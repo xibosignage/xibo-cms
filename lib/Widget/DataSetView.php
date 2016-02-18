@@ -108,7 +108,7 @@ class DataSetView extends ModuleWidget
     public function validate()
     {
         // Must have a duration
-        if ($this->getDuration() == 0)
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('Please enter a duration'));
 
         // Validate Data Set Selected
@@ -146,7 +146,8 @@ class DataSetView extends ModuleWidget
     public function add()
     {
         $this->setOption('name', Sanitize::getString('name'));
-        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setUseDuration(0);
+        $this->setDuration($this->getModule()->defaultDuration);
         $this->setOption('dataSetId', Sanitize::getInt('dataSetId'));
 
         // Save the widget
@@ -168,6 +169,7 @@ class DataSetView extends ModuleWidget
 
         // Other properties
         $this->setOption('name', Sanitize::getString('name', $this->getOption('name')));
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
         $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 120));
         $this->setOption('name', Sanitize::getString('name'));
@@ -210,7 +212,7 @@ class DataSetView extends ModuleWidget
 
         $options = array(
             'type' => $this->getModuleType(),
-            'duration' => $this->getDuration(),
+            'duration' => $this->getCalculatedDuration(),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
             'rowsPerPage' => $this->GetOption('rowsPerPage'),

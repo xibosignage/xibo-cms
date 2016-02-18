@@ -95,6 +95,38 @@
     ".effect-controls": { "display": "block" },
     ".background-color-group": { "display": "block" }
     }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
     }]
 {% endblock %}
 
@@ -115,9 +147,13 @@
                         {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
                         {{ forms.input("name", title, "", helpText) }}
 
+                        {% set title %}{% trans "Set a duration?" %}{% endset %}
+                        {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                        {{ forms.checkbox("useDuration", title, 0, helpText) }}
+
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
-                        {{ forms.number("duration", title, "", helpText, "", "required") }}
+                        {{ forms.number("duration", title, module.getModule().defaultDuration, helpText, "duration-fields", "required") }}
                     </div>
 
                     <div class="tab-pane" id="template">

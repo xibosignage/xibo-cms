@@ -134,15 +134,17 @@ function CallGenerateCalendar() {
 /**
  * Callback for the schedule form
  */
-var setupScheduleForm = function(form) {
+var setupScheduleForm = function(dialog) {
 
     // Select lists
-    $('#campaignId', form).selectpicker();
-    $('select[name="displayGroupIds[]"]', form).selectpicker();
+    $('#campaignId', dialog).selectpicker();
+    $('select[name="displayGroupIds[]"]', dialog).selectpicker();
 
-    // Bind to the form submit
+    // Bind to the dialog submit
     $("#scheduleAddForm, #scheduleEditForm, #scheduleDeleteForm").submit(function(e) {
         e.preventDefault();
+
+        var form = $(this);
 
         $.ajax({
             type: $(this).attr("method"),
@@ -152,7 +154,7 @@ var setupScheduleForm = function(form) {
             dataType: "json",
             success: function(xhr, textStatus, error) {
 
-                XiboSubmitResponse(xhr);
+                XiboSubmitResponse(xhr, form);
 
                 if (xhr.success) {
                     // Reload the Calendar

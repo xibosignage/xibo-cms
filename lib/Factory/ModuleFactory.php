@@ -37,10 +37,14 @@ class ModuleFactory extends BaseFactory
      * Instantiate
      * @param Module $module
      * @return \Xibo\Widget\ModuleWidget
+     * @throws NotFoundException if the class does not exist
      */
     private static function instantiate($module)
     {
         $className = $module->class;
+
+        if (!\class_exists($className))
+            throw new NotFoundException(__('Class %s not found', $className));
 
         /* @var \Xibo\Widget\ModuleWidget $object */
         $object = new $className();
@@ -57,7 +61,7 @@ class ModuleFactory extends BaseFactory
      */
     public static function create($type)
     {
-        $modules = ModuleFactory::query(null, array('type' => $type));
+        $modules = ModuleFactory::query(['enabled'], array('type' => $type));
 
         if (count($modules) <= 0)
             throw new NotFoundException(sprintf(__('Unknown type %s'), $type));
@@ -309,6 +313,13 @@ class ModuleFactory extends BaseFactory
                 ';
             }
 
+            if (DBVERSION >= 122) {
+                $select .= '
+                    ,
+                    `defaultDuration`
+                ';
+            }
+
             $body = '
                   FROM `module`
                  WHERE 1 = 1
@@ -362,7 +373,7 @@ class ModuleFactory extends BaseFactory
 
             $sql = $select . $body . $order . $limit;
 
-            //Log::sql($sql, $params);
+            //
 
             $sth = $dbh->prepare($sql);
             $sth->execute($params);
@@ -387,6 +398,10 @@ class ModuleFactory extends BaseFactory
                 if (DBVERSION >= 120) {
                     $module->class = Sanitize::string($row['class']);
                     $module->viewPath = Sanitize::string($row['viewPath']);
+                }
+
+                if (DBVERSION >= 122) {
+                    $module->defaultDuration = Sanitize::int($row['defaultDuration']);
                 }
 
                 $settings = $row['settings'];

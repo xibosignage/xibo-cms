@@ -352,7 +352,7 @@ class Library extends Base
         );
 
         // Make sure there is room in the library
-        $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
+        $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
         if ($libraryLimit > 0 && $this->libraryUsage() > $libraryLimit)
             throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));

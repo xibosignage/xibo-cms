@@ -323,6 +323,8 @@ class Display
      */
     public function setMediaIncomplete()
     {
+        Log::info('Setting Media Incomplete on %s', $this->display);
+
         $this->mediaInventoryStatus = 3;
         $this->setCollectRequired(true);
     }
@@ -399,7 +401,8 @@ class Display
     {
         $options = array_merge([
             'validate' => true,
-            'audit' => true
+            'audit' => true,
+            'triggerDynamicDisplayGroupAssessment' => true
         ], $options);
 
         if ($options['validate'])
@@ -422,6 +425,14 @@ class Display
                 Log::notice('Display Save would have triggered Player Action, but the action failed with message: %s', $e->getMessage());
             }
         }
+
+        // Trigger an update of all dynamic DisplayGroups
+        if ($options['triggerDynamicDisplayGroupAssessment']) {
+            foreach (DisplayGroupFactory::getByIsDynamic(1) as $group) {
+                /* @var DisplayGroup $group */
+                $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true]);
+            }
+        }
     }
 
     /**
@@ -436,7 +447,7 @@ class Display
         foreach ($this->displayGroups as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
             $displayGroup->unassignDisplay($this);
-            $displayGroup->save(false);
+            $displayGroup->save(['validate' => false]);
         }
 
         // Delete our display specific group
@@ -552,7 +563,7 @@ class Display
         $displayGroup = DisplayGroupFactory::getById($this->displayGroupId);
         $displayGroup->displayGroup = $this->display;
         $displayGroup->description = $this->description;
-        $displayGroup->save(false);
+        $displayGroup->save(['validate' => false, 'manageDisplayLinks' => false]);
     }
 
     /**

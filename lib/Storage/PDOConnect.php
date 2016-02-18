@@ -23,6 +23,11 @@ namespace Xibo\Storage;
 
 use Xibo\Helper\Config;
 
+/**
+ * Class PDOConnect
+ * Manages global connection state and the creation of connections
+ * @package Xibo\Storage
+ */
 class PDOConnect
 {
     /**
@@ -30,17 +35,51 @@ class PDOConnect
      */
 	private static $conn = NULL;
 
+    /**
+     * Count of Connections
+     * @var int
+     */
+    private static $countConnections = 0;
+
+    /**
+     * Count of Selects
+     * @var int
+     */
+    private static $countSelects = 0;
+
+    /**
+     * Count of Inserts
+     * @var int
+     */
+    private static $countInserts = 0;
+
+    /**
+     * Count of Updates
+     * @var int
+     */
+    private static $countUpdates = 0;
+
+    /**
+     * PDOConnect constructor.
+     */
 	private function __construct() {}
 
+	/**
+	 * Opens a connection using the Stored Credentials and store it globally
+	 * @return \PDO
+	 */
 	public static function init()
     {
 		if (!self::$conn) {
-			self::$conn = \Xibo\Storage\PDOConnect::newConnection();
+			self::$conn = PDOConnect::newConnection();
 		}
 
 		return self::$conn;
 	}
 
+    /**
+     * Closes the stored connection
+     */
     public static function close()
     {
         if (self::$conn) {
@@ -48,15 +87,35 @@ class PDOConnect
         }
     }
 
+    /**
+     * Create a DSN from the host/db name
+     * @param string $host
+     * @param string[Optional] $name
+     * @return string
+     */
+    private static function createDsn($host, $name = null)
+    {
+        if (strstr($host, ':')) {
+            $hostParts = explode(':', $host);
+            $dsn = 'mysql:host=' . $hostParts[0] . ';port=' . $hostParts[1] . ';';
+        }
+        else {
+            $dsn = 'mysql:host=' . $host . ';';
+        }
+
+        if ($name != null)
+            $dsn .= 'dbname=' . $name . ';';
+
+        return $dsn;
+    }
+
+    /**
+     * Open a new connection using the stored details
+     * @return \PDO
+     */
 	public static function newConnection()
     {
-		if (strstr(Config::$dbConfig['host'], ':')) {
-			$hostParts = explode(':', Config::$dbConfig['host']);
-			$dsn = 'mysql:host=' . $hostParts[0] . ';port=' . $hostParts[1] . ';dbname=' . Config::$dbConfig['name'] . ';';
-		}
-		else {
-			$dsn = 'mysql:host=' . Config::$dbConfig['host'] . ';dbname=' . Config::$dbConfig['name'] . ';';
-		}
+        $dsn = PDOConnect::createDsn(Config::$dbConfig['host'], Config::$dbConfig['name']);
 
 		// Open the connection and set the error mode
 		$conn = new \PDO($dsn, Config::$dbConfig['user'], Config::$dbConfig['password']);
@@ -64,30 +123,29 @@ class PDOConnect
 
 		$conn->query("SET NAMES 'utf8'");
 
+        self::$countConnections++;
+
 		return $conn;
 	}
 
-	public static function connect($dbhost, $dbuser, $dbpass, $dbname = '')
+    /**
+     * Open a connection with the specified details
+     * @param string $host
+     * @param string $user
+     * @param string $pass
+     * @param string[Optional] $name
+     * @return \PDO
+     */
+	public static function connect($host, $user, $pass, $name = null)
     {
 		if (!self::$conn) {
 			self::close();
 		}
-			
-		if (strstr($dbhost, ':')) {
-			$hostParts = explode(':', $dbhost);
-			$dsn = 'mysql:host=' . $hostParts[0] . ';port=' . $hostParts[1] . ';';
-		}
-		else {
-			$dsn = 'mysql:host=' . $dbhost . ';';
-		}
 
-		if ($dbname != '')
-			$dsn .= 'dbname=' . $dbname . ';';
+        $dsn = PDOConnect::createDsn($host, $name);
 
-		//echo 'connect ' . $dsn , ' user ' . $dbuser . ' pass ' . $dbpass;
-
-		// Open the connection and set the error mode
-		self::$conn = new \PDO($dsn, $dbuser, $dbpass);
+        // Open the connection and set the error mode
+		self::$conn = new \PDO($dsn, $user, $pass);
 		self::$conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
 		self::$conn->query("SET NAMES 'utf8'");
@@ -104,9 +162,13 @@ class PDOConnect
      */
     public static function exists($sql, $params)
     {
-        $dbh = \Xibo\Storage\PDOConnect::init();
+        \Xibo\Helper\Log::sql($sql, $params);
+
+        $dbh = PDOConnect::init();
         $sth = $dbh->prepare($sql);
         $sth->execute($params);
+
+        self::$countSelects++;
 
         if ($sth->fetch())
             return true;
@@ -118,15 +180,30 @@ class PDOConnect
      * Run Insert SQL
      * @param string $sql
      * @param array $params
+     * @param \PDO[Optional] $dbh
      * @return int
      * @throws \PDOException
      */
-    public static function insert($sql, $params)
-    {
-        $dbh = \Xibo\Storage\PDOConnect::init();
+    public static function insert($sql, $params, $dbh = null)
+	{
+        \Xibo\Helper\Log::sql($sql, $params);
+
+        $transaction = false;
+
+        if ($dbh == null) {
+            $dbh = PDOConnect::init();
+            $transaction = true;
+        }
+
+        if ($transaction && !$dbh->inTransaction())
+            $dbh->beginTransaction();
+
         $sth = $dbh->prepare($sql);
 
         $sth->execute($params);
+
+        if ($transaction)
+            self::$countInserts++;
 
         return intval($dbh->lastInsertId());
     }
@@ -135,14 +212,29 @@ class PDOConnect
 	 * Run Update SQL
 	 * @param string $sql
 	 * @param array $params
+     * @param \PDO[Optional] $dbh
 	 * @throws \PDOException
 	 */
-	public static function update($sql, $params)
+	public static function update($sql, $params, $dbh = null)
 	{
-        $dbh = \Xibo\Storage\PDOConnect::init();
+        \Xibo\Helper\Log::sql($sql, $params);
+
+        $transaction = false;
+
+        if ($dbh == null) {
+            $dbh = PDOConnect::init();
+            $transaction = true;
+        }
+
+        if ($transaction && !$dbh->inTransaction())
+            $dbh->beginTransaction();
+
         $sth = $dbh->prepare($sql);
 
         $sth->execute($params);
+
+        if ($transaction)
+            self::$countUpdates++;
 	}
 
 	/**
@@ -154,15 +246,20 @@ class PDOConnect
 	 */
 	public static function select($sql, $params)
 	{
-        $dbh = \Xibo\Storage\PDOConnect::init();
+        \Xibo\Helper\Log::sql($sql, $params);
+
+        $dbh = PDOConnect::init();
         $sth = $dbh->prepare($sql);
 
         $sth->execute($params);
+
+        self::$countSelects++;
 
         return $sth->fetchAll(\PDO::FETCH_ASSOC);
 	}
 
 	/**
+     * Set the TimeZone for this connection
 	 * @param \PDO $connection
 	 * @param string $timeZone e.g. -8:00
 	 */
@@ -172,5 +269,21 @@ class PDOConnect
             $connection = PDOConnect::init();
 
 		$connection->query('SET time_zone = \'' . $timeZone . '\';');
+
+        self::$countSelects++;
 	}
+
+    /**
+     * PDO stats
+     * @return array
+     */
+    public static function stats()
+    {
+        return [
+            'connections' => self::$countConnections,
+            'selects' => self::$countSelects,
+            'inserts' => self::$countInserts,
+            'updates' => self::$countUpdates
+        ];
+    }
 }

@@ -30,6 +30,8 @@ namespace Xibo\Entity;
  */
 class RegionOption
 {
+    use EntityTrait;
+
     /**
      * @SWG\Property(description="The regionId that this Option applies to")
      * @var int

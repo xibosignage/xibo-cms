@@ -36,12 +36,13 @@ class UserGroupFactory extends BaseFactory
     /**
      * Get by Group Name
      * @param string $group
+     * @param int $isUserSpecific
      * @return UserGroup
      * @throws NotFoundException
      */
-    public static function getByName($group)
+    public static function getByName($group, $isUserSpecific = 0)
     {
-        $groups = UserGroupFactory::query(null, ['disableUserCheck' => 1, 'group' => $group, 'isUserSpecific' => 0]);
+        $groups = UserGroupFactory::query(null, ['disableUserCheck' => 1, 'group' => $group, 'isUserSpecific' => $isUserSpecific]);
 
         if (count($groups) <= 0)
             throw new NotFoundException(__('Group not found'));
@@ -164,7 +165,7 @@ class UserGroupFactory extends BaseFactory
 
             $sql = $select . $body . $order . $limit;
 
-            Log::sql($sql, $params);
+
 
             foreach (PDOConnect::select($sql, $params) as $row) {
                 $entries[] = (new UserGroup())->hydrate($row);

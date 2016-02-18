@@ -360,7 +360,7 @@ class User extends Base
 
         // Assign the initial group
         $group->assignUser($user);
-        $group->save(false);
+        $group->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -828,6 +828,89 @@ class User extends Base
         $this->getState()->setData([
             'applications' => ApplicationFactory::getByUserId($this->getUser()->userId),
             'help' => Help::Link('User', 'Applications')
+        ]);
+    }
+
+    /**
+     * @SWG\Get(
+     *     path="/user/pref",
+     *     operationId="userPref",
+     *     tags={"user"},
+     *     summary="Retrieve User Preferences",
+     *     description="User preferences for non-state information, such as Layout designer zoom levels",
+     *     @SWG\Parameter(
+     *      name="preference",
+     *      in="formData",
+     *      description="An optional preference",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful response",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/UserGroupOption")
+     *      )
+     *  )
+     * )
+     */
+    public function pref()
+    {
+        $requestedPreference = Sanitize::getString('preference');
+
+        if ($requestedPreference != '') {
+            return [
+                $this->getUser()->getOption($requestedPreference)
+            ];
+        }
+        else {
+            return $this->getUser()->userOptions;
+        }
+    }
+
+    /**
+     * @SWG\Post(
+     *     path="/user/pref",
+     *     operationId="userPref",
+     *     tags={"user"},
+     *     summary="Save User Preferences",
+     *     description="Save User preferences for non-state information, such as Layout designer zoom levels",
+     *     @SWG\Parameter(
+     *      name="preference",
+     *      in="formData",
+     *      required=true,
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/UserGroupOption")
+     *      )
+     *   ),
+     *   @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function prefEdit()
+    {
+        // Update this user preference with the preference array
+        $i = 0;
+        foreach (Sanitize::getStringArray('preference') as $pref) {
+            $i++;
+
+            $option = Sanitize::string($pref['option']);
+            $value = Sanitize::string($pref['value']);
+
+            $this->getUser()->setOptionValue($option, $value);
+        }
+
+        if ($i > 0)
+            $this->getUser()->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => ($i == 1) ? __('Updated Preference') : __('Updated Preferences')
         ]);
     }
 }

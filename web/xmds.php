@@ -113,19 +113,19 @@ if (isset($_GET['file'])) {
         // Issue magic packet
         // Send via Apache X-Sendfile header?
         if ($sendFileMode == 'Apache') {
-            Log::notice('HTTP GetFile request redirecting to ' . Config::GetSetting('LIBRARY_LOCATION') . $file['storedAs'], 'services');
-            header('X-Sendfile: ' . Config::GetSetting('LIBRARY_LOCATION') . $file['storedAs']);
+            Log::notice('HTTP GetFile request redirecting to ' . Config::GetSetting('LIBRARY_LOCATION') . $file->storedAs, 'services');
+            header('X-Sendfile: ' . Config::GetSetting('LIBRARY_LOCATION') . $file->storedAs);
         }
         // Send via Nginx X-Accel-Redirect?
         else if ($sendFileMode == 'Nginx') {
-            header('X-Accel-Redirect: /download/' . $file['storedAs']);
+            header('X-Accel-Redirect: /download/' . $file->storedAs);
         }
         else {
             header('HTTP/1.0 404 Not Found');
         }
 
         // Log bandwidth
-        \Xibo\Factory\BandwidthFactory::createAndSave(4, $file['displayId'], $file['size']);
+        \Xibo\Factory\BandwidthFactory::createAndSave(4, $file->displayId, $file->size);
     }
     catch (\Exception $e) {
         if ($e instanceof \Xibo\Exception\NotFoundException || $e instanceof \Xibo\Exception\FormExpiredException) {
@@ -142,8 +142,6 @@ if (isset($_GET['file'])) {
 
 
 try {
-    \Xibo\Storage\PDOConnect::init()->beginTransaction();
-
     $wsdl = PROJECT_ROOT . '/lib/Xmds/service_v' . $version . '.wsdl';
 
     if (!file_exists($wsdl))
@@ -158,11 +156,14 @@ try {
     $soap->setClass('\Xibo\Xmds\Soap' . $version);
     $soap->handle();
 
-    \Xibo\Storage\PDOConnect::init()->commit();
+    if (\Xibo\Storage\PDOConnect::init()->inTransaction())
+        \Xibo\Storage\PDOConnect::init()->commit();
 }
 catch (Exception $e) {
     Log::error($e->getMessage());
-    \Xibo\Storage\PDOConnect::init()->rollBack();
+
+    if (\Xibo\Storage\PDOConnect::init()->inTransaction())
+        \Xibo\Storage\PDOConnect::init()->rollBack();
 
     header('HTTP/1.1 500 Internal Server Error');
     header('Content-Type: text/plain');

@@ -42,7 +42,7 @@ class WebPage extends ModuleWidget
         if (!v::url()->notEmpty()->validate(urldecode($this->getOption('uri'))))
             throw new InvalidArgumentException(__('Please enter a link'));
 
-        if ($this->getDuration() == 0)
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new InvalidArgumentException(__('You must enter a duration.'));
     }
 
@@ -52,6 +52,7 @@ class WebPage extends ModuleWidget
     public function add()
     {
         $this->setOption('xmds', true);
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setDuration(Sanitize::getInt('duration'));
         $this->setOption('name', Sanitize::getString('name'));
         $this->setOption('transparency', Sanitize::getCheckbox('transparency'));
@@ -74,6 +75,7 @@ class WebPage extends ModuleWidget
     public function edit()
     {
         $this->setOption('xmds', true);
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setDuration(Sanitize::getInt('duration'));
         $this->setOption('name', Sanitize::getString('name'));
         $this->setOption('transparency', Sanitize::getCheckbox('transparency'));

@@ -17,6 +17,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+var layout;
+var lockPosition;
+var hideControls;
+var lowDesignerScale;
+
 $(document).ready(function(){
     
     // Set the height of the grid to be something sensible for the current screen resolution
@@ -24,51 +29,93 @@ $(document).ready(function(){
         window.location = $(this).val();
     }).selectpicker();
 
-    $("#layout").each(function() {
+    layout = $("#layout");
 
-        // Only enable drag / drop if we are within a certain limit
-        if ($(this).attr("designer_scale") > 0.41) {
+    // Read in the values of lockPosition and hideControls
+    lockPosition = $("input[name=lockPosition]")[0].checked;
+    hideControls = $("input[name=hideControls]")[0].checked;
+    lowDesignerScale = (layout.attr("designer_scale") < 0.41);
 
-            $(this).find(".region")
-                .draggable({
-                        containment: this,
-                        stop: regionPositionUpdate,
-                        drag: updateRegionInfo
-                    })
-                .resizable({
-                        containment: this,
-                        minWidth: 25,
-                        minHeight: 25,
-                        stop: regionPositionUpdate,
-                        resize: updateRegionInfo
-                    });
-        }
+    if (lowDesignerScale)
+        $("input[name=lockPosition]").attr("disabled", true);
 
-        $(this).find(".region")
-            .hover(function() {
-                    $(this).find(".regionInfo").show();
-                    $(this).find(".previewNav").show();
-                },
-                function() {
-                    $(this).find(".regionInfo").hide();
-                    $(this).find(".previewNav").hide();
-                });
-
-        // Preview
-        $('.regionPreview', this).each(function(){
-            new Preview(this);
+    // Hover functions for previews/info
+    layout.find(".region")
+        .hover(function() {
+            if (!hideControls) {
+                layout.find(".regionInfo").show();
+                layout.find(".previewNav").show();
+            }
+        }, function() {
+            layout.find(".regionInfo").hide();
+            layout.find(".previewNav").hide();
+        })
+        .draggable({
+            containment: layout,
+            stop: regionPositionUpdate,
+            drag: updateRegionInfo
+        })
+        .resizable({
+            containment: layout,
+            minWidth: 25,
+            minHeight: 25,
+            stop: regionPositionUpdate,
+            resize: updateRegionInfo
         });
 
-        // Set an interval
-        XiboPing($(this).data('statusUrl'), '.layout-status');
-        setInterval("XiboPing('" + $(this).data('statusUrl') + "', '.layout-status')", 1000 * 60); // Every minute
+    // Initial Drag and Drop configuration
+    configureDragAndDrop();
+
+    // Preview
+    $('.regionPreview', layout).each(function(){
+        new Preview(this);
     });
 
+    // Set an interval
+    layoutStatus(layout.data('statusUrl'));
+    setInterval("layoutStatus('" + layout.data('statusUrl') + "')", 1000 * 60); // Every minute
+
+    // Bind to the switches
+    $(".switch-check-box").bootstrapSwitch().on('switchChange.bootstrapSwitch', function(event, state) {
+
+        var propertyName = $(this).prop("name");
+
+        if (propertyName == "lockPosition") {
+            lockPosition = state;
+            configureDragAndDrop();
+        }
+        else if (propertyName == "hideControls") {
+            hideControls = state;
+
+            if (hideControls) {
+                $(".region .regionInfo").hide();
+                $(".region .previewNav").hide();
+            } else {
+                $(".region .regionInfo").show();
+                $(".region .previewNav").show();
+            }
+        }
+
+        // Update the user preference
+        updateUserPref([{
+            option: propertyName,
+            value: state
+        }]);
+
+    });
+
+    // Hide region previews/info
+    setTimeout(function() {
+        $(".region .regionInfo").hide("200");
+        $(".region .previewNav").hide("200");
+    }, 500);
+
+    // Bind to the region options menu
     $('.RegionOptionsMenuItem').click(function(e) {
         e.preventDefault();
 
         // If any regions have been moved, then save them.
-        if ($("#layout-save-all").length > 0) {
+        if (!$("#layout-save-all").hasClass("disabled")) {
             SystemMessage(translation.savePositionsFirst, true);
             return;
         }
@@ -85,12 +132,45 @@ $(document).ready(function(){
         XiboFormRender(url, data);
     });
 
-    setTimeout(function() {
-        $(".region .regionInfo").hide("200");
-        $(".region .previewNav").hide("200");
-    }, 500);
+    // Bind to the save/revert buttons
+    $("#layout-save-all").on("click", function () {
+        // Save positions for all layouts / regions
+        savePositions();
+        return false;
+    });
 
+    $("#layout-revert").on("click", function () {
+        // Reload
+        location.reload();
+        return false;
+    });
+
+    // Bind to the save size button
+    $("#saveDesignerSize").on("click", function () {
+        // Update the user preference
+        updateUserPref([{
+            option: "defaultDesignerZoom",
+            value: $(this).data().designerSize
+        }]);
+    });
+
+    // Hook up toggle
+    $('[data-toggle="tooltip"]').tooltip();
+
+    // Shrink the Dropdown list according to the container (HAX)
+    var jumpListContainer = $(".layoutJumpListContainer");
+    jumpListContainer.find(".bootstrap-select").width(jumpListContainer.width());
 });
+
+function configureDragAndDrop() {
+
+    // Do we want to bind?
+    if (lockPosition || lowDesignerScale) {
+        layout.find(".region").draggable("disable").resizable("disable");
+    } else {
+        layout.find(".region").draggable("enable").resizable("enable");
+    }
+}
 
 /**
  * Update Region Information with Latest Width/Position
@@ -119,42 +199,17 @@ function regionPositionUpdate(e, ui) {
     preview.SetSequence(preview.seq);
 
     // Expose a new button to save the positions
-    if ($("#layout-save-all").length <= 0) {
-
-        $("<button/>",  {
-                "class": "btn",
-                id: "layout-save-all",
-                html: translation.save_position_button
-            })
-            .click(function() {
-                // Save positions for all layouts / regions
-                savePositions();
-                return false;
-            })
-            .appendTo(".layout-meta");
-
-        $("<button/>",  {
-                "class": "btn",
-                id: "layout-revert",
-                html: translation.revert_position_button
-            })
-            .click(function() {
-                // Reload
-                location.reload();
-                return false;
-            })
-            .appendTo(".layout-meta");
-    }
+    $("#layout-save-all").removeClass("disabled");
+    $("#layout-revert").removeClass("disabled");
 }
 
 function savePositions() {
 
-    // Ditch the button
-    $("#layout-save-all").remove();
-    $("#layout-revert").remove();
-
     // Update all layouts
-    $("#layout").each(function(){
+    layout.each(function(){
+
+        $("#layout-save-all").addClass("disabled");
+        $("#layout-revert").addClass("disabled");
 
         // Store the Layout ID
         var url = $(this).data().positionAllUrl;
@@ -302,3 +357,60 @@ var assignMediaToPlaylist = function(url, media) {
         success: XiboSubmitResponse
     });
 };
+
+function layoutStatus(url) {
+
+    // Call with AJAX
+    $.ajax({
+        type: "get",
+        url: url,
+        cache: false,
+        dataType: "json",
+        success: function(response){
+
+            var status = $("#layout-status");
+
+            // Was the Call successful
+            if (response.success) {
+
+                // Expect the response to have a message (response.html)
+                //  a status (1 to 4)
+                //  a duration
+                var element = $("<span>").addClass("fa");
+
+                if (response.extra.status == 1) {
+                    status.addClass("alert-success");
+                    element.addClass("fa-check");
+                }
+                else if (response.extra.status == 2) {
+                    status.addClass("alert-warning");
+                    element.addClass("fa-question");
+                }
+                else if (response.extra.status == 3) {
+                    status.addClass("alert-info");
+                    element.addClass("fa-cogs");
+                }
+                else {
+                    status.addClass("alert-danger");
+                    element.addClass("fa-times");
+                }
+
+                status.html(response.html).prepend(element);
+
+                // Duration
+                $("#layout-duration").html(moment().startOf("day").seconds(response.extra.duration).format("HH:mm:ss"));
+            }
+            else {
+                // Login Form needed?
+                if (response.login) {
+
+                    LoginBox(response.message);
+
+                    return false;
+                }
+            }
+
+            return false;
+        }
+    });
+}

@@ -37,7 +37,6 @@
                                 <th>{% trans "Last Accessed" %}</th>
                                 <th>{% trans "Active" %}</th>
                                 <th>{% trans "User Name" %}</th>
-                                <th>{% trans "Last Page" %}</th>
                                 <th>{% trans "IP Address" %}</th>
                                 <th>{% trans "Browser" %}</th>
                                 <th></th>
@@ -70,7 +69,6 @@
                 { "data": "lastAccessed", "render": dataTableDateFromIso },
                 { "data": "isExpired", "render": dataTableTickCrossInverseColumn },
                 { "data": "userName" },
-                { "data": "lastPage" },
                 { "data": "remoteAddress" },
                 { "data": "userAgent" },
                 {

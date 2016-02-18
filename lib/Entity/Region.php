@@ -131,12 +131,6 @@ class Region implements \JsonSerializable
      */
     public $tempId = null;
 
-    public function __construct()
-    {
-        // Exclude properties that will cause recursion
-        //$this->excludeProperty('playlists');
-    }
-
     public function __clone()
     {
         // Clear the IDs and clone the playlist
@@ -198,11 +192,15 @@ class Region implements \JsonSerializable
      */
     public function getOption($option)
     {
+        $this->load();
+
         foreach ($this->regionOptions as $regionOption) {
             /* @var RegionOption $regionOption */
             if ($regionOption->option == $option)
                 return $regionOption;
         }
+
+        Log::debug('RegionOption %s not found', $option);
 
         throw new NotFoundException('Region Option not found');
     }
@@ -215,6 +213,8 @@ class Region implements \JsonSerializable
      */
     public function getOptionValue($option, $default)
     {
+        $this->load();
+
         try {
             $regionOption = $this->getOption($option);
             return $regionOption->value;
@@ -494,7 +494,7 @@ class Region implements \JsonSerializable
             $params['displayOrder' . $i] = $playlist->displayOrder;
         }
 
-        Log::sql($sql, $params);
+
 
         PDOConnect::update($sql, $params);
     }

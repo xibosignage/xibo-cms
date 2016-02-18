@@ -74,7 +74,7 @@ class WebAuthentication extends Middleware
             if (!in_array($resource, $app->publicRoutes)) {
                 $app->public = false;
                 // Need to check
-                if ($user->hasIdentity() && $app->session->isExpired == 0) {
+                if ($user->hasIdentity() && !$app->session->isExpired()) {
                     // Replace our user with a fully loaded one
                     $user = UserFactory::loadById($user->userId);
 
@@ -97,7 +97,7 @@ class WebAuthentication extends Middleware
                 $app->public = true;
 
                 // If we are expired and come from ping/clock, then we redirect
-                if ($app->session->isExpired == 1 && ($resource == '/login/ping' || $resource == 'clock')) {
+                if ($app->session->isExpired() && ($resource == '/login/ping' || $resource == 'clock')) {
                     $redirectToLogin();
                 }
             }

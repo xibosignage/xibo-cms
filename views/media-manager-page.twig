@@ -175,11 +175,8 @@
                 openUploadForm({
                     oldMediaId: mediaId,
                     widgetId: widgetId,
-                    {% if config.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}
-                    updateInAllChecked: true,
-                    {% else %}
-                    updateInAllChecked: false,
-                    {% endif %}
+                    updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}true{% else %}false{% endif %},
+                    deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == "Checked" %}true{% else %}false{% endif %},
                     trans: {
                         addFiles: "{% trans "Add Replacement" %}",
                         startUpload: "{% trans "Start Replace" %}",

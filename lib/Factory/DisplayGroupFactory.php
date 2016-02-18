@@ -11,7 +11,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DisplayGroup;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -62,17 +61,46 @@ class DisplayGroupFactory extends BaseFactory
     }
 
     /**
+     * Get Display Groups by isDynamic
+     * @param int $isDynamic
+     * @return array[DisplayGroup]
+     */
+    public static function getByIsDynamic($isDynamic)
+    {
+        return DisplayGroupFactory::query(null, ['disableUserCheck' => 1, 'isDynamic' => $isDynamic]);
+    }
+
+    /**
+     * Get Display Groups by their ParentId
+     * @param int $parentId
+     * @return array[DisplayGroup]
+     */
+    public static function getByParentId($parentId)
+    {
+        return DisplayGroupFactory::query(null, ['disableUserCheck' => 1, 'parentId' => $parentId]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[DisplayGroup]
      */
     public static function query($sortOrder = null, $filterBy = null)
     {
+        if ($sortOrder == null)
+            $sortOrder = ['displayGroup'];
+
         $entries = [];
         $params = [];
 
         $select = '
-            SELECT displaygroup.displayGroupId, displaygroup.displayGroup, displaygroup.isDisplaySpecific, displaygroup.description
+            SELECT `displaygroup`.displayGroupId,
+                `displaygroup`.displayGroup,
+                `displaygroup`.isDisplaySpecific,
+                `displaygroup`.description,
+                `displaygroup`.isDynamic,
+                `displaygroup`.dynamicCriteria,
+                `displaygroup`.userId
         ';
 
         $body = '
@@ -100,16 +128,26 @@ class DisplayGroupFactory extends BaseFactory
         $body .= ' WHERE 1 = 1 ';
 
         // View Permissions
-        self::viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, '`displaygroup`.displayGroupId', null, $filterBy);
+        self::viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, '`displaygroup`.displayGroupId', '`displaygroup`.userId', $filterBy);
 
         if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
             $body .= ' AND displaygroup.displayGroupId = :displayGroupId ';
             $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
         }
 
+        if (Sanitize::getInt('parentId', $filterBy) !== null) {
+            $body .= ' AND `displaygroup`.displayGroupId IN (SELECT `childId` FROM `lkdgdg` WHERE `parentId` = :parentId AND `depth` = 1) ';
+            $params['parentId'] = Sanitize::getInt('parentId', $filterBy);
+        }
+
         if (Sanitize::getInt('isDisplaySpecific', 0, $filterBy) != -1) {
             $body .= ' AND displaygroup.isDisplaySpecific = :isDisplaySpecific ';
             $params['isDisplaySpecific'] = Sanitize::getInt('isDisplaySpecific', 0, $filterBy);
+        }
+
+        if (Sanitize::getInt('isDynamic', $filterBy) !== null) {
+            $body .= ' AND `displaygroup`.isDynamic = :isDynamic ';
+            $params['isDynamic'] = Sanitize::getInt('isDynamic', $filterBy);
         }
 
         if (Sanitize::getInt('displayId', $filterBy) !== null) {
@@ -150,7 +188,7 @@ class DisplayGroupFactory extends BaseFactory
 
         $sql = $select . $body . $order . $limit;
 
-        Log::sql($sql, $params);
+
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new DisplayGroup())->hydrate($row);

@@ -199,7 +199,7 @@ class DisplayProfile
             $params['displayProfileId'] = $this->displayProfileId;
         }
 
-        Log::sql($sql, $params);
+
 
         $count = PDOConnect::select($sql, $params);
 

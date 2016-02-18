@@ -25,7 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Widget;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -115,7 +114,9 @@ class WidgetFactory extends BaseFactory
               widget.ownerId,
               widget.type,
               widget.duration,
-              widget.displayOrder
+              widget.displayOrder,
+              `widget`.useDuration,
+              `widget`.calculatedDuration
         ';
 
         $body = '
@@ -160,7 +161,7 @@ class WidgetFactory extends BaseFactory
         // The final statements
         $sql = $select . $body . $order . $limit;
 
-        Log::sql($sql, $params);
+
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new Widget())->hydrate($row, ['intProperties' => ['duration']]);

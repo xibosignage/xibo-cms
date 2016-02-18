@@ -35,6 +35,9 @@ class Maintenance extends Base
 {
     public function run()
     {
+        // Always start a transaction
+        PDOConnect::init()->beginTransaction();
+
         // Output HTML Headers
         print '<html>';
         print '  <head>';
@@ -637,7 +640,7 @@ FORM;
         );
 
         // Make sure there is room in the library
-        $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
+        $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
         if ($libraryLimit > 0 && Library::libraryUsage() > $libraryLimit)
             throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));

@@ -45,7 +45,7 @@ class Text extends ModuleWidget
         if ($this->getOption('text') == '')
             throw new \InvalidArgumentException(__('Please enter some text'));
 
-        if ($this->getDuration() == 0)
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('You must enter a duration.'));
     }
 
@@ -55,6 +55,7 @@ class Text extends ModuleWidget
     public function add()
     {
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setOption('xmds', true);
         $this->setOption('effect', Sanitize::getString('effect'));
         $this->setOption('speed', Sanitize::getInt('speed'));
@@ -74,6 +75,7 @@ class Text extends ModuleWidget
     public function edit()
     {
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setOption('xmds', true);
         $this->setOption('effect', Sanitize::getString('effect'));
         $this->setOption('speed', Sanitize::getInt('speed'));
@@ -103,7 +105,7 @@ class Text extends ModuleWidget
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
-        $duration = $this->getDuration();
+        $duration = $this->getCalculatedDuration();
 
         $text = $this->parseLibraryReferences($isPreview, $this->getRawNode('text', null));
 

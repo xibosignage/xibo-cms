@@ -31,7 +31,7 @@ class SessionFactory extends BaseFactory
 
         try {
             $select = '
-            SELECT session.userId, user.userName, isExpired, lastPage, session.lastAccessed, remoteAddr AS remoteAddress, userAgent ';
+            SELECT session.userId, user.userName, isExpired, session.lastAccessed, remoteAddr AS remoteAddress, userAgent ';
 
             $body = '
               FROM `session`
@@ -69,7 +69,7 @@ class SessionFactory extends BaseFactory
 
             $sql = $select . $body . $order . $limit;
 
-            Log::sql($sql, $params);
+
 
             foreach (PDOConnect::select($sql, $params) as $row) {
                 $entries[] = (new Session())->hydrate($row);

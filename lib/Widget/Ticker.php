@@ -105,7 +105,7 @@ class Ticker extends ModuleWidget
     public function validate()
     {
         // Must have a duration
-        if ($this->getDuration() == 0)
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('Please enter a duration'));
 
         $sourceId = $this->getOption('sourceId');
@@ -164,10 +164,12 @@ class Ticker extends ModuleWidget
     public function add()
     {
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setOption('xmds', true);
         $this->setOption('sourceId', Sanitize::getInt('sourceId'));
         $this->setOption('uri', urlencode(Sanitize::getString('uri')));
         $this->setOption('dataSetId', Sanitize::getInt('dataSetId', 0));
+        $this->setOption('durationIsPerItem', 1);
         $this->setOption('updateInterval', 120);
         $this->setOption('speed', 2);
 
@@ -188,6 +190,7 @@ class Ticker extends ModuleWidget
         // Source is selected during add() and cannot be edited.
         // Other properties
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setOption('xmds', true);
         $this->setOption('uri', Sanitize::getString('uri'));
         $this->setOption('updateInterval', urlencode(Sanitize::getInt('updateInterval', 120)));
@@ -270,8 +273,8 @@ class Ticker extends ModuleWidget
 
         // Information from the Module
         $itemsSideBySide = $this->getOption('itemsSideBySide', 0);
-        $duration = $this->getDuration();
-        $durationIsPerItem = $this->getOption('durationIsPerItem', 0);
+        $duration = $this->getCalculatedDuration();
+        $durationIsPerItem = $this->getOption('durationIsPerItem', 1);
         $numItems = $this->getOption('numItems', 0);
         $takeItemsFrom = $this->getOption('takeItemsFrom', 'start');
         $itemsPerPage = $this->getOption('itemsPerPage', 0);

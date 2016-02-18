@@ -424,7 +424,7 @@ class Media implements \JsonSerializable
             if ($parentMedia != null)
                 $displayGroup->assignMedia($parentMedia);
 
-            $displayGroup->save(false);
+            $displayGroup->save(['validate' => false]);
         }
 
         foreach ($this->layoutBackgroundImages as $layout) {

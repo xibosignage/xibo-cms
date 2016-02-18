@@ -56,6 +56,7 @@ class Twitter extends ModuleWidget
             $module->regionSpecific = 1;
             $module->renderAs = 'html';
             $module->schemaVersion = $this->codeSchemaVersion;
+            $module->defaultDuration = 60;
             $module->settings = [];
 
             $this->setModule($module);
@@ -141,7 +142,7 @@ class Twitter extends ModuleWidget
 
     public function validate()
     {
-        if ($this->getDuration() == 0)
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('Please enter a duration'));
 
         if (!v::string()->notEmpty()->validate($this->getOption('searchTerm')))
@@ -154,6 +155,7 @@ class Twitter extends ModuleWidget
     public function add()
     {
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setOption('name', Sanitize::getString('name'));
         $this->setOption('searchTerm', Sanitize::getString('searchTerm'));
         $this->setOption('effect', Sanitize::getString('effect'));
@@ -183,6 +185,7 @@ class Twitter extends ModuleWidget
     public function edit()
     {
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setOption('name', Sanitize::getString('name'));
         $this->setOption('searchTerm', Sanitize::getString('searchTerm'));
         $this->setOption('effect', Sanitize::getString('effect'));
@@ -572,7 +575,7 @@ class Twitter extends ModuleWidget
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         // Information from the Module
-        $duration = $this->getDuration();
+        $duration = $this->getCalculatedDuration();
 
         // Generate a JSON string of substituted items.
         $items = $this->getTwitterFeed($displayId, $isPreview);

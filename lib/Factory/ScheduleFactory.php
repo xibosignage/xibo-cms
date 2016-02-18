@@ -11,7 +11,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Schedule;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -124,6 +123,11 @@ class ScheduleFactory extends BaseFactory
             $params['eventId'] = Sanitize::getInt('eventId', $filterBy);
         }
 
+        if (Sanitize::getInt('campaignId', $filterBy) !== null) {
+            $sql .= ' AND `schedule`.campaignId = :campaignId ';
+            $params['campaignId'] = Sanitize::getInt('campaignId', $filterBy);
+        }
+
         // Only 1 date
         if (!$useDetail && Sanitize::getInt('fromDt', $filterBy) !== null && Sanitize::getInt('toDt', $filterBy) === null) {
             $sql .= ' AND schedule.fromDt > :fromDt ';
@@ -170,7 +174,7 @@ class ScheduleFactory extends BaseFactory
         if (is_array($sortOrder))
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
-        Log::sql($sql, $params);
+
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new Schedule())->hydrate($row, ['intProperties' => ['isPriority']]);

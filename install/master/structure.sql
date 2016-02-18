@@ -190,6 +190,9 @@ CREATE TABLE IF NOT EXISTS `displaygroup` (
   `DisplayGroup` varchar(50) NOT NULL,
   `Description` varchar(254) DEFAULT NULL,
   `IsDisplaySpecific` tinyint(4) NOT NULL DEFAULT '0',
+  `isDynamic` tinyint(4) NOT NULL DEFAULT '0',
+  `dynamicCriteria` varchar(2000) DEFAULT NULL,
+  `userId` int(11) NOT NULL,
   PRIMARY KEY (`DisplayGroupID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
@@ -471,6 +474,7 @@ CREATE TABLE IF NOT EXISTS `module` (
   `settings` text,
   `viewPath` varchar(254) NOT NULL DEFAULT '../modules',
   `class` varchar(254) NOT NULL,
+  `defaultDuration` int(11) NOT NULL,
   PRIMARY KEY (`ModuleID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Functional Modules' AUTO_INCREMENT=32 ;
 
@@ -776,12 +780,10 @@ CREATE TABLE IF NOT EXISTS `session` (
   `session_data` longtext NOT NULL,
   `session_expiration` int(10) unsigned NOT NULL DEFAULT '0',
   `LastAccessed` datetime DEFAULT NULL,
-  `LastPage` varchar(25) DEFAULT NULL,
   `userID` int(11) DEFAULT NULL,
   `IsExpired` tinyint(4) NOT NULL DEFAULT '1',
   `UserAgent` varchar(254) DEFAULT NULL,
   `RemoteAddr` varchar(50) DEFAULT NULL,
-  `SecurityToken` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`session_id`),
   KEY `userID` (`userID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -928,6 +930,8 @@ CREATE TABLE IF NOT EXISTS `widget` (
   `type` varchar(50) NOT NULL,
   `duration` int(11) NOT NULL,
   `displayOrder` int(11) NOT NULL,
+  `useDuration` int(4) NOT NULL DEFAULT '1',
+  `calculatedDuration` int(4) NOT NULL,
   PRIMARY KEY (`widgetId`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
@@ -984,4 +988,19 @@ CREATE TABLE IF NOT EXISTS `lkcommanddisplayprofile` (
   `commandString` varchar(1000) NOT NULL,
   `validationString` varchar(1000) DEFAULT NULL,
   PRIMARY KEY (`commandId`,`displayProfileId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `useroption` (
+  `userId` int(11) NOT NULL,
+  `option` varchar(50) NOT NULL,
+  `value` text NOT NULL,
+  UNIQUE KEY `userId` (`userId`,`option`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `lkdgdg` (
+  `parentId` int(11) NOT NULL,
+  `childId` int(11) NOT NULL,
+  `depth` int(11) NOT NULL,
+  UNIQUE KEY `parentId` (`parentId`,`childId`,`depth`),
+  UNIQUE KEY `childId` (`childId`,`parentId`,`depth`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

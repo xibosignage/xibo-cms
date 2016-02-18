@@ -4,29 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-
-Probably fine, missing:
-
-        $response->AddFieldAction('modeid', 'init', 1, $modeFieldDepencies_1);
-        $response->AddFieldAction('modeid', 'change', 1, $modeFieldDepencies_1);
-        $response->AddFieldAction('modeid', 'init', 2, $modeFieldDepencies_2);
-        $response->AddFieldAction('modeid', 'change', 2, $modeFieldDepencies_2);
-        $response->AddFieldAction('modeid', 'init', 3, $modeFieldDepencies_3);
-        $response->AddFieldAction('modeid', 'change', 3, $modeFieldDepencies_3);
-
-        // Field dependencies
-        $modeFieldDepencies_1 = array(
-                '.webpage-widths' => array('display' => 'none'),
-                '.webpage-offsets' => array('display' => 'none'),
-            );
-        $modeFieldDepencies_2 = array(
-                '.webpage-widths' => array('display' => 'block'),
-                '.webpage-offsets' => array('display' => 'block'),
-            );
-        $modeFieldDepencies_3 = array(
-                '.webpage-widths' => array('display' => 'block'),
-                '.webpage-offsets' => array('display' => 'none'),
-            );
 #}
 
 {% extends "form-base.twig" %}
@@ -97,6 +74,38 @@ Probably fine, missing:
     ".webpage-widths": { "display": "block" },
     ".webpage-offsets": { "display": "none" }
     }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
     }]
 {% endblock %}
 
@@ -112,9 +121,13 @@ Probably fine, missing:
                 {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
                 {{ forms.input("name", title, "", helpText) }}
 
+                {% set title %}{% trans "Set a duration?" %}{% endset %}
+                {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                {{ forms.checkbox("useDuration", title, 0, helpText) }}
+
                 {% set title %}{% trans "Duration" %}{% endset %}
-                {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
-                {{ forms.number("duration", title, duration, helpText, "", "required") }}
+                {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                {{ forms.number("duration", title, module.getModule().defaultDuration, helpText, "duration-fields", "required") }}
                 
                 {% set title %}{% trans "Options" %}{% endset %}
                 {% set helpText %}{% trans "How should this web page be embedded?" %}{% endset %}

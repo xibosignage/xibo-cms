@@ -78,6 +78,18 @@ class Widget implements \JsonSerializable
     public $displayOrder;
 
     /**
+     * @SWG\Property(description="Flag indicating if this widget has a duration that should be used")
+     * @var int
+     */
+    public $useDuration;
+
+    /**
+     * @SWG\Property(description="Calculated Duration of this widget after taking into account the useDuration flag")
+     * @var int
+     */
+    public $calculatedDuration = 0;
+
+    /**
      * @SWG\Property(description="An array of Widget Options")
      * @var WidgetOption[]
      */
@@ -119,6 +131,12 @@ class Widget implements \JsonSerializable
      */
     public $isNew = false;
 
+    /**
+     * Minimum duration for widgets
+     * @var int
+     */
+    public static $widgetMinDuration = 1;
+
     public function __construct()
     {
         $this->excludeProperty('module');
@@ -141,7 +159,7 @@ class Widget implements \JsonSerializable
 
     private function hash()
     {
-        return md5($this->widgetId . $this->playlistId . $this->ownerId . $this->type . $this->duration . $this->displayOrder);
+        return md5($this->widgetId . $this->playlistId . $this->ownerId . $this->type . $this->duration . $this->displayOrder . $this->useDuration . $this->calculatedDuration);
     }
 
     private function mediaHash()
@@ -397,13 +415,19 @@ class Widget implements \JsonSerializable
 
         $this->isNew = true;
 
-        $sql = 'INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`, `displayOrder`) VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder)';
+        $sql = '
+            INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`, `displayOrder`, `useDuration`, `calculatedDuration`)
+            VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder, :useDuration, :calculatedDuration)
+        ';
+
         $this->widgetId = PDOConnect::insert($sql, array(
             'playlistId' => $this->playlistId,
             'ownerId' => $this->ownerId,
             'type' => $this->type,
             'duration' => $this->duration,
-            'displayOrder' => $this->displayOrder
+            'displayOrder' => $this->displayOrder,
+            'useDuration' => $this->useDuration,
+            'calculatedDuration' => $this->calculatedDuration
         ));
     }
 
@@ -411,14 +435,26 @@ class Widget implements \JsonSerializable
     {
         Log::debug('Saving Widget ' . $this->type . ' on PlaylistId ' . $this->playlistId . ' WidgetId: ' . $this->widgetId);
 
-        $sql = 'UPDATE `widget` SET `playlistId` = :playlistId, `ownerId` = :ownerId, `type` = :type, `duration` = :duration, `displayOrder` = :displayOrder WHERE `widgetId` = :widgetId';
+        $sql = '
+          UPDATE `widget` SET `playlistId` = :playlistId,
+            `ownerId` = :ownerId,
+            `type` = :type,
+            `duration` = :duration,
+            `displayOrder` = :displayOrder,
+            `useDuration` = :useDuration,
+            `calculatedDuration` = :calculatedDuration
+           WHERE `widgetId` = :widgetId
+        ';
+
         PDOConnect::update($sql, array(
             'playlistId' => $this->playlistId,
             'ownerId' => $this->ownerId,
             'type' => $this->type,
             'duration' => $this->duration,
             'widgetId' => $this->widgetId,
-            'displayOrder' => $this->displayOrder
+            'displayOrder' => $this->displayOrder,
+            'useDuration' => $this->useDuration,
+            'calculatedDuration' => $this->calculatedDuration
         ));
     }
 
@@ -464,7 +500,7 @@ class Widget implements \JsonSerializable
 
         $sql .= ')';
 
-        Log::sql($sql, $params);
+
 
         PDOConnect::update($sql, $params);
     }

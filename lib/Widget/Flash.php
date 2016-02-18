@@ -21,10 +21,13 @@
 namespace Xibo\Widget;
 
 
-use Xibo\Helper\Config;
-
 class Flash extends ModuleWidget
 {
+    public function editForm()
+    {
+        return 'generic-form-edit';
+    }
+
     /**
      * Preview code for a module
      * @param int $width
@@ -52,16 +55,6 @@ class Flash extends ModuleWidget
                    wmode="transparent">
             </embed>
         </object>';
-    }
-
-    /**
-     * Determine duration
-     * @param $fileName
-     * @return int
-     */
-    public function determineDuration($fileName = null)
-    {
-        return Config::GetSetting('swf_length');
     }
 
     /**

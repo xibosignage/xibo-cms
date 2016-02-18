@@ -142,6 +142,15 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * Set the duration
+     * @param int $useDuration
+     */
+    final protected function setUseDuration($useDuration)
+    {
+        $this->widget->useDuration = $useDuration;
+    }
+
+    /**
      * Save the Module
      */
     protected final function saveSettings()
@@ -291,18 +300,36 @@ abstract class ModuleWidget implements ModuleInterface
             'real' => false
         ], $options);
 
-        if ($options['real'] && $this->widget->duration === 0) {
+        if ($options['real']) {
             try {
                 // Get the duration from the parent media record.
                 return $this->getMedia()->duration;
             }
             catch (NotFoundException $e) {
-                Log::debug('Tried to get real duration from a widget without media. widgetId: %d', $this->getWidgetId());
+                Log::error('Tried to get real duration from a widget without media. widgetId: %d', $this->getWidgetId());
                 // Do nothing - drop out
             }
         }
 
         return $this->widget->duration;
+    }
+
+    /**
+     * Gets the set duration option
+     * @return int
+     */
+    final public function getUseDuration()
+    {
+        return $this->widget->useDuration;
+    }
+
+    /**
+     * Gets the calculated duration of this widget
+     * @return int
+     */
+    final public function getCalculatedDuration()
+    {
+        return $this->widget->calculatedDuration;
     }
 
     /**
@@ -326,7 +353,11 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function edit()
     {
-        // Nothing to do
+        $this->setDuration(Sanitize::getInt('duration'));
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
+        $this->setOption('name', Sanitize::getString('name'));
+
+        $this->widget->save();
     }
 
     /**
@@ -380,7 +411,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function previewIcon()
     {
-        return '<div style="text-align:center;"><img alt="' . $this->getModuleType() . ' thumbnail" src="' . Theme::uri('img/forms/' . $this->getModuleType() . '.gif') . '" /></div>';
+        return '<div style="text-align:center;"><img alt="' . $this->getModuleType() . ' thumbnail" src="' . Theme::uri('img/' . $this->getModule()->imageUri) . '" /></div>';
     }
 
     /**
@@ -408,12 +439,13 @@ abstract class ModuleWidget implements ModuleInterface
     {
         // Default Hover window contains a thumbnail, media type and duration
         $output = '<div class="well">';
-        $output .= '<div class="preview-module-image"><img alt="' . __($this->module->name) . ' thumbnail" src="' . Theme::uri('img/forms/' . $this->module->type . '.gif') . '" /></div>';
+        $output .= '<div class="preview-module-image"><img alt="' . __($this->module->name) . ' thumbnail" src="' . Theme::uri('img/' . $this->module->imageUri) . '" /></div>';
         $output .= '<div class="info">';
         $output .= '    <ul>';
         $output .= '    <li>' . __('Type') . ': ' . $this->module->name . '</li>';
         $output .= '    <li>' . __('Name') . ': ' . $this->getName() . '</li>';
-        $output .= '    <li>' . __('Duration') . ': ' . $this->widget->duration . ' ' . __('seconds') . '</li>';
+        if ($this->getUseDuration() == 1)
+            $output .= '    <li>' . __('Duration') . ': ' . $this->widget->duration . ' ' . __('seconds') . '</li>';
         $output .= '    </ul>';
         $output .= '</div>';
         $output .= '</div>';
@@ -728,7 +760,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function determineDuration($fileName = null)
     {
-        return 0;
+        return $this->getModule()->defaultDuration;
     }
 
     /**
@@ -745,6 +777,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function setDefaultWidgetOptions()
     {
-        Log::debug('No default options for this module type');
+        Log::debug('Default Widget Options: Setting use duration to 0');
+        $this->setUseDuration(0);
     }
 }

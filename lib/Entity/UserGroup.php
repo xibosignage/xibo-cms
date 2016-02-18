@@ -142,7 +142,7 @@ class UserGroup
             throw new \InvalidArgumentException(__('Library Quota must be a whole number.'));
 
         try {
-            $group = UserGroupFactory::getByName($this->group);
+            $group = UserGroupFactory::getByName($this->group, $this->isUserSpecific);
 
             if ($this->groupId == null || $this->groupId != $group->groupId)
                 throw new \InvalidArgumentException(__('There is already a group with this name. Please choose another.'));
@@ -176,11 +176,16 @@ class UserGroup
 
     /**
      * Save the group
-     * @param bool $validate
+     * @param array $options
      */
-    public function save($validate = true)
+    public function save($options = [])
     {
-        if ($validate)
+        $options = array_merge([
+            'validate' => true,
+            'linkUsers' => true
+        ], $options);
+
+        if ($options['validate'])
             $this->validate();
 
         if ($this->groupId == null || $this->groupId == 0)
@@ -188,8 +193,10 @@ class UserGroup
         else if ($this->hash() != $this->hash)
             $this->edit();
 
-        $this->linkUsers();
-        $this->unlinkUsers();
+        if ($options['linkUsers']) {
+            $this->linkUsers();
+            $this->unlinkUsers();
+        }
     }
 
     /**
@@ -274,7 +281,7 @@ class UserGroup
 
         $sql .= ')';
 
-        Log::sql($sql, $params);
+
 
         PDOConnect::update($sql, $params);
     }

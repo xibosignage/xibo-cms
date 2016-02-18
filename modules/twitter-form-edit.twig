@@ -95,6 +95,38 @@
     ".effect-controls": { "display": "block" },
     ".background-color-group": { "display": "block" }
     }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
     }]
 {% endblock %}
 
@@ -114,9 +146,13 @@
                         {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
                         {{ forms.input("name", title, module.getOption("name"), helpText) }}
 
+                        {% set title %}{% trans "Set a duration?" %}{% endset %}
+                        {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                        {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
-                        {{ forms.number("duration", title, module.getDuration(), helpText, "", "required") }}
+                        {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
 
                         {% set title %}{% trans "Search Term" %}{% endset %}
                         {% set helpText %}{% trans "Search term. You can test your search term in the twitter.com search box first." %}{% endset %}

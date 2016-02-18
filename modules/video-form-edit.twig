@@ -52,38 +52,40 @@
     ".loop-fields": { "display": "block" }
     }
     },{
-    "field": "playUntilEnd",
+    "field": "useDuration",
     "trigger": "init",
     "value": false,
     "operation": "is:checked",
     "actions": {
-    ".duration-fields": { "display": "block" }
+    ".duration-fields": { "display": "none" },
+    ".loop-fields": { "display": "none" }
     }
     },{
-    "field": "playUntilEnd",
+    "field": "useDuration",
     "trigger": "change",
     "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" },
+    ".loop-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": true,
     "operation": "is:checked",
     "actions": {
     ".duration-fields": { "display": "block" },
     ".loop-fields": { "display": "block" }
     }
     },{
-    "field": "playUntilEnd",
-    "trigger": "init",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".duration-fields": { "display": "none" }
-    }
-    },{
-    "field": "playUntilEnd",
+    "field": "useDuration",
     "trigger": "change",
     "value": true,
     "operation": "is:checked",
     "actions": {
-    ".duration-fields": { "display": "none" },
-    ".loop-fields": { "display": "none" }
+    ".duration-fields": { "display": "block" },
+    ".loop-fields": { "display": "block" }
     }
     }]
 {% endblock %}
@@ -98,14 +100,9 @@
                 {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
                 {{ forms.input("name", title, module.getOption("name"), helpText) }}
 
-                {% set title %}{% trans "Play until the end?" %}{% endset %}
-                {% set helpText %}{% trans "The video plays through once and then finishes," %}{% endset %}
-                {% if module.getDuration() == 0 %}
-                    {% set value = 1 %}
-                {% else %}
-                    {% set value = 0 %}
-                {% endif %}
-                {{ forms.checkbox("playUntilEnd", title, value, helpText) }}
+                {% set title %}{% trans "Set a duration?" %}{% endset %}
+                {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
 
                 {% set title %}{% trans "Duration" %}{% endset %}
                 {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
@@ -128,8 +125,6 @@
                 {% set title %}{% trans "Mute?" %}{% endset %}
                 {% set helpText %}{% trans "Should the video be muted?" %}{% endset %}
                 {{ forms.checkbox("mute", title, module.getOption("mute", 0), helpText, "mute-fields") }}
-
-                {# dependencies #}
 
             </form>
         </div>

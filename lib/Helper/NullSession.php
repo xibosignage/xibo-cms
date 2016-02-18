@@ -11,35 +11,27 @@ namespace Xibo\Helper;
 
 class NullSession
 {
-    function setUser($key, $userid)
+    /**
+     * Set UserId
+     * @param $userId
+     */
+    function setUser($userId)
     {
-        $_SESSION['userid'] = $userid;
-
-        try {
-            $dbh = PDOConnect::init();
-
-            // Delete sessions older than 10 times the max lifetime
-            $sth = $dbh->prepare('UPDATE `session` SET userid = :userid WHERE session_id = :session_id');
-            $sth->execute(array('session_id' => $key, 'userid' => $userid));
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return false;
-        }
+        $_SESSION['userid'] = $userId;
     }
 
     /**
      * Updates the session ID with a new one
      */
-    public function regenerateSessionId($oldSessionID)
+    public function regenerateSessionId()
     {
 
     }
 
-    function setPage($key, $lastpage)
-    {
-
-    }
-
+    /**
+     * Set Expired
+     * @param $isExpired
+     */
     function setIsExpired($isExpired)
     {
 
@@ -69,6 +61,6 @@ class NullSession
      */
     public static function get($key, $secondKey = NULL)
     {
-
+        return false;
     }
 }

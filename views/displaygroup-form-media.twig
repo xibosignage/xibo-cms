@@ -42,7 +42,7 @@
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="FilterDiv">
                     <form onsubmit="false">
-                    {{ inline.dropdown("filter_type", "single", "Type", "", [{type: null, module: ""}]|merge(modules), "type", "name") }}
+                    {{ inline.dropdown("type", "single", "Type", "", [{type: null, module: ""}]|merge(modules), "type", "name") }}
                     </form>
                 </div>
                 <div class="XiboData">

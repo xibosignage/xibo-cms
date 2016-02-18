@@ -27,13 +27,13 @@
     </div>
 {% endmacro %}
 
-{% macro button(title, type, link, groupClass) %}
+{% macro button(title, type, link, groupClass, id) %}
     <div class="form-group {{ groupClass }}">
         <div class="col-sm-offset-2 col-sm-10">
             {% if type == "link" %}
             <a class="btn btn-default" href="{{ link }}">{{ title }}</a>
             {% else %}
-            <button class="btn btn-default" type="{{ type }}">{{ title }}</button>
+            <button id="{{ id }}" class="btn btn-default" type="{{ type }}">{{ title }}</button>
             {% endif %}
         </div>
     </div>

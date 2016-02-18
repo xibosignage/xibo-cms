@@ -59,13 +59,10 @@ class Stat
 
     public static function displayUp($displayId)
     {
-        $dbh = PDOConnect::init();
-
-        $sth = $dbh->prepare('UPDATE `stat` SET end = :toDt WHERE displayId = :displayId AND end IS NULL AND type = :type');
-        $sth->execute(array(
+        PDOConnect::update('UPDATE `stat` SET end = :toDt WHERE displayId = :displayId AND end IS NULL AND type = :type', [
             'toDt' => date('Y-m-d H:i:s'),
             'type' => 'displaydown',
             'displayId' => $displayId
-        ));
+        ]);
     }
 }

@@ -258,7 +258,7 @@ class Playlist extends Base
         $this->getState()->template = 'playlist-form-library-assign';
         $this->getState()->setData([
             'playlist' => $playlist,
-            'modules' => ModuleFactory::query(null, ['regionSpecific' => 0, 'enabled' => 1]),
+            'modules' => ModuleFactory::query(null, ['regionSpecific' => 0, 'enabled' => 1, 'assignable' => 1]),
             'help' => Help::Link('Library', 'Assign')
         ]);
     }
@@ -301,8 +301,6 @@ class Playlist extends Base
 
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
-
-        Log::debug(var_export($this->getApp()->request()->params(), true));
 
         // Expect a list of mediaIds
         $media = Sanitize::getIntArray('media');

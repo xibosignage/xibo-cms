@@ -46,6 +46,7 @@ class Image extends ModuleWidget
     {
         // Set the properties specific to Images
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setOption('name', Sanitize::getString('name', $this->getOption('name')));
         $this->setOption('scaleType', Sanitize::getString('scaleTypeId', 'center'));
         $this->setOption('align', Sanitize::getString('alignId', 'center'));
@@ -94,16 +95,6 @@ class Image extends ModuleWidget
         $output .= '</div>';
 
         return $output;
-    }
-
-    /**
-     * Determine duration
-     * @param $fileName
-     * @return int
-     */
-    public function determineDuration($fileName = null)
-    {
-        return Config::GetSetting('jpg_length');
     }
 
     /**

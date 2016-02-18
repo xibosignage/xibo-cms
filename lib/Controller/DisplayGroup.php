@@ -21,7 +21,6 @@
 namespace Xibo\Controller;
 
 use Xibo\Entity\Display;
-use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\CommandFactory;
@@ -30,7 +29,6 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
-use Xibo\Factory\PermissionFactory;
 use Xibo\Helper\Help;
 use Xibo\Helper\PlayerActionHelper;
 use Xibo\Helper\Sanitize;
@@ -105,12 +103,16 @@ class DisplayGroup extends Base
             if ($this->getUser()->checkEditable($group)) {
                 // Show the edit button, members button
 
-                // Group Members
-                $group->buttons[] = array(
-                    'id' => 'displaygroup_button_group_members',
-                    'url' => $this->urlFor('displayGroup.members.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Displays')
-                );
+                if ($group->isDynamic == 0) {
+                    // Group Members
+                    $group->buttons[] = array(
+                        'id' => 'displaygroup_button_group_members',
+                        'url' => $this->urlFor('displayGroup.members.form', ['id' => $group->displayGroupId]),
+                        'text' => __('Members')
+                    );
+
+                    $group->buttons[] = ['divider' => true];
+                }
 
                 // Edit
                 $group->buttons[] = array(
@@ -260,8 +262,43 @@ class DisplayGroup extends Base
 
             // Store this checkbox
             $checkbox = array(
+                'type' => 'display',
                 'id' => $display->displayId,
                 'name' => $display->display,
+                'value_checked' => (($exists) ? 'checked' : '')
+            );
+
+            $checkboxes[] = $checkbox;
+        }
+
+        // Get all the DisplayGroups assigned to this Group directly
+        $groupsAssigned = DisplayGroupFactory::getByParentId($displayGroup->displayGroupId);
+
+        // Get all groups, aside from this one
+        $groups = DisplayGroupFactory::query();
+
+        // Go through each and create a checkbox
+        foreach ($groups as $group) {
+            /* @var \Xibo\Entity\DisplayGroup $group */
+            // Make sure its not this one.
+            if ($group->displayGroupId == $displayGroup->displayGroupId)
+                continue;
+
+            // Check to see if it exists in $usersAssigned
+            $exists = false;
+            foreach ($groupsAssigned as $groupAssigned) {
+                /* @var \Xibo\Entity\DisplayGroup $groupAssigned */
+                if ($groupAssigned->displayGroupId == $group->displayGroupId) {
+                    $exists = true;
+                    break;
+                }
+            }
+
+            // Store this checkbox
+            $checkbox = array(
+                'type' => 'displayGroup',
+                'id' => $group->displayGroupId,
+                'name' => $group->displayGroup,
                 'value_checked' => (($exists) ? 'checked' : '')
             );
 
@@ -273,7 +310,7 @@ class DisplayGroup extends Base
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
             'checkboxes' => $checkboxes,
-            'help' => Help::Link('DisplayGroup', 'Delete')
+            'help' => Help::Link('DisplayGroup', 'Members')
         ]);
     }
 
@@ -299,6 +336,20 @@ class DisplayGroup extends Base
      *      type="string",
      *      required=false
      *  ),
+     *  @SWG\Parameter(
+     *      name="isDynamic",
+     *      in="formData",
+     *      description="Flag indicating whether this DisplayGroup is Dynamic",
+     *      type="int",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dynamicContent",
+     *      in="formData",
+     *      description="The filter criteria for this dynamic group. A command separated set of regular expressions to apply",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -316,12 +367,10 @@ class DisplayGroup extends Base
         $displayGroup = new \Xibo\Entity\DisplayGroup();
         $displayGroup->displayGroup = Sanitize::getString('displayGroup');
         $displayGroup->description = Sanitize::getString('description');
+        $displayGroup->isDynamic = Sanitize::getCheckbox('isDynamic');
+        $displayGroup->dynamicCriteria = Sanitize::getString('dynamicCriteria');
+        $displayGroup->userId = $this->getUser()->userId;
         $displayGroup->save();
-
-        // Add full permissions for this user to this group
-        /* @var Permission $permission */
-        $permission = PermissionFactory::create($this->getUser()->groupId, get_class($displayGroup), $displayGroup->displayGroupId, 1, 1, 1);
-        $permission->save();
 
         // Return
         $this->getState()->hydrate([
@@ -363,6 +412,20 @@ class DisplayGroup extends Base
      *      type="string",
      *      required=false
      *  ),
+     *  @SWG\Parameter(
+     *      name="isDynamic",
+     *      in="formData",
+     *      description="Flag indicating whether this DisplayGroup is Dynamic",
+     *      type="int",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dynamicContent",
+     *      in="formData",
+     *      description="The filter criteria for this dynamic group. A command separated set of regular expressions to apply",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -379,6 +442,8 @@ class DisplayGroup extends Base
 
         $displayGroup->displayGroup = Sanitize::getString('displayGroup');
         $displayGroup->description = Sanitize::getString('description');
+        $displayGroup->isDynamic = Sanitize::getCheckbox('isDynamic');
+        $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? Sanitize::getString('dynamicCriteria') : null;
         $displayGroup->save();
 
         // Return
@@ -476,6 +541,9 @@ class DisplayGroup extends Base
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
+        if ($displayGroup->isDynamic == 1)
+            throw new \InvalidArgumentException(__('Displays cannot be manually assigned to a Dynamic Group'));
+
         $displays = Sanitize::getIntArray('displayId');
 
         foreach ($displays as $displayId) {
@@ -500,7 +568,7 @@ class DisplayGroup extends Base
         }
 
         // Save the result
-        $displayGroup->save(false);
+        $displayGroup->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -550,18 +618,165 @@ class DisplayGroup extends Base
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
+        if ($displayGroup->isDynamic == 1)
+            throw new \InvalidArgumentException(__('Displays cannot be manually unassigned to a Dynamic Group'));
+
         $displays = Sanitize::getIntArray('displayId');
 
         foreach ($displays as $displayId) {
             $displayGroup->unassignDisplay(DisplayFactory::getById($displayId));
         }
 
-        $displayGroup->save(false);
+        $displayGroup->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Displays unassigned from %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
+     * Sets the Members of a group
+     * @param int $displayGroupId
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/displayGroup/assign",
+     *  operationId="displayGroupDisplayGroupAssign",
+     *  tags={"displayGroup"},
+     *  summary="Assign one or more DisplayGroups to a Display Group",
+     *  description="Adds the provided DisplayGroups to the Display Group",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      type="integer",
+     *      in="path",
+     *      description="The Display Group to assign to",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      type="array",
+     *      in="formData",
+     *      description="The displayGroup Ids to assign",
+     *      required=true,
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Parameter(
+     *      name="unassignDisplayGroupId",
+     *      in="formData",
+     *      description="An optional array of displayGroup IDs to unassign",
+     *      type="array",
+     *      required=false,
+     *      @SWG\Items(type="integer")
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function assignDisplayGroup($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        if ($displayGroup->isDynamic == 1)
+            throw new \InvalidArgumentException(__('DisplayGroups cannot be manually assigned to a Dynamic Group'));
+
+        $displayGroups = Sanitize::getIntArray('displayGroupId');
+
+        foreach ($displayGroups as $assignDisplayGroupId) {
+            $displayGroupAssign = DisplayGroupFactory::getById($assignDisplayGroupId);
+
+            if (!$this->getUser()->checkViewable($displayGroupAssign))
+                throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
+
+            $displayGroup->assignDisplayGroup($displayGroupAssign);
+        }
+
+        // Have we been provided with unassign id's as well?
+        $displayGroups = Sanitize::getIntArray('unassignDisplayGroupId');
+
+        foreach ($displayGroups as $assignDisplayGroupId) {
+            $displayGroupUnassign = DisplayGroupFactory::getById($assignDisplayGroupId);
+
+            if (!$this->getUser()->checkViewable($displayGroupUnassign))
+                throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
+
+            $displayGroup->unassignDisplayGroup($displayGroupUnassign);
+        }
+
+        // Save the result
+        $displayGroup->save(['validate' => false]);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('DisplayGroups assigned to %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
+     * Unassign DisplayGroups from a Display Group
+     * @param int $displayGroupId
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/displayGroup/unassign",
+     *  operationId="displayGroupDisplayGroupUnassign",
+     *  tags={"displayGroup"},
+     *  summary="Unassigns one or more DisplayGroups to a Display Group",
+     *  description="Removes the provided DisplayGroups from the Display Group",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      type="integer",
+     *      in="path",
+     *      description="The Display Group to unassign from",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      type="array",
+     *      in="formData",
+     *      description="The DisplayGroup Ids to unassign",
+     *      required=true,
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function unassignDisplayGroup($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        if ($displayGroup->isDynamic == 1)
+            throw new \InvalidArgumentException(__('DisplayGroups cannot be manually unassigned to a Dynamic Group'));
+
+        $displayGroups = Sanitize::getIntArray('displayGroupId');
+
+        foreach ($displayGroups as $assignDisplayGroupId) {
+            $displayGroup->unassignDisplayGroup(DisplayGroupFactory::getById($assignDisplayGroupId));
+        }
+
+        $displayGroup->save(['validate' => false]);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('DisplayGroups unassigned from %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
     }
@@ -666,7 +881,7 @@ class DisplayGroup extends Base
             $displayGroup->unassignMedia($media);
         }
 
-        $displayGroup->save(false);
+        $displayGroup->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -727,7 +942,7 @@ class DisplayGroup extends Base
             $displayGroup->unassignMedia(MediaFactory::getById($mediaId));
         }
 
-        $displayGroup->save(false);
+        $displayGroup->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -837,7 +1052,7 @@ class DisplayGroup extends Base
             $displayGroup->unassignLayout($layout);
         }
 
-        $displayGroup->save(false);
+        $displayGroup->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -898,7 +1113,7 @@ class DisplayGroup extends Base
             $displayGroup->unassignLayout(LayoutFactory::getById($layoutId));
         }
 
-        $displayGroup->save(false);
+        $displayGroup->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -1112,7 +1327,7 @@ class DisplayGroup extends Base
             $displayGroup->assignLayout($layout);
             // Don't notify, this player action will cause a download.
             $displayGroup->setCollectRequired(false);
-            $displayGroup->save(false);
+            $displayGroup->save(['validate' => false]);
 
             // Convert into a download required
             $downloadRequired = true;

@@ -100,12 +100,20 @@ Preview.prototype.SetSequence = function(seq)
 		success: function(response) {
 		
 			if (response.success) {
+
+                if (response.extra.empty) {
+                    $('.preview-media-information', previewElement).html(response.extra.text);
+                    return;
+                }
+
 				// Success - what do we do now?
 				$(previewContent).html("<div class=\"regionPreviewOverlay\"></div>" + ((response.html == null) ? "" : response.html));
 
 				var infoText = response.extra.current_item + " / " + response.extra.number_items + " "
-                    + response.extra.moduleName
-                    + " (" + moment().startOf("day").seconds(response.extra.duration).format("H:mm:ss") + " / " + moment().startOf("day").seconds(response.extra.regionDuration).format("H:mm:ss") + ")";
+                    + response.extra.moduleName;
+
+				if (response.extra.duration > 0 && response.extra.useDuration != 0)
+                    infoText += " (" + moment().startOf("day").seconds(response.extra.duration).format("H:mm:ss") + " / " + moment().startOf("day").seconds(response.extra.regionDuration).format("H:mm:ss") + ")";
 
 				// Get the extra
 				$('.preview-media-information', previewElement)

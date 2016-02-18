@@ -25,7 +25,6 @@ namespace Xibo\Factory;
 use Xibo\Entity\Display;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -163,23 +162,27 @@ class DisplayFactory extends BaseFactory
                     ON lkdisplaydg.displayid = display.displayId
                     INNER JOIN `displaygroup`
                     ON displaygroup.displaygroupid = lkdisplaydg.displaygroupid
+                        AND `displaygroup`.isDisplaySpecific = 1
                     LEFT OUTER JOIN layout 
                     ON layout.layoutid = display.defaultlayoutid
                     LEFT OUTER JOIN layout currentLayout 
                     ON currentLayout.layoutId = display.currentLayoutId
-               WHERE 1 = 1
             ';
 
-        self::viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'display.displayId', null, $filterBy);
-
+        // Restrict to members of a specific display group
         if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
-            // Restrict to a specific display group
-            $body .= ' AND displaygroup.displaygroupid = :displayGroupId ';
+            $body .= '
+                INNER JOIN `lkdisplaydg` othergroups
+                ON othergroups.displayId = `display`.displayId
+                    AND othergroups.displayGroupId = :displayGroupId
+            ';
+
             $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
-        } else {
-            // Restrict to display specific groups
-            $body .= ' AND displaygroup.isDisplaySpecific = 1 ';
         }
+
+        $body .= ' WHERE 1 = 1 ';
+
+        self::viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'display.displayId', null, $filterBy);
 
         // Filter by Display ID?
         if (Sanitize::getInt('displayId', $filterBy) !== null) {
@@ -201,20 +204,23 @@ class DisplayFactory extends BaseFactory
 
         // Filter by Display Name?
         if (Sanitize::getString('display', $filterBy) != null) {
-            // convert into a space delimited array
-            $names = explode(' ', Sanitize::getString('display', $filterBy));
+            // Convert into commas
+            foreach (explode(',', Sanitize::getString('display', $filterBy)) as $term) {
 
-            $i = 0;
-            foreach ($names as $searchName) {
-                $i++;
-                // Not like, or like?
-                if (substr($searchName, 0, 1) == '-') {
-                    $body .= " AND  display.display NOT LIKE :search$i ";
-                    $params['search' . $i] = '%' . ltrim(($searchName), '-') . '%';
-                }
-                else {
-                    $body .= " AND  display.display LIKE :search$i ";
-                    $params['search' . $i] = '%' . $searchName . '%';
+                // convert into a space delimited array
+                $names = explode(' ', $term);
+
+                $i = 0;
+                foreach ($names as $searchName) {
+                    $i++;
+                    // Not like, or like?
+                    if (substr($searchName, 0, 1) == '-') {
+                        $body .= " AND  display.display NOT RLIKE (:search$i) ";
+                        $params['search' . $i] = ltrim(($searchName), '-');
+                    } else {
+                        $body .= " AND  display.display RLIKE (:search$i) ";
+                        $params['search' . $i] = $searchName;
+                    }
                 }
             }
         }
@@ -386,7 +392,7 @@ class DisplayFactory extends BaseFactory
 
         $sql = $select . $body . $order . $limit;
 
-        Log::sql($sql, $params);
+
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new Display())->hydrate($row);

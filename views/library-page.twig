@@ -130,7 +130,9 @@
                     maxSize: {{ libraryUpload.maxSize }},
                     maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
                     validExt: "{{ libraryUpload.validExt }}"
-                }
+                },
+                updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}true{% else %}false{% endif %},
+                deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == "Checked" %}true{% else %}false{% endif %}
             });
         });
 
@@ -151,11 +153,8 @@
                 // Open the upload dialog with our options.
                 openUploadForm({
                     oldMediaId: mediaId,
-                    {% if config.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}
-                    updateInAllChecked: true,
-                    {% else %}
-                    updateInAllChecked: false,
-                    {% endif %}
+                    updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}true{% else %}false{% endif %},
+                    deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == "Checked" %}true{% else %}false{% endif %},
                     trans: {
                         addFiles: "{% trans "Add Replacement" %}",
                         startUpload: "{% trans "Start Replace" %}",

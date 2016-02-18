@@ -42,14 +42,16 @@ class Actions extends Middleware
         $app->hook('slim.before.dispatch', function() use ($app) {
 
             // Process Actions
-            if (Config::GetSetting('DEFAULTS_IMPORTED') == 0) {
+            if (!Config::isUpgradePending() && Config::GetSetting('DEFAULTS_IMPORTED') == 0) {
 
                 $folder = Theme::uri('layouts', true);
 
                 foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                     if (stripos($file, '.zip')) {
                         $layout = LayoutFactory::createFromZip($folder . '/' . $file, null, 1, false, false, true);
-                        $layout->save();
+                        $layout->save([
+                            'audit' => false
+                        ]);
                     }
                 }
 
@@ -76,7 +78,7 @@ class Actions extends Middleware
             $notifications = [];
 
             if ($app->user->userTypeId == 1 && file_exists(PROJECT_ROOT . '/web/install/index.php')) {
-                Log::info('Install.php exists and shouldn\'t');
+                Log::notice('Install.php exists and shouldn\'t');
 
                 $notifications[] = __('There is a problem with this installation. "install.php" should be deleted.');
             }

@@ -11,7 +11,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Help;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -67,7 +66,7 @@ class HelpFactory extends BaseFactory
 
         $sql = $select . $body . $order . $limit;
 
-        Log::sql($sql, $params);
+
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new Help())->hydrate($row);

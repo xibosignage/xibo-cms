@@ -738,7 +738,7 @@ class Display extends Base
         $groupsAssigned = DisplayGroupFactory::getByDisplayId($display->displayId);
 
         // All Groups
-        $allGroups = DisplayGroupFactory::query(['displayGroup']);
+        $allGroups = DisplayGroupFactory::getByIsDynamic(null, ['isDynamic' => 0]);
 
         // The available users are all users except users already in assigned users
         $checkboxes = array();
@@ -793,7 +793,7 @@ class Display extends Base
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
 
             $displayGroup->assignDisplay($display);
-            $displayGroup->save(false);
+            $displayGroup->save(['validate' => false]);
         }
 
         // Have we been provided with unassign id's as well?
@@ -804,7 +804,7 @@ class Display extends Base
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
 
             $displayGroup->unassignDisplay($display);
-            $displayGroup->save(false);
+            $displayGroup->save(['validate' => false]);
         }
 
         // Return

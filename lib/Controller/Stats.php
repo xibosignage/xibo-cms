@@ -226,7 +226,7 @@ class Stats extends Base
 
         $rows = array();
 
-        Log::sql($sql, $params);
+
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $entry = [];
@@ -293,7 +293,7 @@ class Stats extends Base
             GROUP BY display.display
         ';
 
-        Log::sql($SQL, $params);
+
 
         $sth = $dbh->prepare($SQL);
 
@@ -392,7 +392,7 @@ class Stats extends Base
 
         $SQL .= 'ORDER BY display.display';
 
-        Log::sql($SQL, $params);
+
 
         $sth = $dbh->prepare($SQL);
 

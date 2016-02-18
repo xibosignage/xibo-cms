@@ -42,6 +42,9 @@ class Video extends ModuleWidget
         // Process any module settings you asked for.
         $this->module->settings['defaultMute'] = Sanitize::getCheckbox('defaultMute');
 
+        if ($this->getModule()->defaultDuration !== 0)
+            throw new \InvalidArgumentException(__('The Video Module must have a default duration of 0 to detect the end of videos.'));
+
         // Return an array of the processed settings.
         return $this->module->settings;
     }
@@ -52,17 +55,14 @@ class Video extends ModuleWidget
     public function edit()
     {
         // Set the properties specific to this module
-        if (Sanitize::getCheckbox('playUntilEnd', 0) == 1)
-            $this->setDuration(0);
-        else
-            $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
-
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
+        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
         $this->setOption('name', Sanitize::getString('name', $this->getOption('name')));
         $this->setOption('scaleType', Sanitize::getString('scaleTypeId', 'aspect'));
         $this->setOption('mute', Sanitize::getCheckbox('mute'));
 
         // Only loop if the duration is > 0
-        if ($this->getDuration() == 0)
+        if ($this->getUseDuration() == 0 || $this->getDuration() == 0)
             $this->setOption('loop', 0);
         else
             $this->setOption('loop', Sanitize::getCheckbox('loop'));
@@ -104,6 +104,7 @@ class Video extends ModuleWidget
      */
     public function setDefaultWidgetOptions()
     {
+        parent::setDefaultWidgetOptions();
         $this->setOption('mute', $this->getSetting('defaultMute', 0));
     }
 
