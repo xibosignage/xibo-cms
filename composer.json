@@ -62,7 +62,7 @@
     "there4/slim-test-helpers": "dev-master"
   },
   "autoload": {
-    "psr-4": { "Xibo\\" : "lib/" }
+    "psr-4": { "Xibo\\" : "lib/", "Xibo\\Custom\\": "custom/" }
   },
   "autoload-dev": {
     "psr-4": {

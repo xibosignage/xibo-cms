@@ -9,6 +9,7 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
@@ -70,6 +71,18 @@ class DataSet implements \JsonSerializable
      * @var string
      */
     public $groupsWithPermissions;
+
+    /**
+     * @SWG\Property(description="A code for this Data Set")
+     * @var string
+     */
+    public $code;
+
+    /**
+     * @SWG\Property(description="Flag to indicate whether this DataSet is a lookup table")
+     * @var int
+     */
+    public $isLookup = 0;
 
     private $permissions = [];
     private $columns = [];
@@ -343,6 +356,9 @@ class DataSet implements \JsonSerializable
     {
         $this->load();
 
+        if ($this->isLookup)
+            throw new ConfigurationException(__('Lookup Tables cannot be deleted'));
+
         // TODO check we aren't being used
 
         // Delete Permissions
@@ -380,12 +396,14 @@ class DataSet implements \JsonSerializable
     private function add()
     {
         $this->dataSetId = PDOConnect::insert('
-          INSERT INTO `dataset` (DataSet, Description, UserID)
-            VALUES (:dataSet, :description, :userId)
+          INSERT INTO `dataset` (DataSet, Description, UserID, `code`, `isLookup`)
+            VALUES (:dataSet, :description, :userId, :code, :isLookup)
         ', [
             'dataSet' => $this->dataSet,
             'description' => $this->description,
-            'userId' => $this->userId
+            'userId' => $this->userId,
+            'code' => ($this->code == '') ? null : $this->code,
+            'isLookup' => $this->isLookup
         ]);
 
         // Create the data table for this dataSet
@@ -398,12 +416,14 @@ class DataSet implements \JsonSerializable
     private function edit()
     {
         PDOConnect::update('
-          UPDATE dataset SET DataSet = :dataSet, Description = :description, lastDataEdit = :lastDataEdit WHERE DataSetID = :dataSetId
+          UPDATE dataset SET DataSet = :dataSet, Description = :description, lastDataEdit = :lastDataEdit, `code` = :code, `isLookup` = :isLookup WHERE DataSetID = :dataSetId
         ', [
             'dataSetId' => $this->dataSetId,
             'dataSet' => $this->dataSet,
             'description' => $this->description,
-            'lastDataEdit' => $this->lastDataEdit
+            'lastDataEdit' => $this->lastDataEdit,
+            'code' => $this->code,
+            'isLookup' => $this->isLookup
         ]);
     }
 
