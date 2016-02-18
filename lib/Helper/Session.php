@@ -163,6 +163,8 @@ class Session implements \SessionHandlerInterface
             // Check the session hasn't expired
             if ($row['session_expiration'] < time())
                 $this->expired = true;
+            else
+                $this->expired = $row['isexpired'];
 
             // What happens if the UserAgent has changed?
             if ($row['useragent'] != $userAgent) {
@@ -174,7 +176,6 @@ class Session implements \SessionHandlerInterface
             }
 
             $this->userId = $row['userId'];
-            $this->expired = $row['isexpired'];
             $this->sessionExpiry = $row['session_expiration'];
 
             return ($row['session_data']);

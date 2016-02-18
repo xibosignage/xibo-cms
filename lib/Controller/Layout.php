@@ -932,7 +932,9 @@ class Layout extends Base
             'status' => $layout->status,
             'duration' => $layout->duration
         ];
+
         $this->getState()->success = true;
+        $this->getSession()->refreshExpiry = false;
     }
 
     /**
