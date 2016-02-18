@@ -165,7 +165,7 @@ class UserGroupFactory extends BaseFactory
 
             $sql = $select . $body . $order . $limit;
 
-            Log::sql($sql, $params);
+
 
             foreach (PDOConnect::select($sql, $params) as $row) {
                 $entries[] = (new UserGroup())->hydrate($row);

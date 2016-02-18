@@ -494,7 +494,7 @@ class Region implements \JsonSerializable
             $params['displayOrder' . $i] = $playlist->displayOrder;
         }
 
-        Log::sql($sql, $params);
+
 
         PDOConnect::update($sql, $params);
     }

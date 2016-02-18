@@ -64,7 +64,7 @@ class StatusDashboard extends Base
               ';
             $params = array('month' => time() - (86400 * 365));
 
-            Log::sql($sql, $params);
+
             $results = PDOConnect::select($sql, $params);
 
             // Monthly bandwidth - optionally tested against limits
@@ -124,7 +124,7 @@ class StatusDashboard extends Base
             BaseFactory::viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
             $sql .= ' GROUP BY type ';
 
-            Log::sql($sql, $params);
+
 
             $sth = $dbh->prepare($sql);
             $sth->execute($params);
@@ -195,7 +195,7 @@ class StatusDashboard extends Base
             $sql = 'SELECT IFNULL(COUNT(*), 0) AS count_scheduled FROM `schedule_detail` WHERE :now BETWEEN FromDT AND ToDT AND eventId IN (SELECT eventId FROM `lkscheduledisplaygroup` WHERE displayGroupId IN (' . implode(',', $displayGroupIds) . '))';
             $params = array('now' => time());
 
-            Log::sql($sql, $params);
+
 
             $sth = $dbh->prepare($sql);
             $sth->execute($params);

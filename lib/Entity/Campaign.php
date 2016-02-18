@@ -321,7 +321,7 @@ class Campaign implements \JsonSerializable
             $sql .= ')';
 
             // Get the lkid's for the delete
-            Log::sql($sql, $params);
+
             $ids = PDOConnect::select($sql, $params);
 
             $ids = array_map(function ($element) {
@@ -341,7 +341,7 @@ class Campaign implements \JsonSerializable
         }
 
 
-        Log::sql($sql, $params);
+
         PDOConnect::update($sql, $params);
     }
 

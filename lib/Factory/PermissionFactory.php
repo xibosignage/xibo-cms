@@ -26,7 +26,6 @@ namespace Xibo\Factory;
 use Xibo\Entity\Permission;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -143,7 +142,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
     AND objectId = :objectId
 ';
         $params = array('entity' => $entity, 'objectId' => $objectId);
-        Log::sql($sql, $params);
+
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $permission = new Permission();
@@ -273,7 +272,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
 
         $sql = $select . $body . $order . $limit;
 
-        Log::sql($sql, $params);
+
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $permission = new Permission();
@@ -322,7 +321,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
         ';
         $params = array('entity' => 'Xibo\Entity\\' . $entity, 'groupId' => $groupId);
 
-        Log::sql($sql, $params);
+
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $permission = new Permission();
@@ -367,8 +366,6 @@ SELECT `permission`.`permissionId`, `permission`.`groupId`, `permission`.`object
     AND (`user`.userId IS NOT NULL OR `group`.IsEveryone = 1)
 ';
         $params = array('entity' => $entity, 'userId' => $userId);
-
-        \Xibo\Helper\Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $permission = new Permission();

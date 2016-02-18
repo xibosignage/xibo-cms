@@ -162,6 +162,8 @@ class PDOConnect
      */
     public static function exists($sql, $params)
     {
+        \Xibo\Helper\Log::sql($sql, $params);
+
         $dbh = PDOConnect::init();
         $sth = $dbh->prepare($sql);
         $sth->execute($params);
@@ -184,6 +186,8 @@ class PDOConnect
      */
     public static function insert($sql, $params, $dbh = null)
 	{
+        \Xibo\Helper\Log::sql($sql, $params);
+
         $transaction = false;
 
         if ($dbh == null) {
@@ -213,6 +217,8 @@ class PDOConnect
 	 */
 	public static function update($sql, $params, $dbh = null)
 	{
+        \Xibo\Helper\Log::sql($sql, $params);
+
         $transaction = false;
 
         if ($dbh == null) {
@@ -240,6 +246,8 @@ class PDOConnect
 	 */
 	public static function select($sql, $params)
 	{
+        \Xibo\Helper\Log::sql($sql, $params);
+
         $dbh = PDOConnect::init();
         $sth = $dbh->prepare($sql);
 

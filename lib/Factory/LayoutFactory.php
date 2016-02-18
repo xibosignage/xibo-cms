@@ -675,7 +675,7 @@ class LayoutFactory extends BaseFactory
         // The final statements
         $sql = $select . $body . $order . $limit;
 
-        Log::sql($sql, $params);
+
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $layout = new Layout();

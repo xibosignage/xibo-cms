@@ -359,8 +359,7 @@ class DisplayGroup implements \JsonSerializable
             $this->unlinkLayouts();
 
             // Handle any group links
-            $this->linkDisplayGroups();
-            $this->unlinkDisplayGroups();
+            $this->manageDisplayGroupLinks();
 
         } else if ($this->isDynamic && $options['manageDisplayLinks']) {
             $this->manageDisplayLinks();
@@ -480,6 +479,21 @@ class DisplayGroup implements \JsonSerializable
 
         $this->linkDisplays();
         $this->unlinkDisplays();
+    }
+
+    /**
+     * Manage display group links
+     */
+    private function manageDisplayGroupLinks()
+    {
+        $this->linkDisplayGroups();
+        $this->unlinkDisplayGroups();
+
+        // Check for circular references
+        // this is a lazy last minute check as we can't really tell if there is a circular reference unless
+        // we've inserted the records already.
+        if (PDOConnect::exists('SELECT depth FROM `lkdgdg` WHERE parentId = :parentId AND childId = parentId AND depth > 0', ['parentId' => $this->displayGroupId]))
+            throw new \InvalidArgumentException(__('This assignment creates a circular reference'));
     }
 
     private function linkDisplays()

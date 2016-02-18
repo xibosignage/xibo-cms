@@ -9,7 +9,6 @@
 namespace Xibo\Factory;
 
 
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -94,7 +93,7 @@ class LogFactory extends BaseFactory
 
         $sql = $select . $body . $order . $limit;
 
-        Log::sql($sql, $params);
+
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new \Xibo\Entity\LogEntry())->hydrate($row,  ['htmlStringProperties' => ['message']]);

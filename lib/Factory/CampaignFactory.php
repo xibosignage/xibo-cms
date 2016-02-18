@@ -25,7 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Campaign;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -163,7 +162,7 @@ class CampaignFactory extends BaseFactory
 
         $sql = $select . $body . $group . $order . $limit;
 
-        Log::sql($sql, $params);
+
 
         $intProperties = ['intProperties' => ['numberLayouts']];
 

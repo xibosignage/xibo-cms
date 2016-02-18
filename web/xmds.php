@@ -156,11 +156,14 @@ try {
     $soap->setClass('\Xibo\Xmds\Soap' . $version);
     $soap->handle();
 
-    \Xibo\Storage\PDOConnect::init()->commit();
+    if (\Xibo\Storage\PDOConnect::init()->inTransaction())
+        \Xibo\Storage\PDOConnect::init()->commit();
 }
 catch (Exception $e) {
     Log::error($e->getMessage());
-    \Xibo\Storage\PDOConnect::init()->rollBack();
+
+    if (\Xibo\Storage\PDOConnect::init()->inTransaction())
+        \Xibo\Storage\PDOConnect::init()->rollBack();
 
     header('HTTP/1.1 500 Internal Server Error');
     header('Content-Type: text/plain');

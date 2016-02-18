@@ -36,7 +36,7 @@ class UserTypeFactory extends BaseFactory
             if (is_array($sortOrder))
                 $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
-            Log::sql($sql, $params);
+
 
             foreach (PDOConnect::select($sql, $params) as $row) {
                 $entries[] = (new UserType())->hydrate($row);

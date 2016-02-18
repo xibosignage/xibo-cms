@@ -219,7 +219,7 @@ class Tag implements \JsonSerializable
 
         $sql .= ')';
 
-        Log::sql($sql, $params);
+
 
         PDOConnect::update($sql, $params);
     }
@@ -267,7 +267,7 @@ class Tag implements \JsonSerializable
 
         $sql .= ')';
 
-        Log::sql($sql, $params);
+
 
         PDOConnect::update($sql, $params);
     }

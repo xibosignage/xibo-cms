@@ -283,8 +283,6 @@ class UserFactory extends BaseFactory
 
         $sql = $select . $body . $order . $limit;
 
-        \Xibo\Helper\Log::sql($sql, $params);
-
         foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new User())->hydrate($row);
         }

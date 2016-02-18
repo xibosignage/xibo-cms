@@ -131,9 +131,9 @@ class Soap
                     INNER JOIN `layout`
                     ON lkcampaignlayout.LayoutID = layout.LayoutID
                     INNER JOIN `lkdgdg`
-                    ON `lkdgdg`.displayGroupId = `lkscheduledisplaygroup`.displayGroupId
+                    ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
                     INNER JOIN `lkdisplaydg`
-                    ON lkdisplaydg.DisplayGroupID = `lkdgdg`.displayGroupId
+                    ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
                  WHERE lkdisplaydg.DisplayID = :displayId
                     AND schedule_detail.FromDT < :fromdt
                     AND schedule_detail.ToDT > :todt
@@ -142,9 +142,9 @@ class Soap
                 SELECT `lklayoutdisplaygroup`.layoutId, 0 AS DisplayOrder, 0 AS LayoutDisplayOrder, 0 AS eventId
                   FROM `lklayoutdisplaygroup`
                     INNER JOIN `lkdgdg`
-                    ON `lkdgdg`.displayGroupId = `lklayoutdisplaygroup`.displayGroupId
+                    ON `lkdgdg`.parentId = `lklayoutdisplaygroup`.displayGroupId
                     INNER JOIN `lkdisplaydg`
-                    ON lkdisplaydg.DisplayGroupID = `lkdgdg`.displayGroupId
+                    ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
                  WHERE lkdisplaydg.DisplayID = :displayId
                 ORDER BY DisplayOrder, LayoutDisplayOrder, eventId
             ';
@@ -193,9 +193,9 @@ class Soap
                     INNER JOIN `lkmediadisplaygroup`
                     ON lkmediadisplaygroup.mediaid = media.MediaID
                     INNER JOIN `lkdgdg`
-                    ON `lkdgdg`.displayGroupId = `lkmediadisplaygroup`.displayGroupId
+                    ON `lkdgdg`.parentId = `lkmediadisplaygroup`.displayGroupId
                     INNER JOIN `lkdisplaydg`
-                    ON lkdisplaydg.DisplayGroupID = `lkdgdg`.displayGroupId
+                    ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
                  WHERE lkdisplaydg.DisplayID = :displayId
                 UNION ALL
                 SELECT 3 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
@@ -536,9 +536,9 @@ class Soap
                     INNER JOIN `lkscheduledisplaygroup`
                     ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
                     INNER JOIN `lkdgdg`
-                    ON `lkdgdg`.displayGroupId = `lkscheduledisplaygroup`.displayGroupId
+                    ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
                     INNER JOIN `lkdisplaydg`
-                    ON lkdisplaydg.DisplayGroupID = `lkdgdg`.displayGroupId
+                    ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
                     LEFT OUTER JOIN `campaign`
                     ON `schedule`.CampaignID = campaign.CampaignID
                     LEFT OUTER JOIN `lkcampaignlayout`
@@ -561,7 +561,7 @@ class Soap
             );
 
             if ($this->display->isAuditing)
-                Log::sql($SQL, $params);
+
 
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);

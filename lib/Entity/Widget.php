@@ -500,7 +500,7 @@ class Widget implements \JsonSerializable
 
         $sql .= ')';
 
-        Log::sql($sql, $params);
+
 
         PDOConnect::update($sql, $params);
     }

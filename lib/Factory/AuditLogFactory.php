@@ -78,7 +78,7 @@ class AuditLogFactory extends BaseFactory
         // The final statements
         $sql = $select . $body . $order . $limit;
 
-        Log::sql($sql, $params);
+
 
         $dbh = PDOConnect::init();
 

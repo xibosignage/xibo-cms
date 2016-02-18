@@ -281,7 +281,7 @@ class UserGroup
 
         $sql .= ')';
 
-        Log::sql($sql, $params);
+
 
         PDOConnect::update($sql, $params);
     }

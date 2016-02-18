@@ -246,7 +246,7 @@ class DataSet implements \JsonSerializable
 
         $sql = $select . $body . $order . $limit;
 
-        Log::sql($sql, $params);
+
 
         $data = PDOConnect::select($sql, $params);
 
@@ -533,7 +533,7 @@ class DataSet implements \JsonSerializable
 
         $sql .= ' WHERE `id` = :id ';
 
-        Log::sql($sql, $params);
+
 
         PDOConnect::update($sql, $params);
     }

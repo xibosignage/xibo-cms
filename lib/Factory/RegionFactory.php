@@ -25,7 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Region;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -176,7 +175,7 @@ class RegionFactory extends BaseFactory
             $params['layoutId'] = Sanitize::getInt('layoutId', $filterBy);
         }
 
-        Log::sql($sql, $params);
+
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new Region())->hydrate($row, ['intProperties' => ['zIndex']]);

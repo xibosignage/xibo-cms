@@ -223,7 +223,7 @@ class Session implements \SessionHandlerInterface
                 'remoteaddr' => Sanitize::getString('REMOTE_ADDR')
             ];
 
-            //Log::sql($sql, $params);
+            //
 
             PDOConnect::update($sql, $params, $this->getDb());
 

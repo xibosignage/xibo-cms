@@ -11,7 +11,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -95,7 +94,7 @@ class DataSetColumnFactory extends BaseFactory
 
         $sql = $select . $body . $order . $limit;
 
-        Log::sql($sql, $params);
+
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new DataSetColumn())->hydrate($row);

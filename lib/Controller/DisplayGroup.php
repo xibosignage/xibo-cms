@@ -110,7 +110,7 @@ class DisplayGroup extends Base
                     $group->buttons[] = array(
                         'id' => 'displaygroup_button_group_members',
                         'url' => $this->urlFor('displayGroup.members.form', ['id' => $group->displayGroupId]),
-                        'text' => __('Displays')
+                        'text' => __('Members')
                     );
 
                     $group->buttons[] = ['divider' => true];
@@ -449,7 +449,7 @@ class DisplayGroup extends Base
         $displayGroup->displayGroup = Sanitize::getString('displayGroup');
         $displayGroup->description = Sanitize::getString('description');
         $displayGroup->isDynamic = Sanitize::getCheckbox('isDynamic');
-        $displayGroup->dynamicCriteria = Sanitize::getString('dynamicCriteria');
+        $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? Sanitize::getString('dynamicCriteria') : null;
         $displayGroup->save();
 
         // Return
