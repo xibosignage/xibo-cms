@@ -244,7 +244,7 @@
 
                     // Construct a new list item for the lower list and append it.
                     var newItem = $("<li/>", {
-                        "text": data.name,
+                        "text": " " + data.name,
                         "data-media-id": data.mediaId,
                         "class": "li-sortable",
                         "dblclick": function(){
@@ -260,7 +260,7 @@
                         click: function(){
                             $(this).parent().remove();
                         }
-                    }).appendTo(newItem);
+                    }).prependTo(newItem);
                 });
             });
             mediaTable.on('processing.dt', dataTableProcessing);

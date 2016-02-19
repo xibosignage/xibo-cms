@@ -159,6 +159,7 @@ span.library_assign_list_select {
 
 ul#LibraryAssignSortable {
     display: inline-block;
+    padding: 0;
 }
 
 #LibraryAssignSortable .li-sortable {
@@ -167,7 +168,6 @@ ul#LibraryAssignSortable {
     border: 1px solid #8080ff;
     background-color: #E5F0FF;
     cursor: pointer;
-    float: left;
     list-style: none;
 }
 
@@ -194,4 +194,17 @@ div.regionPreviewOverlay {
 
 div.previewContent {
     overflow: hidden;
+}
+
+.layoutJumpListContainer .bootstrap-select.btn-group .dropdown-toggle .filter-option {
+    text-align: center;
+    overflow: hidden;
+}
+
+.designer-control-panel .btn {
+    overflow: hidden;
+}
+
+.designer-control-panel-checkbox {
+    padding-top: 5px;
 }
