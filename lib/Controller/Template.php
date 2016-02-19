@@ -107,6 +107,15 @@ class Template extends Base
             $template->descriptionWithMarkup = \Parsedown::instance()->text($template->description);
 
             if ($this->getUser()->checkEditable($template)) {
+
+                // Design Button
+                $template->buttons[] = array(
+                    'id' => 'layout_button_design',
+                    'linkType' => '_self', 'external' => true,
+                    'url' => $this->urlFor('layout.designer', array('id' => $template->layoutId)),
+                    'text' => __('Alter Template')
+                );
+
                 // Edit Button
                 $template->buttons[] = array(
                     'id' => 'layout_button_edit',

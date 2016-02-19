@@ -72,8 +72,10 @@ $(document).ready(function(){
     });
 
     // Set an interval
-    layoutStatus(layout.data('statusUrl'));
-    setInterval("layoutStatus('" + layout.data('statusUrl') + "')", 1000 * 60); // Every minute
+    if ($("#layout-status").length > 0) {
+        layoutStatus(layout.data('statusUrl'));
+        setInterval("layoutStatus('" + layout.data('statusUrl') + "')", 1000 * 60); // Every minute
+    }
 
     // Bind to the switches
     $(".switch-check-box").bootstrapSwitch().on('switchChange.bootstrapSwitch', function(event, state) {

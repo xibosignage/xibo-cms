@@ -114,6 +114,7 @@ class Layout extends Base
         $data = [
             'layout' => $layout,
             'resolution' => $resolution,
+            'isTemplate' => $layout->hasTag('template'),
             'layouts' => LayoutFactory::query(),
             'zoom' => Sanitize::getDouble('zoom', $this->getUser()->getOptionValue('defaultDesignerZoom', 1)),
             'modules' => array_map(function($element) { return ModuleFactory::createForInstall($element->class); }, ModuleFactory::getAssignableModules())
