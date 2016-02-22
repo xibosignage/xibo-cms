@@ -279,6 +279,28 @@ class DataSetView extends ModuleWidget
 
         $this->setOption('orderClauses', json_encode($orderClauseMapping));
 
+        $filterClauses = Sanitize::getStringArray('filterClause');
+        $filterClauseCriteria = Sanitize::getStringArray('filterClauseCriteria');
+        $filterClauseValue = Sanitize::getStringArray('filterClauseValue');
+        $filterClauseMapping = [];
+
+        $i = -1;
+        foreach ($filterClauses as $filterClause) {
+            $i++;
+
+            if ($filterClause == '')
+                continue;
+
+            // Map the stop code received to the stop ref (if there is one)
+            $filterClauseMapping[] = [
+                'filterClause' => $filterClause,
+                'filterClauseCriteria' => isset($filterClauseCriteria[$i]) ? $filterClauseCriteria[$i] : '',
+                'filterClauseValue' => isset($filterClauseValue[$i]) ? $filterClauseValue[$i] : '',
+            ];
+        }
+
+        $this->setOption('filterClauses', json_encode($filterClauseMapping));
+
         // Style Sheet
         $this->setRawNode('styleSheet', Sanitize::getParam('styleSheet', null));
 
@@ -364,7 +386,6 @@ class DataSetView extends ModuleWidget
         $dataSetId = $this->GetOption('dataSetId');
         $upperLimit = $this->GetOption('upperLimit');
         $lowerLimit = $this->GetOption('lowerLimit');
-        $filter = $this->GetOption('filter');
         $columnIds = $this->GetOption('columns');
         $showHeadings = $this->GetOption('showHeadings');
         $rowsPerPage = $this->GetOption('rowsPerPage');
@@ -381,6 +402,43 @@ class DataSetView extends ModuleWidget
             }
 
             $ordering = rtrim($ordering, ',');
+        }
+
+        // Filtering
+        $filter = '';
+
+        if ($this->getOption('useFilterClause') == 1) {
+            $filter = $this->GetOption('filter');
+        } else {
+            // Build
+            $i = 0;
+            foreach (json_decode($this->getOption('filterClauses'), true) as $clause) {
+                $i++;
+                $criteria = '';
+
+                switch ($clause['filterClauseCriteria']) {
+
+                    case 'starts-with':
+                        $criteria = 'LIKE \'' . $clause['filterClauseValue'] . '%\'';
+                        break;
+
+                    case 'ends-with':
+                        $criteria = 'LIKE \'%' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'contains':
+                        $criteria = 'LIKE \'%' . $clause['filterClauseValue'] . '%\'';
+                        break;
+
+                    default:
+                        continue;
+                }
+
+                if ($i > 1)
+                    $filter .= ' AND ';
+
+                $filter .= $clause['filterClause'] . ' ' . $criteria;
+            }
         }
 
         if ($columnIds == '')

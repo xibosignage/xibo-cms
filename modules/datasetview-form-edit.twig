@@ -144,7 +144,8 @@
     "value": false,
     "operation": "is:checked",
     "actions": {
-    ".filter-clause-field": { "display": "none" }
+    ".filter-clause-field": { "display": "none" },
+    "#filterClause": { "display": "block" }
     }
     },{
     "field": "useFilteringClause",
@@ -152,7 +153,8 @@
     "value": false,
     "operation": "is:checked",
     "actions": {
-    ".filter-clause-field": { "display": "none" }
+    ".filter-clause-field": { "display": "none" },
+    "#filterClause": { "display": "block" }
     }
     },{
     "field": "useFilteringClause",
@@ -160,7 +162,8 @@
     "value": true,
     "operation": "is:checked",
     "actions": {
-    ".filter-clause-field": { "display": "block" }
+    ".filter-clause-field": { "display": "block" },
+    "#filterClause": { "display": "none" }
     }
     },{
     "field": "useFilteringClause",
@@ -168,7 +171,8 @@
     "value": true,
     "operation": "is:checked",
     "actions": {
-    ".filter-clause-field": { "display": "block" }
+    ".filter-clause-field": { "display": "block" },
+    "#filterClause": { "display": "none" }
     }
     }]
 {% endblock %}
@@ -256,7 +260,7 @@
                         </div>
 
                         {% set title %}{% trans "Use advanced order clause?" %}{% endset %}
-                        {% set helpText %}{% trans "Provide a hand written order clause instead of using the clause builder above." %}{% endset %}
+                        {% set helpText %}{% trans "Provide a custom clause instead of using the clause builder above." %}{% endset %}
                         {{ forms.checkbox("useOrderingClause", title, module.getOption("useOrderingClause", 1), helpText) }}
 
                         {% set title %}{% trans "Order" %}{% endset %}
@@ -266,15 +270,13 @@
                     </div>
 
                     <div class="tab-pane" id="filterCriteria">
-                        <div id="whereClause">
+                        <div id="filterClause">
                             {% set message %}{% trans "The DataSet results can be filtered by any column and set below. New fields can be added by selecting the plus icon at the end of the current row. Should a more complicated filter be required the advanced checkbox can be selected to provide custom SQL syntax." %}{% endset %}
                             {{ forms.message(message) }}
-
-
                         </div>
 
                         {% set title %}{% trans "Use advanced filter clause?" %}{% endset %}
-                        {% set helpText %}{% trans "Provide a hand written filter clause??" %}{% endset %}
+                        {% set helpText %}{% trans "Provide a custom clause instead of using the clause builder above." %}{% endset %}
                         {{ forms.checkbox("useFilteringClause", title, module.getOption("useFilteringClause", 1), helpText) }}
 
                         {% set title %}{% trans "Filter" %}{% endset %}

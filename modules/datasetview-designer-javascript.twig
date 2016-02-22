@@ -11,8 +11,8 @@
 {% raw %}
 <script type="text/x-handlebars-template" id="dataSetViewOrderClauseTemplate">
     <div class="form-group">
-        <label class="col-sm-2 control-label" for="orderClause[]">{{ title }}</label>
-        <div class="col-sm-6">
+        <label class="col-sm-1 control-label" for="orderClause[]">{{ title }}</label>
+        <div class="col-sm-7">
             <select class="form-control" name="orderClause[]">
                 <option value=""></option>
                 {{#each columns}}
@@ -26,6 +26,37 @@
                     <option value="ASC" {{#if orderClauseAsc}}selected{{/if}}>{{ ascTitle }}</option>
                     <option value="DESC" {{#if orderClauseDesc}}selected{{/if}}>{{ descTitle }}</option>
                 </select>
+            </label>
+        </div>
+        <div class="col-sm-1">
+            <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+        </div>
+    </div>
+</script>
+
+<script type="text/x-handlebars-template" id="dataSetViewFilterClauseTemplate">
+    <div class="form-group">
+        <label class="col-sm-1 control-label" for="filterClause[]">{{ title }}</label>
+        <div class="col-sm-4">
+            <select class="form-control" name="filterClause[]">
+                <option value=""></option>
+                {{#each columns}}
+                    <option value="{{ heading }}" {{#if_eq heading ../filterClause}}selected{{/if_eq}}>{{ heading }}</option>
+                {{/each}}
+            </select>
+        </div>
+        <div class="col-sm-3">
+            <label for="filterClauseCriteria[]">
+                <select class="form-control" name="filterClauseCriteria[]">
+                    {{#each filterOptions}}
+                    <option value="{{ id }}" {{#if_eq id ../filterClauseCriteria}}selected{{/if_eq}}>{{ value }}</option>
+                    {{/each}}
+                </select>
+            </label>
+        </div>
+        <div class="col-sm-3">
+            <label for="filterClauseValue[]">
+                <input class="form-control" name="filterClauseValue[]" type="text" value="{{ filterClauseValue }}" />
             </label>
         </div>
         <div class="col-sm-1">
@@ -77,7 +108,7 @@
             }
         });
 
-        // Stop Codes.
+        // Order Clause
         var orderClauseFields = $("#orderClause");
         var orderClauseTemplate = Handlebars.compile($("#dataSetViewOrderClauseTemplate").html());
         var ascTitle = "{% trans "Ascending" %}";
@@ -109,6 +140,78 @@
             if ($(this).find("i").hasClass("fa-plus")) {
                 var context = {columns: dialog.data().extra.columns, title: orderClauseFields.find('.form-group').length + 1, orderClause: "", orderClauseAsc: "", orderClauseDesc: "", buttonGlyph: "fa-minus", ascTitle: ascTitle, descTitle: descTitle};
                 orderClauseFields.append(orderClauseTemplate(context));
+            } else {
+                // Remove this row
+                $(this).closest(".form-group").remove();
+            }
+        });
+
+        //
+        // Filter Clause
+        //
+        var filterClauseFields = $("#filterClause");
+        var filterClauseTemplate = Handlebars.compile($("#dataSetViewFilterClauseTemplate").html());
+        var filterOptions = [
+            {
+                id: "starts-with",
+                value: "{% trans "starts with" %}"
+            },{
+                id: "ends-with",
+                value: "{% trans "ends with" %}"
+            },{
+                id: "contains",
+                value: "{% trans "contains" %}"
+            }
+        ];
+
+        if (dialog.data().extra.filterClause.length == 0) {
+            // Add a template row
+            context = {
+                columns: dialog.data().extra.columns,
+                filterOptions: filterOptions,
+                title: "1",
+                filterClause: "",
+                filterClauseCriteria: "",
+                filterClauseValue: "",
+                buttonGlyph: "fa-plus"
+            };
+            filterClauseFields.append(filterClauseTemplate(context));
+        } else {
+            // For each of the existing codes, create form components
+            var j = 0;
+            $.each(dialog.data().extra.filterClause, function (index, field) {
+                j++;
+
+                var context = {
+                    columns: dialog.data().extra.columns,
+                    filterOptions: filterOptions,
+                    title: j,
+                    filterClause: field.filterClause,
+                    filterClauseCriteria: field.filterClauseCriteria,
+                    filterClauseValue: field.filterClauseValue,
+                    buttonGlyph: ((j == 1) ? "fa-plus" : "fa-minus")
+                };
+
+                filterClauseFields.append(filterClauseTemplate(context));
+            });
+        }
+
+        // Nabble the resulting buttons
+        filterClauseFields.on("click", "button", function (e) {
+            e.preventDefault();
+
+            // find the gylph
+            if ($(this).find("i").hasClass("fa-plus")) {
+                var context = {
+                    columns: dialog.data().extra.columns,
+                    filterOptions: filterOptions,
+                    title: filterClauseFields.find('.form-group').length + 1,
+                    filterClause: "",
+                    filterClauseCriteria: "",
+                    filterClauseValue: "",
+                    buttonGlyph: "fa-minus"
+                };
+                filterClauseFields.append(filterClauseTemplate(context));
             } else {
                 // Remove this row
                 $(this).closest(".form-group").remove();
