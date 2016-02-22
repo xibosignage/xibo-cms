@@ -326,16 +326,20 @@ var XiboTimelineSaveOrder = function(timelineDiv) {
         },
         success: [
             XiboSubmitResponse,
-            afterTimeLineSaveOrder
+            afterDesignerSave
         ]
     });
 };
 
-var afterTimeLineSaveOrder = function() {
-        $('.regionPreview').each(function(idx, el) {
-            refreshPreview($(el).attr("regionid"));
-        });
-};
+function afterDesignerSave() {
+    // Region Preview Refresh
+    $('.regionPreview').each(function(idx, el) {
+        refreshPreview($(el).attr("regionid"));
+    });
+
+    // Layout Status
+    layoutStatus(layout.data('statusUrl'));
+}
 
 var LibraryAssignSubmit = function() {
     // Collect our media
@@ -397,7 +401,7 @@ function layoutStatus(url) {
                     element.addClass("fa-times");
                 }
 
-                status.html(response.html).prepend(element);
+                status.html(" " + response.html).prepend(element);
 
                 // Duration
                 $("#layout-duration").html(moment().startOf("day").seconds(response.extra.duration).format("HH:mm:ss"));

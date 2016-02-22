@@ -273,7 +273,7 @@ class Ticker extends ModuleWidget
 
         // Information from the Module
         $itemsSideBySide = $this->getOption('itemsSideBySide', 0);
-        $duration = $this->getCalculatedDuration();
+        $duration = $this->getCalculadurattedDuration();
         $durationIsPerItem = $this->getOption('durationIsPerItem', 1);
         $numItems = $this->getOption('numItems', 0);
         $takeItemsFrom = $this->getOption('takeItemsFrom', 'start');

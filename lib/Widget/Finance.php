@@ -343,7 +343,7 @@ class Finance extends ModuleWidget
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         // Information from the Module
-        $duration = $this->getCalculatedDuration();
+        $duration = $this->getCalculatedDurationForGetResource();
 
         // Generate a JSON string of items.
         if (!$items = $this->getYql()) {

@@ -105,7 +105,7 @@ class Text extends ModuleWidget
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
-        $duration = $this->getCalculatedDuration();
+        $duration = $this->getCalculatedDurationForGetResource();
 
         $text = $this->parseLibraryReferences($isPreview, $this->getRawNode('text', null));
 

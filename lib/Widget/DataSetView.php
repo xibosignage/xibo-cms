@@ -212,7 +212,7 @@ class DataSetView extends ModuleWidget
 
         $options = array(
             'type' => $this->getModuleType(),
-            'duration' => $this->getCalculatedDuration(),
+            'duration' => $this->getCalculatedDurationForGetResource(),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
             'rowsPerPage' => $this->GetOption('rowsPerPage'),
