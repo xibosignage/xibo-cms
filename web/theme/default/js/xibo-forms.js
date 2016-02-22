@@ -115,30 +115,6 @@ var text_callback = function(dialog) {
     return false;
 };
 
-var datasetview_callback = function(dialog)
-{
-    $("#columnsIn, #columnsOut").sortable({
-        connectWith: '.connectedSortable',
-        dropOnEmpty: true
-    }).disableSelection();
-
-    return false; //prevent submit
-};
-
-var DataSetViewSubmit = function(apply) {
-    var form = $("#dataSetViewEditForm");
-
-    $($("#columnsIn").sortable('toArray')).each(function() {
-        form.append('<input type="hidden" name="dataSetColumnId[]" value="' + this + '" />');
-    });
-
-    // Submit the form
-    if (apply == 1)
-        form.data("apply", true);
-
-    form.submit();
-};
-
 /**
  * Switches an item between 2 connected lists.
  */
