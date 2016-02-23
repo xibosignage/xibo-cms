@@ -83,7 +83,7 @@ class DisplayGroup implements \JsonSerializable
      * )
      * @var int
      */
-    public $userId;
+    public $userId = 0;
 
     // Child Items the Display Group is linked to
     private $displays = [];

@@ -390,6 +390,9 @@ class DataSetView extends ModuleWidget
         $showHeadings = $this->GetOption('showHeadings');
         $rowsPerPage = $this->GetOption('rowsPerPage');
 
+        if ($columnIds == '')
+            return __('No columns');
+
         // Ordering
         $ordering = '';
 
@@ -440,9 +443,6 @@ class DataSetView extends ModuleWidget
                 $filter .= $clause['filterClause'] . ' ' . $criteria;
             }
         }
-
-        if ($columnIds == '')
-            return __('No columns');
 
         // Array of columnIds we want
         $columnIds = explode(',', $columnIds);

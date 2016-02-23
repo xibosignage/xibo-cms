@@ -24,8 +24,8 @@ use Xibo\Helper\Log;
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
 require PROJECT_ROOT . '/vendor/autoload.php';
 
@@ -145,7 +145,7 @@ try {
     $wsdl = PROJECT_ROOT . '/lib/Xmds/service_v' . $version . '.wsdl';
 
     if (!file_exists($wsdl))
-        throw new InvalidArgumentException('Your client is not the correct version to communicate with this CMS.');
+        throw new InvalidArgumentException(__('Your client is not the correct version to communicate with this CMS.'));
 
     // Initialise a theme
     new \Xibo\Helper\Theme();
@@ -167,5 +167,5 @@ catch (Exception $e) {
 
     header('HTTP/1.1 500 Internal Server Error');
     header('Content-Type: text/plain');
-    die ($e->getMessage());
+    die (__('There has been an unknown error with XMDS, it has been logged. Please contact your administrator.'));
 }
