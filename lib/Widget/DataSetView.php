@@ -398,11 +398,11 @@ class DataSetView extends ModuleWidget
         // Ordering
         $ordering = '';
 
-        if ($this->getOption('useOrderingClause')) {
+        if ($this->getOption('useOrderingClause', 1) == 1) {
             $ordering = $this->GetOption('ordering');
         } else {
             // Build an order string
-            foreach (json_decode($this->getOption('orderClauses'), true) as $clause) {
+            foreach (json_decode($this->getOption('orderClauses', '[]'), true) as $clause) {
                 $ordering .= $clause['orderClause'] . ' ' . $clause['orderClauseDirection'] . ',';
             }
 
@@ -412,12 +412,12 @@ class DataSetView extends ModuleWidget
         // Filtering
         $filter = '';
 
-        if ($this->getOption('useFilterClause') == 1) {
+        if ($this->getOption('useFilteringClause', 1) == 1) {
             $filter = $this->GetOption('filter');
         } else {
             // Build
             $i = 0;
-            foreach (json_decode($this->getOption('filterClauses'), true) as $clause) {
+            foreach (json_decode($this->getOption('filterClauses', '[]'), true) as $clause) {
                 $i++;
                 $criteria = '';
 

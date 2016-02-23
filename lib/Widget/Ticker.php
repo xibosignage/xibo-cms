@@ -55,6 +55,12 @@ class Ticker extends ModuleWidget
         MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
     }
 
+    public function layoutDesignerJavaScript()
+    {
+        // We use the same javascript as the data set view designer
+        return 'datasetview-designer-javascript';
+    }
+
     /**
      * DataSets
      * @return array[DataSet]
@@ -74,6 +80,38 @@ class Ticker extends ModuleWidget
             throw new \InvalidArgumentException(__('DataSet not selected'));
 
        return DataSetColumnFactory::getByDataSetId($this->getOption('dataSetId'));
+    }
+
+    /**
+     * Get the Order Clause
+     * @return mixed
+     */
+    public function getOrderClause()
+    {
+        return json_decode($this->getOption('orderClauses', "[]"), true);
+    }
+
+    /**
+     * Get the Filter Clause
+     * @return mixed
+     */
+    public function getFilterClause()
+    {
+        return json_decode($this->getOption('filterClauses', "[]"), true);
+    }
+
+    /**
+     * Get Extra content for the form
+     * @return array
+     */
+    public function getExtra()
+    {
+        return [
+            'templates' => $this->templatesAvailable(),
+            'orderClause' => $this->getOrderClause(),
+            'filterClause' => $this->getFilterClause(),
+            'columns' => $this->dataSetColumns()
+        ];
     }
 
     /**
@@ -204,8 +242,7 @@ class Ticker extends ModuleWidget
         $this->setOption('itemsSideBySide', Sanitize::getCheckbox('itemsSideBySide'));
         $this->setOption('upperLimit', Sanitize::getInt('upperLimit', 0));
         $this->setOption('lowerLimit', Sanitize::getInt('lowerLimit', 0));
-        $this->setOption('filter', Sanitize::getParam('filter', null));
-        $this->setOption('ordering', Sanitize::getString('ordering'));
+
         $this->setOption('itemsPerPage', Sanitize::getInt('itemsPerPage'));
         $this->setOption('dateFormat', Sanitize::getString('dateFormat'));
         $this->setOption('allowedAttributes', Sanitize::getString('allowedAttributes'));
@@ -215,6 +252,60 @@ class Ticker extends ModuleWidget
         $this->setOption('textDirection', Sanitize::getString('textDirection'));
         $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
         $this->setOption('templateId', Sanitize::getString('templateId'));
+
+        // DataSet
+        if ($this->getOption('sourceId') == 2) {
+            // We are a data set, so get the custom filter controls
+            $this->setOption('filter', Sanitize::getParam('filter', null));
+            $this->setOption('ordering', Sanitize::getString('ordering'));
+            $this->setOption('useOrderingClause', Sanitize::getCheckbox('useOrderingClause'));
+            $this->setOption('useFilteringClause', Sanitize::getCheckbox('useFilteringClause'));
+
+            // Order and Filter criteria
+            $orderClauses = Sanitize::getStringArray('orderClause');
+            $orderClauseDirections = Sanitize::getStringArray('orderClauseDirection');
+            $orderClauseMapping = [];
+
+            $i = -1;
+            foreach ($orderClauses as $orderClause) {
+                $i++;
+
+                if ($orderClause == '')
+                    continue;
+
+                // Map the stop code received to the stop ref (if there is one)
+                $orderClauseMapping[] = [
+                    'orderClause' => $orderClause,
+                    'orderClauseDirection' => isset($orderClauseDirections[$i]) ? $orderClauseDirections[$i] : '',
+                ];
+            }
+
+            $this->setOption('orderClauses', json_encode($orderClauseMapping));
+
+            $filterClauses = Sanitize::getStringArray('filterClause');
+            $filterClauseOperator = Sanitize::getStringArray('filterClauseOperator');
+            $filterClauseCriteria = Sanitize::getStringArray('filterClauseCriteria');
+            $filterClauseValue = Sanitize::getStringArray('filterClauseValue');
+            $filterClauseMapping = [];
+
+            $i = -1;
+            foreach ($filterClauses as $filterClause) {
+                $i++;
+
+                if ($filterClause == '')
+                    continue;
+
+                // Map the stop code received to the stop ref (if there is one)
+                $filterClauseMapping[] = [
+                    'filterClause' => $filterClause,
+                    'filterClauseOperator' => isset($filterClauseOperator[$i]) ? $filterClauseOperator[$i] : '',
+                    'filterClauseCriteria' => isset($filterClauseCriteria[$i]) ? $filterClauseCriteria[$i] : '',
+                    'filterClauseValue' => isset($filterClauseValue[$i]) ? $filterClauseValue[$i] : '',
+                ];
+            }
+
+            $this->setOption('filterClauses', json_encode($filterClauseMapping));
+        }
 
         // Text Template
         $this->setRawNode('template', Sanitize::getParam('ta_text', Sanitize::getParam('template', null)));
@@ -644,8 +735,85 @@ class Ticker extends ModuleWidget
         $dataSetId = $this->getOption('dataSetId');
         $upperLimit = $this->getOption('upperLimit');
         $lowerLimit = $this->getOption('lowerLimit');
-        $filter = $this->getOption('filter');
-        $ordering = $this->getOption('ordering');
+
+        // Ordering
+        $ordering = '';
+
+        if ($this->getOption('useOrderingClause', 1) == 1) {
+            $ordering = $this->GetOption('ordering');
+        } else {
+            // Build an order string
+            foreach (json_decode($this->getOption('orderClauses', '[]'), true) as $clause) {
+                $ordering .= $clause['orderClause'] . ' ' . $clause['orderClauseDirection'] . ',';
+            }
+
+            $ordering = rtrim($ordering, ',');
+        }
+
+        // Filtering
+        $filter = '';
+
+        if ($this->getOption('useFilteringClause', 1) == 1) {
+            $filter = $this->GetOption('filter');
+        } else {
+            // Build
+            $i = 0;
+            foreach (json_decode($this->getOption('filterClauses', '[]'), true) as $clause) {
+                $i++;
+                $criteria = '';
+
+                switch ($clause['filterClauseCriteria']) {
+
+                    case 'starts-with':
+                        $criteria = 'LIKE \'' . $clause['filterClauseValue'] . '%\'';
+                        break;
+
+                    case 'ends-with':
+                        $criteria = 'LIKE \'%' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'contains':
+                        $criteria = 'LIKE \'%' . $clause['filterClauseValue'] . '%\'';
+                        break;
+
+                    case 'equals':
+                        $criteria = '= \'' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'not-contains':
+                        $criteria = 'NOT LIKE \'%' . $clause['filterClauseValue'] . '%\'';
+                        break;
+
+                    case 'not-starts-with':
+                        $criteria = 'NOT LIKE \'' . $clause['filterClauseValue'] . '%\'';
+                        break;
+
+                    case 'not-ends-with':
+                        $criteria = 'NOT LIKE \'%' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'not-equals':
+                        $criteria = '<> \'' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'greater-than':
+                        $criteria = '> \'' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'less-than':
+                        $criteria = '< \'' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    default:
+                        continue;
+                }
+
+                if ($i > 1)
+                    $filter .= ' ' . $clause['filterClauseOperator'] . ' ';
+
+                $filter .= $clause['filterClause'] . ' ' . $criteria;
+            }
+        }
 
         Log::notice('Then template for each row is: ' . $text);
 

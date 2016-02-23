@@ -119,6 +119,15 @@
             }
         });
 
+        configureQueryBuilder(dialog);
+    }
+
+    function dataSetTickerFormSetup(dialog) {
+        text_callback(dialog, $('.bootbox').data().extra.templates);
+        configureQueryBuilder(dialog);
+    }
+
+    function configureQueryBuilder(dialog) {
         // Order Clause
         var orderClauseFields = $("#orderClause");
         var orderClauseTemplate = Handlebars.compile($("#dataSetViewOrderClauseTemplate").html());
