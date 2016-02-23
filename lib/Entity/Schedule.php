@@ -477,8 +477,13 @@ class Schedule implements \JsonSerializable
 
             if ($this->toDt == null)
                 $this->addDetail($t_start_temp, null);
-            else
+            else {
+                // Check to make sure that our from/to date isn't longer than the first repeat
+                if ($t_start_temp < $this->toDt)
+                    throw new \InvalidArgumentException(__('The first event repeat is inside the event from/to dates.'));
+
                 $this->addDetail($t_start_temp, $t_end_temp);
+            }
 
             // Check these dates
             if (!$this->isInScheduleLookAhead)
