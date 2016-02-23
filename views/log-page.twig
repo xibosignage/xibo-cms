@@ -46,7 +46,24 @@
                                     {% set title %}{% trans "Channel" %}{% endset %}
                                     {{ inline.input("channel", title, defaults.channel) }}
                                     {{ inline.input("filter_page", "Page", defaults.page) }}
-                                    {{ inline.input("filter_function", "Function", defaults.function) }}
+
+                                    {% set title %}{% trans "Function" %}{% endset %}
+                                    {% set getTrans %}{% trans "GET" %}{% endset %}
+                                    {% set postTrans %}{% trans "POST" %}{% endset %}
+                                    {% set putTrans %}{% trans "PUT" %}{% endset %}
+                                    {% set deleteTrans %}{% trans "DELETE" %}{% endset %}
+                                    {% set headTrans %}{% trans "HEAD" %}{% endset %}
+                                    {% set patchTrans %}{% trans "PATCH" %}{% endset %}
+                                    {% set functionOptions = [
+                                    { id: "", value: "" },
+                                    { id: "GET", value: getTrans },
+                                    { id: "POST", value: postTrans},
+                                    { id: "PUT", value: putTrans},
+                                    { id: "DELETE", value: deleteTrans},
+                                    { id: "HEAD", value: headTrans},
+                                    { id: "PATCH", value: patchTrans},
+                                    ] %}
+                                    {{ inline.dropdown("filter_function", "single", title, defaults.function, functionOptions, "id", "value") }}
 
                                     {% set displays = [{displayId: null, display: ""}]|merge(options.displays) %}
                                     {{ inline.dropdown("filter_display", "single", "Display", defaults.display, displays, "displayId", "display") }}

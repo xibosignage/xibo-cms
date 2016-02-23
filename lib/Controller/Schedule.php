@@ -310,6 +310,13 @@ class Schedule extends Base
      *      @SWG\Items(type="integer")
      *   ),
      *   @SWG\Parameter(
+     *      name="dayPartId",
+     *      in="formData",
+     *      description="The Day Part for this event. Currently supported are 0(custom) and 1(always). Defaulted to 0.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
      *      name="fromDt",
      *      in="formData",
      *      description="The from date for this event.",
@@ -371,6 +378,7 @@ class Schedule extends Base
         $schedule->commandId = Sanitize::getInt('commandId');
         $schedule->displayOrder = Sanitize::getInt('displayOrder', 0);
         $schedule->isPriority = Sanitize::getCheckbox('isPriority');
+        $schedule->dayPartId = Sanitize::getCheckbox('dayPartId');
         $schedule->recurrenceType = Sanitize::getString('recurrenceType');
         $schedule->recurrenceDetail = Sanitize::getInt('recurrenceDetail');
 
@@ -378,24 +386,26 @@ class Schedule extends Base
             $schedule->assignDisplayGroup(DisplayGroupFactory::getById($displayGroupId));
         }
 
-        // Handle the dates
-        $fromDt = Sanitize::getDate('fromDt');
-        $toDt = Sanitize::getDate('toDt');
-        $recurrenceRange = Sanitize::getDate('recurrenceRange');
+        if ($schedule->dayPartId == \Xibo\Entity\Schedule::$DAY_PART_CUSTOM) {
+            // Handle the dates
+            $fromDt = Sanitize::getDate('fromDt');
+            $toDt = Sanitize::getDate('toDt');
+            $recurrenceRange = Sanitize::getDate('recurrenceRange');
 
-        if ($fromDt === null)
-            throw new \InvalidArgumentException(__('Please enter a from date'));
+            if ($fromDt === null)
+                throw new \InvalidArgumentException(__('Please enter a from date'));
 
-        Log::debug('Times received are: FromDt=' . Date::getLocalDate($fromDt) . '. ToDt=' . Date::getLocalDate($toDt) . '. recurrenceRange=' . Date::getLocalDate($recurrenceRange));
+            Log::debug('Times received are: FromDt=' . Date::getLocalDate($fromDt) . '. ToDt=' . Date::getLocalDate($toDt) . '. recurrenceRange=' . Date::getLocalDate($recurrenceRange));
 
-        // Set on schedule object
-        $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
+            // Set on schedule object
+            $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
 
-        if ($toDt !== null)
-            $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
+            if ($toDt !== null)
+                $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
 
-        if ($recurrenceRange != null)
-            $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
+            if ($recurrenceRange != null)
+                $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
+        }
 
         // Ready to do the add
         $schedule->save();
@@ -521,6 +531,13 @@ class Schedule extends Base
      *      @SWG\Items(type="integer")
      *   ),
      *   @SWG\Parameter(
+     *      name="dayPartId",
+     *      in="formData",
+     *      description="The Day Part for this event. Currently supported are 0(custom) and 1(always). Defaulted to 0.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
      *      name="fromDt",
      *      in="formData",
      *      description="The from date for this event.",
@@ -579,6 +596,7 @@ class Schedule extends Base
         $schedule->commandId = Sanitize::getInt('commandId');
         $schedule->displayOrder = Sanitize::getInt('displayOrder');
         $schedule->isPriority = Sanitize::getCheckbox('isPriority');
+        $schedule->dayPartId = Sanitize::getCheckbox('dayPartId');
         $schedule->recurrenceType = Sanitize::getString('recurrenceType');
         $schedule->recurrenceDetail = Sanitize::getInt('recurrenceDetail');
         $schedule->displayGroups = [];
@@ -587,25 +605,27 @@ class Schedule extends Base
             $schedule->assignDisplayGroup(DisplayGroupFactory::getById($displayGroupId));
         }
 
-        // Handle the dates
-        $fromDt = Sanitize::getDate('fromDt');
-        $toDt = Sanitize::getDate('toDt');
-        $recurrenceRange = Sanitize::getDate('recurrenceRange');
+        if ($schedule->dayPartId == \Xibo\Entity\Schedule::$DAY_PART_CUSTOM) {
+            // Handle the dates
+            $fromDt = Sanitize::getDate('fromDt');
+            $toDt = Sanitize::getDate('toDt');
+            $recurrenceRange = Sanitize::getDate('recurrenceRange');
 
-        if ($fromDt === null)
-            throw new \InvalidArgumentException(__('Please enter a from date'));
+            if ($fromDt === null)
+                throw new \InvalidArgumentException(__('Please enter a from date'));
 
-        Log::debug('Times received are: FromDt=' . Date::getLocalDate($fromDt) . '. ToDt=' . Date::getLocalDate($toDt) . '. recurrenceRange=' . Date::getLocalDate($recurrenceRange));
+            Log::debug('Times received are: FromDt=' . Date::getLocalDate($fromDt) . '. ToDt=' . Date::getLocalDate($toDt) . '. recurrenceRange=' . Date::getLocalDate($recurrenceRange));
 
-        // Set on schedule object
-        $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
+            // Set on schedule object
+            $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
 
-        // If we have a toDt
-        if ($toDt !== null)
-            $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
+            // If we have a toDt
+            if ($toDt !== null)
+                $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
 
-        if ($recurrenceRange != null)
-            $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
+            if ($recurrenceRange != null)
+                $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
+        }
 
         // Ready to do the add
         $schedule->save();

@@ -746,10 +746,11 @@ CREATE TABLE IF NOT EXISTS `schedule` (
   `recurrence_detail` varchar(100) DEFAULT NULL,
   `userID` int(11) NOT NULL,
   `is_priority` tinyint(4) NOT NULL,
-  `FromDT` bigint(20) NOT NULL DEFAULT '0',
+  `FromDT` bigint(20) DEFAULT NULL,
   `ToDT` bigint(20) DEFAULT NULL,
   `recurrence_range` bigint(20) DEFAULT NULL,
   `DisplayOrder` int(11) NOT NULL DEFAULT '0',
+  `dayPartId` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`eventID`),
   KEY `layoutID` (`CampaignID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='High level schedule information' AUTO_INCREMENT=1 ;

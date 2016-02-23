@@ -99,7 +99,8 @@ class ScheduleFactory extends BaseFactory
             campaign.campaignId,
             campaign.campaign,
             `command`.commandId,
-            `command`.command
+            `command`.command,
+            `schedule`.dayPartId
           FROM `schedule`
             LEFT OUTER JOIN `campaign`
             ON campaign.CampaignID = `schedule`.CampaignID
@@ -173,8 +174,6 @@ class ScheduleFactory extends BaseFactory
         // Sorting?
         if (is_array($sortOrder))
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
-
-
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new Schedule())->hydrate($row, ['intProperties' => ['isPriority']]);
