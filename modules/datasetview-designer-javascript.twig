@@ -82,6 +82,8 @@
             dropOnEmpty: true
         }).disableSelection();
 
+        $(".li-sortable", dialog).dblclick(switchLists);
+
         // If all 3 of the template fields are empty, then the template should be reapplied.
         if (!$("#overrideTemplate").is(":checked") && $("#styleSheet").val() == "") {
             // Reapply
