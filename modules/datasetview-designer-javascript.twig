@@ -37,7 +37,16 @@
 <script type="text/x-handlebars-template" id="dataSetViewFilterClauseTemplate">
     <div class="form-group">
         <label class="col-sm-1 control-label" for="filterClause[]">{{ title }}</label>
-        <div class="col-sm-4">
+        <div class="col-sm-2">
+            <label for="filterClauseOperator[]" {{#if_eq title "1"}}class="hidden"{{/if_eq}}>
+                <select class="form-control" name="filterClauseOperator[]">
+                    {{#each filterOperatorOptions}}
+                    <option value="{{ id }}" {{#if_eq id ../filterClauseOperator}}selected{{/if_eq}}>{{ value }}</option>
+                    {{/each}}
+                </select>
+            </label>
+        </div>
+        <div class="col-sm-3">
             <select class="form-control" name="filterClause[]">
                 <option value=""></option>
                 {{#each columns}}
@@ -54,7 +63,7 @@
                 </select>
             </label>
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-2">
             <label for="filterClauseValue[]">
                 <input class="form-control" name="filterClauseValue[]" type="text" value="{{ filterClauseValue }}" />
             </label>
@@ -163,6 +172,36 @@
             },{
                 id: "contains",
                 value: "{% trans "contains" %}"
+            },{
+                id: "equals",
+                value: "{% trans "equals" %}"
+            },{
+                id: "not-starts-with",
+                value: "{% trans "does not start with" %}"
+            },{
+                id: "not-ends-with",
+                value: "{% trans "does not end with" %}"
+            },{
+                id: "not-contains",
+                value: "{% trans "does not contain" %}"
+            },{
+                id: "not-equals",
+                value: "{% trans "does not equal" %}"
+            },{
+                id: "greater-than",
+                value: "{% trans "greater than" %}"
+            },{
+                id: "less-than",
+                value: "{% trans "less than" %}"
+            }
+        ];
+        var filterOperatorOptions = [
+            {
+                id: "OR",
+                value: "{% trans "Or" %}"
+            },{
+                id: "AND",
+                value: "{% trans "And" %}"
             }
         ];
 
@@ -171,8 +210,10 @@
             context = {
                 columns: dialog.data().extra.columns,
                 filterOptions: filterOptions,
+                filterOperatorOptions: filterOperatorOptions,
                 title: "1",
                 filterClause: "",
+                filterClauseOperator: "AND",
                 filterClauseCriteria: "",
                 filterClauseValue: "",
                 buttonGlyph: "fa-plus"
@@ -187,8 +228,10 @@
                 var context = {
                     columns: dialog.data().extra.columns,
                     filterOptions: filterOptions,
+                    filterOperatorOptions: filterOperatorOptions,
                     title: j,
                     filterClause: field.filterClause,
+                    filterClauseOperator: field.filterClauseOperator,
                     filterClauseCriteria: field.filterClauseCriteria,
                     filterClauseValue: field.filterClauseValue,
                     buttonGlyph: ((j == 1) ? "fa-plus" : "fa-minus")
@@ -207,8 +250,10 @@
                 var context = {
                     columns: dialog.data().extra.columns,
                     filterOptions: filterOptions,
+                    filterOperatorOptions: filterOperatorOptions,
                     title: filterClauseFields.find('.form-group').length + 1,
                     filterClause: "",
+                    filterClauseOperator: "AND",
                     filterClauseCriteria: "",
                     filterClauseValue: "",
                     buttonGlyph: "fa-minus"

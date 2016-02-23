@@ -280,6 +280,7 @@ class DataSetView extends ModuleWidget
         $this->setOption('orderClauses', json_encode($orderClauseMapping));
 
         $filterClauses = Sanitize::getStringArray('filterClause');
+        $filterClauseOperator = Sanitize::getStringArray('filterClauseOperator');
         $filterClauseCriteria = Sanitize::getStringArray('filterClauseCriteria');
         $filterClauseValue = Sanitize::getStringArray('filterClauseValue');
         $filterClauseMapping = [];
@@ -294,6 +295,7 @@ class DataSetView extends ModuleWidget
             // Map the stop code received to the stop ref (if there is one)
             $filterClauseMapping[] = [
                 'filterClause' => $filterClause,
+                'filterClauseOperator' => isset($filterClauseOperator[$i]) ? $filterClauseOperator[$i] : '',
                 'filterClauseCriteria' => isset($filterClauseCriteria[$i]) ? $filterClauseCriteria[$i] : '',
                 'filterClauseValue' => isset($filterClauseValue[$i]) ? $filterClauseValue[$i] : '',
             ];
@@ -433,12 +435,40 @@ class DataSetView extends ModuleWidget
                         $criteria = 'LIKE \'%' . $clause['filterClauseValue'] . '%\'';
                         break;
 
+                    case 'equals':
+                        $criteria = '= \'' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'not-contains':
+                        $criteria = 'NOT LIKE \'%' . $clause['filterClauseValue'] . '%\'';
+                        break;
+
+                    case 'not-starts-with':
+                        $criteria = 'NOT LIKE \'' . $clause['filterClauseValue'] . '%\'';
+                        break;
+
+                    case 'not-ends-with':
+                        $criteria = 'NOT LIKE \'%' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'not-equals':
+                        $criteria = '<> \'' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'greater-than':
+                        $criteria = '> \'' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'less-than':
+                        $criteria = '< \'' . $clause['filterClauseValue'] . '\'';
+                        break;
+
                     default:
                         continue;
                 }
 
                 if ($i > 1)
-                    $filter .= ' AND ';
+                    $filter .= ' ' . $clause['filterClauseOperator'] . ' ';
 
                 $filter .= $clause['filterClause'] . ' ' . $criteria;
             }
