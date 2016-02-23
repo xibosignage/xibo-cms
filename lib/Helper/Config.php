@@ -23,7 +23,7 @@ namespace Xibo\Helper;
 use Xibo\Storage\PDOConnect;
 
 define('WEBSITE_VERSION_NAME', '1.8.0-alpha3');
-define('WEBSITE_VERSION', 122);
+define('WEBSITE_VERSION', 123);
 
 class Config
 {
