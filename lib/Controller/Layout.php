@@ -52,45 +52,9 @@ class Layout extends Base
      */
     function displayPage()
     {
-        // Default options
-        if ($this->getSession()->get('layout', 'Filter') == 1) {
-
-            $layout = $this->getSession()->get('layout', 'filter_layout');
-            $tags = $this->getSession()->get('layout', 'filter_tags');
-            $retired = $this->getSession()->get('layout', 'filter_retired');
-            $owner = $this->getSession()->get('layout', 'filter_userid');
-            $filterLayoutStatusId = $this->getSession()->get('layout', 'filterLayoutStatusId');
-            $showDescriptionId = $this->getSession()->get('layout', 'showDescriptionId');
-            $pinned = 1;
-
-        } else {
-
-            $layout = NULL;
-            $tags = NULL;
-            $retired = 0;
-            $owner = NULL;
-            $filterLayoutStatusId = 1;
-            $showDescriptionId = 2;
-            $pinned = 0;
-        }
-
-        $data = [
-            // Users we have permission to see
-            'users' => UserFactory::query(),
-            'defaults' => [
-                'layout' => $layout,
-                'tags' => $tags,
-                'owner' => $owner,
-                'retired' => $retired,
-                'filterLayoutStatusId' => $filterLayoutStatusId,
-                'showDescriptionId' => $showDescriptionId,
-                'filterPinned' => $pinned
-            ]
-        ];
-
         // Call to render the template
         $this->getState()->template = 'layout-page';
-        $this->getState()->setData($data);
+        $this->getState()->setData(['users' => UserFactory::query()]);
     }
 
     /**
@@ -555,11 +519,11 @@ class Layout extends Base
 
         // Get all layouts
         $layouts = LayoutFactory::query($this->gridRenderSort(), $this->gridRenderFilter([
-            'layout' => $this->getSession()->set('layout', 'layout', Sanitize::getString('layout')),
-            'userId' => $this->getSession()->set('layout', 'userId', Sanitize::getInt('userId')),
-            'retired' => $this->getSession()->set('layout', 'retired', Sanitize::getInt('retired')),
-            'tags' => $this->getSession()->set('layout', 'tags', Sanitize::getString('tags')),
-            'filterLayoutStatusId' => $this->getSession()->set('layout', 'layoutStatusId', Sanitize::getInt('layoutStatusId')),
+            'layout' => Sanitize::getString('layout'),
+            'userId' => Sanitize::getInt('userId'),
+            'retired' => Sanitize::getInt('retired'),
+            'tags' => Sanitize::getString('tags'),
+            'filterLayoutStatusId' => Sanitize::getInt('layoutStatusId'),
             'layoutId' => Sanitize::getInt('layoutId')
         ]));
 

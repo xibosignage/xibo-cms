@@ -3,42 +3,36 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
         <li><a class="XiboFormButton" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ urlFor("layout.add.form") }}">{% trans "Add Layout" %}</a></li>
         <li><a id="layoutUploadForm" title="{% trans "Import a Layout from a ZIP file." %}" href="#">{% trans "Import" %}</a></li>
     </ul>
 {% endblock %}
 
-
 {% block pageContent %}
     <div class="widget">
         <div class="widget-title">{% trans "Layouts" %}</div>
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="layoutView">
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.input("layout", "Name", defaults.layout) }}
-                            {{ inline.input("tags", "Tags", defaults.tags) }}
+                            {{ inline.input("layout", "Name") }}
+                            {{ inline.input("tags", "Tags") }}
 
                             {% set title %}{% trans "Owner" %}{% endset %}
-                            {{ inline.dropdown("userId", "single", title, defaults.owner, [{userId:null, userName:""}]|merge(users), "userId", "userName") }}
+                            {{ inline.dropdown("userId", "single", title, "", [{userId:null, userName:""}]|merge(users), "userId", "userName") }}
 
                             {% set title %}{% trans "Retired" %}{% endset %}
                             {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
-                            {{ inline.dropdown("retired", "single", title, defaults.retired, values, "id", "value") }}
+                            {{ inline.dropdown("retired", "single", title, 0, values, "id", "value") }}
 
                             {% set title %}{% trans "Show" %}{% endset %}
                             {% set values = [{id: 1, value: "All"}, {id: 2, value: "Only Used"}, {id: 3, value: "Only Unused"}] %}
-                            {{ inline.dropdown("layoutStatusId", "single", title, defaults.filterLayoutStatusId, values, "id", "value") }}
+                            {{ inline.dropdown("layoutStatusId", "single", title, 1, values, "id", "value") }}
 
                             {% set title %}{% trans "Description" %}{% endset %}
                             {% set values = [{id: 1, value: "All"}, {id: 2, value: "1st line"}] %}
-                            {{ inline.dropdown("showDescriptionId", "single", title, defaults.showDescriptionId, values, "id", "value") }}
-
-                            {% set title %}{% trans "Keep Open" %}{% endset %}
-                            {{ inline.checkbox("XiboFilterPinned", title, defaults.filterPinned) }}
-
+                            {{ inline.dropdown("showDescriptionId", "single", title, 2, values, "id", "value") }}
                         </form>
                     </div>
                 </div>
@@ -70,64 +64,75 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#layouts").DataTable({ "language": dataTablesLanguage,
-            serverSide: true,
-            stateSave: true,
-            filter: false,
-            searchDelay: 3000,
-            "order": [[ 1, "asc"]],
-            ajax: {
-                url: "{{ urlFor("layout.search") }}",
-                "data": function(d) {
-                    $.extend(d, $("#layouts").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-                }
-            },
-            "columns": [
-                { "data": "layoutId" },
-                { "data": "layout" },
-                { "name": "description", "data": null, "render": {"_": "description", "display": "descriptionFormatted", "sort": "description" }},
-                {
-                    "name": "duration",
-                    "data": function(data, type) {
-                        if (type != "display")
-                            return data.duration;
-
-                        return moment().startOf("day").seconds(data.duration).format("H:mm:ss");
+        $(document).ready(function() {
+            var table = $("#layouts").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true,
+                stateSave: true,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    url: "{{ urlFor("layout.search") }}",
+                    "data": function (d) {
+                        $.extend(d, $("#layouts").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }
                 },
-                { "data": "tags", "visible": false },
-                { "name": "layoutId", "data": null, "render": {"_": "thumbnail", "display": "thumbnail", "sort": "layoutId" }},
-                { "data": "owner" },
-                { "data": "groupsWithPermissions" },
-                {
-                    "name": "status",
-                    "data": function(data, type) {
-                        if (type != "display")
-                            return data.status;
+                "columns": [
+                    {"data": "layoutId"},
+                    {"data": "layout"},
+                    {
+                        "name": "description",
+                        "data": null,
+                        "render": {"_": "description", "display": "descriptionFormatted", "sort": "description"}
+                    },
+                    {
+                        "name": "duration",
+                        "data": function (data, type) {
+                            if (type != "display")
+                                return data.duration;
 
-                        var icon = "";
-                        if (data.status == 1)
-                            icon = "fa-check";
-                        else if (data.status == 0)
-                            icon = "fa-times";
-                        else if (data.status == 3)
-                            icon = "fa-cogs";
-                        else
-                            icon = "fa-exclamation";
+                            return moment().startOf("day").seconds(data.duration).format("H:mm:ss");
+                        }
+                    },
+                    {"data": "tags", "visible": false},
+                    {
+                        "name": "layoutId",
+                        "data": null,
+                        "render": {"_": "thumbnail", "display": "thumbnail", "sort": "layoutId"}
+                    },
+                    {"data": "owner"},
+                    {"data": "groupsWithPermissions"},
+                    {
+                        "name": "status",
+                        "data": function (data, type) {
+                            if (type != "display")
+                                return data.status;
 
-                        return "<span class='fa " + icon + "' title='" + (data.statusDescription) + "'></span>";
+                            var icon = "";
+                            if (data.status == 1)
+                                icon = "fa-check";
+                            else if (data.status == 0)
+                                icon = "fa-times";
+                            else if (data.status == 3)
+                                icon = "fa-cogs";
+                            else
+                                icon = "fa-exclamation";
+
+                            return "<span class='fa " + icon + "' title='" + (data.statusDescription) + "'></span>";
+                        }
+                    },
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
                     }
-                },
-                {
-                    "orderable": false,
-                    "data": dataTableButtonsColumn
-                }
-            ]
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#layouts_wrapper').find('.col-sm-6').eq(1));
         });
-
-        table.on('draw', dataTableDraw);
-        table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#layouts_wrapper').find('.col-sm-6').eq(1));
 
         $("#layoutUploadForm").click(function() {
 

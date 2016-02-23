@@ -354,10 +354,6 @@ table.dataTable tbody tr.selected > td {
     background-color: #a6b3cd;
 }
 
-.XiboFilter {
-    float: right;
-}
-
 div.dt-buttons {
     float: none;
     text-align: right;
