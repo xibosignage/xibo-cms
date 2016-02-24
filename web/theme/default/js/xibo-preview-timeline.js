@@ -109,7 +109,12 @@ Preview.prototype.SetSequence = function(seq)
 				// Success - what do we do now?
 				$(previewContent).html("<div class=\"regionPreviewOverlay\"></div>" + ((response.html == null) ? "" : response.html));
 
-				var infoText = response.extra.current_item + " / " + response.extra.number_items + " "
+				var infoText = "";
+
+				if (response.extra.zIndex != 0)
+					infoText = "[" + response.extra.zIndex + "] ";
+
+				infoText += response.extra.current_item + " / " + response.extra.number_items + " "
                     + response.extra.moduleName;
 
 				if (response.extra.duration > 0 && response.extra.useDuration != 0)
