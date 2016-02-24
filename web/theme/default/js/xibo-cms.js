@@ -1179,14 +1179,11 @@ function SystemMessageInline(messageText, modal) {
 /**
  * Toggles the FilterForm view
  */
-function ToggleFilterView(div)
-{
-    if ($('#'+div).css("display") == "none") {
-        $('#'+div).fadeIn("slow");
+function ToggleFilterView(div) {
+    if ($(div).css("display") == "none") {
+        $(div).fadeIn("slow");
     }
     else {
-        $('#'+div).fadeOut("slow");
+        $(div).fadeOut("slow");
     }
-
-    return false;
 }

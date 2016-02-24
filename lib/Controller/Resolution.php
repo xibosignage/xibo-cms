@@ -36,23 +36,7 @@ class Resolution extends Base
      */
     function displayPage()
     {
-        if ($this->getSession()->get('resolution', 'Filter') == 1) {
-            $pinned = 1;
-            $enabled = $this->getSession()->get('resolution', 'filterEnabled');
-        } else {
-            $enabled = 1;
-            $pinned = 0;
-        }
-
-        $data = [
-            'defaults' => [
-                'enabled' => $enabled,
-                'filterPinned' => $pinned
-            ]
-        ];
-
         $this->getState()->template = 'resolution-page';
-        $this->getState()->setData($data);
     }
 
     /**
@@ -97,11 +81,9 @@ class Resolution extends Base
      */
     function grid()
     {
-        $this->getSession()->set('resolution', 'ResolutionFilter', Sanitize::getCheckbox('XiboFilterPinned'));
-
         // Show enabled
         $filter = [
-            'enabled' => $this->getSession()->set('resolution', 'filterEnabled', Sanitize::getInt('enabled', -1)),
+            'enabled' => Sanitize::getInt('enabled', -1),
             'resolutionId' => Sanitize::getInt('resolutionId'),
             'resolution' => Sanitize::getString('resolution')
         ];

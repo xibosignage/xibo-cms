@@ -9,24 +9,16 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
-{% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
-    </ul>
-{% endblock %}
-
-
 {% block pageContent %}
     <div class="widget">
         <div class="widget-title">{% trans "Templates" %}</div>
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="templateView">
+                <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.input("filter_name", "Name", defaults.name) }}
-                            {{ inline.input("filter_tags", "Tags", defaults.tags) }}
-                            {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
+                            {{ inline.input("template", "Name") }}
+                            {{ inline.input("tags", "Tags") }}
                         </form>
                     </div>
                 </div>

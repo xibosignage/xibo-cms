@@ -11,7 +11,6 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
         <li><a class="XiboFormButton" title="{% trans "Add a new User Group" %}" href="{{ urlFor("group.add.form") }}">{% trans "Add User Group" %}</a></li>
     </ul>
 {% endblock %}
@@ -21,12 +20,11 @@
     <div class="widget">
         <div class="widget-title">{% trans "User Groups" %}</div>
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="userGroupView">
+                <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.input("userGroup", "Name", defaults.name) }}
-                            {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
+                            {{ inline.input("userGroup", "Name") }}
                         </form>
                     </div>
                 </div>

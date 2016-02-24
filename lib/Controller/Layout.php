@@ -509,10 +509,7 @@ class Layout extends Base
         $this->getState()->template = 'grid';
 
         // Should we parse the description into markdown
-        $showDescriptionId = $this->getSession()->set('layout', 'showDescriptionId', Sanitize::getInt('showDescriptionId'));
-
-        // Pinned option?
-        $this->getSession()->set('layout', 'LayoutFilter', Sanitize::getCheckbox('XiboFilterPinned'));
+        $showDescriptionId = Sanitize::getInt('showDescriptionId');
 
         // Embed?
         $embed = (Sanitize::getString('embed') != null) ? explode(',', Sanitize::getString('embed')) : [];

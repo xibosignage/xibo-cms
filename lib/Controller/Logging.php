@@ -35,88 +35,27 @@ class Logging extends Base
 {
     public function displayPage()
     {
-        // Construct Filter Form
-        if ($this->getSession()->get('log', 'Filter') == 1) {
-            $filter_pinned = 1;
-            $filter_type = $this->getSession()->get('log', 'filter_type');
-            $filter_page = $this->getSession()->get('log', 'filter_page');
-            $channel = $this->getSession()->get('log', 'channel');
-            $filter_function = $this->getSession()->get('log', 'filter_function');
-            $filter_display = $this->getSession()->get('log', 'filter_display');
-            $filter_seconds = $this->getSession()->get('log', 'filter_seconds');
-            $filter_intervalTypeId = $this->getSession()->get('log', 'filter_intervalTypeId');
-
-            // Never remember the fromDt
-            $filter_fromdt = NULL;
-        } else {
-            $filter_pinned = 0;
-            $filter_type = NULL;
-            $filter_page = NULL;
-            $channel = NULL;
-            $filter_function = NULL;
-            $filter_display = 0;
-            $filter_fromdt = NULL;
-            $filter_seconds = 120;
-            $filter_intervalTypeId = 1;
-        }
-
-        $data = [
-            'defaults' => [
-                'filterPinned' => $filter_pinned,
-                'type' => $filter_type,
-                'page' => $filter_page,
-                'channel' => $channel,
-                'function' => $filter_function,
-                'display' => $filter_display,
-                'fromDt' => $filter_fromdt,
-                'seconds' => $filter_seconds,
-                'intervalType' => $filter_intervalTypeId
-            ],
-            'options' => [
-                'intervalType' => array(
-                    array('id' => 1, 'value' => __('Seconds')),
-                    array('id' => 60, 'value' => __('Minutes')),
-                    array('id' => 3600, 'value' => __('Hours'))
-                ),
-                'displays' => DisplayFactory::query()
-            ]
-        ];
-
         $this->getState()->template = 'log-page';
-        $this->getState()->setData($data);
+        $this->getState()->setData([
+            'displays' => DisplayFactory::query()
+        ]);
     }
 
     function grid()
     {
-        $type = Sanitize::getString('filter_type');
-        $function = Sanitize::getString('filter_function');
-        $page = Sanitize::getString('filter_page');
-        $channel = Sanitize::getString('channel');
-        $displayId = Sanitize::getInt('filter_display');
-        $seconds = Sanitize::getInt('filter_seconds', 120);
-        $filter_intervalTypeId = Sanitize::getInt('filter_intervalTypeId', 1);
-
-        // Get the provided date, or go from today
-        $fromDt = Sanitize::getDate('filter_fromdt', Date::getLocalDate());
-
-        $this->getSession()->set('log', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
-        $this->getSession()->set('log', 'filter_type', $type);
-        $this->getSession()->set('log', 'filter_function', $function);
-        $this->getSession()->set('log', 'filter_page', $page);
-        $this->getSession()->set('log', 'channel', $channel);
-        $this->getSession()->set('log', 'filter_fromdt', Date::getLocalDate($fromDt));
-        $this->getSession()->set('log', 'filter_display', $displayId);
-        $this->getSession()->set('log', 'filter_seconds', $seconds);
-        $this->getSession()->set('log', 'filter_intervalTypeId', $filter_intervalTypeId);
+        // Date time criteria
+        $seconds = Sanitize::getInt('seconds', 120);
+        $intervalType = Sanitize::getInt('intervalType', 1);
+        $fromDt = Sanitize::getDate('fromDt', Date::getLocalDate());
 
         $logs = LogFactory::query($this->gridRenderSort(), $this->gridRenderFilter([
-            'fromDt' => $fromDt->format('U') - ($seconds * $filter_intervalTypeId),
+            'fromDt' => $fromDt->format('U') - ($seconds * $intervalType),
             'toDt' => $fromDt->format('U'),
-            'type' => $type,
-            'page' => $page,
-            'channel' => $channel,
-            'function' => $function,
-            'displayId' => $displayId,
+            'type' => Sanitize::getString('level'),
+            'page' => Sanitize::getString('page'),
+            'channel' => Sanitize::getString('channel'),
+            'function' => Sanitize::getString('function'),
+            'displayId' => Sanitize::getInt('displayId'),
             'excludeLog' => 1,
             'runNo' => Sanitize::getString('runNo')
         ]));

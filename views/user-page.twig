@@ -11,34 +11,28 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
         <li><a class="XiboFormButton" title="{% trans "Add a new User" %}" href="{{ urlFor("user.add.form") }}">{% trans "Add User" %}</a></li>
         <li><a class="XiboFormButton" title="{% trans "View my authenticated applications" %}" href="{{ urlFor("user.applications") }}">{% trans "My Applications" %}</a></li>
     </ul>
 {% endblock %}
 
-
 {% block pageContent %}
     <div class="widget">
         <div class="widget-title">{% trans "Users" %}</div>
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="usersView">
+                <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-
                             {% set title %}{% trans "Name" %}{% endset %}
-                            {{ inline.input("userName", title, defaults.userName) }}
+                            {{ inline.input("userName", title) }}
 
                             {% set title %}{% trans "User Type" %}{% endset %}
-                            {{ inline.dropdown("userTypeId", "single", title, defaults.userType, options.userTypes, "userTypeId", "userType") }}
+                            {{ inline.dropdown("userTypeId", "single", title, "", [{userTypeId:null, userType:""}]|merge(userTypes), "userTypeId", "userType") }}
 
                             {% set title %}{% trans "Retired" %}{% endset %}
                             {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
-                            {{ inline.dropdown("retired", "single", title, defaults.retired, values, "id", "value") }}
-
-                            {% set title %}{% trans "Keep Open" %}{% endset %}
-                            {{ inline.checkbox("XiboFilterPinned", title, defaults.filterPinned) }}
+                            {{ inline.dropdown("retired", "single", title, 0, values, "id", "value") }}
                         </form>
                     </div>
                 </div>

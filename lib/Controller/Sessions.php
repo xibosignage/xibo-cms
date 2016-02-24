@@ -32,46 +32,15 @@ class Sessions extends Base
 
     function displayPage()
     {
-        // Construct Filter Form
-        if ($this->getSession()->get(get_class(), 'Filter') == 1) {
-            $filter_pinned = 1;
-            $filter_type = $this->getSession()->get(get_class(), 'filter_type');
-            $filter_fromdt = $this->getSession()->get(get_class(), 'filter_fromdt');
-        } else {
-            $filter_pinned = 0;
-            $filter_type = '0';
-            $filter_fromdt = NULL;
-        }
-
-        $data = [
-            'defaults' => [
-                'fromDate' => $filter_fromdt,
-                'type' => $filter_type,
-                'filterPinned' => $filter_pinned
-            ],
-            'options' => [
-                'type' => array(
-                    array('id' => '0', 'value' => 'All'),
-                    array('id' => 'active', 'value' => 'Active'),
-                    array('id' => 'guest', 'value' => 'Guest'),
-                    array('id' => 'expired', 'value' => 'Expired'))
-            ]
-        ];
-
         $this->getState()->template = 'sessions-page';
-        $this->getState()->setData($data);
     }
 
     function grid()
     {
-        $type = Sanitize::getString('filter_type');
-        $fromDt = Sanitize::getString('filter_fromdt');
-
-        $this->getSession()->set('sessions', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
-        $this->getSession()->set('sessions', 'filter_type', $type);
-        $this->getSession()->set('sessions', 'filter_fromdt', $fromDt);
-
-        $sessions = SessionFactory::query($this->gridRenderSort(), $this->gridRenderFilter(['type' => $type, 'fromDt' => $fromDt]));
+        $sessions = SessionFactory::query($this->gridRenderSort(), $this->gridRenderFilter([
+            'type' => Sanitize::getString('type'),
+            'fromDt' => Sanitize::getString('fromDt')
+        ]));
 
         foreach ($sessions as $row) {
             /* @var \Xibo\Entity\Session $row */

@@ -34,28 +34,8 @@ class Template extends Base
      */
     function displayPage()
     {
-        // Default options
-        if ($this->getSession()->get('layout', 'Filter') == 1) {
-            $pinned = 1;
-            $name = $this->getSession()->get('template', 'filter_name');
-            $tags = $this->getSession()->get('template', 'filter_tags');
-        } else {
-            $pinned = 0;
-            $name = '';
-            $tags = '';
-        }
-
-        $data = [
-            'defaults' => [
-                'name' => $name,
-                'tags' => $tags,
-                'filterPinned' => $pinned
-            ]
-        ];
-
         // Call to render the template
         $this->getState()->template = 'template-page';
-        $this->getState()->setData($data);
     }
 
     /**
@@ -79,14 +59,11 @@ class Template extends Base
      */
     function grid()
     {
-        $filter_name = Sanitize::getString('filter_name');
-        $filter_tags = Sanitize::getString('filter_tags');
-
-        $this->getSession()->set('template', 'filter_name', $filter_name);
-        $this->getSession()->set('template', 'filter_tags', $filter_tags);
-        $this->getSession()->set('template', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
-
-        $templates = LayoutFactory::query($this->gridRenderSort(), $this->gridRenderFilter(['excludeTemplates' => 0, 'tags' => $filter_tags, 'layout' => $filter_name]));
+        $templates = LayoutFactory::query($this->gridRenderSort(), $this->gridRenderFilter([
+            'excludeTemplates' => 0,
+            'tags' => Sanitize::getString('tags'),
+            'layout' => Sanitize::getString('template')
+        ]));
 
         foreach ($templates as $template) {
             /* @var \Xibo\Entity\Layout $template */

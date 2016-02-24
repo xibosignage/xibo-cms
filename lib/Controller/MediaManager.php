@@ -30,32 +30,10 @@ class MediaManager extends Base
 
     public function displayPage()
     {
-        // Default options
-        if ($this->getSession()->get('mediamanager', 'Filter') == 1) {
-            $filter_pinned = 1;
-            $layout = $this->getSession()->get('mediamanager', 'layout');
-            $region = $this->getSession()->get('mediamanager', 'region');
-            $media = $this->getSession()->get('mediamanager', 'media');
-            $filter_type = $this->getSession()->get('mediamanager', 'type');
-        } else {
-            $filter_pinned = 0;
-            $layout = NULL;
-            $region = NULL;
-            $media = NULL;
-            $filter_type = 0;
-        }
-
         $this->getState()->template .= 'media-manager-page';
         $this->getState()->setData([
             // Users we have permission to see
-            'modules' => ModuleFactory::query(null, ['assignable' => 1]),
-            'defaults' => [
-                'layout' => $layout,
-                'region' => $region,
-                'media' => $media,
-                'type' => $filter_type,
-                'filterPinned' => $filter_pinned
-            ]
+            'modules' => ModuleFactory::query(null, ['assignable' => 1])
         ]);
     }
 
@@ -63,11 +41,10 @@ class MediaManager extends Base
     {
         $this->getState()->template = 'grid';
 
-        $filterLayout = $this->getSession()->set('mediamanager', Sanitize::getString('layout'));
-        $filterRegion = $this->getSession()->set('mediamanager', Sanitize::getString('region'));
-        $filterMedia = $this->getSession()->set('mediamanager', Sanitize::getString('media'));
-        $filterType = $this->getSession()->set('mediamanager', Sanitize::getString('type'));
-        $this->getSession()->set('mediamanager', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
+        $filterLayout = Sanitize::getString('layout');
+        $filterRegion = Sanitize::getString('region');
+        $filterMedia = Sanitize::getString('media');
+        $filterType = Sanitize::getString('type');
 
         $rows = array();
 

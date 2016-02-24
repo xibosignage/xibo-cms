@@ -11,7 +11,6 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
         <li><a class="XiboFormButton" title="{% trans "Truncate the Log" %}" href="{{ urlFor("log.truncate.form") }}">{% trans "Truncate" %}</a></li>
         <li><a id="refreshLog" title="{% trans "Refresh the Log" %}" href="#">{% trans "Refresh" %}</a></li>
     </ul>
@@ -22,8 +21,8 @@
     <div class="widget">
         <div class="widget-title">{% trans "Logs" %}</div>
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="logView">
+                <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <ul class="nav nav-tabs" role="tablist">
                             <li class="active"><a href="#general" role="tab" data-toggle="tab">{% trans "General" %}</a></li>
@@ -33,19 +32,33 @@
                             <div class="tab-content">
                                 <div class="tab-pane active" id="general">
                                     {% set title %}{% trans "Level" %}{% endset %}
-                                    {{ inline.input("filter_type", title, defaults.type) }}
-                                    {{ inline.dropdown("filter_intervalTypeId", "single", "Interval", defaults.intervalType, options.intervalType, "id", "value") }}
-                                    {{ inline.number("filter_seconds", "Duration back", defaults.seconds) }}
-                                    {{ inline.input("runNo", "Run") }}
+                                    {{ inline.input("level", title) }}
 
-                                    {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
+                                    {% set title %}{% trans "Interval" %}{% endset %}
+                                    {% set secondsTrans %}{% trans "Seconds" %}{% endset %}
+                                    {% set minutesTrans %}{% trans "Minutes" %}{% endset %}
+                                    {% set hoursTrans %}{% trans "Hours" %}{% endset %}
+                                    {% set intervalTypeOptions = [
+                                    { id: 1, value: secondsTrans },
+                                    { id: 60, value: minutesTrans },
+                                    { id: 3600, value: hoursTrans },
+                                    ] %}
+                                    {{ inline.dropdown("intervalType", "single", title, 1, intervalTypeOptions, "id", "value") }}
+
+                                    {% set title %}{% trans "Duration back" %}{% endset %}
+                                    {{ inline.number("seconds", title, 120) }}
+
+                                    {% set title %}{% trans "Run" %}{% endset %}
+                                    {{ inline.input("runNo", title) }}
                                 </div>
                                 <div class="tab-pane" id="advanced">
-                                    {{ inline.date("filter_fromdt", "From Date", defaults.fromDt) }}
+                                    {{ inline.date("fromDt", "From Date") }}
 
                                     {% set title %}{% trans "Channel" %}{% endset %}
-                                    {{ inline.input("channel", title, defaults.channel) }}
-                                    {{ inline.input("filter_page", "Page", defaults.page) }}
+                                    {{ inline.input("channel", title) }}
+
+                                    {% set title %}{% trans "Page" %}{% endset %}
+                                    {{ inline.input("page", title) }}
 
                                     {% set title %}{% trans "Function" %}{% endset %}
                                     {% set getTrans %}{% trans "GET" %}{% endset %}
@@ -63,10 +76,11 @@
                                     { id: "HEAD", value: headTrans},
                                     { id: "PATCH", value: patchTrans},
                                     ] %}
-                                    {{ inline.dropdown("filter_function", "single", title, defaults.function, functionOptions, "id", "value") }}
+                                    {{ inline.dropdown("function", "single", title, "", functionOptions, "id", "value") }}
 
-                                    {% set displays = [{displayId: null, display: ""}]|merge(options.displays) %}
-                                    {{ inline.dropdown("filter_display", "single", "Display", defaults.display, displays, "displayId", "display") }}
+                                    {% set title %}{% trans "Display" %}{% endset %}
+                                    {% set displays = [{displayId: null, display: ""}]|merge(displays) %}
+                                    {{ inline.dropdown("displayId", "single", title, "", displays, "displayId", "display") }}
                                 </div>
                             </div>
                         </form>

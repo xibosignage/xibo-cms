@@ -28,42 +28,15 @@ class AuditLog extends Base
 {
     public function displayPage()
     {
-        // Construct Filter Form
-        if ($this->getSession()->get('auditlog', 'Filter') == 1) {
-            $filter_pinned = 1;
-            $filterFromDt = $this->getSession()->get('auditlog', 'filterFromDt');
-            $filterToDt = $this->getSession()->get('auditlog', 'filterToDt');
-            $filterUser = $this->getSession()->get('auditlog', 'filterUser');
-            $filterEntity = $this->getSession()->get('auditlog', 'filterEntity');
-        } else {
-            $filter_pinned = 0;
-            $filterFromDt = Date::getLocalDate(Date::parse()->sub('1 day'));
-            $filterToDt = Date::getLocalDate();
-            $filterUser = NULL;
-            $filterEntity = NULL;
-        }
-
-        $data = [
-            'defaults' => [
-                'filterPinned' => $filter_pinned,
-                'fromDt' => $filterFromDt,
-                'toDt' => $filterToDt,
-                'user' => $filterUser,
-                'entity' => $filterEntity
-            ]
-        ];
-
         $this->getState()->template = 'auditlog-page';
-        $this->getState()->setData($data);
     }
 
     function grid()
     {
-        $this->getSession()->set('auditlog', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
-        $filterFromDt = $this->getSession()->set('auditlog', 'filterFromDt', Sanitize::getDate('filterFromDt'));
-        $filterToDt = $this->getSession()->set('auditlog', 'filterToDt', Sanitize::getDate('filterToDt'));
-        $filterUser = $this->getSession()->set('auditlog', 'filterUser', Sanitize::getString('filterUser'));
-        $filterEntity = $this->getSession()->set('auditlog', 'filterEntity', Sanitize::getString('filterEntity'));
+        $filterFromDt = Sanitize::getDate('fromDt');
+        $filterToDt = Sanitize::getDate('toDt');
+        $filterUser = Sanitize::getString('user');
+        $filterEntity = Sanitize::getString('entity');
 
         $search = [];
 

@@ -360,6 +360,29 @@ class MediaFactory extends BaseFactory
             $params['layoutId'] = Sanitize::getInt('layoutId', $filterBy);
         }
 
+        // Tags
+        if (Sanitize::getString('tags', $filterBy) != '') {
+            $body .= " AND `media`.mediaId IN (
+                SELECT `lktagmedia`.mediaId
+                  FROM tag
+                    INNER JOIN `lktagmedia`
+                    ON `lktagmedia`.tagId = tag.tagId
+                ";
+            $i = 0;
+            foreach (explode(',', Sanitize::getString('tags', $filterBy)) as $tag) {
+                $i++;
+
+                if ($i == 1)
+                    $body .= " WHERE tag LIKE :tags$i ";
+                else
+                    $body .= " OR tag LIKE :tags$i ";
+
+                $params['tags' . $i] =  '%' . $tag . '%';
+            }
+
+            $body .= " ) ";
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))

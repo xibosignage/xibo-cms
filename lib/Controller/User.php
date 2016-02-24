@@ -46,36 +46,10 @@ class User extends Base
      */
     function displayPage()
     {
-        // Configure the theme
-        if ($this->getSession()->get('user_admin', 'Filter') == 1) {
-            $pinned = 1;
-            $userName = $this->getSession()->get('user_admin', 'userName');
-            $userTypeId = $this->getSession()->get('user_admin', 'userTypeId');
-            $retired = $this->getSession()->get('user_admin', 'retired');
-        } else {
-            $pinned = 0;
-            $userName = NULL;
-            $userTypeId = NULL;
-            $retired = 0;
-        }
-
-        $userTypes = PDOConnect::select("SELECT userTypeId, userType FROM usertype ORDER BY usertype", []);
-        array_unshift($userTypes, array('userTypeId' => '', 'userType' => 'All'));
-
-        $data = [
-            'defaults' => [
-                'filterPinned' => $pinned,
-                'userName' => $userName,
-                'userType' => $userTypeId,
-                'retired' => $retired
-            ],
-            'options' => [
-                'userTypes' => $userTypes
-            ]
-        ];
-
         $this->getState()->template = 'user-page';
-        $this->getState()->setData($data);
+        $this->getState()->setData([
+            'userTypes' => PDOConnect::select("SELECT userTypeId, userType FROM usertype ORDER BY usertype", [])
+        ]);
     }
 
     /**
@@ -152,15 +126,12 @@ class User extends Base
      */
     function grid()
     {
-        // Capture the filter options
-        $this->getSession()->set('user_admin', 'Filter', Sanitize::getCheckbox('XiboFilterPinned', 0));
-
         // Filter our users?
         $filterBy = [
             'userId' => Sanitize::getInt('userId'),
-            'userTypeId' => $this->getSession()->set('user_admin', 'userTypeId', Sanitize::getInt('userTypeId')),
-            'userName' => $this->getSession()->set('user_admin', 'userName', Sanitize::getString('userName')),
-            'retired' => $this->getSession()->set('user_admin', 'retired', Sanitize::getInt('retired'))
+            'userTypeId' => Sanitize::getInt('userTypeId'),
+            'userName' => Sanitize::getString('userName'),
+            'retired' => Sanitize::getInt('retired')
         ];
 
         // Load results into an array

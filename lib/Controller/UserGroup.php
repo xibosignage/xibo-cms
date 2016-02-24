@@ -44,24 +44,7 @@ class UserGroup extends Base
      */
     function displayPage()
     {
-        // Default options
-        if ($this->getSession()->get(get_class(), 'Filter') == 1) {
-            $filter_pinned = 1;
-            $filter_name = $this->getSession()->get(get_class(), 'filter_name');
-        } else {
-            $filter_pinned = 0;
-            $filter_name = NULL;
-        }
-
-        $data = [
-            'defaults' => [
-                'filterPinned' => $filter_pinned,
-                'name' => $filter_name
-            ]
-        ];
-
         $this->getState()->template = 'usergroup-page';
-        $this->getState()->setData($data);
     }
 
     /**
@@ -100,11 +83,9 @@ class UserGroup extends Base
     {
         $user = $this->getUser();
 
-        $this->getSession()->set(get_class(), 'Filter', Sanitize::getCheckbox('XiboFilterPinned', 0));
-
         $filterBy = [
             'groupId' => Sanitize::getInt('userGroupId'),
-            'group' => $this->getSession()->set(get_class(), 'filter_name', Sanitize::getString('userGroup'))
+            'group' => Sanitize::getString('userGroup')
         ];
 
         $groups = UserGroupFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filterBy));

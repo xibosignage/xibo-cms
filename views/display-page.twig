@@ -9,29 +9,20 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
-{% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
-    </ul>
-{% endblock %}
-
-
 {% block pageContent %}
     <div class="widget">
         <div class="widget-title">{% trans "Displays" %}</div>
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="displayView">
+                <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
 
-                            {{ inline.input("display", "Name", defaults.display) }}
+                            {{ inline.input("display", "Name") }}
 
-                            {{ inline.input("macAddress", "Mac Address", defaults.macAddress) }}
+                            {{ inline.input("macAddress", "Mac Address") }}
 
-                            {{ inline.dropdown("displayGroupId", "single", "Display Group", defaults.displayGroup, [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
-
-                            {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
+                            {{ inline.dropdown("displayGroupId", "single", "Display Group", "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
                         </form>
                     </div>
                 </div>
