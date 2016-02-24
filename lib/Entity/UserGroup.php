@@ -209,14 +209,18 @@ class UserGroup
             $this->load();
 
         // Unlink users
-        $this->unlinkUsers();
+        $this->removeAssignments();
 
         PDOConnect::update('DELETE FROM `permission` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
         PDOConnect::update('DELETE FROM `group` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
     }
 
-    public function removeAssignments()
+    /**
+     * Remove all assignments
+     */
+    private function removeAssignments()
     {
+        $this->users = [];
         $this->unlinkUsers();
     }
 

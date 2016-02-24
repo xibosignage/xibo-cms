@@ -53,6 +53,7 @@ class ScheduleFactory extends BaseFactory
     }
 
     /**
+     * Get by OwnerId
      * @param int $ownerId
      * @return array[Schedule]
      * @throws NotFoundException
@@ -127,6 +128,11 @@ class ScheduleFactory extends BaseFactory
         if (Sanitize::getInt('campaignId', $filterBy) !== null) {
             $sql .= ' AND `schedule`.campaignId = :campaignId ';
             $params['campaignId'] = Sanitize::getInt('campaignId', $filterBy);
+        }
+
+        if (Sanitize::getInt('ownerId', $filterBy) !== null) {
+            $sql .= ' AND `schedule`.userId = :ownerId ';
+            $params['ownerId'] = Sanitize::getInt('ownerId', $filterBy);
         }
 
         // Only 1 date

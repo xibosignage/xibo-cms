@@ -217,7 +217,7 @@ class SAMLAuthentication extends Middleware
                         }
 
                         $group->assignUser($user);
-                        $group->save(false);
+                        $group->save(['validate' => false]);
                     }
                 }
 
@@ -241,7 +241,6 @@ class SAMLAuthentication extends Middleware
                 $page = \Xibo\Factory\PageFactory::getById($user->homePageId);
                 $this->app->redirectTo($page->getName() . '.view');
             }
-            
         });
 
         $app->get('/saml/sls', function () {
