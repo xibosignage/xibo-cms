@@ -27,7 +27,6 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\ByteFormatter;
-use Xibo\Helper\Cache;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
@@ -209,10 +208,12 @@ class StatusDashboard extends Base
 
                 try {
                     $feedUrl = Theme::getConfig('latest_news_url');
-                    $key = md5($feedUrl);
+                    $cache = $this->getPool()->getItem('rss/' . md5($feedUrl));
+
+                    $latestNews = $cache->get();
 
                     // Check the cache
-                    if (!Cache::has($key)) {
+                    if ($cache->isMiss()) {
 
                         // Get the feed
                         $reader = new Reader(Config::getPicoFeedProxy($feedUrl));
@@ -237,10 +238,10 @@ class StatusDashboard extends Base
                         }
 
                         // Store in the cache for 1 day
-                        Cache::put($key, $latestNews, 86400);
+                        $cache->set($latestNews);
+                        $cache->expiresAfter(86400);
 
-                    } else {
-                        $latestNews = Cache::get($key);
+                        $this->getPool()->saveDeferred($cache);
                     }
 
                     $data['latestNews'] = $latestNews;

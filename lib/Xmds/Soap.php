@@ -1209,6 +1209,9 @@ class Soap
             $this->display->clientAddress = $this->getIp();
             $this->display->save(['validate' => false, 'audit' => false]);
 
+            // Commit if necessary
+            PDOConnect::commitIfNecessary();
+
             // Configure our log processor
             $this->logProcessor->setDisplay($this->display->displayId);
 
