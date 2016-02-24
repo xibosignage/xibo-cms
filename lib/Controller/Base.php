@@ -191,6 +191,7 @@ class Base
 
         // API Request
         if ($this->isApi()) {
+
             // Envelope by default - the APIView will un-pack if necessary
             $data = [
                 'grid' => $grid,

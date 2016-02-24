@@ -6,13 +6,12 @@
  */
 
 
-namespace integration;
+namespace Xibo\Tests;
 
 
 use Xibo\Entity\DataSet;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Helper\Random;
-use Xibo\Tests\LocalWebTestCase;
 
 class DataSetTest extends LocalWebTestCase
 {

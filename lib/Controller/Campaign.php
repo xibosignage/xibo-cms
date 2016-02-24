@@ -412,7 +412,6 @@ class Campaign extends Base
         // Check our permissions to see each one
         $layouts = Sanitize::getParam('layoutId', null);
         $layouts = is_array($layouts) ? $layouts : [];
-        Log::error(json_encode($layouts));
         foreach ($layouts as $object) {
 
             $layout = LayoutFactory::getById(Sanitize::getInt('layoutId', $object));

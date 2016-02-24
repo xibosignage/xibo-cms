@@ -378,7 +378,7 @@ class Schedule extends Base
         $schedule->commandId = Sanitize::getInt('commandId');
         $schedule->displayOrder = Sanitize::getInt('displayOrder', 0);
         $schedule->isPriority = Sanitize::getCheckbox('isPriority');
-        $schedule->dayPartId = Sanitize::getCheckbox('dayPartId');
+        $schedule->dayPartId = Sanitize::getCheckbox('dayPartId', 0);
         $schedule->recurrenceType = Sanitize::getString('recurrenceType');
         $schedule->recurrenceDetail = Sanitize::getInt('recurrenceDetail');
 
