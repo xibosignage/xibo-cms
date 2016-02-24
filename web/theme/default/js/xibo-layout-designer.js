@@ -25,9 +25,25 @@ var lowDesignerScale;
 $(document).ready(function(){
     
     // Set the height of the grid to be something sensible for the current screen resolution
-    $("#layoutJumpList").change(function(){
+    var jumpList = $("#layoutJumpList");
+
+    jumpList.selectpicker();
+
+    jumpList.on("changed.bs.select", function(event, index, newValue, oldValue) {
+        localStorage.liveSearchPlaceholder = $(this).parent().find(".bs-searchbox input").val();
         window.location = $(this).val();
-    }).selectpicker();
+    }).on("shown.bs.select", function() {
+        $(this).parent().find(".bs-searchbox input").val(localStorage.liveSearchPlaceholder);
+        $(this).selectpicker("refresh");
+
+        // Shrink the Dropdown list according to the container (HAX)
+        var jumpListContainer = $(".layoutJumpListContainer");
+        jumpListContainer.find(".bootstrap-select").width(jumpListContainer.width());
+    });
+
+    // Shrink the Dropdown list according to the container (HAX)
+    var jumpListContainer = $(".layoutJumpListContainer");
+    jumpListContainer.find(".bootstrap-select").width(jumpListContainer.width());
 
     layout = $("#layout");
 
@@ -158,10 +174,6 @@ $(document).ready(function(){
 
     // Hook up toggle
     $('[data-toggle="tooltip"]').tooltip();
-
-    // Shrink the Dropdown list according to the container (HAX)
-    var jumpListContainer = $(".layoutJumpListContainer");
-    jumpListContainer.find(".bootstrap-select").width(jumpListContainer.width());
 });
 
 function configureDragAndDrop() {
