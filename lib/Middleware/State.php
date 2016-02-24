@@ -24,6 +24,10 @@ namespace Xibo\Middleware;
 use Jenssegers\Date\Date;
 use Slim\Middleware;
 use Slim\Slim;
+use Stash\Driver\Composite;
+use Stash\Driver\Ephemeral;
+use Stash\Driver\FileSystem;
+use Stash\Pool;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\UpgradePendingException;
 use Xibo\Factory\ModuleFactory;
@@ -121,6 +125,9 @@ class State extends Middleware
         // The state of the application response
         $app->container->singleton('state', function() { return new ApplicationState(); });
 
+        // Configure the cache
+        self::configureCache($app);
+
         // Create a session
         $app->container->singleton('session', function() use ($app) {
             if ($app->getName() == 'web' || $app->getName() == 'auth')
@@ -202,5 +209,38 @@ class State extends Middleware
                 $app->rootUri = str_replace('/maintenance', '', $app->rootUri);
                 break;
         }
+    }
+
+    /**
+     * Configure the Cache
+     * @param Slim $app
+     */
+    public static function configureCache($app)
+    {
+        $drivers = [];
+
+        if (Config::$cacheDrivers != null && is_array(Config::$cacheDrivers)) {
+            $drivers = Config::$cacheDrivers;
+        } else {
+            // File System Driver
+            $drivers[] = new FileSystem(['path' => Config::GetSetting('LIBRARY_LOCATION') . 'cache/']);
+        }
+
+        // Always add the Ephemeral driver
+        $drivers[] = new Ephemeral();
+
+        // Create a composite driver
+        $composite = new Composite(['drivers' => $drivers]);
+
+        // Create a pool using this driver set
+        $app->container->singleton('pool', function() use ($app, $composite) {
+            $pool = new Pool($composite);
+            $pool->setLogger($app->logWriter->getWriter());
+            $pool->setNamespace('Xibo');
+            return $pool;
+        });
+
+        // Pass the pool into the config object
+        Config::setPool($app->pool);
     }
 }

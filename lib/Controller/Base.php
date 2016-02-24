@@ -112,6 +112,15 @@ class Base
     }
 
     /**
+     * Get Cache Pool
+     * @return \Stash\Interfaces\PoolInterface
+     */
+    protected function getPool()
+    {
+        return $this->app->pool;
+    }
+
+    /**
      * Is this the Api?
      * @return bool
      */

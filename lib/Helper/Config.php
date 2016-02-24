@@ -29,6 +29,11 @@ class Config
 {
     public static $VERSION_REQUIRED = '5.5';
 
+    /**
+     * @var \Stash\Interfaces\PoolInterface
+     */
+    private static $pool = null;
+
     private $extensions;
     public $envTested;
     public $envFault;
@@ -40,6 +45,7 @@ class Config
     public static $middleware = null;
     public static $authentication = null;
     public static $samlSettings = null;
+    public static $cacheDrivers = null;
 
     public function __construct()
     {
@@ -52,6 +58,24 @@ class Config
         $this->envTested = false;
 
         return;
+    }
+
+    /**
+     * Set the Cache Pool
+     * @param \Stash\Interfaces\PoolInterface $pool
+     */
+    public static function setPool($pool)
+    {
+        self::$pool = $pool;
+    }
+
+    /**
+     * Get Cache Pool
+     * @return \Stash\Interfaces\PoolInterface
+     */
+    private static function getPool()
+    {
+        return self::$pool;
     }
 
     /**
@@ -81,6 +105,8 @@ class Config
             Config::$authentication = $authentication;
         if (isset($samlSettings))
             Config::$samlSettings = $samlSettings;
+        if (isset($cacheDrivers))
+            Config::$cacheDrivers = $cacheDrivers;
 
         // Configure the timezone information
         date_default_timezone_set(Config::GetSetting("defaultTimezone"));
@@ -94,39 +120,55 @@ class Config
      */
     static function GetSetting($setting, $default = NULL)
     {
+        $item = null;
+
+        if (self::getPool() != null) {
+            Log::debug('Getting %s from Pool', $setting);
+            $item = self::getPool()->getItem('config/' . $setting);
+
+            $data = $item->get();
+
+            if ($item->isHit()) {
+                return $data;
+            }
+        }
+
         $dbh = PDOConnect::init();
 
-        $sth = $dbh->prepare('SELECT value FROM setting WHERE setting = :setting');
+        $sth = $dbh->prepare('SELECT `value` FROM `setting` WHERE `setting` = :setting');
         $sth->execute(array('setting' => $setting));
 
         if (!$result = $sth->fetch())
-            return $default;
+            $data = $default;
+        else
+            $data = Sanitize::getString('value', $default, $result);
 
-        // Validate as a string and return
-        return Sanitize::getString('value', $default, $result);
+        if (self::getPool() != null) {
+            self::getPool()->saveDeferred($item->set($data));
+        }
+
+        return $data;
     }
 
     /**
-     * Change a setting
-     * @param [type] $setting [description]
-     * @param [type] $value   [description]
+     * Change Setting
+     * @param string $setting
+     * @param mixed $value
      */
-    static function ChangeSetting($setting, $value)
+    public static function ChangeSetting($setting, $value)
     {
-        try {
-            $dbh = PDOConnect::init();
+        $dbh = PDOConnect::init();
 
-            $sth = $dbh->prepare('UPDATE setting SET value = :value WHERE setting = :setting');
-            $sth->execute(array('setting' => $setting, 'value' => $value));
+        $sth = $dbh->prepare('UPDATE `setting` SET `value` = :value WHERE `setting` = :setting');
+        $sth->execute(array('setting' => $setting, 'value' => $value));
 
-            return true;
-        } catch (\Exception $e) {
-            trigger_error($e->getMessage());
-            return false;
+        if (self::getPool() != null) {
+            $item = self::getPool()->getItem('config/' . $setting);
+            self::getPool()->saveDeferred($item->set($value));
         }
     }
 
-    static function GetAll($sort_order = array('cat', 'ordering'), $filter_by = array())
+    public static function GetAll($sort_order = array('cat', 'ordering'), $filter_by = array())
     {
 
         if ($sort_order == NULL)

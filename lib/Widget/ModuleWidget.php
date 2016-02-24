@@ -88,6 +88,15 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * Get Cache Pool
+     * @return \Stash\Interfaces\PoolInterface
+     */
+    protected function getPool()
+    {
+        return $this->app->pool;
+    }
+
+    /**
      * Set the Widget
      * @param \Xibo\Entity\Widget $widget
      */

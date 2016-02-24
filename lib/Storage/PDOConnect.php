@@ -258,6 +258,19 @@ class PDOConnect
         return $sth->fetchAll(\PDO::FETCH_ASSOC);
 	}
 
+    /**
+     * Commit if necessary
+     * @param \PDO $pdo
+     */
+    public static function commitIfNecessary($pdo = null)
+    {
+        if ($pdo == null)
+            $pdo = PDOConnect::init();
+
+        if ($pdo->inTransaction())
+            $pdo->commit();
+    }
+
 	/**
      * Set the TimeZone for this connection
 	 * @param \PDO $connection
