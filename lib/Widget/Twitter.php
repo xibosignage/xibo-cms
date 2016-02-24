@@ -210,9 +210,13 @@ class Twitter extends ModuleWidget
         $key = base64_encode(urlencode($this->getSetting('apiKey')) . ':' . urlencode($this->getSetting('apiSecret')));
 
         // Check to see if we have the bearer token already cached
-        if (Cache::has('bearer_' . $key)) {
+        $cache = $this->getPool()->getItem('bearer_' . $key);
+
+        $token = $cache->get();
+
+        if ($cache->isHit()) {
             Log::debug('Bearer Token served from cache');
-            return Cache::get('bearer_' . $key);
+            return $token;
         }
 
         Log::debug('Bearer Token served from API');
@@ -284,7 +288,9 @@ class Twitter extends ModuleWidget
 
         // It is, so lets cache it
         // long times...
-        Cache::put('bearer_' . $key, $body->access_token, 100000);
+        $cache->set($body->access_token);
+        $cache->expiresAfter(100000);
+        $this->getPool()->saveDeferred($cache);
 
         return $body->access_token;
     }
@@ -382,9 +388,11 @@ class Twitter extends ModuleWidget
         }
 
         // Connect to twitter and get the twitter feed.
-        $key = md5($this->getOption('searchTerm') . $this->getOption('resultType') . $this->getOption('tweetCount', 15) . $geoCode);
+        $cache = $this->getPool()->getItem(md5($this->getOption('searchTerm') . $this->getOption('resultType') . $this->getOption('tweetCount', 15) . $geoCode));
 
-        if (!Cache::has($key) || Cache::get($key) == '') {
+        $data = $cache->get();
+
+        if ($cache->isMiss()) {
 
             Log::debug('Querying API for ' . $this->getOption('searchTerm'));
 
@@ -397,10 +405,9 @@ class Twitter extends ModuleWidget
                 return false;
 
             // Cache it
-            Cache::put($key, $data, $this->getSetting('cachePeriod'));
-        } else {
-            Log::debug('Served from Cache');
-            $data = Cache::get($key);
+            $cache->set($data);
+            $cache->expiresAfter($this->getSetting('cachePeriod'));
+            $this->getPool()->saveDeferred($cache);
         }
 
         // Get the template

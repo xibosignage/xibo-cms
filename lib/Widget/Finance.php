@@ -205,9 +205,11 @@ class Finance extends ModuleWidget
         $yql = str_replace('[Item]', implode(',', $items), $yql);
 
         // Fire off a request for the data
-        $key = md5($yql);
+        $cache = $this->getPool()->getItem('finance/' . md5($yql));
 
-        if (!Cache::has($key) || Cache::get($key) == '') {
+        $data = $cache->get();
+
+        if ($cache->isMiss()) {
 
             Log::debug('Querying API for ' . $yql);
 
@@ -216,11 +218,10 @@ class Finance extends ModuleWidget
             }
 
             // Cache it
-            Cache::put($key, $data, $this->getSetting('cachePeriod', 300));
+            $cache->set($data);
+            $cache->expiresAfter($this->getSetting('cachePeriod', 300));
+            $this->getPool()->saveDeferred($cache);
 
-        } else {
-            Log::debug('Served from Cache');
-            $data = Cache::get($key);
         }
 
         Log::debug('Finance data returned: %s', var_export($data, true));

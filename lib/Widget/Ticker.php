@@ -497,15 +497,17 @@ class Ticker extends ModuleWidget
 
         // Create a key to use as a caching key for this item.
         // the rendered feed will be cached, so it is important the key covers all options.
-        $key = md5(json_encode($this->widget->widgetOptions));
         $feedUrl = urldecode($this->getOption('uri'));
+        $cache = $this->getPool()->getItem(md5(json_encode($this->widget->widgetOptions)));
 
-        Log::debug('Ticker with RSS source %s. Cache key: %s.', $feedUrl, $key);
+        $items = $cache->get();
+
+        Log::debug('Ticker with RSS source %s. Cache key: %s.', $feedUrl, $cache->getKey());
 
         // Check our cache to see if the key exists
-        if (Cache::has($key)) {
+        if ($cache->isHit()) {
             // Our local cache is valid
-            return Cache::get($key);
+            return $items;
         }
 
         // Our local cache is not valid
@@ -714,7 +716,9 @@ class Ticker extends ModuleWidget
             }
 
             // Add this to the cache.
-            Cache::put($key, $items, $this->getOption('updateInterval', 360) * 60);
+            $cache->set($items);
+            $cache->expiresAfter($this->getOption('updateInterval', 360) * 60);
+            $this->getPool()->saveDeferred($cache);
         }
         catch (PicoFeedException $e) {
             Log::error('Unable to get feed: %s', $e->getMessage());
