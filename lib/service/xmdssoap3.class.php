@@ -1128,7 +1128,12 @@ class XMDSSoap3
             // Last accessed date on the display
             $displayObject = new Display();
             $displayObject->Touch($this->displayId, array('clientAddress' => Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING)));
-                
+
+            // Commit early to prevent deadlocks
+            $pdo = PDOConnect::init();
+            if ($pdo->inTransaction())
+                $pdo->commit();
+
             return true;
         }
         catch (Exception $e) {

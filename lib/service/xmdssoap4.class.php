@@ -1354,6 +1354,11 @@ class XMDSSoap4
             $displayObject = new Display();
             $displayObject->Touch($this->displayId, array('clientAddress' => $this->getIp()));
 
+            // Commit early to prevent deadlocks
+            $pdo = PDOConnect::init();
+            if ($pdo->inTransaction())
+                $pdo->commit();
+
             return true;
         }
         catch (Exception $e) {
