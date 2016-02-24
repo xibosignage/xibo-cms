@@ -22,7 +22,7 @@ class FaultTest extends \Xibo\Tests\LocalWebTestCase
         $this->client->put('/fault/debug/on');
         $this->assertSame(200, $this->client->response->status());
 
-        $this->assertSame(Slim\Log::DEBUG, intval(\Xibo\Helper\Config::GetSetting('audit')));
+        $this->assertSame('DEBUG', \Xibo\Helper\Config::GetSetting('audit'));
     }
 
     public function testDebugOff()
@@ -33,6 +33,6 @@ class FaultTest extends \Xibo\Tests\LocalWebTestCase
         $this->client->put('/fault/debug/off');
         $this->assertSame(200, $this->client->response->status());
 
-        $this->assertSame(Slim\Log::EMERGENCY, intval(\Xibo\Helper\Config::GetSetting('audit')));
+        $this->assertSame('EMERGENCY', \Xibo\Helper\Config::GetSetting('audit'));
     }
 }

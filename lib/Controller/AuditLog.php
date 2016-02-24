@@ -116,6 +116,9 @@ class AuditLog extends Base
         $filterFromDt = Sanitize::getDate('filterFromDt');
         $filterToDt = Sanitize::getDate('filterToDt');
 
+        if ($filterFromDt == null || $filterToDt == null)
+            throw new \InvalidArgumentException(__('Please provide a from/to date.'));
+
         $search = [
             ['fromTimeStamp', $filterFromDt->setTime(0, 0, 0)->format('U')],
             ['toTimeStamp', $filterToDt->setTime(0, 0, 0)->format('U')]
