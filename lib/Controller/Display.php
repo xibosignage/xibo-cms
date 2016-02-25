@@ -616,6 +616,9 @@ class Display extends Base
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
+        // Track the licenced flag
+        $licensed = $display->licensed;
+
         // Update properties
         $display->display = Sanitize::getString('display');
         $display->description = Sanitize::getString('description');
@@ -636,6 +639,11 @@ class Display extends Base
         $display->displayProfileId = Sanitize::getInt('displayProfileId');
 
         $display->save();
+
+        // Remove the cache if the display licenced state has changed
+        if ($licensed != $display->licensed) {
+            $this->getPool()->deleteItems($display->getCacheKey());
+        }
 
         // Return
         $this->getState()->hydrate([

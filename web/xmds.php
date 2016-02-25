@@ -50,7 +50,7 @@ if (isset($_GET['wsdl']) || isset($_GET['WSDL'])) {
     exit;
 }
 
-// We create a Slim Object ONLY for logging
+// We create a Slim Object ONLY for logging (calls to Slim::getInstance())
 // Create a logger
 $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'XMDS',
