@@ -68,7 +68,7 @@ class Login extends Base
             $user->loggedIn = 1;
 
             // Overwrite our stored user with this new object.
-            $this->app->user = $user;
+            $this->getApp()->user = $user;
 
             // Switch Session ID's
             $session = $this->getSession();

@@ -46,7 +46,7 @@ $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     )
 ), false);
 
-$app = new \Slim\Slim(array(
+$app = new \RKA\Slim(array(
     'mode' => Config::GetSetting('SERVER_MODE'),
     'debug' => false,
     'log.writer' => $logger
@@ -61,12 +61,14 @@ $app->view(new \Xibo\Middleware\ApiView());
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
     $controller = new \Xibo\Controller\Error();
+    $controller->setApp($app);
     $controller->handler($e);
 });
 
 // Configure a not found handler
 $app->notFound(function () use ($app) {
     $controller = new \Xibo\Controller\Error();
+    $controller->setApp($app);
     $controller->notFound();
 });
 

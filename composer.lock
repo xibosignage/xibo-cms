@@ -4,9 +4,52 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "51e27f0e1c5eff420624bbef7abe48a9",
-    "content-hash": "289f73334a511673390df4ca3a00609b",
+    "hash": "0113e18659b04e5d767ed3ab8ce2f1f7",
+    "content-hash": "25ff038c789217462f245140956fb9c6",
     "packages": [
+        {
+            "name": "akrabat/rka-slim-controller",
+            "version": "2.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/akrabat/rka-slim-controller.git",
+                "reference": "7115f082a91af83fd22755e8d2d27e9fcffc636b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/akrabat/rka-slim-controller/zipball/7115f082a91af83fd22755e8d2d27e9fcffc636b",
+                "reference": "7115f082a91af83fd22755e8d2d27e9fcffc636b",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4",
+                "slim/slim": "~2.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "RKA\\": "RKA"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Rob Allen",
+                    "email": "rob@akrabat.com",
+                    "homepage": "http://akrabat.com"
+                }
+            ],
+            "description": "Dynamically instantiated controller classes for Slim Framework",
+            "homepage": "http://github.com/akrabat/rka-slim-controller",
+            "keywords": [
+                "controller",
+                "slim"
+            ],
+            "time": "2015-01-07 09:54:54"
+        },
         {
             "name": "doctrine/inflector",
             "version": "v1.1.0",
@@ -1942,7 +1985,7 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sallar/jDateTime/zipball/e6bef94defe0f1ac07bd807f54ca673b676ef8a9",
+                "url": "https://api.github.com/repos/sallar/jDateTime/zipball/30fa124d6e18a9e02df8fc92eda80dc38bdb120a",
                 "reference": "e6bef94defe0f1ac07bd807f54ca673b676ef8a9",
                 "shasum": ""
             },

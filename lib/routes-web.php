@@ -28,7 +28,8 @@ $app->get('/', function () use ($app) {
     /* @var \Xibo\Entity\User $user */
 
     if ($user->newUserWizard == 0) {
-        $controller = new \Xibo\Controller\Login($app);
+        $controller = new \Xibo\Controller\Login();
+        $controller->setApp($app);
         $controller->userWelcome();
 
         // We've seen it
@@ -65,7 +66,8 @@ $app->post('/login', function () use ($app) {
     $priorRoute = ($app->request()->post('priorRoute'));
 
     try {
-        $controller = new \Xibo\Controller\Login($app);
+        $controller = new \Xibo\Controller\Login();
+        $controller->setApp($app);
         $controller->setNoOutput();
         $controller->login();
 

@@ -46,7 +46,7 @@ $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
 ), false);
 
 // Installer is its own little Slim application
-$app = new \Slim\Slim(array(
+$app = new \RKA\Slim(array(
     'mode' => 'install',
     'debug' => false,
     'log.writer' => $logger
@@ -64,6 +64,7 @@ $app->error(function (\Exception $e) use ($app) {
 // Configure a not found handler
 $app->notFound(function () use ($app) {
     $controller = new \Xibo\Controller\Error();
+    $controller->setApp($app);
     $controller->notFound();
 });
 

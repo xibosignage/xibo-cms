@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 use Slim\Slim;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
@@ -63,11 +64,14 @@ class Base
     private $noOutput = false;
 
     /**
-     * Create the controller
+     * Called by Slim when the Controller is instantiated from a route definition
+     * @param Slim $app
      */
-    public function __construct()
+    public function setApp($app)
     {
-        $this->app = Slim::getInstance();
+        Log::debug('Setting APP on Controller');
+
+        $this->app = $app;
 
         // Reference back to this from the app
         // but only the first time
@@ -78,9 +82,13 @@ class Base
     /**
      * Get the App
      * @return Slim
+     * @throws \Exception
      */
     public function getApp()
     {
+        if ($this->app == null)
+            throw new ConfigurationException(__('Controller called before DI has been setup'));
+
         return $this->app;
     }
 

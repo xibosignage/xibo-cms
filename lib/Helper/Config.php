@@ -123,7 +123,6 @@ class Config
         $item = null;
 
         if (self::getPool() != null) {
-            Log::debug('Getting %s from Pool', $setting);
             $item = self::getPool()->getItem('config/' . $setting);
 
             $data = $item->get();
