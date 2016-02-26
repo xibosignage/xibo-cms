@@ -156,6 +156,8 @@ try {
     $soap->setClass('\Xibo\Xmds\Soap' . $version);
     $soap->handle();
 
+    Log::info('PDO stats: %s.', json_encode(\Xibo\Storage\PDOConnect::stats()));
+
     if (\Xibo\Storage\PDOConnect::init()->inTransaction())
         \Xibo\Storage\PDOConnect::init()->commit();
 }

@@ -303,6 +303,8 @@ class Display
      */
     private $commands = null;
 
+    public static $saveOptionsMinimum = ['validate' => false, 'audit' => false, 'triggerDynamicDisplayGroupAssessment' => false];
+
     public function __construct()
     {
         $this->excludeProperty('mediaInventoryXml');

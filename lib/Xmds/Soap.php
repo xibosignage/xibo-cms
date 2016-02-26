@@ -109,6 +109,20 @@ class Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Sender', 'This display is not licensed.');
 
+        // Check the cache
+        $cache = $this->getPool()->getItem($this->display->getCacheKey() . '/requiredFiles');
+
+        $output = $cache->get();
+
+        if ($cache->isHit()) {
+            Log::info('Returning required files from Cache for display %s', $this->display->display);
+
+            // Log Bandwidth
+            $this->LogBandwidth($this->display->displayId, Bandwidth::$RF, strlen($output));
+
+            return $output;
+        }
+
         // Generate a new Request Key which we will sign our Required Files with
         $requestKey = Random::generateString(10);
 
@@ -448,6 +462,11 @@ class Soap
 
         // Remove unused required files
         RequiredFile::removeUnusedForDisplay($this->display->displayId, $requestKey);
+
+        // Cache
+        $cache->set($output);
+        $cache->expiresAt(\Jenssegers\Date\Date::createFromFormat('U', $toFilter));
+        $this->getPool()->saveDeferred($cache);
 
         // Log Bandwidth
         $this->logBandwidth($this->display->displayId, Bandwidth::$RF, strlen($output));
@@ -1244,7 +1263,7 @@ class Soap
             $this->display->lastAccessed = time();
             $this->display->loggedIn = 1;
             $this->display->clientAddress = $this->getIp();
-            $this->display->save(['validate' => false, 'audit' => false]);
+            $this->display->save(Display::$saveOptionsMinimum);
 
             // Commit if necessary
             PDOConnect::commitIfNecessary();
