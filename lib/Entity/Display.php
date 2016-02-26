@@ -338,7 +338,7 @@ class Display
         $this->setCollectRequired(true);
 
         // remove from the cache
-        $this->getPool()->deleteItems($this->getCacheKey());
+        $this->getPool()->deleteItem($this->getCacheKey());
     }
 
     /**
