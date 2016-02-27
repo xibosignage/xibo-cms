@@ -642,7 +642,7 @@ class Display extends Base
 
         // Remove the cache if the display licenced state has changed
         if ($licensed != $display->licensed) {
-            $this->getPool()->deleteItems($display->getCacheKey());
+            $this->getPool()->deleteItem($display->getCacheKey());
         }
 
         // Return

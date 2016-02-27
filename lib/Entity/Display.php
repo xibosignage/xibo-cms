@@ -303,6 +303,8 @@ class Display
      */
     private $commands = null;
 
+    public static $saveOptionsMinimum = ['validate' => false, 'audit' => false, 'triggerDynamicDisplayGroupAssessment' => false];
+
     public function __construct()
     {
         $this->excludeProperty('mediaInventoryXml');
@@ -338,7 +340,7 @@ class Display
         $this->setCollectRequired(true);
 
         // remove from the cache
-        $this->getPool()->deleteItems($this->getCacheKey());
+        $this->getPool()->deleteItem($this->getCacheKey());
     }
 
     /**

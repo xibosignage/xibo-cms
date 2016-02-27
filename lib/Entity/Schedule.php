@@ -198,12 +198,17 @@ class Schedule implements \JsonSerializable
      */
     private function datesInScheduleLookAhead($fromDt, $toDt)
     {
+        if ($this->dayPartId == Schedule::$DAY_PART_ALWAYS)
+            return true;
+
         // From Date and To Date are in UNIX format
         $currentDate = time();
         $rfLookAhead = intval($currentDate) + intval(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         if ($toDt == null)
             $toDt = $fromDt;
+
+        Log::debug('Checking to see if %d and %d are between %d and %d', $fromDt, $toDt, $currentDate, $rfLookAhead);
 
         return ($fromDt < $rfLookAhead && $toDt > $currentDate);
     }
@@ -320,6 +325,7 @@ class Schedule implements \JsonSerializable
         // Notify
         // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
         if ($this->isInScheduleLookAhead) {
+            Log::debug('Schedule changing is within the schedule look ahead, will notify %d display groups', $this->displayGroups);
             foreach ($this->displayGroups as $displayGroup) {
                 /* @var DisplayGroup $displayGroup */
                 $displayGroup->setCollectRequired();
