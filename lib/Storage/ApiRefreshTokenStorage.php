@@ -26,9 +26,42 @@ namespace Xibo\Storage;
 use League\OAuth2\Server\Entity\RefreshTokenEntity;
 use League\OAuth2\Server\Storage\AbstractStorage;
 use League\OAuth2\Server\Storage\RefreshTokenInterface;
+use Slim\Slim;
 
 class ApiRefreshTokenStorage extends AbstractStorage implements RefreshTokenInterface
 {
+    /**
+     * @var Slim
+     */
+    private $app;
+
+    public function __construct($app)
+    {
+        $this->app = $app;
+    }
+
+    /**
+     * Get the App
+     * @return Slim
+     * @throws \Exception
+     */
+    public function getApp()
+    {
+        if ($this->app == null)
+            throw new \RuntimeException(__('API Storage called before DI has been setup'));
+
+        return $this->app;
+    }
+
+    /**
+     * Get Store
+     * @return StorageInterface
+     */
+    protected function getStore()
+    {
+        return $this->getApp()->store;
+    }
+
     /**
      * {@inheritdoc}
      */

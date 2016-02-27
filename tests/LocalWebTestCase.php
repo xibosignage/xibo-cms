@@ -11,10 +11,18 @@ use Monolog\Logger;
 use Slim\Environment;
 use Slim\Slim;
 use There4\Slim\Test\WebTestCase;
+use Xibo\Helper\AccessibleMonologWriter;
 use Xibo\Middleware\ApiView;
 
 class LocalWebTestCase extends WebTestCase
 {
+    protected $app;
+
+    public function getApp()
+    {
+        return $this->app;
+    }
+
     /**
      * Gets the Slim instance configured
      * @return Slim
@@ -30,7 +38,7 @@ class LocalWebTestCase extends WebTestCase
         ]);
 
         // Create a logger
-        $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
+        $logger = new AccessibleMonologWriter(array(
             'name' => 'PHPUNIT',
             'handlers' => array(
                 new \Xibo\Helper\DatabaseLogHandler(Logger::DEBUG)
@@ -49,6 +57,7 @@ class LocalWebTestCase extends WebTestCase
         $app->setName('default');
         $app->setName('test');
 
+        $app->add(new TestAuthMiddleware());
         $app->add(new \Xibo\Middleware\State());
         $app->add(new \Xibo\Middleware\Storage());
 
@@ -59,12 +68,11 @@ class LocalWebTestCase extends WebTestCase
             throw $e;
         });
 
-        // Super User
-        $app->user = \Xibo\Factory\UserFactory::getById(1);
-
         // All routes
         require PROJECT_ROOT . '/lib/routes.php';
         require PROJECT_ROOT . '/lib/routes-web.php';
+
+        $this->app = $app;
 
         return $app;
     }

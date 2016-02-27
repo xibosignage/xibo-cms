@@ -132,6 +132,9 @@ class State extends Middleware
         // Register Controllers with DI
         self::registerControllersWithDi($app);
 
+        // Register Factories with DI
+        self::registerFactoriesWithDi($app);
+
         // Set some public routes
         $app->publicRoutes = array('/login', '/logout', '/clock', '/about', '/login/ping');
 
@@ -410,5 +413,14 @@ class State extends Middleware
         $app->container->singleton('\Xibo\Controller\UserGroup', function($container) {
             return new \Xibo\Controller\UserGroup();
         });
+    }
+
+    /**
+     * Register Factories with DI
+     * @param Slim $app
+     */
+    public static function registerFactoriesWithDi($app)
+    {
+        // TODO
     }
 }

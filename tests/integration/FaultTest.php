@@ -18,7 +18,7 @@ class FaultTest extends \Xibo\Tests\LocalWebTestCase
     public function testDebugOn()
     {
         // Ensure we are
-        \Xibo\Helper\Config::ChangeSetting('audit', $this->getLog()->EMERGENCY);
+        \Xibo\Helper\Config::ChangeSetting('audit', 'emergency');
 
         $this->client->put('/fault/debug/on');
         $this->assertSame(200, $this->client->response->status());
@@ -29,7 +29,7 @@ class FaultTest extends \Xibo\Tests\LocalWebTestCase
     public function testDebugOff()
     {
         // Ensure we are
-        \Xibo\Helper\Config::ChangeSetting('audit', $this->getLog()->DEBUG);
+        \Xibo\Helper\Config::ChangeSetting('audit', 'debug');
 
         $this->client->put('/fault/debug/off');
         $this->assertSame(200, $this->client->response->status());

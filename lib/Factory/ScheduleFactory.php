@@ -181,7 +181,7 @@ class ScheduleFactory extends BaseFactory
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Schedule())->hydrate($row, ['intProperties' => ['isPriority']]);
+            $entries[] = (new Schedule())->hydrate($row, ['intProperties' => ['isPriority']])->setApp($this->getApp());
         }
 
         return $entries;

@@ -61,7 +61,7 @@ class ResolutionTest extends LocalWebTestCase
      */
     public function testEdit($resolutionId)
     {
-        $resolution = ResolutionFactory::getById($resolutionId);
+        $resolution = (new ResolutionFactory($this->getApp()))->getById($resolutionId);
 
         $name = Random::generateString(8, 'phpunit');
 
@@ -79,7 +79,7 @@ class ResolutionTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object);
 
         // Deeper check by querying for resolution again
-        $object = ResolutionFactory::getById($resolutionId);
+        $object = (new ResolutionFactory($this->getApp()))->getById($resolutionId);
 
         $this->assertSame($name, $object->resolution);
         $this->assertSame(1, $object->enabled, 'Enabled has been switched');
@@ -94,7 +94,7 @@ class ResolutionTest extends LocalWebTestCase
      */
     public function testEditEnabled($resolutionId)
     {
-        $resolution = ResolutionFactory::getById($resolutionId);
+        $resolution = (new ResolutionFactory($this->getApp()))->getById($resolutionId);
 
         $this->client->put('/resolution/' . $resolutionId, [
             'resolution' => $resolution->resolution,
@@ -110,7 +110,7 @@ class ResolutionTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object);
 
         // Deeper check by querying for resolution again
-        $object = ResolutionFactory::getById($resolutionId);
+        $object = (new ResolutionFactory($this->getApp()))->getById($resolutionId);
 
         $this->assertSame($resolution->resolution, $object->resolution);
         $this->assertSame(1080, $object->width);

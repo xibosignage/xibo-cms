@@ -36,9 +36,9 @@ class ScheduleTest extends LocalWebTestCase
     public function testAdd()
     {
         // Get a layout to schedule
-        $layout = LayoutFactory::query(null, ['start' => 1, 'length' => 1])[0];
+        $layout = (new LayoutFactory($this->getApp()))->query(null, ['start' => 1, 'length' => 1])[0];
         // Get a Display Group Id
-        $displayGroup = DisplayGroupFactory::query(null, ['start' => 1, 'length' => 1])[0];
+        $displayGroup = (new DisplayGroupFactory($this->getApp()))->query(null, ['start' => 1, 'length' => 1])[0];
 
         $fromDt = time();
         $toDt = time() + 3600;
@@ -71,7 +71,7 @@ class ScheduleTest extends LocalWebTestCase
     public function testEdit($eventId)
     {
         // Get the scheduled event
-        $event = ScheduleFactory::getById($eventId);
+        $event = (new ScheduleFactory($this->getApp()))->getById($eventId);
         $event->load();
 
         $fromDt = time();

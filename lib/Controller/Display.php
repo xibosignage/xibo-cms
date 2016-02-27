@@ -992,6 +992,7 @@ class Display extends Base
 
                     // Log the down event
                     $stat = new Stat();
+                    $stat->setApp($this->getApp());
                     $stat->type = 'displaydown';
                     $stat->displayId = $display->displayId;
                     $stat->fromDt = $display->lastAccessed;

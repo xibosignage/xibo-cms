@@ -58,7 +58,7 @@ class DataSetTest extends LocalWebTestCase
      */
     public function testEdit($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         $name = Random::generateString(8, 'phpunit');
 
@@ -74,7 +74,7 @@ class DataSetTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object);
 
         // Deeper check by querying for resolution again
-        $object = DataSetFactory::getById($dataSetId);
+        $object = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         $this->assertSame($name, $object->dataSet);
 

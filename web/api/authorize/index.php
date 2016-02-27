@@ -74,12 +74,12 @@ $app->notFound(function () use ($app) {
 // oAuth Resource
 $server = new \League\OAuth2\Server\AuthorizationServer;
 
-$server->setSessionStorage(new \Xibo\Storage\ApiSessionStorage());
-$server->setAccessTokenStorage(new \Xibo\Storage\ApiAccessTokenStorage());
-$server->setRefreshTokenStorage(new \Xibo\Storage\ApiRefreshTokenStorage());
-$server->setClientStorage(new \Xibo\Storage\ApiClientStorage());
-$server->setScopeStorage(new \Xibo\Storage\ApiScopeStorage());
-$server->setAuthCodeStorage(new \Xibo\Storage\ApiAuthCodeStorage());
+$server->setSessionStorage(new \Xibo\Storage\ApiSessionStorage($app));
+$server->setAccessTokenStorage(new \Xibo\Storage\ApiAccessTokenStorage($app));
+$server->setRefreshTokenStorage(new \Xibo\Storage\ApiRefreshTokenStorage($app));
+$server->setClientStorage(new \Xibo\Storage\ApiClientStorage($app));
+$server->setScopeStorage(new \Xibo\Storage\ApiScopeStorage($app));
+$server->setAuthCodeStorage(new \Xibo\Storage\ApiAuthCodeStorage($app));
 
 // Allow auth code grant
 $authCodeGrant = new \League\OAuth2\Server\Grant\AuthCodeGrant();
@@ -112,11 +112,11 @@ $app->get('/', function() use ($app) {
 // Access Token
 $app->post('/access_token', function() use ($app) {
 
-    \Xibo\Helper\$this->getLog()->debug('Request for access token using grant_type: %s', $app->request()->post('grant_type'));
+    $app->logHelper->debug('Request for access token using grant_type: %s', $app->request()->post('grant_type'));
 
     $token = json_encode($app->server->issueAccessToken());
 
-    \Xibo\Helper\$this->getLog()->debug('Issued token: %s', $token);
+    $app->logHelper->debug('Issued token: %s', $token);
 
     // Issue an access token
     $app->halt(200, $token);

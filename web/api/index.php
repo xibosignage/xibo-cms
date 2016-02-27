@@ -73,10 +73,10 @@ $app->notFound(function () use ($app) {
 });
 
 // oAuth Resource
-$sessionStorage = new \Xibo\Storage\ApiSessionStorage();
-$accessTokenStorage = new \Xibo\Storage\ApiAccessTokenStorage();
-$clientStorage = new \Xibo\Storage\ApiClientStorage();
-$scopeStorage = new \Xibo\Storage\ApiScopeStorage();
+$sessionStorage = new \Xibo\Storage\ApiSessionStorage($app);
+$accessTokenStorage = new \Xibo\Storage\ApiAccessTokenStorage($app);
+$clientStorage = new \Xibo\Storage\ApiClientStorage($app);
+$scopeStorage = new \Xibo\Storage\ApiScopeStorage($app);
 
 $server = new \League\OAuth2\Server\ResourceServer(
     $sessionStorage,
