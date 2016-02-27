@@ -29,6 +29,22 @@ use Xibo\Helper\Sanitize;
 class CampaignFactory extends BaseFactory
 {
     /**
+     * Create Campaign
+     * @param string $name
+     * @param int $userId
+     * @return Campaign
+     */
+    public function create($name, $userId)
+    {
+        $campaign = new Campaign();
+        $campaign->setApp($this->getApp());
+        $campaign->ownerId = $userId;
+        $campaign->campaign = $name;
+
+        return $campaign;
+    }
+
+    /**
      * Get Campaign by ID
      * @param int $campaignId
      * @return Campaign

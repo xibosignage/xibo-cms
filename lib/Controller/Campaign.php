@@ -176,9 +176,7 @@ class Campaign extends Base
      */
     public function add()
     {
-        $campaign = new \Xibo\Entity\Campaign();
-        $campaign->ownerId = $this->getUser()->userId;
-        $campaign->campaign = Sanitize::getString('name');
+        $campaign = (new CampaignFactory($this->getApp()))->create(Sanitize::getString('name'), $this->getUser()->userId);
         $campaign->save();
 
         // Permissions

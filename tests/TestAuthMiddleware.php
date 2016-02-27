@@ -21,5 +21,7 @@ class TestAuthMiddleware extends Middleware
             // Super User
             $app->user = (new \Xibo\Factory\UserFactory($app))->getById(1);
         });
+
+        $this->next->call();
     }
 }

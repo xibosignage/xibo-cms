@@ -7,6 +7,8 @@
 
 namespace Xibo\Tests;
 
+use Monolog\Handler\PHPConsoleHandler;
+use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Slim\Environment;
 use Slim\Slim;
@@ -41,7 +43,7 @@ class LocalWebTestCase extends WebTestCase
         $logger = new AccessibleMonologWriter(array(
             'name' => 'PHPUNIT',
             'handlers' => array(
-                new \Xibo\Helper\DatabaseLogHandler(Logger::DEBUG)
+                new StreamHandler('test.log')
             ),
             'processors' => array(
                 new \Xibo\Helper\LogProcessor(),
@@ -49,7 +51,7 @@ class LocalWebTestCase extends WebTestCase
             )
         ), false);
 
-        $app = new Slim(array(
+        $app = new \RKA\Slim(array(
             'mode' => 'phpunit',
             'debug' => false,
             'log.writer' => $logger
