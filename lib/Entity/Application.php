@@ -9,8 +9,6 @@
 namespace Xibo\Entity;
 use League\OAuth2\Server\Util\SecureKey;
 use Xibo\Factory\ApplicationRedirectUriFactory;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class Application
@@ -130,7 +128,7 @@ class Application implements \JsonSerializable
         else
             $this->edit();
 
-        Log::debug('Saving redirect uris: %s', json_encode($this->redirectUris));
+        $this->getLog()->debug('Saving redirect uris: %s', json_encode($this->redirectUris));
 
         foreach ($this->redirectUris as $redirectUri) {
             /* @var \Xibo\Entity\ApplicationRedirectUri $redirectUri */
@@ -149,9 +147,9 @@ class Application implements \JsonSerializable
 
         // Clear out everything owned by this client
         $this->deleteTokens();
-        PDOConnect::update('DELETE FROM `oauth_session_scopes` WHERE id IN (SELECT session_id FROM `oauth_sessions` WHERE `client_id` = :id)', ['id' => $this->key]);
-        PDOConnect::update('DELETE FROM `oauth_sessions` WHERE `client_id` = :id', ['id' => $this->key]);
-        PDOConnect::update('DELETE FROM `oauth_clients` WHERE `id` = :id', ['id' => $this->key]);
+        $this->getStore()->update('DELETE FROM `oauth_session_scopes` WHERE id IN (SELECT session_id FROM `oauth_sessions` WHERE `client_id` = :id)', ['id' => $this->key]);
+        $this->getStore()->update('DELETE FROM `oauth_sessions` WHERE `client_id` = :id', ['id' => $this->key]);
+        $this->getStore()->update('DELETE FROM `oauth_clients` WHERE `id` = :id', ['id' => $this->key]);
     }
 
     public function resetKeys()
@@ -162,11 +160,11 @@ class Application implements \JsonSerializable
 
     private function deleteTokens()
     {
-        PDOConnect::update('DELETE FROM `oauth_access_token_scopes` WHERE access_token IN (SELECT access_token FROM `oauth_access_tokens` WHERE session_id IN (SELECT session_id FROM `oauth_sessions` WHERE `client_id` = :id))', ['id' => $this->key]);
-        PDOConnect::update('DELETE FROM `oauth_refresh_tokens` WHERE access_token IN (SELECT access_token FROM `oauth_access_tokens` WHERE session_id IN (SELECT session_id FROM `oauth_sessions` WHERE `client_id` = :id))', ['id' => $this->key]);
-        PDOConnect::update('DELETE FROM `oauth_access_tokens` WHERE session_id IN (SELECT session_id FROM `oauth_sessions` WHERE `client_id` = :id)', ['id' => $this->key]);
-        PDOConnect::update('DELETE FROM `oauth_auth_code_scopes` WHERE auth_code IN (SELECT auth_code FROM `oauth_auth_codes` WHERE session_id IN (SELECT session_id FROM `oauth_sessions` WHERE `client_id` = :id))', ['id' => $this->key]);
-        PDOConnect::update('DELETE FROM `oauth_auth_codes` WHERE session_id IN (SELECT session_id FROM `oauth_sessions` WHERE `client_id` = :id)', ['id' => $this->key]);
+        $this->getStore()->update('DELETE FROM `oauth_access_token_scopes` WHERE access_token IN (SELECT access_token FROM `oauth_access_tokens` WHERE session_id IN (SELECT session_id FROM `oauth_sessions` WHERE `client_id` = :id))', ['id' => $this->key]);
+        $this->getStore()->update('DELETE FROM `oauth_refresh_tokens` WHERE access_token IN (SELECT access_token FROM `oauth_access_tokens` WHERE session_id IN (SELECT session_id FROM `oauth_sessions` WHERE `client_id` = :id))', ['id' => $this->key]);
+        $this->getStore()->update('DELETE FROM `oauth_access_tokens` WHERE session_id IN (SELECT session_id FROM `oauth_sessions` WHERE `client_id` = :id)', ['id' => $this->key]);
+        $this->getStore()->update('DELETE FROM `oauth_auth_code_scopes` WHERE auth_code IN (SELECT auth_code FROM `oauth_auth_codes` WHERE session_id IN (SELECT session_id FROM `oauth_sessions` WHERE `client_id` = :id))', ['id' => $this->key]);
+        $this->getStore()->update('DELETE FROM `oauth_auth_codes` WHERE session_id IN (SELECT session_id FROM `oauth_sessions` WHERE `client_id` = :id)', ['id' => $this->key]);
     }
 
     private function add()
@@ -174,7 +172,7 @@ class Application implements \JsonSerializable
         $this->key = SecureKey::generate();
 
         // Simple Insert for now
-        PDOConnect::insert('
+        $this->getStore()->insert('
             INSERT INTO `oauth_clients` (`id`, `secret`, `name`, `userId`)
               VALUES (:id, :secret, :name, :userId)
         ', [
@@ -187,7 +185,7 @@ class Application implements \JsonSerializable
 
     private function edit()
     {
-        PDOConnect::update('
+        $this->getStore()->update('
             UPDATE `oauth_clients` SET
               `id` = :id,
               `secret` = :secret,

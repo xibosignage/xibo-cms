@@ -23,7 +23,6 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class Module
@@ -158,7 +157,7 @@ class Module implements \JsonSerializable
 
     private function add()
     {
-        $this->moduleId = PDOConnect::insert('
+        $this->moduleId = $this->getStore()->insert('
           INSERT INTO `module` (`Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`,
                 `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`, `defaultDuration`)
             VALUES (:module, :name, :enabled, :region_specific, :description,
@@ -184,7 +183,7 @@ class Module implements \JsonSerializable
 
     private function edit()
     {
-        PDOConnect::update('
+        $this->getStore()->update('
           UPDATE module SET
               enabled = :enabled,
               previewEnabled = :previewEnabled,

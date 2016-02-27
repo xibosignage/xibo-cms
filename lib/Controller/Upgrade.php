@@ -24,7 +24,6 @@ use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\UpgradeFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
-use Xibo\Helper\Log;
 
 class Upgrade extends Base
 {
@@ -96,8 +95,8 @@ class Upgrade extends Base
         catch (\Exception $e) {
             $upgradeStep->lastTryDate = Date::parse()->format('U');
             $upgradeStep->save();
-            Log::error('Unable to run upgrade step. Message = %s', $e->getMessage());
-            Log::error($e->getTraceAsString());
+            $this->getLog()->error('Unable to run upgrade step. Message = %s', $e->getMessage());
+            $this->getLog()->error($e->getTraceAsString());
 
             throw new ConfigurationException($e->getMessage());
         }

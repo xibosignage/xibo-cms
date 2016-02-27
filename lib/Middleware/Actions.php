@@ -27,7 +27,6 @@ use Slim\Middleware;
 use Xibo\Controller\Library;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 use Xibo\Helper\Translate;
 
@@ -74,14 +73,14 @@ class Actions extends Middleware
             // Does the version in the DB match the version of the code?
             // If not then we need to run an upgrade.
             if (Config::isUpgradePending() && !in_array($resource, $excludedRoutes)) {
-                Log::debug('%s not in excluded routes, redirecting. ', $resource);
+                $app->logHelper->debug('%s not in excluded routes, redirecting. ', $resource);
                 $app->redirectTo('upgrade.view');
             }
 
             $notifications = [];
 
             if ($app->user->userTypeId == 1 && file_exists(PROJECT_ROOT . '/web/install/index.php')) {
-                Log::notice('Install.php exists and shouldn\'t');
+                $app->logHelper->notice('Install.php exists and shouldn\'t');
 
                 $notifications[] = __('There is a problem with this installation. "install.php" should be deleted.');
             }

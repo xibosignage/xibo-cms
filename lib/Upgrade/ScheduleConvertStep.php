@@ -9,14 +9,12 @@
 namespace Xibo\Upgrade;
 
 
-use Xibo\Storage\PDOConnect;
-
 class ScheduleConvertStep implements  Step
 {
     public static function doStep()
     {
         // Get all events and their Associated display group id's
-        foreach (PDOConnect::select('SELECT eventId, displayGroupIds FROM `schedule`', []) as $event) {
+        foreach ($this->getStore()->select('SELECT eventId, displayGroupIds FROM `schedule`', []) as $event) {
             // Ping open the displayGroupIds
             $displayGroupIds = explode(',', $event['displayGroupIds']);
 
@@ -29,7 +27,7 @@ class ScheduleConvertStep implements  Step
 
             $sql = rtrim($sql, ',');
 
-            PDOConnect::update($sql, []);
+            $this->getStore()->update($sql, []);
         }
     }
 }

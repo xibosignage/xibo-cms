@@ -10,9 +10,7 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Factory\CommandFactory;
-use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class DisplayProfile
@@ -142,7 +140,7 @@ class DisplayProfile
             return;
 
         $this->config = json_decode($this->config, true);
-        Log::debug('Config loaded [%d]: %s', count($this->config), json_encode($this->config, JSON_PRETTY_PRINT));
+        $this->getLog()->debug('Config loaded [%d]: %s', count($this->config), json_encode($this->config, JSON_PRETTY_PRINT));
 
         $this->configDefault = $this->loadFromFile();
         $this->configTabs = $this->configDefault[$this->type]['tabs'];
@@ -201,7 +199,7 @@ class DisplayProfile
 
 
 
-        $count = PDOConnect::select($sql, $params);
+        $count = $this->getStore()->select($sql, $params);
 
         if ($count[0]['cnt'] + $this->isDefault > 1)
             throw new \InvalidArgumentException(__('Only 1 default per display type is allowed.'));
@@ -232,7 +230,7 @@ class DisplayProfile
         $this->commands = [];
         $this->manageAssignments();
 
-        PDOConnect::update('DELETE FROM `displayprofile` WHERE displayprofileid = :displayProfileId', ['displayProfileId' => $this->displayProfileId]);
+        $this->getStore()->update('DELETE FROM `displayprofile` WHERE displayprofileid = :displayProfileId', ['displayProfileId' => $this->displayProfileId]);
     }
 
     /**
@@ -240,12 +238,12 @@ class DisplayProfile
      */
     private function manageAssignments()
     {
-        Log::debug('Managing Assignment for Display Profile: %d. %d commands.', $this->displayProfileId, count($this->commands));
+        $this->getLog()->debug('Managing Assignment for Display Profile: %d. %d commands.', $this->displayProfileId, count($this->commands));
 
         // Link
         foreach ($this->commands as $command) {
             /* @var Command $command */
-            PDOConnect::update('
+            $this->getStore()->update('
               INSERT INTO `lkcommanddisplayprofile` (`commandId`, `displayProfileId`, `commandString`, `validationString`) VALUES
                 (:commandId, :displayProfileId, :commandString, :validationString) ON DUPLICATE KEY UPDATE commandString = :commandString2, validationString = :validationString2
             ', [
@@ -273,12 +271,12 @@ class DisplayProfile
 
         $sql .= ')';
 
-        PDOConnect::update($sql, $params);
+        $this->getStore()->update($sql, $params);
     }
 
     private function add()
     {
-        $this->displayProfileId = PDOConnect::insert('
+        $this->displayProfileId = $this->getStore()->insert('
             INSERT INTO `displayprofile` (`name`, type, config, isdefault, userid)
               VALUES (:name, :type, :config, :isDefault, :userId)
         ', [
@@ -292,7 +290,7 @@ class DisplayProfile
 
     private function edit()
     {
-        PDOConnect::update('
+        $this->getStore()->update('
           UPDATE `displayprofile`
             SET `name` = :name, type = :type, config = :config, isdefault = :isDefault
            WHERE displayprofileid = :displayProfileId', [

@@ -30,10 +30,8 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
-use Xibo\Storage\PDOConnect;
 
 class DataSetView extends ModuleWidget
 {
@@ -129,7 +127,7 @@ class DataSetView extends ModuleWidget
             $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
 
-        Log::debug(count($this->module->settings['templates']));
+        $this->getLog()->debug(count($this->module->settings['templates']));
     }
 
     /**
@@ -498,7 +496,7 @@ class DataSetView extends ModuleWidget
                 ];
             }
 
-            Log::debug('Resolved column mappings: %s', json_encode($columnIds));
+            $this->getLog()->debug('Resolved column mappings: %s', json_encode($columnIds));
 
             $filter = [
                 'filter' => $filter,
@@ -521,10 +519,10 @@ class DataSetView extends ModuleWidget
                 $timeZone = $display->getSetting('displayTimeZone', '');
                 $timeZone = ($timeZone == '') ? Config::GetSetting('defaultTimezone') : $timeZone;
                 $dateNow->timezone($timeZone);
-                Log::debug('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString());
+                $this->getLog()->debug('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString());
             }
 
-            PDOConnect::setTimeZone(Date::getLocalDate($dateNow, 'P'));
+            $this->getStore()->setTimeZone(Date::getLocalDate($dateNow, 'P'));
 
             // Get the data (complete table, filtered)
             $dataSetResults = $dataSet->getData($filter);
@@ -610,7 +608,7 @@ class DataSetView extends ModuleWidget
                             $file = (new MediaFactory($this->getApp()))->getById($replace);
                         }
                         catch (NotFoundException $e) {
-                            Log::error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);
+                            $this->getLog()->error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);
                             continue;
                         }
 
@@ -638,8 +636,8 @@ class DataSetView extends ModuleWidget
             return $table;
         }
         catch (NotFoundException $e) {
-            Log::error('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
-            Log::debug($e->getTraceAsString());
+            $this->getLog()->error('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
+            $this->getLog()->debug($e->getTraceAsString());
             return '';
         }
     }

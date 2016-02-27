@@ -25,8 +25,6 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\DataSetUploadHandler;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
 
@@ -169,7 +167,7 @@ class DataSet extends Base
     {
         $this->getState()->template = 'dataset-form-add';
         $this->getState()->setData([
-            'help' => Help::Link('DataSet', 'Add')
+            'help' => $this->getHelp()->link('DataSet', 'Add')
         ]);
     }
 
@@ -253,7 +251,7 @@ class DataSet extends Base
         $this->getState()->template = 'dataset-form-edit';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'help' => Help::Link('DataSet', 'Edit')
+            'help' => $this->getHelp()->link('DataSet', 'Edit')
         ]);
     }
 
@@ -332,7 +330,7 @@ class DataSet extends Base
         $this->getState()->template = 'dataset-form-delete';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'help' => Help::Link('DataSet', 'Delete')
+            'help' => $this->getHelp()->link('DataSet', 'Delete')
         ]);
     }
 
@@ -412,7 +410,7 @@ class DataSet extends Base
      */
     public function import($dataSetId)
     {
-        Log::debug('Import DataSet');
+        $this->getLog()->debug('Import DataSet');
 
         $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
 

@@ -26,7 +26,6 @@ namespace Xibo\Factory;
 use Xibo\Entity\Media;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 class MediaFactory extends BaseFactory
 {
@@ -398,7 +397,7 @@ class MediaFactory extends BaseFactory
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
+        foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = (new Media())->hydrate($row, [
                 'intProperties' => [
                     'duration', 'size'
@@ -409,7 +408,7 @@ class MediaFactory extends BaseFactory
         // Paging
         if ($limit != '' && count($entries) > 0) {
             unset($params['entity']);
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }
 

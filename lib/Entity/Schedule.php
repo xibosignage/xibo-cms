@@ -11,8 +11,6 @@ namespace Xibo\Entity;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Helper\Config;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class Schedule
@@ -208,7 +206,7 @@ class Schedule implements \JsonSerializable
         if ($toDt == null)
             $toDt = $fromDt;
 
-        Log::debug('Checking to see if %d and %d are between %d and %d', $fromDt, $toDt, $currentDate, $rfLookAhead);
+        $this->getLog()->debug('Checking to see if %d and %d are between %d and %d', $fromDt, $toDt, $currentDate, $rfLookAhead);
 
         return ($fromDt < $rfLookAhead && $toDt > $currentDate);
     }
@@ -265,7 +263,7 @@ class Schedule implements \JsonSerializable
         if (count($this->displayGroups) <= 0)
             throw new \InvalidArgumentException(__('No display groups selected'));
 
-        Log::debug('EventTypeId: %d. CampaignId: %d, CommandId: %d', $this->eventTypeId, $this->campaignId, $this->commandId);
+        $this->getLog()->debug('EventTypeId: %d. CampaignId: %d, CommandId: %d', $this->eventTypeId, $this->campaignId, $this->commandId);
 
         if ($this->eventTypeId == Schedule::$LAYOUT_EVENT) {
             // Validate layout
@@ -325,7 +323,7 @@ class Schedule implements \JsonSerializable
         // Notify
         // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
         if ($this->isInScheduleLookAhead) {
-            Log::debug('Schedule changing is within the schedule look ahead, will notify %d display groups', $this->displayGroups);
+            $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify %d display groups', $this->displayGroups);
             foreach ($this->displayGroups as $displayGroup) {
                 /* @var DisplayGroup $displayGroup */
                 $displayGroup->setCollectRequired();
@@ -347,7 +345,7 @@ class Schedule implements \JsonSerializable
         $this->deleteDetail();
 
         // Delete the event itself
-        PDOConnect::update('DELETE FROM `schedule` WHERE eventId = :eventId', ['eventId' => $this->eventId]);
+        $this->getStore()->update('DELETE FROM `schedule` WHERE eventId = :eventId', ['eventId' => $this->eventId]);
     }
 
     /**
@@ -355,7 +353,7 @@ class Schedule implements \JsonSerializable
      */
     private function add()
     {
-        $this->eventId = PDOConnect::insert('
+        $this->eventId = $this->getStore()->insert('
           INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range, `dayPartId`)
             VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange, :dayPartId)
         ', [
@@ -379,7 +377,7 @@ class Schedule implements \JsonSerializable
      */
     private function edit()
     {
-        PDOConnect::update('
+        $this->getStore()->update('
           UPDATE `schedule` SET
             eventTypeId = :eventTypeId,
             campaignId = :campaignId,
@@ -504,7 +502,7 @@ class Schedule implements \JsonSerializable
      */
     private function addDetail($fromDt, $toDt)
     {
-        PDOConnect::insert('INSERT INTO `schedule_detail` (eventId, fromDt, toDt) VALUES (:eventId, :fromDt, :toDt)', [
+        $this->getStore()->insert('INSERT INTO `schedule_detail` (eventId, fromDt, toDt) VALUES (:eventId, :fromDt, :toDt)', [
             'eventId' => $this->eventId,
             'fromDt' => $fromDt,
             'toDt' => $toDt
@@ -516,7 +514,7 @@ class Schedule implements \JsonSerializable
      */
     private function deleteDetail()
     {
-        PDOConnect::update('DELETE FROM `schedule_detail` WHERE eventId = :eventId', ['eventId' => $this->eventId]);
+        $this->getStore()->update('DELETE FROM `schedule_detail` WHERE eventId = :eventId', ['eventId' => $this->eventId]);
     }
 
     /**
@@ -540,7 +538,7 @@ class Schedule implements \JsonSerializable
         foreach ($this->displayGroups as $displayGroup) {
             $i++;
 
-            PDOConnect::insert($sql, array(
+            $this->getStore()->insert($sql, array(
                 'eventId' => $this->eventId,
                 'displayGroupId' => $displayGroup->displayGroupId
             ));
@@ -566,6 +564,6 @@ class Schedule implements \JsonSerializable
 
         $sql .= ')';
 
-        PDOConnect::update($sql, $params);
+        $this->getStore()->update($sql, $params);
     }
 }

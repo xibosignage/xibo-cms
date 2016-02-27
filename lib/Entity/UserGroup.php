@@ -13,8 +13,6 @@ use Respect\Validation\Validator as v;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class UserGroup
@@ -211,8 +209,8 @@ class UserGroup
         // Unlink users
         $this->removeAssignments();
 
-        PDOConnect::update('DELETE FROM `permission` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
-        PDOConnect::update('DELETE FROM `group` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
+        $this->getStore()->update('DELETE FROM `permission` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
+        $this->getStore()->update('DELETE FROM `group` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
     }
 
     /**
@@ -229,7 +227,7 @@ class UserGroup
      */
     private function add()
     {
-        $this->groupId = PDOConnect::insert('INSERT INTO `group` (`group`, IsUserSpecific, libraryQuota) VALUES (:group, :isUserSpecific, :libraryQuota)', [
+        $this->groupId = $this->getStore()->insert('INSERT INTO `group` (`group`, IsUserSpecific, libraryQuota) VALUES (:group, :isUserSpecific, :libraryQuota)', [
             'group' => $this->group,
             'isUserSpecific' => $this->isUserSpecific,
             'libraryQuota' => $this->libraryQuota
@@ -241,7 +239,7 @@ class UserGroup
      */
     private function edit()
     {
-        PDOConnect::update('UPDATE `group` SET `group` = :group, libraryQuota = :libraryQuota WHERE groupId = :groupId', [
+        $this->getStore()->update('UPDATE `group` SET `group` = :group, libraryQuota = :libraryQuota WHERE groupId = :groupId', [
             'groupId' => $this->groupId,
             'group' => $this->group,
             'libraryQuota' => $this->libraryQuota
@@ -253,11 +251,11 @@ class UserGroup
      */
     private function linkUsers()
     {
-        $insert = PDOConnect::init()->prepare('INSERT INTO `lkusergroup` (groupId, userId) VALUES (:groupId, :userId) ON DUPLICATE KEY UPDATE groupId = groupId');
+        $insert = $this->getStore()->init()->prepare('INSERT INTO `lkusergroup` (groupId, userId) VALUES (:groupId, :userId) ON DUPLICATE KEY UPDATE groupId = groupId');
 
         foreach ($this->users as $user) {
             /* @var User $user */
-            Log::debug('Linking %s to %s', $user->userName, $this->group);
+            $this->getLog()->debug('Linking %s to %s', $user->userName, $this->group);
 
             $insert->execute([
                 'groupId' => $this->groupId,
@@ -287,6 +285,6 @@ class UserGroup
 
 
 
-        PDOConnect::update($sql, $params);
+        $this->getStore()->update($sql, $params);
     }
 }

@@ -30,22 +30,22 @@ class JsonUtils
             case JSON_ERROR_NONE:
                 return $encoded;
             case JSON_ERROR_DEPTH:
-                Log::debug('Maximum stack depth exceeded');
+                $this->getLog()->debug('Maximum stack depth exceeded');
                 return false;
             case JSON_ERROR_STATE_MISMATCH:
-                Log::debug('Underflow or the modes mismatch');
+                $this->getLog()->debug('Underflow or the modes mismatch');
                 return false;
             case JSON_ERROR_CTRL_CHAR:
-                Log::debug('Unexpected control character found');
+                $this->getLog()->debug('Unexpected control character found');
                 return false;
             case JSON_ERROR_SYNTAX:
-                Log::debug('Syntax error, malformed JSON');
+                $this->getLog()->debug('Syntax error, malformed JSON');
                 return false;
             case JSON_ERROR_UTF8:
                 $clean = JsonUtils::utf8ize($mixed);
                 return JsonUtils::jsonEncode($clean);
             default:
-                Log::debug('Unknown error');
+                $this->getLog()->debug('Unknown error');
                 return false;
         }
     }

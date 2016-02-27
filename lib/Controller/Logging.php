@@ -25,10 +25,8 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LogFactory;
 use Xibo\Helper\Date;
-use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
-use Xibo\Storage\PDOConnect;
 
 
 class Logging extends Base
@@ -71,7 +69,7 @@ class Logging extends Base
         $displayId = Sanitize::getInt('displayid');
 
         try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             $sth = $dbh->prepare('SELECT logid, logdate, page, function, message FROM log WHERE displayid = :displayid ORDER BY logid DESC LIMIT 100');
             $sth->execute(array(
@@ -130,7 +128,7 @@ class Logging extends Base
 
         $this->getState()->template = 'log-form-truncate';
         $this->getState()->setData([
-            'help' => Help::Link('Log', 'Truncate')
+            'help' => $this->getHelp()->link('Log', 'Truncate')
         ]);
     }
 
@@ -142,7 +140,7 @@ class Logging extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException(__('Only Administrator Users can truncate the log'));
 
-        PDOConnect::update('TRUNCATE TABLE log', array());
+        $this->getStore()->update('TRUNCATE TABLE log', array());
 
         // Return
         $this->getState()->hydrate([

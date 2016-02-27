@@ -30,10 +30,7 @@ use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Config;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 
 class Module extends Base
@@ -137,7 +134,7 @@ class Module extends Base
         $this->getState()->template = ($moduleFields == null) ? 'module-form-settings' : $moduleFields;
         $this->getState()->setData([
             'module' => $module,
-            'help' => Help::Link('Module', 'Edit')
+            'help' => $this->getHelp()->link('Module', 'Edit')
         ]);
     }
 
@@ -186,7 +183,7 @@ class Module extends Base
         // Pass to view
         $this->getState()->template = 'module-form-verify';
         $this->getState()->setData([
-            'help' => Help::Link('Module', 'Edit')
+            'help' => $this->getHelp()->link('Module', 'Edit')
         ]);
     }
 
@@ -196,7 +193,7 @@ class Module extends Base
     public function verify()
     {
         // Set all files to valid = 0
-        PDOConnect::update('UPDATE `media` SET valid = 0 WHERE moduleSystemFile = 1', []);
+        $this->getStore()->update('UPDATE `media` SET valid = 0 WHERE moduleSystemFile = 1', []);
 
         // Install all files
         Library::installAllModuleFiles($this->getApp());
@@ -224,7 +221,7 @@ class Module extends Base
         $this->getState()->template = 'module-form-install';
         $this->getState()->setData([
             'module' => $module,
-            'help' => Help::Link('Module', 'Install')
+            'help' => $this->getHelp()->link('Module', 'Install')
         ]);
     }
 
@@ -234,7 +231,7 @@ class Module extends Base
      */
     public function install($name)
     {
-        Log::notice('Request to install Module: ' . $name);
+        $this->getLog()->notice('Request to install Module: ' . $name);
 
         if (file_exists(PROJECT_ROOT . '/modules/' . $name . '.json'))
             $moduleDetails = json_decode(file_get_contents(PROJECT_ROOT . '/modules/' . $name . '.json'));
@@ -248,7 +245,7 @@ class Module extends Base
         $module->setUser($this->getUser());
         $module->installOrUpdate();
 
-        Log::notice('Module Installed: ' . $module->getModuleType());
+        $this->getLog()->notice('Module Installed: ' . $module->getModuleType());
 
         // Excellent... capital... success
         $this->getState()->hydrate([
@@ -391,7 +388,7 @@ class Module extends Base
         $this->getState()->template = 'module-form-delete';
         $this->getState()->setData([
             'module' => $module,
-            'help' => Help::Link('Media', 'Delete')
+            'help' => $this->getHelp()->link('Media', 'Delete')
         ]);
     }
 
@@ -468,7 +465,7 @@ class Module extends Base
                     array('id' => 'NW', 'name' => __('North West'))
                 )
             ],
-            'help' => Help::Link('Transition', 'Edit')
+            'help' => $this->getHelp()->link('Transition', 'Edit')
         ]);
     }
 

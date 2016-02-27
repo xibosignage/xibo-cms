@@ -60,7 +60,7 @@ class ApiClientStorage extends AbstractStorage implements ClientInterface
             $params['clientSecret'] = $clientSecret;
         }
 
-        $result = PDOConnect::select($sql, $params);
+        $result = $this->getStore()->select($sql, $params);
 
         if (count($result) === 1) {
             $client = new ClientEntity($this->server);
@@ -99,7 +99,7 @@ class ApiClientStorage extends AbstractStorage implements ClientInterface
      */
     public function getBySession(SessionEntity $session)
     {
-        $result = PDOConnect::select('
+        $result = $this->getStore()->select('
             SELECT oauth_clients.id, oauth_clients.name
               FROM oauth_clients
                 INNER JOIN oauth_sessions ON oauth_clients.id = oauth_sessions.client_id

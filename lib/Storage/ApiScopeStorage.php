@@ -34,7 +34,7 @@ class ApiScopeStorage extends AbstractStorage implements ScopeInterface
      */
     public function get($scope, $grantType = null, $clientId = null)
     {
-        $result = PDOConnect::select('SELECT * FROM oauth_scopes WHERE id = :id ', array('id' => $scope));
+        $result = $this->getStore()->select('SELECT * FROM oauth_scopes WHERE id = :id ', array('id' => $scope));
 
         if (count($result) === 0) {
             return;

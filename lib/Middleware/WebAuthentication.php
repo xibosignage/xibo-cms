@@ -26,7 +26,6 @@ namespace Xibo\Middleware;
 use Slim\Middleware;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\ApplicationState;
-use Xibo\Helper\Log;
 
 class WebAuthentication extends Middleware
 {
@@ -46,7 +45,7 @@ class WebAuthentication extends Middleware
         // Create a function which we will call should the request be for a protected page
         // and the user not yet be logged in.
         $redirectToLogin = function () use ($app) {
-            Log::debug('Request to redirect to login. Ajax = %d', $app->request->isAjax());
+
             if ($app->request->isAjax()) {
                 $state = $app->state;
                 /* @var ApplicationState $state */
@@ -77,6 +76,8 @@ class WebAuthentication extends Middleware
                 if ($user->hasIdentity() && !$app->session->isExpired()) {
                     // Replace our user with a fully loaded one
                     $user = (new UserFactory($app))->loadById($user->userId);
+
+                    $app->logHelper->setUserId($user->userId);
 
                     // Do they have permission?
                     $user->routeAuthentication($resource);

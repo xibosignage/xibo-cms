@@ -26,7 +26,6 @@ namespace Xibo\Factory;
 use Xibo\Entity\Page;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 class PageFactory extends BaseFactory
 {
@@ -94,7 +93,7 @@ class PageFactory extends BaseFactory
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
+        foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = (new Page())->hydrate($row)->setApp($this->getApp());
         }
 

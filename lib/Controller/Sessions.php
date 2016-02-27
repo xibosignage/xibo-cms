@@ -22,9 +22,7 @@ namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\SessionFactory;
-use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 
 class Sessions extends Base
@@ -70,7 +68,7 @@ class Sessions extends Base
         $this->getState()->template = 'sessions-form-confirm-logout';
         $this->getState()->setData([
             'userId' => $userId,
-            'help' => Help::Link('Sessions', 'Logout')
+            'help' => $this->getHelp()->link('Sessions', 'Logout')
         ]);
     }
 
@@ -83,7 +81,7 @@ class Sessions extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        PDOConnect::update('UPDATE `session` SET IsExpired = 1 WHERE userID = :userId ', ['userId' => $userId]);
+        $this->getStore()->update('UPDATE `session` SET IsExpired = 1 WHERE userID = :userId ', ['userId' => $userId]);
 
         // Return
         $this->getState()->hydrate([

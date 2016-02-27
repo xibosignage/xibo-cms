@@ -11,9 +11,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DisplayProfile;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 class DisplayProfileFactory extends BaseFactory
 {
@@ -144,13 +142,13 @@ class DisplayProfileFactory extends BaseFactory
 
 
 
-            foreach (PDOConnect::select($sql, $params) as $row) {
+            foreach ($this->getStore()->select($sql, $params) as $row) {
                 $profiles[] = (new DisplayProfile())->hydrate($row)->setApp($this->getApp())->setApp($this->getApp());
             }
 
             // Paging
             if ($limit != '' && count($profiles) > 0) {
-                $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+                $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
                 $this->_countLast = intval($results[0]['total']);
             }
 
@@ -158,7 +156,7 @@ class DisplayProfileFactory extends BaseFactory
 
         } catch (\Exception $e) {
 
-            Log::error($e);
+            $this->getLog()->error($e);
 
             throw new NotFoundException();
         }

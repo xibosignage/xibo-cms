@@ -27,8 +27,6 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\WidgetMediaFactory;
 use Xibo\Factory\WidgetOptionFactory;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
 use Xibo\Widget\ModuleWidget;
 
 /**
@@ -335,7 +333,7 @@ class Widget implements \JsonSerializable
             'notify' => true
         ], $options);
 
-        Log::debug('Saving widgetId %d with options. %s', $this->getId(), json_encode($options, JSON_PRETTY_PRINT));
+        $this->getLog()->debug('Saving widgetId %d with options. %s', $this->getId(), json_encode($options, JSON_PRETTY_PRINT));
 
         // Add/Edit
         if ($this->widgetId == null || $this->widgetId == 0)
@@ -359,7 +357,7 @@ class Widget implements \JsonSerializable
         $this->unlinkMedia();
 
         if ($options['notify']) {
-            Log::debug('Notify playlistId %d', $this->playlistId);
+            $this->getLog()->debug('Notify playlistId %d', $this->playlistId);
             // Notify the Layout
             $playlist = (new PlaylistFactory($this->getApp()))->getById($this->playlistId);
             $playlist->notifyLayouts();
@@ -395,23 +393,23 @@ class Widget implements \JsonSerializable
         $this->unlinkMedia();
 
         // Delete this
-        PDOConnect::update('DELETE FROM `widget` WHERE widgetId = :widgetId', array('widgetId' => $this->widgetId));
+        $this->getStore()->update('DELETE FROM `widget` WHERE widgetId = :widgetId', array('widgetId' => $this->widgetId));
 
         if ($options['notify']) {
 
-            Log::debug('Notifying upstream playlist');
+            $this->getLog()->debug('Notifying upstream playlist');
 
             // Notify the Layout
             $playlist = (new PlaylistFactory($this->getApp()))->getById($this->playlistId);
             $playlist->notifyLayouts();
         }
 
-        Log::debug('Delete Widget Complete');
+        $this->getLog()->debug('Delete Widget Complete');
     }
 
     private function add()
     {
-        Log::debug('Adding Widget ' . $this->type . ' to PlaylistId ' . $this->playlistId);
+        $this->getLog()->debug('Adding Widget ' . $this->type . ' to PlaylistId ' . $this->playlistId);
 
         $this->isNew = true;
 
@@ -420,7 +418,7 @@ class Widget implements \JsonSerializable
             VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder, :useDuration, :calculatedDuration)
         ';
 
-        $this->widgetId = PDOConnect::insert($sql, array(
+        $this->widgetId = $this->getStore()->insert($sql, array(
             'playlistId' => $this->playlistId,
             'ownerId' => $this->ownerId,
             'type' => $this->type,
@@ -433,7 +431,7 @@ class Widget implements \JsonSerializable
 
     private function update()
     {
-        Log::debug('Saving Widget ' . $this->type . ' on PlaylistId ' . $this->playlistId . ' WidgetId: ' . $this->widgetId);
+        $this->getLog()->debug('Saving Widget ' . $this->type . ' on PlaylistId ' . $this->playlistId . ' WidgetId: ' . $this->widgetId);
 
         $sql = '
           UPDATE `widget` SET `playlistId` = :playlistId,
@@ -446,7 +444,7 @@ class Widget implements \JsonSerializable
            WHERE `widgetId` = :widgetId
         ';
 
-        PDOConnect::update($sql, array(
+        $this->getStore()->update($sql, array(
             'playlistId' => $this->playlistId,
             'ownerId' => $this->ownerId,
             'type' => $this->type,
@@ -468,9 +466,9 @@ class Widget implements \JsonSerializable
 
         foreach ($this->mediaIds as $mediaId) {
 
-            Log::debug('Inserting %d', $mediaId);
+            $this->getLog()->debug('Inserting %d', $mediaId);
 
-            PDOConnect::insert($sql, array(
+            $this->getStore()->insert($sql, array(
                 'widgetId' => $this->widgetId,
                 'mediaId' => $mediaId,
                 'mediaId2' => $mediaId
@@ -502,6 +500,6 @@ class Widget implements \JsonSerializable
 
 
 
-        PDOConnect::update($sql, $params);
+        $this->getStore()->update($sql, $params);
     }
 }

@@ -33,11 +33,9 @@ use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 use Xibo\Helper\Random;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
-use Xibo\Storage\PDOConnect;
 
 class Soap
 {
@@ -115,7 +113,7 @@ class Soap
         $output = $cache->get();
 
         if ($cache->isHit()) {
-            Log::info('Returning required files from Cache for display %s', $this->display->display);
+            $this->getLog()->info('Returning required files from Cache for display %s', $this->display->display);
 
             // Log Bandwidth
             $this->LogBandwidth($this->display->displayId, Bandwidth::$RF, strlen($output));
@@ -141,10 +139,10 @@ class Soap
         $toFilter = $rfLookAhead - ($rfLookAhead % 3600);
 
         if ($this->display->isAuditing == 1)
-            Log::debug(sprintf('Required files date criteria. FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)));
+            $this->getLog()->debug(sprintf('Required files date criteria. FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             // Get a list of all layout ids in the schedule right now
             // including any layouts that have been associated to our Display Group
@@ -196,7 +194,7 @@ class Soap
                 $layouts[] = Sanitize::int($row['layoutID']);
 
         } catch (\Exception $e) {
-            Log::error('Unable to get a list of layouts. ' . $e->getMessage());
+            $this->getLog()->error('Unable to get a list of layouts. ' . $e->getMessage());
             return new \SoapFault('Sender', 'Unable to get a list of layouts');
         }
 
@@ -204,7 +202,7 @@ class Soap
         $layoutIdList = implode(',', $layouts);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             // Run a query to get all required files for this display.
             // Include the following:
@@ -314,8 +312,8 @@ class Soap
                 $pathsAdded[] = $path;
             }
         } catch (\Exception $e) {
-            Log::error('Unable to get a list of required files. ' . $e->getMessage());
-            Log::debug($e->getTraceAsString());
+            $this->getLog()->error('Unable to get a list of required files. ' . $e->getMessage());
+            $this->getLog()->debug($e->getTraceAsString());
             return new \SoapFault('Sender', 'Unable to get a list of files');
         }
 
@@ -345,7 +343,7 @@ class Soap
 
             // Log
             if ($this->display->isAuditing == 1)
-                Log::debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
+                $this->getLog()->debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
 
             // Add nonce
             $layoutNonce = (new RequiredFileFactory($this->getApp()))->createForLayout($this->display->displayId, $requestKey, $layoutId, $fileSize, basename($path));
@@ -431,7 +429,7 @@ class Soap
         $fileElements->appendChild($blackList);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             $sth = $dbh->prepare('SELECT MediaID FROM blacklist WHERE DisplayID = :displayid AND isIgnored = 0');
             $sth->execute(array(
@@ -446,7 +444,7 @@ class Soap
                 $blackList->appendChild($file);
             }
         } catch (\Exception $e) {
-            Log::error('Unable to get a list of blacklisted files. ' . $e->getMessage());
+            $this->getLog()->error('Unable to get a list of blacklisted files. ' . $e->getMessage());
             return new \SoapFault('Sender', 'Unable to get a list of blacklisted files');
         }
 
@@ -454,7 +452,7 @@ class Soap
         $this->phoneHome();
 
         if ($this->display->isAuditing == 1)
-            Log::debug($requiredFilesXml->saveXML());
+            $this->getLog()->debug($requiredFilesXml->saveXML());
 
         // Return the results of requiredFiles()
         $requiredFilesXml->formatOutput = true;
@@ -510,7 +508,7 @@ class Soap
         $output = $cache->get();
 
         if ($cache->isHit()) {
-            Log::info('Returning Schedule from Cache for display %s', $this->display->display);
+            $this->getLog()->info('Returning Schedule from Cache for display %s', $this->display->display);
 
             // Log Bandwidth
             $this->LogBandwidth($this->display->displayId, Bandwidth::$SCHEDULE, strlen($output));
@@ -538,10 +536,10 @@ class Soap
             $toFilter = ($fromFilter + 3600) - (($fromFilter + 3600) % 3600);
 
         if ($this->display->isAuditing == 1)
-            Log::debug(sprintf('FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)));
+            $this->getLog()->debug(sprintf('FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             // Get all the module dependants
             $sth = $dbh->prepare("SELECT DISTINCT StoredAs FROM `media` WHERE media.type = 'font' OR (media.type = 'module' AND media.moduleSystemFile = 1) ");
@@ -612,7 +610,7 @@ class Soap
             );
 
             if ($this->display->isAuditing)
-                Log::sql($SQL, $params);
+                $this->getLog()->sql($SQL, $params);
 
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
@@ -647,14 +645,14 @@ class Soap
                       AND media.type <> \'module\'
                 ';
 
-                foreach (PDOConnect::select($SQL, []) as $row) {
+                foreach ($this->getStore()->select($SQL, []) as $row) {
                     if (!array_key_exists($row['layoutId'], $layoutDependents))
                         $layoutDependents[$row['layoutId']] = [];
 
                     $layoutDependents[$row['layoutId']][] = $row['storedAs'];
                 }
 
-                Log::debug('Resolved dependents for Schedule: %s.', json_encode($layoutDependents, JSON_PRETTY_PRINT));
+                $this->getLog()->debug('Resolved dependents for Schedule: %s.', json_encode($layoutDependents, JSON_PRETTY_PRINT));
             }
 
             // We must have some results in here by this point
@@ -704,7 +702,7 @@ class Soap
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Error getting a list of layouts for the schedule. ' . $e->getMessage());
+            $this->getLog()->error('Error getting a list of layouts for the schedule. ' . $e->getMessage());
             return new \SoapFault('Sender', 'Unable to get A list of layouts for the schedule');
         }
 
@@ -765,7 +763,7 @@ class Soap
         $scheduleXml->formatOutput = true;
 
         if ($this->display->isAuditing == 1)
-            Log::debug($scheduleXml->saveXML());
+            $this->getLog()->debug($scheduleXml->saveXML());
 
         $output = $scheduleXml->saveXML();
 
@@ -813,10 +811,10 @@ class Soap
             throw new \SoapFault('Receiver', "This display client is not licensed", $hardwareKey);
 
         if ($this->display->isAuditing == 1)
-            Log::debug('Blacklisting ' . $mediaId . ' for ' . $reason);
+            $this->getLog()->debug('Blacklisting ' . $mediaId . ' for ' . $reason);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             // Check to see if this media / display is already blacklisted (and not ignored)
             $sth = $dbh->prepare('SELECT BlackListID FROM blacklist WHERE MediaID = :mediaid AND isIgnored = 0 AND DisplayID = :displayid');
@@ -858,10 +856,10 @@ class Soap
                 }
             } else {
                 if ($this->display->isAuditing == 1)
-                    Log::debug($mediaId . ' already black listed');
+                    $this->getLog()->debug($mediaId . ' already black listed');
             }
         } catch (\Exception $e) {
-            Log::error('Unable to query for Blacklist records. ' . $e->getMessage());
+            $this->getLog()->error('Unable to query for Blacklist records. ' . $e->getMessage());
             return new \SoapFault('Sender', "Unable to query for BlackList records.");
         }
 
@@ -891,13 +889,13 @@ class Soap
             throw new \SoapFault('Sender', 'This display client is not licensed.');
 
         if ($this->display->isAuditing == 1)
-            Log::debug('XML log: ' . $logXml);
+            $this->getLog()->debug('XML log: ' . $logXml);
 
         // Load the XML into a DOMDocument
         $document = new \DOMDocument("1.0");
 
         if (!$document->loadXML($logXml)) {
-            Log::error('Malformed XML from Player, this will be discarded. The Raw XML String provided is: ' . $logXml);
+            $this->getLog()->error('Malformed XML from Player, this will be discarded. The Raw XML String provided is: ' . $logXml);
             return true;
         }
 
@@ -923,7 +921,7 @@ class Soap
             $cat = strtolower($node->getAttribute('category'));
 
             if ($date == '' || $cat == '') {
-                Log::error('Log submitted without a date or category attribute');
+                $this->getLog()->error('Log submitted without a date or category attribute');
                 continue;
             }
 
@@ -955,7 +953,7 @@ class Soap
             // We should have enough information to log this now.
             $logType = ($cat == 'error') ? 'error' : 'audit';
 
-            Log::notice('%s,%s,%s,%s,%s,%s,%s,%s', $logType, $message, 'Client', $thread . $method . $type, $date, $scheduleId, $layoutId, $mediaId);
+            $this->getLog()->notice('%s,%s,%s,%s,%s,%s,%s,%s', $logType, $message, 'Client', $thread . $method . $type, $date, $scheduleId, $layoutId, $mediaId);
         }
 
         $this->LogBandwidth($this->display->displayId, Bandwidth::$SUBMITLOG, strlen($logXml));
@@ -991,7 +989,7 @@ class Soap
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
         if ($this->display->isAuditing == 1)
-            Log::debug('Received XML. ' . $statXml);
+            $this->getLog()->debug('Received XML. ' . $statXml);
 
         if ($statXml == "")
             throw new \SoapFault('Receiver', "Stat XML is empty.");
@@ -1012,7 +1010,7 @@ class Soap
             $type = $node->getAttribute('type');
 
             if ($fromdt == '' || $todt == '' || $type == '') {
-                Log::error('Stat submitted without the fromdt, todt or type attributes.');
+                $this->getLog()->error('Stat submitted without the fromdt, todt or type attributes.');
                 continue;
             }
 
@@ -1035,7 +1033,7 @@ class Soap
                 $stat->save();
             }
             catch (\PDOException $e) {
-                Log::error('Stat Add failed with error: %s', $e->getMessage());
+                $this->getLog()->error('Stat Add failed with error: %s', $e->getMessage());
             }
         }
 
@@ -1072,7 +1070,7 @@ class Soap
             throw new \SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->display->isAuditing == 1)
-            Log::debug($inventory);
+            $this->getLog()->debug($inventory);
 
         // Check that the $inventory contains something
         if ($inventory == '')
@@ -1108,12 +1106,12 @@ class Soap
                         break;
 
                     default:
-                        Log::debug('Skipping unknown node in media inventory: %s - %s.', $node->getAttribute('type'), $node->getAttribute('id'));
+                        $this->getLog()->debug('Skipping unknown node in media inventory: %s - %s.', $node->getAttribute('type'), $node->getAttribute('id'));
                         continue;
                 }
             }
             catch (NotFoundException $e) {
-                Log::info('Unable to find file in media inventory: %s', $node->getAttribute('type'), $node->getAttribute('id'));
+                $this->getLog()->info('Unable to find file in media inventory: %s', $node->getAttribute('type'), $node->getAttribute('id'));
                 continue;
             }
 
@@ -1204,7 +1202,7 @@ class Soap
             if (Config::GetSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
 
                 try {
-                    $dbh = PDOConnect::init();
+                    $dbh = $this->getStore()->getConnection();
 
                     // Retrieve number of displays
                     $sth = $dbh->prepare('SELECT COUNT(*) AS Cnt FROM `display` WHERE `licensed` = 1');
@@ -1218,7 +1216,7 @@ class Soap
                     $PHONE_HOME_URL = Config::GetSetting('PHONE_HOME_URL') . "?id=" . urlencode(Config::GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
 
                     if ($this->display->isAuditing == 1)
-                        Log::notice("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL, "xmds", "RequiredFiles");
+                        $this->getLog()->notice("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL, "xmds", "RequiredFiles");
 
                     // Set PHONE_HOME_TIME to NOW.
                     $sth = $dbh->prepare('UPDATE `setting` SET `value` = :time WHERE `setting`.`setting` = :setting LIMIT 1');
@@ -1230,11 +1228,11 @@ class Soap
                     @file_get_contents($PHONE_HOME_URL);
 
                     if ($this->display->isAuditing == 1)
-                        Log::notice("audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles");
+                        $this->getLog()->notice("audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles");
 
                 } catch (\Exception $e) {
 
-                    Log::error($e->getMessage());
+                    $this->getLog()->error($e->getMessage());
 
                     return false;
                 }
@@ -1266,18 +1264,18 @@ class Soap
             $this->display->save(Display::$saveOptionsMinimum);
 
             // Commit if necessary
-            PDOConnect::commitIfNecessary();
+            $this->getStore()->commitIfNecessary();
 
             // Configure our log processor
             $this->logProcessor->setDisplay($this->display->displayId);
 
             if ($this->display->isAuditing == 1)
-                Log::info('IN');
+                $this->getLog()->info('IN');
 
             return true;
 
         } catch (NotFoundException $e) {
-            Log::error($e->getMessage());
+            $this->getLog()->error($e->getMessage());
             return false;
         }
     }
@@ -1319,7 +1317,7 @@ class Soap
                             $mail->Body = $body;
 
                             if (!$mail->send())
-                                Log::error('Unable to send Display Up mail to %s', $user->email);
+                                $this->getLog()->error('Unable to send Display Up mail to %s', $user->email);
                         }
                     }
                 }
@@ -1335,7 +1333,7 @@ class Soap
                 $mail->Body = $body;
 
                 if (!$mail->send())
-                    Log::error('Unable to send Display Up mail to %s', $msgTo);
+                    $this->getLog()->error('Unable to send Display Up mail to %s', $msgTo);
             }
         }
     }
@@ -1370,7 +1368,7 @@ class Soap
             return true;
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             // Test bandwidth for the current month
             $sth = $dbh->prepare('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month = :month');
@@ -1383,7 +1381,7 @@ class Soap
             return ($bandwidthUsage >= ($xmdsLimit * 1024)) ? false : true;
 
         } catch (\Exception $e) {
-            Log::error($e->getMessage());
+            $this->getLog()->error($e->getMessage());
             return false;
         }
     }

@@ -28,9 +28,7 @@ use Xibo\Entity\Widget;
 use Xibo\Entity\WidgetOption;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class LayoutFactory
@@ -191,7 +189,7 @@ class LayoutFactory extends BaseFactory
      */
     public function loadByXlf($layoutXlf, $layout = null)
     {
-        Log::debug('Loading Layout by XLF');
+        $this->getLog()->debug('Loading Layout by XLF');
 
         // New Layout
         if ($layout == null)
@@ -216,7 +214,7 @@ class LayoutFactory extends BaseFactory
         // Populate Region Nodes
         foreach ($document->getElementsByTagName('region') as $regionNode) {
             /* @var \DOMElement $regionNode */
-            Log::debug('Found Region');
+            $this->getLog()->debug('Found Region');
 
             $region = (new RegionFactory($this->getApp()))->create(
                 (int)$regionNode->getAttribute('userId'),
@@ -248,11 +246,11 @@ class LayoutFactory extends BaseFactory
                 $widget->useDuration = ($widget->useDuration == '') ? 0 : 1;
                 $widget->tempId = $mediaNode->getAttribute('id');
 
-                Log::debug('Adding Widget to object model. %s', $widget);
+                $this->getLog()->debug('Adding Widget to object model. %s', $widget);
 
                 // Does this module type exist?
                 if (!array_key_exists($widget->type, $modules)) {
-                    Log::error('Module Type [%s] in imported Layout does not exist. Allowable types: %s', $widget->type, json_encode(array_keys($modules)));
+                    $this->getLog()->error('Module Type [%s] in imported Layout does not exist. Allowable types: %s', $widget->type, json_encode(array_keys($modules)));
                     continue;
                 }
 
@@ -304,7 +302,7 @@ class LayoutFactory extends BaseFactory
             $layout->regions[] = $region;
         }
 
-        Log::debug('Finished loading layout - there are %d regions.', count($layout->regions));
+        $this->getLog()->debug('Finished loading layout - there are %d regions.', count($layout->regions));
 
         // Load any existing tags
         if (!is_array($layout->tags))
@@ -334,7 +332,7 @@ class LayoutFactory extends BaseFactory
      */
     public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags)
     {
-        Log::debug('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName);
+        $this->getLog()->debug('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName);
 
         $libraryLocation = Config::GetSetting('LIBRARY_LOCATION') . 'temp/';
 
@@ -353,7 +351,7 @@ class LayoutFactory extends BaseFactory
         // Construct the Layout
         $layout = $this->loadByXlf($zip->getFromName('layout.xml'));
 
-        Log::debug('Layout Loaded: %s.', $layout);
+        $this->getLog()->debug('Layout Loaded: %s.', $layout);
 
         // Override the name/description
         $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);
@@ -361,7 +359,7 @@ class LayoutFactory extends BaseFactory
 
         // Remove the tags if necessary
         if (!$importTags) {
-            Log::debug('Removing tags from imported layout');
+            $this->getLog()->debug('Removing tags from imported layout');
             $layout->tags = [];
         }
 
@@ -376,7 +374,7 @@ class LayoutFactory extends BaseFactory
         // Set the owner
         $layout->setOwner($userId);
 
-        Log::debug('Process mapping.json file.');
+        $this->getLog()->debug('Process mapping.json file.');
 
         // Go through each region and add the media (updating the media ids)
         $mappings = json_decode($zip->getFromName('mapping.json'), true);
@@ -392,7 +390,7 @@ class LayoutFactory extends BaseFactory
             try {
                 $media = (new MediaFactory($this->getApp()))->getByName($intendedMediaName);
 
-                Log::debug('Media already exists with name: %s', $intendedMediaName);
+                $this->getLog()->debug('Media already exists with name: %s', $intendedMediaName);
 
                 if ($replaceExisting) {
                     // Media with this name already exists, but we don't want to use it.
@@ -402,7 +400,7 @@ class LayoutFactory extends BaseFactory
 
             } catch (NotFoundException $e) {
                 // Create it instead
-                Log::debug('Media does not exist in Library, add it. %s', $file['file']);
+                $this->getLog()->debug('Media does not exist in Library, add it. %s', $file['file']);
 
                 $media = (new MediaFactory($this->getApp()))->create($intendedMediaName, $file['file'], $file['type'], $userId, $file['duration']);
                 $media->tags[] = (new TagFactory($this->getApp()))->tagFromString('imported');
@@ -414,7 +412,7 @@ class LayoutFactory extends BaseFactory
             $oldMediaId = $file['mediaid'];
             $newMediaId = $media->mediaId;
 
-            Log::debug('Layout has %d widgets', count($widgets));
+            $this->getLog()->debug('Layout has %d widgets', count($widgets));
 
             if ($file['background'] == 1) {
                 $layout->backgroundImageId = $newMediaId;
@@ -425,11 +423,11 @@ class LayoutFactory extends BaseFactory
                 foreach ($widgets as $widget) {
                     /* @var Widget $widget */
 
-                    Log::debug('Checking Widget for the old mediaID [%d] so we can replace it with the new mediaId [%d] and storedAs [%s]. Media assigned to widget %s.', $oldMediaId, $newMediaId, $media->storedAs, json_encode($widget->mediaIds));
+                    $this->getLog()->debug('Checking Widget for the old mediaID [%d] so we can replace it with the new mediaId [%d] and storedAs [%s]. Media assigned to widget %s.', $oldMediaId, $newMediaId, $media->storedAs, json_encode($widget->mediaIds));
 
                     if (in_array($oldMediaId, $widget->mediaIds)) {
 
-                        Log::debug('Removing %d and replacing with %d', $oldMediaId, $newMediaId);
+                        $this->getLog()->debug('Removing %d and replacing with %d', $oldMediaId, $newMediaId);
 
                         // Unassign the old ID
                         $widget->unassignMedia($oldMediaId);
@@ -444,7 +442,7 @@ class LayoutFactory extends BaseFactory
             }
         }
 
-        Log::debug('Finished creating from Zip');
+        $this->getLog()->debug('Finished creating from Zip');
 
         // Finished
         $zip->close();
@@ -677,7 +675,7 @@ class LayoutFactory extends BaseFactory
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
+        foreach ($this->getStore()->select($sql, $params) as $row) {
             $layout = new Layout();
             $layout->setApp($this->getApp());
 
@@ -710,7 +708,7 @@ class LayoutFactory extends BaseFactory
         // Paging
         if ($limit != '' && count($entries) > 0) {
             unset($params['permissionEntityForGroup']);
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }
 

@@ -29,10 +29,8 @@ use Xibo\Factory\UserFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
-use Xibo\Storage\PDOConnect;
 
 class StatusDashboard extends Base
 {
@@ -52,7 +50,7 @@ class StatusDashboard extends Base
             $displayIds[] = -1;
 
             // Get some data for a bandwidth chart
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             $sql = '
               SELECT MAX(FROM_UNIXTIME(month)) AS month,
@@ -64,7 +62,7 @@ class StatusDashboard extends Base
             $params = array('month' => time() - (86400 * 365));
 
 
-            $results = PDOConnect::select($sql, $params);
+            $results = $this->getStore()->select($sql, $params);
 
             // Monthly bandwidth - optionally tested against limits
             $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
@@ -247,8 +245,8 @@ class StatusDashboard extends Base
                     $data['latestNews'] = $latestNews;
                 }
                 catch (PicoFeedException $e) {
-                    Log::error('Unable to get feed: %s', $e->getMessage());
-                    Log::debug($e->getTraceAsString());
+                    $this->getLog()->error('Unable to get feed: %s', $e->getMessage());
+                    $this->getLog()->debug($e->getTraceAsString());
 
                     $data['latestNews'] = array(array('title' => __('Latest news not available.'), 'description' => '', 'link' => ''));
                 }
@@ -259,7 +257,7 @@ class StatusDashboard extends Base
         }
         catch (Exception $e) {
 
-            Log::error($e->getMessage());
+            $this->getLog()->error($e->getMessage());
 
             // Show the error in place of the bandwidth chart
             $data['widget-error'] = 'Unable to get widget details';

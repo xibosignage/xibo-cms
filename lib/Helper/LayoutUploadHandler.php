@@ -12,7 +12,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
         // Handle form data, e.g. $_REQUEST['description'][$index]
         $fileName = $file->name;
 
-        Log::debug('Upload complete for ' . $fileName . '.');
+        $this->getLog()->debug('Upload complete for ' . $fileName . '.');
 
         // Upload and Save
         try {
@@ -38,8 +38,8 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             $file->name = $layout->layout;
 
         } catch (Exception $e) {
-            Log::error('Error uploading media: %s', $e->getMessage());
-            Log::debug($e->getTraceAsString());
+            $this->getLog()->error('Error uploading media: %s', $e->getMessage());
+            $this->getLog()->debug($e->getTraceAsString());
 
             $file->error = $e->getMessage();
 

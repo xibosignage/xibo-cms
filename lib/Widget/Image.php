@@ -24,7 +24,6 @@ use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
 class Image extends ModuleWidget
@@ -104,7 +103,7 @@ class Image extends ModuleWidget
      */
     public function getResource($displayId = 0)
     {
-        Log::debug('GetResource for %d', $this->getMediaId());
+        $this->getLog()->debug('GetResource for %d', $this->getMediaId());
 
         $media = (new MediaFactory($this->getApp()))->getById($this->getMediaId());
         $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
@@ -124,7 +123,7 @@ class Image extends ModuleWidget
             // Preview (we output the file to the browser with image headers
             Img::configure(array('driver' => 'gd'));
 
-            Log::debug('Preview Requested with Width and Height %d x %d', $width, $height);
+            $this->getLog()->debug('Preview Requested with Width and Height %d x %d', $width, $height);
 
             // Output a thumbnail?
             if ($width != 0 || $height != 0) {
@@ -136,12 +135,12 @@ class Image extends ModuleWidget
             }
             else {
                 // Load the whole image
-                Log::debug('Loading %s', $filePath);
+                $this->getLog()->debug('Loading %s', $filePath);
                 $eTag = $media->md5;
                 $img = Img::make($filePath);
             }
 
-            Log::debug('Outputting Image Response');
+            $this->getLog()->debug('Outputting Image Response');
 
             // Output the file
             echo $img->response();

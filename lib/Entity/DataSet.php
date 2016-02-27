@@ -16,9 +16,7 @@ use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class DataSet
@@ -215,7 +213,7 @@ class DataSet implements \JsonSerializable
 
                 // Check allowable
                 if (!in_array($sanitized, $allowedOrderCols)) {
-                    Log::Info('Disallowed column: ' . $sanitized);
+                    $this->getLog()->Info('Disallowed column: ' . $sanitized);
                     continue;
                 }
 
@@ -248,10 +246,10 @@ class DataSet implements \JsonSerializable
 
 
 
-        $data = PDOConnect::select($sql, $params);
+        $data = $this->getStore()->select($sql, $params);
 
         // If there are limits run some SQL to work out the full payload of rows
-        $results = PDOConnect::select('SELECT COUNT(*) AS total FROM (' . $body, $params);
+        $results = $this->getStore()->select('SELECT COUNT(*) AS total FROM (' . $body, $params);
         $this->countLast = intval($results[0]['total']);
 
         return $data;
@@ -278,7 +276,7 @@ class DataSet implements \JsonSerializable
      */
     public function hasData()
     {
-        return PDOConnect::exists('SELECT id FROM `dataset_' . $this->dataSetId . '` LIMIT 1', []);
+        return $this->getStore()->exists('SELECT id FROM `dataset_' . $this->dataSetId . '` LIMIT 1', []);
     }
 
     /**
@@ -374,7 +372,7 @@ class DataSet implements \JsonSerializable
         }
 
         // Delete the data set
-        PDOConnect::update('DELETE FROM `dataset` WHERE dataSetId = :dataSetId', ['dataSetId' => $this->dataSetId]);
+        $this->getStore()->update('DELETE FROM `dataset` WHERE dataSetId = :dataSetId', ['dataSetId' => $this->dataSetId]);
 
         // The last thing we do is drop the dataSet table
         $this->dropTable();
@@ -386,8 +384,8 @@ class DataSet implements \JsonSerializable
     public function deleteData()
     {
         // The last thing we do is drop the dataSet table
-        PDOConnect::update('TRUNCATE TABLE `dataset_' . $this->dataSetId . '`', []);
-        PDOConnect::update('ALTER TABLE `dataset_' . $this->dataSetId . '` AUTO_INCREMENT = 1', []);
+        $this->getStore()->update('TRUNCATE TABLE `dataset_' . $this->dataSetId . '`', []);
+        $this->getStore()->update('ALTER TABLE `dataset_' . $this->dataSetId . '` AUTO_INCREMENT = 1', []);
     }
 
     /**
@@ -395,7 +393,7 @@ class DataSet implements \JsonSerializable
      */
     private function add()
     {
-        $this->dataSetId = PDOConnect::insert('
+        $this->dataSetId = $this->getStore()->insert('
           INSERT INTO `dataset` (DataSet, Description, UserID, `code`, `isLookup`)
             VALUES (:dataSet, :description, :userId, :code, :isLookup)
         ', [
@@ -415,7 +413,7 @@ class DataSet implements \JsonSerializable
      */
     private function edit()
     {
-        PDOConnect::update('
+        $this->getStore()->update('
           UPDATE dataset SET DataSet = :dataSet, Description = :description, lastDataEdit = :lastDataEdit, `code` = :code, `isLookup` = :isLookup WHERE DataSetID = :dataSetId
         ', [
             'dataSetId' => $this->dataSetId,
@@ -430,7 +428,7 @@ class DataSet implements \JsonSerializable
     private function createTable()
     {
         // Create the data table for this dataset
-        PDOConnect::update('
+        $this->getStore()->update('
           CREATE TABLE `dataset_' . $this->dataSetId . '` (
             `id` int(11) NOT NULL AUTO_INCREMENT,
             PRIMARY KEY (`id`)
@@ -440,7 +438,7 @@ class DataSet implements \JsonSerializable
 
     private function dropTable()
     {
-        PDOConnect::update('DROP TABLE IF EXISTS dataset_' . $this->dataSetId, []);
+        $this->getStore()->update('DROP TABLE IF EXISTS dataset_' . $this->dataSetId, []);
     }
 
     /**
@@ -468,7 +466,7 @@ class DataSet implements \JsonSerializable
      */
     public function notify()
     {
-        Log::debug('Checking for Displays to refresh for DataSet %d', $this->dataSetId);
+        $this->getLog()->debug('Checking for Displays to refresh for DataSet %d', $this->dataSetId);
 
         foreach ((new DisplayFactory($this->getApp()))->getByActiveDataSetId($this->dataSetId) as $display) {
             /* @var \Xibo\Entity\Display $display */
@@ -485,7 +483,7 @@ class DataSet implements \JsonSerializable
      */
     public function addRow($row)
     {
-        Log::debug('Adding row %s', var_export($row, true));
+        $this->getLog()->debug('Adding row %s', var_export($row, true));
 
         // Update the last edit date on this dataSet
         $this->lastDataEdit = time();
@@ -499,9 +497,9 @@ class DataSet implements \JsonSerializable
 
         $sql = 'INSERT INTO `dataset_' . $this->dataSetId . '` (`' . implode('`, `', $keys) . '`) VALUES (' . implode(',', array_fill(0, count($values), '?')) . ')';
 
-        Log::sql($sql, $values);
+        $this->getLog()->sql($sql, $values);
 
-        return PDOConnect::insert($sql, $values);
+        return $this->getStore()->insert($sql, $values);
     }
 
     /**
@@ -511,7 +509,7 @@ class DataSet implements \JsonSerializable
      */
     public function editRow($rowId, $row)
     {
-        Log::debug('Editing row %s', var_export($row, true));
+        $this->getLog()->debug('Editing row %s', var_export($row, true));
 
         // Update the last edit date on this dataSet
         $this->lastDataEdit = time();
@@ -535,7 +533,7 @@ class DataSet implements \JsonSerializable
 
 
 
-        PDOConnect::update($sql, $params);
+        $this->getStore()->update($sql, $params);
     }
 
     /**
@@ -546,7 +544,7 @@ class DataSet implements \JsonSerializable
     {
         $this->lastDataEdit = time();
 
-        PDOConnect::update('DELETE FROM `dataset_' . $this->dataSetId . '` WHERE id = :id', [
+        $this->getStore()->update('DELETE FROM `dataset_' . $this->dataSetId . '` WHERE id = :id', [
             'id' => $rowId
         ]);
     }

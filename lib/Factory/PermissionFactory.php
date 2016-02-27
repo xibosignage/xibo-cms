@@ -27,7 +27,6 @@ use Xibo\Entity\Permission;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 class PermissionFactory extends BaseFactory
 {
@@ -44,7 +43,7 @@ class PermissionFactory extends BaseFactory
     public function create($groupId, $entity, $objectId, $view, $edit, $delete)
     {
         // Lookup the entityId
-        $results = PDOConnect::select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => $entity]);
+        $results = $this->getStore()->select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => $entity]);
 
         if (count($results) <= 0)
             throw new \InvalidArgumentException('Entity not found: ' . $entity);
@@ -72,7 +71,7 @@ class PermissionFactory extends BaseFactory
     public function createForEveryone($entity, $objectId, $view, $edit, $delete)
     {
         // Lookup the entityId
-        $results = PDOConnect::select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => $entity]);
+        $results = $this->getStore()->select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => $entity]);
 
         if (count($results) <= 0)
             throw new \InvalidArgumentException('Entity not found: ' . $entity);
@@ -144,7 +143,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
         $params = array('entity' => $entity, 'objectId' => $objectId);
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
+        foreach ($this->getStore()->select($sql, $params) as $row) {
             $permission = new Permission();
             $permission->permissionId = $row['permissionId'];
             $permission->groupId = $row['groupId'];
@@ -173,7 +172,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
     public function getAllByObjectId($entity, $objectId, $sortOrder = null, $filterBy = null)
     {
         // Look up the entityId for any add operation that might occur
-        $entityId = PDOConnect::select('SELECT entityId FROM permissionentity WHERE entity = :entity', array('entity' => $entity));
+        $entityId = $this->getStore()->select('SELECT entityId FROM permissionentity WHERE entity = :entity', array('entity' => $entity));
 
         if (count($entityId) <= 0)
             throw new NotFoundException(__('Entity not found'));
@@ -274,7 +273,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
+        foreach ($this->getStore()->select($sql, $params) as $row) {
             $permission = new Permission();
             $permission->permissionId = $row['permissionId'];
             $permission->groupId = $row['groupId'];
@@ -292,7 +291,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
 
         // Paging
         if ($limit != '' && count($permissions) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }
 
@@ -323,7 +322,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
+        foreach ($this->getStore()->select($sql, $params) as $row) {
             $permission = new Permission();
             $permission->permissionId = $row['permissionId'];
             $permission->groupId = $row['groupId'];
@@ -367,7 +366,7 @@ SELECT `permission`.`permissionId`, `permission`.`groupId`, `permission`.`object
 ';
         $params = array('entity' => $entity, 'userId' => $userId);
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
+        foreach ($this->getStore()->select($sql, $params) as $row) {
             $permission = new Permission();
             $permission->permissionId = $row['permissionId'];
             $permission->groupId = $row['groupId'];

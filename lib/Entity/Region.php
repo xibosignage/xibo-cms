@@ -26,8 +26,6 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionOptionFactory;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class Region
@@ -200,7 +198,7 @@ class Region implements \JsonSerializable
                 return $regionOption;
         }
 
-        Log::debug('RegionOption %s not found', $option);
+        $this->getLog()->debug('RegionOption %s not found', $option);
 
         throw new NotFoundException('Region Option not found');
     }
@@ -279,7 +277,7 @@ class Region implements \JsonSerializable
 
         $options = array_merge(['regionIncludePlaylists' => true], $options);
 
-        Log::debug('Load Region with %s', json_encode($options));
+        $this->getLog()->debug('Load Region with %s', json_encode($options));
 
         // Load permissions
         $this->permissions = (new PermissionFactory($this->getApp()))->getByObjectId(get_class(), $this->regionId);
@@ -312,7 +310,7 @@ class Region implements \JsonSerializable
             'manageRegionAssignments' => true
         ], $options);
 
-        Log::debug('Saving %s. Options = %s', $this, json_encode($options, JSON_PRETTY_PRINT));
+        $this->getLog()->debug('Saving %s. Options = %s', $this, json_encode($options, JSON_PRETTY_PRINT));
 
         if ($this->regionId == null || $this->regionId == 0)
             $this->add();
@@ -347,7 +345,7 @@ class Region implements \JsonSerializable
         if ($this->hash == null)
             $this->load();
 
-        Log::debug('Deleting ' . $this);
+        $this->getLog()->debug('Deleting ' . $this);
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {
@@ -370,23 +368,23 @@ class Region implements \JsonSerializable
 
         // Should we delete orphaned playlists?
         if ($options['deleteOrphanedPlaylists']) {
-            Log::debug('We should delete orphaned playlists, checking %d playlists.', count($playlists));
+            $this->getLog()->debug('We should delete orphaned playlists, checking %d playlists.', count($playlists));
 
             // Delete
             foreach ($playlists as $playlist) {
                 /* @var Playlist $playlist */
                 if (!$playlist->hasLayouts()) {
-                    Log::debug('Deleting orphaned playlist: %d', $playlist->playlistId);
+                    $this->getLog()->debug('Deleting orphaned playlist: %d', $playlist->playlistId);
                     $playlist->delete();
                 }
                 else {
-                    Log::debug('Playlist still linked to Layouts, skipping playlist delete');
+                    $this->getLog()->debug('Playlist still linked to Layouts, skipping playlist delete');
                 }
             }
         }
 
         // Delete this region
-        PDOConnect::update('DELETE FROM `region` WHERE regionId = :regionId', array('regionId' => $this->regionId));
+        $this->getStore()->update('DELETE FROM `region` WHERE regionId = :regionId', array('regionId' => $this->regionId));
     }
 
     // Add / Update
@@ -395,11 +393,11 @@ class Region implements \JsonSerializable
      */
     private function add()
     {
-        Log::debug('Adding region to LayoutId ' . $this->layoutId);
+        $this->getLog()->debug('Adding region to LayoutId ' . $this->layoutId);
 
         $sql = 'INSERT INTO `region` (`layoutId`, `ownerId`, `name`, `width`, `height`, `top`, `left`, `zIndex`) VALUES (:layoutId, :ownerId, :name, :width, :height, :top, :left, :zIndex)';
 
-        $this->regionId = PDOConnect::insert($sql, array(
+        $this->regionId = $this->getStore()->insert($sql, array(
             'layoutId' => $this->layoutId,
             'ownerId' => $this->ownerId,
             'name' => $this->name,
@@ -416,7 +414,7 @@ class Region implements \JsonSerializable
      */
     private function update()
     {
-        Log::debug('Editing %s', $this);
+        $this->getLog()->debug('Editing %s', $this);
 
         $sql = '
           UPDATE `region` SET
@@ -431,7 +429,7 @@ class Region implements \JsonSerializable
            WHERE `regionId` = :regionId
         ';
 
-        PDOConnect::update($sql, array(
+        $this->getStore()->update($sql, array(
             'ownerId' => $this->ownerId,
             'name' => $this->name,
             'width' => $this->width,
@@ -462,7 +460,7 @@ class Region implements \JsonSerializable
             if ($playlist->playlistId == 0)
                 $playlist->save();
 
-            PDOConnect::insert('INSERT INTO `lkregionplaylist` (regionId, playlistId, displayOrder) VALUES (:regionId, :playlistId, :displayOrder) ON DUPLICATE KEY UPDATE regionId = regionId', array(
+            $this->getStore()->insert('INSERT INTO `lkregionplaylist` (regionId, playlistId, displayOrder) VALUES (:regionId, :playlistId, :displayOrder) ON DUPLICATE KEY UPDATE regionId = regionId', array(
                 'regionId' => $this->regionId,
                 'playlistId' => $playlist->playlistId,
                 'displayOrder' => $playlist->displayOrder
@@ -496,6 +494,6 @@ class Region implements \JsonSerializable
 
 
 
-        PDOConnect::update($sql, $params);
+        $this->getStore()->update($sql, $params);
     }
 }

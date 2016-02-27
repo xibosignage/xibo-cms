@@ -30,7 +30,6 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Cache;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
@@ -44,8 +43,6 @@ class ForecastIo extends ModuleWidget
     public function __construct()
     {
         $this->resourceFolder = PROJECT_ROOT . '/web/modules/forecastio';
-
-        parent::__construct();
     }
 
     /**
@@ -123,7 +120,7 @@ class ForecastIo extends ModuleWidget
             $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
 
-        Log::debug(count($this->module->settings['templates']));
+        $this->getLog()->debug(count($this->module->settings['templates']));
     }
 
     /**
@@ -317,7 +314,7 @@ class ForecastIo extends ModuleWidget
         $data = $cache->get();
 
         if ($cache->isMiss()) {
-            Log::notice('Getting Forecast from the API');
+            $this->getLog()->notice('Getting Forecast from the API');
             if (!$data = $this->get($defaultLat, $defaultLong, null, $apiOptions)) {
                 return false;
             }
@@ -401,7 +398,7 @@ class ForecastIo extends ModuleWidget
 
                 $time = Date::getLocalDate($data['time'], $timeSplit[1]);
 
-                Log::info('Time: ' . $time);
+                $this->getLog()->info('Time: ' . $time);
 
                 // Pull time out of the array
                 $source = str_replace($sub, $time, $source);
@@ -529,7 +526,7 @@ class ForecastIo extends ModuleWidget
             $request_url .= '?'. http_build_query($options);
         }
 
-        Log::debug('Calling API with: ' . $request_url);
+        $this->getLog()->debug('Calling API with: ' . $request_url);
 
         $request_url = str_replace('[APIKEY]', $this->getSetting('apiKey'), $request_url);
 
@@ -541,12 +538,12 @@ class ForecastIo extends ModuleWidget
 
             // Success?
             if ($response->getStatusCode() != 200) {
-                Log::error('ForecastIO API returned %d status. Unable to proceed. Headers = %s', $response->getStatusCode(), var_export($response->getHeaders(), true));
+                $this->getLog()->error('ForecastIO API returned %d status. Unable to proceed. Headers = %s', $response->getStatusCode(), var_export($response->getHeaders(), true));
 
                 // See if we can parse the error.
                 $body = json_decode($response->getBody());
 
-                Log::error('ForecastIO Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
+                $this->getLog()->error('ForecastIO Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
 
                 return false;
             }
@@ -557,7 +554,7 @@ class ForecastIo extends ModuleWidget
             return $body;
         }
         catch (RequestException $e) {
-            Log::error('Unable to reach Forecast API: %s', $e->getMessage());
+            $this->getLog()->error('Unable to reach Forecast API: %s', $e->getMessage());
             return false;
         }
     }

@@ -26,7 +26,6 @@ namespace Xibo\Factory;
 use Xibo\Entity\Resolution;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 class ResolutionFactory extends BaseFactory
 {
@@ -155,13 +154,13 @@ class ResolutionFactory extends BaseFactory
 
 
 
-        foreach(PDOConnect::select($sql, $params) as $record) {
+        foreach($this->getStore()->select($sql, $params) as $record) {
             $entities[] = (new Resolution())->hydrate($record, ['intProperties' => ['width', 'height', 'version', 'enabled']]);
         }
 
         // Paging
         if ($limit != '' && count($entities) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }
 

@@ -36,7 +36,7 @@ $app->get('/', function () use ($app) {
         $user->newUserWizard = 1;
     }
     else {
-        \Xibo\Helper\Log::debug('Showing the homepage: %s', $user->homePageId);
+        $app->logHelper->debug('Showing the homepage: %s', $user->homePageId);
 
         $page = (new \Xibo\Factory\PageFactory($app))->getById($user->homePageId);
 
@@ -71,7 +71,7 @@ $app->post('/login', function () use ($app) {
         $controller->setNoOutput();
         $controller->login();
 
-        \Xibo\Helper\Log::info('%s user logged in.', $app->user->userName);
+        $app->logHelper->info('%s user logged in.', $app->user->userName);
 
         try {
             $redirect = ($priorRoute == '' || stripos($priorRoute, 'login')) ? $app->urlFor('home') : $priorRoute;
@@ -80,11 +80,11 @@ $app->post('/login', function () use ($app) {
             $redirect = $app->urlFor('home');
         }
 
-        \Xibo\Helper\Log::debug('Redirect to %s', $redirect);
+        $app->logHelper->debug('Redirect to %s', $redirect);
         $app->redirect($redirect);
     }
     catch (\Xibo\Exception\AccessDeniedException $e) {
-        \Xibo\Helper\Log::warning($e->getMessage());
+        $app->logHelper->warning($e->getMessage());
         $app->flash('login_message', __('Username or Password incorrect'));
         $app->flash('priorRoute', $priorRoute);
     }

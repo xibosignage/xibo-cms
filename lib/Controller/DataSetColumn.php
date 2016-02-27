@@ -14,7 +14,6 @@ use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetColumnTypeFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DataTypeFactory;
-use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 
 class DataSetColumn extends Base
@@ -120,7 +119,7 @@ class DataSetColumn extends Base
             'dataSet' => $dataSet,
             'dataTypes' => (new DataTypeFactory($this->getApp()))->query(),
             'dataSetColumnTypes' => (new DataSetColumnTypeFactory($this->getApp()))->query(),
-            'help' => Help::Link('DataSet', 'AddColumn')
+            'help' => $this->getHelp()->link('DataSet', 'AddColumn')
         ]);
     }
 
@@ -241,7 +240,7 @@ class DataSetColumn extends Base
             'dataSetColumn' => (new DataSetColumnFactory($this->getApp()))->getById($dataSetColumnId),
             'dataTypes' => (new DataTypeFactory($this->getApp()))->query(),
             'dataSetColumnTypes' => (new DataSetColumnTypeFactory($this->getApp()))->query(),
-            'help' => Help::Link('DataSet', 'EditColumn')
+            'help' => $this->getHelp()->link('DataSet', 'EditColumn')
         ]);
     }
 
@@ -367,7 +366,7 @@ class DataSetColumn extends Base
         $this->getState()->setData([
             'dataSet' => $dataSet,
             'dataSetColumn' => (new DataSetColumnFactory($this->getApp()))->getById($dataSetColumnId),
-            'help' => Help::Link('DataSet', 'DeleteColumn')
+            'help' => $this->getHelp()->link('DataSet', 'DeleteColumn')
         ]);
     }
 

@@ -23,7 +23,6 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Form;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
@@ -71,7 +70,7 @@ class Settings extends Base
                 $options = [];
                 foreach($iterator as $file) {
                     /* @var \SplFileInfo $file */
-                    Log::debug('Found %s', $file->getPath());
+                    $this->getLog()->debug('Found %s', $file->getPath());
 
                     // Include the config file
                     include $file->getPath() . '/' . $file->getFilename();

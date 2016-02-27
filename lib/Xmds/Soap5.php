@@ -15,7 +15,6 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
 class Soap5 extends Soap4
@@ -56,7 +55,7 @@ class Soap5 extends Soap4
         }
 
         // Audit in
-        Log::debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
+        $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -153,7 +152,7 @@ class Soap5 extends Soap4
 
                 // Check to see if the channel/pubKey are already entered
                 if ($display->isAuditing == 1) {
-                    Log::debug('xmrChannel: [' . $xmrChannel . ']. xmrPublicKey: [' . $xmrPubKey . ']');
+                    $this->getLog()->debug('xmrChannel: [' . $xmrChannel . ']. xmrPublicKey: [' . $xmrPubKey . ']');
                 }
 
                 // Update the Channel
@@ -207,7 +206,7 @@ class Soap5 extends Soap4
 
         // Audit our return
         if ($display->isAuditing == 1)
-            Log::debug($returnXml, $display->displayId);
+            $this->getLog()->debug($returnXml, $display->displayId);
 
         return $returnXml;
     }

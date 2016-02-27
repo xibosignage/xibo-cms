@@ -24,9 +24,7 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Date;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 
 class Stats extends Base
@@ -152,7 +150,7 @@ class Stats extends Base
             $toDt->addDay(1);
         }
 
-        Log::debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
+        $this->getLog()->debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
 
         // Get an array of display id this user has access to.
         $display_ids = array();
@@ -228,7 +226,7 @@ class Stats extends Base
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
+        foreach ($this->getStore()->select($sql, $params) as $row) {
             $entry = [];
             $entry['type'] = Sanitize::string($row['type']);
             $entry['display'] = Sanitize::string($row['Display']);
@@ -263,7 +261,7 @@ class Stats extends Base
             trigger_error(__('No displays with View permissions'), E_USER_ERROR);
 
         // Get some data for a bandwidth chart
-        $dbh = PDOConnect::init();
+        $dbh = $this->getStore()->getConnection();
 
         $params = array(
             'type' => 'displaydown',
@@ -353,7 +351,7 @@ class Stats extends Base
             trigger_error(__('No displays with View permissions'), E_USER_ERROR);
 
         // Get some data for a bandwidth chart
-        $dbh = PDOConnect::init();
+        $dbh = $this->getStore()->getConnection();
 
         $displayId = Sanitize::getInt('displayId');
         $params = array(
@@ -494,7 +492,7 @@ class Stats extends Base
         fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag']);
 
         // Do some post processing
-        foreach (PDOConnect::select($sql, $params) as $row) {
+        foreach ($this->getStore()->select($sql, $params) as $row) {
             // Read the columns
             $type = Sanitize::string($row['Type']);
             $fromDt = Sanitize::string($row['start']);

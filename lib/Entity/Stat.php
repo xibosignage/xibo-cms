@@ -9,8 +9,6 @@
 namespace Xibo\Entity;
 
 
-use Xibo\Storage\PDOConnect;
-
 class Stat
 {
     use EntityTrait;
@@ -36,7 +34,7 @@ class Stat
 
     private function add()
     {
-        $this->statId = PDOConnect::insert('
+        $this->statId = $this->getStore()->insert('
             INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag)
               VALUES (:type, :statDate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag)
         ', [
@@ -54,12 +52,12 @@ class Stat
 
     private function edit()
     {
-        PDOConnect::update('UPDATE stat SET end = :toDt WHERE statId = :statId', ['statId' => $this->statId, 'toDt' => $this->toDt]);
+        $this->getStore()->update('UPDATE stat SET end = :toDt WHERE statId = :statId', ['statId' => $this->statId, 'toDt' => $this->toDt]);
     }
 
     public static function displayUp($displayId)
     {
-        PDOConnect::update('UPDATE `stat` SET end = :toDt WHERE displayId = :displayId AND end IS NULL AND type = :type', [
+        $this->getStore()->update('UPDATE `stat` SET end = :toDt WHERE displayId = :displayId AND end IS NULL AND type = :type', [
             'toDt' => date('Y-m-d H:i:s'),
             'type' => 'displaydown',
             'displayId' => $displayId

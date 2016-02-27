@@ -10,8 +10,10 @@ namespace Xibo\Entity;
 
 
 use Slim\Slim;
+use Xibo\Helper\Log;
 use Xibo\Helper\ObjectVars;
 use Xibo\Helper\Sanitize;
+use Xibo\Storage\StorageInterface;
 
 trait EntityTrait
 {
@@ -143,6 +145,24 @@ trait EntityTrait
      */
     protected function getPool()
     {
-        return $this->app->pool;
+        return $this->getApp()->pool;
+    }
+
+    /**
+     * Get Store
+     * @return StorageInterface
+     */
+    protected function getStore()
+    {
+        return $this->getApp()->store;
+    }
+
+    /**
+     * Get Log
+     * @return Log
+     */
+    protected function getLog()
+    {
+        return $this->getApp()->logHelper;
     }
 }

@@ -35,7 +35,7 @@ class ApiAuthCodeStorage extends AbstractStorage implements AuthCodeInterface
      */
     public function get($code)
     {
-        $result = PDOConnect::select('SELECT * FROM oauth_auth_codes WHERE auth_code = :auth_code AND expire_time >= :expire_time', array('auth_code' => $code, 'expire_time' => time()));
+        $result = $this->getStore()->select('SELECT * FROM oauth_auth_codes WHERE auth_code = :auth_code AND expire_time >= :expire_time', array('auth_code' => $code, 'expire_time' => time()));
 
         if (count($result) === 1) {
             $token = new AuthCodeEntity($this->server);
@@ -51,7 +51,7 @@ class ApiAuthCodeStorage extends AbstractStorage implements AuthCodeInterface
 
     public function create($token, $expireTime, $sessionId, $redirectUri)
     {
-        PDOConnect::insert('
+        $this->getStore()->insert('
             INSERT INTO oauth_auth_codes (auth_code, client_redirect_uri, session_id, expire_time)
                 VALUES (:auth_code, :client_redirect_uri, :session_id, :expire_time)
             ', [
@@ -67,7 +67,7 @@ class ApiAuthCodeStorage extends AbstractStorage implements AuthCodeInterface
      */
     public function getScopes(AuthCodeEntity $token)
     {
-        $result = PDOConnect::select('
+        $result = $this->getStore()->select('
             SELECT oauth_scopes.id, oauth_scopes.description
               FROM oauth_auth_code_scopes
                 INNER JOIN oauth_scopes
@@ -97,7 +97,7 @@ class ApiAuthCodeStorage extends AbstractStorage implements AuthCodeInterface
      */
     public function associateScope(AuthCodeEntity $token, ScopeEntity $scope)
     {
-        PDOConnect::insert('INSERT INTO oauth_auth_code_scopes (auth_code, scope) VALUES (:auth_code, :scope)', [
+        $this->getStore()->insert('INSERT INTO oauth_auth_code_scopes (auth_code, scope) VALUES (:auth_code, :scope)', [
             'auth_code' =>  $token->getId(),
             'scope'     =>  $scope->getId(),
         ]);
@@ -108,7 +108,7 @@ class ApiAuthCodeStorage extends AbstractStorage implements AuthCodeInterface
      */
     public function delete(AuthCodeEntity $token)
     {
-        PDOConnect::update('DELETE FROM oauth_auth_codes WHERE auth_code = :auth_code', [
+        $this->getStore()->update('DELETE FROM oauth_auth_codes WHERE auth_code = :auth_code', [
             'auth_code' =>  $token->getId()
         ]);
     }

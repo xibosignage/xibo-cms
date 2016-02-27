@@ -28,8 +28,6 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Date;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class Playlist
@@ -192,7 +190,7 @@ class Playlist implements \JsonSerializable
             'loadWidgets' => true
         ], $loadOptions);
 
-        Log::debug('Load Playlist with %s', json_encode($options));
+        $this->getLog()->debug('Load Playlist with %s', json_encode($options));
 
         // Load permissions
         if ($options['loadPermissions'])
@@ -262,7 +260,7 @@ class Playlist implements \JsonSerializable
         if (!$this->loaded)
             $this->load();
 
-        Log::debug('Deleting ' . $this);
+        $this->getLog()->debug('Deleting ' . $this);
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {
@@ -287,7 +285,7 @@ class Playlist implements \JsonSerializable
         }
 
         // Delete this playlist
-        PDOConnect::update('DELETE FROM `playlist` WHERE playlistId = :playlistId', array('playlistId' => $this->playlistId));
+        $this->getStore()->update('DELETE FROM `playlist` WHERE playlistId = :playlistId', array('playlistId' => $this->playlistId));
     }
 
     /**
@@ -295,10 +293,10 @@ class Playlist implements \JsonSerializable
      */
     private function add()
     {
-        Log::debug('Adding Playlist ' . $this->name);
+        $this->getLog()->debug('Adding Playlist ' . $this->name);
 
         $sql = 'INSERT INTO `playlist` (`name`, `ownerId`) VALUES (:name, :ownerId)';
-        $this->playlistId = PDOConnect::insert($sql, array(
+        $this->playlistId = $this->getStore()->insert($sql, array(
             'name' => $this->name,
             'ownerId' => $this->ownerId
         ));
@@ -309,10 +307,10 @@ class Playlist implements \JsonSerializable
      */
     private function update()
     {
-        Log::debug('Updating Playlist ' . $this->name . '. Id = ' . $this->playlistId);
+        $this->getLog()->debug('Updating Playlist ' . $this->name . '. Id = ' . $this->playlistId);
 
         $sql = 'UPDATE `playlist` SET `name` = :name WHERE `playlistId` = :playlistId';
-        PDOConnect::update($sql, array(
+        $this->getStore()->update($sql, array(
             'playlistId' => $this->playlistId,
             'name' => $this->name
         ));
@@ -327,7 +325,7 @@ class Playlist implements \JsonSerializable
      */
     public function notifyLayouts()
     {
-        PDOConnect::update('
+        $this->getStore()->update('
             UPDATE `layout` SET `status` = 3, `modifiedDT` = :modifiedDt WHERE layoutId IN (
               SELECT `region`.layoutId
                 FROM `lkregionplaylist`
@@ -347,7 +345,7 @@ class Playlist implements \JsonSerializable
      */
     public function hasLayouts()
     {
-        $results = PDOConnect::select('SELECT COUNT(*) AS qty FROM `lkregionplaylist` WHERE playlistId = :playlistId', ['playlistId' => $this->playlistId]);
+        $results = $this->getStore()->select('SELECT COUNT(*) AS qty FROM `lkregionplaylist` WHERE playlistId = :playlistId', ['playlistId' => $this->playlistId]);
 
         return ($results[0]['qty'] > 0);
     }

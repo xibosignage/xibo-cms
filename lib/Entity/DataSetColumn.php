@@ -9,9 +9,6 @@
 namespace Xibo\Entity;
 
 
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
-
 /**
  * Class DataSetColumn
  * @package Xibo\Entity
@@ -115,7 +112,7 @@ class DataSetColumn implements \JsonSerializable
             // We can check this is valid by building up a NOT IN sql statement, if we get results.. we know its not good
             $select = '';
 
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             for ($i=0; $i < count($list); $i++) {
                 $list_val = $dbh->quote($list[$i]);
@@ -159,11 +156,11 @@ class DataSetColumn implements \JsonSerializable
      */
     public function delete()
     {
-        PDOConnect::update('DELETE FROM `datasetcolumn` WHERE DataSetColumnID = :dataSetColumnId', ['dataSetColumnId' => $this->dataSetColumnId]);
+        $this->getStore()->update('DELETE FROM `datasetcolumn` WHERE DataSetColumnID = :dataSetColumnId', ['dataSetColumnId' => $this->dataSetColumnId]);
 
         // Delete column
         if ($this->dataSetColumnTypeId == 1) {
-            PDOConnect::update('ALTER TABLE `dataset_' . $this->dataSetId . '` DROP `' . $this->heading . '`', []);
+            $this->getStore()->update('ALTER TABLE `dataset_' . $this->dataSetId . '` DROP `' . $this->heading . '`', []);
         }
     }
 
@@ -172,7 +169,7 @@ class DataSetColumn implements \JsonSerializable
      */
     private function add()
     {
-        $this->dataSetColumnId = PDOConnect::insert('
+        $this->dataSetColumnId = $this->getStore()->insert('
         INSERT INTO `datasetcolumn` (DataSetID, Heading, DataTypeID, ListContent, ColumnOrder, DataSetColumnTypeID, Formula)
           VALUES (:dataSetId, :heading, :dataTypeId, :listContent, :columnOrder, :dataSetColumnTypeId, :formula)
         ', [
@@ -187,7 +184,7 @@ class DataSetColumn implements \JsonSerializable
 
         // Add Column to Underlying Table
         if ($this->dataSetColumnTypeId == 1) {
-            PDOConnect::update('ALTER TABLE `dataset_' . $this->dataSetId . '` ADD `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL', []);
+            $this->getStore()->update('ALTER TABLE `dataset_' . $this->dataSetId . '` ADD `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL', []);
         }
     }
 
@@ -198,10 +195,10 @@ class DataSetColumn implements \JsonSerializable
     private function edit($options)
     {
         // Get the current heading
-        $currentHeading = PDOConnect::select('SELECT heading FROM `datasetcolumn` WHERE dataSetColumnId = :dataSetColumnId', ['dataSetColumnId' => $this->dataSetColumnId]);
+        $currentHeading = $this->getStore()->select('SELECT heading FROM `datasetcolumn` WHERE dataSetColumnId = :dataSetColumnId', ['dataSetColumnId' => $this->dataSetColumnId]);
         $currentHeading = $currentHeading[0]['heading'];
 
-        PDOConnect::update('
+        $this->getStore()->update('
           UPDATE `datasetcolumn` SET
             dataSetId = :dataSetId,
             Heading = :heading,
@@ -223,12 +220,12 @@ class DataSetColumn implements \JsonSerializable
         ]);
 
         if ($options['rebuilding'] && $this->dataSetColumnTypeId == 1) {
-            PDOConnect::update('ALTER TABLE `dataset_' . $this->dataSetId . '` ADD `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL', []);
+            $this->getStore()->update('ALTER TABLE `dataset_' . $this->dataSetId . '` ADD `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL', []);
 
         } else if ($this->dataSetColumnTypeId == 1 && $currentHeading != $this->heading) {
             $sql = 'ALTER TABLE `dataset_' . $this->dataSetId . '` CHANGE `' . $currentHeading . '` `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL DEFAULT NULL';
-            Log::debug($sql);
-            PDOConnect::update($sql, []);
+            $this->getLog()->debug($sql);
+            $this->getStore()->update($sql, []);
         }
     }
 

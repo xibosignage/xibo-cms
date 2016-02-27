@@ -31,13 +31,10 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\LogFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
 use Xibo\Helper\PlayerActionHelper;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Helper\WakeOnLan;
-use Xibo\Storage\PDOConnect;
 use Xibo\XMR\ScreenShotAction;
 
 
@@ -76,7 +73,7 @@ class Display extends Base
         ]);
 
         // Widget for file status
-        $status = PDOConnect::select('
+        $status = $this->getStore()->select('
             SELECT IFNULL(SUM(size), 0) AS sizeTotal,
                 SUM(CASE WHEN complete = 1 THEN size ELSE 0 END) AS sizeComplete,
                 COUNT(*) AS countTotal,
@@ -95,10 +92,10 @@ class Display extends Base
             $base = 0;
 
         $units = (isset($suffixes[$base]) ? $suffixes[$base] : '');
-        Log::debug('Base for size is %d and suffix is %s', $base, $units);
+        $this->getLog()->debug('Base for size is %d and suffix is %s', $base, $units);
 
         // Show 3 widgets
-        $layouts = PDOConnect::select('
+        $layouts = $this->getStore()->select('
             SELECT `layout`.layout,
                 `requiredfile`.*
               FROM `requiredfile`
@@ -112,7 +109,7 @@ class Display extends Base
         ]);
 
         // Media
-        $media = PDOConnect::select('
+        $media = $this->getStore()->select('
             SELECT `media`.name,
                 `media`.type,
                 `requiredfile`.*
@@ -127,7 +124,7 @@ class Display extends Base
         ]);
 
         // Widgets
-        $widgets = PDOConnect::select('
+        $widgets = $this->getStore()->select('
             SELECT `widget`.type,
                 `widgetoption`.value AS widgetName,
                 `requiredfile`.*
@@ -444,7 +441,7 @@ class Display extends Base
             'layouts' => (new LayoutFactory($this->getApp()))->query(),
             'profiles' => (new DisplayProfileFactory($this->getApp()))->query(NULL, array('type' => $display->clientType)),
             'settings' => $profile,
-            'help' => Help::Link('Display', 'Edit')
+            'help' => $this->getHelp()->link('Display', 'Edit')
         ]);
     }
 
@@ -462,7 +459,7 @@ class Display extends Base
         $this->getState()->template = 'display-form-delete';
         $this->getState()->setData([
             'display' => $display,
-            'help' => Help::Link('Display', 'Delete')
+            'help' => $this->getHelp()->link('Display', 'Delete')
         ]);
     }
 
@@ -740,7 +737,7 @@ class Display extends Base
         $this->getState()->setData([
             'display' => $display,
             'checkboxes' => $checkboxes,
-            'help' =>  Help::Link('Display', 'Members')
+            'help' =>  $this->getHelp()->link('Display', 'Members')
         ]);
     }
 
@@ -834,7 +831,7 @@ class Display extends Base
         $this->getState()->template = 'display-form-request-screenshot';
         $this->getState()->setData([
             'display' => $display,
-            'help' =>  Help::Link('Display', 'ScreenShot')
+            'help' =>  $this->getHelp()->link('Display', 'ScreenShot')
         ]);
     }
 
@@ -900,7 +897,7 @@ class Display extends Base
         $this->getState()->template = 'display-form-wakeonlan';
         $this->getState()->setData([
             'display' => $display,
-            'help' =>  Help::Link('Display', 'WakeOnLan')
+            'help' =>  $this->getHelp()->link('Display', 'WakeOnLan')
         ]);
     }
 
@@ -937,7 +934,7 @@ class Display extends Base
         if ($display->macAddress == '' || $display->broadCastAddress == '')
             throw new \InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
 
-        Log::notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);
+        $this->getLog()->notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);
 
         WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9');
 
@@ -956,7 +953,7 @@ class Display extends Base
      * @param array[Display] $displays
      * @return array[Display]
      */
-    public static function validateDisplays($displays)
+    public function validateDisplays($displays)
     {
         $timedOutDisplays = [];
 
@@ -979,7 +976,7 @@ class Display extends Base
 
             // If the last time we accessed is less than now minus the time out
             if ($timeOut < time()) {
-                Log::debug('Timed out display. Last Accessed: ' . date('Y-m-d h:i:s', $display->lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
+                $this->getLog()->debug('Timed out display. Last Accessed: ' . date('Y-m-d h:i:s', $display->lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
 
                 // If this is the first switch (i.e. the row was logged in before)
                 if ($display->loggedIn == 1) {

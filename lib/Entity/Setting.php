@@ -9,8 +9,6 @@
 namespace Xibo\Entity;
 
 
-use Xibo\Storage\PDOConnect;
-
 /**
  * Class Setting
  * @package Xibo\Entity
@@ -23,6 +21,6 @@ class Setting
 
     public function save()
     {
-        PDOConnect::update('UPDATE `setting` SET `value` = :value WHERE `setting` = :setting', ['setting' => $this->setting, 'value' => $this->value]);
+        $this->getStore()->update('UPDATE `setting` SET `value` = :value WHERE `setting` = :setting', ['setting' => $this->setting, 'value' => $this->value]);
     }
 }

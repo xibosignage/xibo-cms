@@ -27,9 +27,7 @@ use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 use Xibo\Helper\PlayerActionHelper;
-use Xibo\Storage\PDOConnect;
 use Xibo\XMR\CollectNowAction;
 
 /**
@@ -334,7 +332,7 @@ class Display
      */
     public function setMediaIncomplete()
     {
-        Log::info('Setting Media Incomplete on %s', $this->display);
+        $this->getLog()->info('Setting Media Incomplete on %s', $this->display);
 
         $this->mediaInventoryStatus = 3;
         $this->setCollectRequired(true);
@@ -367,7 +365,7 @@ class Display
         $maxDisplays = Config::GetSetting('MAX_LICENSED_DISPLAYS');
 
         if ($maxDisplays > 0 && $this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
-            $countLicensed = PDOConnect::select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
+            $countLicensed = $this->getStore()->select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
 
             if (intval($countLicensed[0]) + 1 > $maxDisplays)
                 throw new \InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays));
@@ -428,15 +426,15 @@ class Display
             $this->edit();
 
         if ($options['audit'])
-            Log::audit('Display', $this->displayId, 'Display Saved', $this->jsonSerialize());
+            $this->getLog()->audit('Display', $this->displayId, 'Display Saved', $this->jsonSerialize());
 
         if ($this->collectRequired) {
-            Log::debug('Collect Now Action for Display %s', $this->display);
+            $this->getLog()->debug('Collect Now Action for Display %s', $this->display);
 
             try {
                 PlayerActionHelper::sendAction($this, new CollectNowAction());
             } catch (\Exception $e) {
-                Log::notice('Display Save would have triggered Player Action, but the action failed with message: %s', $e->getMessage());
+                $this->getLog()->notice('Display Save would have triggered Player Action, but the action failed with message: %s', $e->getMessage());
             }
         }
 
@@ -469,15 +467,15 @@ class Display
         $displayGroup->delete();
 
         // Delete the display
-        PDOConnect::update('DELETE FROM `blacklist` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
-        PDOConnect::update('DELETE FROM `display` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
+        $this->getStore()->update('DELETE FROM `blacklist` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
+        $this->getStore()->update('DELETE FROM `display` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
 
-        Log::audit('Display', $this->displayId, 'Display Deleted', ['displayId' => $this->displayId]);
+        $this->getLog()->audit('Display', $this->displayId, 'Display Deleted', ['displayId' => $this->displayId]);
     }
 
     private function add()
     {
-        $this->displayId = PDOConnect::insert('
+        $this->displayId = $this->getStore()->insert('
             INSERT INTO display (display, isAuditing, defaultlayoutid, license, licensed, inc_schedule, email_alert, alert_timeout, xmrChannel, xmrPubKey)
               VALUES (:display, :isauditing, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, :alert_timeout, :xmrChannel, :xmrPubKey)
         ', [
@@ -501,7 +499,7 @@ class Display
 
     private function edit()
     {
-        PDOConnect::update('
+        $this->getStore()->update('
             UPDATE display
                 SET display = :display,
                     defaultlayoutid = :defaultLayoutId,

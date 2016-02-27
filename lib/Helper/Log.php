@@ -23,12 +23,52 @@
 namespace Xibo\Helper;
 
 
-use Slim\Slim;
 use Xibo\Storage\PDOConnect;
 
 class Log
 {
-    private static $_auditLogStatement;
+    /**
+     * @var \Slim\Log
+     */
+    private $log;
+
+    /**
+     * The Log Mode
+     * @var string
+     */
+    private $mode;
+
+    /**
+     * The user Id
+     * @var int
+     */
+    private $userId = 0;
+
+    /**
+     * Audit Log Statement
+     * @var \PDOStatement
+     */
+    private $_auditLogStatement;
+
+    /**
+     * Log constructor.
+     * @param \Slim\Log $logger
+     * @param string $mode
+     */
+    public function __construct($logger, $mode = 'production')
+    {
+        $this->log = $logger;
+        $this->mode = $mode;
+    }
+
+    /**
+     * Set the user Id
+     * @param int $userId
+     */
+    public function setUserId($userId)
+    {
+        $this->userId = $userId;
+    }
 
     /**
      * Audit Log
@@ -37,13 +77,13 @@ class Log
      * @param string $message
      * @param string|object|array $object
      */
-    public static function audit($entity, $entityId, $message, $object)
+    public function audit($entity, $entityId, $message, $object)
     {
-        Log::debug(sprintf('Audit Trail message recorded for %s with id %d. Message: %s', $entity, $entityId, $message));
+        $this->debug(sprintf('Audit Trail message recorded for %s with id %d. Message: %s', $entity, $entityId, $message));
 
-        if (self::$_auditLogStatement == null) {
+        if ($this->_auditLogStatement == null) {
             $dbh = PDOConnect::newConnection();
-            self::$_auditLogStatement = $dbh->prepare('
+            $this->_auditLogStatement = $dbh->prepare('
                 INSERT INTO `auditlog` (logDate, userId, entity, message, entityId, objectAfter)
                   VALUES (:logDate, :userId, :entity, :message, :entityId, :objectAfter)
             ');
@@ -53,11 +93,9 @@ class Log
         if (!is_string($object))
             $object = json_encode($object);
 
-        $app = Slim::getInstance();
-
-        self::$_auditLogStatement->execute([
+        $this->_auditLogStatement->execute([
             'logDate' => time(),
-            'userId' => $app->user->userId,
+            'userId' => $this->userId,
             'entity' => $entity,
             'message' => $message,
             'entityId' => $entityId,
@@ -65,64 +103,55 @@ class Log
         ]);
     }
 
-    public static function sql($sql, $params)
+    public function sql($sql, $params)
     {
-        $app = Slim::getInstance();
-        if (strtolower($app->getMode()) == 'test') {
+        if (strtolower($this->mode) == 'test') {
             $paramSql = '';
             foreach ($params as $key => $param) {
                 $paramSql .= 'SET @' . $key . '=\'' . $param . '\';' . PHP_EOL;
             }
-            $app->log->debug($paramSql . str_replace(':', '@', $sql));
+            $this->log->debug($paramSql . str_replace(':', '@', $sql));
         }
     }
 
-    public static function debug($object)
+    public function debug($object)
     {
         // Get the calling class / function
-        $app = Slim::getInstance();
-        $app->log->debug(Log::prepare($object, func_get_args()));
+        $this->log->debug($this->prepare($object, func_get_args()));
     }
 
-    public static function notice($object)
+    public function notice($object)
     {
-        $app = Slim::getInstance();
-        $app->log->notice(Log::prepare($object, func_get_args()));
+        $this->log->notice($this->prepare($object, func_get_args()));
     }
-    public static function info($object)
+    public function info($object)
     {
-        $app = Slim::getInstance();
-        $app->log->info(Log::prepare($object, func_get_args()));
+        $this->log->info($this->prepare($object, func_get_args()));
     }
 
-    public static function warning($object)
+    public function warning($object)
     {
-        $app = Slim::getInstance();
-        $app->log->warning(Log::prepare($object, func_get_args()));
+        $this->log->warning($this->prepare($object, func_get_args()));
     }
 
-    public static function error($object)
+    public function error($object)
     {
-        $app = Slim::getInstance();
-        $app->log->error(Log::prepare($object, func_get_args()));
+        $this->log->error($this->prepare($object, func_get_args()));
     }
 
-    public static function critical($object)
+    public function critical($object)
     {
-        $app = Slim::getInstance();
-        $app->log->critical(Log::prepare($object, func_get_args()));
+        $this->log->critical($this->prepare($object, func_get_args()));
     }
 
-    public static function alert($object)
+    public function alert($object)
     {
-        $app = Slim::getInstance();
-        $app->log->alert(Log::prepare($object, func_get_args()));
+        $this->log->alert($this->prepare($object, func_get_args()));
     }
 
-    public static function emergency($object)
+    public function emergency($object)
     {
-        $app = Slim::getInstance();
-        $app->log->emergency(Log::prepare($object, func_get_args()));
+        $this->log->emergency($this->prepare($object, func_get_args()));
     }
     
     /**
@@ -130,7 +159,7 @@ class Log
      * @param $object
      * @return string
      */
-    private static function prepare($object, $args)
+    private function prepare($object, $args)
     {
         if (is_string($object)) {
             array_shift($args);

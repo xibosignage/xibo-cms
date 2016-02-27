@@ -12,9 +12,7 @@ namespace Xibo\Factory;
 use Xibo\Entity\Upgrade;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Date;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 class UpgradeFactory extends BaseFactory
 {
@@ -87,13 +85,13 @@ class UpgradeFactory extends BaseFactory
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
+        foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = (new Upgrade())->hydrate($row)->setApp($this->getApp());
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }
 
@@ -108,7 +106,7 @@ class UpgradeFactory extends BaseFactory
      */
     public function createSteps($from, $to)
     {
-        Log::debug('Creating upgrade steps from %d to %d', $from, $to);
+        $this->getLog()->debug('Creating upgrade steps from %d to %d', $from, $to);
 
         $steps = [];
         $date = Date::parse();
@@ -116,7 +114,7 @@ class UpgradeFactory extends BaseFactory
         // Go from $from to $to and get the config file from the install folder.
         for ($i = $from + 1; $i <= $to; $i++) {
             $currentStep = PROJECT_ROOT . '/install/steps/' . $i . '.json';
-            Log::debug('Checking for %s', $currentStep);
+            $this->getLog()->debug('Checking for %s', $currentStep);
             // Get the file
             if (file_exists($currentStep)) {
                 $config = json_decode(file_get_contents($currentStep), true);
@@ -150,7 +148,7 @@ class UpgradeFactory extends BaseFactory
             }
         }
 
-        Log::debug('%d steps for upgrade', count($steps));
+        $this->getLog()->debug('%d steps for upgrade', count($steps));
 
         return $steps;
     }
@@ -164,7 +162,7 @@ class UpgradeFactory extends BaseFactory
             return;
 
         // Check if the table exists
-        $results = PDOConnect::select('SHOW TABLES LIKE :table', ['table' => 'upgrade']);
+        $results = $this->getStore()->select('SHOW TABLES LIKE :table', ['table' => 'upgrade']);
 
         if (count($results) <= 0)
             Upgrade::createTable();

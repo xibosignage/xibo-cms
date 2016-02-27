@@ -35,9 +35,7 @@ use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\Config;
-use Xibo\Helper\Help;
 use Xibo\Helper\LayoutUploadHandler;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
 /**
@@ -184,7 +182,7 @@ class Layout extends Base
             }
         }
 
-        Log::debug('Layout Added');
+        $this->getLog()->debug('Layout Added');
 
         // Return
         $this->getState()->hydrate([
@@ -330,7 +328,7 @@ class Layout extends Base
         $data = [
             'layout' => $layout,
             'help' => [
-                'delete' => Help::Link('Layout', 'Delete')
+                'delete' => $this->getHelp()->link('Layout', 'Delete')
             ]
         ];
 
@@ -353,7 +351,7 @@ class Layout extends Base
         $data = [
             'layout' => $layout,
             'help' => [
-                'delete' => Help::Link('Layout', 'Retire')
+                'delete' => $this->getHelp()->link('Layout', 'Retire')
             ]
         ];
 
@@ -696,7 +694,7 @@ class Layout extends Base
         $this->getState()->setData([
             'layouts' => (new LayoutFactory($this->getApp()))->query(['layout'], ['excludeTemplates' => 0, 'tags' => 'template']),
             'resolutions' => (new ResolutionFactory($this->getApp()))->query(['resolution']),
-            'help' => Help::Link('Layout', 'Add')
+            'help' => $this->getHelp()->link('Layout', 'Add')
         ]);
     }
 
@@ -722,7 +720,7 @@ class Layout extends Base
             'resolutions' => (new ResolutionFactory($this->getApp()))->query(['resolution'], ['withCurrent' => $resolution->resolutionId]),
             'backgroundId' => Sanitize::getInt('backgroundOveride', $layout->backgroundImageId),
             'backgrounds' => (new MediaFactory($this->getApp()))->query(null, ['type' => 'image']),
-            'help' => Help::Link('Layout', 'Edit')
+            'help' => $this->getHelp()->link('Layout', 'Edit')
         ]);
     }
 
@@ -742,7 +740,7 @@ class Layout extends Base
         $this->getState()->template = 'layout-form-copy';
         $this->getState()->setData([
             'layout' => $layout,
-            'help' => Help::Link('Layout', 'Copy')
+            'help' => $this->getHelp()->link('Layout', 'Copy')
         ]);
     }
 
@@ -967,7 +965,7 @@ class Layout extends Base
      */
     public function import()
     {
-        Log::debug('Import Layout');
+        $this->getLog()->debug('Import Layout');
 
         $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
 

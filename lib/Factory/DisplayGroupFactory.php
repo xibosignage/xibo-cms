@@ -12,7 +12,6 @@ namespace Xibo\Factory;
 use Xibo\Entity\DisplayGroup;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 class DisplayGroupFactory extends BaseFactory
 {
@@ -190,13 +189,13 @@ class DisplayGroupFactory extends BaseFactory
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
+        foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = (new DisplayGroup())->hydrate($row)->setApp($this->getApp())->setApp($this->getApp());
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }
 

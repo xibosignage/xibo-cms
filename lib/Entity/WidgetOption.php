@@ -23,9 +23,6 @@
 namespace Xibo\Entity;
 
 
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
-
 /**
  * Class WidgetOption
  * @package Xibo\Entity
@@ -72,9 +69,9 @@ class WidgetOption implements \JsonSerializable
 
     public function save()
     {
-        Log::debug('Saving ' . $this);
+        $this->getLog()->debug('Saving ' . $this);
 
-        PDOConnect::insert('
+        $this->getStore()->insert('
             INSERT INTO `widgetoption` (`widgetId`, `type`, `option`, `value`)
               VALUES (:widgetId, :type, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2
         ', array(
@@ -88,7 +85,7 @@ class WidgetOption implements \JsonSerializable
 
     public function delete()
     {
-        PDOConnect::update('DELETE FROM `widgetoption` WHERE `widgetId` = :widgetId AND `option` = :option', array(
+        $this->getStore()->update('DELETE FROM `widgetoption` WHERE `widgetId` = :widgetId AND `option` = :option', array(
             'widgetId' => $this->widgetId, 'option' => $this->option)
         );
     }

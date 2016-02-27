@@ -9,8 +9,6 @@
 namespace Xibo\Entity;
 
 
-use Xibo\Storage\PDOConnect;
-
 /**
  * Class Bandwidth
  * @package Xibo\Entity
@@ -38,7 +36,7 @@ class Bandwidth
 
     public function save()
     {
-        PDOConnect::update('
+        $this->getStore()->update('
             INSERT INTO `bandwidth` (Month, Type, DisplayID, Size)
               VALUES (:month, :type, :displayId, :size)
             ON DUPLICATE KEY UPDATE Size = Size + :size2

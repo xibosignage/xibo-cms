@@ -24,7 +24,6 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Helper\Date;
-use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 
 
@@ -358,7 +357,7 @@ class DisplayProfile extends Base
         $this->getState()->template = 'displayprofile-form-delete';
         $this->getState()->setData([
             'displayProfile' => $displayProfile,
-            'help' => Help::Link('DisplayProfile', 'Delete')
+            'help' => $this->getHelp()->link('DisplayProfile', 'Delete')
         ]);
     }
 

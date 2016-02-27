@@ -28,7 +28,6 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Cache;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
@@ -89,7 +88,7 @@ class Finance extends ModuleWidget
             $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
 
-        Log::debug(count($this->module->settings['templates']));
+        $this->getLog()->debug(count($this->module->settings['templates']));
     }
 
     /**
@@ -185,10 +184,10 @@ class Finance extends ModuleWidget
         $yql = $this->getOption('yql');
         $items = $this->getOption('item');
 
-        Log::debug('Finance module with YQL = . Looking for %s in response', $yql, $items);
+        $this->getLog()->debug('Finance module with YQL = . Looking for %s in response', $yql, $items);
 
         if ($yql == '' || $items == '') {
-            Log::error('Missing YQL/Items for Finance Module with WidgetId %d', $this->getWidgetId());
+            $this->getLog()->error('Missing YQL/Items for Finance Module with WidgetId %d', $this->getWidgetId());
             return false;
         }
 
@@ -211,7 +210,7 @@ class Finance extends ModuleWidget
 
         if ($cache->isMiss()) {
 
-            Log::debug('Querying API for ' . $yql);
+            $this->getLog()->debug('Querying API for ' . $yql);
 
             if (!$data = $this->request($yql)) {
                 return false;
@@ -224,7 +223,7 @@ class Finance extends ModuleWidget
 
         }
 
-        Log::debug('Finance data returned: %s', var_export($data, true));
+        $this->getLog()->debug('Finance data returned: %s', var_export($data, true));
 
         // Pull out the results according to the resultIdentifier
         // If the element to return is an array and we aren't, then box.
@@ -256,12 +255,12 @@ class Finance extends ModuleWidget
                 return json_decode($response->getBody(), true)['query']['results'];
             }
             else {
-                Log::info('Invalid response from Yahoo %d. %s', $response->getStatusCode(), $response->getBody());
+                $this->getLog()->info('Invalid response from Yahoo %d. %s', $response->getStatusCode(), $response->getBody());
                 return false;
             }
         }
         catch (RequestException $e) {
-            Log::error('Unable to reach Yahoo API: %s', $e->getMessage());
+            $this->getLog()->error('Unable to reach Yahoo API: %s', $e->getMessage());
             return false;
         }
     }
@@ -288,7 +287,7 @@ class Finance extends ModuleWidget
 
                 $time = Date::getLocalDate($data['time'], $timeSplit[1]);
 
-                Log::debug('Time: ' . $time);
+                $this->getLog()->debug('Time: ' . $time);
 
                 // Pull time out of the array
                 $source = str_replace($sub, $time, $source);

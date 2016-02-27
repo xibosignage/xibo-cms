@@ -21,7 +21,6 @@
 namespace Xibo\Widget;
 
 
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
 class Video extends ModuleWidget
@@ -93,7 +92,7 @@ class Video extends ModuleWidget
         if ($fileName === null)
             return 0;
 
-        Log::debug('Determine Duration from %s', $fileName);
+        $this->getLog()->debug('Determine Duration from %s', $fileName);
         $info = new \getID3();
         $file = $info->analyze($fileName);
         return intval(Sanitize::getDouble('playtime_seconds', 0, $file));

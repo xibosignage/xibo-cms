@@ -27,8 +27,6 @@ use Xibo\Entity\Application;
 use Xibo\Entity\ApplicationRedirectUri;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ApplicationFactory;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\ApiAccessTokenStorage;
 use Xibo\Storage\ApiAuthCodeStorage;
@@ -136,7 +134,7 @@ class Applications extends Base
             ]);
         }
 
-        Log::debug('Redirect URL is %s', $redirectUri);
+        $this->getLog()->debug('Redirect URL is %s', $redirectUri);
 
         $this->getApp()->redirect($redirectUri, 302);
     }
@@ -148,7 +146,7 @@ class Applications extends Base
     {
         $this->getState()->template = 'applications-form-add';
         $this->getState()->setData([
-            'help' => Help::Link('Services', 'Register')
+            'help' => $this->getHelp()->link('Services', 'Register')
         ]);
     }
 
@@ -167,7 +165,7 @@ class Applications extends Base
         $this->getState()->template = 'applications-form-edit';
         $this->getState()->setData([
             'client' => $client,
-            'help' => Help::Link('Services', 'Register')
+            'help' => $this->getHelp()->link('Services', 'Register')
         ]);
     }
 

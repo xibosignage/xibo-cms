@@ -11,7 +11,7 @@ class BackupUploadHandler extends BlueImpUploadHandler
         // Handle form data, e.g. $_REQUEST['description'][$index]
         $fileName = $file->name;
 
-        Log::debug('Upload complete for ' . $fileName . '.');
+        $this->getLog()->debug('Upload complete for ' . $fileName . '.');
 
         // Upload and Save
         try {
@@ -26,13 +26,13 @@ class BackupUploadHandler extends BlueImpUploadHandler
             // Push the file into msqldump
             exec('mysql --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname . ' < ' . escapeshellarg($fileName) . ' ');
 
-            Log::notice('mysql --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname . ' < ' . escapeshellarg($fileName) . ' ' );
+            $this->getLog()->notice('mysql --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname . ' < ' . escapeshellarg($fileName) . ' ' );
 
             unlink($destination);
 
         } catch (Exception $e) {
-            Log::error('Error uploading media: %s', $e->getMessage());
-            Log::debug($e->getTraceAsString());
+            $this->getLog()->error('Error uploading media: %s', $e->getMessage());
+            $this->getLog()->debug($e->getTraceAsString());
 
             $file->error = $e->getMessage();
 

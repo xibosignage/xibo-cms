@@ -22,8 +22,6 @@ namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\UserFactory;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
 class Login extends Base
@@ -47,13 +45,13 @@ class Login extends Base
         $username = Sanitize::getUserName('username');
         $password = Sanitize::getPassword('password');
 
-        Log::debug('Login with username %s', $username);
+        $this->getLog()->debug('Login with username %s', $username);
 
         // Get our user
         try {
             $user = (new UserFactory($this->getApp()))->getByName($username);
 
-            // Log::debug($user);
+            // $this->getLog()->debug($user);
 
             // Check password
             $user->checkPassword($password);
@@ -67,6 +65,8 @@ class Login extends Base
             // We are logged in!
             $user->loggedIn = 1;
 
+            $this->getLog()->setUserId($user->userId);
+
             // Overwrite our stored user with this new object.
             $this->getApp()->user = $user;
 
@@ -77,13 +77,13 @@ class Login extends Base
             $session->setUser($user->userId);
 
             // Audit Log
-            Log::audit('User', $user->userId, 'Login Granted', [
+            $this->getLog()->audit('User', $user->userId, 'Login Granted', [
                 'IPAddress' => $this->getApp()->request()->getIp(),
                 'UserAgent' => $this->getApp()->request()->getUserAgent()
             ]);
         }
         catch (NotFoundException $e) {
-            Log::debug('User not found');
+            $this->getLog()->debug('User not found');
             throw new AccessDeniedException();
         }
     }
@@ -113,11 +113,11 @@ class Login extends Base
         $this->getState()->template = 'user-welcome-page';
         $this->getState()->setData([
             'help' => [
-                'dashboard' => Help::Link('Dashboard', 'General'),
-                'display' => Help::Link('Display', 'General'),
-                'layout' => Help::Link('Layout', 'General'),
-                'schedule' => Help::Link('Schedule', 'General'),
-                'windows' => Help::rawLink('install_windows_client')
+                'dashboard' => $this->getHelp()->link('Dashboard', 'General'),
+                'display' => $this->getHelp()->link('Display', 'General'),
+                'layout' => $this->getHelp()->link('Layout', 'General'),
+                'schedule' => $this->getHelp()->link('Schedule', 'General'),
+                'windows' => $this->getHelp()->rawLink('install_windows_client')
             ]
         ]);
     }

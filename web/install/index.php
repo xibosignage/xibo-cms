@@ -55,8 +55,8 @@ $app->setName('install');
 
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
-    \Xibo\Helper\Log::critical('Unexpected Error: %s', $e->getMessage());
-    \Xibo\Helper\Log::debug($e->getTraceAsString());
+    \Xibo\Helper\$this->getLog()->critical('Unexpected Error: %s', $e->getMessage());
+    \Xibo\Helper\$this->getLog()->debug($e->getTraceAsString());
 
     $app->halt(500, 'Sorry there has been an unexpected error. ' . $e->getMessage());
 });

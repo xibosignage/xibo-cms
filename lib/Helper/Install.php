@@ -21,7 +21,6 @@
 namespace Xibo\Helper;
 
 use Xibo\Exception\InstallationError;
-use Xibo\Storage\PDOConnect;
 
 class Install
 {
@@ -90,14 +89,14 @@ class Install
             // Try to create the new database
             // Try and connect using these details and create the new database
             try {
-                PDOConnect::connect($this->new_db_host, $this->db_admin_user, $this->db_admin_pass);
+                $this->getStore()->connect($this->new_db_host, $this->db_admin_user, $this->db_admin_pass);
             } catch (\PDOException $e) {
                 throw new InstallationError(sprintf(__('Could not connect to MySQL with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
             }
 
             // Try to create the new database
             try {
-                $dbh = PDOConnect::init();
+                $dbh = $this->getStore()->getConnection();
                 $dbh->exec(sprintf('CREATE DATABASE `%s` CHARACTER SET utf8 COLLATE utf8_general_ci', $this->new_db_name));
             } catch (\PDOException $e) {
                 throw new InstallationError(sprintf(__('Could not create a new database with the administrator details [%s]. Please check and try again. Error Message = [%s]'), $this->db_admin_user, $e->getMessage()));
@@ -105,7 +104,7 @@ class Install
 
             // Try to create the new user
             try {
-                $dbh = PDOConnect::init();
+                $dbh = $this->getStore()->getConnection();
 
                 // Create the user and grant privileges
                 if ($this->new_db_host == 'localhost') {
@@ -136,7 +135,7 @@ class Install
             $this->existing_db_name = $this->new_db_name;
 
             // Close the connection
-            PDOConnect::close();
+            $this->getStore()->close();
         } else {
             // Check details for a new database
             if ($this->existing_db_host == '')
@@ -154,7 +153,7 @@ class Install
 
         // Try and make a connection with this database
         try {
-            PDOConnect::connect($this->existing_db_host, $this->existing_db_user, $this->existing_db_pass, $this->existing_db_name);
+            $this->getStore()->connect($this->existing_db_host, $this->existing_db_user, $this->existing_db_pass, $this->existing_db_name);
         } catch (\PDOException $e) {
             throw new InstallationError(sprintf(__('Could not connect to MySQL with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
         }
@@ -166,7 +165,7 @@ class Install
         $sql = '';
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             foreach ($sql_files as $filename) {
                 $delimiter = ';';
@@ -194,7 +193,7 @@ class Install
         $secretKey = Install::generateSecret();
 
         // Escape the password before we write it to disk
-        $dbh = PDOConnect::init();
+        $dbh = $this->getStore()->getConnection();
         $existing_db_pass = addslashes($this->existing_db_pass);
 
         $settings = <<<END
@@ -260,7 +259,7 @@ END;
 
         // Update user id 1 with these details.
         try {
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             $sth = $dbh->prepare('UPDATE `user` SET UserName = :username, UserPassword = :password WHERE UserID = 1 LIMIT 1');
             $sth->execute(array(
@@ -328,7 +327,7 @@ END;
         }
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             // Library Location
             $sth = $dbh->prepare('UPDATE `setting` SET `value` = :value WHERE `setting`.`setting` = \'LIBRARY_LOCATION\' LIMIT 1');

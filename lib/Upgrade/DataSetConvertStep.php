@@ -11,7 +11,6 @@ namespace Xibo\Upgrade;
 
 use Xibo\Entity\DataSet;
 use Xibo\Factory\DataSetFactory;
-use Xibo\Storage\PDOConnect;
 
 class DataSetConvertStep implements Step
 {
@@ -32,7 +31,7 @@ class DataSetConvertStep implements Step
         }
 
         // Drop data set data
-        PDOConnect::update('DROP TABLE `datasetdata`;', []);
+        $this->getStore()->update('DROP TABLE `datasetdata`;', []);
     }
 
     /**
@@ -42,7 +41,7 @@ class DataSetConvertStep implements Step
      */
     public static function getExistingData($dataSet)
     {
-        $dbh = PDOConnect::init();
+        $dbh = $this->getStore()->getConnection();
         $params = array('dataSetId' => $dataSet->dataSetId);
 
         $selectSQL = '';

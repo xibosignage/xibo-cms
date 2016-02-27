@@ -23,7 +23,6 @@ namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TagFactory;
-use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 
 
@@ -169,7 +168,7 @@ class Template extends Base
         $this->getState()->template = 'template-form-add-from-layout';
         $this->getState()->setData([
             'layout' => $layout,
-            'help' => Help::Link('Template', 'Add')
+            'help' => $this->getHelp()->link('Template', 'Add')
         ]);
     }
 

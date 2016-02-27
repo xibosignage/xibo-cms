@@ -10,7 +10,6 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\DataSetColumnType;
-use Xibo\Storage\PDOConnect;
 
 class DataSetColumnTypeFactory extends BaseFactory
 {
@@ -23,7 +22,7 @@ class DataSetColumnTypeFactory extends BaseFactory
     {
         $entries = [];
 
-        foreach (PDOConnect::select('SELECT dataSetColumnTypeId, dataSetColumnType FROM `datasetcolumntype` ', []) as $row) {
+        foreach ($this->getStore()->select('SELECT dataSetColumnTypeId, dataSetColumnType FROM `datasetcolumntype` ', []) as $row) {
             $entries[] = (new DataSetColumnType())->hydrate($row)->setApp($this->getApp())->setApp($this->getApp());
         }
 

@@ -30,6 +30,7 @@ use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
+use Xibo\Storage\StorageInterface;
 
 /**
  * Class ModuleWidget
@@ -71,11 +72,12 @@ abstract class ModuleWidget implements ModuleInterface
     protected $codeSchemaVersion = -1;
 
     /**
-     * Create the controller
+     * Set App
+     * @param Slim $app
      */
-    public function __construct()
+    public function setApp($app)
     {
-        $this->app = Slim::getInstance();
+        $this->app = $app;
     }
 
     /**
@@ -84,6 +86,9 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function getApp()
     {
+        if ($this->app == null)
+            throw new \RuntimeException(__('Module Widget Application not set'));
+
         return $this->app;
     }
 
@@ -94,6 +99,24 @@ abstract class ModuleWidget implements ModuleInterface
     protected function getPool()
     {
         return $this->app->pool;
+    }
+
+    /**
+     * Get Store
+     * @return StorageInterface
+     */
+    protected function getStore()
+    {
+        return $this->getApp()->store;
+    }
+
+    /**
+     * Get Log
+     * @return Log
+     */
+    protected function getLog()
+    {
+        return $this->getApp()->logHelper;
     }
 
     /**
@@ -315,7 +338,7 @@ abstract class ModuleWidget implements ModuleInterface
                 return $this->getMedia()->duration;
             }
             catch (NotFoundException $e) {
-                Log::error('Tried to get real duration from a widget without media. widgetId: %d', $this->getWidgetId());
+                $this->getLog()->error('Tried to get real duration from a widget without media. widgetId: %d', $this->getWidgetId());
                 // Do nothing - drop out
             }
         }
@@ -387,7 +410,7 @@ abstract class ModuleWidget implements ModuleInterface
         if ($this->getOption('name') != '')
             return $this->getOption('name');
 
-        Log::debug('Media assigned: ' . count($this->widget->mediaIds));
+        $this->getLog()->debug('Media assigned: ' . count($this->widget->mediaIds));
 
         if ($this->getModule()->regionSpecific == 0 && count($this->widget->mediaIds) > 0) {
             $media = (new MediaFactory($this->getApp()))->getById($this->widget->mediaIds[0]);
@@ -542,7 +565,7 @@ abstract class ModuleWidget implements ModuleInterface
             return __($transition->transition);
         }
         catch (NotFoundException $e) {
-            Log::error('Transition not found with code %s.', $code);
+            $this->getLog()->error('Transition not found with code %s.', $code);
             return 'None';
         }
     }
@@ -571,7 +594,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function installModule()
     {
-        Log::notice('Request to install module with name: ' . $this->module->name, 'module', 'InstallModule');
+        $this->getLog()->notice('Request to install module with name: ' . $this->module->name, 'module', 'InstallModule');
 
         // Validate some things.
         if ($this->module->type == '')
@@ -655,7 +678,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function getMediaId()
     {
-        Log::debug('Getting first MediaID for Widget: %d', $this->getWidgetId());
+        $this->getLog()->debug('Getting first MediaID for Widget: %d', $this->getWidgetId());
 
         if (count($this->widget->mediaIds) <= 0)
             throw new NotFoundException(__('No file to return'));
@@ -745,7 +768,7 @@ abstract class ModuleWidget implements ModuleInterface
                 $parsedContent = str_replace($sub, $replace, $parsedContent);
             }
             catch (NotFoundException $e) {
-                Log::info('Reference to Unknown mediaId %d', $mediaId);
+                $this->getLog()->info('Reference to Unknown mediaId %d', $mediaId);
             }
         }
 
@@ -778,7 +801,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function preProcess($fileName = null)
     {
-        Log::debug('No pre-processing rules for this module type');
+        $this->getLog()->debug('No pre-processing rules for this module type');
     }
 
     /**
@@ -786,7 +809,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function setDefaultWidgetOptions()
     {
-        Log::debug('Default Widget Options: Setting use duration to 0');
+        $this->getLog()->debug('Default Widget Options: Setting use duration to 0');
         $this->setUseDuration(0);
     }
 }

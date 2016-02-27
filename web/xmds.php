@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
@@ -99,7 +98,7 @@ if (isset($_GET['file'])) {
     $sendFileMode = Config::GetSetting('SENDFILE_MODE');
 
     if ($sendFileMode == 'Off') {
-        Log::notice('HTTP GetFile request received but SendFile Mode is Off. Issuing 404', 'services');
+        $this->getLog()->notice('HTTP GetFile request received but SendFile Mode is Off. Issuing 404', 'services');
         header('HTTP/1.0 404 Not Found');
         exit;
     }
@@ -113,7 +112,7 @@ if (isset($_GET['file'])) {
         // Issue magic packet
         // Send via Apache X-Sendfile header?
         if ($sendFileMode == 'Apache') {
-            Log::notice('HTTP GetFile request redirecting to ' . Config::GetSetting('LIBRARY_LOCATION') . $file->storedAs, 'services');
+            $this->getLog()->notice('HTTP GetFile request redirecting to ' . Config::GetSetting('LIBRARY_LOCATION') . $file->storedAs, 'services');
             header('X-Sendfile: ' . Config::GetSetting('LIBRARY_LOCATION') . $file->storedAs);
         }
         // Send via Nginx X-Accel-Redirect?
@@ -129,7 +128,7 @@ if (isset($_GET['file'])) {
     }
     catch (\Exception $e) {
         if ($e instanceof \Xibo\Exception\NotFoundException || $e instanceof \Xibo\Exception\FormExpiredException) {
-            Log::notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404', 'services');
+            $this->getLog()->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404', 'services');
             // 404
             header('HTTP/1.0 404 Not Found');
         }
@@ -156,16 +155,16 @@ try {
     $soap->setClass('\Xibo\Xmds\Soap' . $version);
     $soap->handle();
 
-    Log::info('PDO stats: %s.', json_encode(\Xibo\Storage\PDOConnect::stats()));
+    $this->getLog()->info('PDO stats: %s.', json_encode($this->getStore()->stats()));
 
-    if (\Xibo\Storage\PDOConnect::init()->inTransaction())
-        \Xibo\Storage\PDOConnect::init()->commit();
+    if ($this->getStore()->getConnection()->inTransaction())
+        $this->getStore()->getConnection()->commit();
 }
 catch (Exception $e) {
-    Log::error($e->getMessage());
+    $this->getLog()->error($e->getMessage());
 
-    if (\Xibo\Storage\PDOConnect::init()->inTransaction())
-        \Xibo\Storage\PDOConnect::init()->rollBack();
+    if ($this->getStore()->getConnection()->inTransaction())
+        $this->getStore()->getConnection()->rollBack();
 
     header('HTTP/1.1 500 Internal Server Error');
     header('Content-Type: text/plain');

@@ -9,8 +9,6 @@
 namespace Xibo\Entity;
 
 
-use Xibo\Storage\PDOConnect;
-
 /**
  * Class UserOption
  * @package Xibo\Entity
@@ -47,7 +45,7 @@ class UserOption implements \JsonSerializable
     public function save()
     {
         $sql = 'INSERT INTO `useroption` (`userId`, `option`, `value`) VALUES (:userId, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2';
-        PDOConnect::insert($sql, array(
+        $this->getStore()->insert($sql, array(
             'userId' => $this->userId,
             'option' => $this->option,
             'value' => $this->value,
@@ -58,6 +56,6 @@ class UserOption implements \JsonSerializable
     public function delete()
     {
         $sql = 'DELETE FROM `useroption` WHERE `userId` = :userId AND `option` = :option';
-        PDOConnect::update($sql, array('userId' => $this->userId, 'option' => $this->option));
+        $this->getStore()->update($sql, array('userId' => $this->userId, 'option' => $this->option));
     }
 }

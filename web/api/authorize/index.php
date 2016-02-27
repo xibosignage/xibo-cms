@@ -112,11 +112,11 @@ $app->get('/', function() use ($app) {
 // Access Token
 $app->post('/access_token', function() use ($app) {
 
-    \Xibo\Helper\Log::debug('Request for access token using grant_type: %s', $app->request()->post('grant_type'));
+    \Xibo\Helper\$this->getLog()->debug('Request for access token using grant_type: %s', $app->request()->post('grant_type'));
 
     $token = json_encode($app->server->issueAccessToken());
 
-    \Xibo\Helper\Log::debug('Issued token: %s', $token);
+    \Xibo\Helper\$this->getLog()->debug('Issued token: %s', $token);
 
     // Issue an access token
     $app->halt(200, $token);

@@ -12,7 +12,6 @@ namespace Xibo\Factory;
 use Xibo\Entity\Schedule;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 class ScheduleFactory extends BaseFactory
 {
@@ -181,7 +180,7 @@ class ScheduleFactory extends BaseFactory
         if (is_array($sortOrder))
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
+        foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = (new Schedule())->hydrate($row, ['intProperties' => ['isPriority']]);
         }
 

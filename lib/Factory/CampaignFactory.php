@@ -25,7 +25,6 @@ namespace Xibo\Factory;
 use Xibo\Entity\Campaign;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 class CampaignFactory extends BaseFactory
 {
@@ -163,13 +162,13 @@ class CampaignFactory extends BaseFactory
 
         $intProperties = ['intProperties' => ['numberLayouts']];
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
+        foreach ($this->getStore()->select($sql, $params) as $row) {
             $campaigns[] = (new Campaign())->hydrate($row, $intProperties)->setApp($this->getApp());
         }
 
         // Paging
         if ($limit != '' && count($campaigns) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(DISTINCT campaign.campaignId) AS total ' . $body, $params);
+            $results = $this->getStore()->select('SELECT COUNT(DISTINCT campaign.campaignId) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }
 

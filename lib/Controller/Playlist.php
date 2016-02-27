@@ -20,8 +20,6 @@ use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Config;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
 class Playlist extends Base
@@ -259,7 +257,7 @@ class Playlist extends Base
         $this->getState()->setData([
             'playlist' => $playlist,
             'modules' => (new ModuleFactory($this->getApp()))->query(null, ['regionSpecific' => 0, 'enabled' => 1, 'assignable' => 1]),
-            'help' => Help::Link('Library', 'Assign')
+            'help' => $this->getHelp()->link('Library', 'Assign')
         ]);
     }
 
@@ -420,7 +418,7 @@ class Playlist extends Base
             foreach ($playlist->widgets as $widget) {
                 /* @var \Xibo\Entity\Widget $widget */
                 if ($widget->getId() == $widgetId) {
-                    Log::debug('Setting Display Order ' . $position . ' on widgetId ' . $widgetId);
+                    $this->getLog()->debug('Setting Display Order ' . $position . ' on widgetId ' . $widgetId);
                     $widget->displayOrder = $position;
                     break;
                 }

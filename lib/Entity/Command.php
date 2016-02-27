@@ -10,7 +10,6 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayProfileFactory;
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class Command
@@ -161,12 +160,12 @@ class Command implements \JsonSerializable
             $profile->save(['validate' => false]);
         }
 
-        PDOConnect::update('DELETE FROM `command` WHERE `commandId` = :commandId', ['commandId' => $this->commandId]);
+        $this->getStore()->update('DELETE FROM `command` WHERE `commandId` = :commandId', ['commandId' => $this->commandId]);
     }
 
     private function add()
     {
-        $this->commandId = PDOConnect::insert('INSERT INTO `command` (`command`, `code`, `description`, `userId`) VALUES (:command, :code, :description, :userId)', [
+        $this->commandId = $this->getStore()->insert('INSERT INTO `command` (`command`, `code`, `description`, `userId`) VALUES (:command, :code, :description, :userId)', [
             'command' => $this->command,
             'code' => $this->code,
             'description' => $this->description,
@@ -176,7 +175,7 @@ class Command implements \JsonSerializable
 
     private function edit()
     {
-        PDOConnect::update('
+        $this->getStore()->update('
             UPDATE `command` SET
               `command` = :command,
               `code` = :code,

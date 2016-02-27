@@ -34,9 +34,7 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserOptionFactory;
 use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 // These constants may be changed without breaking existing hashes.
 define("PBKDF2_HASH_ALGORITHM", "sha256");
@@ -273,7 +271,7 @@ class User implements \JsonSerializable
                 return $userOption;
         }
 
-        Log::debug('UserOption %s not found', $option);
+        $this->getLog()->debug('UserOption %s not found', $option);
 
         throw new NotFoundException('User Option not found');
     }
@@ -357,7 +355,7 @@ class User implements \JsonSerializable
         else {
             $params = explode(":", $this->password);
             if (count($params) < HASH_SECTIONS) {
-                Log::warning('Invalid password hash stored for userId %d', $this->userId);
+                $this->getLog()->warning('Invalid password hash stored for userId %d', $this->userId);
                 throw new AccessDeniedException();
             }
 
@@ -365,12 +363,12 @@ class User implements \JsonSerializable
 
             // Check to see if the hash created from the provided password is the same as the hash we have stored already
             if (!$this->slowEquals($pbkdf2, $this->pbkdf2($params[HASH_ALGORITHM_INDEX], $password, $params[HASH_SALT_INDEX], (int)$params[HASH_ITERATION_INDEX], strlen($pbkdf2), true))) {
-                Log::debug('Password failed Hash Check.');
+                $this->getLog()->debug('Password failed Hash Check.');
                 throw new AccessDeniedException();
             }
         }
 
-        Log::debug('Password checked out OK');
+        $this->getLog()->debug('Password checked out OK');
     }
 
     /**
@@ -401,7 +399,7 @@ class User implements \JsonSerializable
         if ($this->userId == null || $this->loaded)
             return;
 
-        Log::debug('Loading %d. All Objects = %d', $this->userId, $all);
+        $this->getLog()->debug('Loading %d. All Objects = %d', $this->userId, $all);
 
         $this->groups = (new UserGroupFactory($this->getApp()))->getByUserId($this->userId);
 
@@ -429,7 +427,7 @@ class User implements \JsonSerializable
         $this->load(true);
 
         $count = count($this->campaigns) + count($this->layouts) + count($this->media) + count($this->events);
-        Log::debug('Counted Children on %d, there are %d', $this->userId, $count);
+        $this->getLog()->debug('Counted Children on %d, there are %d', $this->userId, $count);
 
         return $count;
     }
@@ -440,11 +438,11 @@ class User implements \JsonSerializable
      */
     public function reassignAllTo($user)
     {
-        Log::debug('Reassign all to %s', $user->userName);
+        $this->getLog()->debug('Reassign all to %s', $user->userName);
 
         $this->load(true);
 
-        Log::debug('There are %d children', $this->countChildren());
+        $this->getLog()->debug('There are %d children', $this->countChildren());
 
         // Go through each item and reassign the owner to the provided user.
         foreach ($this->media as $media) {
@@ -472,7 +470,7 @@ class User implements \JsonSerializable
         $this->loaded = false;
         $this->load(true);
 
-        Log::debug('Reassign and reload complete, there are %d children', $this->countChildren());
+        $this->getLog()->debug('Reassign and reload complete, there are %d children', $this->countChildren());
     }
 
     /**
@@ -525,7 +523,7 @@ class User implements \JsonSerializable
         if ($options['validate'])
             $this->validate();
 
-        Log::debug('Saving user. %s', $this);
+        $this->getLog()->debug('Saving user. %s', $this);
 
         if ($this->userId == 0)
             $this->add();
@@ -549,7 +547,7 @@ class User implements \JsonSerializable
      */
     public function delete()
     {
-        Log::debug('Deleting %d', $this->userId);
+        $this->getLog()->debug('Deleting %d', $this->userId);
 
         // We must ensure everything is loaded before we delete
         if ($this->hash == null)
@@ -597,8 +595,8 @@ class User implements \JsonSerializable
         }
 
         // Delete user specific entities
-        PDOConnect::update('DELETE FROM `session` WHERE userId = :userId', ['userId' => $this->userId]);
-        PDOConnect::update('DELETE FROM `user` WHERE userId = :userId', ['userId' => $this->userId]);
+        $this->getStore()->update('DELETE FROM `session` WHERE userId = :userId', ['userId' => $this->userId]);
+        $this->getStore()->update('DELETE FROM `user` WHERE userId = :userId', ['userId' => $this->userId]);
     }
 
     /**
@@ -610,7 +608,7 @@ class User implements \JsonSerializable
                      VALUES (:userName, :password, :userTypeId, :email, :homePageId, :CSPRNG, :firstName, :lastName, :phone, :ref1, :ref2, :ref3, :ref4, :ref5)';
 
         // Get the ID of the record we just inserted
-        $this->userId = PDOConnect::insert($sql, [
+        $this->userId = $this->getStore()->insert($sql, [
             'userName' => $this->userName,
             'password' => $this->password,
             'userTypeId' => $this->userTypeId,
@@ -640,7 +638,7 @@ class User implements \JsonSerializable
      */
     private function update()
     {
-        Log::debug('Update user. %d. homePageId', $this->userId);
+        $this->getLog()->debug('Update user. %d. homePageId', $this->userId);
 
         $sql = 'UPDATE `user` SET UserName = :userName,
                   homePageId = :homePageId,
@@ -684,7 +682,7 @@ class User implements \JsonSerializable
             'userId' => $this->userId
         );
 
-        PDOConnect::update($sql, $params);
+        $this->getStore()->update($sql, $params);
 
         // Update the group
         // This is essentially a dirty edit (i.e. we don't touch the group assignments)
@@ -699,7 +697,7 @@ class User implements \JsonSerializable
      */
     private function updatePassword()
     {
-        Log::debug('Update user password. %d', $this->userId);
+        $this->getLog()->debug('Update user password. %d', $this->userId);
 
         $sql = 'UPDATE `user` SET CSPRNG = :CSPRNG,
                   `UserPassword` = :password
@@ -711,7 +709,7 @@ class User implements \JsonSerializable
             'userId' => $this->userId
         );
 
-        PDOConnect::update($sql, $params);
+        $this->getStore()->update($sql, $params);
     }
 
     /**
@@ -720,7 +718,7 @@ class User implements \JsonSerializable
     public function touch()
     {
         // This needs to happen on a separate connection
-        PDOConnect::update('UPDATE `user` SET lastAccessed = :time, loggedIn = 1, newUserWizard = :newUserWizard WHERE userId = :userId', [
+        $this->getStore()->update('UPDATE `user` SET lastAccessed = :time, loggedIn = 1, newUserWizard = :newUserWizard WHERE userId = :userId', [
             'userId' => $this->userId,
             'newUserWizard' => $this->newUserWizard,
             'time' => date("Y-m-d H:i:s")
@@ -735,7 +733,7 @@ class User implements \JsonSerializable
     public function routeAuthentication($route)
     {
         if (!$this->routeViewable($route)) {
-            Log::debug('Blocked assess to unrecognised page: ' . $route . '.');
+            $this->getLog()->debug('Blocked assess to unrecognised page: ' . $route . '.');
             throw new AccessDeniedException();
         }
     }
@@ -757,7 +755,7 @@ class User implements \JsonSerializable
             }
         }
         catch (\PDOException $e) {
-            Log::info('SQL Error getting permissions: %s', $e->getMessage());
+            $this->getLog()->info('SQL Error getting permissions: %s', $e->getMessage());
 
             return false;
         }
@@ -775,7 +773,7 @@ class User implements \JsonSerializable
                 return true;
         }
 
-        Log::debug('Route %s not viewable', $route[0]);
+        $this->getLog()->debug('Route %s not viewable', $route[0]);
         return false;
     }
 
@@ -975,7 +973,7 @@ class User implements \JsonSerializable
      */
     public function isQuotaFullByUser()
     {
-        $dbh = PDOConnect::init();
+        $dbh = $this->getStore()->getConnection();
         $groupId = 0;
         $userQuota = 0;
 

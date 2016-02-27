@@ -7,8 +7,6 @@
 
 namespace Xibo\Tests;
 
-use Slim\Log;
-
 class FaultTest extends \Xibo\Tests\LocalWebTestCase
 {
     public function testCollect()
@@ -20,7 +18,7 @@ class FaultTest extends \Xibo\Tests\LocalWebTestCase
     public function testDebugOn()
     {
         // Ensure we are
-        \Xibo\Helper\Config::ChangeSetting('audit', Log::EMERGENCY);
+        \Xibo\Helper\Config::ChangeSetting('audit', $this->getLog()->EMERGENCY);
 
         $this->client->put('/fault/debug/on');
         $this->assertSame(200, $this->client->response->status());
@@ -31,7 +29,7 @@ class FaultTest extends \Xibo\Tests\LocalWebTestCase
     public function testDebugOff()
     {
         // Ensure we are
-        \Xibo\Helper\Config::ChangeSetting('audit', Log::DEBUG);
+        \Xibo\Helper\Config::ChangeSetting('audit', $this->getLog()->DEBUG);
 
         $this->client->put('/fault/debug/off');
         $this->assertSame(200, $this->client->response->status());

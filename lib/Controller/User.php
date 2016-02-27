@@ -34,10 +34,7 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserTypeFactory;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 class User extends Base
 {
@@ -48,7 +45,7 @@ class User extends Base
     {
         $this->getState()->template = 'user-page';
         $this->getState()->setData([
-            'userTypes' => PDOConnect::select("SELECT userTypeId, userType FROM usertype ORDER BY usertype", [])
+            'userTypes' => $this->getStore()->select("SELECT userTypeId, userType FROM usertype ORDER BY usertype", [])
         ]);
     }
 
@@ -418,7 +415,7 @@ class User extends Base
             // Do we have a userId to reassign content to?
             if (Sanitize::getInt('reassignUserId') != null) {
                 // Reassign all content owned by this user to the provided user
-                Log::debug('Reassigning content to new userId: %d', Sanitize::getInt('reassignUserId'));
+                $this->getLog()->debug('Reassigning content to new userId: %d', Sanitize::getInt('reassignUserId'));
 
                 $user->reassignAllTo((new UserFactory($this->getApp()))->getById(Sanitize::getInt('reassignUserId')));
             } else {
@@ -453,7 +450,7 @@ class User extends Base
                 'userTypes' => (new UserTypeFactory($this->getApp()))->query()
             ],
             'help' => [
-                'add' => Help::Link('User', 'Add')
+                'add' => $this->getHelp()->link('User', 'Add')
             ]
         ]);
     }
@@ -478,7 +475,7 @@ class User extends Base
                 'userTypes' => (new UserTypeFactory($this->getApp()))->query()
             ],
             'help' => [
-                'edit' => Help::Link('User', 'Edit')
+                'edit' => $this->getHelp()->link('User', 'Edit')
             ]
         ]);
     }
@@ -500,7 +497,7 @@ class User extends Base
             'user' => $user,
             'users' => (new UserFactory($this->getApp()))->query(null, ['notUserId' => $userId]),
             'help' => [
-                'delete' => Help::Link('User', 'Delete')
+                'delete' => $this->getHelp()->link('User', 'Delete')
             ]
         ]);
     }
@@ -513,7 +510,7 @@ class User extends Base
         $this->getState()->template = 'user-form-change-password';
         $this->getState()->setData([
             'help' => [
-                'changePassword' => Help::Link('User', 'ChangePassword')
+                'changePassword' => $this->getHelp()->link('User', 'ChangePassword')
             ]
         ]);
     }
@@ -630,7 +627,7 @@ class User extends Base
             'objectId' => $objectId,
             'permissions' => $currentPermissions,
             'help' => [
-                'permissions' => Help::Link('Campaign', 'Permissions')
+                'permissions' => $this->getHelp()->link('Campaign', 'Permissions')
             ]
         ];
 
@@ -700,7 +697,7 @@ class User extends Base
         // Cascade permissions
         if ($requestEntity == 'Campaign' && Sanitize::getCheckbox('cascade') == 1) {
             /* @var Campaign $object */
-            Log::debug('Cascade permissions down');
+            $this->getLog()->debug('Cascade permissions down');
 
             $updatePermissionsOnLayout = function($layout) use ($object, $groupIds) {
 
@@ -773,7 +770,7 @@ class User extends Base
      */
     private function updatePermissions($permissions, $groupIds)
     {
-        Log::debug('Received Permissions Array to update: %s', var_export($groupIds, true));
+        $this->getLog()->debug('Received Permissions Array to update: %s', var_export($groupIds, true));
 
         // List of groupIds with view, edit and del assignments
         foreach ($permissions as $row) {
@@ -798,7 +795,7 @@ class User extends Base
         $this->getState()->template = 'user-applications-form';
         $this->getState()->setData([
             'applications' => (new ApplicationFactory($this->getApp()))->getByUserId($this->getUser()->userId),
-            'help' => Help::Link('User', 'Applications')
+            'help' => $this->getHelp()->link('User', 'Applications')
         ]);
     }
 

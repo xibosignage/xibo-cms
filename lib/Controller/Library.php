@@ -32,12 +32,9 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Config;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Helper\XiboUploadHandler;
-use Xibo\Storage\PDOConnect;
 
 
 class Library extends Base
@@ -202,7 +199,7 @@ class Library extends Base
         $this->getState()->template = 'library-form-delete';
         $this->getState()->setData([
             'media' => $media,
-            'help' => Help::Link('Library', 'Delete')
+            'help' => $this->getHelp()->link('Library', 'Delete')
         ]);
     }
 
@@ -325,7 +322,7 @@ class Library extends Base
         $this->setNoOutput(true);
 
         try {
-            Log::debug('Hand off to Upload Handler with options: %s', json_encode($options));
+            $this->getLog()->debug('Hand off to Upload Handler with options: %s', json_encode($options));
             // Hand off to the Upload Handler provided by jquery-file-upload
             new XiboUploadHandler($options);
         }
@@ -349,7 +346,7 @@ class Library extends Base
         $this->getState()->setData([
             'media' => $media,
             'validExtensions' => implode('|', (new ModuleFactory($this->getApp()))->getValidExtensions(['type' => $media->mediaType])),
-            'help' => Help::Link('Library', 'Edit')
+            'help' => $this->getHelp()->link('Library', 'Edit')
         ]);
     }
 
@@ -462,7 +459,7 @@ class Library extends Base
         $this->getState()->setData([
             'size' => $size,
             'quantity' => count($media),
-            'help' => Help::Link('Content', 'TidyLibrary')
+            'help' => $this->getHelp()->link('Content', 'TidyLibrary')
         ]);
     }
 
@@ -541,7 +538,7 @@ class Library extends Base
      */
     public static function libraryUsage()
     {
-        $results = PDOConnect::select('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', array());
+        $results = $this->getStore()->select('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', array());
 
         return Sanitize::int($results[0]['SumSize']);
     }
@@ -591,7 +588,7 @@ class Library extends Base
      */
     public function download($mediaId, $type = '')
     {
-        Log::debug('Download request for mediaId %d and type %s', $mediaId, $type);
+        $this->getLog()->debug('Download request for mediaId %d and type %s', $mediaId, $type);
 
         $media = (new MediaFactory($this->getApp()))->getById($mediaId);
 
@@ -681,7 +678,7 @@ class Library extends Base
      */
     public static function installAllModuleFiles($app)
     {
-        Log::info('Installing all module files');
+        $this->getLog()->info('Installing all module files');
 
         // Do this for all enabled modules
         foreach ((new ModuleFactory($app))->query() as $module) {
@@ -705,7 +702,7 @@ class Library extends Base
             if ($item == '.' || $item == '..')
                 continue;
 
-            Log::debug('Deleting temp file: ' . $item);
+            $this->getLog()->debug('Deleting temp file: ' . $item);
 
             unlink($library . 'temp' . DIRECTORY_SEPARATOR . $item);
         }
@@ -720,7 +717,7 @@ class Library extends Base
         foreach ((new MediaFactory($app))->query(null, array('expires' => time(), 'allModules' => 1)) as $entry) {
             /* @var \Xibo\Entity\Media $entry */
             // If the media type is a module, then pretend its a generic file
-            Log::info('Removing Expired File %s', $entry->name);
+            $this->getLog()->info('Removing Expired File %s', $entry->name);
             $entry->delete();
         }
     }

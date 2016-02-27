@@ -7,7 +7,7 @@
 
 $app->map('/(:step)', function($step = 1) use($app) {
 
-    \Xibo\Helper\Log::info('Installer Step %s', $step);
+    \Xibo\Helper\$this->getLog()->info('Installer Step %s', $step);
 
     $install = new \Xibo\Helper\Install();
     $settingsExists = $app->settingsExists;
@@ -41,7 +41,7 @@ $app->map('/(:step)', function($step = 1) use($app) {
 
             // Check and validate DB details
             if (defined('MAX_EXECUTION') && MAX_EXECUTION) {
-                \Xibo\Helper\Log::info('Setting unlimited max execution time.');
+                \Xibo\Helper\$this->getLog()->info('Setting unlimited max execution time.');
                 set_time_limit(0);
             }
 
@@ -53,7 +53,7 @@ $app->map('/(:step)', function($step = 1) use($app) {
             }
             catch (\Xibo\Exception\InstallationError $e) {
 
-                \Xibo\Helper\Log::error('Installation Exception on Step %d: %s', $step, $e->getMessage());
+                \Xibo\Helper\$this->getLog()->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
 
                 $app->flashNow('error', $e->getMessage());
 
@@ -85,7 +85,7 @@ $app->map('/(:step)', function($step = 1) use($app) {
             }
             catch (\Xibo\Exception\InstallationError $e) {
 
-                \Xibo\Helper\Log::error('Installation Exception on Step %d: %s', $step, $e->getMessage());
+                \Xibo\Helper\$this->getLog()->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
 
                 $app->flashNow('error', $e->getMessage());
 
@@ -110,12 +110,12 @@ $app->map('/(:step)', function($step = 1) use($app) {
                 // This will always be one folder down
                 $login = str_replace('/install', '', $app->urlFor('login'));
 
-                \Xibo\Helper\Log::info('Installation Complete. Redirecting to %s', $login);
+                \Xibo\Helper\$this->getLog()->info('Installation Complete. Redirecting to %s', $login);
 
                 $app->redirect($login);
             }
             catch (\Xibo\Exception\InstallationError $e) {
-                \Xibo\Helper\Log::error('Installation Exception on Step %d: %s', $step, $e->getMessage());
+                \Xibo\Helper\$this->getLog()->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
 
                 $app->flashNow('error', $e->getMessage());
 

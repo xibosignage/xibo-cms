@@ -36,8 +36,6 @@ use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class Media
@@ -248,12 +246,12 @@ class Media implements \JsonSerializable
             return $a->tagId - $b->tagId;
         });
 
-        Log::debug('Tags to be removed: %s', json_encode($this->unassignTags));
+        $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
 
         // Replace the arrays
         $this->tags = $tags;
 
-        Log::debug('Tags remaining: %s', json_encode($this->tags));
+        $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
     }
 
     /**
@@ -283,9 +281,9 @@ class Media implements \JsonSerializable
         $params['name'] = $this->name;
         $params['userId'] = $this->ownerId;
 
-        Log::sql($checkSQL, $params);
+        $this->getLog()->sql($checkSQL, $params);
 
-        $result = PDOConnect::select($checkSQL, $params);
+        $result = $this->getStore()->select($checkSQL, $params);
 
         if (count($result) > 0)
             throw new \InvalidArgumentException(__('Media you own already has this name. Please choose another.'));
@@ -302,7 +300,7 @@ class Media implements \JsonSerializable
             'fullInfo' => false
         ], $options);
 
-        Log::debug('Loading Media. Options = %s', json_encode($options));
+        $this->getLog()->debug('Loading Media. Options = %s', json_encode($options));
 
         // Tags
         $this->tags = (new TagFactory($this->getApp()))->loadByMediaId($this->mediaId);
@@ -364,7 +362,7 @@ class Media implements \JsonSerializable
         if (is_array($this->unassignTags)) {
             foreach ($this->unassignTags as $tag) {
                 /* @var Tag $tag */
-                Log::debug('Unassigning tag: %s', $tag->tag);
+                $this->getLog()->debug('Unassigning tag: %s', $tag->tag);
 
                 $tag->unassignMedia($this->mediaId);
                 $tag->save();
@@ -433,17 +431,17 @@ class Media implements \JsonSerializable
             $layout->save(Layout::$saveOptionsMinimum);
         }
 
-        PDOConnect::update('DELETE FROM media WHERE MediaID = :mediaId', ['mediaId' => $this->mediaId]);
+        $this->getStore()->update('DELETE FROM media WHERE MediaID = :mediaId', ['mediaId' => $this->mediaId]);
 
         $this->deleteFile();
 
         // Update any background images
         if ($this->mediaType == 'image' && $parentMedia != null) {
-            Log::debug('Updating layouts with the old media %d as the background image.', $this->mediaId);
+            $this->getLog()->debug('Updating layouts with the old media %d as the background image.', $this->mediaId);
             // Get all Layouts with this as the background image
             foreach ((new LayoutFactory($this->getApp()))->query(null, ['backgroundImageId' => $this->mediaId]) as $layout) {
                 /* @var Layout $layout */
-                Log::debug('Found layout that needs updating. ID = %d. Setting background image id to %d', $layout->layoutId, $parentMedia->mediaId);
+                $this->getLog()->debug('Found layout that needs updating. ID = %d. Setting background image id to %d', $layout->layoutId, $parentMedia->mediaId);
                 $layout->backgroundImageId = $parentMedia->mediaId;
                 $layout->save();
             }
@@ -456,7 +454,7 @@ class Media implements \JsonSerializable
      */
     private function add()
     {
-        $this->mediaId = PDOConnect::insert('
+        $this->mediaId = $this->getStore()->insert('
             INSERT INTO media (name, type, duration, originalFilename, userID, retired, moduleSystemFile, expires)
               VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :expires)
         ', [
@@ -473,7 +471,7 @@ class Media implements \JsonSerializable
         $this->saveFile();
 
         // Update the MD5 and storedAs to suit
-        PDOConnect::update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, duration = :duration WHERE mediaId = :mediaId', [
+        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, duration = :duration WHERE mediaId = :mediaId', [
             'fileSize' => $this->fileSize,
             'md5' => $this->md5,
             'storedAs' => $this->storedAs,
@@ -491,11 +489,11 @@ class Media implements \JsonSerializable
         // Do we need to pull a new update?
         // Is the file either expired or is force set
         if ($this->force || ($this->expires > 0 && $this->expires < time())) {
-            Log::debug('Media %s has expired: %s. Force = %d', $this->name, Date::getLocalDate($this->expires), $this->force);
+            $this->getLog()->debug('Media %s has expired: %s. Force = %d', $this->name, Date::getLocalDate($this->expires), $this->force);
             $this->saveFile();
         }
 
-        PDOConnect::update('
+        $this->getStore()->update('
           UPDATE `media`
               SET `name` = :name,
                 duration = :duration,
@@ -541,7 +539,7 @@ class Media implements \JsonSerializable
         // Work out the extension
         $extension = strtolower(substr(strrchr($this->fileName, '.'), 1));
 
-        Log::debug('saveFile for "%s" with storedAs = "%s", fileName = "%s" to "%s"', $this->name, $this->storedAs, $this->fileName, $this->mediaId . '.' . $extension);
+        $this->getLog()->debug('saveFile for "%s" with storedAs = "%s", fileName = "%s" to "%s"', $this->name, $this->storedAs, $this->fileName, $this->mediaId . '.' . $extension);
 
         // If the storesAs is empty, then set it to be the moved file name
         if (empty($this->storedAs)) {
@@ -564,7 +562,7 @@ class Media implements \JsonSerializable
         else {
             // We have pre-defined where we want this to be stored
             if (!@copy($this->fileName, $libraryFolder . $this->storedAs)) {
-                Log::error('Cannot move %s to %s', $this->fileName, $libraryFolder . $this->storedAs);
+                $this->getLog()->error('Cannot move %s to %s', $this->fileName, $libraryFolder . $this->storedAs);
                 throw new ConfigurationException(__('Problem moving provided file into the Library Folder'));
             }
         }
@@ -581,7 +579,7 @@ class Media implements \JsonSerializable
     {
         // Make sure storedAs isn't null
         if ($this->storedAs == null) {
-            Log::error('Deleting media [%s] with empty stored as. Skipping library file delete.', $this->name);
+            $this->getLog()->error('Deleting media [%s] with empty stored as. Skipping library file delete.', $this->name);
             return;
         }
 
@@ -620,7 +618,7 @@ class Media implements \JsonSerializable
         // Open the temporary file
         $storedAs = Config::GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
 
-        Log::debug('Downloading %s to %s', $this->fileName, $storedAs);
+        $this->getLog()->debug('Downloading %s to %s', $this->fileName, $storedAs);
 
         if (!$fileHandle = fopen($storedAs, 'w'))
             throw new ConfigurationException(__('Temporary location not writable'));
@@ -630,7 +628,7 @@ class Media implements \JsonSerializable
             $client->get($this->fileName, Config::getGuzzleProxy(['save_to' => $fileHandle]));
         }
         catch (RequestException $e) {
-            Log::error('Unable to get %s, %s', $this->fileName, $e->getMessage());
+            $this->getLog()->error('Unable to get %s, %s', $this->fileName, $e->getMessage());
         }
 
         // Change the filename to our temporary file

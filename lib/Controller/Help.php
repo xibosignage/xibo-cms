@@ -62,7 +62,7 @@ class Help extends Base
                 // Test
                 $row->buttons[] = array(
                     'id' => 'help_button_test',
-                    'url' => \Xibo\Helper\Help::Link($row->topic, $row->category),
+                    'url' => \Xibo\Helper\$this->getHelp()->link($row->topic, $row->category),
                     'text' => __('Test')
                 );
             }

@@ -17,7 +17,6 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Exception\TokenExpiredException;
 use Xibo\Exception\UpgradePendingException;
 use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 use Xibo\Helper\Translate;
 
 class Error extends Base
@@ -34,7 +33,7 @@ class Error extends Base
         if (Translate::GetLocale(2) != '')
             \Jenssegers\Date\Date::setLocale(Translate::GetLocale(2));
 
-        Log::debug('Page Not Found. %s', $app->request()->getResourceUri());
+        $this->getLog()->debug('Page Not Found. %s', $app->request()->getResourceUri());
 
         $message = __('Page not found');
 
@@ -91,12 +90,12 @@ class Error extends Base
         $app->commit = false;
 
         if ($handled) {
-            Log::debug($e->getMessage());
+            $this->getLog()->debug($e->getMessage());
         }
         else {
             // Log the full error
-            Log::debug($e->getMessage() . $e->getTraceAsString());
-            Log::error($e->getMessage() . ' Exception Type: ' . get_class($e));
+            $this->getLog()->debug($e->getMessage() . $e->getTraceAsString());
+            $this->getLog()->error($e->getMessage() . ' Exception Type: ' . get_class($e));
         }
 
         // Different action depending on the app name

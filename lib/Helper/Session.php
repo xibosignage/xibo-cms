@@ -64,15 +64,24 @@ class Session implements \SessionHandlerInterface
 
     /**
      * The database connection
-     * @var \PDO
+     * @var PDOConnect
      */
     private $pdo = null;
 
     /**
-     * Session constructor.
+     * Log
+     * @var Log
      */
-    function __construct()
+    private $log;
+
+    /**
+     * Session constructor.
+     * @param Log $log
+     */
+    function __construct($log)
     {
+        $this->log = $log;
+
         session_set_save_handler(
             array(&$this, 'open'),
             array(&$this, 'close'),
@@ -107,29 +116,37 @@ class Session implements \SessionHandlerInterface
             // Commit
             $this->commit();
         } catch (\PDOException $e) {
-            Log::error('Error closing session: %s', $e->getMessage());
+            $this->log->error('Error closing session: %s', $e->getMessage());
         }
 
         try {
 
             // Prune this session if necessary
-            if ($this->pruneKey)
-                PDOConnect::update('DELETE FROM `session` WHERE session_id = :session_id', array('session_id' => $this->key), $this->getDb());
+            if ($this->pruneKey || $this->gcCalled) {
+                $db = new PDOConnect($this->log);
 
-            if ($this->gcCalled) {
-                // Delete sessions older than 10 times the max lifetime
-                PDOConnect::update('DELETE FROM `session` WHERE IsExpired = 1 AND session_expiration < :expiration', array('expiration' => (time() - ($this->maxLifetime * 10))), $this->getDb());
+                if ($this->pruneKey) {
+                    $db->update('DELETE FROM `session` WHERE session_id = :session_id', array('session_id' => $this->key));
+                }
 
-                // Update expired sessions as expired
-                PDOConnect::update('UPDATE `session` SET IsExpired = 1 WHERE session_expiration < :expiration', array('expiration' => time()), $this->getDb());
+                if ($this->gcCalled) {
+                    // Delete sessions older than 10 times the max lifetime
+                    $db->update('DELETE FROM `session` WHERE IsExpired = 1 AND session_expiration < :expiration', array('expiration' => (time() - ($this->maxLifetime * 10))));
+
+                    // Update expired sessions as expired
+                    $db->update('UPDATE `session` SET IsExpired = 1 WHERE session_expiration < :expiration', array('expiration' => time()));
+                }
+
+                $db->commitIfNecessary();
+                $db->close();
             }
 
         } catch (\PDOException $e) {
-            Log::error('Error closing session: %s', $e->getMessage());
+            $this->log->error('Error closing session: %s', $e->getMessage());
         }
 
         // Close
-        $this->pdo = null;
+        $this->getDb()->close();
 
         return true;
     }
@@ -151,7 +168,7 @@ class Session implements \SessionHandlerInterface
             $this->beginTransaction();
 
             // Get this session
-            $sth = $dbh->prepare('SELECT `session_data`, `isexpired`, `useragent`, `session_expiration`, `userId` FROM `session` WHERE `session_id` = :session_id');
+            $sth = $dbh->getConnection()->prepare('SELECT `session_data`, `isexpired`, `useragent`, `session_expiration`, `userId` FROM `session` WHERE `session_id` = :session_id');
             $sth->execute(array('session_id' => $key));
 
             if (!$row = $sth->fetch()) {
@@ -181,7 +198,7 @@ class Session implements \SessionHandlerInterface
             return ($row['session_data']);
 
         } catch (\Exception $e) {
-            Log::error('Error reading session: %s', $e->getMessage());
+            $this->log->error('Error reading session: %s', $e->getMessage());
 
             return settype($empty, "string");
         }
@@ -226,10 +243,10 @@ class Session implements \SessionHandlerInterface
 
             //
 
-            PDOConnect::update($sql, $params, $this->getDb());
+            $this->getDb()->update($sql, $params);
 
         } catch (\PDOException $e) {
-            Log::error('Error writing session data: %s', $e->getMessage());
+            $this->log->error('Error writing session data: %s', $e->getMessage());
             return false;
         }
 
@@ -242,9 +259,9 @@ class Session implements \SessionHandlerInterface
     public function destroy($key)
     {
         try {
-            PDOConnect::update('DELETE FROM `session` WHERE session_id = :session_id', array('session_id', $key), $this->getDb());
+            $this->getDb()->update('DELETE FROM `session` WHERE session_id = :session_id', array('session_id', $key));
         } catch (\PDOException $e) {
-            Log::error('Error destroying session: %s', $e->getMessage());
+            $this->log->error('Error destroying session: %s', $e->getMessage());
         }
 
         return true;
@@ -265,7 +282,7 @@ class Session implements \SessionHandlerInterface
      */
     public function setUser($userId)
     {
-        Log::debug('Setting user Id to %d', $userId);
+        $this->log->debug('Setting user Id to %d', $userId);
         $_SESSION['userid'] = $userId;
         $this->userId = $userId;
     }
@@ -281,14 +298,14 @@ class Session implements \SessionHandlerInterface
 
         try {
             // Swap the ID's
-            PDOConnect::update('UPDATE `session` SET session_id = :new_session_id WHERE session_id = :session_id', array('session_id' => $this->key, 'new_session_id' => $newKey), $this->getDb());
+            $this->getDb()->update('UPDATE `session` SET session_id = :new_session_id WHERE session_id = :session_id', array('session_id' => $this->key, 'new_session_id' => $newKey));
 
             $this->key = $newKey;
 
             return true;
 
         } catch (\PDOException $e) {
-            Log::error('Error regenerating session: %s', $e->getMessage());
+            $this->log->error('Error regenerating session: %s', $e->getMessage());
             return false;
         }
     }
@@ -353,12 +370,12 @@ class Session implements \SessionHandlerInterface
 
     /**
      * Get a Database
-     * @return \PDO
+     * @return PDOConnect
      */
     private function getDb()
     {
         if ($this->pdo == null)
-            $this->pdo = PDOConnect::newConnection();
+            $this->pdo = new PDOConnect($this->log);
 
         return $this->pdo;
     }
@@ -372,9 +389,9 @@ class Session implements \SessionHandlerInterface
      */
     private function beginTransaction()
     {
-        if (!$this->getDb()->inTransaction()) {
-            $this->pdo->exec('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
-            $this->pdo->beginTransaction();
+        if (!$this->getDb()->getConnection()->inTransaction()) {
+            $this->getDb()->getConnection()->exec('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+            $this->getDb()->getConnection()->beginTransaction();
         }
     }
 
@@ -383,8 +400,8 @@ class Session implements \SessionHandlerInterface
      */
     private function commit()
     {
-        if ($this->getDb()->inTransaction())
-            $this->getDb()->commit();
+        if ($this->getDb()->getConnection()->inTransaction())
+            $this->getDb()->getConnection()->commit();
     }
 }
 

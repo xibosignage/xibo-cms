@@ -23,15 +23,13 @@
 namespace Xibo\Factory;
 
 use Xibo\Entity\AuditLog;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 class AuditLogFactory extends BaseFactory
 {
     public function query($sortOrder = null, $filterBy = null)
     {
-        Log::debug('AuditLog Factory with filter: %s', var_export($filterBy, true));
+        $this->getLog()->debug('AuditLog Factory with filter: %s', var_export($filterBy, true));
 
         $entries = array();
         $params = [];
@@ -80,7 +78,7 @@ class AuditLogFactory extends BaseFactory
 
 
 
-        $dbh = PDOConnect::init();
+        $dbh = $this->getStore()->getConnection();
 
         $sth = $dbh->prepare($sql);
         $sth->execute($params);
@@ -91,7 +89,7 @@ class AuditLogFactory extends BaseFactory
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }
 

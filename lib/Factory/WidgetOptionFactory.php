@@ -25,7 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\WidgetOption;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 class WidgetOptionFactory extends BaseFactory
 {
@@ -70,7 +69,7 @@ class WidgetOptionFactory extends BaseFactory
 
         $sql = 'SELECT * FROM `widgetoption` WHERE widgetId = :widgetId';
 
-        foreach (PDOConnect::select($sql, [
+        foreach ($this->getStore()->select($sql, [
             'widgetId' => Sanitize::getInt('widgetId', $filterBy)
         ]) as $row) {
             $entries[] = (new WidgetOption())->hydrate($row)->setApp($this->getApp());

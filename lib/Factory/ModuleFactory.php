@@ -27,9 +27,7 @@ use Xibo\Entity\Media;
 use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 class ModuleFactory extends BaseFactory
 {
@@ -48,6 +46,7 @@ class ModuleFactory extends BaseFactory
 
         /* @var \Xibo\Widget\ModuleWidget $object */
         $object = new $className();
+        $object->setApp($this->getApp());
         $object->setModule($module);
 
         return $object;
@@ -285,7 +284,7 @@ class ModuleFactory extends BaseFactory
         $entries = array();
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             $params = array();
 
@@ -412,7 +411,7 @@ class ModuleFactory extends BaseFactory
 
             // Paging
             if ($limit != '' && count($entries) > 0) {
-                $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+                $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
                 $this->_countLast = intval($results[0]['total']);
             }
 
@@ -420,7 +419,7 @@ class ModuleFactory extends BaseFactory
         }
         catch (\Exception $e) {
 
-            Log::error($e->getMessage());
+            $this->getLog()->error($e->getMessage());
 
             return array();
         }

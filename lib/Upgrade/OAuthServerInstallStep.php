@@ -10,13 +10,12 @@ namespace Xibo\Upgrade;
 
 
 use Xibo\Helper\Install;
-use Xibo\Storage\PDOConnect;
 
 class OAuthServerInstallStep implements Step
 {
     public static function doStep()
     {
-        $dbh = PDOConnect::init();
+        $dbh = $this->getStore()->getConnection();
 
         // Run the SQL to create the necessary tables
         $statements = Install::remove_remarks(self::$dbStructure);

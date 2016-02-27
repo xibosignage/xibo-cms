@@ -26,8 +26,6 @@ use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Helper\Config;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
 
@@ -144,7 +142,7 @@ class Campaign extends Base
     {
         $this->getState()->template = 'campaign-form-add';
         $this->getState()->setData([
-            'help' => Help::Link('Campaign', 'Add')
+            'help' => $this->getHelp()->link('Campaign', 'Add')
         ]);
     }
 
@@ -212,7 +210,7 @@ class Campaign extends Base
         $this->getState()->template = 'campaign-form-edit';
         $this->getState()->setData([
             'campaign' => $campaign,
-            'help' => Help::Link('Campaign', 'Edit')
+            'help' => $this->getHelp()->link('Campaign', 'Edit')
         ]);
     }
 
@@ -279,7 +277,7 @@ class Campaign extends Base
         $this->getState()->template = 'campaign-form-delete';
         $this->getState()->setData([
             'campaign' => $campaign,
-            'help' => Help::Link('Campaign', 'Delete')
+            'help' => $this->getHelp()->link('Campaign', 'Delete')
         ]);
     }
 
@@ -337,7 +335,7 @@ class Campaign extends Base
         $this->getState()->setData([
             'campaign' => $campaign,
             'layouts' => (new LayoutFactory($this->getApp()))->getByCampaignId($campaignId),
-            'help' => Help::Link('Campaign', 'Layouts')
+            'help' => $this->getHelp()->link('Campaign', 'Layouts')
         ]);
     }
 
@@ -402,7 +400,7 @@ class Campaign extends Base
      */
     public function assignLayout($campaignId)
     {
-        Log::debug('assignLayout with campaignId ' . $campaignId);
+        $this->getLog()->debug('assignLayout with campaignId ' . $campaignId);
 
         $campaign = (new CampaignFactory($this->getApp()))->getById($campaignId);
 

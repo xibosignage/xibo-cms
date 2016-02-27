@@ -25,7 +25,6 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Form;
-use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 
 
@@ -78,7 +77,7 @@ class Transition extends Base
         $this->getState()->template = 'transition-form-edit';
         $this->getState()->setData([
             'transition' => $transition,
-            'help' => Help::Link('Transition', 'Edit')
+            'help' => $this->getHelp()->link('Transition', 'Edit')
         ]);
     }
 

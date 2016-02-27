@@ -25,7 +25,6 @@ use Kit;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Helper\Form;
-use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 
 
@@ -125,7 +124,7 @@ class Resolution extends Base
     {
         $this->getState()->template = 'resolution-form-add';
         $this->getState()->setData([
-            'help' => Help::Link('Resolution', 'Add')
+            'help' => $this->getHelp()->link('Resolution', 'Add')
         ]);
     }
 
@@ -143,7 +142,7 @@ class Resolution extends Base
         $this->getState()->template = 'resolution-form-edit';
         $this->getState()->setData([
             'resolution' => $resolution,
-            'help' => Help::Link('Resolution', 'Edit')
+            'help' => $this->getHelp()->link('Resolution', 'Edit')
         ]);
     }
 
@@ -161,7 +160,7 @@ class Resolution extends Base
         $this->getState()->template = 'resolution-form-delete';
         $this->getState()->setData([
             'resolution' => $resolution,
-            'help' => Help::Link('Resolution', 'Delete')
+            'help' => $this->getHelp()->link('Resolution', 'Delete')
         ]);
     }
 

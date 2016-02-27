@@ -24,7 +24,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
         $fileName = $file->name;
         $filePath = Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName;
 
-        Log::debug('Upload complete for name: ' . $fileName . '. Index is %s.', $index);
+        $this->getLog()->debug('Upload complete for name: ' . $fileName . '. Index is %s.', $index);
 
         $controller = $this->options['controller'];
         /* @var \Xibo\Controller\Library $controller */
@@ -49,7 +49,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $module = (new ModuleFactory($controller->getApp()))->getByExtension(strtolower(substr(strrchr($fileName, '.'), 1)));
             $module = (new ModuleFactory($controller->getApp()))->create($module->type);
 
-            Log::debug('Module Type = %s', $module->getModuleType());
+            $this->getLog()->debug('Module Type = %s', $module->getModuleType());
 
             // Do we need to run any pre-processing on the file?
             $module->preProcess($filePath);
@@ -60,7 +60,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $updateInLayouts = ($this->options['updateInLayouts'] == 1);
                 $deleteOldRevisions = ($this->options['deleteOldRevisions'] == 1);
 
-                Log::debug('Replacing old with new - updateInLayouts = %d, deleteOldRevisions = %d', $updateInLayouts, $deleteOldRevisions);
+                $this->getLog()->debug('Replacing old with new - updateInLayouts = %d, deleteOldRevisions = %d', $updateInLayouts, $deleteOldRevisions);
 
                 // Load old media
                 $oldMedia = (new MediaFactory($controller->getApp()))->getById($this->options['oldMediaId']);
@@ -85,7 +85,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 // Save
                 $media->save(['oldMedia' => $oldMedia]);
 
-                Log::debug('Copying permissions to new media');
+                $this->getLog()->debug('Copying permissions to new media');
 
                 foreach ((new PermissionFactory($controller->getApp()))->getAllByObjectId(get_class($oldMedia), $oldMedia->mediaId) as $permission) {
                     /* @var Permission $permission */
@@ -96,7 +96,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Do we want to replace this in all layouts?
                 if ($updateInLayouts) {
-                    Log::debug('Replace in all Layouts selected. Getting associated widgets');
+                    $this->getLog()->debug('Replace in all Layouts selected. Getting associated widgets');
 
                     foreach ((new WidgetFactory($controller->getApp()))->getByMediaId($oldMedia->mediaId) as $widget) {
                         /* @var Widget $widget */
@@ -104,10 +104,10 @@ class XiboUploadHandler extends BlueImpUploadHandler
                             // Widget that we cannot update, this means we can't delete the original mediaId when it comes time to do so.
                             $deleteOldRevisions = false;
 
-                            Log::info('Media used on Widget that we cannot edit. Delete Old Revisions has been disabled.');
+                            $this->getLog()->info('Media used on Widget that we cannot edit. Delete Old Revisions has been disabled.');
                         }
 
-                        Log::debug('Found widget that needs updating. ID = %d. Linking %d', $widget->getId(), $media->mediaId);
+                        $this->getLog()->debug('Found widget that needs updating. ID = %d. Linking %d', $widget->getId(), $media->mediaId);
                         $widget->unassignMedia($oldMedia->mediaId);
                         $widget->assignMedia($media->mediaId);
                         $widget->save();
@@ -115,7 +115,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                     // Update any background images
                     if ($media->mediaType == 'image') {
-                        Log::debug('Updating layouts with the old media %d as the background image.', $oldMedia->mediaId);
+                        $this->getLog()->debug('Updating layouts with the old media %d as the background image.', $oldMedia->mediaId);
                         // Get all Layouts with this as the background image
                         foreach ((new LayoutFactory($controller->getApp()))->query(null, ['disableUserCheck' => 1, 'backgroundImageId' => $oldMedia->mediaId]) as $layout) {
                             /* @var Layout $layout */
@@ -124,17 +124,17 @@ class XiboUploadHandler extends BlueImpUploadHandler
                                 // Widget that we cannot update, this means we can't delete the original mediaId when it comes time to do so.
                                 $deleteOldRevisions = false;
 
-                                Log::info('Media used on Widget that we cannot edit. Delete Old Revisions has been disabled.');
+                                $this->getLog()->info('Media used on Widget that we cannot edit. Delete Old Revisions has been disabled.');
                             }
 
-                            Log::debug('Found layout that needs updating. ID = %d. Setting background image id to %d', $layout->layoutId, $media->mediaId);
+                            $this->getLog()->debug('Found layout that needs updating. ID = %d. Setting background image id to %d', $layout->layoutId, $media->mediaId);
                             $layout->backgroundImageId = $media->mediaId;
                             $layout->save();
                         }
                     }
 
                 } else if ($this->options['widgetId'] != 0) {
-                    Log::debug('Swapping a specific widget only.');
+                    $this->getLog()->debug('Swapping a specific widget only.');
                     // swap this one
                     $widget = (new WidgetFactory($controller->getApp()))->getById($this->options['widgetId']);
 
@@ -205,7 +205,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
             // Are we assigning to a Playlist?
             if ($this->options['playlistId'] != 0 && $this->options['widgetId'] == 0) {
 
-                Log::debug('Assigning uploaded media to playlistId ' . $this->options['playlistId']);
+                $this->getLog()->debug('Assigning uploaded media to playlistId ' . $this->options['playlistId']);
 
                 // Get the Playlist
                 $playlist = (new PlaylistFactory($controller->getApp()))->getById($this->options['playlistId']);
@@ -229,8 +229,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $playlist->save();
             }
         } catch (Exception $e) {
-            Log::error('Error uploading media: %s', $e->getMessage());
-            Log::debug($e->getTraceAsString());
+            $this->getLog()->error('Error uploading media: %s', $e->getMessage());
+            $this->getLog()->debug($e->getTraceAsString());
 
             $file->error = $e->getMessage();
 

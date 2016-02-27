@@ -11,8 +11,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\UserType;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
 
 class UserTypeFactory extends BaseFactory
 {
@@ -38,7 +36,7 @@ class UserTypeFactory extends BaseFactory
 
 
 
-            foreach (PDOConnect::select($sql, $params) as $row) {
+            foreach ($this->getStore()->select($sql, $params) as $row) {
                 $entries[] = (new UserType())->hydrate($row)->setApp($this->getApp());
             }
 
@@ -46,7 +44,7 @@ class UserTypeFactory extends BaseFactory
 
         } catch (\Exception $e) {
 
-            Log::error($e);
+            $this->getLog()->error($e);
 
             throw new NotFoundException();
         }

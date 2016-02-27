@@ -24,19 +24,16 @@ use Xibo\Factory\UserFactory;
 use Xibo\Helper\BackupUploadHandler;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Helper\WakeOnLan;
-use Xibo\Storage\PDOConnect;
 
 class Maintenance extends Base
 {
     public function run()
     {
         // Always start a transaction
-        PDOConnect::init()->beginTransaction();
+        $this->getStore()->init()->beginTransaction();
 
         // Output HTML Headers
         print '<html>';
@@ -103,8 +100,8 @@ class Maintenance extends Base
                         catch (\Exception $e) {
                             $upgradeStep->lastTryDate = Date::parse()->format('U');
                             $upgradeStep->save();
-                            Log::error('Unable to run upgrade step. Message = %s', $e->getMessage());
-                            Log::error($e->getTraceAsString());
+                            $this->getLog()->error('Unable to run upgrade step. Message = %s', $e->getMessage());
+                            $this->getLog()->error($e->getTraceAsString());
 
                             throw new ConfigurationException($e->getMessage());
                         }
@@ -124,7 +121,7 @@ class Maintenance extends Base
                 $msgTo = Config::GetSetting("mail_to");
                 $msgFrom = Config::GetSetting("mail_from");
 
-                foreach (Display::validateDisplays((new DisplayFactory($this->getApp()))->query()) as $display) {
+                foreach ((new Display())->setApp($this->getApp())->validateDisplays((new DisplayFactory($this->getApp()))->query()) as $display) {
                     /* @var \Xibo\Entity\Display $display */
                     // Is this the first time this display has gone "off-line"
                     $displayGoneOffline = ($display->loggedIn == 1);
@@ -155,7 +152,7 @@ class Maintenance extends Base
                                             $mail->Body = $body;
 
                                             if (!$mail->send())
-                                                Log::error('Unable to send Display Up mail to %s', $user->email);
+                                                $this->getLog()->error('Unable to send Display Up mail to %s', $user->email);
                                         }
                                     }
                                 }
@@ -196,7 +193,7 @@ class Maintenance extends Base
                     $maxage = date("Y-m-d H:i:s", time() - (86400 * Sanitize::int(Config::GetSetting("MAINTENANCE_LOG_MAXAGE"))));
 
                     try {
-                        $dbh = PDOConnect::init();
+                        $dbh = $this->getStore()->getConnection();
 
                         $sth = $dbh->prepare('DELETE FROM `log` WHERE logdate < :maxage');
                         $sth->execute(array(
@@ -206,7 +203,7 @@ class Maintenance extends Base
                         print __('Done.');
                     }
                     catch (\PDOException $e) {
-                        Log::error($e->getMessage());
+                        $this->getLog()->error($e->getMessage());
                     }
                 }
                 else {
@@ -219,7 +216,7 @@ class Maintenance extends Base
                     $maxage = date("Y-m-d H:i:s",time() - (86400 * Sanitize::int(Config::GetSetting("MAINTENANCE_STAT_MAXAGE"))));
 
                     try {
-                        $dbh = PDOConnect::init();
+                        $dbh = $this->getStore()->getConnection();
 
                         $sth = $dbh->prepare('DELETE FROM `stat` WHERE statDate < :maxage');
                         $sth->execute(array(
@@ -229,7 +226,7 @@ class Maintenance extends Base
                         print __('Done.');
                     }
                     catch (\PDOException $e) {
-                        Log::error($e->getMessage());
+                        $this->getLog()->error($e->getMessage());
                     }
                 }
                 else {
@@ -244,7 +241,7 @@ class Maintenance extends Base
 
                     // Get a list of all displays
                     try {
-                        $dbh = PDOConnect::init();
+                        $dbh = $this->getStore()->getConnection();
                         $sth = $dbh->prepare('SELECT displayId, display FROM `display` WHERE licensed = 1 ORDER BY lastAccessed');
                         $sth->execute();
 
@@ -274,7 +271,7 @@ class Maintenance extends Base
                         }
                     }
                     catch (\Exception $e) {
-                        Log::error($e);
+                        $this->getLog()->error($e);
                     }
                 }
 
@@ -285,7 +282,7 @@ class Maintenance extends Base
                 $displayObject = new Display();
 
                 try {
-                    $dbh = PDOConnect::init();
+                    $dbh = $this->getStore()->getConnection();
 
                     // Get a list of all displays which have WOL enabled
                     $sth = $dbh->prepare('SELECT DisplayID, Display, WakeOnLanTime, LastWakeOnLanCommandSent FROM `display` WHERE WakeOnLan = 1');
@@ -305,7 +302,7 @@ class Maintenance extends Base
                                 if ($display->macAddress == '' || $display->broadCastAddress == '')
                                     throw new \InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
 
-                                Log::notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);
+                                $this->getLog()->notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);
 
                                 try {
                                     WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9');
@@ -329,7 +326,7 @@ class Maintenance extends Base
                     print __('Done.');
                 }
                 catch (\PDOException $e) {
-                    Log::error($e->getMessage());
+                    $this->getLog()->error($e->getMessage());
                 }
 
                 // Build Layouts
@@ -344,7 +341,7 @@ class Maintenance extends Base
 
                 // Install module files
                 if (!$quick) {
-                    Log::debug('Installing Module Files');
+                    $this->getLog()->debug('Installing Module Files');
                     Library::installAllModuleFiles($this->getApp());
                 }
             }
@@ -357,7 +354,7 @@ class Maintenance extends Base
         print "\n  </body>\n";
         print "</html>";
 
-        Log::debug('Maintenance Complete');
+        $this->getLog()->debug('Maintenance Complete');
 
         // No output
         $this->setNoOutput(true);
@@ -370,7 +367,7 @@ class Maintenance extends Base
     {
         $this->getState()->template = 'maintenance-form-tidy';
         $this->getState()->setData([
-            'help' => Help::Link('Settings', 'TidyLibrary')
+            'help' => $this->getHelp()->link('Settings', 'TidyLibrary')
         ]);
     }
 
@@ -387,7 +384,7 @@ class Maintenance extends Base
 
         // Also run a script to tidy up orphaned media in the library
         $library = Config::GetSetting('LIBRARY_LOCATION');
-        Log::debug('Library Location: ' . $library);
+        $this->getLog()->debug('Library Location: ' . $library);
 
         // Remove temporary files
         Library::removeTempFiles($this->getApp());
@@ -412,7 +409,7 @@ class Maintenance extends Base
             GROUP BY media.mediaid, media.storedAs, media.type, media.isedited
           ';
 
-        foreach (PDOConnect::select($sql, []) as $row) {
+        foreach ($this->getStore()->select($sql, []) as $row) {
             $media[$row['storedAs']] = $row;
 
             // Ignore any module files or fonts
@@ -429,8 +426,8 @@ class Maintenance extends Base
             }
         }
 
-        //Log::debug(var_export($media, true));
-        //Log::debug(var_export($unusedMedia, true));
+        //$this->getLog()->debug(var_export($media, true));
+        //$this->getLog()->debug(var_export($unusedMedia, true));
 
         $i = 0;
 
@@ -456,20 +453,20 @@ class Maintenance extends Base
             // Is this file in the system anywhere?
             if (!array_key_exists($file, $media)) {
                 // Totally missing
-                Log::debug('Deleting file: ' . $file);
+                $this->getLog()->debug('Deleting file: ' . $file);
 
                 // If not, delete it
                 Media::unlink($file);
             }
             else if (array_key_exists($file, $unusedRevisions)) {
                 // It exists but isn't being used any more
-                Log::debug('Deleting unused revision media: ' . $media[$file]['mediaid']);
+                $this->getLog()->debug('Deleting unused revision media: ' . $media[$file]['mediaid']);
 
                 (new MediaFactory($this->getApp()))->getById($media[$file]['mediaid'])->delete();
             }
             else if (array_key_exists($file, $unusedMedia)) {
                 // It exists but isn't being used any more
-                Log::debug('Deleting unused media: ' . $media[$file]['mediaid']);
+                $this->getLog()->debug('Deleting unused media: ' . $media[$file]['mediaid']);
 
                 (new MediaFactory($this->getApp()))->getById($media[$file]['mediaid'])->delete();
             }
@@ -532,7 +529,7 @@ class Maintenance extends Base
             throw new ConfigurationException(__('Database dump failed.'));
 
         // Zippy
-        Log::debug($zipFile);
+        $this->getLog()->debug($zipFile);
         $zip = new \ZipArchive();
         $zip->open($zipFile, \ZIPARCHIVE::OVERWRITE);
         $zip->addFile($fileNameStructure, 'structure.dump');

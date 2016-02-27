@@ -21,6 +21,7 @@
 namespace Xibo\Helper;
 
 use Xibo\Storage\PDOConnect;
+use Xibo\Storage\StorageInterface;
 
 define('WEBSITE_VERSION_NAME', '1.8.0-alpha3');
 define('WEBSITE_VERSION', 123);
@@ -33,6 +34,11 @@ class Config
      * @var \Stash\Interfaces\PoolInterface
      */
     private static $pool = null;
+
+    /**
+     * @var StorageInterface
+     */
+    private static $store = null;
 
     private $extensions;
     public $envTested;
@@ -92,8 +98,6 @@ class Config
             'name' => $dbname
         ];
 
-        Config::Version();
-
         // Pull in other settings
         if (isset($logHandlers))
             Config::$logHandlers = $logHandlers;
@@ -108,8 +112,13 @@ class Config
         if (isset($cacheDrivers))
             Config::$cacheDrivers = $cacheDrivers;
 
+        // Create a store to use
+        self::$store = new PDOConnect();
+
         // Configure the timezone information
         date_default_timezone_set(Config::GetSetting("defaultTimezone"));
+
+        Config::Version();
     }
 
     /**
@@ -132,9 +141,7 @@ class Config
             }
         }
 
-        $dbh = PDOConnect::init();
-
-        $sth = $dbh->prepare('SELECT `value` FROM `setting` WHERE `setting` = :setting');
+        $sth = self::$store->getConnection()->prepare('SELECT `value` FROM `setting` WHERE `setting` = :setting');
         $sth->execute(array('setting' => $setting));
 
         if (!$result = $sth->fetch())
@@ -156,9 +163,8 @@ class Config
      */
     public static function ChangeSetting($setting, $value)
     {
-        $dbh = PDOConnect::init();
 
-        $sth = $dbh->prepare('UPDATE `setting` SET `value` = :value WHERE `setting` = :setting');
+        $sth = self::$store->getConnection()->prepare('UPDATE `setting` SET `value` = :value WHERE `setting` = :setting');
         $sth->execute(array('setting' => $setting, 'value' => $value));
 
         if (self::getPool() != null) {
@@ -174,7 +180,6 @@ class Config
             $sort_order = array('cat', 'ordering');
 
         try {
-            $dbh = PDOConnect::init();
 
             $SQL = 'SELECT * FROM setting WHERE 1 = 1 ';
             $params = array();
@@ -193,7 +198,7 @@ class Config
             if (is_array($sort_order))
                 $SQL .= 'ORDER BY ' . implode(',', $sort_order);
 
-            $sth = $dbh->prepare($SQL);
+            $sth = self::$store->getConnection()->prepare($SQL);
             $sth->execute($params);
 
             return $sth->fetchAll();
@@ -212,8 +217,8 @@ class Config
     static function Version($object = '')
     {
         try {
-            $dbh = PDOConnect::init();
-            $sth = $dbh->prepare('SELECT app_ver, XlfVersion, XmdsVersion, DBVersion FROM version');
+
+            $sth = self::$store->getConnection()->prepare('SELECT app_ver, XlfVersion, XmdsVersion, DBVersion FROM version');
             $sth->execute();
 
             if (!$row = $sth->fetch(\PDO::FETCH_ASSOC))
@@ -255,7 +260,6 @@ class Config
     public static function isProxyException($host)
     {
         $proxyException = Config::GetSetting('PROXY_EXCEPTIONS');
-        Log::debug($host . ' in ' . $proxyException . '. Pos = ' . stripos($host, $proxyException));
         return ($proxyException != '' && stripos($host, $proxyException) > -1);
     }
 
@@ -285,8 +289,6 @@ class Config
             if (Config::GetSetting('PROXY_EXCEPTIONS') != '') {
                 $httpOptions['proxy']['no'] = explode(',', Config::GetSetting('PROXY_EXCEPTIONS'));
             }
-
-            Log::debug('Completed Proxy Configuration: %s', json_encode($httpOptions));
         }
 
         return $httpOptions;

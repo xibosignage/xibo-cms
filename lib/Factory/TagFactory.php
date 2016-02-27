@@ -26,7 +26,6 @@ namespace Xibo\Factory;
 use Xibo\Entity\Tag;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 class TagFactory extends BaseFactory
 {
@@ -86,7 +85,7 @@ class TagFactory extends BaseFactory
     {
         $sql = 'SELECT tag.tagId, tag.tag FROM `tag` WHERE tag.tag = :tag';
 
-        $tags = \Xibo\Storage\PDOConnect::select($sql, array('tag' => $tagName));
+        $tags = $this->getStore()->select($sql, array('tag' => $tagName));
 
         if (count($tags) <= 0)
             throw new NotFoundException(sprintf(__('Unable to find Tag %s'), $tagName));
@@ -110,7 +109,7 @@ class TagFactory extends BaseFactory
 
         $sql = 'SELECT tag.tagId, tag.tag FROM `tag` INNER JOIN `lktaglayout` ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = :layoutId';
 
-        foreach (\Xibo\Storage\PDOConnect::select($sql, array('layoutId' => $layoutId)) as $row) {
+        foreach ($this->getStore()->select($sql, array('layoutId' => $layoutId)) as $row) {
             $tag = new Tag();
             $tag->tagId = \Xibo\Helper\Sanitize::int($row['tagId']);
             $tag->tag = \Xibo\Helper\Sanitize::string($row['tag']);
@@ -133,7 +132,7 @@ class TagFactory extends BaseFactory
 
         $sql = 'SELECT tag.tagId, tag.tag FROM `tag` INNER JOIN `lktagmedia` ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = :mediaId';
 
-        foreach (PDOConnect::select($sql, array('mediaId' => $mediaId)) as $row) {
+        foreach ($this->getStore()->select($sql, array('mediaId' => $mediaId)) as $row) {
             $tag = new Tag();
             $tag->tagId = Sanitize::int($row['tagId']);
             $tag->tag = Sanitize::string($row['tag']);

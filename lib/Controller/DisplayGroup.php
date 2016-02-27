@@ -29,7 +29,6 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
-use Xibo\Helper\Help;
 use Xibo\Helper\PlayerActionHelper;
 use Xibo\Helper\Sanitize;
 use Xibo\XMR\ChangeLayoutAction;
@@ -188,7 +187,7 @@ class DisplayGroup extends Base
     {
         $this->getState()->template = 'displaygroup-form-add';
         $this->getState()->setData([
-            'help' => Help::Link('DisplayGroup', 'Add')
+            'help' => $this->getHelp()->link('DisplayGroup', 'Add')
         ]);
     }
 
@@ -206,7 +205,7 @@ class DisplayGroup extends Base
         $this->getState()->template = 'displaygroup-form-edit';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
-            'help' => Help::Link('DisplayGroup', 'Edit')
+            'help' => $this->getHelp()->link('DisplayGroup', 'Edit')
         ]);
     }
 
@@ -224,7 +223,7 @@ class DisplayGroup extends Base
         $this->getState()->template = 'displaygroup-form-delete';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
-            'help' => Help::Link('DisplayGroup', 'Delete')
+            'help' => $this->getHelp()->link('DisplayGroup', 'Delete')
         ]);
     }
 
@@ -310,7 +309,7 @@ class DisplayGroup extends Base
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
             'checkboxes' => $checkboxes,
-            'help' => Help::Link('DisplayGroup', 'Members')
+            'help' => $this->getHelp()->link('DisplayGroup', 'Members')
         ]);
     }
 
@@ -800,7 +799,7 @@ class DisplayGroup extends Base
             'displayGroup' => $displayGroup,
             'modules' => (new ModuleFactory($this->getApp()))->query(null, ['regionSpecific' => 0]),
             'media' => (new MediaFactory($this->getApp()))->getByDisplayGroupId($displayGroup->displayGroupId),
-            'help' => Help::Link('DisplayGroup', 'FileAssociations')
+            'help' => $this->getHelp()->link('DisplayGroup', 'FileAssociations')
         ]);
     }
 
@@ -971,7 +970,7 @@ class DisplayGroup extends Base
             'displayGroup' => $displayGroup,
             'modules' => (new ModuleFactory($this->getApp()))->query(null, ['regionSpecific' => 0]),
             'layouts' => (new LayoutFactory($this->getApp()))->getByDisplayGroupId($displayGroup->displayGroupId),
-            'help' => Help::Link('DisplayGroup', 'FileAssociations')
+            'help' => $this->getHelp()->link('DisplayGroup', 'FileAssociations')
         ]);
     }
 
@@ -1145,7 +1144,7 @@ class DisplayGroup extends Base
             'displayGroup' => $displayGroup,
             'displays' => $displays,
             'media' => $media,
-            'help' => Help::Link('DisplayGroup', 'Version')
+            'help' => $this->getHelp()->link('DisplayGroup', 'Version')
         ]);
     }
 

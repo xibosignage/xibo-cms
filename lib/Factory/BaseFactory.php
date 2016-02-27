@@ -11,7 +11,9 @@ namespace Xibo\Factory;
 
 use Slim\Slim;
 use Xibo\Entity\User;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
+use Xibo\Storage\StorageInterface;
 
 class BaseFactory
 {
@@ -52,6 +54,9 @@ class BaseFactory
      */
     public function getApp()
     {
+        if ($this->app == null)
+            throw new \RuntimeException(__('Factory Application not set'));
+
         return $this->app;
     }
 
@@ -62,10 +67,25 @@ class BaseFactory
      */
     public function getUser()
     {
-        if ($this->app == null)
-            throw new \RuntimeException(__('Factory application not set'));
+        return $this->getApp()->user;
+    }
 
-        return $this->app->user;
+    /**
+     * Get Log
+     * @return Log
+     */
+    protected function getLog()
+    {
+        return $this->getApp()->logHelper;
+    }
+
+    /**
+     * Get Store
+     * @return StorageInterface
+     */
+    protected function getStore()
+    {
+        return $this->getApp()->store;
     }
 
     /**
@@ -132,7 +152,7 @@ class BaseFactory
 
             $permissionSql .= ' )';
 
-            //Log::debug('Permission SQL = %s', $permissionSql);
+            //$this->getLog()->debug('Permission SQL = %s', $permissionSql);
         }
 
         // Set out params

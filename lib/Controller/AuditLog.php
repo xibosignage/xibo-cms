@@ -21,7 +21,6 @@
 namespace Xibo\Controller;
 use Xibo\Factory\AuditLogFactory;
 use Xibo\Helper\Date;
-use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 
 class AuditLog extends Base
@@ -76,7 +75,7 @@ class AuditLog extends Base
     {
         $this->getState()->template = 'auditlog-form-export';
         $this->getState()->setData([
-            'help' => Help::Link('AuditLog', 'Export')
+            'help' => $this->getHelp()->link('AuditLog', 'Export')
         ]);
     }
 

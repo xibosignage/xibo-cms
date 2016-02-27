@@ -32,8 +32,6 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\Form;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
 
@@ -149,7 +147,7 @@ class UserGroup extends Base
         $this->getState()->template = 'usergroup-form-add';
         $this->getState()->setData([
             'help' => [
-                'add' => Help::Link('UserGroup', 'Add')
+                'add' => $this->getHelp()->link('UserGroup', 'Add')
             ]
         ]);
     }
@@ -169,7 +167,7 @@ class UserGroup extends Base
         $this->getState()->setData([
             'group' => $group,
             'help' => [
-                'add' => Help::Link('UserGroup', 'Edit')
+                'add' => $this->getHelp()->link('UserGroup', 'Edit')
             ]
         ]);
     }
@@ -190,7 +188,7 @@ class UserGroup extends Base
         $this->getState()->setData([
             'group' => $group,
             'help' => [
-                'delete' => Help::Link('UserGroup', 'Delete')
+                'delete' => $this->getHelp()->link('UserGroup', 'Delete')
             ]
         ]);
     }
@@ -317,7 +315,7 @@ class UserGroup extends Base
             'groupId' => $groupId,
             'group' => $group->group,
             'permissions' => $checkboxes,
-            'help' => Help::Link('User', 'Acl')
+            'help' => $this->getHelp()->link('User', 'Acl')
         ];
 
         $this->getState()->template = 'usergroup-form-acl';
@@ -357,7 +355,7 @@ class UserGroup extends Base
             return $newAcl[$array[0]][$array[1]] = 1;
         }, $objectIds);
 
-        Log::debug(var_export($newAcl, true));
+        $this->getLog()->debug(var_export($newAcl, true));
 
         foreach ($entities as $page) {
             /* @var Page $page */
@@ -383,7 +381,7 @@ class UserGroup extends Base
                 }
             }
             else {
-                Log::debug('Permission Exists for %s, and has been set to %d.', $page->getName(), $view);
+                $this->getLog()->debug('Permission Exists for %s, and has been set to %d.', $page->getName(), $view);
                 // Currently assigned
                 if ($view) {
                     $permission->view = 1;
@@ -448,7 +446,7 @@ class UserGroup extends Base
         $this->getState()->setData([
             'group' => $group,
             'checkboxes' => $checkboxes,
-            'help' =>  Help::Link('UserGroup', 'Members')
+            'help' =>  $this->getHelp()->link('UserGroup', 'Members')
         ]);
     }
 
@@ -458,7 +456,7 @@ class UserGroup extends Base
      */
     public function assignUser($groupId)
     {
-        Log::debug('Assign User for groupId %d', $groupId);
+        $this->getLog()->debug('Assign User for groupId %d', $groupId);
 
         $group = (new UserGroupFactory($this->getApp()))->getById($groupId);
 
@@ -469,7 +467,7 @@ class UserGroup extends Base
 
         foreach ($users as $userId) {
 
-            Log::debug('Assign User %d for groupId %d', $userId, $groupId);
+            $this->getLog()->debug('Assign User %d for groupId %d', $userId, $groupId);
 
             $user = (new UserFactory($this->getApp()))->getById($userId);
 
@@ -484,7 +482,7 @@ class UserGroup extends Base
 
         foreach ($users as $userId) {
 
-            Log::debug('Unassign User %d for groupId %d', $userId, $groupId);
+            $this->getLog()->debug('Unassign User %d for groupId %d', $userId, $groupId);
 
             $user = (new UserFactory($this->getApp()))->getById($userId);
 

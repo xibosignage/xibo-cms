@@ -26,7 +26,6 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\RequiredFileFactory;
 use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
 class Soap3 extends Soap
@@ -76,12 +75,12 @@ class Soap3 extends Soap
             // Log Bandwidth
             $this->logBandwidth($display->displayId, Bandwidth::$REGISTER, strlen($active));
 
-            Log::debug($active, $display->displayId);
+            $this->getLog()->debug($active, $display->displayId);
 
             return $active;
 
         } catch (NotFoundException $e) {
-            Log::error('Attempt to register a Version 3 Display with key %s.', $hardwareKey);
+            $this->getLog()->error('Attempt to register a Version 3 Display with key %s.', $hardwareKey);
 
             throw new \SoapFault('Sender', 'You cannot register an old display against this CMS.');
         }
@@ -140,7 +139,7 @@ class Soap3 extends Soap
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
         if ($this->display->isAuditing == 1)
-            Log::debug("[IN] Params: [$hardwareKey] [$filePath] [$fileType] [$chunkOffset] [$chunkSize]");
+            $this->getLog()->debug("[IN] Params: [$hardwareKey] [$filePath] [$fileType] [$chunkOffset] [$chunkSize]");
 
         $file = null;
 
@@ -190,7 +189,7 @@ class Soap3 extends Soap
             }
         }
         catch (NotFoundException $e) {
-            Log::error($e->getMessage());
+            $this->getLog()->error($e->getMessage());
             throw new \SoapFault('Receiver', 'Requested an invalid file.');
         }
 

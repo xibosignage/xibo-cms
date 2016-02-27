@@ -187,7 +187,7 @@ class WakeOnLan
 
                     unset($socket);
 
-                    Log::notice($sent_fsockopen, 'display', 'WakeOnLan');
+                    $this->getLog()->notice($sent_fsockopen, 'display', 'WakeOnLan');
                     return true;
                 }
                 else
@@ -201,7 +201,7 @@ class WakeOnLan
             {
                 unset($socket);
 
-                Log::notice(__('Using fsockopen() failed, due to denied permission'));
+                $this->getLog()->notice(__('Using fsockopen() failed, due to denied permission'));
             }
         }
 
@@ -243,7 +243,7 @@ class WakeOnLan
                     socket_close($socket);
                     unset($socket);
 
-                    Log::notice($socket_create, 'display', 'WakeOnLan');
+                    $this->getLog()->notice($socket_create, 'display', 'WakeOnLan');
                     return true;
                 }
                 else

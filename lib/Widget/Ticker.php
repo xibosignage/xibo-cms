@@ -38,7 +38,6 @@ use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
-use Xibo\Storage\PDOConnect;
 
 class Ticker extends ModuleWidget
 {
@@ -125,7 +124,7 @@ class Ticker extends ModuleWidget
             $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
 
-        Log::debug(count($this->module->settings['templates']));
+        $this->getLog()->debug(count($this->module->settings['templates']));
     }
 
     /**
@@ -502,7 +501,7 @@ class Ticker extends ModuleWidget
 
         $items = $cache->get();
 
-        Log::debug('Ticker with RSS source %s. Cache key: %s.', $feedUrl, $cache->getKey());
+        $this->getLog()->debug('Ticker with RSS source %s. Cache key: %s.', $feedUrl, $cache->getKey());
 
         // Check our cache to see if the key exists
         if ($cache->isHit()) {
@@ -588,8 +587,8 @@ class Ticker extends ModuleWidget
                         $namespace = str_replace(']', '', $namespace);
 
                         // What are we looking at
-                        Log::debug('Namespace: %s, Tag: %s, Attribute: %s', $namespace, $tag, $attribute);
-                        Log::debug('Item content: %s', var_export($item, true));
+                        $this->getLog()->debug('Namespace: %s, Tag: %s, Attribute: %s', $namespace, $tag, $attribute);
+                        $this->getLog()->debug('Item content: %s', var_export($item, true));
 
                         // Are we an image place holder? [tag|image]
                         if ($namespace == 'image') {
@@ -613,7 +612,7 @@ class Ticker extends ModuleWidget
                                             $tags = $item->getTag($tag);
                                             $link = $tags[0];
                                         } else {
-                                            Log::info('Looking for image with namespace %s, but that namespace does not exist.', $attribute);
+                                            $this->getLog()->info('Looking for image with namespace %s, but that namespace does not exist.', $attribute);
                                         }
                                     } else {
                                         $tags = $item->getTag($tag);
@@ -644,7 +643,7 @@ class Ticker extends ModuleWidget
                             else
                                 $tags = $item->getTag($tag);
 
-                            Log::debug('Tags:' . var_export($tags, true));
+                            $this->getLog()->debug('Tags:' . var_export($tags, true));
 
                             // If we find some tags then do the business with them
                             if ($tags != NULL) {
@@ -721,12 +720,12 @@ class Ticker extends ModuleWidget
             $this->getPool()->saveDeferred($cache);
         }
         catch (PicoFeedException $e) {
-            Log::error('Unable to get feed: %s', $e->getMessage());
-            Log::debug($e->getTraceAsString());
+            $this->getLog()->error('Unable to get feed: %s', $e->getMessage());
+            $this->getLog()->debug($e->getTraceAsString());
         }
 
         if (Log::resolveLogLevel(Config::GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
-            Log::debug(var_export(Logger::getMessages(), true));
+            $this->getLog()->debug(var_export(Logger::getMessages(), true));
         }
 
         // Return the formatted items
@@ -819,7 +818,7 @@ class Ticker extends ModuleWidget
             }
         }
 
-        Log::notice('Then template for each row is: ' . $text);
+        $this->getLog()->notice('Then template for each row is: ' . $text);
 
         // Set an expiry time for the media
         $expires = time() + ($this->getOption('updateInterval', 3600) * 60);
@@ -832,7 +831,7 @@ class Ticker extends ModuleWidget
 
         foreach ($matches[1] as $match) {
             // Get the column id's we are interested in
-            Log::notice('Matched column: ' . $match);
+            $this->getLog()->notice('Matched column: ' . $match);
 
             $col = explode('|', $match);
             $columnIds[] = $col[1];
@@ -856,7 +855,7 @@ class Ticker extends ModuleWidget
                 ];
             }
 
-            Log::debug('Resolved column mappings: %s', json_encode($columnIds));
+            $this->getLog()->debug('Resolved column mappings: %s', json_encode($columnIds));
 
             $filter = [
                 'filter' => $filter,
@@ -879,10 +878,10 @@ class Ticker extends ModuleWidget
                 $timeZone = $display->getSetting('displayTimeZone', '');
                 $timeZone = ($timeZone == '') ? Config::GetSetting('defaultTimezone') : $timeZone;
                 $dateNow->timezone($timeZone);
-                Log::debug('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString());
+                $this->getLog()->debug('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString());
             }
 
-            PDOConnect::setTimeZone(Date::getLocalDate($dateNow, 'P'));
+            $this->getStore()->setTimeZone(Date::getLocalDate($dateNow, 'P'));
 
             // Get the data (complete table, filtered)
             $dataSetResults = $dataSet->getData($filter);
@@ -929,7 +928,7 @@ class Ticker extends ModuleWidget
                                 $file = (new MediaFactory($this->getApp()))->getById($replace);
                             }
                             catch (NotFoundException $e) {
-                                Log::error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);
+                                $this->getLog()->error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);
                                 continue;
                             }
 
@@ -951,8 +950,8 @@ class Ticker extends ModuleWidget
             return $items;
         }
         catch (NotFoundException $e) {
-            Log::error('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
-            Log::debug($e->getTraceAsString());
+            $this->getLog()->error('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
+            $this->getLog()->debug($e->getTraceAsString());
             return [];
         }
     }

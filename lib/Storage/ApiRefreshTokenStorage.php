@@ -34,7 +34,7 @@ class ApiRefreshTokenStorage extends AbstractStorage implements RefreshTokenInte
      */
     public function get($token)
     {
-        $result = PDOConnect::select('
+        $result = $this->getStore()->select('
             SELECT * FROM  oauth_refresh_tokens WHERE refresh_token = :refresh_token
         ', [
             'refresh_token' => $token
@@ -57,7 +57,7 @@ class ApiRefreshTokenStorage extends AbstractStorage implements RefreshTokenInte
      */
     public function create($token, $expireTime, $accessToken)
     {
-        PDOConnect::insert('
+        $this->getStore()->insert('
             INSERT INTO oauth_refresh_tokens (refresh_token, access_token, expire_time)
               VALUES (:refresh_token, :access_token, :expire_time)
         ', [
@@ -72,6 +72,6 @@ class ApiRefreshTokenStorage extends AbstractStorage implements RefreshTokenInte
      */
     public function delete(RefreshTokenEntity $token)
     {
-        PDOConnect::update('DELETE FROM oauth_refresh_tokens WHERE refresh_token = :refresh_token', ['refresh_token' => $token->getId()]);
+        $this->getStore()->update('DELETE FROM oauth_refresh_tokens WHERE refresh_token = :refresh_token', ['refresh_token' => $token->getId()]);
     }
 }

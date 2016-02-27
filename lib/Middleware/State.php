@@ -34,9 +34,12 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Config;
+use Xibo\Helper\Help;
+use Xibo\Helper\Log;
 use Xibo\Helper\NullSession;
 use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
+use Xibo\Storage\PDOConnect;
 
 class State extends Middleware
 {
@@ -111,6 +114,21 @@ class State extends Middleware
      */
     public static function setState($app)
     {
+        // Register the log service
+        $app->container->singleton('logHelper', function() use ($app) {
+            return new Log($app->getLog(), $app->getMode());
+        });
+
+        // Register the database service
+        $app->container->singleton('store', function() use ($app) {
+            return new PDOConnect($app->logHelper);
+        });
+
+        // Register the help service
+        $app->container->singleton('helpService', function() use ($app) {
+            return new Help($app);
+        });
+
         // Register Controllers with DI
         self::registerControllersWithDi($app);
 
@@ -134,7 +152,7 @@ class State extends Middleware
         // Create a session
         $app->container->singleton('session', function() use ($app) {
             if ($app->getName() == 'web' || $app->getName() == 'auth')
-                return new Session();
+                return new Session($app->logHelper);
             else
                 return new NullSession();
         });
@@ -164,7 +182,7 @@ class State extends Middleware
 
         // Configure any extra log handlers
         if (Config::$logHandlers != null && is_array(Config::$logHandlers)) {
-            \Xibo\Helper\Log::debug('Configuring %d additional log handlers from Config', count(Config::$logHandlers));
+            $app->logHelper->debug('Configuring %d additional log handlers from Config', count(Config::$logHandlers));
             foreach (Config::$logHandlers as $handler) {
                 $app->logWriter->addHandler($handler);
             }
@@ -172,7 +190,7 @@ class State extends Middleware
 
         // Configure any extra log processors
         if (Config::$logProcessors != null && is_array(Config::$logProcessors)) {
-            \Xibo\Helper\Log::debug('Configuring %d additional log processors from Config', count(Config::$logProcessors));
+            $app->logHelper->debug('Configuring %d additional log processors from Config', count(Config::$logProcessors));
             foreach (Config::$logProcessors as $processor) {
                 $app->logWriter->addProcessor($processor);
             }

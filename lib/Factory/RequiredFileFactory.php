@@ -12,7 +12,6 @@ namespace Xibo\Factory;
 use Xibo\Entity\RequiredFile;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 class RequiredFileFactory extends BaseFactory
 {
@@ -212,7 +211,7 @@ class RequiredFileFactory extends BaseFactory
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
+        foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = (new RequiredFile())->hydrate($row, ['intProperties' => ['expires', 'lastUsed', 'size']]);
         }
 

@@ -21,8 +21,6 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Helper\Config;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
 class Region extends Base
@@ -61,7 +59,7 @@ class Region extends Base
             'region' => $region,
             'modules' => (new ModuleFactory($this->getApp()))->getAssignableModules(),
             'transitions' => $this->transitionData(),
-            'help' => Help::Link('Layout', 'RegionOptions')
+            'help' => $this->getHelp()->link('Layout', 'RegionOptions')
         ]);
     }
 
@@ -81,7 +79,7 @@ class Region extends Base
             'region' => $region,
             'layout' => (new LayoutFactory($this->getApp()))->getById($region->layoutId),
             'transitions' => $this->transitionData(),
-            'help' => Help::Link('Region', 'Edit')
+            'help' => $this->getHelp()->link('Region', 'Edit')
         ]);
     }
 
@@ -100,7 +98,7 @@ class Region extends Base
         $this->getState()->setData([
             'region' => $region,
             'layout' => (new LayoutFactory($this->getApp()))->getById($region->layoutId),
-            'help' => Help::Link('Region', 'Delete')
+            'help' => $this->getHelp()->link('Region', 'Delete')
         ]);
     }
 
@@ -187,7 +185,7 @@ class Region extends Base
         // Permissions
         if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
 
-            Log::debug('Applying permissions from parent, there are %d', count($layout->permissions));
+            $this->getLog()->debug('Applying permissions from parent, there are %d', count($layout->permissions));
 
             // Apply permissions from the Parent
             foreach ($layout->permissions as $permission) {
@@ -203,7 +201,7 @@ class Region extends Base
             }
         }
         else {
-            Log::debug('Applying default permissions');
+            $this->getLog()->debug('Applying default permissions');
 
             // Apply the default permissions
             foreach ((new PermissionFactory($this->getApp()))->createForNewEntity($this->getUser(), get_class($region), $region->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
@@ -467,7 +465,7 @@ class Region extends Base
             $region->left = Sanitize::double($newCoordinates->left);
             $region->width = Sanitize::double($newCoordinates->width);
             $region->height = Sanitize::double($newCoordinates->height);
-            Log::debug('Set ' . $region);
+            $this->getLog()->debug('Set ' . $region);
         }
 
         // Mark the layout as having changed
@@ -515,7 +513,7 @@ class Region extends Base
                 throw new NotFoundException(__('No widgets to preview'));
             }
 
-            Log::debug('There are %d widgets.', count($playlist->widgets));
+            $this->getLog()->debug('There are %d widgets.', count($playlist->widgets));
 
             // Select the widget at the required sequence
             $widget = $playlist->getWidgetAt($seq);
@@ -598,7 +596,7 @@ class Region extends Base
             foreach ($region->playlists as $playlist) {
                 /* @var \Xibo\Entity\Widget $playlist */
                 if ($playlist->getId() == $playlistId) {
-                    Log::debug('Setting Display Order ' . $position . ' on playlistId ' . $playlistId);
+                    $this->getLog()->debug('Setting Display Order ' . $position . ' on playlistId ' . $playlistId);
                     $playlist->displayOrder = $position;
                     break;
                 }

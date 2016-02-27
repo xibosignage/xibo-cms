@@ -27,8 +27,6 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
 
@@ -254,7 +252,7 @@ class Schedule extends Base
             'campaigns' => (new CampaignFactory($this->getApp()))->query(null, ['isLayoutSpecific' => -1]),
             'commands' => (new CommandFactory($this->getApp()))->query(),
             'displayGroupIds' => $this->getSession()->get('displayGroupIds'),
-            'help' => Help::Link('Schedule', 'Add')
+            'help' => $this->getHelp()->link('Schedule', 'Add')
         ]);
     }
 
@@ -369,7 +367,7 @@ class Schedule extends Base
      */
     public function add()
     {
-        Log::debug('Add Schedule');
+        $this->getLog()->debug('Add Schedule');
 
         $schedule = new \Xibo\Entity\Schedule();
         $schedule->userId = $this->getUser()->userId;
@@ -395,7 +393,7 @@ class Schedule extends Base
             if ($fromDt === null)
                 throw new \InvalidArgumentException(__('Please enter a from date'));
 
-            Log::debug('Times received are: FromDt=' . Date::getLocalDate($fromDt) . '. ToDt=' . Date::getLocalDate($toDt) . '. recurrenceRange=' . Date::getLocalDate($recurrenceRange));
+            $this->getLog()->debug('Times received are: FromDt=' . Date::getLocalDate($fromDt) . '. ToDt=' . Date::getLocalDate($toDt) . '. recurrenceRange=' . Date::getLocalDate($recurrenceRange));
 
             // Set on schedule object
             $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
@@ -466,7 +464,7 @@ class Schedule extends Base
             'displayGroupIds' => array_map(function($element) {
                 return $element->displayGroupId;
             }, $schedule->displayGroups),
-            'help' => Help::Link('Schedule', 'Edit')
+            'help' => $this->getHelp()->link('Schedule', 'Edit')
         ]);
     }
 
@@ -614,7 +612,7 @@ class Schedule extends Base
             if ($fromDt === null)
                 throw new \InvalidArgumentException(__('Please enter a from date'));
 
-            Log::debug('Times received are: FromDt=' . Date::getLocalDate($fromDt) . '. ToDt=' . Date::getLocalDate($toDt) . '. recurrenceRange=' . Date::getLocalDate($recurrenceRange));
+            $this->getLog()->debug('Times received are: FromDt=' . Date::getLocalDate($fromDt) . '. ToDt=' . Date::getLocalDate($toDt) . '. recurrenceRange=' . Date::getLocalDate($recurrenceRange));
 
             // Set on schedule object
             $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
@@ -653,7 +651,7 @@ class Schedule extends Base
         $this->getState()->template = 'schedule-form-delete';
         $this->getState()->setData([
             'event' => $schedule,
-            'help' => Help::Link('Schedule', 'Delete')
+            'help' => $this->getHelp()->link('Schedule', 'Delete')
         ]);
     }
 
@@ -755,7 +753,7 @@ class Schedule extends Base
             'displays' => $displays,
             'displayGroups' => $groups,
             'campaigns' => (new CampaignFactory($this->getApp()))->query(null, ['isLayoutSpecific' => -1]),
-            'help' => Help::Link('Schedule', 'ScheduleNow')
+            'help' => $this->getHelp()->link('Schedule', 'ScheduleNow')
         ]);
     }
 }

@@ -10,7 +10,6 @@ namespace Xibo\Upgrade;
 
 
 use Xibo\Helper\Config;
-use Xibo\Storage\PDOConnect;
 
 class MyIsamToInnoDbStep implements Step
 {
@@ -23,8 +22,8 @@ class MyIsamToInnoDbStep implements Step
             AND ENGINE = \'MyISAM\'
         ';
 
-        foreach (PDOConnect::select($sql, []) as $table) {
-            PDOConnect::update('ALTER TABLE `' . $table['TABLE_NAME'] . '` ENGINE=INNODB', []);
+        foreach ($this->getStore()->select($sql, []) as $table) {
+            $this->getStore()->update('ALTER TABLE `' . $table['TABLE_NAME'] . '` ENGINE=INNODB', []);
         }
     }
 }

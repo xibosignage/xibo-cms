@@ -16,8 +16,6 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class DisplayGroup
@@ -316,7 +314,7 @@ class DisplayGroup implements \JsonSerializable
 
         if ($this->isDisplaySpecific == 0) {
             // Check the name
-            $result = PDOConnect::select('SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = :displayGroup AND IsDisplaySpecific = 0 AND displayGroupId <> :displayGroupId', [
+            $result = $this->getStore()->select('SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = :displayGroup AND IsDisplaySpecific = 0 AND displayGroupId <> :displayGroupId', [
                 'displayGroup' => $this->displayGroup,
                 'displayGroupId' => (($this->displayGroupId == null) ? 0 : $this->displayGroupId)
             ]);
@@ -353,7 +351,7 @@ class DisplayGroup implements \JsonSerializable
             $this->edit();
 
         if ($this->loaded && $options['manageDisplayLinks']) {
-            Log::debug('Manage links to Display Group');
+            $this->getLog()->debug('Manage links to Display Group');
 
             // Handle any changes in the displays linked
             $this->manageDisplayLinks();
@@ -401,7 +399,7 @@ class DisplayGroup implements \JsonSerializable
         $this->removeAssignments();
 
         // Delete the Group itself
-        PDOConnect::update('DELETE FROM `displaygroup` WHERE DisplayGroupID = :displayGroupId', ['displayGroupId' => $this->displayGroupId]);
+        $this->getStore()->update('DELETE FROM `displaygroup` WHERE DisplayGroupID = :displayGroupId', ['displayGroupId' => $this->displayGroupId]);
     }
 
     /**
@@ -422,7 +420,7 @@ class DisplayGroup implements \JsonSerializable
 
     private function add()
     {
-        $this->displayGroupId = PDOConnect::insert('
+        $this->displayGroupId = $this->getStore()->insert('
           INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `userId`)
             VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :userId)
         ', [
@@ -435,7 +433,7 @@ class DisplayGroup implements \JsonSerializable
         ]);
 
         // Insert my self link
-        PDOConnect::insert('INSERT INTO `lkdgdg` (`parentId`, `childId`, `depth`) VALUES (:parentId, :childId, 0)', [
+        $this->getStore()->insert('INSERT INTO `lkdgdg` (`parentId`, `childId`, `depth`) VALUES (:parentId, :childId, 0)', [
             'parentId' => $this->displayGroupId,
             'childId' => $this->displayGroupId
         ]);
@@ -443,9 +441,9 @@ class DisplayGroup implements \JsonSerializable
 
     private function edit()
     {
-        Log::debug('Updating Display Group. %s, %d', $this->displayGroup, $this->displayGroupId);
+        $this->getLog()->debug('Updating Display Group. %s, %d', $this->displayGroup, $this->displayGroupId);
 
-        PDOConnect::update('
+        $this->getStore()->update('
           UPDATE displaygroup
             SET DisplayGroup = :displayGroup,
               Description = :description,
@@ -470,7 +468,7 @@ class DisplayGroup implements \JsonSerializable
     {
         if ($this->isDynamic) {
 
-            Log::info('Managing Display Links for Dynamic Display Group %s', $this->displayGroup);
+            $this->getLog()->info('Managing Display Links for Dynamic Display Group %s', $this->displayGroup);
 
             $originalDisplays = ($this->loaded) ? $this->displays : (new DisplayFactory($this->getApp()))->getByDisplayGroupId($this->displayGroupId);
 
@@ -478,7 +476,7 @@ class DisplayGroup implements \JsonSerializable
             // these displays must be permission checked based on the owner of the group NOT the logged in user
             $this->displays = (new DisplayFactory($this->getApp()))->query(null, ['display' => $this->dynamicCriteria, 'userCheckUserId' => $this->getOwnerId()]);
 
-            Log::debug('There are %d original displays and %d displays that match the filter criteria now.', count($originalDisplays), count($this->displays));
+            $this->getLog()->debug('There are %d original displays and %d displays that match the filter criteria now.', count($originalDisplays), count($this->displays));
 
             $difference = array_udiff($originalDisplays, $this->displays, function ($a, $b) {
                 /**
@@ -506,7 +504,7 @@ class DisplayGroup implements \JsonSerializable
         // Check for circular references
         // this is a lazy last minute check as we can't really tell if there is a circular reference unless
         // we've inserted the records already.
-        if (PDOConnect::exists('SELECT depth FROM `lkdgdg` WHERE parentId = :parentId AND childId = parentId AND depth > 0', ['parentId' => $this->displayGroupId]))
+        if ($this->getStore()->exists('SELECT depth FROM `lkdgdg` WHERE parentId = :parentId AND childId = parentId AND depth > 0', ['parentId' => $this->displayGroupId]))
             throw new \InvalidArgumentException(__('This assignment creates a circular reference'));
     }
 
@@ -514,7 +512,7 @@ class DisplayGroup implements \JsonSerializable
     {
         foreach ($this->displays as $display) {
             /* @var Display $display */
-            PDOConnect::update('INSERT INTO lkdisplaydg (DisplayGroupID, DisplayID) VALUES (:displayGroupId, :displayId) ON DUPLICATE KEY UPDATE DisplayID = DisplayID', [
+            $this->getStore()->update('INSERT INTO lkdisplaydg (DisplayGroupID, DisplayID) VALUES (:displayGroupId, :displayId) ON DUPLICATE KEY UPDATE DisplayID = DisplayID', [
                 'displayGroupId' => $this->displayGroupId,
                 'displayId' => $display->displayId
             ]);
@@ -538,7 +536,7 @@ class DisplayGroup implements \JsonSerializable
 
         $sql .= ')';
 
-        PDOConnect::update($sql, $params);
+        $this->getStore()->update($sql, $params);
     }
 
     /**
@@ -555,11 +553,11 @@ class DisplayGroup implements \JsonSerializable
             return $a->getId() - $b->getId();
         });
 
-        Log::debug('Linking %d display groups to Display Group %s', count($links), $this->displayGroup);
+        $this->getLog()->debug('Linking %d display groups to Display Group %s', count($links), $this->displayGroup);
 
         foreach ($links as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
-            PDOConnect::insert('
+            $this->getStore()->insert('
                 INSERT INTO lkdgdg (parentId, childId, depth)
                 SELECT p.parentId, c.childId, p.depth + c.depth + 1
                   FROM lkdgdg p, lkdgdg c
@@ -585,11 +583,11 @@ class DisplayGroup implements \JsonSerializable
             return $a->getId() - $b->getId();
         });
 
-        Log::debug('Unlinking %d display groups to Display Group %s', count($links), $this->displayGroup);
+        $this->getLog()->debug('Unlinking %d display groups to Display Group %s', count($links), $this->displayGroup);
 
         foreach ($links as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
-            PDOConnect::update('
+            $this->getStore()->update('
                 DELETE link
                   FROM `lkdgdg` p, `lkdgdg` link, `lkdgdg` c
                  WHERE p.parentId = link.parentId AND c.childId = link.childId
@@ -607,7 +605,7 @@ class DisplayGroup implements \JsonSerializable
      */
     private function unlinkAllDisplayGroups()
     {
-        PDOConnect::update('
+        $this->getStore()->update('
             DELETE link
               FROM `lkdgdg` p, `lkdgdg` link, `lkdgdg` c, `lkdgdg` to_delete
              WHERE p.parentId = link.parentId AND c.childId = link.childId
@@ -624,7 +622,7 @@ class DisplayGroup implements \JsonSerializable
     {
         foreach ($this->media as $media) {
             /* @var Media $media */
-            PDOConnect::update('INSERT INTO `lkmediadisplaygroup` (mediaid, displaygroupid) VALUES (:mediaId, :displayGroupId) ON DUPLICATE KEY UPDATE mediaid = mediaid', [
+            $this->getStore()->update('INSERT INTO `lkmediadisplaygroup` (mediaid, displaygroupid) VALUES (:mediaId, :displayGroupId) ON DUPLICATE KEY UPDATE mediaid = mediaid', [
                 'displayGroupId' => $this->displayGroupId,
                 'mediaId' => $media->mediaId
             ]);
@@ -648,14 +646,14 @@ class DisplayGroup implements \JsonSerializable
 
         $sql .= ')';
 
-        PDOConnect::update($sql, $params);
+        $this->getStore()->update($sql, $params);
     }
 
     private function linkLayouts()
     {
         foreach ($this->layouts as $layout) {
             /* @var Layout $media */
-            PDOConnect::update('INSERT INTO `lklayoutdisplaygroup` (layoutid, displaygroupid) VALUES (:layoutId, :displayGroupId) ON DUPLICATE KEY UPDATE layoutid = layoutid', [
+            $this->getStore()->update('INSERT INTO `lklayoutdisplaygroup` (layoutid, displaygroupid) VALUES (:layoutId, :displayGroupId) ON DUPLICATE KEY UPDATE layoutid = layoutid', [
                 'displayGroupId' => $this->displayGroupId,
                 'layoutId' => $layout->layoutId
             ]);
@@ -679,6 +677,6 @@ class DisplayGroup implements \JsonSerializable
 
         $sql .= ')';
 
-        PDOConnect::update($sql, $params);
+        $this->getStore()->update($sql, $params);
     }
 }

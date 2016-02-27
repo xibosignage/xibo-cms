@@ -27,6 +27,7 @@ use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
+use Xibo\Storage\StorageInterface;
 
 /**
  * Class Base
@@ -69,14 +70,14 @@ class Base
      */
     public function setApp($app)
     {
-        Log::debug('Setting APP on Controller');
-
         $this->app = $app;
 
         // Reference back to this from the app
         // but only the first time
         if ($this->app->controller == null)
             $this->app->controller = $this;
+
+        return $this;
     }
 
     /**
@@ -98,7 +99,7 @@ class Base
      */
     public function getUser()
     {
-        return $this->app->user;
+        return $this->getApp()->user;
     }
 
     /**
@@ -107,7 +108,7 @@ class Base
      */
     protected function getState()
     {
-        return $this->app->state;
+        return $this->getApp()->state;
     }
 
     /**
@@ -116,7 +117,7 @@ class Base
      */
     protected function getSession()
     {
-        return $this->app->session;
+        return $this->getApp()->session;
     }
 
     /**
@@ -125,7 +126,34 @@ class Base
      */
     protected function getPool()
     {
-        return $this->app->pool;
+        return $this->getApp()->pool;
+    }
+
+    /**
+     * Get Store
+     * @return StorageInterface
+     */
+    protected function getStore()
+    {
+        return $this->getApp()->store;
+    }
+
+    /**
+     * Get Log
+     * @return Log
+     */
+    protected function getLog()
+    {
+        return $this->getApp()->logHelper;
+    }
+
+    /**
+     * Get Help
+     * @return Help
+     */
+    protected function getHelp()
+    {
+        return $this->getApp()->helpService;
     }
 
     /**
@@ -251,7 +279,7 @@ class Base
 
         $this->rendered = true;
 
-        //Log::debug('Updating Session Data.' . json_encode($_SESSION, JSON_PRETTY_PRINT));
+        //$this->getLog()->debug('Updating Session Data.' . json_encode($_SESSION, JSON_PRETTY_PRINT));
     }
 
     /**
@@ -318,10 +346,10 @@ class Base
         $view = $app->view()->render($state->template . '.twig', $data);
 
         // Log Rendered View
-        // Log::debug('%s View: %s', $state->template, $view);
+        // $this->getLog()->debug('%s View: %s', $state->template, $view);
 
         if (!$view = json_decode($view, true)) {
-            Log::error('Problem with Template: View = %s ', $state->template);
+            $this->getLog()->error('Problem with Template: View = %s ', $state->template);
             throw new ControllerNotImplemented(__('Problem with Form Template'));
         }
 
@@ -346,7 +374,7 @@ class Base
                 $button = explode(',', trim($button));
 
                 if (count($button) != 2) {
-                    Log::error('There is a problem with the buttons in the template: %s. Buttons: %s.', $state->template, var_export($view['buttons'], true));
+                    $this->getLog()->error('There is a problem with the buttons in the template: %s. Buttons: %s.', $state->template, var_export($view['buttons'], true));
                     throw new ControllerNotImplemented(__('Problem with Form Template'));
                 }
 

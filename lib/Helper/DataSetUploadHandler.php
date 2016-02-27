@@ -13,7 +13,7 @@ class DataSetUploadHandler extends BlueImpUploadHandler
         // Handle form data, e.g. $_REQUEST['description'][$index]
         $fileName = $file->name;
 
-        Log::debug('Upload complete for ' . $fileName . '.');
+        $this->getLog()->debug('Upload complete for ' . $fileName . '.');
 
         // Upload and Save
         try {
@@ -30,7 +30,7 @@ class DataSetUploadHandler extends BlueImpUploadHandler
             $overwrite = Sanitize::getCheckbox('overwrite');
             $ignoreFirstRow = Sanitize::getCheckbox('ignorefirstrow');
 
-            Log::debug('Options provided - overwrite = %d, ignore first row = %d', $overwrite, $ignoreFirstRow);
+            $this->getLog()->debug('Options provided - overwrite = %d, ignore first row = %d', $overwrite, $ignoreFirstRow);
 
             // Enumerate over the columns in the DataSet and set a row value for each
             $spreadSheetMapping = [];

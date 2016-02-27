@@ -26,7 +26,7 @@ class PlayerActionHelper
         if (!is_array($displays))
             $displays = [$displays];
 
-        Log::info('Sending %s to %d Displays.', get_class($action), count($displays));
+        $this->getLog()->info('Sending %s to %d Displays.', get_class($action), count($displays));
 
         // Check ZMQ
         if (!Config::checkZmq())
@@ -44,7 +44,7 @@ class PlayerActionHelper
             if ($display->xmrChannel == '' || $display->xmrPubKey == '')
                 throw new \InvalidArgumentException(__('This Player is not configured or ready to receive push commands over XMR. Please contact your administrator.'));
 
-            Log::debug('Sending %s to %s.', get_class($action), $display->display);
+            $this->getLog()->debug('Sending %s to %s.', get_class($action), $display->display);
 
             try {
                 // Assign the Layout to the Display
@@ -52,8 +52,8 @@ class PlayerActionHelper
                     throw new ConfigurationException(__('This command has been refused'));
 
             } catch (PlayerActionException $sockEx) {
-                Log::emergency('XMR Connection Failure: %s', $sockEx->getMessage());
-                Log::debug('XMR Connection Failure, trace: %s', $sockEx->getTraceAsString());
+                $this->getLog()->emergency('XMR Connection Failure: %s', $sockEx->getMessage());
+                $this->getLog()->debug('XMR Connection Failure, trace: %s', $sockEx->getTraceAsString());
                 throw new ConfigurationException(__('Connection Failed'));
             }
         }

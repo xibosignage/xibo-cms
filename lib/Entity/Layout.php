@@ -30,8 +30,6 @@ use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class Layout
@@ -329,7 +327,7 @@ class Layout implements \JsonSerializable
         if ($this->loaded || $this->layoutId == 0)
             return;
 
-        Log::debug('Loading Layout %d with options %s', $this->layoutId, json_encode($options));
+        $this->getLog()->debug('Loading Layout %d with options %s', $this->layoutId, json_encode($options));
 
         // Load permissions
         if ($options['loadPermissions'])
@@ -353,7 +351,7 @@ class Layout implements \JsonSerializable
         $this->hash = $this->hash();
         $this->loaded = true;
 
-        Log::debug('Loaded %s' . $this->layoutId);
+        $this->getLog()->debug('Loaded %s' . $this->layoutId);
     }
 
     /**
@@ -390,7 +388,7 @@ class Layout implements \JsonSerializable
         if ($options['setBuildRequired'])
             $this->setBuildRequired();
 
-        Log::debug('Saving %s with options %s', $this, json_encode($options, JSON_PRETTY_PRINT));
+        $this->getLog()->debug('Saving %s with options %s', $this, json_encode($options, JSON_PRETTY_PRINT));
 
         // New or existing layout
         if ($this->layoutId == null || $this->layoutId == 0) {
@@ -400,7 +398,7 @@ class Layout implements \JsonSerializable
         }
 
         if ($options['saveRegions']) {
-            Log::debug('Saving Regions on %s', $this);
+            $this->getLog()->debug('Saving Regions on %s', $this);
 
             // Update the regions
             foreach ($this->regions as $region) {
@@ -413,14 +411,14 @@ class Layout implements \JsonSerializable
         }
 
         if ($options['saveTags']) {
-            Log::debug('Saving tags on %s', $this);
+            $this->getLog()->debug('Saving tags on %s', $this);
 
             // Save the tags
             if (is_array($this->tags)) {
                 foreach ($this->tags as $tag) {
                     /* @var Tag $tag */
 
-                    Log::debug('Assigning tag %s', $tag->tag);
+                    $this->getLog()->debug('Assigning tag %s', $tag->tag);
 
                     $tag->assignLayout($this->layoutId);
                     $tag->save();
@@ -431,7 +429,7 @@ class Layout implements \JsonSerializable
             if (is_array($this->unassignTags)) {
                 foreach ($this->unassignTags as $tag) {
                     /* @var Tag $tag */
-                    Log::debug('Unassigning tag %s', $tag->tag);
+                    $this->getLog()->debug('Unassigning tag %s', $tag->tag);
 
                     $tag->unassignLayout($this->layoutId);
                     $tag->save();
@@ -439,10 +437,10 @@ class Layout implements \JsonSerializable
             }
         }
 
-        Log::debug('Save finished for %s', $this);
+        $this->getLog()->debug('Save finished for %s', $this);
 
         if ($options['audit'])
-            Log::audit('Layout', $this->layoutId, 'Saved', $this);
+            $this->getLog()->audit('Layout', $this->layoutId, 'Saved', $this);
     }
 
     /**
@@ -460,7 +458,7 @@ class Layout implements \JsonSerializable
         if (!$this->loaded)
             $this->load();
 
-        Log::debug('Deleting %s', $this);
+        $this->getLog()->debug('Deleting %s', $this);
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {
@@ -493,10 +491,10 @@ class Layout implements \JsonSerializable
         $campaign->delete();
 
         // Remove the Layout from any display defaults
-        PDOConnect::update('UPDATE `display` SET defaultlayoutid = 4 WHERE defaultlayoutid = :layoutId', array('layoutId' => $this->layoutId));
+        $this->getStore()->update('UPDATE `display` SET defaultlayoutid = 4 WHERE defaultlayoutid = :layoutId', array('layoutId' => $this->layoutId));
 
         // Remove the Layout (now it is orphaned it can be deleted safely)
-        PDOConnect::update('DELETE FROM `layout` WHERE layoutid = :layoutId', array('layoutId' => $this->layoutId));
+        $this->getStore()->update('DELETE FROM `layout` WHERE layoutid = :layoutId', array('layoutId' => $this->layoutId));
 
         // Delete the cached file (if there is one)
         if (file_exists($this->getCachePath()))
@@ -559,12 +557,12 @@ class Layout implements \JsonSerializable
             return $a->tagId - $b->tagId;
         });
 
-        Log::debug('Tags to be removed: %s', json_encode($this->unassignTags));
+        $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
 
         // Replace the arrays
         $this->tags = $tags;
 
-        Log::debug('Tags remaining: %s', json_encode($this->tags));
+        $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
     }
 
     /**
@@ -752,7 +750,7 @@ class Layout implements \JsonSerializable
                 }
             }
 
-            Log::debug('Region duration on layout %d is %d. Comparing to %d.', $this->layoutId, $region->duration, $this->duration);
+            $this->getLog()->debug('Region duration on layout %d is %d. Comparing to %d.', $this->layoutId, $region->duration, $this->duration);
 
             // Track the max duration within the layout
             // Test this duration against the layout duration
@@ -762,7 +760,7 @@ class Layout implements \JsonSerializable
             // End of region loop.
         }
 
-        Log::debug('Setting Layout Duration to %d', $this->duration);
+        $this->getLog()->debug('Setting Layout Duration to %d', $this->duration);
 
         $tagsNode = $document->createElement('tags');
 
@@ -849,7 +847,7 @@ class Layout implements \JsonSerializable
 
         if ($this->status == 3 || !file_exists($path)) {
 
-            Log::debug('XLF needs building for Layout %d', $this->layoutId);
+            $this->getLog()->debug('XLF needs building for Layout %d', $this->layoutId);
 
             // Assume error
             $this->status = 4;
@@ -890,14 +888,14 @@ class Layout implements \JsonSerializable
      */
     private function add()
     {
-        Log::debug('Adding Layout ' . $this->layout);
+        $this->getLog()->debug('Adding Layout ' . $this->layout);
 
         $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex)
                   VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex)';
 
         $time = Date::getLocalDate();
 
-        $this->layoutId = PDOConnect::insert($sql, array(
+        $this->layoutId = $this->getStore()->insert($sql, array(
             'layout' => $this->layout,
             'description' => $this->description,
             'userid' => $this->ownerId,
@@ -933,7 +931,7 @@ class Layout implements \JsonSerializable
             'notify' => true
         ], $options);
 
-        Log::debug('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
+        $this->getLog()->debug('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
 
         $sql = '
         UPDATE layout
@@ -955,7 +953,7 @@ class Layout implements \JsonSerializable
 
         $time = Date::getLocalDate();
 
-        PDOConnect::update($sql, array(
+        $this->getStore()->update($sql, array(
             'layoutid' => $this->layoutId,
             'layout' => $this->layout,
             'description' => $this->description,

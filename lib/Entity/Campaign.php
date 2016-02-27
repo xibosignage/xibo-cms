@@ -27,8 +27,6 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class Campaign
@@ -141,7 +139,7 @@ class Campaign implements \JsonSerializable
             'notify' => true
         ], $options);
 
-        Log::debug('Saving %s', $this);
+        $this->getLog()->debug('Saving %s', $this);
 
         if ($options['validate'])
             $this->validate();
@@ -184,7 +182,7 @@ class Campaign implements \JsonSerializable
         }
 
         // Delete the Actual Campaign
-        PDOConnect::update('DELETE FROM `campaign` WHERE CampaignID = :campaignId', ['campaignId' => $this->campaignId]);
+        $this->getStore()->update('DELETE FROM `campaign` WHERE CampaignID = :campaignId', ['campaignId' => $this->campaignId]);
     }
 
     /**
@@ -207,7 +205,7 @@ class Campaign implements \JsonSerializable
     {
         $this->load();
 
-        Log::debug('Unassigning Layout [%s] from Campaign [%s]. Display Order %d. Count before assign = %d', $layout, $this, $layout->displayOrder, count($this->layouts));
+        $this->getLog()->debug('Unassigning Layout [%s] from Campaign [%s]. Display Order %d. Count before assign = %d', $layout, $this, $layout->displayOrder, count($this->layouts));
 
         $this->layouts = array_udiff($this->layouts, [$layout], function ($a, $b) {
             /**
@@ -215,16 +213,16 @@ class Campaign implements \JsonSerializable
              * @var Layout $b
              */
             $return = ($a->getId() - $b->getId()) + ($a->displayOrder - $b->displayOrder);
-            Log::debug('Comparing a [%d, %d] with b [%d, %d]. Return = %d', $a->layoutId, $a->displayOrder, $b->layoutId, $b->displayOrder, $return);
+            $this->getLog()->debug('Comparing a [%d, %d] with b [%d, %d]. Return = %d', $a->layoutId, $a->displayOrder, $b->layoutId, $b->displayOrder, $return);
             return $return;
         });
 
-        Log::debug('Count after unassign = %d', count($this->layouts));
+        $this->getLog()->debug('Count after unassign = %d', count($this->layouts));
     }
 
     private function add()
     {
-        $this->campaignId = PDOConnect::insert('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId) VALUES (:campaign, :isLayoutSpecific, :userId)', array(
+        $this->campaignId = $this->getStore()->insert('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId) VALUES (:campaign, :isLayoutSpecific, :userId)', array(
             'campaign' => $this->campaign,
             'isLayoutSpecific' => $this->isLayoutSpecific,
             'userId' => $this->ownerId
@@ -233,7 +231,7 @@ class Campaign implements \JsonSerializable
 
     private function update()
     {
-        PDOConnect::update('UPDATE `campaign` SET campaign = :campaign, userId = :userId WHERE CampaignID = :campaignId', [
+        $this->getStore()->update('UPDATE `campaign` SET campaign = :campaign, userId = :userId WHERE CampaignID = :campaignId', [
             'campaignId' => $this->campaignId,
             'campaign' => $this->campaign,
             'userId' => $this->ownerId
@@ -245,7 +243,7 @@ class Campaign implements \JsonSerializable
      */
     private function manageAssignments()
     {
-        Log::debug('Managing Assignments on %s', $this);
+        $this->getLog()->debug('Managing Assignments on %s', $this);
         $this->unlinkLayouts();
         $this->linkLayouts();
     }
@@ -278,7 +276,7 @@ class Campaign implements \JsonSerializable
 
         foreach ($this->layouts as $layout) {
 
-            PDOConnect::insert($sql, array(
+            $this->getStore()->insert($sql, array(
                 'campaignId' => $this->campaignId,
                 'displayOrder' => $layout->displayOrder,
                 'layoutId' => $layout->layoutId,
@@ -322,7 +320,7 @@ class Campaign implements \JsonSerializable
 
             // Get the lkid's for the delete
 
-            $ids = PDOConnect::select($sql, $params);
+            $ids = $this->getStore()->select($sql, $params);
 
             $ids = array_map(function ($element) {
                 return $element['lkCampaignLayoutId'];
@@ -342,7 +340,7 @@ class Campaign implements \JsonSerializable
 
 
 
-        PDOConnect::update($sql, $params);
+        $this->getStore()->update($sql, $params);
     }
 
     /**
@@ -350,7 +348,7 @@ class Campaign implements \JsonSerializable
      */
     private function notify()
     {
-        Log::debug('Checking for Displays to refresh on Campaign %d', $this->campaignId);
+        $this->getLog()->debug('Checking for Displays to refresh on Campaign %d', $this->campaignId);
 
         $displays = array_merge((new DisplayFactory($this->getApp()))->getByActiveCampaignId($this->campaignId), (new DisplayFactory($this->getApp()))->getByAssignedCampaignId($this->campaignId));
 

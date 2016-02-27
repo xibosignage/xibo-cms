@@ -24,7 +24,6 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
-use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
 class Storage extends Middleware
@@ -36,19 +35,20 @@ class Storage extends Middleware
         $this->next->call();
 
         // Are we in a transaction coming out of the stack?
-        if (PDOConnect::init()->inTransaction()) {
+        if ($this->app->store->getConnection()->inTransaction()) {
             // We need to commit or rollback? Default is commit
             if ($this->app->commit) {
-                PDOConnect::init()->commit();
+                $this->app->store->commitIfNecessary();
             } else {
 
-                Log::debug('Storage rollback.');
-                PDOConnect::init()->rollBack();
+                $this->app->logHelper->debug('Storage rollback.');
+
+                $this->app->store->getConnection()->rollBack();
             }
         }
 
-        Log::info('PDO stats: %s.', json_encode(PDOConnect::stats()));
+        $this->app->logHelper->info('PDO stats: %s.', json_encode(PDOConnect::stats()));
 
-        PDOConnect::close();
+        $this->app->store->close();
     }
 }

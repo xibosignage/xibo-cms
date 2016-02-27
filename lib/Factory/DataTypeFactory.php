@@ -10,7 +10,6 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\DataType;
-use Xibo\Storage\PDOConnect;
 
 class DataTypeFactory extends BaseFactory
 {
@@ -23,7 +22,7 @@ class DataTypeFactory extends BaseFactory
     {
         $entries = [];
 
-        foreach (PDOConnect::select('SELECT dataTypeId, dataType FROM `datatype` ', []) as $row) {
+        foreach ($this->getStore()->select('SELECT dataTypeId, dataType FROM `datatype` ', []) as $row) {
             $entries[] = (new DataType())->hydrate($row)->setApp($this->getApp())->setApp($this->getApp());
         }
 

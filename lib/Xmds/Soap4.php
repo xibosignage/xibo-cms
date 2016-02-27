@@ -31,7 +31,6 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\RequiredFileFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
 
@@ -65,7 +64,7 @@ class Soap4 extends Soap
         $clientAddress = $this->getIp();
 
         // Audit in
-        Log::debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
+        $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -181,7 +180,7 @@ class Soap4 extends Soap
 
         // Audit our return
         if ($display->isAuditing == 1)
-            Log::debug($returnXml, $display->displayId);
+            $this->getLog()->debug($returnXml, $display->displayId);
 
         return $returnXml;
     }
@@ -237,7 +236,7 @@ class Soap4 extends Soap
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
         if ($this->display->isAuditing == 1)
-            Log::debug('hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize);
+            $this->getLog()->debug('hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize);
 
         try {
             if ($fileType == "layout") {
@@ -280,7 +279,7 @@ class Soap4 extends Soap
             }
         }
         catch (NotFoundException $e) {
-            Log::error($e->getMessage());
+            $this->getLog()->error($e->getMessage());
             throw new \SoapFault('Receiver', 'Requested an invalid file.');
         }
 
@@ -400,7 +399,7 @@ class Soap4 extends Soap
             throw new \SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->display->isAuditing == 1)
-            Log::debug($status);
+            $this->getLog()->debug($status);
 
         $this->LogBandwidth($this->display->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
 
@@ -453,7 +452,7 @@ class Soap4 extends Soap
             throw new \SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->display->isAuditing == 1)
-            Log::debug('Received Screen shot');
+            $this->getLog()->debug('Received Screen shot');
 
         // Open this displays screen shot file and save this.
         Library::ensureLibraryExists();
@@ -465,11 +464,11 @@ class Soap4 extends Soap
                 $screenShotImg = Img::make($screenShot);
             } catch (\Exception $e) {
                 if ($this->display->isAuditing == 1)
-                    Log::debug($imgDriver . " - " . $e->getMessage());
+                    $this->getLog()->debug($imgDriver . " - " . $e->getMessage());
             }
             if($screenShotImg !== false) {
                 if ($this->display->isAuditing == 1)
-                    Log::debug("Use " . $imgDriver);
+                    $this->getLog()->debug("Use " . $imgDriver);
                 break;
             }
         }
@@ -481,12 +480,12 @@ class Soap4 extends Soap
                 $needConversion = true;
                 try {
                     if ($this->display->isAuditing == 1)
-                        Log::debug("converting: '" . $imgMime . "' to '" . $screenShotMime . "'");
+                        $this->getLog()->debug("converting: '" . $imgMime . "' to '" . $screenShotMime . "'");
                     $screenShot = (string) $screenShotImg->encode($screenShotFmt);
                     $converted = true;
                 } catch (\Exception $e) {
                     if ($this->display->isAuditing == 1)
-                        Log::debug($e->getMessage());
+                        $this->getLog()->debug($e->getMessage());
                 }
             }
         }

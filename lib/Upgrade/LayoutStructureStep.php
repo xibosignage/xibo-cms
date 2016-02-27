@@ -13,14 +13,13 @@ use Xibo\Entity\Permission;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Install;
-use Xibo\Storage\PDOConnect;
 
 class LayoutStructureStep implements Step
 {
     public static function doStep()
     {
         // Create the new structure
-        $dbh = PDOConnect::init();
+        $dbh = $this->getStore()->getConnection();
 
         // Run the SQL to create the necessary tables
         $statements = Install::remove_remarks(self::$dbStructure);
@@ -32,7 +31,7 @@ class LayoutStructureStep implements Step
 
         // Build a keyed array of existing widget permissions
         $mediaPermissions = [];
-        foreach (PDOConnect::select('SELECT groupId, layoutId, regionId, mediaId, `view`, `edit`, `del` FROM `lklayoutmediagroup`', []) as $row) {
+        foreach ($this->getStore()->select('SELECT groupId, layoutId, regionId, mediaId, `view`, `edit`, `del` FROM `lklayoutmediagroup`', []) as $row) {
             $permission = new Permission();
             $permission->entityId = 6; // Widget
             $permission->groupId = $row['groupId'];
@@ -47,7 +46,7 @@ class LayoutStructureStep implements Step
 
         // Build a keyed array of existing region permissions
         $regionPermissions = [];
-        foreach (PDOConnect::select('SELECT groupId, layoutId, regionId, `view`, `edit`, `del` FROM `lklayoutregiongroup`', []) as $row) {
+        foreach ($this->getStore()->select('SELECT groupId, layoutId, regionId, `view`, `edit`, `del` FROM `lklayoutregiongroup`', []) as $row) {
             $permission = new Permission();
             $permission->entityId = 7; // Widget
             $permission->groupId = $row['groupId'];
@@ -63,7 +62,7 @@ class LayoutStructureStep implements Step
         $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
 
         // We need to go through each layout, save the XLF as a backup in the library and then upgrade it.
-        foreach (PDOConnect::select('SELECT layoutId, xml FROM `layout` WHERE IFNULL(xml, \'\') <> \'\'', []) as $oldLayout) {
+        foreach ($this->getStore()->select('SELECT layoutId, xml FROM `layout` WHERE IFNULL(xml, \'\') <> \'\'', []) as $oldLayout) {
             // Save off a copy of the XML in the library
             file_put_contents($libraryLocation . 'archive_' . $oldLayout['layoutId'] . '.xlf', $oldLayout['xml']);
 
@@ -105,7 +104,7 @@ class LayoutStructureStep implements Step
             }
 
             // Clear the XML field (we do this in case we are interrupted and we need to process again
-            PDOConnect::update('UPDATE `layout` SET xml = NULL WHERE layoutId = :layoutId', ['layoutId' => $layout->layoutId]);
+            $this->getStore()->update('UPDATE `layout` SET xml = NULL WHERE layoutId = :layoutId', ['layoutId' => $layout->layoutId]);
         }
 
         // Drop the permissions

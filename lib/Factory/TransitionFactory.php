@@ -12,7 +12,6 @@ namespace Xibo\Factory;
 use Xibo\Entity\Transition;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 class TransitionFactory extends BaseFactory
 {
@@ -113,7 +112,7 @@ class TransitionFactory extends BaseFactory
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
+        foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = (new Transition())->hydrate($row)->setApp($this->getApp());
         }
 

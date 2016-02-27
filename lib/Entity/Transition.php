@@ -9,8 +9,6 @@
 namespace Xibo\Entity;
 
 
-use Xibo\Storage\PDOConnect;
-
 /**
  * Class Transition
  * @package Xibo\Entity
@@ -78,7 +76,7 @@ class Transition
         if ($this->transitionId == null || $this->transitionId == 0)
             throw new \InvalidArgumentException();
 
-        PDOConnect::update('
+        $this->getStore()->update('
             UPDATE `transition` SET AvailableAsIn = :availableAsIn, AvailableAsOut = :availableAsOut WHERE transitionID = :transitionId
         ', [
             'availableAsIn' => $this->availableAsIn,
