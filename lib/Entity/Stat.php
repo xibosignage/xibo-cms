@@ -55,7 +55,7 @@ class Stat
         $this->getStore()->update('UPDATE stat SET end = :toDt WHERE statId = :statId', ['statId' => $this->statId, 'toDt' => $this->toDt]);
     }
 
-    public static function displayUp($displayId)
+    public function displayUp($displayId)
     {
         $this->getStore()->update('UPDATE `stat` SET end = :toDt WHERE displayId = :displayId AND end IS NULL AND type = :type', [
             'toDt' => date('Y-m-d H:i:s'),

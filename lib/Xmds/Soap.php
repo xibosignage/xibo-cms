@@ -33,9 +33,11 @@ use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Config;
+use Xibo\Helper\Log;
 use Xibo\Helper\Random;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
+use Xibo\Storage\StorageInterface;
 
 class Soap
 {
@@ -50,21 +52,31 @@ class Soap
     protected $logProcessor;
 
     /**
-     * @var \Stash\Interfaces\PoolInterface
+     * @var Slim
      */
-    protected $pool;
+    protected $app;
 
 
-    public function __construct()
+    public function __construct($app)
     {
-        $app = Slim::getInstance();
+        $this->app = $app;
 
         // Create a log processor
         $this->logProcessor = new LogProcessor();
         $app->logWriter->addProcessor($this->logProcessor);
+    }
 
-        // Grab the pool
-        $this->pool = $app->pool;
+    /**
+     * Get the App
+     * @return Slim
+     * @throws \Exception
+     */
+    public function getApp()
+    {
+        if ($this->app == null)
+            throw new \RuntimeException(__('XMDS called before DI has been setup'));
+
+        return $this->app;
     }
 
     /**
@@ -73,7 +85,25 @@ class Soap
      */
     protected function getPool()
     {
-       return $this->pool;
+        return $this->getApp()->pool;
+    }
+
+    /**
+     * Get Store
+     * @return StorageInterface
+     */
+    protected function getStore()
+    {
+        return $this->getApp()->store;
+    }
+
+    /**
+     * Get Log
+     * @return Log
+     */
+    protected function getLog()
+    {
+        return $this->getApp()->logHelper;
     }
 
     /**
@@ -1287,7 +1317,7 @@ class Soap
         if ($this->display->loggedIn == 0) {
 
             // Log display up
-            Stat::displayUp($this->display->displayId);
+            (new Stat())->setApp($this->getApp())->displayUp($this->display->displayId);
 
             // Do we need to email?
             if ($this->display->emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected')

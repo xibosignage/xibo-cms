@@ -98,7 +98,7 @@ if (isset($_GET['file'])) {
     $sendFileMode = Config::GetSetting('SENDFILE_MODE');
 
     if ($sendFileMode == 'Off') {
-        $this->getLog()->notice('HTTP GetFile request received but SendFile Mode is Off. Issuing 404', 'services');
+        $app->logHelper->notice('HTTP GetFile request received but SendFile Mode is Off. Issuing 404', 'services');
         header('HTTP/1.0 404 Not Found');
         exit;
     }
@@ -112,7 +112,7 @@ if (isset($_GET['file'])) {
         // Issue magic packet
         // Send via Apache X-Sendfile header?
         if ($sendFileMode == 'Apache') {
-            $this->getLog()->notice('HTTP GetFile request redirecting to ' . Config::GetSetting('LIBRARY_LOCATION') . $file->storedAs, 'services');
+            $app->logHelper->notice('HTTP GetFile request redirecting to ' . Config::GetSetting('LIBRARY_LOCATION') . $file->storedAs, 'services');
             header('X-Sendfile: ' . Config::GetSetting('LIBRARY_LOCATION') . $file->storedAs);
         }
         // Send via Nginx X-Accel-Redirect?
@@ -128,7 +128,7 @@ if (isset($_GET['file'])) {
     }
     catch (\Exception $e) {
         if ($e instanceof \Xibo\Exception\NotFoundException || $e instanceof \Xibo\Exception\FormExpiredException) {
-            $this->getLog()->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404', 'services');
+            $app->logHelper->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404', 'services');
             // 404
             header('HTTP/1.0 404 Not Found');
         }
@@ -152,19 +152,19 @@ try {
     // Create a SoapServer
     //$soap = new SoapServer($wsdl);
     $soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
-    $soap->setClass('\Xibo\Xmds\Soap' . $version);
+    $soap->setClass('\Xibo\Xmds\Soap' . $version, $app);
     $soap->handle();
 
-    $this->getLog()->info('PDO stats: %s.', json_encode($this->getStore()->stats()));
+    $app->logHelper->info('PDO stats: %s.', json_encode($app->store->stats()));
 
-    if ($this->getStore()->getConnection()->inTransaction())
-        $this->getStore()->getConnection()->commit();
+    if ($app->store->getConnection()->inTransaction())
+        $app->store->getConnection()->commit();
 }
 catch (Exception $e) {
-    $this->getLog()->error($e->getMessage());
+    $app->logHelper->error($e->getMessage());
 
-    if ($this->getStore()->getConnection()->inTransaction())
-        $this->getStore()->getConnection()->rollBack();
+    if ($app->store->getConnection()->inTransaction())
+        $app->store->getConnection()->rollBack();
 
     header('HTTP/1.1 500 Internal Server Error');
     header('Content-Type: text/plain');
