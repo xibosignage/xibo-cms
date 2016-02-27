@@ -45,7 +45,7 @@ class StatusDashboard extends Base
 
         try {
             // Displays this user has access to
-            $displays = DisplayFactory::query(['display']);
+            $displays = (new DisplayFactory($this->getApp()))->query(['display']);
             $displayIds = array_map(function($element) {
                 return $element->displayId;
             }, $displays);
@@ -120,7 +120,7 @@ class StatusDashboard extends Base
             // Library Size in Bytes
             $params = [];
             $sql = 'SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM `media` WHERE 1 = 1 ';
-            BaseFactory::viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
+            (new BaseFactory($this->getApp()))->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
             $sql .= ' GROUP BY type ';
 
 
@@ -181,10 +181,10 @@ class StatusDashboard extends Base
             $data['displays'] = $displays;
 
             // Get a count of users
-            $data['countUsers'] = count(UserFactory::query());
+            $data['countUsers'] = count((new UserFactory($this->getApp()))->query());
 
             // Get a count of active layouts, only for display groups we have permission for
-            $displayGroups = DisplayGroupFactory::query(null, ['isDisplaySpecific' => -1]);
+            $displayGroups = (new DisplayGroupFactory($this->getApp()))->query(null, ['isDisplaySpecific' => -1]);
             $displayGroupIds = array_map(function($element) {
                 return $element->displayGroupId;
             }, $displayGroups);

@@ -240,7 +240,7 @@ class Media implements \JsonSerializable
     public function replaceTags($tags = [])
     {
         if (!is_array($this->tags) || count($this->tags) <= 0)
-            $this->tags = TagFactory::loadByMediaId($this->mediaId);
+            $this->tags = (new TagFactory($this->getApp()))->loadByMediaId($this->mediaId);
 
         $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
             /* @var Tag $a */
@@ -305,21 +305,21 @@ class Media implements \JsonSerializable
         Log::debug('Loading Media. Options = %s', json_encode($options));
 
         // Tags
-        $this->tags = TagFactory::loadByMediaId($this->mediaId);
+        $this->tags = (new TagFactory($this->getApp()))->loadByMediaId($this->mediaId);
 
         // Are we loading for a delete? If so load the child models
         if ($options['deleting'] || $options['fullInfo']) {
             // Permissions
-            $this->permissions = PermissionFactory::getByObjectId(get_class($this), $this->mediaId);
+            $this->permissions = (new PermissionFactory($this->getApp()))->getByObjectId(get_class($this), $this->mediaId);
 
             // Widgets
-            $this->widgets = WidgetFactory::getByMediaId($this->mediaId);
+            $this->widgets = (new WidgetFactory($this->getApp()))->getByMediaId($this->mediaId);
 
             // Layout Background Images
-            $this->layoutBackgroundImages = LayoutFactory::getByBackgroundImageId($this->mediaId);
+            $this->layoutBackgroundImages = (new LayoutFactory($this->getApp()))->getByBackgroundImageId($this->mediaId);
 
             // Display Groups
-            $this->displayGroups = DisplayGroupFactory::getByMediaId($this->mediaId);
+            $this->displayGroups = (new DisplayGroupFactory($this->getApp()))->getByMediaId($this->mediaId);
         }
 
         $this->loaded = true;
@@ -382,7 +382,7 @@ class Media implements \JsonSerializable
 
         // If there is a parent, bring it back
         try {
-            $parentMedia = MediaFactory::getParentById($this->mediaId);
+            $parentMedia = (new MediaFactory($this->getApp()))->getParentById($this->mediaId);
             $parentMedia->isEdited = 0;
             $parentMedia->parentId = null;
             $parentMedia->save(['validate' => false]);
@@ -441,7 +441,7 @@ class Media implements \JsonSerializable
         if ($this->mediaType == 'image' && $parentMedia != null) {
             Log::debug('Updating layouts with the old media %d as the background image.', $this->mediaId);
             // Get all Layouts with this as the background image
-            foreach (LayoutFactory::query(null, ['backgroundImageId' => $this->mediaId]) as $layout) {
+            foreach ((new LayoutFactory($this->getApp()))->query(null, ['backgroundImageId' => $this->mediaId]) as $layout) {
                 /* @var Layout $layout */
                 Log::debug('Found layout that needs updating. ID = %d. Setting background image id to %d', $layout->layoutId, $parentMedia->mediaId);
                 $layout->backgroundImageId = $parentMedia->mediaId;

@@ -30,9 +30,9 @@ class WidgetMediaFactory extends BaseFactory
      * @param int $widgetId
      * @return array[int]
      */
-    public static function getByWidgetId($widgetId)
+    public function getByWidgetId($widgetId)
     {
-        return WidgetMediaFactory::query(null, array('widgetId' => $widgetId));
+        return $this->query(null, array('widgetId' => $widgetId));
     }
 
     /**
@@ -41,7 +41,7 @@ class WidgetMediaFactory extends BaseFactory
      * @param array $filterBy
      * @return array[int]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $sql = 'SELECT mediaId FROM `lkwidgetmedia` WHERE widgetId = :widgetId';
 

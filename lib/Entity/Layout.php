@@ -333,21 +333,21 @@ class Layout implements \JsonSerializable
 
         // Load permissions
         if ($options['loadPermissions'])
-            $this->permissions = PermissionFactory::getByObjectId('Xibo\\Entity\\Campaign', $this->campaignId);
+            $this->permissions = (new PermissionFactory($this->getApp()))->getByObjectId('Xibo\\Entity\\Campaign', $this->campaignId);
 
         // Load all regions
-        $this->regions = RegionFactory::getByLayoutId($this->layoutId);
+        $this->regions = (new RegionFactory($this->getApp()))->getByLayoutId($this->layoutId);
 
         if ($options['loadPlaylists'])
             $this->loadPlaylists($options);
 
         // Load all tags
         if ($options['loadTags'])
-            $this->tags = TagFactory::loadByLayoutId($this->layoutId);
+            $this->tags = (new TagFactory($this->getApp()))->loadByLayoutId($this->layoutId);
 
         // Load Campaigns
         if ($options['loadCampaigns'])
-            $this->campaigns = CampaignFactory::getByLayoutId($this->layoutId);
+            $this->campaigns = (new CampaignFactory($this->getApp()))->getByLayoutId($this->layoutId);
 
         // Set the hash
         $this->hash = $this->hash();
@@ -489,7 +489,7 @@ class Layout implements \JsonSerializable
         }
 
         // Delete our own Campaign
-        $campaign = CampaignFactory::getById($this->campaignId);
+        $campaign = (new CampaignFactory($this->getApp()))->getById($this->campaignId);
         $campaign->delete();
 
         // Remove the Layout from any display defaults
@@ -521,7 +521,7 @@ class Layout implements \JsonSerializable
             throw new \InvalidArgumentException(__("Description can not be longer than 254 characters"));
 
         // Check for duplicates
-        $duplicates = LayoutFactory::query(null, array('userId' => $this->ownerId, 'layoutExact' => $this->layout, 'notLayoutId' => $this->layoutId));
+        $duplicates = (new LayoutFactory($this->getApp()))->query(null, array('userId' => $this->ownerId, 'layoutExact' => $this->layout, 'notLayoutId' => $this->layoutId));
 
         if (count($duplicates) > 0)
             throw new \InvalidArgumentException(sprintf(__("You already own a layout called '%s'. Please choose another name."), $this->layout));
@@ -551,7 +551,7 @@ class Layout implements \JsonSerializable
     public function replaceTags($tags = [])
     {
         if (!is_array($this->tags) || count($this->tags) <= 0)
-            $this->tags = TagFactory::loadByLayoutId($this->layoutId);
+            $this->tags = (new TagFactory($this->getApp()))->loadByLayoutId($this->layoutId);
 
         $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
             /* @var Tag $a */
@@ -585,7 +585,7 @@ class Layout implements \JsonSerializable
 
         if ($this->backgroundImageId != 0) {
             // Get stored as
-            $media = MediaFactory::getById($this->backgroundImageId);
+            $media = (new MediaFactory($this->getApp()))->getById($this->backgroundImageId);
 
             $layoutNode->setAttribute('background', $media->storedAs);
         }
@@ -662,7 +662,7 @@ class Layout implements \JsonSerializable
                 /* @var Playlist $playlist */
                 foreach ($playlist->widgets as $widget) {
                     /* @var Widget $widget */
-                    $module = ModuleFactory::createWithWidget($widget, $region);
+                    $module = (new ModuleFactory($this->getApp()))->createWithWidget($widget, $region);
 
                     // Set the Layout Status
                     $status = ($module->isValid() > $status) ? $module->isValid() : $status;
@@ -715,7 +715,7 @@ class Layout implements \JsonSerializable
                     // Inject the URI
                     $uriInjected = false;
                     if ($module->getModule()->regionSpecific == 0) {
-                        $media = MediaFactory::getById($widget->mediaIds[0]);
+                        $media = (new MediaFactory($this->getApp()))->getById($widget->mediaIds[0]);
                         $optionNode = $document->createElement('uri', $media->storedAs);
                         $optionsNode->appendChild($optionNode);
                         $uriInjected = true;
@@ -804,7 +804,7 @@ class Layout implements \JsonSerializable
         $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
         $mappings = [];
 
-        foreach (MediaFactory::getByLayoutId($this->layoutId) as $media) {
+        foreach ((new MediaFactory($this->getApp()))->getByLayoutId($this->layoutId) as $media) {
             /* @var Media $media */
             $zip->addFile($libraryLocation . $media->storedAs, $media->fileName);
 
@@ -820,7 +820,7 @@ class Layout implements \JsonSerializable
 
         // Add the background image
         if ($this->backgroundImageId != 0) {
-            $media = MediaFactory::getById($this->backgroundImageId);
+            $media = (new MediaFactory($this->getApp()))->getById($this->backgroundImageId);
             $zip->addFile($libraryLocation . $media->storedAs, $media->fileName);
 
             $mappings[] = [
@@ -973,7 +973,7 @@ class Layout implements \JsonSerializable
         ));
 
         // Update the Campaign
-        $campaign = CampaignFactory::getById($this->campaignId);
+        $campaign = (new CampaignFactory($this->getApp()))->getById($this->campaignId);
         $campaign->campaign = $this->layout;
         $campaign->ownerId = $this->ownerId;
         $campaign->save(['validate' => false, 'notify' => $options['notify']]);

@@ -54,7 +54,7 @@ class Applications extends Base
     {
         $this->getState()->template = 'grid';
 
-        $applications = ApplicationFactory::query($this->gridRenderSort(), $this->gridRenderFilter());
+        $applications = (new ApplicationFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter());
 
         foreach ($applications as $application) {
             /* @var Application $application */
@@ -79,7 +79,7 @@ class Applications extends Base
         }
 
         $this->getState()->setData($applications);
-        $this->getState()->recordsTotal = ApplicationFactory::countLast();
+        $this->getState()->recordsTotal = (new ApplicationFactory($this->getApp()))->countLast();
     }
 
     /**
@@ -155,7 +155,7 @@ class Applications extends Base
     public function editForm($clientId)
     {
         // Get the client
-        $client = ApplicationFactory::getById($clientId);
+        $client = (new ApplicationFactory($this->getApp()))->getById($clientId);
 
         if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
             throw new AccessDeniedException();
@@ -176,7 +176,7 @@ class Applications extends Base
      */
     public function add()
     {
-        $application = ApplicationFactory::create();
+        $application = (new ApplicationFactory($this->getApp()))->create();
         $application->name = Sanitize::getString('name');
         $application->save();
 
@@ -191,7 +191,7 @@ class Applications extends Base
     public function edit($clientId)
     {
         // Get the client
-        $client = ApplicationFactory::getById($clientId);
+        $client = (new ApplicationFactory($this->getApp()))->getById($clientId);
 
         if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
             throw new AccessDeniedException();

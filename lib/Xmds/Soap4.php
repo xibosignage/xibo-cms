@@ -82,7 +82,7 @@ class Soap4 extends Soap
 
         // Check in the database for this hardwareKey
         try {
-            $display = DisplayFactory::getByLicence($hardwareKey);
+            $display = (new DisplayFactory($this->getApp()))->getByLicence($hardwareKey);
 
             $this->logProcessor->setDisplay($display->displayId);
 
@@ -244,10 +244,10 @@ class Soap4 extends Soap
                 $fileId = Sanitize::int($fileId);
 
                 // Validate the nonce
-                $requiredFile = RequiredFileFactory::getByDisplayAndLayout($this->display->displayId, $fileId);
+                $requiredFile = (new RequiredFileFactory($this->getApp()))->getByDisplayAndLayout($this->display->displayId, $fileId);
 
                 // Load the layout
-                $layout = LayoutFactory::getById($fileId);
+                $layout = (new LayoutFactory($this->getApp()))->getById($fileId);
                 $path = $layout->xlfToDisk();
 
                 $file = file_get_contents($path);
@@ -258,9 +258,9 @@ class Soap4 extends Soap
 
             } else if ($fileType == "media") {
                 // Validate the nonce
-                $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $fileId);
+                $requiredFile = (new RequiredFileFactory($this->getApp()))->getByDisplayAndMedia($this->display->displayId, $fileId);
 
-                $media = MediaFactory::getById($fileId);
+                $media = (new MediaFactory($this->getApp()))->getById($fileId);
 
                 // Return the Chunk size specified
                 $f = fopen($libraryLocation . $media->storedAs, 'r');

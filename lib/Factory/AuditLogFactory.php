@@ -29,7 +29,7 @@ use Xibo\Storage\PDOConnect;
 
 class AuditLogFactory extends BaseFactory
 {
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         Log::debug('AuditLog Factory with filter: %s', var_export($filterBy, true));
 
@@ -86,13 +86,13 @@ class AuditLogFactory extends BaseFactory
         $sth->execute($params);
 
         foreach ($sth->fetchAll() as $row) {
-            $entries[] = (new AuditLog())->hydrate($row);
+            $entries[] = (new AuditLog())->setApp($this->getApp())->hydrate($row)->setApp($this->getApp());
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
             $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

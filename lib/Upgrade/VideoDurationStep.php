@@ -18,13 +18,13 @@ class VideoDurationStep implements Step
     public static function doStep()
     {
         $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
-        $videos = MediaFactory::getByMediaType('video');
+        $videos = (new MediaFactory($this->getApp()))->getByMediaType('video');
 
         foreach ($videos as $video) {
             /* @var \Xibo\Entity\Media $video */
             if ($video->duration == 0) {
                 // Update
-                $module = ModuleFactory::createWithMedia($video);
+                $module = (new ModuleFactory($this->getApp()))->createWithMedia($video);
                 $video->duration = $module->determineDuration($libraryLocation . $video->storedAs);
                 $video->save(['validate' => false]);
             }

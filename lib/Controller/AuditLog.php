@@ -56,7 +56,7 @@ class AuditLog extends Base
         if ($filterEntity != '')
             $search['entity'] = $filterEntity;
 
-        $rows = AuditLogFactory::query($this->gridRenderSort(), $this->gridRenderFilter($search));
+        $rows = (new AuditLogFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter($search));
 
         // Do some post processing
         foreach ($rows as $row) {
@@ -65,7 +65,7 @@ class AuditLog extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = AuditLogFactory::countLast();
+        $this->getState()->recordsTotal = (new AuditLogFactory($this->getApp()))->countLast();
         $this->getState()->setData($rows);
     }
 
@@ -102,7 +102,7 @@ class AuditLog extends Base
             return implode('|', $element);
         }, $search));
 
-        $rows = AuditLogFactory::query('logId', ['search' => $search]);
+        $rows = (new AuditLogFactory($this->getApp()))->query('logId', ['search' => $search]);
 
         $out = fopen('php://output', 'w');
         fputcsv($out, ['ID', 'Date', 'User', 'Entity', 'Message', 'Object']);

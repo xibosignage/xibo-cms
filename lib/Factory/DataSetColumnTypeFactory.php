@@ -19,12 +19,12 @@ class DataSetColumnTypeFactory extends BaseFactory
      * @param null $filterBy
      * @return array[DataSetColumnType]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = [];
 
         foreach (PDOConnect::select('SELECT dataSetColumnTypeId, dataSetColumnType FROM `datasetcolumntype` ', []) as $row) {
-            $entries[] = (new DataSetColumnType())->hydrate($row);
+            $entries[] = (new DataSetColumnType())->hydrate($row)->setApp($this->getApp())->setApp($this->getApp());
         }
 
         return $entries;

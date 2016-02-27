@@ -158,11 +158,11 @@ class SAMLAuthentication extends Middleware
 
                 try {
                     if ($identityField == 'UserID') {
-                        $user = UserFactory::getById($userData[$identityField][0]);
+                        $user = (new UserFactory($this->app))->getById($userData[$identityField][0]);
                     } else if ($identityField == 'UserName') {
-                        $user = UserFactory::getByName($userData[$identityField][0]);
+                        $user = (new UserFactory($this->app))->getByName($userData[$identityField][0]);
                     } else {
-                        $user = UserFactory::getByEmail($userData[$identityField][0]);
+                        $user = (new UserFactory($this->app))->getByEmail($userData[$identityField][0]);
                     }
                 } catch (NotFoundException $e) {
                     $user = null;
@@ -194,9 +194,9 @@ class SAMLAuthentication extends Middleware
 
                         // Home page
                         if (isset(Config::$samlSettings['workflow']['homePage'])) {
-                            $user->homePageId = PageFactory::getByName(Config::$samlSettings['workflow']['homePage'])->pageId;
+                            $user->homePageId = (new PageFactory($this->app))->getByName(Config::$samlSettings['workflow']['homePage'])->pageId;
                         } else {
-                            $user->homePageId = PageFactory::getByName('dashboard')->pageId;
+                            $user->homePageId = (new PageFactory($this->app))->getByName('dashboard')->pageId;
                         }
 
                         // Library Quota
@@ -211,9 +211,9 @@ class SAMLAuthentication extends Middleware
 
                         // Assign the initial group
                         if (isset(Config::$samlSettings['workflow']['group'])) {
-                            $group = UserGroupFactory::getByName(Config::$samlSettings['workflow']['group']);
+                            $group = (new UserGroupFactory($this->app))->getByName(Config::$samlSettings['workflow']['group']);
                         } else {
-                            $group = UserGroupFactory::getByName('Users');
+                            $group = (new UserGroupFactory($this->app))->getByName('Users');
                         }
 
                         $group->assignUser($user);
@@ -238,7 +238,7 @@ class SAMLAuthentication extends Middleware
                 }
 
                 // Redirect to User Homepage
-                $page = \Xibo\Factory\PageFactory::getById($user->homePageId);
+                $page = (new \Xibo\Factory\PageFactory($this->app))->getById($user->homePageId);
                 $this->app->redirectTo($page->getName() . '.view');
             }
         });
@@ -294,7 +294,7 @@ class SAMLAuthentication extends Middleware
                 // Need to check
                 if ($user->hasIdentity() && !$app->session->isExpired()) {
                     // Replace our user with a fully loaded one
-                    $user = UserFactory::loadById($user->userId);
+                    $user = (new UserFactory($app))->loadById($user->userId);
 
                     // Do they have permission?
                     $user->routeAuthentication($resource);

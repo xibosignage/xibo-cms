@@ -36,9 +36,9 @@ class PlaylistFactory extends BaseFactory
      * @return array[Playlist]
      * @throws NotFoundException
      */
-    public static function getByRegionId($regionId)
+    public function getByRegionId($regionId)
     {
-        return PlaylistFactory::query(null, array('disableUserCheck' => 1, 'regionId' => $regionId));
+        return $this->query(null, array('disableUserCheck' => 1, 'regionId' => $regionId));
     }
 
     /**
@@ -47,9 +47,9 @@ class PlaylistFactory extends BaseFactory
      * @return Playlist
      * @throws NotFoundException
      */
-    public static function getById($playlistId)
+    public function getById($playlistId)
     {
-        $playlists = PlaylistFactory::query(null, array('disableUserCheck' => 1, 'playlistId' => $playlistId));
+        $playlists = $this->query(null, array('disableUserCheck' => 1, 'playlistId' => $playlistId));
 
         if (count($playlists) <= 0)
             throw new NotFoundException(__('Cannot find playlist'));
@@ -63,7 +63,7 @@ class PlaylistFactory extends BaseFactory
      * @param int $ownerId
      * @return Playlist
      */
-    public static function create($name, $ownerId)
+    public function create($name, $ownerId)
     {
         $playlist = new Playlist();
         $playlist->name = $name;
@@ -72,7 +72,7 @@ class PlaylistFactory extends BaseFactory
         return $playlist;
     }
 
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
 
@@ -117,13 +117,13 @@ class PlaylistFactory extends BaseFactory
 
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Playlist())->hydrate($row);
+            $entries[] = (new Playlist())->hydrate($row)->setApp($this->getApp());
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
             $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

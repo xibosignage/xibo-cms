@@ -39,7 +39,7 @@ class MediaFactory extends BaseFactory
      * @param int $duration
      * @return Media
      */
-    public static function create($name, $fileName, $type, $ownerId, $duration = 0)
+    public function create($name, $fileName, $type, $ownerId, $duration = 0)
     {
         $media = new Media();
         $media->name = $name;
@@ -57,9 +57,9 @@ class MediaFactory extends BaseFactory
      * @param string $file
      * @return Media
      */
-    public static function createModuleSystemFile($name, $file = '')
+    public function createModuleSystemFile($name, $file = '')
     {
-        $media = self::createModuleFile($name, $file, 1);
+        $media = $this->createModuleFile($name, $file, 1);
         $media->moduleSystemFile = 1;
         return $media;
     }
@@ -70,7 +70,7 @@ class MediaFactory extends BaseFactory
      * @param $file
      * @return Media
      */
-    public static function createModuleFile($name, $file = '', $systemFile = 0)
+    public function createModuleFile($name, $file = '', $systemFile = 0)
     {
         if ($file == '') {
             $file = $name;
@@ -78,7 +78,7 @@ class MediaFactory extends BaseFactory
         }
 
         try {
-            $media = MediaFactory::getByName($name);
+            $media = $this->getByName($name);
 
             // Reassert the new file (which we might want to download)
             $media->fileName = $file;
@@ -105,7 +105,7 @@ class MediaFactory extends BaseFactory
      * @param string $folder The path to the folder to add.
      * @return array[Media]
      */
-    public static function createModuleFileFromFolder($folder)
+    public function createModuleFileFromFolder($folder)
     {
         $media = [];
 
@@ -114,7 +114,7 @@ class MediaFactory extends BaseFactory
 
         foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
 
-            $file = MediaFactory::createModuleSystemFile($file, $folder . DIRECTORY_SEPARATOR . $file);
+            $file = $this->createModuleSystemFile($file, $folder . DIRECTORY_SEPARATOR . $file);
             $file->moduleSystemFile = true;
 
             $media[] = $file;
@@ -129,9 +129,9 @@ class MediaFactory extends BaseFactory
      * @return Media
      * @throws NotFoundException
      */
-    public static function getById($mediaId)
+    public function getById($mediaId)
     {
-        $media = MediaFactory::query(null, array('disableUserCheck' => 1, 'mediaId' => $mediaId, 'allModules' => 1));
+        $media = $this->query(null, array('disableUserCheck' => 1, 'mediaId' => $mediaId, 'allModules' => 1));
 
         if (count($media) <= 0)
             throw new NotFoundException(__('Cannot find media'));
@@ -145,9 +145,9 @@ class MediaFactory extends BaseFactory
      * @return Media
      * @throws NotFoundException
      */
-    public static function getParentById($mediaId)
+    public function getParentById($mediaId)
     {
-        $media = MediaFactory::query(null, array('disableUserCheck' => 1, 'parentMediaId' => $mediaId, 'allModules' => 1));
+        $media = $this->query(null, array('disableUserCheck' => 1, 'parentMediaId' => $mediaId, 'allModules' => 1));
 
         if (count($media) <= 0)
             throw new NotFoundException(__('Cannot find media'));
@@ -161,9 +161,9 @@ class MediaFactory extends BaseFactory
      * @return Media
      * @throws NotFoundException
      */
-    public static function getByName($name)
+    public function getByName($name)
     {
-        $media = MediaFactory::query(null, array('disableUserCheck' => 1, 'name' => $name, 'allModules' => 1));
+        $media = $this->query(null, array('disableUserCheck' => 1, 'name' => $name, 'allModules' => 1));
 
         if (count($media) <= 0)
             throw new NotFoundException(__('Cannot find media'));
@@ -177,9 +177,9 @@ class MediaFactory extends BaseFactory
      * @return array[Media]
      * @throws NotFoundException
      */
-    public static function getByOwnerId($ownerId)
+    public function getByOwnerId($ownerId)
     {
-        return MediaFactory::query(null, array('disableUserCheck' => 1, 'ownerId' => $ownerId));
+        return $this->query(null, array('disableUserCheck' => 1, 'ownerId' => $ownerId));
     }
 
     /**
@@ -187,9 +187,9 @@ class MediaFactory extends BaseFactory
      * @param string $type
      * @return array[Media]
      */
-    public static function getByMediaType($type)
+    public function getByMediaType($type)
     {
-        return MediaFactory::query(null, array('disableUserCheck' => 1, 'type' => $type, 'allModules' => 1));
+        return $this->query(null, array('disableUserCheck' => 1, 'type' => $type, 'allModules' => 1));
     }
 
     /**
@@ -197,9 +197,9 @@ class MediaFactory extends BaseFactory
      * @param int $displayGroupId
      * @return array[Media]
      */
-    public static function getByDisplayGroupId($displayGroupId)
+    public function getByDisplayGroupId($displayGroupId)
     {
-        return MediaFactory::query(null, array('disableUserCheck' => 1, 'displayGroupId' => $displayGroupId));
+        return $this->query(null, array('disableUserCheck' => 1, 'displayGroupId' => $displayGroupId));
     }
 
     /**
@@ -207,12 +207,12 @@ class MediaFactory extends BaseFactory
      * @param int $layoutId
      * @return array[Media]
      */
-    public static function getByLayoutId($layoutId)
+    public function getByLayoutId($layoutId)
     {
-        return MediaFactory::query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId]);
     }
 
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         if ($sortOrder === null)
             $sortOrder = ['name'];
@@ -271,7 +271,7 @@ class MediaFactory extends BaseFactory
         $body .= " WHERE 1 = 1 ";
 
         // View Permissions
-        self::viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
 
         if (Sanitize::getInt('allModules', $filterBy) == 0) {
             $body .= ' AND media.type <> \'module\' ';
@@ -410,7 +410,7 @@ class MediaFactory extends BaseFactory
         if ($limit != '' && count($entries) > 0) {
             unset($params['entity']);
             $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

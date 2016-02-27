@@ -144,7 +144,7 @@ class DisplayGroup implements \JsonSerializable
      */
     public function setMediaIncomplete()
     {
-        foreach (DisplayFactory::getByDisplayGroupId($this->displayGroupId) as $display) {
+        foreach ((new DisplayFactory($this->getApp()))->getByDisplayGroupId($this->displayGroupId) as $display) {
             /* @var Display $display */
             $display->setMediaIncomplete();
             $display->setCollectRequired($this->collectRequired);
@@ -284,17 +284,17 @@ class DisplayGroup implements \JsonSerializable
         if ($this->loaded || $this->displayGroupId == null || $this->displayGroupId == 0)
             return;
 
-        $this->permissions = PermissionFactory::getByObjectId(get_class($this), $this->displayGroupId);
+        $this->permissions = (new PermissionFactory($this->getApp()))->getByObjectId(get_class($this), $this->displayGroupId);
 
-        $this->displays = DisplayFactory::getByDisplayGroupId($this->displayGroupId);
+        $this->displays = (new DisplayFactory($this->getApp()))->getByDisplayGroupId($this->displayGroupId);
 
-        $this->displayGroups = DisplayGroupFactory::getByParentId($this->displayGroupId);
+        $this->displayGroups = (new DisplayGroupFactory($this->getApp()))->getByParentId($this->displayGroupId);
 
-        $this->layouts = LayoutFactory::getByDisplayGroupId($this->displayGroupId);
+        $this->layouts = (new LayoutFactory($this->getApp()))->getByDisplayGroupId($this->displayGroupId);
 
-        $this->media = MediaFactory::getByDisplayGroupId($this->displayGroupId);
+        $this->media = (new MediaFactory($this->getApp()))->getByDisplayGroupId($this->displayGroupId);
 
-        $this->events = ScheduleFactory::getByDisplayGroupId($this->displayGroupId);
+        $this->events = (new ScheduleFactory($this->getApp()))->getByDisplayGroupId($this->displayGroupId);
 
         // Set the originals
         $this->originalDisplayGroups = $this->displayGroups;
@@ -472,11 +472,11 @@ class DisplayGroup implements \JsonSerializable
 
             Log::info('Managing Display Links for Dynamic Display Group %s', $this->displayGroup);
 
-            $originalDisplays = ($this->loaded) ? $this->displays : DisplayFactory::getByDisplayGroupId($this->displayGroupId);
+            $originalDisplays = ($this->loaded) ? $this->displays : (new DisplayFactory($this->getApp()))->getByDisplayGroupId($this->displayGroupId);
 
             // Update the linked displays based on the filter criteria
             // these displays must be permission checked based on the owner of the group NOT the logged in user
-            $this->displays = DisplayFactory::query(null, ['display' => $this->dynamicCriteria, 'userCheckUserId' => $this->getOwnerId()]);
+            $this->displays = (new DisplayFactory($this->getApp()))->query(null, ['display' => $this->dynamicCriteria, 'userCheckUserId' => $this->getOwnerId()]);
 
             Log::debug('There are %d original displays and %d displays that match the filter criteria now.', count($originalDisplays), count($this->displays));
 

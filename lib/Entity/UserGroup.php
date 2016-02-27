@@ -142,7 +142,7 @@ class UserGroup
             throw new \InvalidArgumentException(__('Library Quota must be a whole number.'));
 
         try {
-            $group = UserGroupFactory::getByName($this->group, $this->isUserSpecific);
+            $group = (new UserGroupFactory($this->getApp()))->getByName($this->group, $this->isUserSpecific);
 
             if ($this->groupId == null || $this->groupId != $group->groupId)
                 throw new \InvalidArgumentException(__('There is already a group with this name. Please choose another.'));
@@ -167,7 +167,7 @@ class UserGroup
 
         if ($options['loadUsers'])
             // Load all assigned users
-            $this->users = UserFactory::getByGroupId($this->groupId);
+            $this->users = (new UserFactory($this->getApp()))->getByGroupId($this->groupId);
 
         // Set the hash
         $this->hash = $this->hash();

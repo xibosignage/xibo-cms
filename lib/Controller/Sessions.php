@@ -37,7 +37,7 @@ class Sessions extends Base
 
     function grid()
     {
-        $sessions = SessionFactory::query($this->gridRenderSort(), $this->gridRenderFilter([
+        $sessions = (new SessionFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter([
             'type' => Sanitize::getString('type'),
             'fromDt' => Sanitize::getString('fromDt')
         ]));
@@ -54,7 +54,7 @@ class Sessions extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = SessionFactory::countLast();
+        $this->getState()->recordsTotal = (new SessionFactory($this->getApp()))->countLast();
         $this->getState()->setData($sessions);
     }
 

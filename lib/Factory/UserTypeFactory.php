@@ -22,7 +22,7 @@ class UserTypeFactory extends BaseFactory
      * @return array[Transition]
      * @throws NotFoundException
      */
-    public static function query($sortOrder = ['userType'], $filterBy = null)
+    public function query($sortOrder = ['userType'], $filterBy = null)
     {
         $entries = array();
         $params = array();
@@ -39,7 +39,7 @@ class UserTypeFactory extends BaseFactory
 
 
             foreach (PDOConnect::select($sql, $params) as $row) {
-                $entries[] = (new UserType())->hydrate($row);
+                $entries[] = (new UserType())->hydrate($row)->setApp($this->getApp());
             }
 
             return $entries;

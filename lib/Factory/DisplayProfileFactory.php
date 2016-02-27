@@ -22,9 +22,9 @@ class DisplayProfileFactory extends BaseFactory
      * @return DisplayProfile
      * @throws NotFoundException
      */
-    public static function getById($displayProfileId)
+    public function getById($displayProfileId)
     {
-        $profiles = DisplayProfileFactory::query(null, ['disableUserCheck' => 1, 'displayProfileId' => $displayProfileId]);
+        $profiles = $this->query(null, ['disableUserCheck' => 1, 'displayProfileId' => $displayProfileId]);
 
         if (count($profiles) <= 0)
             throw new NotFoundException();
@@ -41,9 +41,9 @@ class DisplayProfileFactory extends BaseFactory
      * @return DisplayProfile
      * @throws NotFoundException
      */
-    public static function getDefaultByType($type)
+    public function getDefaultByType($type)
     {
-        $profiles = DisplayProfileFactory::query(null, ['disableUserCheck' => 1, 'type' => $type, 'isDefault' => 1]);
+        $profiles = $this->query(null, ['disableUserCheck' => 1, 'type' => $type, 'isDefault' => 1]);
 
         if (count($profiles) <= 0)
             throw new NotFoundException();
@@ -61,9 +61,9 @@ class DisplayProfileFactory extends BaseFactory
      * @return array[DisplayProfile]
      * @throws NotFoundException
      */
-    public static function getByCommandId($commandId)
+    public function getByCommandId($commandId)
     {
-        return DisplayProfileFactory::query(null, ['disableUserCheck' => 1, 'commandId' => $commandId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'commandId' => $commandId]);
     }
 
     /**
@@ -72,7 +72,7 @@ class DisplayProfileFactory extends BaseFactory
      * @return array[DisplayProfile]
      * @throws NotFoundException
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $profiles = array();
 
@@ -145,13 +145,13 @@ class DisplayProfileFactory extends BaseFactory
 
 
             foreach (PDOConnect::select($sql, $params) as $row) {
-                $profiles[] = (new DisplayProfile())->hydrate($row);
+                $profiles[] = (new DisplayProfile())->hydrate($row)->setApp($this->getApp())->setApp($this->getApp());
             }
 
             // Paging
             if ($limit != '' && count($profiles) > 0) {
                 $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-                self::$_countLast = intval($results[0]['total']);
+                $this->_countLast = intval($results[0]['total']);
             }
 
             return $profiles;

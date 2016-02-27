@@ -24,7 +24,7 @@ class DataSetData extends Base
      */
     public function displayPage($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -63,7 +63,7 @@ class DataSetData extends Base
      */
     public function grid($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -95,7 +95,7 @@ class DataSetData extends Base
      */
     public function addForm($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -105,7 +105,7 @@ class DataSetData extends Base
         $this->getState()->template = 'dataset-data-form-add';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'images' => MediaFactory::query(null, ['type' => 'image'])
+            'images' => (new MediaFactory($this->getApp()))->query(null, ['type' => 'image'])
         ]);
     }
 
@@ -146,7 +146,7 @@ class DataSetData extends Base
      */
     public function add($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -202,7 +202,7 @@ class DataSetData extends Base
      */
     public function editForm($dataSetId, $rowId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -213,7 +213,7 @@ class DataSetData extends Base
         $this->getState()->setData([
             'dataSet' => $dataSet,
             'row' => $dataSet->getData(['id' => $rowId])[0],
-            'images' => MediaFactory::query(null, ['type' => 'image'])
+            'images' => (new MediaFactory($this->getApp()))->query(null, ['type' => 'image'])
         ]);
     }
 
@@ -257,7 +257,7 @@ class DataSetData extends Base
      */
     public function edit($dataSetId, $rowId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -315,7 +315,7 @@ class DataSetData extends Base
      */
     public function deleteForm($dataSetId, $rowId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -362,7 +362,7 @@ class DataSetData extends Base
      */
     public function delete($dataSetId, $rowId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();

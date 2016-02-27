@@ -20,7 +20,7 @@ class LogFactory extends BaseFactory
      * @param array $filterBy
      * @return array[\Xibo\Entity\Log]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         if ($sortOrder == null)
             $sortOrder = ['logId DESC'];
@@ -102,7 +102,7 @@ class LogFactory extends BaseFactory
         // Paging
         if ($limit != '' && count($entries) > 0) {
             $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

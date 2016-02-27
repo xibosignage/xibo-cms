@@ -34,9 +34,9 @@ class RegionOptionFactory extends BaseFactory
      * @param int $regionId
      * @return array[RegionOption]
      */
-    public static function getByRegionId($regionId)
+    public function getByRegionId($regionId)
     {
-        return RegionOptionFactory::query(null, array('regionId' => $regionId));
+        return $this->query(null, array('regionId' => $regionId));
     }
 
     /**
@@ -46,7 +46,7 @@ class RegionOptionFactory extends BaseFactory
      * @param mixed $value
      * @return RegionOption
      */
-    public static function create($regionId, $option, $value)
+    public function create($regionId, $option, $value)
     {
         $regionOption = new RegionOption();
         $regionOption->regionId = $regionId;
@@ -62,14 +62,14 @@ class RegionOptionFactory extends BaseFactory
      * @param array $filterBy
      * @return array[RegionOption]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
 
         $sql = 'SELECT * FROM `regionoption` WHERE regionId = :regionId';
 
         foreach (PDOConnect::select($sql, array('regionId' => Sanitize::getInt('regionId', $filterBy))) as $row) {
-            $entries[] = (new RegionOption())->hydrate($row);
+            $entries[] = (new RegionOption())->hydrate($row)->setApp($this->getApp());
         }
 
         return $entries;

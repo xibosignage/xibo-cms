@@ -78,7 +78,7 @@ class Campaign extends Base
             'name' => Sanitize::getString('name'),
         ];
 
-        $campaigns = CampaignFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $campaigns = (new CampaignFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
@@ -133,7 +133,7 @@ class Campaign extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = CampaignFactory::countLast();
+        $this->getState()->recordsTotal = (new CampaignFactory($this->getApp()))->countLast();
         $this->getState()->setData($campaigns);
     }
 
@@ -184,7 +184,7 @@ class Campaign extends Base
         $campaign->save();
 
         // Permissions
-        foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($campaign), $campaign->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+        foreach ((new PermissionFactory($this->getApp()))->createForNewEntity($this->getUser(), get_class($campaign), $campaign->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
             /* @var Permission $permission */
             $permission->save();
         }
@@ -204,7 +204,7 @@ class Campaign extends Base
      */
     public function editForm($campaignId)
     {
-        $campaign = CampaignFactory::getById($campaignId);
+        $campaign = (new CampaignFactory($this->getApp()))->getById($campaignId);
 
         if (!$this->getUser()->checkEditable($campaign))
             throw new AccessDeniedException();
@@ -249,7 +249,7 @@ class Campaign extends Base
      */
     public function edit($campaignId)
     {
-        $campaign = CampaignFactory::getById($campaignId);
+        $campaign = (new CampaignFactory($this->getApp()))->getById($campaignId);
 
         if (!$this->getUser()->checkEditable($campaign))
             throw new AccessDeniedException();
@@ -271,7 +271,7 @@ class Campaign extends Base
      */
     function deleteForm($campaignId)
     {
-        $campaign = CampaignFactory::getById($campaignId);
+        $campaign = (new CampaignFactory($this->getApp()))->getById($campaignId);
 
         if (!$this->getUser()->checkDeleteable($campaign))
             throw new AccessDeniedException();
@@ -308,7 +308,7 @@ class Campaign extends Base
      */
     public function delete($campaignId)
     {
-        $campaign = CampaignFactory::getById($campaignId);
+        $campaign = (new CampaignFactory($this->getApp()))->getById($campaignId);
 
         if (!$this->getUser()->checkDeleteable($campaign))
             throw new AccessDeniedException();
@@ -328,7 +328,7 @@ class Campaign extends Base
      */
     public function layoutsForm($campaignId)
     {
-        $campaign = CampaignFactory::getById($campaignId);
+        $campaign = (new CampaignFactory($this->getApp()))->getById($campaignId);
 
         if (!$this->getUser()->checkEditable($campaign))
             throw new AccessDeniedException();
@@ -336,7 +336,7 @@ class Campaign extends Base
         $this->getState()->template = 'campaign-form-layouts';
         $this->getState()->setData([
             'campaign' => $campaign,
-            'layouts' => LayoutFactory::getByCampaignId($campaignId),
+            'layouts' => (new LayoutFactory($this->getApp()))->getByCampaignId($campaignId),
             'help' => Help::Link('Campaign', 'Layouts')
         ]);
     }
@@ -404,7 +404,7 @@ class Campaign extends Base
     {
         Log::debug('assignLayout with campaignId ' . $campaignId);
 
-        $campaign = CampaignFactory::getById($campaignId);
+        $campaign = (new CampaignFactory($this->getApp()))->getById($campaignId);
 
         if (!$this->getUser()->checkEditable($campaign))
             throw new AccessDeniedException();
@@ -414,7 +414,7 @@ class Campaign extends Base
         $layouts = is_array($layouts) ? $layouts : [];
         foreach ($layouts as $object) {
 
-            $layout = LayoutFactory::getById(Sanitize::getInt('layoutId', $object));
+            $layout = (new LayoutFactory($this->getApp()))->getById(Sanitize::getInt('layoutId', $object));
 
             if (!$this->getUser()->checkViewable($layout))
                 throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
@@ -431,7 +431,7 @@ class Campaign extends Base
         $layouts = is_array($layouts) ? $layouts : [];
         foreach ($layouts as $object) {
 
-            $layout = LayoutFactory::getById(Sanitize::getInt('layoutId', $object));
+            $layout = (new LayoutFactory($this->getApp()))->getById(Sanitize::getInt('layoutId', $object));
 
             if (!$this->getUser()->checkViewable($layout))
                 throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
@@ -488,7 +488,7 @@ class Campaign extends Base
      */
     public function unassignLayout($campaignId)
     {
-        $campaign = CampaignFactory::getById($campaignId);
+        $campaign = (new CampaignFactory($this->getApp()))->getById($campaignId);
 
         if (!$this->getUser()->checkEditable($campaign))
             throw new AccessDeniedException();
@@ -502,7 +502,7 @@ class Campaign extends Base
         $layouts = Sanitize::getParam('layoutId', null);
         $layouts = is_array($layouts) ? $layouts : [];
         foreach ($layouts as $object) {
-            $layout = LayoutFactory::getById(Sanitize::getInt('layoutId', $object));
+            $layout = (new LayoutFactory($this->getApp()))->getById(Sanitize::getInt('layoutId', $object));
 
             if (!$this->getUser()->checkViewable($layout))
                 throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));

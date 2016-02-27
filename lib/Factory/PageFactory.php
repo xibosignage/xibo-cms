@@ -36,9 +36,9 @@ class PageFactory extends BaseFactory
      * @return Page
      * @throws NotFoundException if the page cannot be resolved from the provided route
      */
-    public static function getById($pageId)
+    public function getById($pageId)
     {
-        $pages = PageFactory::query(null, array('pageId' => $pageId, 'disableUserCheck' => 1));
+        $pages = $this->query(null, array('pageId' => $pageId, 'disableUserCheck' => 1));
 
         if (count($pages) <= 0)
             throw new NotFoundException('Unknown Route');
@@ -52,9 +52,9 @@ class PageFactory extends BaseFactory
      * @return Page
      * @throws NotFoundException if the page cannot be resolved from the provided route
      */
-    public static function getByName($page)
+    public function getByName($page)
     {
-        $pages = PageFactory::query(null, array('name' => $page, 'disableUserCheck' => 1));
+        $pages = $this->query(null, array('name' => $page, 'disableUserCheck' => 1));
 
         if (count($pages) <= 0)
             throw new NotFoundException('Unknown Route');
@@ -62,7 +62,7 @@ class PageFactory extends BaseFactory
         return $pages[0];
     }
 
-    public static function query($sortOrder = null, $filterBy = [])
+    public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder == null)
             $sortOrder = ['name'];
@@ -72,7 +72,7 @@ class PageFactory extends BaseFactory
         $sql = 'SELECT pageId, name, title, asHome FROM `pages` WHERE 1 = 1 ';
 
         // Logged in user view permissions
-        self::viewPermissionSql('Xibo\Entity\Page', $sql, $params, 'pageId', null, $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Page', $sql, $params, 'pageId', null, $filterBy);
 
         if (Sanitize::getString('name', $filterBy) != null) {
             $params['name'] = Sanitize::getString('name', $filterBy);
@@ -95,7 +95,7 @@ class PageFactory extends BaseFactory
 
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Page())->hydrate($row);
+            $entries[] = (new Page())->hydrate($row)->setApp($this->getApp());
         }
 
         return $entries;

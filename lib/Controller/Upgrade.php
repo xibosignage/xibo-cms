@@ -36,7 +36,7 @@ class Upgrade extends Base
         $this->getState()->template = 'upgrade-page';
 
         // Is there a pending upgrade (i.e. are there any pending upgrade steps).
-        $steps = UpgradeFactory::getIncomplete();
+        $steps = (new UpgradeFactory($this->getApp()))->getIncomplete();
 
         if (count($steps) <= 0) {
             // No pending steps, check to see if we need to insert them
@@ -51,7 +51,7 @@ class Upgrade extends Base
             }
 
             // Insert pending upgrade steps.
-            $steps = UpgradeFactory::createSteps(DBVERSION, WEBSITE_VERSION);
+            $steps = (new UpgradeFactory($this->getApp()))->createSteps(DBVERSION, WEBSITE_VERSION);
 
             foreach ($steps as $step) {
                 /* @var \Xibo\Entity\Upgrade $step */
@@ -78,7 +78,7 @@ class Upgrade extends Base
             throw new AccessDeniedException();
 
         // Get upgrade step
-        $upgradeStep = UpgradeFactory::getByStepId($stepId);
+        $upgradeStep = (new UpgradeFactory($this->getApp()))->getByStepId($stepId);
 
         if ($upgradeStep->complete == 1)
             throw new \InvalidArgumentException(__('Upgrade step already complete'));
@@ -90,8 +90,8 @@ class Upgrade extends Base
             $upgradeStep->save();
 
             // Install all module files if we are on the last step
-            if (count(UpgradeFactory::getIncomplete()) <= 0)
-                Library::installAllModuleFiles();
+            if (count((new UpgradeFactory($this->getApp()))->getIncomplete()) <= 0)
+                Library::installAllModuleFiles($this->getApp());
         }
         catch (\Exception $e) {
             $upgradeStep->lastTryDate = Date::parse()->format('U');

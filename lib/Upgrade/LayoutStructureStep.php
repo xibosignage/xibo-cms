@@ -68,7 +68,7 @@ class LayoutStructureStep implements Step
             file_put_contents($libraryLocation . 'archive_' . $oldLayout['layoutId'] . '.xlf', $oldLayout['xml']);
 
             // Create a new layout from the XML
-            $layout = LayoutFactory::loadByXlf($oldLayout['xml'], LayoutFactory::getById($oldLayout['layoutId']));
+            $layout = (new LayoutFactory($this->getApp()))->loadByXlf($oldLayout['xml'], (new LayoutFactory($this->getApp()))->getById($oldLayout['layoutId']));
 
             // Save the layout
             $layout->save(['notify' => false]);

@@ -38,7 +38,7 @@ $app->get('/', function () use ($app) {
     else {
         \Xibo\Helper\Log::debug('Showing the homepage: %s', $user->homePageId);
 
-        $page = \Xibo\Factory\PageFactory::getById($user->homePageId);
+        $page = (new \Xibo\Factory\PageFactory($app))->getById($user->homePageId);
 
         $app->redirectTo($page->getName() . '.view');
     }

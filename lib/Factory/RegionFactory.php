@@ -41,7 +41,7 @@ class RegionFactory extends BaseFactory
      * @param int $zIndex
      * @return Region
      */
-    public static function create($ownerId, $name, $width, $height, $top, $left, $zIndex = 0)
+    public function create($ownerId, $name, $width, $height, $top, $left, $zIndex = 0)
     {
         // Validation
         if (!is_numeric($width) || !is_numeric($height) || !is_numeric($top) || !is_numeric($left))
@@ -54,6 +54,7 @@ class RegionFactory extends BaseFactory
             throw new \InvalidArgumentException(__('Height must be greater than 0'));
 
         $region = new Region();
+        $region->setApp($this->getApp());
         $region->ownerId = $ownerId;
         $region->name = $name;
         $region->width = $width;
@@ -64,7 +65,7 @@ class RegionFactory extends BaseFactory
 
         // Create a Playlist for this region
         // many to many relationship
-        $playlist = PlaylistFactory::create($name, $ownerId);
+        $playlist = (new PlaylistFactory($this->getApp()))->create($name, $ownerId);
         $region->assignPlaylist($playlist);
 
         return $region;
@@ -75,10 +76,10 @@ class RegionFactory extends BaseFactory
      * @param int $layoutId
      * @return array[\Xibo\Entity\Region]
      */
-    public static function getByLayoutId($layoutId)
+    public function getByLayoutId($layoutId)
     {
         // Get all regions for this layout
-        return RegionFactory::query(array(), array('disableUserCheck' => 1, 'layoutId' => $layoutId));
+        return $this->query(array(), array('disableUserCheck' => 1, 'layoutId' => $layoutId));
     }
 
     /**
@@ -86,10 +87,10 @@ class RegionFactory extends BaseFactory
      * @param int $playlistId
      * @return array[\Xibo\Entity\Region]
      */
-    public static function getByPlaylistId($playlistId)
+    public function getByPlaylistId($playlistId)
     {
         // Get all regions for this layout
-        return RegionFactory::query(array(), array('disableUserCheck' => 1, 'playlistId' => $playlistId));
+        return $this->query(array(), array('disableUserCheck' => 1, 'playlistId' => $playlistId));
     }
 
     /**
@@ -97,9 +98,9 @@ class RegionFactory extends BaseFactory
      * @param int $regionId
      * @return Region
      */
-    public static function loadByRegionId($regionId)
+    public function loadByRegionId($regionId)
     {
-        $region = RegionFactory::getById($regionId);
+        $region = $this->getById($regionId);
         $region->load();
         return $region;
     }
@@ -110,10 +111,10 @@ class RegionFactory extends BaseFactory
      * @return Region
      * @throws NotFoundException
      */
-    public static function getById($regionId)
+    public function getById($regionId)
     {
         // Get a region by its ID
-        $regions = RegionFactory::query(array(), array('disableUserCheck' => 1, 'regionId' => $regionId));
+        $regions = $this->query(array(), array('disableUserCheck' => 1, 'regionId' => $regionId));
 
         if (count($regions) <= 0)
             throw new NotFoundException(__('Region not found'));
@@ -126,7 +127,7 @@ class RegionFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Region]
      */
-    public static function query($sortOrder = array(), $filterBy = array())
+    public function query($sortOrder = array(), $filterBy = array())
     {
         $entries = array();
 
@@ -175,10 +176,8 @@ class RegionFactory extends BaseFactory
             $params['layoutId'] = Sanitize::getInt('layoutId', $filterBy);
         }
 
-
-
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Region())->hydrate($row, ['intProperties' => ['zIndex']]);
+            $entries[] = (new Region())->setApp($this->getApp())->hydrate($row, ['intProperties' => ['zIndex']]);
         }
 
         return $entries;

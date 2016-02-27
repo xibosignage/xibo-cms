@@ -59,7 +59,7 @@ class Template extends Base
      */
     function grid()
     {
-        $templates = LayoutFactory::query($this->gridRenderSort(), $this->gridRenderFilter([
+        $templates = (new LayoutFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter([
             'excludeTemplates' => 0,
             'tags' => Sanitize::getString('tags'),
             'layout' => Sanitize::getString('template')
@@ -160,7 +160,7 @@ class Template extends Base
     function addTemplateForm($layoutId)
     {
         // Get the layout
-        $layout = LayoutFactory::getById($layoutId);
+        $layout = (new LayoutFactory($this->getApp()))->getById($layoutId);
 
         // Check Permissions
         if (!$this->getUser()->checkViewable($layout))
@@ -233,7 +233,7 @@ class Template extends Base
     function add($layoutId)
     {
         // Get the layout
-        $layout = LayoutFactory::getById($layoutId);
+        $layout = (new LayoutFactory($this->getApp()))->getById($layoutId);
 
         // Check Permissions
         if (!$this->getUser()->checkViewable($layout))
@@ -255,8 +255,8 @@ class Template extends Base
         $layout = clone $layout;
 
         $layout->layout = Sanitize::getString('name');
-        $layout->tags = TagFactory::tagsFromString(Sanitize::getString('tags'));
-        $layout->tags[] = TagFactory::getByTag('template');
+        $layout->tags = (new TagFactory($this->getApp()))->tagsFromString(Sanitize::getString('tags'));
+        $layout->tags[] = (new TagFactory($this->getApp()))->getByTag('template');
         $layout->description = Sanitize::getString('description');
         $layout->save();
 

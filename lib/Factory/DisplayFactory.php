@@ -35,9 +35,9 @@ class DisplayFactory extends BaseFactory
      * @return Display
      * @throws NotFoundException
      */
-    public static function getById($displayId)
+    public function getById($displayId)
     {
-        $displays = DisplayFactory::query(null, ['disableUserCheck' => 1, 'displayId' => $displayId]);
+        $displays = $this->query(null, ['disableUserCheck' => 1, 'displayId' => $displayId]);
 
         if (count($displays) <= 0)
             throw new NotFoundException();
@@ -50,9 +50,9 @@ class DisplayFactory extends BaseFactory
      * @return Display
      * @throws NotFoundException
      */
-    public static function getByLicence($licence)
+    public function getByLicence($licence)
     {
-        $displays = DisplayFactory::query(null, ['disableUserCheck' => 1, 'license' => $licence]);
+        $displays = $this->query(null, ['disableUserCheck' => 1, 'license' => $licence]);
 
         if (count($displays) <= 0)
             throw new NotFoundException();
@@ -65,9 +65,9 @@ class DisplayFactory extends BaseFactory
      * @return array[Display]
      * @throws NotFoundException
      */
-    public static function getByDisplayGroupId($displayGroupId)
+    public function getByDisplayGroupId($displayGroupId)
     {
-        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
     }
 
     /**
@@ -75,9 +75,9 @@ class DisplayFactory extends BaseFactory
      * @param $campaignId
      * @return array[Display]
      */
-    public static function getByActiveCampaignId($campaignId)
+    public function getByActiveCampaignId($campaignId)
     {
-        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'activeCampaignId' => $campaignId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'activeCampaignId' => $campaignId]);
     }
 
     /**
@@ -85,9 +85,9 @@ class DisplayFactory extends BaseFactory
      * @param $campaignId
      * @return array[Display]
      */
-    public static function getByAssignedCampaignId($campaignId)
+    public function getByAssignedCampaignId($campaignId)
     {
-        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'assignedCampaignId' => $campaignId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'assignedCampaignId' => $campaignId]);
     }
 
     /**
@@ -95,9 +95,9 @@ class DisplayFactory extends BaseFactory
      * @param $dataSetId
      * @return array[Display]
      */
-    public static function getByActiveDataSetId($dataSetId)
+    public function getByActiveDataSetId($dataSetId)
     {
-        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'activeDataSetId' => $dataSetId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'activeDataSetId' => $dataSetId]);
     }
 
     /**
@@ -105,7 +105,7 @@ class DisplayFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Display]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         if ($sortOrder === null)
             $sortOrder = ['display'];
@@ -182,7 +182,7 @@ class DisplayFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        self::viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'display.displayId', null, $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'display.displayId', null, $filterBy);
 
         // Filter by Display ID?
         if (Sanitize::getInt('displayId', $filterBy) !== null) {
@@ -395,13 +395,13 @@ class DisplayFactory extends BaseFactory
 
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Display())->hydrate($row);
+            $entries[] = (new Display())->hydrate($row)->setApp($this->getApp())->setApp($this->getApp());
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
             $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

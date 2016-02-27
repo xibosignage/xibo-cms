@@ -15,24 +15,57 @@ use Xibo\Helper\Sanitize;
 
 class BaseFactory
 {
-    protected static $_countLast = 0;
+    /**
+     * @var Slim $app
+     */
+    private $app;
+
+    /**
+     * Count records last query
+     * @var int
+     */
+    protected $_countLast = 0;
+
+    /**
+     * BaseFactory constructor.
+     * @param Slim $app
+     */
+    public function __construct($app)
+    {
+        $this->app = $app;
+
+        return $this;
+    }
 
     /**
      * Count of records returned for the last query.
      * @return int
      */
-    public static function countLast()
+    public function countLast()
     {
-        return self::$_countLast;
+        return $this->_countLast;
+    }
+
+    /**
+     * Get App
+     * @return Slim
+     */
+    public function getApp()
+    {
+        return $this->app;
     }
 
     /**
      * Get User
      * @return User
+     * @throws \RuntimeException
      */
-    public static function getUser()
+    public function getUser()
     {
-        return Slim::getInstance()->user;
+        if ($this->app == null)
+            throw new \RuntimeException(__('Factory application not set'));
+
+        return $this->app->user;
     }
 
     /**
@@ -44,9 +77,9 @@ class BaseFactory
      * @param null $ownerColumn
      * @param array $filterBy
      */
-    public static function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [])
+    public function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [])
     {
-        $user = (Sanitize::getInt('userCheckUserId', $filterBy) !== null) ? UserFactory::getById(Sanitize::getInt('userCheckUserId', $filterBy)) : self::getUser();
+        $user = (Sanitize::getInt('userCheckUserId', $filterBy) !== null) ? (new UserFactory($this->app))->getById(Sanitize::getInt('userCheckUserId', $filterBy)) : $this->getUser();
 
         $permissionSql = '';
 

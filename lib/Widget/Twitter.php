@@ -72,10 +72,10 @@ class Twitter extends ModuleWidget
      */
     public function installFiles()
     {
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/emojione/emojione.sprites.svg')->save();
+        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/emojione/emojione.sprites.svg')->save();
     }
 
     /**
@@ -375,7 +375,7 @@ class Twitter extends ModuleWidget
             // Use the display ID or the default.
             if ($displayId != 0) {
                 // Look up the lat/long
-                $display = DisplayFactory::getById($displayId);
+                $display = (new DisplayFactory($this->getApp()))->getById($displayId);
                 $defaultLat = $display->latitude;
                 $defaultLong = $display->longitude;
             } else {
@@ -509,7 +509,7 @@ class Twitter extends ModuleWidget
                         // Grab the profile image
                         if ($tweet->user->profile_image_url != '') {
                             // Grab the profile image
-                            $file = MediaFactory::createModuleFile('twitter_' . $tweet->user->id, $tweet->user->profile_image_url);
+                            $file = (new MediaFactory($this->getApp()))->createModuleFile('twitter_' . $tweet->user->id, $tweet->user->profile_image_url);
                             $file->isRemote = true;
                             $file->expires = $expires;
                             $file->save();
@@ -530,7 +530,7 @@ class Twitter extends ModuleWidget
                             $photoUrl = $tweet->entities->media[0]->media_url;
 
                             if ($photoUrl != '') {
-                                $file = MediaFactory::createModuleFile('twitter_photo_' . $tweet->user->id . '_' . $tweet->entities->media[0]->id_str, $photoUrl);
+                                $file = (new MediaFactory($this->getApp()))->createModuleFile('twitter_photo_' . $tweet->user->id . '_' . $tweet->entities->media[0]->id_str, $photoUrl);
                                 $file->isRemote = true;
                                 $file->expires = $expires;
                                 $file->save();

@@ -73,7 +73,7 @@ class Soap5 extends Soap4
 
         // Check in the database for this hardwareKey
         try {
-            $display = DisplayFactory::getByLicence($hardwareKey);
+            $display = (new DisplayFactory($this->getApp()))->getByLicence($hardwareKey);
 
             $this->logProcessor->setDisplay($display->displayId);
 

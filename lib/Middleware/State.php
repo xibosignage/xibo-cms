@@ -76,7 +76,7 @@ class State extends Middleware
                     'libraryUpload' => [
                         'maxSize' => ByteFormatter::toBytes(Config::getMaxUploadSize()),
                         'maxSizeMessage' => sprintf(__('This form accepts files up to a maximum size of %s'), Config::getMaxUploadSize()),
-                        'validExt' => implode('|', ModuleFactory::getValidExtensions())
+                        'validExt' => implode('|', (new ModuleFactory($app))->getValidExtensions())
                     ]
                 ));
             }

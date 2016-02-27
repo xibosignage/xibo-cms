@@ -21,9 +21,9 @@ class HelpFactory extends BaseFactory
      * @return Help
      * @throws NotFoundException
      */
-    public static function getById($helpId)
+    public function getById($helpId)
     {
-        $help = HelpFactory::query(null, ['helpId' => $helpId]);
+        $help = $this->query(null, ['helpId' => $helpId]);
 
         if (count($help) <= 0)
             throw new NotFoundException();
@@ -37,7 +37,7 @@ class HelpFactory extends BaseFactory
      * @return array[Transition]
      * @throws NotFoundException
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
         $params = array();
@@ -69,13 +69,13 @@ class HelpFactory extends BaseFactory
 
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Help())->hydrate($row);
+            $entries[] = (new Help())->hydrate($row)->setApp($this->getApp());
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
             $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

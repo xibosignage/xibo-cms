@@ -76,12 +76,12 @@ class Maintenance extends Base
                 // Upgrade
                 // Is there a pending upgrade (i.e. are there any pending upgrade steps).
                 if (Config::isUpgradePending()) {
-                    $steps = UpgradeFactory::getIncomplete();
+                    $steps = (new UpgradeFactory($this->getApp()))->getIncomplete();
 
                     if (count($steps) <= 0) {
 
                         // Insert pending upgrade steps.
-                        $steps = UpgradeFactory::createSteps(DBVERSION, WEBSITE_VERSION);
+                        $steps = (new UpgradeFactory($this->getApp()))->createSteps(DBVERSION, WEBSITE_VERSION);
 
                         foreach ($steps as $step) {
                             /* @var \Xibo\Entity\Upgrade $step */
@@ -124,7 +124,7 @@ class Maintenance extends Base
                 $msgTo = Config::GetSetting("mail_to");
                 $msgFrom = Config::GetSetting("mail_from");
 
-                foreach (Display::validateDisplays(DisplayFactory::query()) as $display) {
+                foreach (Display::validateDisplays((new DisplayFactory($this->getApp()))->query()) as $display) {
                     /* @var \Xibo\Entity\Display $display */
                     // Is this the first time this display has gone "off-line"
                     $displayGoneOffline = ($display->loggedIn == 1);
@@ -141,7 +141,7 @@ class Maintenance extends Base
 
                                 // Get a list of people that have view access to the display?
                                 if ($alertForViewUsers) {
-                                    foreach (UserFactory::getByDisplayGroupId($display->displayGroupId) as $user) {
+                                    foreach ((new UserFactory($this->getApp()))->getByDisplayGroupId($display->displayGroupId) as $user) {
                                         /* @var User $user */
                                         if ($user->email != '') {
                                             // Send them an email
@@ -291,7 +291,7 @@ class Maintenance extends Base
                     $sth = $dbh->prepare('SELECT DisplayID, Display, WakeOnLanTime, LastWakeOnLanCommandSent FROM `display` WHERE WakeOnLan = 1');
                     $sth->execute(array());
 
-                    foreach(DisplayFactory::query(null, ['wakeOnLan' => 1]) as $display) {
+                    foreach((new DisplayFactory($this->getApp()))->query(null, ['wakeOnLan' => 1]) as $display) {
 
                         // Time to WOL (with respect to today)
                         $timeToWake = strtotime(date('Y-m-d') . ' ' . $display->wakeOnLanTime);
@@ -333,19 +333,19 @@ class Maintenance extends Base
                 }
 
                 // Build Layouts
-                foreach (LayoutFactory::query(null, ['status' => 3]) as $layout) {
+                foreach ((new LayoutFactory($this->getApp()))->query(null, ['status' => 3]) as $layout) {
                     /* @var Layout $layout */
                     $layout->xlfToDisk();
                 }
 
                 // Keep tidy
-                Library::removeExpiredFiles();
-                Library::removeTempFiles();
+                Library::removeExpiredFiles($this->getApp());
+                Library::removeTempFiles($this->getApp());
 
                 // Install module files
                 if (!$quick) {
                     Log::debug('Installing Module Files');
-                    Library::installAllModuleFiles();
+                    Library::installAllModuleFiles($this->getApp());
                 }
             }
             else {
@@ -390,7 +390,7 @@ class Maintenance extends Base
         Log::debug('Library Location: ' . $library);
 
         // Remove temporary files
-        Library::removeTempFiles();
+        Library::removeTempFiles($this->getApp());
 
         $media = array();
         $unusedMedia = array();
@@ -465,13 +465,13 @@ class Maintenance extends Base
                 // It exists but isn't being used any more
                 Log::debug('Deleting unused revision media: ' . $media[$file]['mediaid']);
 
-                MediaFactory::getById($media[$file]['mediaid'])->delete();
+                (new MediaFactory($this->getApp()))->getById($media[$file]['mediaid'])->delete();
             }
             else if (array_key_exists($file, $unusedMedia)) {
                 // It exists but isn't being used any more
                 Log::debug('Deleting unused media: ' . $media[$file]['mediaid']);
 
-                MediaFactory::getById($media[$file]['mediaid'])->delete();
+                (new MediaFactory($this->getApp()))->getById($media[$file]['mediaid'])->delete();
             }
             else {
                 $i--;

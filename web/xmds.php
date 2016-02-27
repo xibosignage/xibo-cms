@@ -87,11 +87,11 @@ $twig->parserExtensions = array(
 );
 
 // Configure the template folder
-$twig->twigTemplateDirs = array_merge(\Xibo\Factory\ModuleFactory::getViewPaths(), [PROJECT_ROOT . '/views']);
+$twig->twigTemplateDirs = array_merge((new \Xibo\Factory\ModuleFactory($app))->getViewPaths(), [PROJECT_ROOT . '/views']);
 $app->view($twig);
 
 // Configure a user
-$app->user = \Xibo\Factory\UserFactory::getById(1);
+$app->user = (new \Xibo\Factory\UserFactory($app))->getById(1);
 
 // Check to see if we have a file attribute set (for HTTP file downloads)
 if (isset($_GET['file'])) {
@@ -106,7 +106,7 @@ if (isset($_GET['file'])) {
 
     // Check nonce, output appropriate headers, log bandwidth and stop.
     try {
-        $file = \Xibo\Factory\RequiredFileFactory::getByNonce($_REQUEST['file']);
+        $file = (new \Xibo\Factory\RequiredFileFactory($app))->getByNonce($_REQUEST['file']);
         $file->bytesRequested = $file->bytesRequested + $file->size;
         $file->isValid();
 
@@ -125,7 +125,7 @@ if (isset($_GET['file'])) {
         }
 
         // Log bandwidth
-        \Xibo\Factory\BandwidthFactory::createAndSave(4, $file->displayId, $file->size);
+        (new \Xibo\Factory\BandwidthFactory($app))->createAndSave(4, $file->displayId, $file->size);
     }
     catch (\Exception $e) {
         if ($e instanceof \Xibo\Exception\NotFoundException || $e instanceof \Xibo\Exception\FormExpiredException) {

@@ -41,7 +41,7 @@ class Schedule extends Base
         $groups = array();
         $displays = array();
 
-        foreach (DisplayGroupFactory::query(null, ['isDisplaySpecific' => -1]) as $display) {
+        foreach ((new DisplayGroupFactory($this->getApp()))->query(null, ['isDisplaySpecific' => -1]) as $display) {
             /* @var DisplayGroup $display */
             if ($display->isDisplaySpecific == 1) {
                 $displays[] = $display;
@@ -126,7 +126,7 @@ class Schedule extends Base
             'displayGroupIds' => array_diff($displayGroupIds, [-1])
         ];
 
-        foreach (ScheduleFactory::query('schedule_detail.FromDT', $filter) as $row) {
+        foreach ((new ScheduleFactory($this->getApp()))->query('schedule_detail.FromDT', $filter) as $row) {
             /* @var \Xibo\Entity\Schedule $row */
 
             // Load the display groups
@@ -233,7 +233,7 @@ class Schedule extends Base
         $displays = array();
         $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
-        foreach (DisplayGroupFactory::query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
+        foreach ((new DisplayGroupFactory($this->getApp()))->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
 
             // Can't schedule with view, but no edit permissions
@@ -251,8 +251,8 @@ class Schedule extends Base
         $this->getState()->setData([
             'displays' => $displays,
             'displayGroups' => $groups,
-            'campaigns' => CampaignFactory::query(null, ['isLayoutSpecific' => -1]),
-            'commands' => CommandFactory::query(),
+            'campaigns' => (new CampaignFactory($this->getApp()))->query(null, ['isLayoutSpecific' => -1]),
+            'commands' => (new CommandFactory($this->getApp()))->query(),
             'displayGroupIds' => $this->getSession()->get('displayGroupIds'),
             'help' => Help::Link('Schedule', 'Add')
         ]);
@@ -383,7 +383,7 @@ class Schedule extends Base
         $schedule->recurrenceDetail = Sanitize::getInt('recurrenceDetail');
 
         foreach (Sanitize::getIntArray('displayGroupIds') as $displayGroupId) {
-            $schedule->assignDisplayGroup(DisplayGroupFactory::getById($displayGroupId));
+            $schedule->assignDisplayGroup((new DisplayGroupFactory($this->getApp()))->getById($displayGroupId));
         }
 
         if ($schedule->dayPartId == \Xibo\Entity\Schedule::$DAY_PART_CUSTOM) {
@@ -425,7 +425,7 @@ class Schedule extends Base
      */
     function editForm($eventId)
     {
-        $schedule = ScheduleFactory::getById($eventId);
+        $schedule = (new ScheduleFactory($this->getApp()))->getById($eventId);
         $schedule->load();
 
         if (!$this->isEventEditable($schedule->displayGroups))
@@ -442,7 +442,7 @@ class Schedule extends Base
         $displays = array();
         $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
-        foreach (DisplayGroupFactory::query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
+        foreach ((new DisplayGroupFactory($this->getApp()))->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
 
             // Can't schedule with view, but no edit permissions
@@ -461,8 +461,8 @@ class Schedule extends Base
             'event' => $schedule,
             'displays' => $displays,
             'displayGroups' => $groups,
-            'campaigns' => CampaignFactory::query(null, ['isLayoutSpecific' => -1]),
-            'commands' => CommandFactory::query(),
+            'campaigns' => (new CampaignFactory($this->getApp()))->query(null, ['isLayoutSpecific' => -1]),
+            'commands' => (new CommandFactory($this->getApp()))->query(),
             'displayGroupIds' => array_map(function($element) {
                 return $element->displayGroupId;
             }, $schedule->displayGroups),
@@ -585,7 +585,7 @@ class Schedule extends Base
      */
     public function edit($eventId)
     {
-        $schedule = ScheduleFactory::getById($eventId);
+        $schedule = (new ScheduleFactory($this->getApp()))->getById($eventId);
         $schedule->load();
 
         if (!$this->isEventEditable($schedule->displayGroups))
@@ -602,7 +602,7 @@ class Schedule extends Base
         $schedule->displayGroups = [];
 
         foreach (Sanitize::getIntArray('displayGroupIds') as $displayGroupId) {
-            $schedule->assignDisplayGroup(DisplayGroupFactory::getById($displayGroupId));
+            $schedule->assignDisplayGroup((new DisplayGroupFactory($this->getApp()))->getById($displayGroupId));
         }
 
         if ($schedule->dayPartId == \Xibo\Entity\Schedule::$DAY_PART_CUSTOM) {
@@ -644,7 +644,7 @@ class Schedule extends Base
      */
     function deleteForm($eventId)
     {
-        $schedule = ScheduleFactory::getById($eventId);
+        $schedule = (new ScheduleFactory($this->getApp()))->getById($eventId);
         $schedule->load();
 
         if (!$this->isEventEditable($schedule->displayGroups))
@@ -682,7 +682,7 @@ class Schedule extends Base
      */
     public function delete($eventId)
     {
-        $schedule = ScheduleFactory::getById($eventId);
+        $schedule = (new ScheduleFactory($this->getApp()))->getById($eventId);
         $schedule->load();
 
         if (!$this->isEventEditable($schedule->displayGroups))
@@ -734,7 +734,7 @@ class Schedule extends Base
         $displays = array();
         $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
-        foreach (DisplayGroupFactory::query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
+        foreach ((new DisplayGroupFactory($this->getApp()))->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
 
             // Can't schedule with view, but no edit permissions
@@ -754,7 +754,7 @@ class Schedule extends Base
             'displayGroupId' => (($from == 'DisplayGroup') ? $id : 0),
             'displays' => $displays,
             'displayGroups' => $groups,
-            'campaigns' => CampaignFactory::query(null, ['isLayoutSpecific' => -1]),
+            'campaigns' => (new CampaignFactory($this->getApp()))->query(null, ['isLayoutSpecific' => -1]),
             'help' => Help::Link('Schedule', 'ScheduleNow')
         ]);
     }

@@ -36,9 +36,9 @@ class UserFactory extends BaseFactory
      * @return User
      * @throws NotFoundException if the user cannot be found
      */
-    public static function getById($userId)
+    public function getById($userId)
     {
-        $users = UserFactory::query(null, array('disableUserCheck' => 1, 'userId' => $userId));
+        $users = $this->query(null, array('disableUserCheck' => 1, 'userId' => $userId));
 
         if (count($users) <= 0)
             throw new NotFoundException(__('User not found'));
@@ -52,9 +52,9 @@ class UserFactory extends BaseFactory
      * @return User
      * @throws NotFoundException if the user cannot be found
      */
-    public static function loadById($userId)
+    public function loadById($userId)
     {
-        $user = UserFactory::getById($userId);
+        $user = $this->getById($userId);
         $user->load();
 
         return $user;
@@ -65,9 +65,9 @@ class UserFactory extends BaseFactory
      * @param string $clientId
      * @throws NotFoundException
      */
-    public static function loadByClientId($clientId)
+    public function loadByClientId($clientId)
     {
-        $users = UserFactory::query(null, array('disableUserCheck' => 1, 'clientId' => $clientId));
+        $users = $this->query(null, array('disableUserCheck' => 1, 'clientId' => $clientId));
 
         if (count($users) <= 0)
             throw new NotFoundException(sprintf('User not found'));
@@ -81,9 +81,9 @@ class UserFactory extends BaseFactory
      * @return User
      * @throws NotFoundException if the user cannot be found
      */
-    public static function getByName($userName)
+    public function getByName($userName)
     {
-        $users = UserFactory::query(null, array('disableUserCheck' => 1, 'userName' => $userName));
+        $users = $this->query(null, array('disableUserCheck' => 1, 'userName' => $userName));
 
         if (count($users) <= 0)
             throw new NotFoundException(__('User not found'));
@@ -97,8 +97,8 @@ class UserFactory extends BaseFactory
      * @return User
      * @throws NotFoundException if the user cannot be found
      */
-    public static function getByEmail($email) {
-        $users = UserFactory::query(null, array('disableUserCheck' => 1, 'email' => $email));
+    public function getByEmail($email) {
+        $users = $this->query(null, array('disableUserCheck' => 1, 'email' => $email));
 
         if (count($users) <= 0)
             throw new NotFoundException(__('User not found'));
@@ -110,9 +110,9 @@ class UserFactory extends BaseFactory
      * @param int $groupId
      * @return array[User]
      */
-    public static function getByGroupId($groupId)
+    public function getByGroupId($groupId)
     {
-        return UserFactory::query(null, array('disableUserCheck' => 1, 'groupIds' => [$groupId]));
+        return $this->query(null, array('disableUserCheck' => 1, 'groupIds' => [$groupId]));
     }
 
     /**
@@ -120,9 +120,9 @@ class UserFactory extends BaseFactory
      * @param $displayGroupId
      * @return array
      */
-    public static function getByDisplayGroupId($displayGroupId)
+    public function getByDisplayGroupId($displayGroupId)
     {
-        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
+        return (new DisplayFactory($this->getApp()))->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
     }
 
     /**
@@ -131,7 +131,7 @@ class UserFactory extends BaseFactory
      * @param array[mixed] $filterBy
      * @return array[User]
      */
-    public static function query($sortOrder = array(), $filterBy = array())
+    public function query($sortOrder = array(), $filterBy = array())
     {
         $entries = array();
 
@@ -206,11 +206,11 @@ class UserFactory extends BaseFactory
 
         if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
             // Normal users can only see themselves
-            if (self::getUser()->userTypeId == 3) {
-                $filterBy['userId'] = self::getUser()->userId;
+            if ($this->getUser()->userTypeId == 3) {
+                $filterBy['userId'] = $this->getUser()->userId;
             }
             // Group admins can only see users from their groups.
-            else if (self::getUser()->userTypeId == 2) {
+            else if ($this->getUser()->userTypeId == 2) {
                 $body .= '
                     AND user.userId IN (
                         SELECT `otherUserLinks`.userId
@@ -223,7 +223,7 @@ class UserFactory extends BaseFactory
                          WHERE `lkusergroup`.userId = :currentUserId
                     )
                 ';
-                $params['currentUserId'] = self::getUser()->userId;
+                $params['currentUserId'] = $this->getUser()->userId;
             }
         }
 
@@ -304,13 +304,13 @@ class UserFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new User())->hydrate($row);
+            $entries[] = (new User())->hydrate($row)->setApp($this->getApp());
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
             $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

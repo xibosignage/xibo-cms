@@ -25,7 +25,7 @@ class DataSetColumn extends Base
      */
     public function displayPage($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -65,12 +65,12 @@ class DataSetColumn extends Base
      */
     public function grid($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
 
-        $dataSetColumns = DataSetColumnFactory::getByDataSetId($dataSetId);
+        $dataSetColumns = (new DataSetColumnFactory($this->getApp()))->getByDataSetId($dataSetId);
 
         foreach ($dataSetColumns as $column) {
             /* @var \Xibo\Entity\DataSetColumn $column */
@@ -110,7 +110,7 @@ class DataSetColumn extends Base
      */
     public function addForm($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -118,8 +118,8 @@ class DataSetColumn extends Base
         $this->getState()->template = 'dataset-column-form-add';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'dataTypes' => DataTypeFactory::query(),
-            'dataSetColumnTypes' => DataSetColumnTypeFactory::query(),
+            'dataTypes' => (new DataTypeFactory($this->getApp()))->query(),
+            'dataSetColumnTypes' => (new DataSetColumnTypeFactory($this->getApp()))->query(),
             'help' => Help::Link('DataSet', 'AddColumn')
         ]);
     }
@@ -197,7 +197,7 @@ class DataSetColumn extends Base
      */
     public function add($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -230,7 +230,7 @@ class DataSetColumn extends Base
      */
     public function editForm($dataSetId, $dataSetColumnId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -238,9 +238,9 @@ class DataSetColumn extends Base
         $this->getState()->template = 'dataset-column-form-edit';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'dataSetColumn' => DataSetColumnFactory::getById($dataSetColumnId),
-            'dataTypes' => DataTypeFactory::query(),
-            'dataSetColumnTypes' => DataSetColumnTypeFactory::query(),
+            'dataSetColumn' => (new DataSetColumnFactory($this->getApp()))->getById($dataSetColumnId),
+            'dataTypes' => (new DataTypeFactory($this->getApp()))->query(),
+            'dataSetColumnTypes' => (new DataSetColumnTypeFactory($this->getApp()))->query(),
             'help' => Help::Link('DataSet', 'EditColumn')
         ]);
     }
@@ -326,13 +326,13 @@ class DataSetColumn extends Base
      */
     public function edit($dataSetId, $dataSetColumnId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
 
         // Column
-        $column = DataSetColumnFactory::getById($dataSetColumnId);
+        $column = (new DataSetColumnFactory($this->getApp()))->getById($dataSetColumnId);
         $column->heading = Sanitize::getString('heading');
         $column->listContent = Sanitize::getString('listContent');
         $column->columnOrder = Sanitize::getInt('columnOrder');
@@ -358,7 +358,7 @@ class DataSetColumn extends Base
      */
     public function deleteForm($dataSetId, $dataSetColumnId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkDeleteable($dataSet))
             throw new AccessDeniedException();
@@ -366,7 +366,7 @@ class DataSetColumn extends Base
         $this->getState()->template = 'dataset-column-form-delete';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'dataSetColumn' => DataSetColumnFactory::getById($dataSetColumnId),
+            'dataSetColumn' => (new DataSetColumnFactory($this->getApp()))->getById($dataSetColumnId),
             'help' => Help::Link('DataSet', 'DeleteColumn')
         ]);
     }
@@ -404,13 +404,13 @@ class DataSetColumn extends Base
      */
     public function delete($dataSetId, $dataSetColumnId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkDeleteable($dataSet))
             throw new AccessDeniedException();
 
         // Get the column
-        $column = DataSetColumnFactory::getById($dataSetColumnId);
+        $column = (new DataSetColumnFactory($this->getApp()))->getById($dataSetColumnId);
         $column->delete();
 
         // Return

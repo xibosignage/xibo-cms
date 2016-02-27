@@ -113,13 +113,13 @@ class Campaign implements \JsonSerializable
             return;
 
         // Permissions
-        $this->permissions = PermissionFactory::getByObjectId('Campaign', $this->campaignId);
+        $this->permissions = (new PermissionFactory($this->getApp()))->getByObjectId('Campaign', $this->campaignId);
 
         // Layouts
-        $this->layouts = LayoutFactory::getByCampaignId($this->campaignId);
+        $this->layouts = (new LayoutFactory($this->getApp()))->getByCampaignId($this->campaignId);
 
         // Events
-        $this->events = ScheduleFactory::getByCampaignId($this->campaignId);
+        $this->events = (new ScheduleFactory($this->getApp()))->getByCampaignId($this->campaignId);
 
         $this->loaded = true;
     }
@@ -352,7 +352,7 @@ class Campaign implements \JsonSerializable
     {
         Log::debug('Checking for Displays to refresh on Campaign %d', $this->campaignId);
 
-        $displays = array_merge(DisplayFactory::getByActiveCampaignId($this->campaignId), DisplayFactory::getByAssignedCampaignId($this->campaignId));
+        $displays = array_merge((new DisplayFactory($this->getApp()))->getByActiveCampaignId($this->campaignId), (new DisplayFactory($this->getApp()))->getByAssignedCampaignId($this->campaignId));
 
         foreach ($displays as $display) {
             /* @var \Xibo\Entity\Display $display */

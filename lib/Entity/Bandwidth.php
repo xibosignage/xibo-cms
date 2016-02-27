@@ -18,6 +18,8 @@ use Xibo\Storage\PDOConnect;
  */
 class Bandwidth
 {
+    use EntityTrait;
+
     public static $REGISTER = 1;
     public static $RF = 2;
     public static $SCHEDULE = 3;

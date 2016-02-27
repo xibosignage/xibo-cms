@@ -235,7 +235,7 @@ class Region implements \JsonSerializable
             $this->getOption($option)->value = $value;
         }
         catch (NotFoundException $e) {
-            $this->regionOptions[] = RegionOptionFactory::create($this->regionId, $option, $value);
+            $this->regionOptions[] = (new RegionOptionFactory($this->getApp()))->create($this->regionId, $option, $value);
         }
     }
 
@@ -282,11 +282,11 @@ class Region implements \JsonSerializable
         Log::debug('Load Region with %s', json_encode($options));
 
         // Load permissions
-        $this->permissions = PermissionFactory::getByObjectId(get_class(), $this->regionId);
+        $this->permissions = (new PermissionFactory($this->getApp()))->getByObjectId(get_class(), $this->regionId);
 
         // Load all playlists
         if ($options['regionIncludePlaylists']) {
-            $this->playlists = PlaylistFactory::getByRegionId($this->regionId);
+            $this->playlists = (new PlaylistFactory($this->getApp()))->getByRegionId($this->regionId);
 
             foreach ($this->playlists as $playlist) {
                 /* @var Playlist $playlist */
@@ -295,7 +295,7 @@ class Region implements \JsonSerializable
         }
 
         // Get region options
-        $this->regionOptions = RegionOptionFactory::getByRegionId($this->regionId);
+        $this->regionOptions = (new RegionOptionFactory($this->getApp()))->getByRegionId($this->regionId);
 
         $this->hash = $this->hash();
         $this->loaded = true;

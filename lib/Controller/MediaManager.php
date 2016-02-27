@@ -33,7 +33,7 @@ class MediaManager extends Base
         $this->getState()->template .= 'media-manager-page';
         $this->getState()->setData([
             // Users we have permission to see
-            'modules' => ModuleFactory::query(null, ['assignable' => 1])
+            'modules' => (new ModuleFactory($this->getApp()))->query(null, ['assignable' => 1])
         ]);
     }
 
@@ -48,7 +48,7 @@ class MediaManager extends Base
 
         $rows = array();
 
-        foreach (LayoutFactory::query(null, ['layout' => $filterLayout]) as $layout) {
+        foreach ((new LayoutFactory($this->getApp()))->query(null, ['layout' => $filterLayout]) as $layout) {
             /* @var \Xibo\Entity\Layout $layout */
             // We have edit permissions?
             if (!$this->getUser()->checkEditable($layout))

@@ -167,7 +167,7 @@ class DisplayProfile
         }
 
         // Load any commands
-        $this->commands = CommandFactory::getByDisplayProfileId($this->displayProfileId);
+        $this->commands = (new CommandFactory($this->getApp()))->getByDisplayProfileId($this->displayProfileId);
 
         // We are loaded
         $this->loaded = true;

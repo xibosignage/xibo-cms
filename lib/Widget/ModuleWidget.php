@@ -390,7 +390,7 @@ abstract class ModuleWidget implements ModuleInterface
         Log::debug('Media assigned: ' . count($this->widget->mediaIds));
 
         if ($this->getModule()->regionSpecific == 0 && count($this->widget->mediaIds) > 0) {
-            $media = MediaFactory::getById($this->widget->mediaIds[0]);
+            $media = (new MediaFactory($this->getApp()))->getById($this->widget->mediaIds[0]);
             $name = $media->name;
         } else {
             $name = $this->module->name;
@@ -538,7 +538,7 @@ abstract class ModuleWidget implements ModuleInterface
 
         // Look up the real transition name
         try {
-            $transition = TransitionFactory::getByCode($code);
+            $transition = (new TransitionFactory($this->getApp()))->getByCode($code);
             return __($transition->transition);
         }
         catch (NotFoundException $e) {
@@ -670,7 +670,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function getMedia()
     {
-        return MediaFactory::getById($this->getMediaId());
+        return (new MediaFactory($this->getApp()))->getById($this->getMediaId());
     }
 
     /**
@@ -678,7 +678,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function download()
     {
-        $media = MediaFactory::getById($this->getMediaId());
+        $media = (new MediaFactory($this->getApp()))->getById($this->getMediaId());
 
         // This widget is expected to output a file - usually this is for file based media
         // Get the name with library
@@ -733,7 +733,7 @@ abstract class ModuleWidget implements ModuleInterface
 
             // Check that this mediaId exists and get some information about it
             try {
-                $entry = MediaFactory::getById($mediaId);
+                $entry = (new MediaFactory($this->getApp()))->getById($mediaId);
 
                 // Assign it
                 $this->assignMedia($entry->mediaId);

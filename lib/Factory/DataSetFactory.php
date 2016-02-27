@@ -23,9 +23,9 @@ class DataSetFactory extends BaseFactory
      * @return DataSet
      * @throws NotFoundException
      */
-    public static function getById($dataSetId)
+    public function getById($dataSetId)
     {
-        $dataSets = DataSetFactory::query(null, ['disableUserCheck' => 1, 'dataSetId' => $dataSetId]);
+        $dataSets = $this->query(null, ['disableUserCheck' => 1, 'dataSetId' => $dataSetId]);
 
         if (count($dataSets) <= 0)
             throw new NotFoundException();
@@ -39,9 +39,9 @@ class DataSetFactory extends BaseFactory
      * @return DataSet
      * @throws NotFoundException
      */
-    public static function getByCode($code)
+    public function getByCode($code)
     {
-        $dataSets = DataSetFactory::query(null, ['disableUserCheck' => 1, 'code' => $code]);
+        $dataSets = $this->query(null, ['disableUserCheck' => 1, 'code' => $code]);
 
         if (count($dataSets) <= 0)
             throw new NotFoundException();
@@ -55,9 +55,9 @@ class DataSetFactory extends BaseFactory
      * @return DataSet
      * @throws NotFoundException
      */
-    public static function getByName($dataSet)
+    public function getByName($dataSet)
     {
-        $dataSets = DataSetFactory::query(null, ['disableUserCheck' => 1, 'dataSet' => $dataSet]);
+        $dataSets = $this->query(null, ['disableUserCheck' => 1, 'dataSet' => $dataSet]);
 
         if (count($dataSets) <= 0)
             throw new NotFoundException();
@@ -71,7 +71,7 @@ class DataSetFactory extends BaseFactory
      * @return array[DataSet]
      * @throws NotFoundException
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
         $params = array();
@@ -116,7 +116,7 @@ class DataSetFactory extends BaseFactory
             ';
 
             // View Permissions
-            self::viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy);
+            $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy);
 
             if (Sanitize::getInt('dataSetId', $filterBy) !== null) {
                 $body .= ' AND dataset.dataSetId = :dataSetId ';
@@ -149,13 +149,13 @@ class DataSetFactory extends BaseFactory
 
 
             foreach (PDOConnect::select($sql, $params) as $row) {
-                $entries[] = (new DataSet())->hydrate($row);
+                $entries[] = (new DataSet())->hydrate($row)->setApp($this->getApp())->setApp($this->getApp());
             }
 
             // Paging
             if ($limit != '' && count($entries) > 0) {
                 $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-                self::$_countLast = intval($results[0]['total']);
+                $this->_countLast = intval($results[0]['total']);
             }
 
             return $entries;

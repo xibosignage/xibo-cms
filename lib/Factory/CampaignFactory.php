@@ -22,7 +22,6 @@
 
 namespace Xibo\Factory;
 
-
 use Xibo\Entity\Campaign;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Sanitize;
@@ -36,9 +35,9 @@ class CampaignFactory extends BaseFactory
      * @return Campaign
      * @throws NotFoundException
      */
-    public static function getById($campaignId)
+    public function getById($campaignId)
     {
-        $campaigns = CampaignFactory::query(null, array('disableUserCheck' => 1, 'campaignId' => $campaignId, 'isLayoutSpecific' => -1));
+        $campaigns = $this->query(null, array('disableUserCheck' => 1, 'campaignId' => $campaignId, 'isLayoutSpecific' => -1));
 
         if (count($campaigns) <= 0) {
             throw new NotFoundException(\__('Campaign not found'));
@@ -53,9 +52,9 @@ class CampaignFactory extends BaseFactory
      * @param int $ownerId
      * @return array[Campaign]
      */
-    public static function getByOwnerId($ownerId)
+    public function getByOwnerId($ownerId)
     {
-        return CampaignFactory::query(null, array('ownerId' => $ownerId));
+        return $this->query(null, array('ownerId' => $ownerId));
     }
 
     /**
@@ -63,9 +62,9 @@ class CampaignFactory extends BaseFactory
      * @param int $layoutId
      * @return array[Campaign]
      */
-    public static function getByLayoutId($layoutId)
+    public function getByLayoutId($layoutId)
     {
-        return CampaignFactory::query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId));
+        return $this->query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId));
     }
 
     /**
@@ -74,7 +73,7 @@ class CampaignFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Campaign]
      */
-    public static function query($sortOrder = null, $filterBy = array())
+    public function query($sortOrder = null, $filterBy = array())
     {
         if ($sortOrder == null)
             $sortOrder = array('Campaign');
@@ -101,7 +100,7 @@ class CampaignFactory extends BaseFactory
         ';
 
         // View Permissions
-        self::viewPermissionSql('Xibo\Entity\Campaign', $body, $params, '`campaign`.campaignId', '`campaign`.userId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, '`campaign`.campaignId', '`campaign`.userId', $filterBy);
 
         if (Sanitize::getString('isLayoutSpecific', 0, $filterBy) != -1) {
             // Exclude layout specific campaigns
@@ -162,18 +161,16 @@ class CampaignFactory extends BaseFactory
 
         $sql = $select . $body . $group . $order . $limit;
 
-
-
         $intProperties = ['intProperties' => ['numberLayouts']];
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $campaigns[] = (new Campaign())->hydrate($row, $intProperties);
+            $campaigns[] = (new Campaign())->hydrate($row, $intProperties)->setApp($this->getApp());
         }
 
         // Paging
         if ($limit != '' && count($campaigns) > 0) {
             $results = PDOConnect::select('SELECT COUNT(DISTINCT campaign.campaignId) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $campaigns;

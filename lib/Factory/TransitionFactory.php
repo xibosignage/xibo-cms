@@ -21,9 +21,9 @@ class TransitionFactory extends BaseFactory
      * @return Transition
      * @throws NotFoundException
      */
-    public static function getById($transitionId)
+    public function getById($transitionId)
     {
-        $transitions = TransitionFactory::query(null, ['transitionId' => $transitionId]);
+        $transitions = $this->query(null, ['transitionId' => $transitionId]);
 
         if (count($transitions) <= 0)
             throw new NotFoundException();
@@ -37,9 +37,9 @@ class TransitionFactory extends BaseFactory
      * @return Transition
      * @throws NotFoundException
      */
-    public static function getByCode($code)
+    public function getByCode($code)
     {
-        $transitions = TransitionFactory::query(null, ['code' => $code]);
+        $transitions = $this->query(null, ['code' => $code]);
 
         if (count($transitions) <= 0)
             throw new NotFoundException();
@@ -52,7 +52,7 @@ class TransitionFactory extends BaseFactory
      * @param string $type
      * @return array[Transition]
      */
-    public static function getEnabledByType($type)
+    public function getEnabledByType($type)
     {
         $filter = [];
 
@@ -62,7 +62,7 @@ class TransitionFactory extends BaseFactory
             $filter['availableAsOut'] = 1;
         }
 
-        return TransitionFactory::query(null, $filter);
+        return $this->query(null, $filter);
     }
 
     /**
@@ -70,7 +70,7 @@ class TransitionFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Transition]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
         $params = array();
@@ -114,7 +114,7 @@ class TransitionFactory extends BaseFactory
 
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Transition())->hydrate($row);
+            $entries[] = (new Transition())->hydrate($row)->setApp($this->getApp());
         }
 
         return $entries;

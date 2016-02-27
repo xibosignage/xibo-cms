@@ -20,9 +20,10 @@ class BandwidthFactory extends BaseFactory
      * @param int $size
      * @return Bandwidth
      */
-    public static function createAndSave($type, $displayId, $size)
+    public function createAndSave($type, $displayId, $size)
     {
         $bandwidth = new Bandwidth();
+        $bandwidth->setApp($this->getApp());
         $bandwidth->type = $type;
         $bandwidth->displayId = $displayId;
         $bandwidth->size = $size;

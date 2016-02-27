@@ -35,7 +35,7 @@ class TagFactory extends BaseFactory
      * @param string $tagString
      * @return array[Tag]
      */
-    public static function tagsFromString($tagString)
+    public function tagsFromString($tagString)
     {
         $tags = array();
 
@@ -47,7 +47,7 @@ class TagFactory extends BaseFactory
         foreach(explode(',', $tagString) as $tagName) {
             $tagName = trim($tagName);
 
-            $tags[] = TagFactory::tagFromString($tagName);
+            $tags[] = $this->tagFromString($tagName);
         }
 
         return $tags;
@@ -58,14 +58,14 @@ class TagFactory extends BaseFactory
      * @param string $tagString
      * @return Tag
      */
-    public static function tagFromString($tagString)
+    public function tagFromString($tagString)
     {
         // Trim the tag
         $tagString = trim($tagString);
 
         // Add to the list
         try {
-            $tag = TagFactory::getByTag($tagString);
+            $tag = $this->getByTag($tagString);
         }
         catch (NotFoundException $e) {
             // New tag
@@ -82,7 +82,7 @@ class TagFactory extends BaseFactory
      * @return Tag
      * @throws NotFoundException
      */
-    public static function getByTag($tagName)
+    public function getByTag($tagName)
     {
         $sql = 'SELECT tag.tagId, tag.tag FROM `tag` WHERE tag.tag = :tag';
 
@@ -104,7 +104,7 @@ class TagFactory extends BaseFactory
      * @param $layoutId
      * @return array[Tag]
      */
-    public static function loadByLayoutId($layoutId)
+    public function loadByLayoutId($layoutId)
     {
         $tags = array();
 
@@ -127,7 +127,7 @@ class TagFactory extends BaseFactory
      * @param $mediaId
      * @return array[Tag]
      */
-    public static function loadByMediaId($mediaId)
+    public function loadByMediaId($mediaId)
     {
         $tags = array();
 

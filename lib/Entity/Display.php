@@ -404,7 +404,7 @@ class Display
     public function load()
     {
         // Load this displays group membership
-        $this->displayGroups = DisplayGroupFactory::getByDisplayId($this->displayId);
+        $this->displayGroups = (new DisplayGroupFactory($this->getApp()))->getByDisplayId($this->displayId);
     }
 
     /**
@@ -442,7 +442,7 @@ class Display
 
         // Trigger an update of all dynamic DisplayGroups
         if ($options['triggerDynamicDisplayGroupAssessment']) {
-            foreach (DisplayGroupFactory::getByIsDynamic(1) as $group) {
+            foreach ((new DisplayGroupFactory($this->getApp()))->getByIsDynamic(1) as $group) {
                 /* @var DisplayGroup $group */
                 $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true]);
             }
@@ -465,7 +465,7 @@ class Display
         }
 
         // Delete our display specific group
-        $displayGroup = DisplayGroupFactory::getById($this->displayGroupId);
+        $displayGroup = (new DisplayGroupFactory($this->getApp()))->getById($this->displayGroupId);
         $displayGroup->delete();
 
         // Delete the display
@@ -574,7 +574,7 @@ class Display
         ]);
 
         // Maintain the Display Group
-        $displayGroup = DisplayGroupFactory::getById($this->displayGroupId);
+        $displayGroup = (new DisplayGroupFactory($this->getApp()))->getById($this->displayGroupId);
         $displayGroup->displayGroup = $this->display;
         $displayGroup->description = $this->description;
         $displayGroup->save(['validate' => false, 'manageDisplayLinks' => false]);
@@ -630,11 +630,11 @@ class Display
 
             if ($this->displayProfileId == 0) {
                 // Load the default profile
-                $displayProfile = DisplayProfileFactory::getDefaultByType($this->clientType);
+                $displayProfile = (new DisplayProfileFactory($this->getApp()))->getDefaultByType($this->clientType);
             }
             else {
                 // Load the specified profile
-                $displayProfile = DisplayProfileFactory::getById($this->displayProfileId);
+                $displayProfile = (new DisplayProfileFactory($this->getApp()))->getById($this->displayProfileId);
             }
 
             $this->_config = $displayProfile->getConfig();

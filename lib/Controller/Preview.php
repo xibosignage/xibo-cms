@@ -35,7 +35,7 @@ class Preview extends Base
      */
     public function show($layoutId)
     {
-        $layout = LayoutFactory::getById($layoutId);
+        $layout = (new LayoutFactory($this->getApp()))->getById($layoutId);
 
         if (!$this->getUser()->checkViewable($layout))
             throw new AccessDeniedException();
@@ -58,7 +58,7 @@ class Preview extends Base
      */
     function getXlf($layoutId)
     {
-        $layout = LayoutFactory::getById($layoutId);
+        $layout = (new LayoutFactory($this->getApp()))->getById($layoutId);
 
         if (!$this->getUser()->checkViewable($layout))
             throw new AccessDeniedException();

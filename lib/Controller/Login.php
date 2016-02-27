@@ -51,7 +51,7 @@ class Login extends Base
 
         // Get our user
         try {
-            $user = UserFactory::getByName($username);
+            $user = (new UserFactory($this->getApp()))->getByName($username);
 
             // Log::debug($user);
 

@@ -19,12 +19,12 @@ class DataTypeFactory extends BaseFactory
      * @param null $filterBy
      * @return array[DataType]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = [];
 
         foreach (PDOConnect::select('SELECT dataTypeId, dataType FROM `datatype` ', []) as $row) {
-            $entries[] = (new DataType())->hydrate($row);
+            $entries[] = (new DataType())->hydrate($row)->setApp($this->getApp())->setApp($this->getApp());
         }
 
         return $entries;

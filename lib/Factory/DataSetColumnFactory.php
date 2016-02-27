@@ -22,9 +22,9 @@ class DataSetColumnFactory extends BaseFactory
      * @return DataSetColumn
      * @throws NotFoundException
      */
-    public static function getById($dataSetColumnId)
+    public function getById($dataSetColumnId)
     {
-        $columns = DataSetColumnFactory::query(null, ['dataSetColumnId' => $dataSetColumnId]);
+        $columns = $this->query(null, ['dataSetColumnId' => $dataSetColumnId]);
 
         if (count($columns) <= 0)
             throw new NotFoundException();
@@ -37,12 +37,12 @@ class DataSetColumnFactory extends BaseFactory
      * @param $dataSetId
      * @return array[DataSetColumn]
      */
-    public static function getByDataSetId($dataSetId)
+    public function getByDataSetId($dataSetId)
     {
-        return DataSetColumnFactory::query(null, ['dataSetId' => $dataSetId]);
+        return $this->query(null, ['dataSetId' => $dataSetId]);
     }
 
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = [];
         $params = [];
@@ -97,13 +97,13 @@ class DataSetColumnFactory extends BaseFactory
 
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new DataSetColumn())->hydrate($row);
+            $entries[] = (new DataSetColumn())->hydrate($row)->setApp($this->getApp())->setApp($this->getApp());
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
             $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

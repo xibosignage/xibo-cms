@@ -47,12 +47,12 @@ class Ticker extends ModuleWidget
      */
     public function installFiles()
     {
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
+        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
+        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
     }
 
     public function layoutDesignerJavaScript()
@@ -67,7 +67,7 @@ class Ticker extends ModuleWidget
      */
     public function dataSets()
     {
-        return DataSetFactory::query();
+        return (new DataSetFactory($this->getApp()))->query();
     }
 
     /**
@@ -79,7 +79,7 @@ class Ticker extends ModuleWidget
         if ($this->getOption('dataSetId') == 0)
             throw new \InvalidArgumentException(__('DataSet not selected'));
 
-       return DataSetColumnFactory::getByDataSetId($this->getOption('dataSetId'));
+       return (new DataSetColumnFactory($this->getApp()))->getByDataSetId($this->getOption('dataSetId'));
     }
 
     /**
@@ -161,7 +161,7 @@ class Ticker extends ModuleWidget
                 throw new \InvalidArgumentException(__('Please select a DataSet'));
 
             // Check we have permission to use this DataSetId
-            if (!$this->getUser()->checkViewable(DataSetFactory::getById($this->getOption('dataSetId'))))
+            if (!$this->getUser()->checkViewable((new DataSetFactory($this->getApp()))->getById($this->getOption('dataSetId'))))
                 throw new \InvalidArgumentException(__('You do not have permission to use that dataset'));
 
             if ($this->widget->widgetId != 0) {
@@ -625,7 +625,7 @@ class Ticker extends ModuleWidget
                             // image url
                             if ($link != NULL) {
                                 // Grab the profile image
-                                $file = MediaFactory::createModuleFile('ticker_' . md5($this->getOption('url') . $link), $link);
+                                $file = (new MediaFactory($this->getApp()))->createModuleFile('ticker_' . md5($this->getOption('url') . $link), $link);
                                 $file->isRemote = true;
                                 $file->expires = $expires;
                                 $file->save();
@@ -840,7 +840,7 @@ class Ticker extends ModuleWidget
 
         // Create a data set object, to get the results.
         try {
-            $dataSet = DataSetFactory::getById($dataSetId);
+            $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
             // Get an array representing the id->heading mappings
             $mappings = [];
@@ -875,7 +875,7 @@ class Ticker extends ModuleWidget
             // Set the timezone for SQL
             $dateNow = Date::parse();
             if ($displayId != 0) {
-                $display = DisplayFactory::getById($displayId);
+                $display = (new DisplayFactory($this->getApp()))->getById($displayId);
                 $timeZone = $display->getSetting('displayTimeZone', '');
                 $timeZone = ($timeZone == '') ? Config::GetSetting('defaultTimezone') : $timeZone;
                 $dateNow->timezone($timeZone);
@@ -910,7 +910,7 @@ class Ticker extends ModuleWidget
                         if ($mappings[$header]['dataTypeId'] == 4) {
                             // External Image
                             // Download the image, alter the replace to wrap in an image tag
-                            $file = MediaFactory::createModuleFile('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
+                            $file = (new MediaFactory($this->getApp()))->createModuleFile('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
                             $file->isRemote = true;
                             $file->expires = $expires;
                             $file->save();
@@ -926,7 +926,7 @@ class Ticker extends ModuleWidget
                             // Library Image
                             // The content is the ID of the image
                             try {
-                                $file = MediaFactory::getById($replace);
+                                $file = (new MediaFactory($this->getApp()))->getById($replace);
                             }
                             catch (NotFoundException $e) {
                                 Log::error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);

@@ -24,7 +24,7 @@ class SessionFactory extends BaseFactory
      * @return array[Session]
      * @throws NotFoundException
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
         $params = array();
@@ -72,13 +72,13 @@ class SessionFactory extends BaseFactory
 
 
             foreach (PDOConnect::select($sql, $params) as $row) {
-                $entries[] = (new Session())->hydrate($row);
+                $entries[] = (new Session())->hydrate($row)->setApp($this->getApp());
             }
 
             // Paging
             if ($limit != '' && count($entries) > 0) {
                 $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-                self::$_countLast = intval($results[0]['total']);
+                $this->_countLast = intval($results[0]['total']);
             }
 
             return $entries;

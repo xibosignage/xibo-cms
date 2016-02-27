@@ -22,9 +22,9 @@ class CommandFactory extends BaseFactory
      * @return Command
      * @throws NotFoundException
      */
-    public static function getById($commandId)
+    public function getById($commandId)
     {
-        $commands = CommandFactory::query(null, ['commandId' => $commandId]);
+        $commands = $this->query(null, ['commandId' => $commandId]);
 
         if (count($commands) <= 0)
             throw new NotFoundException();
@@ -36,12 +36,12 @@ class CommandFactory extends BaseFactory
      * @param $displayProfileId
      * @return array[Command]
      */
-    public static function getByDisplayProfileId($displayProfileId)
+    public function getByDisplayProfileId($displayProfileId)
     {
-        return CommandFactory::query(null, ['displayProfileId' => $displayProfileId]);
+        return $this->query(null, ['displayProfileId' => $displayProfileId]);
     }
 
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
 
@@ -100,13 +100,13 @@ class CommandFactory extends BaseFactory
 
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Command())->hydrate($row);
+            $entries[] = (new Command())->hydrate($row)->setApp($this->getApp())->setApp($this->getApp());
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
             $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

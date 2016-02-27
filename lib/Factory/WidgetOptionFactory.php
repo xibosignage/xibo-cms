@@ -37,7 +37,7 @@ class WidgetOptionFactory extends BaseFactory
      * @param mixed $value
      * @return WidgetOption
      */
-    public static function create($widgetId, $type, $option, $value)
+    public function create($widgetId, $type, $option, $value)
     {
         $widgetOption = new WidgetOption();
         $widgetOption->widgetId = $widgetId;
@@ -53,9 +53,9 @@ class WidgetOptionFactory extends BaseFactory
      * @param int $widgetId
      * @return array[WidgetOption]
      */
-    public static function getByWidgetId($widgetId)
+    public function getByWidgetId($widgetId)
     {
-        return WidgetOptionFactory::query(null, array('widgetId' => $widgetId));
+        return $this->query(null, array('widgetId' => $widgetId));
     }
 
     /**
@@ -64,7 +64,7 @@ class WidgetOptionFactory extends BaseFactory
      * @param array $filterBy
      * @return array[WidgetOption]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
 
@@ -73,7 +73,7 @@ class WidgetOptionFactory extends BaseFactory
         foreach (PDOConnect::select($sql, [
             'widgetId' => Sanitize::getInt('widgetId', $filterBy)
         ]) as $row) {
-            $entries[] = (new WidgetOption())->hydrate($row);
+            $entries[] = (new WidgetOption())->hydrate($row)->setApp($this->getApp());
         }
 
         return $entries;

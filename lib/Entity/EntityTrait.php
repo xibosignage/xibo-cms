@@ -15,6 +15,12 @@ use Xibo\Helper\Sanitize;
 
 trait EntityTrait
 {
+    /**
+     * The App
+     * @var Slim
+     */
+    private $app;
+
     private $hash = null;
     private $loaded = false;
     private $permissionsClass = null;
@@ -108,11 +114,35 @@ trait EntityTrait
     }
 
     /**
+     * Set app
+     * @param Slim $app
+     * @return mixed
+     */
+    public function setApp($app)
+    {
+        $this->app = $app;
+
+        return $this;
+    }
+
+    /**
+     * Get App
+     * @return Slim
+     */
+    protected function getApp()
+    {
+        if ($this->app == null)
+            throw new \RuntimeException(__('Entity Application not set'));
+
+        return $this->app;
+    }
+
+    /**
      * Get Pool
      * @return \Stash\Interfaces\PoolInterface
      */
     protected function getPool()
     {
-        return Slim::getInstance()->pool;
+        return $this->app->pool;
     }
 }

@@ -21,9 +21,9 @@ class RequiredFileFactory extends BaseFactory
      * @return RequiredFile
      * @throws NotFoundException
      */
-    public static function getByNonce($nonce)
+    public function getByNonce($nonce)
     {
-        $nonce = RequiredFileFactory::query(null, ['nonce' => $nonce]);
+        $nonce = $this->query(null, ['nonce' => $nonce]);
 
         if (count($nonce) <= 0)
             throw new NotFoundException();
@@ -37,9 +37,9 @@ class RequiredFileFactory extends BaseFactory
      * @return RequiredFile
      * @throws NotFoundException
      */
-    public static function getByDisplayAndLayout($displayId, $layoutId)
+    public function getByDisplayAndLayout($displayId, $layoutId)
     {
-        $files = RequiredFileFactory::query(null, ['displayId' => $displayId, 'layoutId' => $layoutId]);
+        $files = $this->query(null, ['displayId' => $displayId, 'layoutId' => $layoutId]);
 
         if (count($files) <= 0)
             throw new NotFoundException();
@@ -53,9 +53,9 @@ class RequiredFileFactory extends BaseFactory
      * @return RequiredFile
      * @throws NotFoundException
      */
-    public static function getByDisplayAndMedia($displayId, $mediaId)
+    public function getByDisplayAndMedia($displayId, $mediaId)
     {
-        $files = RequiredFileFactory::query(null, ['displayId' => $displayId, 'mediaId' => $mediaId]);
+        $files = $this->query(null, ['displayId' => $displayId, 'mediaId' => $mediaId]);
 
         if (count($files) <= 0)
             throw new NotFoundException();
@@ -71,9 +71,9 @@ class RequiredFileFactory extends BaseFactory
      * @return RequiredFile
      * @throws NotFoundException
      */
-    public static function getByDisplayAndResource($displayId, $layoutId, $regionId, $mediaId)
+    public function getByDisplayAndResource($displayId, $layoutId, $regionId, $mediaId)
     {
-        $files = RequiredFileFactory::query(null, ['displayId' => $displayId, 'layoutId' => $layoutId, 'regionId' => $regionId, 'mediaId' => $mediaId]);
+        $files = $this->query(null, ['displayId' => $displayId, 'layoutId' => $layoutId, 'regionId' => $regionId, 'mediaId' => $mediaId]);
 
         if (count($files) <= 0)
             throw new NotFoundException();
@@ -90,10 +90,10 @@ class RequiredFileFactory extends BaseFactory
      * @param $path
      * @return RequiredFile
      */
-    public static function createForLayout($displayId, $requestKey, $layoutId, $size, $path)
+    public function createForLayout($displayId, $requestKey, $layoutId, $size, $path)
     {
         try {
-            $nonce = RequiredFileFactory::getByDisplayAndLayout($displayId, $layoutId);
+            $nonce = $this->getByDisplayAndLayout($displayId, $layoutId);
         }
         catch (NotFoundException $e) {
             $nonce = new RequiredFile();
@@ -116,10 +116,10 @@ class RequiredFileFactory extends BaseFactory
      * @param $mediaId
      * @return RequiredFile
      */
-    public static function createForGetResource($displayId, $requestKey, $layoutId, $regionId, $mediaId)
+    public function createForGetResource($displayId, $requestKey, $layoutId, $regionId, $mediaId)
     {
         try {
-            $nonce = RequiredFileFactory::getByDisplayAndResource($displayId, $layoutId, $regionId, $mediaId);
+            $nonce = $this->getByDisplayAndResource($displayId, $layoutId, $regionId, $mediaId);
         }
         catch (NotFoundException $e) {
             $nonce = new RequiredFile();
@@ -142,10 +142,10 @@ class RequiredFileFactory extends BaseFactory
      * @param $path
      * @return RequiredFile
      */
-    public static function createForMedia($displayId, $requestKey, $mediaId, $size, $path)
+    public function createForMedia($displayId, $requestKey, $mediaId, $size, $path)
     {
         try {
-            $nonce = RequiredFileFactory::getByDisplayAndMedia($displayId, $mediaId);
+            $nonce = $this->getByDisplayAndMedia($displayId, $mediaId);
         }
         catch (NotFoundException $e) {
             $nonce = new RequiredFile();
@@ -159,7 +159,7 @@ class RequiredFileFactory extends BaseFactory
         return $nonce;
     }
 
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = [];
         $params = [];

@@ -37,7 +37,7 @@ class Logging extends Base
     {
         $this->getState()->template = 'log-page';
         $this->getState()->setData([
-            'displays' => DisplayFactory::query()
+            'displays' => (new DisplayFactory($this->getApp()))->query()
         ]);
     }
 
@@ -48,7 +48,7 @@ class Logging extends Base
         $intervalType = Sanitize::getInt('intervalType', 1);
         $fromDt = Sanitize::getDate('fromDt', Date::getLocalDate());
 
-        $logs = LogFactory::query($this->gridRenderSort(), $this->gridRenderFilter([
+        $logs = (new LogFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter([
             'fromDt' => $fromDt->format('U') - ($seconds * $intervalType),
             'toDt' => $fromDt->format('U'),
             'type' => Sanitize::getString('level'),
@@ -61,7 +61,7 @@ class Logging extends Base
         ]));
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = LogFactory::countLast();
+        $this->getState()->recordsTotal = (new LogFactory($this->getApp()))->countLast();
         $this->getState()->setData($logs);
     }
 

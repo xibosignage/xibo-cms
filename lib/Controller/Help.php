@@ -37,7 +37,7 @@ class Help extends Base
 
     public function grid()
     {
-        $helpLinks = HelpFactory::query($this->gridRenderSort(), $this->gridRenderFilter());
+        $helpLinks = (new HelpFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter());
 
         foreach ($helpLinks as $row) {
             /* @var \Xibo\Entity\Help $row */
@@ -69,7 +69,7 @@ class Help extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = HelpFactory::countLast();
+        $this->getState()->recordsTotal = (new HelpFactory($this->getApp()))->countLast();
         $this->getState()->setData($helpLinks);
     }
 
@@ -93,7 +93,7 @@ class Help extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $help = HelpFactory::getById($helpId);
+        $help = (new HelpFactory($this->getApp()))->getById($helpId);
 
         $this->getState()->template = 'help-form-edit';
         $this->getState()->setData([
@@ -110,7 +110,7 @@ class Help extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $help = HelpFactory::getById($helpId);
+        $help = (new HelpFactory($this->getApp()))->getById($helpId);
 
         $this->getState()->template = 'help-form-delete';
         $this->getState()->setData([
@@ -150,7 +150,7 @@ class Help extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $help = HelpFactory::getById($helpId);
+        $help = (new HelpFactory($this->getApp()))->getById($helpId);
         $help->topic = Sanitize::getString('topic');
         $help->category = Sanitize::getString('category');
         $help->link = Sanitize::getString('link');
@@ -175,7 +175,7 @@ class Help extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $help = HelpFactory::getById($helpId);
+        $help = (new HelpFactory($this->getApp()))->getById($helpId);
         $help->delete();
 
         // Return

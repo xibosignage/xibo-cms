@@ -36,9 +36,9 @@ class ResolutionFactory extends BaseFactory
      * @return Resolution
      * @throws NotFoundException
      */
-    public static function getById($resolutionId)
+    public function getById($resolutionId)
     {
-        $resolutions = ResolutionFactory::query(null, array('disableUserCheck' => 1, 'resolutionId' => $resolutionId));
+        $resolutions = (new ResolutionFactory($this->getApp()))->query(null, array('disableUserCheck' => 1, 'resolutionId' => $resolutionId));
 
         if (count($resolutions) <= 0)
             throw new NotFoundException;
@@ -53,9 +53,9 @@ class ResolutionFactory extends BaseFactory
      * @return Resolution
      * @throws NotFoundException
      */
-    public static function getByDimensions($width, $height)
+    public function getByDimensions($width, $height)
     {
-        $resolutions = ResolutionFactory::query(null, array('disableUserCheck' => 1, 'width' => $width, 'height' => $height));
+        $resolutions = (new ResolutionFactory($this->getApp()))->query(null, array('disableUserCheck' => 1, 'width' => $width, 'height' => $height));
 
         if (count($resolutions) <= 0)
             throw new NotFoundException('Resolution not found');
@@ -70,9 +70,9 @@ class ResolutionFactory extends BaseFactory
      * @return Resolution
      * @throws NotFoundException
      */
-    public static function getByDesignerDimensions($width, $height)
+    public function getByDesignerDimensions($width, $height)
     {
-        $resolutions = ResolutionFactory::query(null, array('disableUserCheck' => 1, 'designerWidth' => $width, 'designerHeight' => $height));
+        $resolutions = (new ResolutionFactory($this->getApp()))->query(null, array('disableUserCheck' => 1, 'designerWidth' => $width, 'designerHeight' => $height));
 
         if (count($resolutions) <= 0)
             throw new NotFoundException('Resolution not found');
@@ -80,7 +80,7 @@ class ResolutionFactory extends BaseFactory
         return $resolutions[0];
     }
 
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         if ($sortOrder === null)
             $sortOrder = ['resolution'];
@@ -162,7 +162,7 @@ class ResolutionFactory extends BaseFactory
         // Paging
         if ($limit != '' && count($entities) > 0) {
             $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entities;

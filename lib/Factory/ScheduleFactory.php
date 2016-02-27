@@ -21,9 +21,9 @@ class ScheduleFactory extends BaseFactory
      * @return Schedule
      * @throws NotFoundException
      */
-    public static function getById($eventId)
+    public function getById($eventId)
     {
-        $events = ScheduleFactory::query(null, ['disableUserCheck' => 1, 'eventId' => $eventId]);
+        $events = $this->query(null, ['disableUserCheck' => 1, 'eventId' => $eventId]);
 
         if (count($events) <= 0)
             throw new NotFoundException();
@@ -36,9 +36,9 @@ class ScheduleFactory extends BaseFactory
      * @return array[Schedule]
      * @throws NotFoundException
      */
-    public static function getByDisplayGroupId($displayGroupId)
+    public function getByDisplayGroupId($displayGroupId)
     {
-        return ScheduleFactory::query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
     }
 
     /**
@@ -47,9 +47,9 @@ class ScheduleFactory extends BaseFactory
      * @return array[Schedule]
      * @throws NotFoundException
      */
-    public static function getByCampaignId($campaignId)
+    public function getByCampaignId($campaignId)
     {
-        return ScheduleFactory::query(null, ['disableUserCheck' => 1, 'campaignId' => $campaignId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'campaignId' => $campaignId]);
     }
 
     /**
@@ -58,9 +58,9 @@ class ScheduleFactory extends BaseFactory
      * @return array[Schedule]
      * @throws NotFoundException
      */
-    public static function getByOwnerId($ownerId)
+    public function getByOwnerId($ownerId)
     {
-        return ScheduleFactory::query(null, ['disableUserCheck' => 1, 'ownerId' => $ownerId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'ownerId' => $ownerId]);
     }
 
     /**
@@ -68,7 +68,7 @@ class ScheduleFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Schedule]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = [];
         $params = [];

@@ -18,7 +18,7 @@ use Xibo\Storage\PDOConnect;
 
 class UpgradeFactory extends BaseFactory
 {
-    private static $provisioned = false;
+    private $provisioned = false;
 
     /**
      * Get by Step Id
@@ -26,9 +26,9 @@ class UpgradeFactory extends BaseFactory
      * @return Upgrade
      * @throws NotFoundException
      */
-    public static function getByStepId($stepId)
+    public function getByStepId($stepId)
     {
-        $steps = UpgradeFactory::query(null, ['stepId' => $stepId]);
+        $steps = $this->query(null, ['stepId' => $stepId]);
 
         if (count($steps) <= 0)
             throw new NotFoundException();
@@ -40,9 +40,9 @@ class UpgradeFactory extends BaseFactory
      * Get Incomplete Steps
      * @return array[Upgrade]
      */
-    public static function getIncomplete()
+    public function getIncomplete()
     {
-        return UpgradeFactory::query(null, ['complete' => 0]);
+        return $this->query(null, ['complete' => 0]);
     }
 
     /**
@@ -50,9 +50,9 @@ class UpgradeFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Upgrade]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
-        self::checkAndProvision();
+        $this->checkAndProvision();
 
         if ($sortOrder === null)
             $sortOrder = ['stepId'];
@@ -88,13 +88,13 @@ class UpgradeFactory extends BaseFactory
 
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Upgrade())->hydrate($row);
+            $entries[] = (new Upgrade())->hydrate($row)->setApp($this->getApp());
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
             $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;
@@ -106,7 +106,7 @@ class UpgradeFactory extends BaseFactory
      * @param int $to
      * @return array[Upgrade]
      */
-    public static function createSteps($from, $to)
+    public function createSteps($from, $to)
     {
         Log::debug('Creating upgrade steps from %d to %d', $from, $to);
 
@@ -158,9 +158,9 @@ class UpgradeFactory extends BaseFactory
     /**
      * Check the table is present
      */
-    private static function checkAndProvision()
+    private function checkAndProvision()
     {
-        if (self::$provisioned)
+        if ($this->$provisioned)
             return;
 
         // Check if the table exists
@@ -169,6 +169,6 @@ class UpgradeFactory extends BaseFactory
         if (count($results) <= 0)
             Upgrade::createTable();
 
-        self::$provisioned = true;
+        $this->$provisioned = true;
     }
 }

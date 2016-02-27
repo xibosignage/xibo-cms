@@ -88,7 +88,7 @@ class Resolution extends Base
             'resolution' => Sanitize::getString('resolution')
         ];
 
-        $resolutions = ResolutionFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $resolutions = (new ResolutionFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($resolutions as $resolution) {
             /* @var \Xibo\Entity\Resolution $resolution */
@@ -115,7 +115,7 @@ class Resolution extends Base
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($resolutions);
-        $this->getState()->recordsTotal = ResolutionFactory::countLast();
+        $this->getState()->recordsTotal = (new ResolutionFactory($this->getApp()))->countLast();
     }
 
     /**
@@ -135,7 +135,7 @@ class Resolution extends Base
      */
     function editForm($resolutionId)
     {
-        $resolution = ResolutionFactory::getById($resolutionId);
+        $resolution = (new ResolutionFactory($this->getApp()))->getById($resolutionId);
 
         if (!$this->getUser()->checkEditable($resolution))
             throw new AccessDeniedException();
@@ -153,7 +153,7 @@ class Resolution extends Base
      */
     function deleteForm($resolutionId)
     {
-        $resolution = ResolutionFactory::getById($resolutionId);
+        $resolution = (new ResolutionFactory($this->getApp()))->getById($resolutionId);
 
         if (!$this->getUser()->checkEditable($resolution))
             throw new AccessDeniedException();
@@ -271,7 +271,7 @@ class Resolution extends Base
      */
     function edit($resolutionId)
     {
-        $resolution = ResolutionFactory::getById($resolutionId);
+        $resolution = (new ResolutionFactory($this->getApp()))->getById($resolutionId);
 
         if (!$this->getUser()->checkEditable($resolution))
             throw new AccessDeniedException();
@@ -315,7 +315,7 @@ class Resolution extends Base
      */
     function delete($resolutionId)
     {
-        $resolution = ResolutionFactory::getById($resolutionId);
+        $resolution = (new ResolutionFactory($this->getApp()))->getById($resolutionId);
 
         if (!$this->getUser()->checkDeleteable($resolution))
             throw new AccessDeniedException();

@@ -21,9 +21,9 @@ class DisplayGroupFactory extends BaseFactory
      * @return DisplayGroup
      * @throws NotFoundException
      */
-    public static function getById($displayGroupId)
+    public function getById($displayGroupId)
     {
-        $groups = DisplayGroupFactory::query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId, 'isDisplaySpecific' => -1]);
+        $groups = $this->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId, 'isDisplaySpecific' => -1]);
 
         if (count($groups) <= 0)
             throw new NotFoundException();
@@ -35,9 +35,9 @@ class DisplayGroupFactory extends BaseFactory
      * @param int $displayId
      * @return array[DisplayGroup]
      */
-    public static function getByDisplayId($displayId)
+    public function getByDisplayId($displayId)
     {
-        return DisplayGroupFactory::query(null, ['disableUserCheck' => 1, 'displayId' => $displayId, 'isDisplaySpecific' => -1]);
+        return $this->query(null, ['disableUserCheck' => 1, 'displayId' => $displayId, 'isDisplaySpecific' => -1]);
     }
 
     /**
@@ -45,9 +45,9 @@ class DisplayGroupFactory extends BaseFactory
      * @param int $mediaId
      * @return array[DisplayGroup]
      */
-    public static function getByMediaId($mediaId)
+    public function getByMediaId($mediaId)
     {
-        return DisplayGroupFactory::query(null, ['disableUserCheck' => 1, 'mediaId' => $mediaId, 'isDisplaySpecific' => -1]);
+        return $this->query(null, ['disableUserCheck' => 1, 'mediaId' => $mediaId, 'isDisplaySpecific' => -1]);
     }
 
     /**
@@ -55,9 +55,9 @@ class DisplayGroupFactory extends BaseFactory
      * @param int $eventId
      * @return array[DisplayGroup]
      */
-    public static function getByEventId($eventId)
+    public function getByEventId($eventId)
     {
-        return DisplayGroupFactory::query(null, ['disableUserCheck' => 1, 'eventId' => $eventId, 'isDisplaySpecific' => -1]);
+        return $this->query(null, ['disableUserCheck' => 1, 'eventId' => $eventId, 'isDisplaySpecific' => -1]);
     }
 
     /**
@@ -65,9 +65,9 @@ class DisplayGroupFactory extends BaseFactory
      * @param int $isDynamic
      * @return array[DisplayGroup]
      */
-    public static function getByIsDynamic($isDynamic)
+    public function getByIsDynamic($isDynamic)
     {
-        return DisplayGroupFactory::query(null, ['disableUserCheck' => 1, 'isDynamic' => $isDynamic]);
+        return $this->query(null, ['disableUserCheck' => 1, 'isDynamic' => $isDynamic]);
     }
 
     /**
@@ -75,9 +75,9 @@ class DisplayGroupFactory extends BaseFactory
      * @param int $parentId
      * @return array[DisplayGroup]
      */
-    public static function getByParentId($parentId)
+    public function getByParentId($parentId)
     {
-        return DisplayGroupFactory::query(null, ['disableUserCheck' => 1, 'parentId' => $parentId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'parentId' => $parentId]);
     }
 
     /**
@@ -85,7 +85,7 @@ class DisplayGroupFactory extends BaseFactory
      * @param array $filterBy
      * @return array[DisplayGroup]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         if ($sortOrder == null)
             $sortOrder = ['displayGroup'];
@@ -128,7 +128,7 @@ class DisplayGroupFactory extends BaseFactory
         $body .= ' WHERE 1 = 1 ';
 
         // View Permissions
-        self::viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, '`displaygroup`.displayGroupId', '`displaygroup`.userId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, '`displaygroup`.displayGroupId', '`displaygroup`.userId', $filterBy);
 
         if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
             $body .= ' AND displaygroup.displayGroupId = :displayGroupId ';
@@ -191,13 +191,13 @@ class DisplayGroupFactory extends BaseFactory
 
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new DisplayGroup())->hydrate($row);
+            $entries[] = (new DisplayGroup())->hydrate($row)->setApp($this->getApp())->setApp($this->getApp());
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
             $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

@@ -126,7 +126,7 @@ class Command implements \JsonSerializable
         if ($this->loaded || $this->commandId == null)
             return;
 
-        $this->displayProfiles = DisplayProfileFactory::getByCommandId($this->commandId);
+        $this->displayProfiles = (new DisplayProfileFactory($this->getApp()))->getByCommandId($this->commandId);
     }
 
     /**

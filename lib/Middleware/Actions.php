@@ -48,7 +48,7 @@ class Actions extends Middleware
 
                 foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                     if (stripos($file, '.zip')) {
-                        $layout = LayoutFactory::createFromZip($folder . '/' . $file, null, 1, false, false, true);
+                        $layout = (new LayoutFactory($app))->createFromZip($folder . '/' . $file, null, 1, false, false, true);
                         $layout->save([
                             'audit' => false
                         ]);
@@ -56,7 +56,7 @@ class Actions extends Middleware
                 }
 
                 // Install files
-                Library::installAllModuleFiles();
+                Library::installAllModuleFiles($app);
 
                 Config::ChangeSetting('DEFAULTS_IMPORTED', 1);
             }

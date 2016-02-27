@@ -38,9 +38,9 @@ class Stats extends Base
     {
         $data = [
             // List of Displays this user has permission for
-            'displays' => DisplayFactory::query(),
+            'displays' => (new DisplayFactory($this->getApp()))->query(),
             // List of Media this user has permission for
-            'media' => MediaFactory::query(),
+            'media' => (new MediaFactory($this->getApp()))->query(),
             'defaults' => [
                 'fromDate' => Date::getLocalDate(time() - (86400 * 35)),
                 'fromDateOneDay' => Date::getLocalDate(time() - 86400),
@@ -157,7 +157,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $display_ids = array();
 
-        foreach (DisplayFactory::query() as $display) {
+        foreach ((new DisplayFactory($this->getApp()))->query() as $display) {
             $display_ids[] = $display->displayId;
         }
 
@@ -255,7 +255,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $displayIds = array();
 
-        foreach (DisplayFactory::query() as $display) {
+        foreach ((new DisplayFactory($this->getApp()))->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -345,7 +345,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $displayIds = array();
 
-        foreach (DisplayFactory::query() as $display) {
+        foreach ((new DisplayFactory($this->getApp()))->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -456,7 +456,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $displayIds = array();
 
-        foreach (DisplayFactory::query() as $display) {
+        foreach ((new DisplayFactory($this->getApp()))->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 

@@ -106,7 +106,7 @@ class Image extends ModuleWidget
     {
         Log::debug('GetResource for %d', $this->getMediaId());
 
-        $media = MediaFactory::getById($this->getMediaId());
+        $media = (new MediaFactory($this->getApp()))->getById($this->getMediaId());
         $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
         $filePath = $libraryLocation . $media->storedAs;
         $proportional = Sanitize::getInt('proportional', 1) == 1;

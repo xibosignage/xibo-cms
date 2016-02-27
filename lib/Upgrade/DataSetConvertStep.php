@@ -18,7 +18,7 @@ class DataSetConvertStep implements Step
     public static function doStep()
     {
         // Get all DataSets
-        foreach (DataSetFactory::query() as $dataSet) {
+        foreach ((new DataSetFactory($this->getApp()))->query() as $dataSet) {
             /* @var \Xibo\Entity\DataSet $dataSet */
             $dataSet->load();
 

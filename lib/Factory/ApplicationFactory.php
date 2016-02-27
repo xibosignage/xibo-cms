@@ -17,13 +17,13 @@ use Xibo\Storage\PDOConnect;
 
 class ApplicationFactory extends BaseFactory
 {
-    public static function create()
+    public function create()
     {
         $application = new Application();
         // Make and ID/Secret
         $application->secret = SecureKey::generate(254);
         // Assign this user
-        $application->userId = self::getUser()->userId;
+        $application->userId = $this->getUser()->userId;
         return $application;
     }
 
@@ -33,9 +33,9 @@ class ApplicationFactory extends BaseFactory
      * @return Application
      * @throws NotFoundException
      */
-    public static function getById($clientId)
+    public function getById($clientId)
     {
-        $client = self::query(null, ['clientId' => $clientId]);
+        $client = $this->query(null, ['clientId' => $clientId]);
 
         if (count($client) <= 0)
             throw new NotFoundException();
@@ -43,12 +43,12 @@ class ApplicationFactory extends BaseFactory
         return $client[0];
     }
 
-    public static function getByUserId($userId)
+    public function getByUserId($userId)
     {
-        return ApplicationFactory::query(null, ['userId' => $userId]);
+        return $this->query(null, ['userId' => $userId]);
     }
 
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
         $params = array();
@@ -104,16 +104,14 @@ class ApplicationFactory extends BaseFactory
         // The final statements
         $sql = $select . $body . $order . $limit;
 
-
-
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Application())->hydrate($row);
+            $entries[] = (new Application())->setApp($this->getApp())->hydrate($row)->setApp($this->getApp());
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
             $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

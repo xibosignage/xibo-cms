@@ -23,9 +23,9 @@ class UserGroupFactory extends BaseFactory
      * @return UserGroup
      * @throws NotFoundException
      */
-    public static function getById($groupId)
+    public function getById($groupId)
     {
-        $groups = UserGroupFactory::query(null, ['disableUserCheck' => 1, 'groupId' => $groupId, 'isUserSpecific' => -1]);
+        $groups = $this->query(null, ['disableUserCheck' => 1, 'groupId' => $groupId, 'isUserSpecific' => -1]);
 
         if (count($groups) <= 0)
             throw new NotFoundException(__('Group not found'));
@@ -40,9 +40,9 @@ class UserGroupFactory extends BaseFactory
      * @return UserGroup
      * @throws NotFoundException
      */
-    public static function getByName($group, $isUserSpecific = 0)
+    public function getByName($group, $isUserSpecific = 0)
     {
-        $groups = UserGroupFactory::query(null, ['disableUserCheck' => 1, 'group' => $group, 'isUserSpecific' => $isUserSpecific]);
+        $groups = $this->query(null, ['disableUserCheck' => 1, 'group' => $group, 'isUserSpecific' => $isUserSpecific]);
 
         if (count($groups) <= 0)
             throw new NotFoundException(__('Group not found'));
@@ -55,9 +55,9 @@ class UserGroupFactory extends BaseFactory
      * @return UserGroup
      * @throws NotFoundException
      */
-    public static function getEveryone()
+    public function getEveryone()
     {
-        $groups = UserGroupFactory::query(null, ['disableUserCheck' => 1, 'isEveryone' => 1]);
+        $groups = $this->query(null, ['disableUserCheck' => 1, 'isEveryone' => 1]);
 
         if (count($groups) <= 0)
             throw new NotFoundException(__('Group not found'));
@@ -71,9 +71,9 @@ class UserGroupFactory extends BaseFactory
      * @return array[UserGroup]
      * @throws NotFoundException
      */
-    public static function getByUserId($userId)
+    public function getByUserId($userId)
     {
-        return UserGroupFactory::query(null, ['disableUserCheck' => 1, 'userId' => $userId, 'isUserSpecific' => 0]);
+        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $userId, 'isUserSpecific' => 0]);
     }
 
     /**
@@ -82,7 +82,7 @@ class UserGroupFactory extends BaseFactory
      * @return array[UserGroup]
      * @throws \Exception
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
         $params = array();
@@ -109,7 +109,7 @@ class UserGroupFactory extends BaseFactory
             // Permissions
             if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
                 // Normal users can only see their group
-                if (self::getUser()->userTypeId != 1) {
+                if ($this->getUser()->userTypeId != 1) {
                     $body .= '
                     AND `group`.groupId IN (
                         SELECT `group`.groupId
@@ -120,7 +120,7 @@ class UserGroupFactory extends BaseFactory
                          WHERE `lkusergroup`.userId = :currentUserId
                     )
                     ';
-                    $params['currentUserId'] = self::getUser()->userId;
+                    $params['currentUserId'] = $this->getUser()->userId;
                 }
             }
 
@@ -168,13 +168,13 @@ class UserGroupFactory extends BaseFactory
 
 
             foreach (PDOConnect::select($sql, $params) as $row) {
-                $entries[] = (new UserGroup())->hydrate($row);
+                $entries[] = (new UserGroup())->hydrate($row)->setApp($this->getApp());
             }
 
             // Paging
             if ($limit != '' && count($entries) > 0) {
                 $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-                self::$_countLast = intval($results[0]['total']);
+                $this->_countLast = intval($results[0]['total']);
             }
 
             return $entries;

@@ -39,7 +39,7 @@ class ModuleFactory extends BaseFactory
      * @return \Xibo\Widget\ModuleWidget
      * @throws NotFoundException if the class does not exist
      */
-    private static function instantiate($module)
+    private function instantiate($module)
     {
         $className = $module->class;
 
@@ -59,15 +59,15 @@ class ModuleFactory extends BaseFactory
      * @return \Xibo\Widget\ModuleWidget
      * @throws NotFoundException
      */
-    public static function create($type)
+    public function create($type)
     {
-        $modules = ModuleFactory::query(['enabled'], array('type' => $type));
+        $modules = $this->query(['enabled'], array('type' => $type));
 
         if (count($modules) <= 0)
             throw new NotFoundException(sprintf(__('Unknown type %s'), $type));
 
         // Create a module
-        return self::instantiate($modules[0]);
+        return $this->instantiate($modules[0]);
     }
 
     /**
@@ -76,7 +76,7 @@ class ModuleFactory extends BaseFactory
      * @return \Xibo\Widget\ModuleWidget
      * @throws NotFoundException
      */
-    public static function createForInstall($class)
+    public function createForInstall($class)
     {
         $type = new $class();
         /* @var \Xibo\Widget\ModuleWidget $type */
@@ -90,9 +90,9 @@ class ModuleFactory extends BaseFactory
      * @return \Xibo\Widget\ModuleWidget
      * @throws NotFoundException
      */
-    public static function createById($moduleId)
+    public function createById($moduleId)
     {
-        return self::instantiate(ModuleFactory::getById($moduleId));
+        return $this->instantiate($this->getById($moduleId));
     }
 
     /**
@@ -101,9 +101,9 @@ class ModuleFactory extends BaseFactory
      * @return \Xibo\Widget\ModuleWidget
      * @throws NotFoundException
      */
-    public static function createWithMedia($media)
+    public function createWithMedia($media)
     {
-        $modules = ModuleFactory::query(null, array('type' => $media->mediaType));
+        $modules = $this->query(null, array('type' => $media->mediaType));
 
         if (count($modules) <= 0)
             throw new NotFoundException(sprintf(__('Unknown type %s'), $media->mediaType));
@@ -115,7 +115,7 @@ class ModuleFactory extends BaseFactory
         // Create a module
         /* @var \Xibo\Widget\ModuleWidget $object */
         $module = $modules[0];
-        $object = self::instantiate($module);
+        $object = $this->instantiate($module);
         $object->setWidget($widget);
 
         return $object;
@@ -131,14 +131,14 @@ class ModuleFactory extends BaseFactory
      * @return \Xibo\Widget\ModuleWidget
      * @throws NotFoundException
      */
-    public static function createForWidget($type, $widgetId = 0, $ownerId = 0, $playlistId = 0, $regionId = 0)
+    public function createForWidget($type, $widgetId = 0, $ownerId = 0, $playlistId = 0, $regionId = 0)
     {
-        $module = ModuleFactory::create($type);
+        $module = $this->create($type);
 
         // Do we have a regionId
         if ($regionId != 0) {
             // Load the region and set
-            $region = RegionFactory::getById($regionId);
+            $region = (new RegionFactory($this->getApp()))->getById($regionId);
             $module->setRegion($region);
         }
 
@@ -149,18 +149,18 @@ class ModuleFactory extends BaseFactory
                 throw new \InvalidArgumentException(__('Neither Playlist or Widget provided'));
             }
 
-            $playlist = PlaylistFactory::getById($playlistId);
+            $playlist = (new PlaylistFactory($this->getApp()))->getById($playlistId);
             $playlist->load(['playlistIncludeRegionAssignments' => false]);
 
             // Create a new widget to use
-            $widget = WidgetFactory::create($ownerId, $playlistId, $module->getModuleType(), 0);
+            $widget = (new WidgetFactory($this->getApp()))->create($ownerId, $playlistId, $module->getModuleType(), 0);
             $module->setWidget($widget);
 
             $playlist->assignWidget($widget);
         }
         else {
             // Load the widget
-            $module->setWidget(WidgetFactory::loadByWidgetId($widgetId));
+            $module->setWidget((new WidgetFactory($this->getApp()))->loadByWidgetId($widgetId));
         }
 
         return $module;
@@ -172,9 +172,9 @@ class ModuleFactory extends BaseFactory
      * @param Region[optional] $region
      * @return \Xibo\Widget\ModuleWidget
      */
-    public static function createWithWidget($widget, $region = null)
+    public function createWithWidget($widget, $region = null)
     {
-        $module = ModuleFactory::create($widget->type);
+        $module = $this->create($widget->type);
         $module->setWidget($widget);
 
         if ($region != null)
@@ -183,9 +183,9 @@ class ModuleFactory extends BaseFactory
         return $module;
     }
 
-    public static function get($key = 'type')
+    public function get($key = 'type')
     {
-        $modules = ModuleFactory::query();
+        $modules = $this->query();
 
         if ($key != null && $key != '') {
 
@@ -201,9 +201,9 @@ class ModuleFactory extends BaseFactory
         return $modules;
     }
 
-    public static function getAssignableModules()
+    public function getAssignableModules()
     {
-        return ModuleFactory::query(null, array('assignable' => 1, 'enabled' => 1));
+        return $this->query(null, array('assignable' => 1, 'enabled' => 1));
     }
 
     /**
@@ -212,9 +212,9 @@ class ModuleFactory extends BaseFactory
      * @return Module
      * @throws NotFoundException
      */
-    public static function getById($moduleId)
+    public function getById($moduleId)
     {
-        $modules = ModuleFactory::query(null, array('moduleId' => $moduleId));
+        $modules = $this->query(null, array('moduleId' => $moduleId));
 
         if (count($modules) <= 0)
             throw new NotFoundException();
@@ -228,9 +228,9 @@ class ModuleFactory extends BaseFactory
      * @return Module
      * @throws NotFoundException
      */
-    public static function getByExtension($extension)
+    public function getByExtension($extension)
     {
-        $modules = ModuleFactory::query(null, array('extension' => $extension));
+        $modules = $this->query(null, array('extension' => $extension));
 
         if (count($modules) <= 0)
             throw new NotFoundException(sprintf(__('Extension %s does not match any enabled Module'), $extension));
@@ -243,9 +243,9 @@ class ModuleFactory extends BaseFactory
      * @param array[Optional] $filterBy
      * @return array[string]
      */
-    public static function getValidExtensions($filterBy = [])
+    public function getValidExtensions($filterBy = [])
     {
-        $modules = ModuleFactory::query(null, $filterBy);
+        $modules = $this->query(null, $filterBy);
         $extensions = array();
 
         foreach($modules as $module) {
@@ -264,9 +264,9 @@ class ModuleFactory extends BaseFactory
      * Get View Paths
      * @return array[string]
      */
-    public static function getViewPaths()
+    public function getViewPaths()
     {
-        $modules = ModuleFactory::query();
+        $modules = $this->query();
         $paths = array_map(function ($module) {
             /* @var Module $module */
             return $module->viewPath;
@@ -277,7 +277,7 @@ class ModuleFactory extends BaseFactory
         return $paths;
     }
 
-    public static function query($sortOrder = null, $filterBy = array())
+    public function query($sortOrder = null, $filterBy = array())
     {
         if ($sortOrder == null)
             $sortOrder = array('Module');
@@ -413,7 +413,7 @@ class ModuleFactory extends BaseFactory
             // Paging
             if ($limit != '' && count($entries) > 0) {
                 $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-                self::$_countLast = intval($results[0]['total']);
+                $this->_countLast = intval($results[0]['total']);
             }
 
             return $entries;

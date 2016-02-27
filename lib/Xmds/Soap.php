@@ -287,7 +287,7 @@ class Soap
                 }
 
                 // Add nonce
-                $mediaNonce = RequiredFileFactory::createForMedia($this->display->displayId, $requestKey, $id, $fileSize, $path);
+                $mediaNonce = (new RequiredFileFactory($this->getApp()))->createForMedia($this->display->displayId, $requestKey, $id, $fileSize, $path);
                 $mediaNonce->save();
 
                 // Add the file node
@@ -320,7 +320,7 @@ class Soap
         }
 
         // Get an array of modules to use
-        $modules = ModuleFactory::get();
+        $modules = (new ModuleFactory($this->getApp()))->get();
 
         // Reset the paths added array to start again with layouts
         $pathsAdded = [];
@@ -333,7 +333,7 @@ class Soap
                 continue;
 
             // Load this layout
-            $layout = LayoutFactory::loadById($layoutId);
+            $layout = (new LayoutFactory($this->getApp()))->loadById($layoutId);
             $layout->loadPlaylists();
 
             // Make sure its XLF is up to date
@@ -348,7 +348,7 @@ class Soap
                 Log::debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
 
             // Add nonce
-            $layoutNonce = RequiredFileFactory::createForLayout($this->display->displayId, $requestKey, $layoutId, $fileSize, basename($path));
+            $layoutNonce = (new RequiredFileFactory($this->getApp()))->createForLayout($this->display->displayId, $requestKey, $layoutId, $fileSize, basename($path));
             $layoutNonce->save();
 
             // Add the Layout file element
@@ -389,7 +389,7 @@ class Soap
                             $modules[$widget->type]->renderAs == 'html'
                         ) {
                             // Add nonce
-                            RequiredFileFactory::createForGetResource($this->display->displayId, $requestKey, $layoutId, $region->regionId, $widget->widgetId)->save();
+                            (new RequiredFileFactory($this->getApp()))->createForGetResource($this->display->displayId, $requestKey, $layoutId, $region->regionId, $widget->widgetId)->save();
 
                             // Does the media provide a modified Date?
                             $widgetModifiedDt = $layoutModifiedDt->getTimestamp();
@@ -397,7 +397,7 @@ class Soap
                             if ($widget->type == 'datasetview' || $widget->type == 'ticker') {
                                 try {
                                     $dataSetId = $widget->getOption('dataSetId');
-                                    $dataSet = DataSetFactory::getById($dataSetId);
+                                    $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
                                     $widgetModifiedDt = $dataSet->lastDataEdit;
                                 }
                                 catch (NotFoundException $e) {
@@ -1096,15 +1096,15 @@ class Soap
                 switch ($node->getAttribute('type')) {
 
                     case 'media':
-                        $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
+                        $requiredFile = (new RequiredFileFactory($this->getApp()))->getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
                         break;
 
                     case 'layout':
-                        $requiredFile = RequiredFileFactory::getByDisplayAndLayout($this->display->displayId, $node->getAttribute('id'));
+                        $requiredFile = (new RequiredFileFactory($this->getApp()))->getByDisplayAndLayout($this->display->displayId, $node->getAttribute('id'));
                         break;
 
                     case 'resource':
-                        $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
+                        $requiredFile = (new RequiredFileFactory($this->getApp()))->getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
                         break;
 
                     default:
@@ -1169,9 +1169,9 @@ class Soap
 
         // The MediaId is actually the widgetId
         try {
-            $requiredFile = RequiredFileFactory::getByDisplayAndResource($this->display->displayId, $layoutId, $regionId, $mediaId);
+            $requiredFile = (new RequiredFileFactory($this->getApp()))->getByDisplayAndResource($this->display->displayId, $layoutId, $regionId, $mediaId);
 
-            $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($mediaId), RegionFactory::getById($regionId));
+            $module = (new ModuleFactory($this->getApp()))->createWithWidget((new WidgetFactory($this->getApp()))->loadByWidgetId($mediaId), (new RegionFactory($this->getApp()))->getById($regionId));
             $resource = $module->GetResource($this->display->displayId);
 
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
@@ -1250,7 +1250,7 @@ class Soap
     protected function authDisplay($hardwareKey)
     {
         try {
-            $this->display = DisplayFactory::getByLicence($hardwareKey);
+            $this->display = (new DisplayFactory($this->getApp()))->getByLicence($hardwareKey);
 
             if ($this->display->licensed != 1)
                 return false;
@@ -1305,7 +1305,7 @@ class Soap
                 // Get a list of people that have view access to the display?
                 if (Config::GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1) {
 
-                    foreach (UserFactory::getByDisplayGroupId($this->display->displayGroupId) as $user) {
+                    foreach ((new UserFactory($this->getApp()))->getByDisplayGroupId($this->display->displayGroupId) as $user) {
                         /* @var User $user */
                         if ($user->email != '') {
                             // Send them an email
@@ -1396,6 +1396,6 @@ class Soap
      */
     protected function logBandwidth($displayId, $type, $sizeInBytes)
     {
-        BandwidthFactory::createAndSave($type, $displayId, $sizeInBytes);
+        (new BandwidthFactory($this->getApp()))->createAndSave($type, $displayId, $sizeInBytes);
     }
 }

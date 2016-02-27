@@ -21,7 +21,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             $replaceExisting = isset($_REQUEST['replaceExisting']) ? $_REQUEST['replaceExisting'][$index] : 0;
             $importTags = isset($_REQUEST['importTags']) ? $_REQUEST['importTags'][$index] : 0;
 
-            $layout = LayoutFactory::createFromZip(
+            $layout = (new LayoutFactory($this->options['controller']->getApp()))->createFromZip(
                 Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName,
                 $name,
                 $this->options['userId'],

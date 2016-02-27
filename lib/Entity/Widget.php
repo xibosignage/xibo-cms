@@ -247,7 +247,7 @@ class Widget implements \JsonSerializable
             $widgetOption->value = $value;
         }
         catch (NotFoundException $e) {
-            $this->widgetOptions[] = WidgetOptionFactory::create($this->widgetId, $type, $option, $value);
+            $this->widgetOptions[] = (new WidgetOptionFactory($this->getApp()))->create($this->widgetId, $type, $option, $value);
         }
     }
 
@@ -310,13 +310,13 @@ class Widget implements \JsonSerializable
             return;
 
         // Load permissions
-        $this->permissions = PermissionFactory::getByObjectId(get_class(), $this->widgetId);
+        $this->permissions = (new PermissionFactory($this->getApp()))->getByObjectId(get_class(), $this->widgetId);
 
         // Load the widget options
-        $this->widgetOptions = WidgetOptionFactory::getByWidgetId($this->widgetId);
+        $this->widgetOptions = (new WidgetOptionFactory($this->getApp()))->getByWidgetId($this->widgetId);
 
         // Load any media assignments for this widget
-        $this->mediaIds = WidgetMediaFactory::getByWidgetId($this->widgetId);
+        $this->mediaIds = (new WidgetMediaFactory($this->getApp()))->getByWidgetId($this->widgetId);
 
         $this->hash = $this->hash();
         $this->mediaHash = $this->mediaHash();
@@ -361,7 +361,7 @@ class Widget implements \JsonSerializable
         if ($options['notify']) {
             Log::debug('Notify playlistId %d', $this->playlistId);
             // Notify the Layout
-            $playlist = PlaylistFactory::getById($this->playlistId);
+            $playlist = (new PlaylistFactory($this->getApp()))->getById($this->playlistId);
             $playlist->notifyLayouts();
         }
     }
@@ -402,7 +402,7 @@ class Widget implements \JsonSerializable
             Log::debug('Notifying upstream playlist');
 
             // Notify the Layout
-            $playlist = PlaylistFactory::getById($this->playlistId);
+            $playlist = (new PlaylistFactory($this->getApp()))->getById($this->playlistId);
             $playlist->notifyLayouts();
         }
 

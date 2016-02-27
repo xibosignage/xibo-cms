@@ -111,7 +111,7 @@ class ShellCommand extends ModuleWidget
 
     public function setTemplateData($data)
     {
-        $data['commands'] = CommandFactory::query();
+        $data['commands'] = (new CommandFactory($this->getApp()))->query();
         return $data;
     }
 }

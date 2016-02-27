@@ -45,7 +45,7 @@ class Fault extends Base
         fputcsv($out, ['logId', 'runNo', 'logDate', 'channel', 'page', 'function', 'message', 'display.display', 'type']);
 
         // Do some post processing
-        foreach (LogFactory::query(['logId'], ['fromDt' => (time() - (60 * 10))]) as $row) {
+        foreach ((new LogFactory($this->getApp()))->query(['logId'], ['fromDt' => (time() - (60 * 10))]) as $row) {
             /* @var \Xibo\Entity\LogEntry $row */
             fputcsv($out, [$row->logId, $row->runNo, $row->logDate, $row->channel, $row->page, $row->function, $row->message, $row->display, $row->type]);
         }

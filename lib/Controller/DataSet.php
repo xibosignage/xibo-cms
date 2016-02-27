@@ -83,7 +83,7 @@ class DataSet extends Base
             'dataSet' => Sanitize::getString('dataSet')
         ];
 
-        $dataSets = DataSetFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $dataSets = (new DataSetFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($dataSets as $dataSet) {
             /* @var \Xibo\Entity\DataSet $dataSet */
@@ -158,7 +158,7 @@ class DataSet extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = DataSetFactory::countLast();
+        $this->getState()->recordsTotal = (new DataSetFactory($this->getApp()))->countLast();
         $this->getState()->setData($dataSets);
     }
 
@@ -244,7 +244,7 @@ class DataSet extends Base
      */
     public function editForm($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -297,7 +297,7 @@ class DataSet extends Base
      */
     public function edit($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -320,7 +320,7 @@ class DataSet extends Base
      */
     public function deleteForm($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkDeleteable($dataSet))
             throw new AccessDeniedException();
@@ -361,7 +361,7 @@ class DataSet extends Base
      */
     public function delete($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
 
         if (!$this->getUser()->checkDeleteable($dataSet))
             throw new AccessDeniedException();

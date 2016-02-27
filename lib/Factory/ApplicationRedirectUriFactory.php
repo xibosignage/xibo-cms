@@ -22,9 +22,9 @@ class ApplicationRedirectUriFactory extends BaseFactory
      * @return ApplicationRedirectUri
      * @throws NotFoundException
      */
-    public static function getById($id)
+    public function getById($id)
     {
-        $clientRedirectUri = self::query(null, ['id' => $id]);
+        $clientRedirectUri = $this->query(null, ['id' => $id]);
 
         if (count($clientRedirectUri) <= 0)
             throw new NotFoundException();
@@ -38,9 +38,9 @@ class ApplicationRedirectUriFactory extends BaseFactory
      * @return array[ApplicationRedirectUri]
      * @throws NotFoundException
      */
-    public static function getByClientId($clientId)
+    public function getByClientId($clientId)
     {
-        return self::query(null, ['clientId' => $clientId]);
+        return $this->query(null, ['clientId' => $clientId]);
     }
 
     /**
@@ -49,7 +49,7 @@ class ApplicationRedirectUriFactory extends BaseFactory
      * @param null $filterBy
      * @return array
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
         $params = array();
@@ -85,13 +85,13 @@ class ApplicationRedirectUriFactory extends BaseFactory
 
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new ApplicationRedirectUri())->hydrate($row);
+            $entries[] = (new ApplicationRedirectUri())->setApp($this->getApp())->hydrate($row)->setApp($this->getApp());
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
             $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;
