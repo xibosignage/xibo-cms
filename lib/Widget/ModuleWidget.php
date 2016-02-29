@@ -30,7 +30,6 @@ use Xibo\Helper\Config;
 use Xibo\Helper\DateInterface;
 use Xibo\Helper\Log;
 use Xibo\Helper\SanitizerInterface;
-use Xibo\Helper\Theme;
 use Xibo\Storage\StorageInterface;
 
 /**

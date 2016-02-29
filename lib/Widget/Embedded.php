@@ -21,7 +21,7 @@
 namespace Xibo\Widget;
 
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Theme;
+
 
 class Embedded extends ModuleWidget
 {

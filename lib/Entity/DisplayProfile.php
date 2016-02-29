@@ -10,7 +10,7 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Factory\CommandFactory;
-use Xibo\Helper\Theme;
+
 
 /**
  * Class DisplayProfile

@@ -35,15 +35,8 @@ class Storage extends Middleware
 
         $app->commit = true;
 
-        // Register the log service
-        $app->container->singleton('logHelper', function() use ($app) {
-            return new Log($app->getLog(), $app->getMode());
-        });
-
-        // Register the database service
-        $app->container->singleton('store', function() use ($app) {
-            return new PDOConnect($app->logHelper);
-        });
+        // Configure storage
+        self::setStorage($app);
 
         $this->next->call();
 
@@ -63,5 +56,18 @@ class Storage extends Middleware
         $app->logHelper->info('PDO stats: %s.', json_encode(PDOConnect::stats()));
 
         $app->store->close();
+    }
+
+    public static function setStorage($app)
+    {
+        // Register the log service
+        $app->container->singleton('logHelper', function() use ($app) {
+            return new Log($app->getLog(), $app->getMode());
+        });
+
+        // Register the database service
+        $app->container->singleton('store', function() use ($app) {
+            return new PDOConnect($app->logHelper);
+        });
     }
 }

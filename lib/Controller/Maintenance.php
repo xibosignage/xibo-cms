@@ -22,7 +22,6 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UpgradeFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\BackupUploadHandler;
-use Xibo\Helper\Theme;
 use Xibo\Helper\WakeOnLan;
 
 class Maintenance extends Base

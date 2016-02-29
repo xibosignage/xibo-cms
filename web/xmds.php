@@ -22,30 +22,13 @@
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
-error_reporting(0);
-ini_set('display_errors', 0);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 require PROJECT_ROOT . '/vendor/autoload.php';
 
 if (!file_exists(PROJECT_ROOT . '/web/settings.php')) {
     die('Not configured');
-}
-
-// Load the config
-$this->getConfig()->Load(PROJECT_ROOT . '/web/settings.php');
-
-// Always have a version defined
-$version = $this->getSanitizer()->getInt('v', 3, $_REQUEST);
-
-// Version Request?
-if (isset($_GET['what']))
-    die($this->getConfig()->Version('XmdsVersion'));
-
-// Is the WSDL being requested.
-if (isset($_GET['wsdl']) || isset($_GET['WSDL'])) {
-    $wsdl = new \Xibo\Xmds\Wsdl(PROJECT_ROOT . '/lib/Xmds/service_v' . $version . '.wsdl', $version);
-    $wsdl->output();
-    exit;
 }
 
 // We create a Slim Object ONLY for logging (calls to Slim::getInstance())
@@ -62,14 +45,33 @@ $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
 
 // Slim Application
 $app = new \Slim\Slim(array(
-    'mode' => $this->getConfig()->GetSetting('SERVER_MODE'),
     'debug' => false,
     'log.writer' => $logger
 ));
 $app->setName('api');
 
+// Load the config
+\Xibo\Helper\Config::Load($app, PROJECT_ROOT . '/web/settings.php');
+
+// Set storage
+\Xibo\Middleware\Storage::setStorage($app);
+
 // Set state
 \Xibo\Middleware\State::setState($app);
+
+// Always have a version defined
+$version = $app->sanitizerService->getInt('v', 3, $_REQUEST);
+
+// Version Request?
+if (isset($_GET['what']))
+    die($app->configService->Version('XmdsVersion'));
+
+// Is the WSDL being requested.
+if (isset($_GET['wsdl']) || isset($_GET['WSDL'])) {
+    $wsdl = new \Xibo\Xmds\Wsdl(PROJECT_ROOT . '/lib/Xmds/service_v' . $version . '.wsdl', $version);
+    $wsdl->output();
+    exit;
+}
 
 // We need a View for rendering GetResource Templates
 // Twig templates
@@ -94,7 +96,7 @@ $app->user = (new \Xibo\Factory\UserFactory($app))->getById(1);
 // Check to see if we have a file attribute set (for HTTP file downloads)
 if (isset($_GET['file'])) {
     // Check send file mode is enabled
-    $sendFileMode = $this->getConfig()->GetSetting('SENDFILE_MODE');
+    $sendFileMode = $app->configService->GetSetting('SENDFILE_MODE');
 
     if ($sendFileMode == 'Off') {
         $app->logHelper->notice('HTTP GetFile request received but SendFile Mode is Off. Issuing 404', 'services');
@@ -111,8 +113,8 @@ if (isset($_GET['file'])) {
         // Issue magic packet
         // Send via Apache X-Sendfile header?
         if ($sendFileMode == 'Apache') {
-            $app->logHelper->notice('HTTP GetFile request redirecting to ' . $this->getConfig()->GetSetting('LIBRARY_LOCATION') . $file->storedAs, 'services');
-            header('X-Sendfile: ' . $this->getConfig()->GetSetting('LIBRARY_LOCATION') . $file->storedAs);
+            $app->logHelper->notice('HTTP GetFile request redirecting to ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->storedAs, 'services');
+            header('X-Sendfile: ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->storedAs);
         }
         // Send via Nginx X-Accel-Redirect?
         else if ($sendFileMode == 'Nginx') {
@@ -144,9 +146,6 @@ try {
 
     if (!file_exists($wsdl))
         throw new InvalidArgumentException(__('Your client is not the correct version to communicate with this CMS.'));
-
-    // Initialise a theme
-    new \Xibo\Helper\Theme();
 
     // Create a SoapServer
     //$soap = new SoapServer($wsdl);

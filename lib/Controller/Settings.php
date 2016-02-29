@@ -21,7 +21,6 @@
 namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Helper\Form;
-use Xibo\Helper\Theme;
 
 
 class Settings extends Base

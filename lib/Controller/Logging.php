@@ -24,7 +24,6 @@ use Exception;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LogFactory;
-use Xibo\Helper\Theme;
 
 
 class Logging extends Base

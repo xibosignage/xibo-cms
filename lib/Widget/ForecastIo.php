@@ -27,8 +27,7 @@ use Xibo\Entity\Media;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Cache;
-use Xibo\Helper\Theme;
+
 
 class ForecastIo extends ModuleWidget
 {

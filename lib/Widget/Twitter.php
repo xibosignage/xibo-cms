@@ -26,8 +26,7 @@ use Emojione\Ruleset;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Cache;
-use Xibo\Helper\Theme;
+
 
 class Twitter extends ModuleWidget
 {

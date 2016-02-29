@@ -31,7 +31,6 @@ use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
-use Xibo\Helper\Theme;
 use Xibo\Helper\XiboUploadHandler;
 
 

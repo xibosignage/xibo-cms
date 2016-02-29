@@ -21,7 +21,6 @@
 namespace Xibo\Widget;
 
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Theme;
 use Xibo\Helper\Translate;
 
 class Text extends ModuleWidget

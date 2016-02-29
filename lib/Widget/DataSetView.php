@@ -28,7 +28,7 @@ use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Theme;
+
 
 class DataSetView extends ModuleWidget
 {

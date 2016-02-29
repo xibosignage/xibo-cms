@@ -23,7 +23,6 @@ namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Theme;
 use Xibo\Helper\Translate;
 
 class Clock extends ModuleWidget

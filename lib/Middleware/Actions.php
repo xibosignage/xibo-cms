@@ -26,7 +26,6 @@ namespace Xibo\Middleware;
 use Slim\Middleware;
 use Xibo\Controller\Library;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Helper\Theme;
 use Xibo\Helper\Translate;
 
 class Actions extends Middleware

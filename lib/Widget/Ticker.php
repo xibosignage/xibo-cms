@@ -32,9 +32,8 @@ use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Cache;
 use Xibo\Helper\Log;
-use Xibo\Helper\Theme;
+
 
 class Ticker extends ModuleWidget
 {

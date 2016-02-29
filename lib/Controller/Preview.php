@@ -24,7 +24,6 @@ use baseDAO;
 use database;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Helper\Theme;
 
 
 class Preview extends Base

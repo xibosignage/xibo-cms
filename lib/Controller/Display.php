@@ -29,7 +29,6 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\LogFactory;
-use Xibo\Helper\Theme;
 use Xibo\Helper\WakeOnLan;
 use Xibo\XMR\ScreenShotAction;
 

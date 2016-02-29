@@ -25,8 +25,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Cache;
-use Xibo\Helper\Theme;
+
 
 class Finance extends ModuleWidget
 {

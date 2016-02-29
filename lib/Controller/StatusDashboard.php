@@ -27,7 +27,7 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\ByteFormatter;
-use Xibo\Helper\Theme;
+
 
 class StatusDashboard extends Base
 {
