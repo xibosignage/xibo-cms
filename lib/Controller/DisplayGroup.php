@@ -29,7 +29,6 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
-use Xibo\Helper\PlayerActionHelper;
 use Xibo\XMR\ChangeLayoutAction;
 use Xibo\XMR\CollectNowAction;
 use Xibo\XMR\CommandAction;
@@ -1238,7 +1237,7 @@ class DisplayGroup extends Base
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
-        PlayerActionHelper::sendAction((new DisplayFactory($this->getApp()))->getByDisplayGroupId($displayGroupId), new CollectNowAction());
+        $this->getPlayerService()->sendAction((new DisplayFactory($this->getApp()))->getByDisplayGroupId($displayGroupId), new CollectNowAction());
 
         // Return
         $this->getState()->hydrate([
@@ -1331,7 +1330,7 @@ class DisplayGroup extends Base
             $downloadRequired = true;
         }
 
-        PlayerActionHelper::sendAction((new DisplayFactory($this->getApp()))->getByDisplayGroupId($displayGroupId), (new ChangeLayoutAction())->setLayoutDetails(
+        $this->getPlayerService()->sendAction((new DisplayFactory($this->getApp()))->getByDisplayGroupId($displayGroupId), (new ChangeLayoutAction())->setLayoutDetails(
             $layoutId,
             $this->getSanitizer()->getInt('duration'),
             $downloadRequired,
@@ -1377,7 +1376,7 @@ class DisplayGroup extends Base
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
-        PlayerActionHelper::sendAction((new DisplayFactory($this->getApp()))->getByDisplayGroupId($displayGroupId), new RevertToSchedule());
+        $this->getPlayerService()->sendAction((new DisplayFactory($this->getApp()))->getByDisplayGroupId($displayGroupId), new RevertToSchedule());
 
         // Return
         $this->getState()->hydrate([
@@ -1447,7 +1446,7 @@ class DisplayGroup extends Base
         $command = (new CommandFactory($this->getApp()))->getById($this->getSanitizer()->getInt('commandId'));
         $displays = (new DisplayFactory($this->getApp()))->getByDisplayGroupId($displayGroupId);
 
-        PlayerActionHelper::sendAction($displays, (new CommandAction())->setCommandCode($command->code));
+        $this->getPlayerService()->sendAction($displays, (new CommandAction())->setCommandCode($command->code));
 
         // Update the flag
         foreach ($displays as $display) {

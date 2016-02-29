@@ -9,19 +9,53 @@
 namespace Xibo\Helper;
 
 
+use Slim\Slim;
 use Xibo\Entity\Display;
 use Xibo\Exception\ConfigurationException;
 use Xibo\XMR\PlayerAction;
 use Xibo\XMR\PlayerActionException;
 
-class PlayerActionHelper
+class PlayerActionHelper implements PlayerActionHelperInterface
 {
+    private $app;
+
+    /**
+     * PlayerActionHelper constructor.
+     * @param Slim $app
+     */
+    public function __construct($app)
+    {
+        $this->app = $app;
+    }
+
+    /**
+     * Get the App
+     * @return Slim
+     * @throws \Exception
+     */
+    public function getApp()
+    {
+        if ($this->app == null)
+            throw new ConfigurationException(__('Player Service called before DI has been setup'));
+
+        return $this->app;
+    }
+
+    /**
+     * Get Config
+     * @return Config
+     */
+    public function getConfig()
+    {
+        return $this->getApp()->configService;
+    }
+
     /**
      * @param array[Display]|Display $displays
      * @param PlayerAction $action
      * @throws ConfigurationException
      */
-    public static function sendAction($displays, $action)
+    public function sendAction($displays, $action)
     {
         if (!is_array($displays))
             $displays = [$displays];

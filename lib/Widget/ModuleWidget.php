@@ -26,6 +26,7 @@ use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\TransitionFactory;
+use Xibo\Helper\Config;
 use Xibo\Helper\DateInterface;
 use Xibo\Helper\Log;
 use Xibo\Helper\SanitizerInterface;
@@ -117,6 +118,15 @@ abstract class ModuleWidget implements ModuleInterface
     protected function getLog()
     {
         return $this->getApp()->logHelper;
+    }
+
+    /**
+     * Get Config
+     * @return Config
+     */
+    public function getConfig()
+    {
+        return $this->getApp()->configService;
     }
 
     /**

@@ -81,6 +81,15 @@ class Help
     }
 
     /**
+     * Get Config
+     * @return Config
+     */
+    public function getConfig()
+    {
+        return $this->getApp()->configService;
+    }
+
+    /**
      * Get Help Link
      * @param string $topic
      * @param string $category

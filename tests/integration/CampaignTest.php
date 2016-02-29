@@ -7,7 +7,6 @@
 
 namespace Xibo\Tests;
 
-use Xibo\Entity\Campaign;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
 
@@ -84,9 +83,7 @@ class CampaignTest extends LocalWebTestCase
         // Make a campaign with a known name
         $name = \Xibo\Helper\Random::generateString(8, 'phpunit');
 
-        $campaign = new Campaign();
-        $campaign->campaign = $name;
-        $campaign->ownerId = 1;
+        $campaign = (new CampaignFactory($this->getApp()))->create($name, 1);
         $campaign->save();
 
         $layout = (new LayoutFactory($this->getApp()))->query(null, ['start' => 1, 'length' => 1]);

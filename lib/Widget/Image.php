@@ -101,7 +101,7 @@ class Image extends ModuleWidget
      */
     public function getResource($displayId = 0)
     {
-        $this->getLog()->debug('GetResource for %d', $this->getMediaId());
+        $this->getLog()->debug('Image Module: GetResource for %d', $this->getMediaId());
 
         $media = (new MediaFactory($this->getApp()))->getById($this->getMediaId());
         $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');

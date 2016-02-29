@@ -40,6 +40,7 @@ class MediaFactory extends BaseFactory
     public function create($name, $fileName, $type, $ownerId, $duration = 0)
     {
         $media = new Media();
+        $media->setApp($this->getApp());
         $media->name = $name;
         $media->fileName = $fileName;
         $media->mediaType = $type;
@@ -86,6 +87,7 @@ class MediaFactory extends BaseFactory
         }
         catch (NotFoundException $e) {
             $media = new Media();
+            $media->setApp($this->getApp());
             $media->name = $name;
             $media->fileName = $file;
             $media->mediaType = 'module';

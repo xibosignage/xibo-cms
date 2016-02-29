@@ -29,7 +29,6 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\LogFactory;
-use Xibo\Helper\PlayerActionHelper;
 use Xibo\Helper\Theme;
 use Xibo\Helper\WakeOnLan;
 use Xibo\XMR\ScreenShotAction;
@@ -868,7 +867,7 @@ class Display extends Base
         $display->screenShotRequested = 1;
         $display->save(['validate' => false, 'audit' => false]);
 
-        PlayerActionHelper::sendAction($display, new ScreenShotAction());
+        $this->getPlayerService()->sendAction($display, new ScreenShotAction());
 
         // Return
         $this->getState()->hydrate([

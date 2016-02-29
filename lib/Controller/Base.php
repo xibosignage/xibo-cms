@@ -27,6 +27,7 @@ use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Helper\Config;
 use Xibo\Helper\DateInterface;
 use Xibo\Helper\Log;
+use Xibo\Helper\PlayerActionHelperInterface;
 use Xibo\Helper\SanitizerInterface;
 use Xibo\Storage\StorageInterface;
 
@@ -186,6 +187,15 @@ class Base
     }
 
     /**
+     * Get Player Service
+     * @return PlayerActionHelperInterface
+     */
+    public function getPlayerService()
+    {
+        return $this->getApp()->playerActionService;
+    }
+
+    /**
      * Is this the Api?
      * @return bool
      */
@@ -304,14 +314,10 @@ class Base
             $data['clock'] = $this->getDate()->getLocalDate(null, 'H:i T');
             $data['currentUser'] = $this->getUser();
 
-            $app->logHelper->info("Rendering Controller" . $state->template);
-
             $app->render($state->template . '.twig', $data, $state->httpStatus);
         }
 
         $this->rendered = true;
-
-        $this->getLog()->debug('Finished calling Render');
     }
 
     /**

@@ -283,7 +283,7 @@ class Library extends Base
         $libraryFolder = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists
-        $this->ensureLibraryExists();
+        self::ensureLibraryExists($libraryFolder);
 
         // Get Valid Extensions
         if ($this->getSanitizer()->getInt('oldMediaId') !== null) {
@@ -501,6 +501,7 @@ class Library extends Base
 
     /**
      * Make sure the library exists
+     * @param string $libraryFolder
      * @throws ConfigurationException when the library is not writable
      */
     public static function ensureLibraryExists($libraryFolder)

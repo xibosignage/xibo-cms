@@ -32,6 +32,7 @@ use Xibo\Exception\UpgradePendingException;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
 use Xibo\Helper\NullSession;
+use Xibo\Helper\PlayerActionHelper;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
@@ -105,6 +106,11 @@ class State extends Middleware
 
         // Register Factories with DI
         self::registerFactoriesWithDi($app);
+
+        // Player Action Helper
+        $app->container->singleton('playerActionService', function() use($app) {
+            return new PlayerActionHelper($app);
+        });
 
         // Set some public routes
         $app->publicRoutes = array('/login', '/logout', '/clock', '/about', '/login/ping');

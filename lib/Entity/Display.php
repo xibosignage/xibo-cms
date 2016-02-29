@@ -26,7 +26,6 @@ namespace Xibo\Entity;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
-use Xibo\Helper\PlayerActionHelper;
 use Xibo\XMR\CollectNowAction;
 
 /**
@@ -431,7 +430,7 @@ class Display
             $this->getLog()->debug('Collect Now Action for Display %s', $this->display);
 
             try {
-                PlayerActionHelper::sendAction($this, new CollectNowAction());
+                $this->getPlayerService()->sendAction($this, new CollectNowAction());
             } catch (\Exception $e) {
                 $this->getLog()->notice('Display Save would have triggered Player Action, but the action failed with message: %s', $e->getMessage());
             }

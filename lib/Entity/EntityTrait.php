@@ -14,6 +14,7 @@ use Xibo\Helper\Config;
 use Xibo\Helper\DateInterface;
 use Xibo\Helper\Log;
 use Xibo\Helper\ObjectVars;
+use Xibo\Helper\PlayerActionHelperInterface;
 use Xibo\Helper\SanitizerInterface;
 use Xibo\Storage\StorageInterface;
 
@@ -193,5 +194,14 @@ trait EntityTrait
     protected function getConfig()
     {
         return $this->getApp()->configService;
+    }
+
+    /**
+     * Get Player Service
+     * @return PlayerActionHelperInterface
+     */
+    public function getPlayerService()
+    {
+        return $this->getApp()->playerActionService;
     }
 }
