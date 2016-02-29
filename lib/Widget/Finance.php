@@ -134,23 +134,7 @@ class Finance extends ModuleWidget
      */
     public function add()
     {
-        $this->setDuration(Sanitize::getInt('duration'));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setOption('name', Sanitize::getString('name'));
-        $this->setOption('yql', Sanitize::getString('yql'));
-        $this->setOption('item', Sanitize::getString('item'));
-        $this->setOption('resultIdentifier', Sanitize::getString('resultIdentifier'));
-        $this->setOption('effect', Sanitize::getString('effect'));
-        $this->setOption('speed', Sanitize::getInt('speed'));
-        $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
-        $this->setOption('noRecordsMessage', Sanitize::getString('noRecordsMessage'));
-        $this->setOption('dateFormat', Sanitize::getString('dateFormat'));
-        $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
-        $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
-        $this->setOption('templateId', Sanitize::getString('templateId'));
-
-        $this->setRawNode('template', Sanitize::getParam('ta_text', Sanitize::getParam('template', null)));
-        $this->setRawNode('styleSheet', Sanitize::getParam('ta_css', Sanitize::getParam('styleSheet', null)));
+        $this->setCommonOptions();
 
         // Save the widget
         $this->validate();
@@ -161,6 +145,15 @@ class Finance extends ModuleWidget
      * Edit Media
      */
     public function edit()
+    {
+        $this->setCommonOptions();
+
+        // Save the widget
+        $this->validate();
+        $this->saveWidget();
+    }
+
+    public function setCommonOptions()
     {
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
         $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
@@ -176,17 +169,9 @@ class Finance extends ModuleWidget
         $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
         $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
         $this->setOption('templateId', Sanitize::getString('templateId'));
-
+        $this->setOption('durationIsPerItem', Sanitize::getCheckbox('durationIsPerItem'));
         $this->setRawNode('template', Sanitize::getParam('ta_text', Sanitize::getParam('template', null)));
         $this->setRawNode('styleSheet', Sanitize::getParam('ta_css', Sanitize::getParam('styleSheet', null)));
-
-        // Save the widget
-        $this->validate();
-        $this->saveWidget();
-
-        // Save the widget
-        $this->validate();
-        $this->saveWidget();
     }
 
     /**
@@ -220,9 +205,11 @@ class Finance extends ModuleWidget
         $yql = str_replace('[Item]', implode(',', $items), $yql);
 
         // Fire off a request for the data
-        $key = md5($yql);
+        $cache = $this->getPool()->getItem('finance/' . md5($yql));
 
-        if (!Cache::has($key) || Cache::get($key) == '') {
+        $data = $cache->get();
+
+        if ($cache->isMiss()) {
 
             Log::debug('Querying API for ' . $yql);
 
@@ -231,11 +218,10 @@ class Finance extends ModuleWidget
             }
 
             // Cache it
-            Cache::put($key, $data, $this->getSetting('cachePeriod', 300));
+            $cache->set($data);
+            $cache->expiresAfter($this->getSetting('cachePeriod', 300));
+            $this->getPool()->saveDeferred($cache);
 
-        } else {
-            Log::debug('Served from Cache');
-            $data = Cache::get($key);
         }
 
         Log::debug('Finance data returned: %s', var_export($data, true));
@@ -343,7 +329,7 @@ class Finance extends ModuleWidget
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         // Information from the Module
-        $duration = $this->getCalculatedDuration();
+        $duration = $this->getCalculatedDurationForGetResource();
 
         // Generate a JSON string of items.
         if (!$items = $this->getYql()) {

@@ -6,12 +6,11 @@
  */
 
 
-namespace integration;
+namespace Xibo\Tests;
 
 
 use Xibo\Entity\Layout;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Tests\LocalWebTestCase;
 
 class LayoutTest extends LocalWebTestCase
 {

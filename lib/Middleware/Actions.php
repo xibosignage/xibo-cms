@@ -66,7 +66,10 @@ class Actions extends Middleware
             $resource = $app->router->getCurrentRoute()->getPattern();
 
             // Get an array of excluded routes
-            $excludedRoutes = array_merge($app->publicRoutes, ['/update', '/update/step/:id']);
+            if (is_array($this->app->excludedCsrfRoutes))
+                $excludedRoutes = array_merge($app->publicRoutes, ['/update', '/update/step/:id'], $this->app->excludedCsrfRoutes);
+            else
+                $excludedRoutes = array_merge($app->publicRoutes, ['/update', '/update/step/:id']);
 
             // Does the version in the DB match the version of the code?
             // If not then we need to run an upgrade.

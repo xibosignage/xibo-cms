@@ -217,7 +217,7 @@ class SAMLAuthentication extends Middleware
                         }
 
                         $group->assignUser($user);
-                        $group->save(false);
+                        $group->save(['validate' => false]);
                     }
                 }
 
@@ -233,15 +233,14 @@ class SAMLAuthentication extends Middleware
 
                     // Switch Session ID's
                     $this->app->session->setIsExpired(0);
-                    $this->app->session->regenerateSessionId(session_id());
-                    $this->app->session->setUser(session_id(), $user->userId, 'user');
+                    $this->app->session->regenerateSessionId();
+                    $this->app->session->setUser($user->userId);
                 }
 
                 // Redirect to User Homepage
                 $page = \Xibo\Factory\PageFactory::getById($user->homePageId);
                 $this->app->redirectTo($page->getName() . '.view');
             }
-            
         });
 
         $app->get('/saml/sls', function () {
@@ -293,7 +292,7 @@ class SAMLAuthentication extends Middleware
             if (!in_array($resource, $app->publicRoutes) && !in_array($resource, SAMLAuthentication::samlRoutes())) {
                 $app->public = false;
                 // Need to check
-                if ($user->hasIdentity() && $app->session->isExpired == 0) {
+                if ($user->hasIdentity() && !$app->session->isExpired()) {
                     // Replace our user with a fully loaded one
                     $user = UserFactory::loadById($user->userId);
 
@@ -315,7 +314,7 @@ class SAMLAuthentication extends Middleware
             else {
                 $app->public = true;
                 // If we are expired and come from ping/clock, then we redirect
-                if ($app->session->isExpired == 1 && ($resource == '/login/ping' || $resource == 'clock')) {
+                if ($app->session->isExpired() && ($resource == '/login/ping' || $resource == 'clock')) {
                     $redirectToLogin();
                 } else if ($resource == '/login') {
                     //Force SAML SSO

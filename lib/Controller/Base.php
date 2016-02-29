@@ -112,6 +112,15 @@ class Base
     }
 
     /**
+     * Get Cache Pool
+     * @return \Stash\Interfaces\PoolInterface
+     */
+    protected function getPool()
+    {
+        return $this->app->pool;
+    }
+
+    /**
      * Is this the Api?
      * @return bool
      */
@@ -191,6 +200,7 @@ class Base
 
         // API Request
         if ($this->isApi()) {
+
             // Envelope by default - the APIView will un-pack if necessary
             $data = [
                 'grid' => $grid,

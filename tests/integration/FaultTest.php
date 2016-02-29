@@ -5,6 +5,9 @@
  * (AuditLogTest.php)
  */
 
+namespace Xibo\Tests;
+
+use Slim\Log;
 
 class FaultTest extends \Xibo\Tests\LocalWebTestCase
 {
@@ -17,22 +20,22 @@ class FaultTest extends \Xibo\Tests\LocalWebTestCase
     public function testDebugOn()
     {
         // Ensure we are
-        \Xibo\Helper\Config::ChangeSetting('audit', Slim\Log::EMERGENCY);
+        \Xibo\Helper\Config::ChangeSetting('audit', Log::EMERGENCY);
 
         $this->client->put('/fault/debug/on');
         $this->assertSame(200, $this->client->response->status());
 
-        $this->assertSame(Slim\Log::DEBUG, intval(\Xibo\Helper\Config::GetSetting('audit')));
+        $this->assertSame('DEBUG', \Xibo\Helper\Config::GetSetting('audit'));
     }
 
     public function testDebugOff()
     {
         // Ensure we are
-        \Xibo\Helper\Config::ChangeSetting('audit', Slim\Log::DEBUG);
+        \Xibo\Helper\Config::ChangeSetting('audit', Log::DEBUG);
 
         $this->client->put('/fault/debug/off');
         $this->assertSame(200, $this->client->response->status());
 
-        $this->assertSame(Slim\Log::EMERGENCY, intval(\Xibo\Helper\Config::GetSetting('audit')));
+        $this->assertSame('EMERGENCY', \Xibo\Helper\Config::GetSetting('audit'));
     }
 }

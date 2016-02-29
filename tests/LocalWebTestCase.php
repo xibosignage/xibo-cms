@@ -11,7 +11,6 @@ use Monolog\Logger;
 use Slim\Environment;
 use Slim\Slim;
 use There4\Slim\Test\WebTestCase;
-use Xibo\Controller\Error;
 use Xibo\Middleware\ApiView;
 
 class LocalWebTestCase extends WebTestCase
@@ -34,7 +33,7 @@ class LocalWebTestCase extends WebTestCase
         $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
             'name' => 'PHPUNIT',
             'handlers' => array(
-                new \Xibo\Helper\DatabaseLogHandler(Logger::ERROR)
+                new \Xibo\Helper\DatabaseLogHandler(Logger::DEBUG)
             ),
             'processors' => array(
                 new \Xibo\Helper\LogProcessor(),
@@ -57,8 +56,7 @@ class LocalWebTestCase extends WebTestCase
 
         // Configure the Slim error handler
         $app->error(function (\Exception $e) use ($app) {
-            $controller = new Error();
-            $controller->handler($e);
+            throw $e;
         });
 
         // Super User

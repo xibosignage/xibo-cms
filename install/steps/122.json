@@ -64,6 +64,10 @@
       "action": "ALTER TABLE `session`DROP `LastPage`,DROP `SecurityToken`;"
     },
     {
+      "step": "Table Structure for Closure Table",
+      "action": "CREATE TABLE IF NOT EXISTS `lkdgdg` (`parentId` int(11) NOT NULL,`childId` int(11) NOT NULL,`depth` int(11) NOT NULL,UNIQUE KEY `parentId` (`parentId`,`childId`,`depth`),UNIQUE KEY `childId` (`childId`,`parentId`,`depth`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    },
+    {
       "step": "Add Closure Links for existing Display Groups",
       "action": "INSERT INTO `lkdgdg` (parentId, childId, depth) SELECT displayGroupId, displayGroupId, 0 FROM `displaygroup` WHERE `displayGroupID` NOT IN (SELECT `parentId` FROM `lkdgdg` WHERE depth = 0);"
     },

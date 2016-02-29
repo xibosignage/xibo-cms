@@ -154,25 +154,7 @@ class Twitter extends ModuleWidget
      */
     public function add()
     {
-        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setOption('name', Sanitize::getString('name'));
-        $this->setOption('searchTerm', Sanitize::getString('searchTerm'));
-        $this->setOption('effect', Sanitize::getString('effect'));
-        $this->setOption('speed', Sanitize::getInt('speed'));
-        $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
-        $this->setOption('noTweetsMessage', Sanitize::getString('noTweetsMessage'));
-        $this->setOption('dateFormat', Sanitize::getString('dateFormat'));
-        $this->setOption('resultType', Sanitize::getString('resultType'));
-        $this->setOption('tweetDistance', Sanitize::getInt('tweetDistance'));
-        $this->setOption('tweetCount', Sanitize::getInt('tweetCount'));
-        $this->setOption('removeUrls', Sanitize::getCheckbox('removeUrls'));
-        $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
-        $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
-        $this->setOption('templateId', Sanitize::getString('templateId'));
-
-        $this->setRawNode('template', Sanitize::getParam('ta_text', Sanitize::getParam('template', null)));
-        $this->setRawNode('styleSheet', Sanitize::getParam('ta_css', Sanitize::getParam('styleSheet', null)));
+        $this->setCommonOptions();
 
         // Save the widget
         $this->validate();
@@ -184,6 +166,18 @@ class Twitter extends ModuleWidget
      */
     public function edit()
     {
+        $this->setCommonOptions();
+
+        // Save the widget
+        $this->validate();
+        $this->saveWidget();
+    }
+
+    /**
+     * Set common options from Request Params
+     */
+    private function setCommonOptions()
+    {
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
         $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setOption('name', Sanitize::getString('name'));
@@ -197,20 +191,14 @@ class Twitter extends ModuleWidget
         $this->setOption('tweetDistance', Sanitize::getInt('tweetDistance'));
         $this->setOption('tweetCount', Sanitize::getInt('tweetCount'));
         $this->setOption('removeUrls', Sanitize::getCheckbox('removeUrls'));
+        $this->setOption('removeMentions', Sanitize::getCheckbox('removeMentions'));
+        $this->setOption('removeHashtags', Sanitize::getCheckbox('removeHashtags'));
         $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
         $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
         $this->setOption('templateId', Sanitize::getString('templateId'));
-
+        $this->setOption('durationIsPerItem', Sanitize::getCheckbox('durationIsPerItem'));
         $this->setRawNode('template', Sanitize::getParam('ta_text', Sanitize::getParam('template', null)));
         $this->setRawNode('styleSheet', Sanitize::getParam('ta_css', Sanitize::getParam('styleSheet', null)));
-
-        // Save the widget
-        $this->validate();
-        $this->saveWidget();
-
-        // Save the widget
-        $this->validate();
-        $this->saveWidget();
     }
 
     protected function getToken()
@@ -222,9 +210,13 @@ class Twitter extends ModuleWidget
         $key = base64_encode(urlencode($this->getSetting('apiKey')) . ':' . urlencode($this->getSetting('apiSecret')));
 
         // Check to see if we have the bearer token already cached
-        if (Cache::has('bearer_' . $key)) {
+        $cache = $this->getPool()->getItem('bearer_' . $key);
+
+        $token = $cache->get();
+
+        if ($cache->isHit()) {
             Log::debug('Bearer Token served from cache');
-            return Cache::get('bearer_' . $key);
+            return $token;
         }
 
         Log::debug('Bearer Token served from API');
@@ -296,7 +288,9 @@ class Twitter extends ModuleWidget
 
         // It is, so lets cache it
         // long times...
-        Cache::put('bearer_' . $key, $body->access_token, 100000);
+        $cache->set($body->access_token);
+        $cache->expiresAfter(100000);
+        $this->getPool()->saveDeferred($cache);
 
         return $body->access_token;
     }
@@ -394,9 +388,11 @@ class Twitter extends ModuleWidget
         }
 
         // Connect to twitter and get the twitter feed.
-        $key = md5($this->getOption('searchTerm') . $this->getOption('resultType') . $this->getOption('tweetCount', 15) . $geoCode);
+        $cache = $this->getPool()->getItem(md5($this->getOption('searchTerm') . $this->getOption('resultType') . $this->getOption('tweetCount', 15) . $geoCode));
 
-        if (!Cache::has($key) || Cache::get($key) == '') {
+        $data = $cache->get();
+
+        if ($cache->isMiss()) {
 
             Log::debug('Querying API for ' . $this->getOption('searchTerm'));
 
@@ -409,10 +405,9 @@ class Twitter extends ModuleWidget
                 return false;
 
             // Cache it
-            Cache::put($key, $data, $this->getSetting('cachePeriod'));
-        } else {
-            Log::debug('Served from Cache');
-            $data = Cache::get($key);
+            $cache->set($data);
+            $cache->expiresAfter($this->getSetting('cachePeriod'));
+            $this->getPool()->saveDeferred($cache);
         }
 
         // Get the template
@@ -429,7 +424,9 @@ class Twitter extends ModuleWidget
         $expires = time() + ($this->getSetting('cachePeriodImages') * 60 * 60);
 
         // Remove URL setting
-        $removeUrls = $this->getOption('removeUrls', 1);
+        $removeUrls = $this->getOption('removeUrls', 1)  == 1;
+        $removeMentions = $this->getOption('removeMentions', 1)  == 1;
+        $removeHashTags = $this->getOption('removeHashTags', 1)  == 1;
 
         // If we have nothing to show, display a no tweets message.
         if (count($data->statuses) <= 0) {
@@ -479,10 +476,19 @@ class Twitter extends ModuleWidget
                             }
                         }
 
-                        // Handle URL removal if requested
-                        if ($removeUrls == 1) {
-                            $tweetText = preg_replace("((https?|ftp|gopher|telnet|file|notes|ms-help):((\/\/)|(\\\\))+[\w\d:#\@%\/;$()~_?\+-=\\\.&]*)", '', $tweetText);
-                        }
+                        // Clean up the tweet text
+                        // thanks to https://github.com/solarbug (https://github.com/xibosignage/xibo/issues/703)
+                        // Remove Mentions
+                        if ($removeMentions)
+                            $tweetText = preg_replace('/(\s+|^)@\S+/', '', $tweetText);
+
+                        // Remove HashTags
+                        if ($removeHashTags)
+                            $tweetText = preg_replace('/(\s+|^)#\S+/', '', $tweetText);
+
+                        if ($removeUrls)
+                            // Regex taken from http://daringfireball.net/2010/07/improved_regex_for_matching_urls
+                            $tweetText  = preg_replace('~(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?«»“”‘’]))~', '', $tweetText); // remove urls
 
                         $replace = $emoji->toImage($tweetText);
                         break;
@@ -575,7 +581,7 @@ class Twitter extends ModuleWidget
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         // Information from the Module
-        $duration = $this->getCalculatedDuration();
+        $duration = $this->getCalculatedDurationForGetResource();
 
         // Generate a JSON string of substituted items.
         $items = $this->getTwitterFeed($displayId, $isPreview);

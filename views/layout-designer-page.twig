@@ -31,14 +31,18 @@
 
     <div class="row">
         <div class="col-sm-12 text-center">
-            <h4>{% trans "Layout Design" %} - {{ layout.layout }}</h4>
+            <h4>{% trans "Layout Design" %} - {{ layout.layout }} {{ isTemplate }}</h4>
         </div>
     </div>
     <div class="row">
         <div class="col-sm-2">
             <div class="row">
                 <div class="col-sm-12">
+                    {% if isTemplate %}
+                    <div class="alert alert-info">{% trans "Editing a Template will only effect future Layouts." %}</div>
+                    {% else %}
                     <div id="layout-status" class="alert"></div>
+                    {% endif %}
                 </div>
             </div>
             <div class="row">
@@ -240,7 +244,7 @@
 
                     // Construct a new list item for the lower list and append it.
                     var newItem = $("<li/>", {
-                        "text": data.name,
+                        "text": " " + data.name,
                         "data-media-id": data.mediaId,
                         "class": "li-sortable",
                         "dblclick": function(){
@@ -256,7 +260,7 @@
                         click: function(){
                             $(this).parent().remove();
                         }
-                    }).appendTo(newItem);
+                    }).prependTo(newItem);
                 });
             });
             mediaTable.on('processing.dt', dataTableProcessing);

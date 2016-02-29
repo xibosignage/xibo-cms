@@ -136,7 +136,6 @@ class Error extends Base
 
             case 'auth':
             case 'api':
-            case 'test':
 
                 $status = 500;
 

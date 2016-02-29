@@ -362,7 +362,7 @@ class Campaign extends Base
      * @param int $campaignId
      *
      * SWG\Post(
-     *  path="/campaign/layout/assign/{layoutId}",
+     *  path="/campaign/layout/assign/{campaignId}",
      *  operationId="campaignAssignLayout",
      *  tags={"campaign"},
      *  summary="Assign Layouts",
@@ -458,7 +458,7 @@ class Campaign extends Base
      * @param int $campaignId
      *
      * SWG\Post(
-     *  path="/campaign/layout/unassign/{layoutId}",
+     *  path="/campaign/layout/unassign/{campaignId}",
      *  operationId="campaignUnassignLayout",
      *  tags={"campaign"},
      *  summary="Unassign Layouts",
@@ -471,7 +471,7 @@ class Campaign extends Base
      *      required=true
      *   ),
      *  SWG\Parameter(
-     *      name="layoutIds",
+     *      name="layoutId",
      *      in="formData",
      *      description="Array of Layout IDs to Unassign",
      *      type="array",
@@ -493,7 +493,7 @@ class Campaign extends Base
         if (!$this->getUser()->checkEditable($campaign))
             throw new AccessDeniedException();
 
-        $layouts = Sanitize::getIntArray('layoutIds');
+        $layouts = Sanitize::getIntArray('layoutId');
 
         if (count($layouts) <= 0)
             throw new \InvalidArgumentException(__('Layouts not provided'));

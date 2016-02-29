@@ -237,6 +237,11 @@
                     </div>
 
                     <div class="tab-pane" id="advanced">
+
+                        {% set title %}{% trans "Duration is per item" %}{% endset %}
+                        {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
+                        {{ forms.checkbox("durationIsPerItem", title, module.getOption("durationIsPerItem"), helpText) }}
+
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
                         {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
@@ -249,8 +254,16 @@
                         {% set helpText %}{% trans "The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php" %}{% endset %}
                         {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText) }}
 
+                        {% set title %}{% trans "Remove Mentions?" %}{% endset %}
+                        {% set helpText %}{% trans "Should mentions (@someone) be removed from the Tweet Text?" %}{% endset %}
+                        {{ forms.checkbox("removeMentions", title, module.GetOption("removeMentions", 0), helpText) }}
+
+                        {% set title %}{% trans "Remove Hashtags?" %}{% endset %}
+                        {% set helpText %}{% trans "Should Hashtags (#something) be removed from the Tweet Text?" %}{% endset %}
+                        {{ forms.checkbox("removeHashtags", title, module.GetOption("removeHashtags", 0), helpText) }}
+
                         {% set title %}{% trans "Remove URLs?" %}{% endset %}
-                        {% set helpText %}{% trans "Should URLs be removed from the Tweet Text. Most URLs do not compliment digital signage." %}{% endset %}
+                        {% set helpText %}{% trans "Should URLs be removed from the Tweet Text? Most URLs do not compliment digital signage." %}{% endset %}
                         {{ forms.checkbox("removeUrls", title, module.GetOption("removeUrls", 1), helpText) }}
 
                         {% set title %}{% trans "Update Interval (mins)" %}{% endset %}

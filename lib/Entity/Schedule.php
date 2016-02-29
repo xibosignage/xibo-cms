@@ -26,6 +26,10 @@ class Schedule implements \JsonSerializable
 
     public static $LAYOUT_EVENT = 1;
     public static $COMMAND_EVENT = 2;
+    public static $DAY_PART_CUSTOM = 0;
+    public static $DAY_PART_ALWAYS = 1;
+    public static $DATE_MIN = 0;
+    public static $DATE_MAX = 2556057600;
 
     /**
      * @SWG\Property(
@@ -153,6 +157,14 @@ class Schedule implements \JsonSerializable
     public $command;
 
     /**
+     * @SWG\Property(
+     *  description="The Day Part Id"
+     * )
+     * @var int
+     */
+    public $dayPartId;
+
+    /**
      * Is this event (as a whole) inside the schedule look ahead period?
      * @var bool
      */
@@ -186,6 +198,9 @@ class Schedule implements \JsonSerializable
      */
     private function datesInScheduleLookAhead($fromDt, $toDt)
     {
+        if ($this->dayPartId == Schedule::$DAY_PART_ALWAYS)
+            return true;
+
         // From Date and To Date are in UNIX format
         $currentDate = time();
         $rfLookAhead = intval($currentDate) + intval(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'));
@@ -193,9 +208,14 @@ class Schedule implements \JsonSerializable
         if ($toDt == null)
             $toDt = $fromDt;
 
+        Log::debug('Checking to see if %d and %d are between %d and %d', $fromDt, $toDt, $currentDate, $rfLookAhead);
+
         return ($fromDt < $rfLookAhead && $toDt > $currentDate);
     }
 
+    /**
+     * Load
+     */
     public function load()
     {
         // If we are already loaded, then don't do it again
@@ -252,9 +272,11 @@ class Schedule implements \JsonSerializable
             if (!v::int()->notEmpty()->validate($this->campaignId))
                 throw new \InvalidArgumentException(__('Please select a Campaign/Layout for this event.'));
 
-            // validate the dates
-            if ($this->toDt < $this->fromDt)
-                throw new \InvalidArgumentException(__('Can not have an end time earlier than your start time'));
+            if ($this->dayPartId == Schedule::$DAY_PART_CUSTOM) {
+                // validate the dates
+                if ($this->toDt < $this->fromDt)
+                    throw new \InvalidArgumentException(__('Can not have an end time earlier than your start time'));
+            }
 
             $this->commandId = null;
 
@@ -303,6 +325,7 @@ class Schedule implements \JsonSerializable
         // Notify
         // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
         if ($this->isInScheduleLookAhead) {
+            Log::debug('Schedule changing is within the schedule look ahead, will notify %d display groups', $this->displayGroups);
             foreach ($this->displayGroups as $displayGroup) {
                 /* @var DisplayGroup $displayGroup */
                 $displayGroup->setCollectRequired();
@@ -333,8 +356,8 @@ class Schedule implements \JsonSerializable
     private function add()
     {
         $this->eventId = PDOConnect::insert('
-          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range)
-            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange)
+          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range, `dayPartId`)
+            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange, :dayPartId)
         ', [
             'eventTypeId' => $this->eventTypeId,
             'campaignId' => $this->campaignId,
@@ -346,7 +369,8 @@ class Schedule implements \JsonSerializable
             'displayOrder' => $this->displayOrder,
             'recurrenceType' => $this->recurrenceType,
             'recurrenceDetail' => $this->recurrenceDetail,
-            'recurrenceRange' => $this->recurrenceRange
+            'recurrenceRange' => $this->recurrenceRange,
+            'dayPartId' => $this->dayPartId
         ]);
     }
 
@@ -367,7 +391,8 @@ class Schedule implements \JsonSerializable
             displayOrder = :displayOrder,
             recurrence_type = :recurrenceType,
             recurrence_detail = :recurrenceDetail,
-            recurrence_range = :recurrenceRange
+            recurrence_range = :recurrenceRange,
+            `dayPartId` = :dayPartId
           WHERE eventId = :eventId
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -381,6 +406,7 @@ class Schedule implements \JsonSerializable
             'recurrenceType' => $this->recurrenceType,
             'recurrenceDetail' => $this->recurrenceDetail,
             'recurrenceRange' => $this->recurrenceRange,
+            'dayPartId' => $this->dayPartId,
             'eventId' => $this->eventId
         ]);
 
@@ -395,6 +421,13 @@ class Schedule implements \JsonSerializable
     {
         // TODO: generate 30 days in advance.
         $daysToGenerate = 30;
+
+        if ($this->dayPartId == Schedule::$DAY_PART_ALWAYS) {
+            // Create events with min/max dates
+            $this->addDetail(Schedule::$DATE_MIN, Schedule::$DATE_MAX);
+
+            return;
+        }
 
         // Add the detail for the main event
         $this->addDetail($this->fromDt, $this->toDt);
@@ -450,8 +483,13 @@ class Schedule implements \JsonSerializable
 
             if ($this->toDt == null)
                 $this->addDetail($t_start_temp, null);
-            else
+            else {
+                // Check to make sure that our from/to date isn't longer than the first repeat
+                if ($t_start_temp < $this->toDt)
+                    throw new \InvalidArgumentException(__('The first event repeat is inside the event from/to dates.'));
+
                 $this->addDetail($t_start_temp, $t_end_temp);
+            }
 
             // Check these dates
             if (!$this->isInScheduleLookAhead)

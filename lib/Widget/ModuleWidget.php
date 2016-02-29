@@ -88,6 +88,15 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * Get Cache Pool
+     * @return \Stash\Interfaces\PoolInterface
+     */
+    protected function getPool()
+    {
+        return $this->app->pool;
+    }
+
+    /**
      * Set the Widget
      * @param \Xibo\Entity\Widget $widget
      */
@@ -327,9 +336,9 @@ abstract class ModuleWidget implements ModuleInterface
      * Gets the calculated duration of this widget
      * @return int
      */
-    final public function getCalculatedDuration()
+    final public function getCalculatedDurationForGetResource()
     {
-        return $this->widget->calculatedDuration;
+        return ($this->widget->calculatedDuration == 0) ? $this->getModule()->defaultDuration : $this->widget->calculatedDuration;
     }
 
     /**

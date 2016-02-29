@@ -354,10 +354,6 @@ table.dataTable tbody tr.selected > td {
     background-color: #a6b3cd;
 }
 
-.XiboFilter {
-    float: right;
-}
-
 div.dt-buttons {
     float: none;
     text-align: right;
@@ -365,17 +361,4 @@ div.dt-buttons {
 
 .ui-state-disabled {
     opacity: 1;
-}
-
-.layoutJumpListContainer .bootstrap-select.btn-group .dropdown-toggle .filter-option {
-    text-align: center;
-    overflow: hidden;
-}
-
-.designer-control-panel .btn {
-    overflow: hidden;
-}
-
-.designer-control-panel-checkbox {
-    padding-top: 5px;
 }

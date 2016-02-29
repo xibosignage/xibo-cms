@@ -568,7 +568,8 @@ class User implements \JsonSerializable
         // Remove any assignments to groups
         foreach ($this->groups as $group) {
             /* @var UserGroup $group */
-            $group->removeAssignments();
+            $group->unassignUser($this);
+            $group->save(['validate' => false]);
         }
 
         // Delete any layouts

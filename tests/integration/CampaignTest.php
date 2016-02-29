@@ -91,8 +91,10 @@ class CampaignTest extends LocalWebTestCase
 
         $layout = LayoutFactory::query(null, ['start' => 1, 'length' => 1]);
 
+        $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
+
         // Call assign on the default layout
-        $this->client->post('/campaign/layout/assign/' . $campaign->campaignId, ['layoutIds' => [$layout[0]->layoutId]]);
+        $this->client->post('/campaign/layout/assign/' . $campaign->campaignId, ['layoutId' => [['layoutId' => $layout[0]->layoutId, 'displayOrder' => 1]]]);
         $this->assertSame(200, $this->client->response->status(), '/campaign/layout/assign/' . $campaign->campaignId . '. Body: ' . $this->client->response->body());
 
         // Get this campaign and check it has 1 layout
@@ -114,7 +116,7 @@ class CampaignTest extends LocalWebTestCase
         $layout = LayoutFactory::query(null, ['start' => 1, 'length' => 1]);
 
         // Call assign on the default layout
-        $this->client->post('/campaign/layout/unassign/' . $campaignId, ['layoutIds' => [$layout[0]->layoutId]]);
+        $this->client->post('/campaign/layout/unassign/' . $campaignId, ['layoutId' => [['layoutId' => $layout[0]->layoutId, 'displayOrder' => 1]]]);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
 

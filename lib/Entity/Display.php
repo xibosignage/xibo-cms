@@ -303,6 +303,8 @@ class Display
      */
     private $commands = null;
 
+    public static $saveOptionsMinimum = ['validate' => false, 'audit' => false, 'triggerDynamicDisplayGroupAssessment' => false];
+
     public function __construct()
     {
         $this->excludeProperty('mediaInventoryXml');
@@ -319,6 +321,15 @@ class Display
     }
 
     /**
+     * Get the cache key
+     * @return string
+     */
+    public function getCacheKey()
+    {
+        return 'display/' . $this->getId();
+    }
+
+    /**
      * Set the Media Status to Incomplete
      */
     public function setMediaIncomplete()
@@ -327,6 +338,9 @@ class Display
 
         $this->mediaInventoryStatus = 3;
         $this->setCollectRequired(true);
+
+        // remove from the cache
+        $this->getPool()->deleteItem($this->getCacheKey());
     }
 
     /**

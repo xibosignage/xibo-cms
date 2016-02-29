@@ -10,27 +10,32 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
         <li><a class="XiboFormButton" title="{% trans "Export raw data to CSV" %}" href="{{ urlFor("auditLog.export.form") }}">{% trans "Export" %}</a></li>
         <li><a id="refreshLog" title="{% trans "Refresh the Log" %}" href="#">{% trans "Refresh" %}</a></li>
     </ul>
 {% endblock %}
 
-
 {% block pageContent %}
     <div class="widget">
         <div class="widget-title">{% trans "Audit Log" %}</div>
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="auditView">
+                <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.date("filterFromDt", "From Date", defaults.fromDt) }}
-                            {{ inline.date("filterToDt", "To Date", defaults.toDt) }}
-                            {{ inline.input("filterUser", "User", defaults.user) }}
-                            {{ inline.input("filterEntity", "Entity", defaults.entity) }}
 
-                            {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.date("fromDt", title) }}
+
+                            {% set title %}{% trans "To Date" %}{% endset %}
+                            {{ inline.date("toDt", title) }}
+
+                            {% set title %}{% trans "User" %}{% endset %}
+                            {{ inline.input("user", title) }}
+
+                            {% set title %}{% trans "Entity" %}{% endset %}
+                            {{ inline.input("entity", title) }}
+
                         </form>
                     </div>
                 </div>

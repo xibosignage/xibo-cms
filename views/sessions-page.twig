@@ -9,24 +9,29 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
-{% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
-    </ul>
-{% endblock %}
-
-
 {% block pageContent %}
     <div class="widget">
         <div class="widget-title">{% trans "Sessions" %}</div>
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="sessionsView">
+                <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.date("filter_fromdt", "From Date", defaults.fromDate) }}
-                            {{ inline.dropdown("filter_type", "single", "Type", defaults.type, values, "id", "value") }}
-                            {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.date("fromDt", title) }}
+
+                            {% set title %}{% trans "Type" %}{% endset %}
+                            {% set activeTrans %}{% trans "Active" %}{% endset %}
+                            {% set guestTrans %}{% trans "Guest" %}{% endset %}
+                            {% set expiredTrans %}{% trans "Expired" %}{% endset %}
+                            {% set typeOptions = [
+                            { id: "0", value: "" },
+                            { id: "active", value: activeTrans },
+                            { id: "guest", value: guestTrans},
+                            { id: "expired", value: expiredTrans}
+                            ] %}
+                            {{ inline.dropdown("type", "single", title, "", typeOptions, "id", "value") }}
+
                         </form>
                     </div>
                 </div>

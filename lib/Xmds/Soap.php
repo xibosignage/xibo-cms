@@ -51,6 +51,11 @@ class Soap
      */
     protected $logProcessor;
 
+    /**
+     * @var \Stash\Interfaces\PoolInterface
+     */
+    protected $pool;
+
 
     public function __construct()
     {
@@ -59,6 +64,18 @@ class Soap
         // Create a log processor
         $this->logProcessor = new LogProcessor();
         $app->logWriter->addProcessor($this->logProcessor);
+
+        // Grab the pool
+        $this->pool = $app->pool;
+    }
+
+    /**
+     * Get Cache Pool
+     * @return \Stash\Interfaces\PoolInterface
+     */
+    protected function getPool()
+    {
+       return $this->pool;
     }
 
     /**
@@ -91,6 +108,20 @@ class Soap
         // auth this request...
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Sender', 'This display is not licensed.');
+
+        // Check the cache
+        $cache = $this->getPool()->getItem($this->display->getCacheKey() . '/requiredFiles');
+
+        $output = $cache->get();
+
+        if ($cache->isHit()) {
+            Log::info('Returning required files from Cache for display %s', $this->display->display);
+
+            // Log Bandwidth
+            $this->LogBandwidth($this->display->displayId, Bandwidth::$RF, strlen($output));
+
+            return $output;
+        }
 
         // Generate a new Request Key which we will sign our Required Files with
         $requestKey = Random::generateString(10);
@@ -432,6 +463,11 @@ class Soap
         // Remove unused required files
         RequiredFile::removeUnusedForDisplay($this->display->displayId, $requestKey);
 
+        // Cache
+        $cache->set($output);
+        $cache->expiresAt(\Jenssegers\Date\Date::createFromFormat('U', $toFilter));
+        $this->getPool()->saveDeferred($cache);
+
         // Log Bandwidth
         $this->logBandwidth($this->display->displayId, Bandwidth::$RF, strlen($output));
 
@@ -468,6 +504,21 @@ class Soap
         if (!$this->AuthDisplay($hardwareKey))
             throw new \SoapFault('Sender', "This display client is not licensed");
 
+        // Check the cache
+        $cache = $this->getPool()->getItem($this->display->getCacheKey() . '/schedule');
+
+        $output = $cache->get();
+
+        if ($cache->isHit()) {
+            Log::info('Returning Schedule from Cache for display %s', $this->display->display);
+
+            // Log Bandwidth
+            $this->LogBandwidth($this->display->displayId, Bandwidth::$SCHEDULE, strlen($output));
+
+            return $output;
+        }
+
+        // Generate the Schedule XML
         $scheduleXml = new \DOMDocument("1.0");
         $layoutElements = $scheduleXml->createElement("schedule");
 
@@ -561,7 +612,7 @@ class Soap
             );
 
             if ($this->display->isAuditing)
-
+                Log::sql($SQL, $params);
 
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
@@ -717,6 +768,11 @@ class Soap
             Log::debug($scheduleXml->saveXML());
 
         $output = $scheduleXml->saveXML();
+
+        // Cache
+        $cache->set($output);
+        $cache->expiresAt(\Jenssegers\Date\Date::createFromFormat('U', $toFilter));
+        $this->getPool()->saveDeferred($cache);
 
         // Log Bandwidth
         $this->LogBandwidth($this->display->displayId, Bandwidth::$SCHEDULE, strlen($output));
@@ -1207,7 +1263,10 @@ class Soap
             $this->display->lastAccessed = time();
             $this->display->loggedIn = 1;
             $this->display->clientAddress = $this->getIp();
-            $this->display->save(['validate' => false, 'audit' => false]);
+            $this->display->save(Display::$saveOptionsMinimum);
+
+            // Commit if necessary
+            PDOConnect::commitIfNecessary();
 
             // Configure our log processor
             $this->logProcessor->setDisplay($this->display->displayId);

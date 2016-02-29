@@ -11,7 +11,6 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
         <li><a class="XiboFormButton" title="{% trans "Add a new resolution for use on layouts" %}" href="{{ urlFor("resolution.add.form") }}">{% trans "Add Resolution" %}</a></li>
     </ul>
 {% endblock %}
@@ -21,13 +20,12 @@
     <div class="widget">
         <div class="widget-title">{% trans "Resolution" %}</div>
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="resolutionView">
+                <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
                             {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
-                            {{ inline.dropdown("enabled", "single", "Enabled", defaults.enabled, values, "id", "value") }}
-                            {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
+                            {{ inline.dropdown("enabled", "single", "Enabled", 1, values, "id", "value") }}
                         </form>
                     </div>
                 </div>

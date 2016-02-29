@@ -47,46 +47,12 @@ class Library extends Base
      */
     function displayPage()
     {
-        // Default options
-        if ($this->getSession()->get(get_class(), 'Filter') == 1) {
-            $filter_pinned = 1;
-            $filter_name = $this->getSession()->get('content', 'filter_name');
-            $filter_type = $this->getSession()->get('content', 'filter_type');
-            $filter_retired = $this->getSession()->get('content', 'filter_retired');
-            $filter_owner = $this->getSession()->get('content', 'filter_owner');
-            $filter_duration_in_seconds = $this->getSession()->get('content', 'filter_duration_in_seconds');
-            $showTags = $this->getSession()->get('content', 'showTags');
-            $filter_showThumbnail = $this->getSession()->get('content', 'filter_showThumbnail');
-        } else {
-            $filter_pinned = 0;
-            $filter_name = NULL;
-            $filter_type = NULL;
-            $filter_retired = 0;
-            $filter_owner = NULL;
-            $filter_duration_in_seconds = 0;
-            $filter_showThumbnail = 0;
-            $showTags = 0;
-        }
-
-        $data = [
-            'defaults' => [
-                'name' => $filter_name,
-                'type' => $filter_type,
-                'retired' => $filter_retired,
-                'owner' => $filter_owner,
-                'durationInSeconds' => $filter_duration_in_seconds,
-                'showTags' => $showTags,
-                'showThumbnail' => $filter_showThumbnail,
-                'filterPinned' => $filter_pinned
-            ]
-        ];
-
         // Users we have permission to see
-        $data['users'] = UserFactory::query();
-        $data['modules'] = ModuleFactory::query(['module'], ['regionSpecific' => 0, 'enabled' => 1]);
-
         $this->getState()->template = 'library-page';
-        $this->getState()->setData($data);
+        $this->getState()->setData([
+            'users' => UserFactory::query(),
+            'modules' => ModuleFactory::query(['module'], ['regionSpecific' => 0, 'enabled' => 1])
+        ]);
     }
 
     /**
@@ -147,18 +113,15 @@ class Library extends Base
     {
         $user = $this->getUser();
 
-        $this->getSession()->set('content', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
-
-        $filter = [
-            'mediaId' => Sanitize::getInt('mediaId'),
-            'name' => $this->getSession()->set('content', 'filter_name', Sanitize::getString('media')),
-            'type' => $this->getSession()->set('content', 'filter_type', Sanitize::getString('type')),
-            'ownerId' => $this->getSession()->set('content', 'filter_owner', Sanitize::getInt('ownerId')),
-            'retired' => $this->getSession()->set('content', 'filter_retired', Sanitize::getInt('retired'))
-        ];
-
         // Construct the SQL
-        $mediaList = MediaFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $mediaList = MediaFactory::query($this->gridRenderSort(), $this->gridRenderFilter([
+            'mediaId' => Sanitize::getInt('mediaId'),
+            'name' => Sanitize::getString('media'),
+            'type' => Sanitize::getString('type'),
+            'tags' => Sanitize::getString('tags'),
+            'ownerId' => Sanitize::getInt('ownerId'),
+            'retired' => Sanitize::getInt('retired')
+        ]));
 
         // Add some additional row content
         foreach ($mediaList as $media) {

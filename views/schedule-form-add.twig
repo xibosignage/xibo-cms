@@ -63,7 +63,8 @@
     "actions": {
     ".layout-control": { "display": "block" },
     ".endtime-control": { "display": "block" },
-    ".command-control": { "display": "none" }
+    ".command-control": { "display": "none" },
+    ".day-part-control": { "display": "block" }
     }
     },{
     "field": "eventTypeId",
@@ -73,7 +74,8 @@
     "actions": {
     ".layout-control": { "display": "block" },
     ".endtime-control": { "display": "block" },
-    ".command-control": { "display": "none" }
+    ".command-control": { "display": "none" },
+    ".day-part-control": { "display": "block" }
     }
     },{
     "field": "eventTypeId",
@@ -83,7 +85,9 @@
     "actions": {
     ".layout-control": { "display": "none" },
     ".endtime-control": { "display": "none" },
-    ".command-control": { "display": "block" }
+    ".command-control": { "display": "block" },
+    ".day-part-control": { "display": "none" },
+    ".starttime-control": { "display": "block" }
     }
     },{
     "field": "eventTypeId",
@@ -93,7 +97,45 @@
     "actions": {
     ".layout-control": { "display": "none" },
     ".endtime-control": { "display": "none" },
-    ".command-control": { "display": "block" }
+    ".command-control": { "display": "block" },
+    ".day-part-control": { "display": "none" },
+    ".starttime-control": { "display": "block" }
+    }
+    },{
+    "field": "dayPartId",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".starttime-control": { "display": "block" },
+    ".endtime-control": { "display": "block" }
+    }
+    },{
+    "field": "dayPartId",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".starttime-control": { "display": "block" },
+    ".endtime-control": { "display": "block" }
+    }
+    },{
+    "field": "dayPartId",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".starttime-control": { "display": "none" },
+    ".endtime-control": { "display": "none" }
+    }
+    },{
+    "field": "dayPartId",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".starttime-control": { "display": "none" },
+    ".endtime-control": { "display": "none" }
     }
     }]
 {% endblock %}
@@ -133,9 +175,13 @@
                         ] %}
                         {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, {group: displayGroups, display: displays}, "displayGroupId", "displayGroup", helpText, "", "", "", "", attributes, optionGroups) }}
 
+                        {% set title %}{% trans "Always" %}{% endset %}
+                        {% set helpText %}{% trans "Put into the schedule rotation and never remove. Layouts will be cycled if there is more than one scheduled." %}{% endset %}
+                        {{ forms.checkbox("dayPartId", title, "", helpText, "day-part-control") }}
+
                         {% set title %}{% trans "Start Time" %}{% endset %}
                         {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}
-                        {{ forms.dateTime("fromDt", title, "", helpText, "", "required") }}
+                        {{ forms.dateTime("fromDt", title, "", helpText, "starttime-control", "required") }}
 
                         {% set title %}{% trans "End Time" %}{% endset %}
                         {% set helpText %}{% trans "Select the end time for this event" %}{% endset %}

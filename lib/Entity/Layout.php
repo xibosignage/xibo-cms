@@ -528,6 +528,24 @@ class Layout implements \JsonSerializable
     }
 
     /**
+     * Does the layout have the provided tag?
+     * @param $searchTag
+     * @return bool
+     */
+    public function hasTag($searchTag)
+    {
+        $this->load();
+
+        foreach ($this->tags as $tag) {
+            /* @var Tag $tag */
+            if ($tag->tag == $searchTag)
+                return true;
+        }
+
+        return false;
+    }
+
+    /**
      * @param array[Tag] $tags
      */
     public function replaceTags($tags = [])

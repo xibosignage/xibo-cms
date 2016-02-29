@@ -136,6 +136,9 @@ class Settings extends Base
         if (!$this->getUser()->userTypeId == 1)
             throw new AccessDeniedException();
 
+        // Clear all cache
+        $this->getPool()->deleteItem('config/');
+
         // Get all of the settings in an array
         $settings = Config::GetAll(NULL, array('userChange' => 1, 'userSee' => 1));
 

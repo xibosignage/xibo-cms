@@ -312,25 +312,21 @@ class ForecastIo extends ModuleWidget
 
         // Query the API and Dump the Results.
         $apiOptions = array('units' => $this->getOption('units', 'auto'), 'lang' => $this->getOption('lang', 'en'), 'exclude' => 'flags,minutely,hourly');
-        $key = md5($defaultLat . $defaultLong . 'null' . implode('.', $apiOptions));
 
-        if (!Cache::has($key)) {
-            Log::notice('Getting Forecast from the API', $this->getModuleType(), __FUNCTION__);
+        $cache = $this->getPool()->getItem('forecast/' . md5($defaultLat . $defaultLong . implode('.', $apiOptions)));
+        $data = $cache->get();
+
+        if ($cache->isMiss()) {
+            Log::notice('Getting Forecast from the API');
             if (!$data = $this->get($defaultLat, $defaultLong, null, $apiOptions)) {
                 return false;
             }
 
-            // If the response is empty, cache it for less time
-            $cacheDuration = $this->getSetting('cachePeriod');
-
             // Cache
-            Cache::put($key, $data, $cacheDuration);
-        } else {
-            Log::notice('Getting Forecast from the Cache with key: ' . $key, $this->getModuleType(), __FUNCTION__);
-            $data = Cache::get($key);
+            $cache->set($data);
+            $cache->expiresAfter($this->getSetting('cachePeriod'));
+            $this->getPool()->saveDeferred($cache);
         }
-
-        //Debug::Audit('Data: ' . var_export($data, true));
 
         // Icon Mappings
         $icons = array(

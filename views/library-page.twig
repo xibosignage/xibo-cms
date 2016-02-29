@@ -11,7 +11,6 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
         <li><a href="#" id="libraryUploadForm" title="{% trans "Add a new media item to the library" %}">{% trans "Add Media" %}</a></li>
         {% if settings.SETTING_LIBRARY_TIDY_ENABLED == 1 %}
             <li><a class="XiboFormButton" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ urlFor("library.tidy.form") }}">{% trans "Tidy Library" %}</a></li>
@@ -24,21 +23,19 @@
     <div class="widget">
         <div class="widget-title">{% trans "Library" %}</div>
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="libraryView">
+                <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.input("media", "Name", defaults.media) }}
-                            {{ inline.input("tags", "Tags", defaults.tags) }}
+                            {{ inline.input("media", "Name") }}
+                            {{ inline.input("tags", "Tags") }}
 
                             {% set users = [{userId: null, userName: ""}]|merge(users) %}
-                            {{ inline.dropdown("ownerId", "single", "Owner", defaults.owner, users, "userId", "userName") }}
-                            {{ inline.dropdown("type", "single", "Type", defaults.type, [{"type": none, "name": ""}]|merge(modules), "type", "name") }}
+                            {{ inline.dropdown("ownerId", "single", "Owner", null, users, "userId", "userName") }}
+                            {{ inline.dropdown("type", "single", "Type", "", [{"type": none, "name": ""}]|merge(modules), "type", "name") }}
 
                             {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
-                            {{ inline.dropdown("retired", "single", "Retired", defaults.retired, values, "id", "value") }}
-
-                            {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
+                            {{ inline.dropdown("retired", "single", "Retired", 0, values, "id", "value") }}
                         </form>
                     </div>
                 </div>

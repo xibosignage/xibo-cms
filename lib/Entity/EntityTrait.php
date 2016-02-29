@@ -9,6 +9,7 @@
 namespace Xibo\Entity;
 
 
+use Slim\Slim;
 use Xibo\Helper\ObjectVars;
 use Xibo\Helper\Sanitize;
 
@@ -104,5 +105,14 @@ trait EntityTrait
     protected function setPermissionsClass($class)
     {
         $this->permissionsClass = $class;
+    }
+
+    /**
+     * Get Pool
+     * @return \Stash\Interfaces\PoolInterface
+     */
+    protected function getPool()
+    {
+        return Slim::getInstance()->pool;
     }
 }

@@ -25,9 +25,25 @@ var lowDesignerScale;
 $(document).ready(function(){
     
     // Set the height of the grid to be something sensible for the current screen resolution
-    $("#layoutJumpList").change(function(){
+    var jumpList = $("#layoutJumpList");
+
+    jumpList.selectpicker();
+
+    jumpList.on("changed.bs.select", function(event, index, newValue, oldValue) {
+        localStorage.liveSearchPlaceholder = $(this).parent().find(".bs-searchbox input").val();
         window.location = $(this).val();
-    }).selectpicker();
+    }).on("shown.bs.select", function() {
+        $(this).parent().find(".bs-searchbox input").val(localStorage.liveSearchPlaceholder);
+        $(this).selectpicker("refresh");
+
+        // Shrink the Dropdown list according to the container (HAX)
+        var jumpListContainer = $(".layoutJumpListContainer");
+        jumpListContainer.find(".bootstrap-select").width(jumpListContainer.width());
+    });
+
+    // Shrink the Dropdown list according to the container (HAX)
+    var jumpListContainer = $(".layoutJumpListContainer");
+    jumpListContainer.find(".bootstrap-select").width(jumpListContainer.width());
 
     layout = $("#layout");
 
@@ -72,8 +88,10 @@ $(document).ready(function(){
     });
 
     // Set an interval
-    layoutStatus(layout.data('statusUrl'));
-    setInterval("layoutStatus('" + layout.data('statusUrl') + "')", 1000 * 60); // Every minute
+    if ($("#layout-status").length > 0) {
+        layoutStatus(layout.data('statusUrl'));
+        setInterval("layoutStatus('" + layout.data('statusUrl') + "')", 1000 * 60); // Every minute
+    }
 
     // Bind to the switches
     $(".switch-check-box").bootstrapSwitch().on('switchChange.bootstrapSwitch', function(event, state) {
@@ -156,10 +174,6 @@ $(document).ready(function(){
 
     // Hook up toggle
     $('[data-toggle="tooltip"]').tooltip();
-
-    // Shrink the Dropdown list according to the container (HAX)
-    var jumpListContainer = $(".layoutJumpListContainer");
-    jumpListContainer.find(".bootstrap-select").width(jumpListContainer.width());
 });
 
 function configureDragAndDrop() {
@@ -324,16 +338,20 @@ var XiboTimelineSaveOrder = function(timelineDiv) {
         },
         success: [
             XiboSubmitResponse,
-            afterTimeLineSaveOrder
+            afterDesignerSave
         ]
     });
 };
 
-var afterTimeLineSaveOrder = function() {
-        $('.regionPreview').each(function(idx, el) {
-            refreshPreview($(el).attr("regionid"));
-        });
-};
+function afterDesignerSave() {
+    // Region Preview Refresh
+    $('.regionPreview').each(function(idx, el) {
+        refreshPreview($(el).attr("regionid"));
+    });
+
+    // Layout Status
+    layoutStatus(layout.data('statusUrl'));
+}
 
 var LibraryAssignSubmit = function() {
     // Collect our media
@@ -395,7 +413,7 @@ function layoutStatus(url) {
                     element.addClass("fa-times");
                 }
 
-                status.html(response.html).prepend(element);
+                status.html(" " + response.html).prepend(element);
 
                 // Duration
                 $("#layout-duration").html(moment().startOf("day").seconds(response.extra.duration).format("HH:mm:ss"));

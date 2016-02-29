@@ -48,42 +48,11 @@ class Display extends Base
      */
     function displayPage()
     {
-        // Default options
-        if ($this->getSession()->get(get_class(), 'Filter') == 1) {
-            $filter_pinned = 1;
-            $filter_displaygroup = $this->getSession()->get('display', 'filter_displaygroup');
-            $filter_display = $this->getSession()->get('display', 'filter_display');
-            $filterMacAddress = $this->getSession()->get('display', 'filterMacAddress');
-            $filter_showView = $this->getSession()->get('display', 'filter_showView');
-            $filterVersion = $this->getSession()->get('display', 'filterVersion');
-            $filter_autoRefresh = $this->getSession()->get('display', 'filter_autoRefresh');
-        } else {
-            $filter_pinned = 0;
-            $filter_displaygroup = NULL;
-            $filter_display = NULL;
-            $filterMacAddress = NULL;
-            $filter_showView = 0;
-            $filterVersion = NULL;
-            $filter_autoRefresh = 0;
-        }
-
-        $data = [
-            'defaults' => [
-                'displayGroup' => $filter_displaygroup,
-                'display' => $filter_display,
-                'macAddress' => $filterMacAddress,
-                'showView' => $filter_showView,
-                'version' => $filterVersion,
-                'filterAutoRefresh' => $filter_autoRefresh,
-                'filterPinned' => $filter_pinned
-            ]
-        ];
-
-        $data['displayGroups'] = DisplayGroupFactory::query();
-
         // Call to render the template
         $this->getState()->template = 'display-page';
-        $this->getState()->setData($data);
+        $this->getState()->setData([
+            'displayGroups' => DisplayGroupFactory::query()
+        ]);
     }
 
     /**
@@ -262,17 +231,11 @@ class Display extends Base
      */
     function grid()
     {
-        // Does this grid auto refresh? Just store in session
-        $this->getSession()->set('display', 'filter_autoRefresh', Sanitize::getCheckbox('filter_autoRefresh', 0));
-
-        // Pinned option?
-        $this->getSession()->set('display', 'DisplayFilter', Sanitize::getCheckbox('XiboFilterPinned'));
-
         $filter = [
             'displayId' => Sanitize::getInt('displayId'),
-            'display' => $this->getSession()->set('display', 'filter_display', Sanitize::getString('display')),
-            'macAddress' => $this->getSession()->set('display', 'filterMacAddress', Sanitize::getString('macAddress')),
-            'displayGroupId' => $this->getSession()->set('display', 'filter_displaygroup', Sanitize::getInt('displayGroupId')),
+            'display' => Sanitize::getString('display'),
+            'macAddress' => Sanitize::getString('macAddress'),
+            'displayGroupId' => Sanitize::getInt('displayGroupId'),
             'clientVersion' => Sanitize::getString('clientVersion')
         ];
 
@@ -653,6 +616,9 @@ class Display extends Base
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
+        // Track the licenced flag
+        $licensed = $display->licensed;
+
         // Update properties
         $display->display = Sanitize::getString('display');
         $display->description = Sanitize::getString('description');
@@ -673,6 +639,11 @@ class Display extends Base
         $display->displayProfileId = Sanitize::getInt('displayProfileId');
 
         $display->save();
+
+        // Remove the cache if the display licenced state has changed
+        if ($licensed != $display->licensed) {
+            $this->getPool()->deleteItem($display->getCacheKey());
+        }
 
         // Return
         $this->getState()->hydrate([

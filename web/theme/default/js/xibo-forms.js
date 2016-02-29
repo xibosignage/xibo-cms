@@ -1,4 +1,8 @@
-var text_callback = function(dialog) {
+var text_callback = function(dialog, extra) {
+
+    if (extra == null) {
+        extra = $('.bootbox').data().extra;
+    }
 
     // Set the text template based on the selected template id
     if ($("#ta_text").val() == "" && !$("#overrideTemplate").is(":checked")) {
@@ -11,7 +15,7 @@ var text_callback = function(dialog) {
         // Get the current template selected
         var templateId = $("#templateId").val();
             
-        $.each($('.bootbox').data().extra, function(index, value) {
+        $.each(extra, function(index, value) {
             if (value.id == templateId) {
                 // Substitute the #Color# references with the suggested complimentary color
                 $("#ta_text").val(value.template.replace(/#Color#/g, color));
@@ -37,7 +41,7 @@ var text_callback = function(dialog) {
             var color = $c.complement($("#layout").data().backgroundColor);
             var templateId = $("#templateId").val();
             
-            $.each($('.bootbox').data().extra, function(index, value) {
+            $.each(extra, function(index, value) {
                 if (value.id == templateId) {
                     CKEDITOR.instances["ta_text"].setData(value.template.replace(/#Color#/g, color));
                     $("#ta_css").val(value.css);
@@ -113,30 +117,6 @@ var text_callback = function(dialog) {
     $("#backgroundColor").colorpicker();
 
     return false;
-};
-
-var datasetview_callback = function(dialog)
-{
-    $("#columnsIn, #columnsOut").sortable({
-        connectWith: '.connectedSortable',
-        dropOnEmpty: true
-    }).disableSelection();
-
-    return false; //prevent submit
-};
-
-var DataSetViewSubmit = function(apply) {
-    var form = $("#dataSetViewEditForm");
-
-    $($("#columnsIn").sortable('toArray')).each(function() {
-        form.append('<input type="hidden" name="dataSetColumnId[]" value="' + this + '" />');
-    });
-
-    // Submit the form
-    if (apply == 1)
-        form.data("apply", true);
-
-    form.submit();
 };
 
 /**

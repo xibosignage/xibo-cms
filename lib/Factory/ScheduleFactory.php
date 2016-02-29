@@ -53,6 +53,7 @@ class ScheduleFactory extends BaseFactory
     }
 
     /**
+     * Get by OwnerId
      * @param int $ownerId
      * @return array[Schedule]
      * @throws NotFoundException
@@ -99,7 +100,8 @@ class ScheduleFactory extends BaseFactory
             campaign.campaignId,
             campaign.campaign,
             `command`.commandId,
-            `command`.command
+            `command`.command,
+            `schedule`.dayPartId
           FROM `schedule`
             LEFT OUTER JOIN `campaign`
             ON campaign.CampaignID = `schedule`.CampaignID
@@ -126,6 +128,11 @@ class ScheduleFactory extends BaseFactory
         if (Sanitize::getInt('campaignId', $filterBy) !== null) {
             $sql .= ' AND `schedule`.campaignId = :campaignId ';
             $params['campaignId'] = Sanitize::getInt('campaignId', $filterBy);
+        }
+
+        if (Sanitize::getInt('ownerId', $filterBy) !== null) {
+            $sql .= ' AND `schedule`.userId = :ownerId ';
+            $params['ownerId'] = Sanitize::getInt('ownerId', $filterBy);
         }
 
         // Only 1 date
@@ -173,8 +180,6 @@ class ScheduleFactory extends BaseFactory
         // Sorting?
         if (is_array($sortOrder))
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
-
-
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new Schedule())->hydrate($row, ['intProperties' => ['isPriority']]);
