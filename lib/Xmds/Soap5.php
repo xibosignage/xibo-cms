@@ -13,9 +13,6 @@ use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
-use Xibo\Helper\Sanitize;
 
 class Soap5 extends Soap4
 {
@@ -39,16 +36,16 @@ class Soap5 extends Soap4
         $this->logProcessor->setRoute('RegisterDisplay');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
-        $displayName = Sanitize::string($displayName);
-        $clientType = Sanitize::string($clientType);
-        $clientVersion = Sanitize::string($clientVersion);
-        $clientCode = Sanitize::int($clientCode);
-        $macAddress = Sanitize::string($macAddress);
-        $clientAddress = Sanitize::getString('REMOTE_ADDR');
-        $xmrChannel = Sanitize::string($xmrChannel);
-        $xmrPubKey = trim(Sanitize::string($xmrPubKey));
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $displayName = $this->getSanitizer()->string($displayName);
+        $clientType = $this->getSanitizer()->string($clientType);
+        $clientVersion = $this->getSanitizer()->string($clientVersion);
+        $clientCode = $this->getSanitizer()->int($clientCode);
+        $macAddress = $this->getSanitizer()->string($macAddress);
+        $clientAddress = $this->getSanitizer()->getString('REMOTE_ADDR');
+        $xmrChannel = $this->getSanitizer()->string($xmrChannel);
+        $xmrPubKey = trim($this->getSanitizer()->string($xmrPubKey));
 
         if ($xmrPubKey != '' && !str_contains($xmrPubKey, 'BEGIN PUBLIC KEY')) {
             $xmrPubKey = "-----BEGIN PUBLIC KEY-----\n" . $xmrPubKey . "\n-----END PUBLIC KEY-----\n";
@@ -58,7 +55,7 @@ class Soap5 extends Soap4
         $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Check the Length of the hardwareKey
@@ -77,11 +74,11 @@ class Soap5 extends Soap4
             $this->logProcessor->setDisplay($display->displayId);
 
             // Now
-            $dateNow = Date::parse();
+            $dateNow = $this->getDate()->parse();
 
             // Append the time
-            $displayElement->setAttribute('date', Date::getLocalDate($dateNow));
-            $displayElement->setAttribute('timezone', Config::GetSetting('defaultTimezone'));
+            $displayElement->setAttribute('date', $this->getDate()->getLocalDate($dateNow));
+            $displayElement->setAttribute('timezone', $this->getConfig()->GetSetting('defaultTimezone'));
 
             // Determine if we are licensed or not
             if ($display->licensed == 0) {
@@ -105,7 +102,7 @@ class Soap5 extends Soap4
 
                     // Override the XMR address if empty
                     if (strtolower($arrayItem['name']) == 'xmrnetworkaddress' && $arrayItem['value'] == '') {
-                        $arrayItem['value'] = Config::GetSetting('XMR_PUB_ADDRESS');
+                        $arrayItem['value'] = $this->getConfig()->GetSetting('XMR_PUB_ADDRESS');
                     }
 
                     // Append Local Time to the root element
@@ -114,7 +111,7 @@ class Soap5 extends Soap4
                         $dateNow->timezone($arrayItem['value']);
 
                         // Append Local Time
-                        $displayElement->setAttribute('localDate', Date::getLocalDate($dateNow));
+                        $displayElement->setAttribute('localDate', $this->getDate()->getLocalDate($dateNow));
                     }
 
                     $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));

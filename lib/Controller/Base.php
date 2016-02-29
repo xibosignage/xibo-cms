@@ -24,9 +24,10 @@ namespace Xibo\Controller;
 use Slim\Slim;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
-use Xibo\Helper\Date;
+use Xibo\Helper\Config;
+use Xibo\Helper\DateInterface;
 use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
+use Xibo\Helper\SanitizerInterface;
 use Xibo\Storage\StorageInterface;
 
 /**
@@ -67,6 +68,7 @@ class Base
     /**
      * Called by Slim when the Controller is instantiated from a route definition
      * @param Slim $app
+     * @return Base
      */
     public function setApp($app)
     {
@@ -142,18 +144,45 @@ class Base
      * Get Log
      * @return Log
      */
-    protected function getLog()
+    public function getLog()
     {
         return $this->getApp()->logHelper;
     }
 
     /**
      * Get Help
-     * @return Help
+     * @return \Xibo\Helper\Help
      */
     protected function getHelp()
     {
         return $this->getApp()->helpService;
+    }
+
+    /**
+     * Get Date
+     * @return DateInterface
+     */
+    protected function getDate()
+    {
+        return $this->getApp()->dateService;
+    }
+
+    /**
+     * Get Sanitizer
+     * @return SanitizerInterface
+     */
+    public function getSanitizer()
+    {
+        return $this->getApp()->sanitizerService;
+    }
+
+    /**
+     * Get Config
+     * @return Config
+     */
+    public function getConfig()
+    {
+        return $this->getApp()->configService;
     }
 
     /**
@@ -214,6 +243,7 @@ class Base
             return;
 
         $app = $this->getApp();
+
         // State will contain the current ApplicationState, including a success flag that can be used to determine
         // if we are in error or not.
         $state = $this->getState();
@@ -227,7 +257,7 @@ class Base
             $recordsFiltered = ($state->recordsFiltered == null) ? $recordsTotal : $state->recordsFiltered;
 
             $data = [
-                'draw' => intval(Sanitize::getInt('draw')),
+                'draw' => intval($this->getSanitizer()->getInt('draw')),
                 'recordsTotal' => $recordsTotal,
                 'recordsFiltered' => $recordsFiltered,
                 'data' => $data
@@ -271,15 +301,17 @@ class Base
                 throw new ControllerNotImplemented(__('Template Missing'));
 
             // Append the side bar content
-            $data['clock'] = Date::getLocalDate(null, 'H:i T');
+            $data['clock'] = $this->getDate()->getLocalDate(null, 'H:i T');
             $data['currentUser'] = $this->getUser();
 
-            $this->app->render($state->template . '.twig', $data, $state->httpStatus);
+            $app->logHelper->info("Rendering Controller" . $state->template);
+
+            $app->render($state->template . '.twig', $data, $state->httpStatus);
         }
 
         $this->rendered = true;
 
-        //$this->getLog()->debug('Updating Session Data.' . json_encode($_SESSION, JSON_PRETTY_PRINT));
+        $this->getLog()->debug('Finished calling Render');
     }
 
     /**
@@ -293,8 +325,8 @@ class Base
 
         // Handle filtering
         $filter = [
-            'start' => Sanitize::getInt('start', 0),
-            'length' => Sanitize::getInt('length', 10)
+            'start' => $this->getSanitizer()->getInt('start', 0),
+            'length' => $this->getSanitizer()->getInt('length', 10)
         ];
 
         $search = $app->request->get('search', array());

@@ -11,7 +11,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DisplayGroup;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class DisplayGroupFactory extends BaseFactory
 {
@@ -106,22 +105,22 @@ class DisplayGroupFactory extends BaseFactory
               FROM `displaygroup`
         ';
 
-        if (Sanitize::getInt('mediaId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('mediaId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN lkmediadisplaygroup
                 ON lkmediadisplaygroup.displayGroupId = `displaygroup`.displayGroupId
                     AND lkmediadisplaygroup.mediaId = :mediaId
             ';
-            $params['mediaId'] = Sanitize::getInt('mediaId', $filterBy);
+            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
         }
 
-        if (Sanitize::getInt('eventId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('eventId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN `lkscheduledisplaygroup`
                 ON `lkscheduledisplaygroup`.displayGroupId = `displaygroup`.displayGroupId
                     AND `lkscheduledisplaygroup`.eventId = :eventId
             ';
-            $params['eventId'] = Sanitize::getInt('eventId', $filterBy);
+            $params['eventId'] = $this->getSanitizer()->getInt('eventId', $filterBy);
         }
 
         $body .= ' WHERE 1 = 1 ';
@@ -129,35 +128,35 @@ class DisplayGroupFactory extends BaseFactory
         // View Permissions
         $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, '`displaygroup`.displayGroupId', '`displaygroup`.userId', $filterBy);
 
-        if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
             $body .= ' AND displaygroup.displayGroupId = :displayGroupId ';
-            $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
+            $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
         }
 
-        if (Sanitize::getInt('parentId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('parentId', $filterBy) !== null) {
             $body .= ' AND `displaygroup`.displayGroupId IN (SELECT `childId` FROM `lkdgdg` WHERE `parentId` = :parentId AND `depth` = 1) ';
-            $params['parentId'] = Sanitize::getInt('parentId', $filterBy);
+            $params['parentId'] = $this->getSanitizer()->getInt('parentId', $filterBy);
         }
 
-        if (Sanitize::getInt('isDisplaySpecific', 0, $filterBy) != -1) {
+        if ($this->getSanitizer()->getInt('isDisplaySpecific', 0, $filterBy) != -1) {
             $body .= ' AND displaygroup.isDisplaySpecific = :isDisplaySpecific ';
-            $params['isDisplaySpecific'] = Sanitize::getInt('isDisplaySpecific', 0, $filterBy);
+            $params['isDisplaySpecific'] = $this->getSanitizer()->getInt('isDisplaySpecific', 0, $filterBy);
         }
 
-        if (Sanitize::getInt('isDynamic', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('isDynamic', $filterBy) !== null) {
             $body .= ' AND `displaygroup`.isDynamic = :isDynamic ';
-            $params['isDynamic'] = Sanitize::getInt('isDynamic', $filterBy);
+            $params['isDynamic'] = $this->getSanitizer()->getInt('isDynamic', $filterBy);
         }
 
-        if (Sanitize::getInt('displayId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('displayId', $filterBy) !== null) {
             $body .= ' AND displaygroup.displayGroupId IN (SELECT displayGroupId FROM lkdisplaydg WHERE displayId = :displayId) ';
-            $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
+            $params['displayId'] = $this->getSanitizer()->getInt('displayId', $filterBy);
         }
 
         // Filter by DisplayGroup Name?
-        if (Sanitize::getString('displayGroup', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('displayGroup', $filterBy) != null) {
             // convert into a space delimited array
-            $names = explode(' ', Sanitize::getString('displayGroup', $filterBy));
+            $names = explode(' ', $this->getSanitizer()->getString('displayGroup', $filterBy));
 
             $i = 0;
             foreach ($names as $searchName) {
@@ -181,8 +180,8 @@ class DisplayGroupFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         $sql = $select . $body . $order . $limit;

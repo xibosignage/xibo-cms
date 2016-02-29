@@ -23,8 +23,6 @@ use Xibo\Entity\Command;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
-use Xibo\Helper\Date;
-use Xibo\Helper\Sanitize;
 
 
 class DisplayProfile extends Base
@@ -78,9 +76,9 @@ class DisplayProfile extends Base
     function grid()
     {
         $filter = [
-            'displayProfileId' => Sanitize::getInt('displayProfileId'),
-            'displayProfile' => Sanitize::getString('displayProfile'),
-            'type' => Sanitize::getString('type')
+            'displayProfileId' => $this->getSanitizer()->getInt('displayProfileId'),
+            'displayProfile' => $this->getSanitizer()->getString('displayProfile'),
+            'type' => $this->getSanitizer()->getString('type')
         ];
 
         $profiles = (new DisplayProfileFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
@@ -168,9 +166,9 @@ class DisplayProfile extends Base
     public function add()
     {
         $displayProfile = new \Xibo\Entity\DisplayProfile();
-        $displayProfile->name = Sanitize::getString('name');
-        $displayProfile->type = Sanitize::getString('type');
-        $displayProfile->isDefault = Sanitize::getCheckbox('isDefault');
+        $displayProfile->name = $this->getSanitizer()->getString('name');
+        $displayProfile->type = $this->getSanitizer()->getString('type');
+        $displayProfile->isDefault = $this->getSanitizer()->getCheckbox('isDefault');
         $displayProfile->userId = $this->getUser()->userId;
 
         $displayProfile->save();
@@ -203,7 +201,7 @@ class DisplayProfile extends Base
 
         // Get a list of timezones
         $timeZones = [];
-        foreach (Date::timezoneList() as $key => $value) {
+        foreach ($this->getDate()->timezoneList() as $key => $value) {
             $timeZones[] = ['id' => $key, 'value' => $value];
         }
 
@@ -275,8 +273,8 @@ class DisplayProfile extends Base
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
 
-        $displayProfile->name = Sanitize::getString('name');
-        $displayProfile->isDefault = Sanitize::getCheckbox('isDefault');
+        $displayProfile->name = $this->getSanitizer()->getString('name');
+        $displayProfile->isDefault = $this->getSanitizer()->getCheckbox('isDefault');
 
         // Capture and validate the posted form parameters in accordance with the display config object.
         $combined = array();
@@ -287,23 +285,23 @@ class DisplayProfile extends Base
 
             switch ($setting['type']) {
                 case 'string':
-                    $value = Sanitize::getString($setting['name'], $setting['default']);
+                    $value = $this->getSanitizer()->getString($setting['name'], $setting['default']);
                     break;
 
                 case 'int':
-                    $value = Sanitize::getInt($setting['name'], $setting['default']);
+                    $value = $this->getSanitizer()->getInt($setting['name'], $setting['default']);
                     break;
 
                 case 'double':
-                    $value = Sanitize::getDouble($setting['name'], $setting['default']);
+                    $value = $this->getSanitizer()->getDouble($setting['name'], $setting['default']);
                     break;
 
                 case 'checkbox':
-                    $value = Sanitize::getCheckbox($setting['name']);
+                    $value = $this->getSanitizer()->getCheckbox($setting['name']);
                     break;
 
                 default:
-                    $value = Sanitize::getParam($setting['name'], $setting['default']);
+                    $value = $this->getSanitizer()->getParam($setting['name'], $setting['default']);
             }
 
             // Add to the combined array
@@ -320,10 +318,10 @@ class DisplayProfile extends Base
         // Capture and update commands
         foreach ((new CommandFactory($this->getApp()))->query() as $command) {
             /* @var Command $command */
-            if (Sanitize::getString('commandString_' . $command->commandId) != null) {
+            if ($this->getSanitizer()->getString('commandString_' . $command->commandId) != null) {
                 // Set and assign the command
-                $command->commandString = Sanitize::getString('commandString_' . $command->commandId);
-                $command->validationString = Sanitize::getString('validationString_' . $command->commandId);
+                $command->commandString = $this->getSanitizer()->getString('commandString_' . $command->commandId);
+                $command->validationString = $this->getSanitizer()->getString('validationString_' . $command->commandId);
                 $displayProfile->assignCommand($command);
             } else {
                 $displayProfile->unassignCommand($command);

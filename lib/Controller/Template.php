@@ -23,7 +23,6 @@ namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TagFactory;
-use Xibo\Helper\Sanitize;
 
 
 class Template extends Base
@@ -60,8 +59,8 @@ class Template extends Base
     {
         $templates = (new LayoutFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter([
             'excludeTemplates' => 0,
-            'tags' => Sanitize::getString('tags'),
-            'layout' => Sanitize::getString('template')
+            'tags' => $this->getSanitizer()->getString('tags'),
+            'layout' => $this->getSanitizer()->getString('template')
         ]));
 
         foreach ($templates as $template) {
@@ -238,7 +237,7 @@ class Template extends Base
         if (!$this->getUser()->checkViewable($layout))
             throw new AccessDeniedException(__('You do not have permissions to view this layout'));
 
-        if (Sanitize::getCheckbox('includeWidgets') == 1) {
+        if ($this->getSanitizer()->getCheckbox('includeWidgets') == 1) {
             $layout->load();
         }
         else {
@@ -253,10 +252,10 @@ class Template extends Base
 
         $layout = clone $layout;
 
-        $layout->layout = Sanitize::getString('name');
-        $layout->tags = (new TagFactory($this->getApp()))->tagsFromString(Sanitize::getString('tags'));
+        $layout->layout = $this->getSanitizer()->getString('name');
+        $layout->tags = (new TagFactory($this->getApp()))->tagsFromString($this->getSanitizer()->getString('tags'));
         $layout->tags[] = (new TagFactory($this->getApp()))->getByTag('template');
-        $layout->description = Sanitize::getString('description');
+        $layout->description = $this->getSanitizer()->getString('description');
         $layout->save();
 
         // Return

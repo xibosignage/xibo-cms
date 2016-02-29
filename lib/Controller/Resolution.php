@@ -25,7 +25,6 @@ use Kit;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Helper\Form;
-use Xibo\Helper\Sanitize;
 
 
 class Resolution extends Base
@@ -82,9 +81,9 @@ class Resolution extends Base
     {
         // Show enabled
         $filter = [
-            'enabled' => Sanitize::getInt('enabled', -1),
-            'resolutionId' => Sanitize::getInt('resolutionId'),
-            'resolution' => Sanitize::getString('resolution')
+            'enabled' => $this->getSanitizer()->getInt('enabled', -1),
+            'resolutionId' => $this->getSanitizer()->getInt('resolutionId'),
+            'resolution' => $this->getSanitizer()->getString('resolution')
         ];
 
         $resolutions = (new ResolutionFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
@@ -209,9 +208,9 @@ class Resolution extends Base
     function add()
     {
         $resolution = new \Xibo\Entity\Resolution();
-        $resolution->resolution = Sanitize::getString('resolution');
-        $resolution->width = Sanitize::getInt('width');
-        $resolution->height = Sanitize::getInt('height');
+        $resolution->resolution = $this->getSanitizer()->getString('resolution');
+        $resolution->width = $this->getSanitizer()->getInt('width');
+        $resolution->height = $this->getSanitizer()->getInt('height');
         $resolution->save();
 
         // Return
@@ -275,10 +274,10 @@ class Resolution extends Base
         if (!$this->getUser()->checkEditable($resolution))
             throw new AccessDeniedException();
 
-        $resolution->resolution = Sanitize::getString('resolution');
-        $resolution->width = Sanitize::getInt('width');
-        $resolution->height = Sanitize::getInt('height');
-        $resolution->enabled = Sanitize::getCheckbox('enabled');
+        $resolution->resolution = $this->getSanitizer()->getString('resolution');
+        $resolution->width = $this->getSanitizer()->getInt('width');
+        $resolution->height = $this->getSanitizer()->getInt('height');
+        $resolution->enabled = $this->getSanitizer()->getCheckbox('enabled');
         $resolution->save();
 
         // Return

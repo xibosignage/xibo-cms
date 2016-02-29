@@ -21,8 +21,6 @@
 namespace Xibo\Widget;
 
 
-use Xibo\Helper\Sanitize;
-
 class Video extends ModuleWidget
 {
     /**
@@ -39,7 +37,7 @@ class Video extends ModuleWidget
     public function settings()
     {
         // Process any module settings you asked for.
-        $this->module->settings['defaultMute'] = Sanitize::getCheckbox('defaultMute');
+        $this->module->settings['defaultMute'] = $this->getSanitizer()->getCheckbox('defaultMute');
 
         if ($this->getModule()->defaultDuration !== 0)
             throw new \InvalidArgumentException(__('The Video Module must have a default duration of 0 to detect the end of videos.'));
@@ -54,17 +52,17 @@ class Video extends ModuleWidget
     public function edit()
     {
         // Set the properties specific to this module
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
-        $this->setOption('name', Sanitize::getString('name', $this->getOption('name')));
-        $this->setOption('scaleType', Sanitize::getString('scaleTypeId', 'aspect'));
-        $this->setOption('mute', Sanitize::getCheckbox('mute'));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setOption('name', $this->getSanitizer()->getString('name', $this->getOption('name')));
+        $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'aspect'));
+        $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
 
         // Only loop if the duration is > 0
         if ($this->getUseDuration() == 0 || $this->getDuration() == 0)
             $this->setOption('loop', 0);
         else
-            $this->setOption('loop', Sanitize::getCheckbox('loop'));
+            $this->setOption('loop', $this->getSanitizer()->getCheckbox('loop'));
 
         $this->saveWidget();
     }
@@ -95,7 +93,7 @@ class Video extends ModuleWidget
         $this->getLog()->debug('Determine Duration from %s', $fileName);
         $info = new \getID3();
         $file = $info->analyze($fileName);
-        return intval(Sanitize::getDouble('playtime_seconds', 0, $file));
+        return intval($this->getSanitizer()->getDouble('playtime_seconds', 0, $file));
     }
 
     /**

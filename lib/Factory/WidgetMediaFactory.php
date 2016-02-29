@@ -45,6 +45,6 @@ class WidgetMediaFactory extends BaseFactory
     {
         $sql = 'SELECT mediaId FROM `lkwidgetmedia` WHERE widgetId = :widgetId';
 
-        return array_map(function($element) { return $element['mediaId']; }, $this->getStore()->select($sql, array('widgetId' => \Xibo\Helper\Sanitize::getInt('widgetId', $filterBy))));
+        return array_map(function($element) { return $element['mediaId']; }, $this->getStore()->select($sql, array('widgetId' => $this->getSanitizer()->getInt('widgetId', $filterBy))));
     }
 }

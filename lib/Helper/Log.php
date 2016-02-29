@@ -70,6 +70,11 @@ class Log
         $this->userId = $userId;
     }
 
+    public function setMode($mode)
+    {
+        $this->mode = $mode;
+    }
+
     /**
      * Audit Log
      * @param string $entity

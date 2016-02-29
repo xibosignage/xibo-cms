@@ -10,7 +10,6 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Helper\Config;
 
 /**
  * Class Schedule
@@ -201,7 +200,7 @@ class Schedule implements \JsonSerializable
 
         // From Date and To Date are in UNIX format
         $currentDate = time();
-        $rfLookAhead = intval($currentDate) + intval(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'));
+        $rfLookAhead = intval($currentDate) + intval($this->getConfig()->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         if ($toDt == null)
             $toDt = $fromDt;

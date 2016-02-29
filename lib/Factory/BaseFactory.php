@@ -11,8 +11,10 @@ namespace Xibo\Factory;
 
 use Slim\Slim;
 use Xibo\Entity\User;
+use Xibo\Helper\Config;
+use Xibo\Helper\DateInterface;
 use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
+use Xibo\Helper\SanitizerInterface;
 use Xibo\Storage\StorageInterface;
 
 class BaseFactory
@@ -89,6 +91,33 @@ class BaseFactory
     }
 
     /**
+     * Get Date
+     * @return DateInterface
+     */
+    protected function getDate()
+    {
+        return $this->getApp()->dateService;
+    }
+
+    /**
+     * Get Sanitizer
+     * @return SanitizerInterface
+     */
+    protected function getSanitizer()
+    {
+        return $this->getApp()->sanitizerService;
+    }
+
+    /**
+     * Get Config
+     * @return Config
+     */
+    protected function getConfig()
+    {
+        return $this->getApp()->configService;
+    }
+
+    /**
      * View Permission SQL
      * @param $entity
      * @param $sql
@@ -99,11 +128,11 @@ class BaseFactory
      */
     public function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [])
     {
-        $user = (Sanitize::getInt('userCheckUserId', $filterBy) !== null) ? (new UserFactory($this->app))->getById(Sanitize::getInt('userCheckUserId', $filterBy)) : $this->getUser();
+        $user = ($this->getSanitizer()->getInt('userCheckUserId', $filterBy) !== null) ? (new UserFactory($this->app))->getById($this->getSanitizer()->getInt('userCheckUserId', $filterBy)) : $this->getUser();
 
         $permissionSql = '';
 
-        if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0 && $user->userTypeId != 1) {
+        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0 && $user->userTypeId != 1) {
             $permissionSql .= '
               AND (' . $idColumn . ' IN (
                 SELECT `permission`.objectId

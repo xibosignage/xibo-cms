@@ -10,7 +10,6 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\UserOption;
-use Xibo\Helper\Sanitize;
 
 class UserOptionFactory extends BaseFactory
 {
@@ -56,7 +55,7 @@ class UserOptionFactory extends BaseFactory
 
         $sql = 'SELECT * FROM `useroption` WHERE userId = :userId';
 
-        foreach ($this->getStore()->select($sql, array('userId' => Sanitize::getInt('userId', $filterBy))) as $row) {
+        foreach ($this->getStore()->select($sql, array('userId' => $this->getSanitizer()->getInt('userId', $filterBy))) as $row) {
             $entries[] = (new UserOption())->hydrate($row)->setApp($this->getApp());
         }
 

@@ -19,8 +19,6 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Sanitize;
 
 class Playlist extends Base
 {
@@ -42,21 +40,21 @@ class Playlist extends Base
     public function add()
     {
         $playlist = new \Xibo\Entity\Playlist();
-        $playlist->name = Sanitize::getString('name');
+        $playlist->name = $this->getSanitizer()->getString('name');
         $playlist->save();
 
         // Assign to a region?
-        if (Sanitize::getInt('regionId') !== null) {
-            $region = (new RegionFactory($this->getApp()))->getById(Sanitize::getInt('regionId'));
+        if ($this->getSanitizer()->getInt('regionId') !== null) {
+            $region = (new RegionFactory($this->getApp()))->getById($this->getSanitizer()->getInt('regionId'));
 
             // Assert the provided display order
-            $playlist->displayOrder = Sanitize::getInt('displayOrder');
+            $playlist->displayOrder = $this->getSanitizer()->getInt('displayOrder');
 
             // Assign to a region
             $region->assignPlaylist($playlist);
             $region->save();
 
-            if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
+            if ($this->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
                 // Apply permissions from the Parent
                 foreach ($region->permissions as $permission) {
                     /* @var Permission $permission */
@@ -70,9 +68,9 @@ class Playlist extends Base
         $playlist->notifyLayouts();
 
         // Permissions
-        if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS' == 0)) {
+        if ($this->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS' == 0)) {
             // Default permissions
-            foreach ((new PermissionFactory($this->getApp()))->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+            foreach ((new PermissionFactory($this->getApp()))->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT')) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
@@ -101,7 +99,7 @@ class Playlist extends Base
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
 
-        $playlist->name = Sanitize::getString('name');
+        $playlist->name = $this->getSanitizer()->getString('name');
         $playlist->save();
 
         // Success
@@ -169,7 +167,7 @@ class Playlist extends Base
         // Transitions
         $transIn = (new TransitionFactory($this->getApp()))->getEnabledByType('in');
         $transOut = (new TransitionFactory($this->getApp()))->getEnabledByType('out');
-        $widgets = (new WidgetFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter(['playlistId' => Sanitize::getInt('playlistId')]));
+        $widgets = (new WidgetFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter(['playlistId' => $this->getSanitizer()->getInt('playlistId')]));
 
         foreach ($widgets as $widget) {
 
@@ -301,7 +299,7 @@ class Playlist extends Base
             throw new AccessDeniedException();
 
         // Expect a list of mediaIds
-        $media = Sanitize::getIntArray('media');
+        $media = $this->getSanitizer()->getIntArray('media');
 
         if (count($media) <= 0)
             throw new \InvalidArgumentException(__('Please provide Media to Assign'));
@@ -342,7 +340,7 @@ class Playlist extends Base
         // Handle permissions
         foreach ($newWidgets as $widget) {
             /* @var Widget $widget */
-            if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
+            if ($this->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
                 // Apply permissions from the Parent
                 foreach ($playlist->permissions as $permission) {
                     /* @var Permission $permission */
@@ -350,7 +348,7 @@ class Playlist extends Base
                     $permission->save();
                 }
             } else {
-                foreach ((new PermissionFactory($this->getApp()))->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                foreach ((new PermissionFactory($this->getApp()))->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT')) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
                 }
@@ -409,7 +407,7 @@ class Playlist extends Base
         $playlist->load();
 
         // Get our list of widget orders
-        $widgets = Sanitize::getParam('widgets', null);
+        $widgets = $this->getSanitizer()->getParam('widgets', null);
 
         // Go through each one and move it
         foreach ($widgets as $widgetId => $position) {

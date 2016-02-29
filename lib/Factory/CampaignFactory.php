@@ -24,7 +24,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Campaign;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class CampaignFactory extends BaseFactory
 {
@@ -117,33 +116,33 @@ class CampaignFactory extends BaseFactory
         // View Permissions
         $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, '`campaign`.campaignId', '`campaign`.userId', $filterBy);
 
-        if (Sanitize::getString('isLayoutSpecific', 0, $filterBy) != -1) {
+        if ($this->getSanitizer()->getString('isLayoutSpecific', 0, $filterBy) != -1) {
             // Exclude layout specific campaigns
             $body .= " AND `campaign`.isLayoutSpecific = :isLayoutSpecific ";
-            $params['isLayoutSpecific'] = Sanitize::getString('isLayoutSpecific', 0, $filterBy);
+            $params['isLayoutSpecific'] = $this->getSanitizer()->getString('isLayoutSpecific', 0, $filterBy);
         }
 
-        if (Sanitize::getString('campaignId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getString('campaignId', 0, $filterBy) != 0) {
             // Join Campaign back onto it again
             $body .= " AND `campaign`.campaignId = :campaignId ";
-            $params['campaignId'] = Sanitize::getString('campaignId', 0, $filterBy);
+            $params['campaignId'] = $this->getSanitizer()->getString('campaignId', 0, $filterBy);
         }
 
-        if (Sanitize::getString('ownerId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getString('ownerId', 0, $filterBy) != 0) {
             // Join Campaign back onto it again
             $body .= " AND `campaign`.userId = :ownerId ";
-            $params['ownerId'] = Sanitize::getString('ownerId', 0, $filterBy);
+            $params['ownerId'] = $this->getSanitizer()->getString('ownerId', 0, $filterBy);
         }
 
-        if (Sanitize::getString('layoutId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getString('layoutId', 0, $filterBy) != 0) {
             // Filter by Layout
             $body .= " AND `lkcampaignlayout`.layoutId = :layoutId ";
-            $params['layoutId'] = Sanitize::getString('layoutId', 0, $filterBy);
+            $params['layoutId'] = $this->getSanitizer()->getString('layoutId', 0, $filterBy);
         }
 
-        if (Sanitize::getString('name', $filterBy) != '') {
+        if ($this->getSanitizer()->getString('name', $filterBy) != '') {
             // convert into a space delimited array
-            $names = explode(' ', Sanitize::getString('name', $filterBy));
+            $names = explode(' ', $this->getSanitizer()->getString('name', $filterBy));
 
             $i = 0;
             foreach($names as $searchName) {
@@ -170,8 +169,8 @@ class CampaignFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         $sql = $select . $body . $group . $order . $limit;

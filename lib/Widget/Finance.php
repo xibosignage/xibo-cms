@@ -26,9 +26,6 @@ use GuzzleHttp\Exception\RequestException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Cache;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
-use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 class Finance extends ModuleWidget
@@ -116,7 +113,7 @@ class Finance extends ModuleWidget
      */
     public function settings()
     {
-        $this->module->settings['cachePeriod'] = Sanitize::getInt('cachePeriod', 300);
+        $this->module->settings['cachePeriod'] = $this->getSanitizer()->getInt('cachePeriod', 300);
 
         // Return an array of the processed settings.
         return $this->module->settings;
@@ -154,23 +151,23 @@ class Finance extends ModuleWidget
 
     public function setCommonOptions()
     {
-        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setOption('name', Sanitize::getString('name'));
-        $this->setOption('yql', Sanitize::getString('yql'));
-        $this->setOption('item', Sanitize::getString('item'));
-        $this->setOption('resultIdentifier', Sanitize::getString('resultIdentifier'));
-        $this->setOption('effect', Sanitize::getString('effect'));
-        $this->setOption('speed', Sanitize::getInt('speed'));
-        $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
-        $this->setOption('noRecordsMessage', Sanitize::getString('noRecordsMessage'));
-        $this->setOption('dateFormat', Sanitize::getString('dateFormat'));
-        $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
-        $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
-        $this->setOption('templateId', Sanitize::getString('templateId'));
-        $this->setOption('durationIsPerItem', Sanitize::getCheckbox('durationIsPerItem'));
-        $this->setRawNode('template', Sanitize::getParam('ta_text', Sanitize::getParam('template', null)));
-        $this->setRawNode('styleSheet', Sanitize::getParam('ta_css', Sanitize::getParam('styleSheet', null)));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('yql', $this->getSanitizer()->getString('yql'));
+        $this->setOption('item', $this->getSanitizer()->getString('item'));
+        $this->setOption('resultIdentifier', $this->getSanitizer()->getString('resultIdentifier'));
+        $this->setOption('effect', $this->getSanitizer()->getString('effect'));
+        $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
+        $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
+        $this->setOption('noRecordsMessage', $this->getSanitizer()->getString('noRecordsMessage'));
+        $this->setOption('dateFormat', $this->getSanitizer()->getString('dateFormat'));
+        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
+        $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
+        $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
+        $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
+        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
     }
 
     /**
@@ -249,7 +246,7 @@ class Finance extends ModuleWidget
         $client = new Client();
 
         try {
-            $response = $client->get($url, Config::getGuzzleProxy());
+            $response = $client->get($url, $this->getConfig()->getGuzzleProxy());
 
             if ($response->getStatusCode() == 200) {
                 return json_decode($response->getBody(), true)['query']['results'];
@@ -285,7 +282,7 @@ class Finance extends ModuleWidget
             if (stripos($replace, 'time|') > -1) {
                 $timeSplit = explode('|', $replace);
 
-                $time = Date::getLocalDate($data['time'], $timeSplit[1]);
+                $time = $this->getDate()->getLocalDate($data['time'], $timeSplit[1]);
 
                 $this->getLog()->debug('Time: ' . $time);
 
@@ -322,7 +319,7 @@ class Finance extends ModuleWidget
     public function getResource($displayId = 0)
     {
         $data = [];
-        $isPreview = (Sanitize::getCheckbox('preview') == 1);
+        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
@@ -355,9 +352,9 @@ class Finance extends ModuleWidget
             'itemsPerPage' => 1,
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => Sanitize::getDouble('width', 0),
-            'previewHeight' => Sanitize::getDouble('height', 0),
-            'scaleOverride' => Sanitize::getDouble('scale_override', 0)
+            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
+            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
+            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
         );
 
         // Replace the control meta with our data from twitter
@@ -379,7 +376,7 @@ class Finance extends ModuleWidget
 
         // Add our fonts.css file
         $headContent .= '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
-        $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
+        $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         // Replace the Head Content with our generated javascript
         $data['head'] = $headContent;

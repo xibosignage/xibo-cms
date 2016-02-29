@@ -27,9 +27,6 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\ByteFormatter;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
-use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 class StatusDashboard extends Base
@@ -65,7 +62,7 @@ class StatusDashboard extends Base
             $results = $this->getStore()->select($sql, $params);
 
             // Monthly bandwidth - optionally tested against limits
-            $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
+            $xmdsLimit = $this->getConfig()->GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 
             $maxSize = 0;
             foreach ($results as $row) {
@@ -87,7 +84,7 @@ class StatusDashboard extends Base
                 $size = ((double)$row['size']) / (pow(1024, $base));
                 $remaining = $xmdsLimit - $size;
                 $output[] = array(
-                    'label' => Date::getLocalDate(Sanitize::getDate('month', $row), 'F'),
+                    'label' => $this->getDate()->getLocalDate($this->getSanitizer()->getDate('month', $row), 'F'),
                     'value' => round($size, 2),
                     'limit' => round($remaining, 2)
                 );
@@ -96,7 +93,7 @@ class StatusDashboard extends Base
             // What if we are empty?
             if (count($output) == 0) {
                 $output[] = array(
-                    'label' => Date::getLocalDate(null, 'F'),
+                    'label' => $this->getDate()->getLocalDate(null, 'F'),
                     'value' => 0,
                     'limit' => 0
                 );
@@ -112,7 +109,7 @@ class StatusDashboard extends Base
                 $libraryLimit = $this->getUser()->libraryQuota * 1024;
             }
             else {
-                $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+                $libraryLimit = $this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
             }
 
             // Library Size in Bytes
@@ -200,12 +197,12 @@ class StatusDashboard extends Base
             $data['nowShowing'] = $sth->fetchColumn(0);
 
             // Latest news
-            if (Config::GetSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1) {
+            if ($this->getConfig()->GetSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1) {
                 // Make sure we have the cache location configured
-                Library::ensureLibraryExists();
+                Library::ensureLibraryExists($this->getConfig()->GetSetting('LIBRARY_LOCATION'));
 
                 try {
-                    $feedUrl = Theme::getConfig('latest_news_url');
+                    $feedUrl = $this->getConfig()->getThemeConfig('latest_news_url');
                     $cache = $this->getPool()->getItem('rss/' . md5($feedUrl));
 
                     $latestNews = $cache->get();
@@ -214,7 +211,7 @@ class StatusDashboard extends Base
                     if ($cache->isMiss()) {
 
                         // Get the feed
-                        $reader = new Reader(Config::getPicoFeedProxy($feedUrl));
+                        $reader = new Reader($this->getConfig()->getPicoFeedProxy($feedUrl));
                         $resource = $reader->download($feedUrl);
 
                         // Get the feed parser
@@ -264,7 +261,7 @@ class StatusDashboard extends Base
         }
 
         // Do we have an embedded widget?
-        $data['embedded-widget'] = html_entity_decode(Config::GetSetting('EMBEDDED_STATUS_WIDGET'));
+        $data['embedded-widget'] = html_entity_decode($this->getConfig()->GetSetting('EMBEDDED_STATUS_WIDGET'));
 
         // Render the Theme and output
         $this->getState()->template = 'dashboard-status-page';

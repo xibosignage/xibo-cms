@@ -11,7 +11,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\ApplicationRedirectUri;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class ApplicationRedirectUriFactory extends BaseFactory
 {
@@ -57,14 +56,14 @@ class ApplicationRedirectUriFactory extends BaseFactory
 
         $body = ' FROM `oauth_client_redirect_uris` WHERE 1 = 1 ';
 
-        if (Sanitize::getString('clientId', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('clientId', $filterBy) != null) {
             $body .= ' AND `oauth_client_redirect_uris`.client_id = :clientId ';
-            $params['clientId'] = Sanitize::getString('clientId', $filterBy);
+            $params['clientId'] = $this->getSanitizer()->getString('clientId', $filterBy);
         }
 
-        if (Sanitize::getString('id', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('id', $filterBy) != null) {
             $body .= ' AND `oauth_client_redirect_uris`.client_id = :id ';
-            $params['id'] = Sanitize::getString('id', $filterBy);
+            $params['id'] = $this->getSanitizer()->getString('id', $filterBy);
         }
 
         // Sorting?
@@ -74,8 +73,8 @@ class ApplicationRedirectUriFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         // The final statements

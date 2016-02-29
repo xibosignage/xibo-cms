@@ -11,7 +11,6 @@ namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CommandFactory;
-use Xibo\Helper\Sanitize;
 
 class Command extends Base
 {
@@ -61,9 +60,9 @@ class Command extends Base
     function grid()
     {
         $filter = [
-            'commandId' => Sanitize::getInt('commandId'),
-            'command' => Sanitize::getString('command'),
-            'code' => Sanitize::getString('code')
+            'commandId' => $this->getSanitizer()->getInt('commandId'),
+            'command' => $this->getSanitizer()->getString('command'),
+            'code' => $this->getSanitizer()->getString('code')
         ];
 
         $commands = (new CommandFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
@@ -184,9 +183,9 @@ class Command extends Base
     public function add()
     {
         $command = new \Xibo\Entity\Command();
-        $command->command = Sanitize::getString('command');
-        $command->description = Sanitize::getString('description');
-        $command->code = Sanitize::getString('code');
+        $command->command = $this->getSanitizer()->getString('command');
+        $command->description = $this->getSanitizer()->getString('description');
+        $command->code = $this->getSanitizer()->getString('code');
         $command->userId = $this->getUser()->userId;
         $command->save();
 
@@ -251,9 +250,9 @@ class Command extends Base
         if ($command->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $command->command = Sanitize::getString('command');
-        $command->description = Sanitize::getString('description');
-        $command->code = Sanitize::getString('code');
+        $command->command = $this->getSanitizer()->getString('command');
+        $command->description = $this->getSanitizer()->getString('description');
+        $command->code = $this->getSanitizer()->getString('code');
         $command->save();
 
         // Return

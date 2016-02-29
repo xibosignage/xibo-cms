@@ -9,8 +9,6 @@
 namespace Xibo\Upgrade;
 
 
-use Xibo\Helper\Config;
-
 class MyIsamToInnoDbStep implements Step
 {
     public static function doStep()
@@ -18,7 +16,7 @@ class MyIsamToInnoDbStep implements Step
         $sql = '
           SELECT TABLE_NAME
             FROM INFORMATION_SCHEMA.TABLES
-           WHERE TABLE_SCHEMA = \'' . Config::$dbConfig['name']  . '\'
+           WHERE TABLE_SCHEMA = \'' . $this->getConfig()->$dbConfig['name']  . '\'
             AND ENGINE = \'MyISAM\'
         ';
 

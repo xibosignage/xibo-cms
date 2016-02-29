@@ -14,6 +14,7 @@ use Slim\Environment;
 use Slim\Slim;
 use There4\Slim\Test\WebTestCase;
 use Xibo\Helper\AccessibleMonologWriter;
+use Xibo\Helper\Config;
 use Xibo\Middleware\ApiView;
 
 class LocalWebTestCase extends WebTestCase
@@ -58,6 +59,9 @@ class LocalWebTestCase extends WebTestCase
         ));
         $app->setName('default');
         $app->setName('test');
+
+        // Config
+        Config::Load($app, PROJECT_ROOT . '/web/settings.php');
 
         $app->add(new TestAuthMiddleware());
         $app->add(new \Xibo\Middleware\State());

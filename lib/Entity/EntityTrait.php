@@ -10,9 +10,11 @@ namespace Xibo\Entity;
 
 
 use Slim\Slim;
+use Xibo\Helper\Config;
+use Xibo\Helper\DateInterface;
 use Xibo\Helper\Log;
 use Xibo\Helper\ObjectVars;
-use Xibo\Helper\Sanitize;
+use Xibo\Helper\SanitizerInterface;
 use Xibo\Storage\StorageInterface;
 
 trait EntityTrait
@@ -50,7 +52,7 @@ trait EntityTrait
                 if (stripos(strrev($prop), 'dI') === 0 || in_array($prop, $intProperties))
                     $val = intval($val);
                 else if (in_array($prop, $stringProperties))
-                    $val = Sanitize::string($val);
+                    $val = $this->getSanitizer()->string($val);
                 else if (in_array($prop, $htmlStringProperties))
                     $val = htmlentities($val);
 
@@ -164,5 +166,32 @@ trait EntityTrait
     protected function getLog()
     {
         return $this->getApp()->logHelper;
+    }
+
+    /**
+     * Get Date
+     * @return DateInterface
+     */
+    protected function getDate()
+    {
+        return $this->getApp()->dateService;
+    }
+
+    /**
+     * Get Sanitizer
+     * @return SanitizerInterface
+     */
+    protected function getSanitizer()
+    {
+        return $this->getApp()->sanitizerService;
+    }
+
+    /**
+     * Get Config
+     * @return Config
+     */
+    protected function getConfig()
+    {
+        return $this->getApp()->configService;
     }
 }

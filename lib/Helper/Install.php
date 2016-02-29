@@ -20,10 +20,16 @@
  */
 namespace Xibo\Helper;
 
+use Slim\Slim;
 use Xibo\Exception\InstallationError;
 
 class Install
 {
+    /**
+     * @var Slim
+     */
+    private $app;
+
     // DB Details
     public $db_create;
     public $db_admin_user;
@@ -36,6 +42,21 @@ class Install
     public $existing_db_user;
     public $existing_db_pass;
     public $existing_db_name;
+
+    public function __construct($app)
+    {
+        $this->app = $app;
+    }
+
+    /**
+     * Get the App
+     * @return Slim
+     * @throws \Exception
+     */
+    public function getApp()
+    {
+        return $this->app;
+    }
 
     public function Step1()
     {
@@ -52,21 +73,21 @@ class Install
     public function Step3()
     {
         // Have we been told to create a new database
-        $this->db_create = Sanitize::getInt('db_create');
+        $this->db_create = $this->getSanitizer()->getInt('db_create');
 
         // Check all parameters have been specified
-        $this->db_admin_user = Sanitize::getString('admin_username');
-        $this->db_admin_pass = Sanitize::getString('admin_password');
+        $this->db_admin_user = $this->getSanitizer()->getString('admin_username');
+        $this->db_admin_pass = $this->getSanitizer()->getString('admin_password');
 
-        $this->new_db_host = Sanitize::getString('host');
-        $this->new_db_user = Sanitize::getString('db_username');
-        $this->new_db_pass = Sanitize::getString('db_password');
-        $this->new_db_name = Sanitize::getString('db_name');
+        $this->new_db_host = $this->getSanitizer()->getString('host');
+        $this->new_db_user = $this->getSanitizer()->getString('db_username');
+        $this->new_db_pass = $this->getSanitizer()->getString('db_password');
+        $this->new_db_name = $this->getSanitizer()->getString('db_name');
 
-        $this->existing_db_host = Sanitize::getString('existing_host');
-        $this->existing_db_user = Sanitize::getString('existing_db_username');
-        $this->existing_db_pass = Sanitize::getString('existing_db_password');
-        $this->existing_db_name = Sanitize::getString('existing_db_name');
+        $this->existing_db_host = $this->getSanitizer()->getString('existing_host');
+        $this->existing_db_user = $this->getSanitizer()->getString('existing_db_username');
+        $this->existing_db_pass = $this->getSanitizer()->getString('existing_db_password');
+        $this->existing_db_name = $this->getSanitizer()->getString('existing_db_name');
 
         // If an administrator user name / password has been specified then we should create a new DB
         if ($this->db_create == 1) {
@@ -248,8 +269,8 @@ END;
     public function Step5()
     {
         // Configure the user account
-        $username = Sanitize::getString('admin_username');
-        $password = Sanitize::getString('admin_password');
+        $username = $this->getSanitizer()->getString('admin_username');
+        $password = $this->getSanitizer()->getString('admin_password');
 
         if ($username == '')
             throw new InstallationError(__('Missing the admin username.'));
@@ -287,9 +308,9 @@ END;
 
     public function Step7()
     {
-        $server_key = Sanitize::getString('server_key');
-        $library_location = Sanitize::getString('library_location');
-        $stats = Sanitize::getCheckbox('stats');
+        $server_key = $this->getSanitizer()->getString('server_key');
+        $library_location = $this->getSanitizer()->getString('library_location');
+        $stats = $this->getSanitizer()->getCheckbox('stats');
 
         if ($server_key == '')
             throw new InstallationError(__('Missing the server key.'));

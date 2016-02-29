@@ -16,7 +16,6 @@ use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\TokenExpiredException;
 use Xibo\Exception\UpgradePendingException;
-use Xibo\Helper\Config;
 use Xibo\Helper\Translate;
 
 class Error extends Base
@@ -27,11 +26,11 @@ class Error extends Base
 
         // Not found controller happens outside the normal middleware stack for some reason
         // Setup the translations for gettext
-        Translate::InitLocale();
+        Translate::InitLocale($app);
 
         // Configure the locale for date/time
         if (Translate::GetLocale(2) != '')
-            \Jenssegers\Date\Date::setLocale(Translate::GetLocale(2));
+            $this->getDate()->setLocale(Translate::GetLocale(2));
 
         $this->getLog()->debug('Page Not Found. %s', $app->request()->getResourceUri());
 
@@ -118,7 +117,7 @@ class Error extends Base
                     $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($e)));
 
                     // An upgrade might be pending
-                    if ($e instanceof AccessDeniedException && Config::isUpgradePending())
+                    if ($e instanceof AccessDeniedException && $this->getConfig()->isUpgradePending())
                         $exceptionClass = 'upgrade-in-progress-page';
 
                     if (file_exists(PROJECT_ROOT . '/views/' . $exceptionClass . '.twig'))

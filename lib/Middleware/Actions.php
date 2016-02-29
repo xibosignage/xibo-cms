@@ -26,7 +26,6 @@ namespace Xibo\Middleware;
 use Slim\Middleware;
 use Xibo\Controller\Library;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Helper\Config;
 use Xibo\Helper\Theme;
 use Xibo\Helper\Translate;
 
@@ -41,9 +40,9 @@ class Actions extends Middleware
         $app->hook('slim.before.dispatch', function() use ($app) {
 
             // Process Actions
-            if (!Config::isUpgradePending() && Config::GetSetting('DEFAULTS_IMPORTED') == 0) {
+            if (!$app->configService->isUpgradePending() && $app->configService->GetSetting('DEFAULTS_IMPORTED') == 0) {
 
-                $folder = Theme::uri('layouts', true);
+                $folder = $this->getConfig()->uri('layouts', true);
 
                 foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                     if (stripos($file, '.zip')) {
@@ -55,9 +54,9 @@ class Actions extends Middleware
                 }
 
                 // Install files
-                Library::installAllModuleFiles($app);
+                (new Library())->installAllModuleFiles();
 
-                Config::ChangeSetting('DEFAULTS_IMPORTED', 1);
+                $app->configService->ChangeSetting('DEFAULTS_IMPORTED', 1);
             }
 
             // Handle if we are an upgrade
@@ -72,7 +71,7 @@ class Actions extends Middleware
 
             // Does the version in the DB match the version of the code?
             // If not then we need to run an upgrade.
-            if (Config::isUpgradePending() && !in_array($resource, $excludedRoutes)) {
+            if ($app->configService->isUpgradePending() && !in_array($resource, $excludedRoutes)) {
                 $app->logHelper->debug('%s not in excluded routes, redirecting. ', $resource);
                 $app->redirectTo('upgrade.view');
             }

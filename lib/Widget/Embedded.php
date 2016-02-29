@@ -21,7 +21,6 @@
 namespace Xibo\Widget;
 
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 class Embedded extends ModuleWidget
@@ -41,14 +40,14 @@ class Embedded extends ModuleWidget
     public function add()
     {
         // Required Attributes
-        $this->setDuration(Sanitize::getInt('duration'));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->SetOption('name', Sanitize::getString('name'));
-        $this->SetOption('transparency', Sanitize::getCheckbox('transparency'));
-        $this->SetOption('scaleContent', Sanitize::getCheckbox('scaleContent'));
-        $this->setRawNode('embedHtml', Sanitize::getParam('embedHtml', null));
-        $this->setRawNode('embedScript', Sanitize::getParam('embedScript', null));
-        $this->setRawNode('embedStyle', Sanitize::getParam('embedStyle', null));
+        $this->setDuration($this->getSanitizer()->getInt('duration'));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->SetOption('name', $this->getSanitizer()->getString('name'));
+        $this->SetOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
+        $this->SetOption('scaleContent', $this->getSanitizer()->getCheckbox('scaleContent'));
+        $this->setRawNode('embedHtml', $this->getSanitizer()->getParam('embedHtml', null));
+        $this->setRawNode('embedScript', $this->getSanitizer()->getParam('embedScript', null));
+        $this->setRawNode('embedStyle', $this->getSanitizer()->getParam('embedStyle', null));
 
         // Save the widget
         $this->saveWidget();
@@ -59,14 +58,14 @@ class Embedded extends ModuleWidget
      */
     public function edit()
     {
-        $this->setDuration(Sanitize::getInt('duration'));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->SetOption('name', Sanitize::getString('name'));
-        $this->SetOption('transparency', Sanitize::getCheckbox('transparency'));
-        $this->SetOption('scaleContent', Sanitize::getCheckbox('scaleContent'));
-        $this->setRawNode('embedHtml', Sanitize::getParam('embedHtml', null));
-        $this->setRawNode('embedScript', Sanitize::getParam('embedScript', null));
-        $this->setRawNode('embedStyle', Sanitize::getParam('embedStyle', null));
+        $this->setDuration($this->getSanitizer()->getInt('duration'));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->SetOption('name', $this->getSanitizer()->getString('name'));
+        $this->SetOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
+        $this->SetOption('scaleContent', $this->getSanitizer()->getCheckbox('scaleContent'));
+        $this->setRawNode('embedHtml', $this->getSanitizer()->getParam('embedHtml', null));
+        $this->setRawNode('embedScript', $this->getSanitizer()->getParam('embedScript', null));
+        $this->setRawNode('embedStyle', $this->getSanitizer()->getParam('embedStyle', null));
 
         // Save the widget
         $this->saveWidget();
@@ -88,7 +87,7 @@ class Embedded extends ModuleWidget
     {
         // Behave exactly like the client.
         $data = [];
-        $isPreview = (Sanitize::getCheckbox('preview') == 1);
+        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
@@ -113,9 +112,9 @@ class Embedded extends ModuleWidget
         $options = array(
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => Sanitize::getDouble('width', 0),
-            'previewHeight' => Sanitize::getDouble('height', 0),
-            'scaleOverride' => Sanitize::getDouble('scale_override', 0)
+            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
+            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
+            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
         );
 
         // Add an options variable with some useful information for scaling
@@ -135,7 +134,7 @@ class Embedded extends ModuleWidget
 
         // Add our fonts.css file
         $headContent = '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
-        $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
+        $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         $data['head'] = $headContent;
 

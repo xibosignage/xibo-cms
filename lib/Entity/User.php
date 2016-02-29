@@ -33,8 +33,6 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserOptionFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Sanitize;
 
 // These constants may be changed without breaking existing hashes.
 define("PBKDF2_HASH_ALGORITHM", "sha256");
@@ -347,7 +345,7 @@ class User implements \JsonSerializable
         if ($this->userId == 0)
             throw new NotFoundException(__('User not found'));
 
-        if ($this->CSPRNG == 0 || Config::Version('DBVersion') < 62) {
+        if ($this->CSPRNG == 0 || $this->getConfig()->Version('DBVersion') < 62) {
             // Password is tested using a plain MD5 check
             if ($this->password != md5($password))
                 throw new AccessDeniedException();
@@ -377,7 +375,7 @@ class User implements \JsonSerializable
      */
     public function hasIdentity()
     {
-        $userId = isset($_SESSION['userid']) ? Sanitize::int($_SESSION['userid']) : 0;
+        $userId = isset($_SESSION['userid']) ? $this->getSanitizer()->int($_SESSION['userid']) : 0;
 
         // Checks for a user ID in the session variable
         if ($userId == 0) {
@@ -1022,7 +1020,7 @@ class User implements \JsonSerializable
             if (!$row = $sth->fetch())
                 throw new LibraryFullException("Error Processing Request", 1);
 
-            $fileSize = Sanitize::int($row['SumSize']);
+            $fileSize = $this->getSanitizer()->int($row['SumSize']);
 
             if (($fileSize / 1024) <= $userQuota)
                 throw new LibraryFullException(__('You have exceeded your library quota'));
@@ -1074,11 +1072,11 @@ class User implements \JsonSerializable
     public function testPasswordAgainstPolicy($password)
     {
         // Check password complexity
-        $policy = Config::GetSetting('USER_PASSWORD_POLICY');
+        $policy = $this->getConfig()->GetSetting('USER_PASSWORD_POLICY');
 
         if ($policy != '')
         {
-            $policyError = Config::GetSetting('USER_PASSWORD_ERROR');
+            $policyError = $this->getConfig()->GetSetting('USER_PASSWORD_ERROR');
             $policyError = ($policyError == '') ? __('Your password does not meet the required complexity') : $policyError;
 
             if(!preg_match($policy, $password, $matches))

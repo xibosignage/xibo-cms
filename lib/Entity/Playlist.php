@@ -27,7 +27,6 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\Date;
 
 /**
  * Class Playlist
@@ -335,7 +334,7 @@ class Playlist implements \JsonSerializable
             )
         ', [
             'playlistId' => $this->playlistId,
-            'modifiedDt' => Date::getLocalDate()
+            'modifiedDt' => $this->getDate()->getLocalDate()
         ]);
     }
 

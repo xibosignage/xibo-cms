@@ -29,10 +29,7 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\LogFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
 use Xibo\Helper\PlayerActionHelper;
-use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Helper\WakeOnLan;
 use Xibo\XMR\ScreenShotAction;
@@ -68,8 +65,8 @@ class Display extends Base
         $errors = (new LogFactory($this->getApp()))->query(null, [
             'displayId' => $display->displayId,
             'type' => 'ERROR',
-            'fromDt' => Date::getLocalDate(Date::parse()->subHours(24), 'U'),
-            'toDt' => Date::getLocalDate(null, 'U')
+            'fromDt' => $this->getDate()->getLocalDate($this->getDate()->parse()->subHours(24), 'U'),
+            'toDt' => $this->getDate()->getLocalDate(null, 'U')
         ]);
 
         // Widget for file status
@@ -150,7 +147,7 @@ class Display extends Base
         $this->getState()->setData([
             'requiredFiles' => [],
             'display' => $display,
-            'timeAgo' => Date::parse($display->lastAccessed, 'U')->diffForHumans(),
+            'timeAgo' => $this->getDate()->parse($display->lastAccessed, 'U')->diffForHumans(),
             'errors' => $errors,
             'inventory' => [
                 'layouts' => $layouts,
@@ -165,9 +162,9 @@ class Display extends Base
                 'sizeRemaining' => round((double)($status[0]['sizeTotal'] - $status[0]['sizeComplete']) / (pow(1024, $base)), 2),
             ],
             'defaults' => [
-                'fromDate' => Date::getLocalDate(time() - (86400 * 35)),
-                'fromDateOneDay' => Date::getLocalDate(time() - 86400),
-                'toDate' => Date::getLocalDate()
+                'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
+                'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
+                'toDate' => $this->getDate()->getLocalDate()
             ]
         ]);
     }
@@ -229,11 +226,11 @@ class Display extends Base
     function grid()
     {
         $filter = [
-            'displayId' => Sanitize::getInt('displayId'),
-            'display' => Sanitize::getString('display'),
-            'macAddress' => Sanitize::getString('macAddress'),
-            'displayGroupId' => Sanitize::getInt('displayGroupId'),
-            'clientVersion' => Sanitize::getString('clientVersion')
+            'displayId' => $this->getSanitizer()->getInt('displayId'),
+            'display' => $this->getSanitizer()->getString('display'),
+            'macAddress' => $this->getSanitizer()->getString('macAddress'),
+            'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
+            'clientVersion' => $this->getSanitizer()->getString('clientVersion')
         ];
 
         // Get a list of displays
@@ -272,7 +269,7 @@ class Display extends Base
             // Thumbnail
             $display->thumbnail = '';
             // If we aren't logged in, and we are showThumbnail == 2, then show a circle
-            if (file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
+            if (file_exists($this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
                 $display->thumbnail = $this->urlFor('display.screenShot', ['id' => $display->displayId]);
             }
 
@@ -314,7 +311,7 @@ class Display extends Base
             }
 
             // Schedule Now
-            if ($this->getUser()->checkEditable($display) || Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes') {
+            if ($this->getUser()->checkEditable($display) || $this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes') {
                 $display->buttons[] = array(
                     'id' => 'display_button_schedulenow',
                     'url' => $this->urlFor('schedule.now.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
@@ -431,7 +428,7 @@ class Display extends Base
                         $profile[$i]['valueString'] = $option['value'];
                 }
             } else if ($profile[$i]['fieldType'] == 'timePicker') {
-                $profile[$i]['valueString'] = ($profile[$i]['value'] == null) ? '00:00' : Date::parse($profile[$i]['value'], 'H:i')->format('H:i');
+                $profile[$i]['valueString'] = ($profile[$i]['value'] == null) ? '00:00' : $this->getDate()->parse($profile[$i]['value'], 'H:i')->format('H:i');
             }
         }
 
@@ -617,23 +614,23 @@ class Display extends Base
         $licensed = $display->licensed;
 
         // Update properties
-        $display->display = Sanitize::getString('display');
-        $display->description = Sanitize::getString('description');
-        $display->isAuditing = Sanitize::getInt('isAuditing');
-        $display->defaultLayoutId = Sanitize::getInt('defaultLayoutId');
-        $display->licensed = Sanitize::getInt('licensed');
-        $display->license = Sanitize::getString('license');
-        $display->incSchedule = Sanitize::getInt('incSchedule');
-        $display->emailAlert = Sanitize::getInt('emailAlert');
-        $display->alertTimeout = Sanitize::getCheckbox('alertTimeout');
-        $display->wakeOnLanEnabled = Sanitize::getCheckbox('wakeOnLanEnabled');
-        $display->wakeOnLanTime = Sanitize::getString('wakeOnLanTime');
-        $display->broadCastAddress = Sanitize::getString('broadCastAddress');
-        $display->secureOn = Sanitize::getString('secureOn');
-        $display->cidr = Sanitize::getString('cidr');
-        $display->latitude = Sanitize::getDouble('latitude');
-        $display->longitude = Sanitize::getDouble('longitude');
-        $display->displayProfileId = Sanitize::getInt('displayProfileId');
+        $display->display = $this->getSanitizer()->getString('display');
+        $display->description = $this->getSanitizer()->getString('description');
+        $display->isAuditing = $this->getSanitizer()->getInt('isAuditing');
+        $display->defaultLayoutId = $this->getSanitizer()->getInt('defaultLayoutId');
+        $display->licensed = $this->getSanitizer()->getInt('licensed');
+        $display->license = $this->getSanitizer()->getString('license');
+        $display->incSchedule = $this->getSanitizer()->getInt('incSchedule');
+        $display->emailAlert = $this->getSanitizer()->getInt('emailAlert');
+        $display->alertTimeout = $this->getSanitizer()->getCheckbox('alertTimeout');
+        $display->wakeOnLanEnabled = $this->getSanitizer()->getCheckbox('wakeOnLanEnabled');
+        $display->wakeOnLanTime = $this->getSanitizer()->getString('wakeOnLanTime');
+        $display->broadCastAddress = $this->getSanitizer()->getString('broadCastAddress');
+        $display->secureOn = $this->getSanitizer()->getString('secureOn');
+        $display->cidr = $this->getSanitizer()->getString('cidr');
+        $display->latitude = $this->getSanitizer()->getDouble('latitude');
+        $display->longitude = $this->getSanitizer()->getDouble('longitude');
+        $display->displayProfileId = $this->getSanitizer()->getInt('displayProfileId');
 
         $display->save();
 
@@ -754,7 +751,7 @@ class Display extends Base
             throw new AccessDeniedException();
 
         // Go through each ID to assign
-        foreach (Sanitize::getIntArray('displayGroupId') as $displayGroupId) {
+        foreach ($this->getSanitizer()->getIntArray('displayGroupId') as $displayGroupId) {
             $displayGroup = (new DisplayGroupFactory($this->getApp()))->getById($displayGroupId);
 
             if (!$this->getUser()->checkEditable($displayGroup))
@@ -765,7 +762,7 @@ class Display extends Base
         }
 
         // Have we been provided with unassign id's as well?
-        foreach (Sanitize::getIntArray('unassignDisplayGroupId') as $displayGroupId) {
+        foreach ($this->getSanitizer()->getIntArray('unassignDisplayGroupId') as $displayGroupId) {
             $displayGroup = (new DisplayGroupFactory($this->getApp()))->getById($displayGroupId);
 
             if (!$this->getUser()->checkEditable($displayGroup))
@@ -793,11 +790,11 @@ class Display extends Base
         $file = 'screenshots/' . $displayId . '_screenshot.jpg';
 
         // File upload directory.. get this from the settings object
-        $library = Config::GetSetting("LIBRARY_LOCATION");
+        $library = $this->getConfig()->GetSetting("LIBRARY_LOCATION");
         $fileName = $library . $file;
 
         if (!file_exists($fileName)) {
-            $fileName = Theme::uri('forms/filenotfound.gif');
+            $fileName = $this->getConfig()->uri('forms/filenotfound.gif');
         }
 
         $size = filesize($fileName);
@@ -958,7 +955,7 @@ class Display extends Base
         $timedOutDisplays = [];
 
         // Get the global time out (overrides the alert time out on the display if 0)
-        $globalTimeout = Config::GetSetting('MAINTENANCE_ALERT_TOUT') * 60;
+        $globalTimeout = $this->getConfig()->GetSetting('MAINTENANCE_ALERT_TOUT') * 60;
 
         foreach ($displays as $display) {
             /* @var \Xibo\Entity\Display $display */

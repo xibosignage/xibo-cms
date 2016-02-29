@@ -27,7 +27,6 @@ use Xibo\Entity\Media;
 use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class ModuleFactory extends BaseFactory
 {
@@ -324,39 +323,39 @@ class ModuleFactory extends BaseFactory
                  WHERE 1 = 1
             ';
 
-            if (Sanitize::getInt('moduleId', $filterBy) !== null) {
-                $params['moduleId'] = Sanitize::getInt('moduleId', $filterBy);
+            if ($this->getSanitizer()->getInt('moduleId', $filterBy) !== null) {
+                $params['moduleId'] = $this->getSanitizer()->getInt('moduleId', $filterBy);
                 $body .= ' AND ModuleID = :moduleId ';
             }
 
-            if (Sanitize::getString('name', $filterBy) != '') {
-                $params['name'] = Sanitize::getString('name', $filterBy);
+            if ($this->getSanitizer()->getString('name', $filterBy) != '') {
+                $params['name'] = $this->getSanitizer()->getString('name', $filterBy);
                 $body .= ' AND name = :name ';
             }
 
-            if (Sanitize::getString('type', $filterBy) != '') {
-                $params['type'] = Sanitize::getString('type', $filterBy);
+            if ($this->getSanitizer()->getString('type', $filterBy) != '') {
+                $params['type'] = $this->getSanitizer()->getString('type', $filterBy);
                 $body .= ' AND module = :type ';
             }
 
-            if (Sanitize::getString('extension', $filterBy) != '') {
-                $params['extension'] = '%' . Sanitize::getString('extension', $filterBy) . '%';
+            if ($this->getSanitizer()->getString('extension', $filterBy) != '') {
+                $params['extension'] = '%' . $this->getSanitizer()->getString('extension', $filterBy) . '%';
                 $body .= ' AND ValidExtensions LIKE :extension ';
             }
 
-            if (Sanitize::getInt('assignable', -1, $filterBy) != -1) {
+            if ($this->getSanitizer()->getInt('assignable', -1, $filterBy) != -1) {
                 $body .= " AND assignable = :assignable ";
-                $params['assignable'] = Sanitize::getInt('assignable', $filterBy);
+                $params['assignable'] = $this->getSanitizer()->getInt('assignable', $filterBy);
             }
 
-            if (Sanitize::getInt('enabled', -1, $filterBy) != -1) {
+            if ($this->getSanitizer()->getInt('enabled', -1, $filterBy) != -1) {
                 $body .= " AND enabled = :enabled ";
-                $params['enabled'] = Sanitize::getInt('enabled', $filterBy);
+                $params['enabled'] = $this->getSanitizer()->getInt('enabled', $filterBy);
             }
 
-            if (Sanitize::getInt('regionSpecific', -1, $filterBy) != -1) {
+            if ($this->getSanitizer()->getInt('regionSpecific', -1, $filterBy) != -1) {
                 $body .= " AND regionSpecific = :regionSpecific ";
-                $params['regionSpecific'] = Sanitize::getInt('regionSpecific', $filterBy);
+                $params['regionSpecific'] = $this->getSanitizer()->getInt('regionSpecific', $filterBy);
             }
 
             // Sorting?
@@ -366,8 +365,8 @@ class ModuleFactory extends BaseFactory
 
             $limit = '';
             // Paging
-            if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-                $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+            if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+                $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
             }
 
             $sql = $select . $body . $order . $limit;
@@ -379,28 +378,28 @@ class ModuleFactory extends BaseFactory
 
             foreach ($sth->fetchAll(\PDO::FETCH_ASSOC) as $row) {
                 $module = new Module();
-                $module->moduleId = Sanitize::int($row['ModuleID']);
-                $module->name = Sanitize::string($row['Name']);
-                $module->description = Sanitize::string($row['Description']);
-                $module->validExtensions = Sanitize::string($row['ValidExtensions']);
-                $module->imageUri = Sanitize::string($row['ImageUri']);
-                $module->renderAs = Sanitize::string($row['render_as']);
-                $module->enabled = Sanitize::int($row['Enabled']);
-                $module->regionSpecific = Sanitize::int($row['RegionSpecific']);
-                $module->previewEnabled = Sanitize::int($row['PreviewEnabled']);
-                $module->assignable = Sanitize::int($row['assignable']);
-                $module->schemaVersion = Sanitize::int($row['SchemaVersion']);
+                $module->moduleId = $this->getSanitizer()->int($row['ModuleID']);
+                $module->name = $this->getSanitizer()->string($row['Name']);
+                $module->description = $this->getSanitizer()->string($row['Description']);
+                $module->validExtensions = $this->getSanitizer()->string($row['ValidExtensions']);
+                $module->imageUri = $this->getSanitizer()->string($row['ImageUri']);
+                $module->renderAs = $this->getSanitizer()->string($row['render_as']);
+                $module->enabled = $this->getSanitizer()->int($row['Enabled']);
+                $module->regionSpecific = $this->getSanitizer()->int($row['RegionSpecific']);
+                $module->previewEnabled = $this->getSanitizer()->int($row['PreviewEnabled']);
+                $module->assignable = $this->getSanitizer()->int($row['assignable']);
+                $module->schemaVersion = $this->getSanitizer()->int($row['SchemaVersion']);
 
                 // Identification
-                $module->type = strtolower(Sanitize::string($row['Module']));
+                $module->type = strtolower($this->getSanitizer()->string($row['Module']));
 
                 if (DBVERSION >= 120) {
-                    $module->class = Sanitize::string($row['class']);
-                    $module->viewPath = Sanitize::string($row['viewPath']);
+                    $module->class = $this->getSanitizer()->string($row['class']);
+                    $module->viewPath = $this->getSanitizer()->string($row['viewPath']);
                 }
 
                 if (DBVERSION >= 122) {
-                    $module->defaultDuration = Sanitize::int($row['defaultDuration']);
+                    $module->defaultDuration = $this->getSanitizer()->int($row['defaultDuration']);
                 }
 
                 $settings = $row['settings'];

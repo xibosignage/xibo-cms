@@ -13,8 +13,6 @@ use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Date;
-use Xibo\Helper\Sanitize;
 
 class DataSetData extends Base
 {
@@ -74,7 +72,7 @@ class DataSetData extends Base
             $sorting = implode(',', $sorting);
 
         // Work out the limits
-        $filter = $this->gridRenderFilter(['filter' => Sanitize::getParam('filter', null)]);
+        $filter = $this->gridRenderFilter(['filter' => $this->getSanitizer()->getParam('filter', null)]);
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($dataSet->getData([
@@ -161,19 +159,19 @@ class DataSetData extends Base
                 // Sanitize accordingly
                 if ($column->dataTypeId == 2) {
                     // Number
-                    $value = Sanitize::getDouble('dataSetColumnId_' . $column->dataSetColumnId);
+                    $value = $this->getSanitizer()->getDouble('dataSetColumnId_' . $column->dataSetColumnId);
                 }
                 else if ($column->dataTypeId == 3) {
                     // Date
-                    $value = Date::getLocalDate(Sanitize::getDate('dataSetColumnId_' . $column->dataSetColumnId));
+                    $value = $this->getDate()->getLocalDate($this->getSanitizer()->getDate('dataSetColumnId_' . $column->dataSetColumnId));
                 }
                 else if ($column->dataTypeId == 5) {
                     // Media Id
-                    $value = Sanitize::getInt('dataSetColumnId_' . $column->dataSetColumnId);
+                    $value = $this->getSanitizer()->getInt('dataSetColumnId_' . $column->dataSetColumnId);
                 }
                 else {
                     // String
-                    $value = Sanitize::getString('dataSetColumnId_' . $column->dataSetColumnId);
+                    $value = $this->getSanitizer()->getString('dataSetColumnId_' . $column->dataSetColumnId);
                 }
 
                 $row[$column->heading] = $value;
@@ -269,26 +267,26 @@ class DataSetData extends Base
         foreach ($dataSet->getColumn() as $column) {
             /* @var DataSetColumn $column */
 
-            $existingValue = Sanitize::getParam($column->heading, null, $existingRow);
+            $existingValue = $this->getSanitizer()->getParam($column->heading, null, $existingRow);
 
             if ($column->dataSetColumnTypeId == 1) {
 
                 // Sanitize accordingly
                 if ($column->dataTypeId == 2) {
                     // Number
-                    $value = Sanitize::getDouble('dataSetColumnId_' . $column->dataSetColumnId, $existingValue);
+                    $value = $this->getSanitizer()->getDouble('dataSetColumnId_' . $column->dataSetColumnId, $existingValue);
                 }
                 else if ($column->dataTypeId == 3) {
                     // Date
-                    $value = Date::getLocalDate(Sanitize::getDate('dataSetColumnId_' . $column->dataSetColumnId, $existingValue));
+                    $value = $this->getDate()->getLocalDate($this->getSanitizer()->getDate('dataSetColumnId_' . $column->dataSetColumnId, $existingValue));
                 }
                 else if ($column->dataTypeId == 5) {
                     // Media Id
-                    $value = Sanitize::getInt('dataSetColumnId_' . $column->dataSetColumnId);
+                    $value = $this->getSanitizer()->getInt('dataSetColumnId_' . $column->dataSetColumnId);
                 }
                 else {
                     // String
-                    $value = Sanitize::getString('dataSetColumnId_' . $column->dataSetColumnId, $existingValue);
+                    $value = $this->getSanitizer()->getString('dataSetColumnId_' . $column->dataSetColumnId, $existingValue);
                 }
 
                 $row[$column->heading] = $value;

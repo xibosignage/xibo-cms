@@ -27,9 +27,6 @@ use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Cache;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
-use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 class Twitter extends ModuleWidget
@@ -119,21 +116,21 @@ class Twitter extends ModuleWidget
     public function settings()
     {
         // Process any module settings you asked for.
-        $apiKey = Sanitize::getString('apiKey');
+        $apiKey = $this->getSanitizer()->getString('apiKey');
 
         if ($apiKey == '')
             throw new \InvalidArgumentException(__('Missing API Key'));
 
         // Process any module settings you asked for.
-        $apiSecret = Sanitize::getString('apiSecret');
+        $apiSecret = $this->getSanitizer()->getString('apiSecret');
 
         if ($apiSecret == '')
             throw new \InvalidArgumentException(__('Missing API Secret'));
 
         $this->module->settings['apiKey'] = $apiKey;
         $this->module->settings['apiSecret'] = $apiSecret;
-        $this->module->settings['cachePeriod'] = Sanitize::getInt('cachePeriod', 300);
-        $this->module->settings['cachePeriodImages'] = Sanitize::getInt('cachePeriodImages', 24);
+        $this->module->settings['cachePeriod'] = $this->getSanitizer()->getInt('cachePeriod', 300);
+        $this->module->settings['cachePeriodImages'] = $this->getSanitizer()->getInt('cachePeriodImages', 24);
 
         // Return an array of the processed settings.
         return $this->module->settings;
@@ -177,27 +174,27 @@ class Twitter extends ModuleWidget
      */
     private function setCommonOptions()
     {
-        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setOption('name', Sanitize::getString('name'));
-        $this->setOption('searchTerm', Sanitize::getString('searchTerm'));
-        $this->setOption('effect', Sanitize::getString('effect'));
-        $this->setOption('speed', Sanitize::getInt('speed'));
-        $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
-        $this->setOption('noTweetsMessage', Sanitize::getString('noTweetsMessage'));
-        $this->setOption('dateFormat', Sanitize::getString('dateFormat'));
-        $this->setOption('resultType', Sanitize::getString('resultType'));
-        $this->setOption('tweetDistance', Sanitize::getInt('tweetDistance'));
-        $this->setOption('tweetCount', Sanitize::getInt('tweetCount'));
-        $this->setOption('removeUrls', Sanitize::getCheckbox('removeUrls'));
-        $this->setOption('removeMentions', Sanitize::getCheckbox('removeMentions'));
-        $this->setOption('removeHashtags', Sanitize::getCheckbox('removeHashtags'));
-        $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
-        $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
-        $this->setOption('templateId', Sanitize::getString('templateId'));
-        $this->setOption('durationIsPerItem', Sanitize::getCheckbox('durationIsPerItem'));
-        $this->setRawNode('template', Sanitize::getParam('ta_text', Sanitize::getParam('template', null)));
-        $this->setRawNode('styleSheet', Sanitize::getParam('ta_css', Sanitize::getParam('styleSheet', null)));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('searchTerm', $this->getSanitizer()->getString('searchTerm'));
+        $this->setOption('effect', $this->getSanitizer()->getString('effect'));
+        $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
+        $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
+        $this->setOption('noTweetsMessage', $this->getSanitizer()->getString('noTweetsMessage'));
+        $this->setOption('dateFormat', $this->getSanitizer()->getString('dateFormat'));
+        $this->setOption('resultType', $this->getSanitizer()->getString('resultType'));
+        $this->setOption('tweetDistance', $this->getSanitizer()->getInt('tweetDistance'));
+        $this->setOption('tweetCount', $this->getSanitizer()->getInt('tweetCount'));
+        $this->setOption('removeUrls', $this->getSanitizer()->getCheckbox('removeUrls'));
+        $this->setOption('removeMentions', $this->getSanitizer()->getCheckbox('removeMentions'));
+        $this->setOption('removeHashtags', $this->getSanitizer()->getCheckbox('removeHashtags'));
+        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
+        $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
+        $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
+        $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
+        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
     }
 
     protected function getToken()
@@ -241,12 +238,12 @@ class Twitter extends ModuleWidget
         );
 
         // Proxy support
-        if (Config::GetSetting('PROXY_HOST') != '' && !Config::isProxyException($url)) {
-            $httpOptions[CURLOPT_PROXY] = Config::GetSetting('PROXY_HOST');
-            $httpOptions[CURLOPT_PROXYPORT] = Config::GetSetting('PROXY_PORT');
+        if ($this->getConfig()->GetSetting('PROXY_HOST') != '' && !$this->getConfig()->isProxyException($url)) {
+            $httpOptions[CURLOPT_PROXY] = $this->getConfig()->GetSetting('PROXY_HOST');
+            $httpOptions[CURLOPT_PROXYPORT] = $this->getConfig()->GetSetting('PROXY_PORT');
 
-            if (Config::GetSetting('PROXY_AUTH') != '')
-                $httpOptions[CURLOPT_PROXYUSERPWD] = Config::GetSetting('PROXY_AUTH');
+            if ($this->getConfig()->GetSetting('PROXY_AUTH') != '')
+                $httpOptions[CURLOPT_PROXYUSERPWD] = $this->getConfig()->GetSetting('PROXY_AUTH');
         }
 
         $curl = curl_init();
@@ -322,12 +319,12 @@ class Twitter extends ModuleWidget
         );
 
         // Proxy support
-        if (Config::GetSetting('PROXY_HOST') != '' && !Config::isProxyException($url)) {
-            $httpOptions[CURLOPT_PROXY] = Config::GetSetting('PROXY_HOST');
-            $httpOptions[CURLOPT_PROXYPORT] = Config::GetSetting('PROXY_PORT');
+        if ($this->getConfig()->GetSetting('PROXY_HOST') != '' && !$this->getConfig()->isProxyException($url)) {
+            $httpOptions[CURLOPT_PROXY] = $this->getConfig()->GetSetting('PROXY_HOST');
+            $httpOptions[CURLOPT_PROXYPORT] = $this->getConfig()->GetSetting('PROXY_PORT');
 
-            if (Config::GetSetting('PROXY_AUTH') != '')
-                $httpOptions[CURLOPT_PROXYUSERPWD] = Config::GetSetting('PROXY_AUTH');
+            if ($this->getConfig()->GetSetting('PROXY_AUTH') != '')
+                $httpOptions[CURLOPT_PROXYUSERPWD] = $this->getConfig()->GetSetting('PROXY_AUTH');
         }
 
         $this->getLog()->debug('Calling API with: ' . $url . $queryString);
@@ -378,8 +375,8 @@ class Twitter extends ModuleWidget
                 $defaultLat = $display->latitude;
                 $defaultLong = $display->longitude;
             } else {
-                $defaultLat = Config::GetSetting('DEFAULT_LAT');
-                $defaultLong = Config::GetSetting('DEFAULT_LONG');
+                $defaultLat = $this->getConfig()->GetSetting('DEFAULT_LAT');
+                $defaultLong = $this->getConfig()->GetSetting('DEFAULT_LONG');
             }
 
             // Built the geoCode string.
@@ -451,7 +448,7 @@ class Twitter extends ModuleWidget
         $emoji->imagePathSVGSprites = $this->getResourceUrl('emojione/emojione.sprites.svg');
 
         // Get the date format to apply
-        $dateFormat = $this->getOption('dateFormat', Config::GetSetting('DATE_FORMAT'));
+        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
 
         // This should return the formatted items.
         foreach ($data->statuses as $tweet) {
@@ -501,7 +498,7 @@ class Twitter extends ModuleWidget
                         break;
 
                     case '[Date]':
-                        $replace = Date::getLocalDate(strtotime($tweet->created_at), $dateFormat);
+                        $replace = $this->getDate()->getLocalDate(strtotime($tweet->created_at), $dateFormat);
                         break;
 
                     case '[ProfileImage]':
@@ -574,7 +571,7 @@ class Twitter extends ModuleWidget
         }
 
         $data = [];
-        $isPreview = (Sanitize::getCheckbox('preview') == 1);
+        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
@@ -601,9 +598,9 @@ class Twitter extends ModuleWidget
             'itemsPerPage' => 1,
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => Sanitize::getDouble('width', 0),
-            'previewHeight' => Sanitize::getDouble('height', 0),
-            'scaleOverride' => Sanitize::getDouble('scale_override', 0)
+            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
+            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
+            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
         );
 
         // Replace the control meta with our data from twitter
@@ -625,7 +622,7 @@ class Twitter extends ModuleWidget
 
         // Add our fonts.css file
         $headContent .= '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
-        $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
+        $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         // Replace the Head Content with our generated javascript
         $data['head'] = $headContent;

@@ -15,8 +15,6 @@ use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Sanitize;
 
 /**
  * Class DataSet
@@ -138,11 +136,11 @@ class DataSet implements \JsonSerializable
      */
     public function getData($filterBy = [])
     {
-        $start = Sanitize::getInt('start', 0, $filterBy);
-        $size = Sanitize::getInt('size', 0, $filterBy);
-        $filter = Sanitize::getParam('filter', $filterBy);
-        $ordering = Sanitize::getString('order', $filterBy);
-        $displayId = Sanitize::getInt('displayId', 0, $filterBy);
+        $start = $this->getSanitizer()->getInt('start', 0, $filterBy);
+        $size = $this->getSanitizer()->getInt('size', 0, $filterBy);
+        $filter = $this->getSanitizer()->getParam('filter', $filterBy);
+        $ordering = $this->getSanitizer()->getString('order', $filterBy);
+        $displayId = $this->getSanitizer()->getInt('displayId', 0, $filterBy);
 
         // Params
         $params = [];
@@ -152,7 +150,7 @@ class DataSet implements \JsonSerializable
 
         // Get the Latitude and Longitude ( might be used in a formula )
         if ($displayId == 0) {
-            $displayGeoLocation = "GEOMFROMTEXT('POINT(" . Config::GetSetting('DEFAULT_LAT') . " " . Config::GetSetting('DEFAULT_LONG') . ")')";
+            $displayGeoLocation = "GEOMFROMTEXT('POINT(" . $this->getConfig()->GetSetting('DEFAULT_LAT') . " " . $this->getConfig()->GetSetting('DEFAULT_LONG') . ")')";
         }
         else {
             $displayGeoLocation = '(SELECT GeoLocation FROM `display` WHERE DisplayID = :displayId)';
@@ -195,9 +193,9 @@ class DataSet implements \JsonSerializable
 
         // Filter by ID
         if (
-            Sanitize::getInt('id', $filterBy) !== null) {
+            $this->getSanitizer()->getInt('id', $filterBy) !== null) {
             $body .= ' AND id = :id ';
-            $params['id'] = Sanitize::getInt('id', $filterBy);
+            $params['id'] = $this->getSanitizer()->getInt('id', $filterBy);
         }
 
         // Ordering

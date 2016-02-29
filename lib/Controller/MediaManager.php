@@ -22,7 +22,6 @@ namespace Xibo\Controller;
 
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
-use Xibo\Helper\Sanitize;
 
 
 class MediaManager extends Base
@@ -41,10 +40,10 @@ class MediaManager extends Base
     {
         $this->getState()->template = 'grid';
 
-        $filterLayout = Sanitize::getString('layout');
-        $filterRegion = Sanitize::getString('region');
-        $filterMedia = Sanitize::getString('media');
-        $filterType = Sanitize::getString('type');
+        $filterLayout = $this->getSanitizer()->getString('layout');
+        $filterRegion = $this->getSanitizer()->getString('region');
+        $filterMedia = $this->getSanitizer()->getString('media');
+        $filterType = $this->getSanitizer()->getString('type');
 
         $rows = array();
 

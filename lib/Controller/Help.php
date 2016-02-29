@@ -22,7 +22,6 @@ namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\HelpFactory;
-use Xibo\Helper\Sanitize;
 
 
 class Help extends Base
@@ -62,7 +61,7 @@ class Help extends Base
                 // Test
                 $row->buttons[] = array(
                     'id' => 'help_button_test',
-                    'url' => \Xibo\Helper\$this->getHelp()->link($row->topic, $row->category),
+                    'url' => $this->getHelp()->link($row->topic, $row->category),
                     'text' => __('Test')
                 );
             }
@@ -127,9 +126,9 @@ class Help extends Base
             throw new AccessDeniedException();
 
         $help = new \Xibo\Entity\Help();
-        $help->topic = Sanitize::getString('topic');
-        $help->category = Sanitize::getString('category');
-        $help->link = Sanitize::getString('link');
+        $help->topic = $this->getSanitizer()->getString('topic');
+        $help->category = $this->getSanitizer()->getString('category');
+        $help->link = $this->getSanitizer()->getString('link');
 
         $help->save();
 
@@ -151,9 +150,9 @@ class Help extends Base
             throw new AccessDeniedException();
 
         $help = (new HelpFactory($this->getApp()))->getById($helpId);
-        $help->topic = Sanitize::getString('topic');
-        $help->category = Sanitize::getString('category');
-        $help->link = Sanitize::getString('link');
+        $help->topic = $this->getSanitizer()->getString('topic');
+        $help->category = $this->getSanitizer()->getString('category');
+        $help->link = $this->getSanitizer()->getString('link');
 
         $help->save();
 

@@ -20,8 +20,6 @@
  */
 namespace Xibo\Controller;
 
-use Xibo\Helper\Date;
-
 
 class Clock extends Base
 {
@@ -46,7 +44,7 @@ class Clock extends Base
      */
     function clock()
     {
-        $output = Date::getLocalDate(null, 'H:i T');
+        $output = $this->getDate()->getLocalDate(null, 'H:i T');
         $this->getApp()->session->refreshExpiry = false;
 
         $this->getState()->setData(array('time' => $output));

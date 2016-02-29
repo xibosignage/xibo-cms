@@ -11,7 +11,6 @@ namespace Xibo\Upgrade;
 
 use Xibo\Entity\Permission;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Helper\Config;
 use Xibo\Helper\Install;
 
 class LayoutStructureStep implements Step
@@ -59,7 +58,7 @@ class LayoutStructureStep implements Step
         }
 
         // Get the library location to store backups of existing XLF
-        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
+        $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
 
         // We need to go through each layout, save the XLF as a backup in the library and then upgrade it.
         foreach ($this->getStore()->select('SELECT layoutId, xml FROM `layout` WHERE IFNULL(xml, \'\') <> \'\'', []) as $oldLayout) {

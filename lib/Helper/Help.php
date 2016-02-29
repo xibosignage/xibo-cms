@@ -101,11 +101,16 @@ class Help
             $link = $sth->fetchColumn(0);
         }
 
-        return Config::GetSetting('HELP_BASE') . $link;
+        return $this->getConfig()->GetSetting('HELP_BASE') . $link;
     }
 
+    /**
+     * Raw Link
+     * @param $link
+     * @return string
+     */
     public function rawLink($link)
     {
-        return Config::GetSetting('HELP_BASE') . $link;
+        return $this->getConfig()->GetSetting('HELP_BASE') . $link;
     }
 }

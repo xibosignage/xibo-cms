@@ -27,8 +27,6 @@ use Xibo\Entity\Layout;
 use Xibo\Entity\Widget;
 use Xibo\Entity\WidgetOption;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Config;
-use Xibo\Helper\Sanitize;
 
 /**
  * Class LayoutFactory
@@ -334,7 +332,7 @@ class LayoutFactory extends BaseFactory
     {
         $this->getLog()->debug('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName);
 
-        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION') . 'temp/';
+        $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/';
 
         // Do some pre-checks on the arguments we have been provided
         if (!file_exists($zipFile))
@@ -485,7 +483,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.backgroundzIndex, ";
         $select .= "        layout.schemaVersion, ";
 
-        if (Sanitize::getInt('campaignId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('campaignId', 0, $filterBy) != 0) {
             $select .= ' lkcl.displayOrder, ';
         }
         else {
@@ -512,20 +510,20 @@ class LayoutFactory extends BaseFactory
         $body .= "       AND campaign.IsLayoutSpecific = 1";
         $body .= "   INNER JOIN `user` ON `user`.userId = `campaign`.userId ";
 
-        if (Sanitize::getInt('campaignId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('campaignId', 0, $filterBy) != 0) {
             // Join Campaign back onto it again
             $body .= " INNER JOIN `lkcampaignlayout` lkcl ON lkcl.layoutid = layout.layoutid AND lkcl.CampaignID = :campaignId ";
-            $params['campaignId'] = Sanitize::getInt('campaignId', 0, $filterBy);
+            $params['campaignId'] = $this->getSanitizer()->getInt('campaignId', 0, $filterBy);
         }
 
-        if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN `lklayoutdisplaygroup`
                 ON lklayoutdisplaygroup.layoutId = `layout`.layoutId
                     AND lklayoutdisplaygroup.displayGroupId = :displayGroupId
             ';
 
-            $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
+            $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
         }
 
         $body .= " WHERE 1 = 1 ";
@@ -534,9 +532,9 @@ class LayoutFactory extends BaseFactory
         $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy);
 
         // Layout Like
-        if (Sanitize::getString('layout', $filterBy) != '') {
+        if ($this->getSanitizer()->getString('layout', $filterBy) != '') {
             // convert into a space delimited array
-            $names = explode(' ', Sanitize::getString('layout', $filterBy));
+            $names = explode(' ', $this->getSanitizer()->getString('layout', $filterBy));
 
             foreach($names as $searchName)
             {
@@ -552,49 +550,49 @@ class LayoutFactory extends BaseFactory
             }
         }
 
-        if (Sanitize::getString('layoutExact', $filterBy) != '') {
+        if ($this->getSanitizer()->getString('layoutExact', $filterBy) != '') {
             $body.= " AND layout.layout = :exact ";
-            $params['exact'] = Sanitize::getString('layoutExact', $filterBy);
+            $params['exact'] = $this->getSanitizer()->getString('layoutExact', $filterBy);
         }
 
         // Layout
-        if (Sanitize::getInt('layoutId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('layoutId', 0, $filterBy) != 0) {
             $body .= " AND layout.layoutId = :layoutId ";
-            $params['layoutId'] = Sanitize::getInt('layoutId', 0, $filterBy);
+            $params['layoutId'] = $this->getSanitizer()->getInt('layoutId', 0, $filterBy);
         }
 
         // Layout Status
-        if (Sanitize::getInt('status', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('status', $filterBy) !== null) {
             $body .= " AND layout.status = :status ";
-            $params['status'] = Sanitize::getInt('status', $filterBy);
+            $params['status'] = $this->getSanitizer()->getInt('status', $filterBy);
         }
 
         // Background Image
-        if (Sanitize::getInt('backgroundImageId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('backgroundImageId', $filterBy) !== null) {
             $body .= " AND layout.backgroundImageId = :backgroundImageId ";
-            $params['backgroundImageId'] = Sanitize::getInt('backgroundImageId', 0, $filterBy);
+            $params['backgroundImageId'] = $this->getSanitizer()->getInt('backgroundImageId', 0, $filterBy);
         }
 
         // Not Layout
-        if (Sanitize::getInt('notLayoutId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('notLayoutId', 0, $filterBy) != 0) {
             $body .= " AND layout.layoutId <> :notLayoutId ";
-            $params['notLayoutId'] = Sanitize::getInt('notLayoutId', 0, $filterBy);
+            $params['notLayoutId'] = $this->getSanitizer()->getInt('notLayoutId', 0, $filterBy);
         }
 
         // Owner filter
-        if (Sanitize::getInt('userId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('userId', 0, $filterBy) != 0) {
             $body .= " AND layout.userid = :userId ";
-            $params['userId'] = Sanitize::getInt('userId', 0, $filterBy);
+            $params['userId'] = $this->getSanitizer()->getInt('userId', 0, $filterBy);
         }
 
         // Retired options (default to 0 - provide -1 to return all
-        if (Sanitize::getInt('retired', 0, $filterBy) != -1) {
+        if ($this->getSanitizer()->getInt('retired', 0, $filterBy) != -1) {
             $body .= " AND layout.retired = :retired ";
-            $params['retired'] = Sanitize::getInt('retired', 0, $filterBy);
+            $params['retired'] = $this->getSanitizer()->getInt('retired', 0, $filterBy);
         }
 
         // Tags
-        if (Sanitize::getString('tags', $filterBy) != '') {
+        if ($this->getSanitizer()->getString('tags', $filterBy) != '') {
             $body .= " AND layout.layoutID IN (
                 SELECT lktaglayout.layoutId
                   FROM tag
@@ -602,7 +600,7 @@ class LayoutFactory extends BaseFactory
                     ON lktaglayout.tagId = tag.tagId
                 ";
             $i = 0;
-            foreach (explode(',', Sanitize::getString('tags', $filterBy)) as $tag) {
+            foreach (explode(',', $this->getSanitizer()->getString('tags', $filterBy)) as $tag) {
                 $i++;
 
                 if ($i == 1)
@@ -617,8 +615,8 @@ class LayoutFactory extends BaseFactory
         }
 
         // Exclude templates by default
-        if (Sanitize::getInt('excludeTemplates', 1, $filterBy) != -1) {
-            if (Sanitize::getInt('excludeTemplates', 1, $filterBy) == 1) {
+        if ($this->getSanitizer()->getInt('excludeTemplates', 1, $filterBy) != -1) {
+            if ($this->getSanitizer()->getInt('excludeTemplates', 1, $filterBy) == 1) {
                 $body .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
             } else {
                 $body .= " AND layout.layoutID IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
@@ -626,8 +624,8 @@ class LayoutFactory extends BaseFactory
         }
 
         // Show All, Used or UnUsed
-        if (Sanitize::getInt('filterLayoutStatusId', 1, $filterBy) != 1)  {
-            if (Sanitize::getInt('filterLayoutStatusId', $filterBy) == 2) {
+        if ($this->getSanitizer()->getInt('filterLayoutStatusId', 1, $filterBy) != 1)  {
+            if ($this->getSanitizer()->getInt('filterLayoutStatusId', $filterBy) == 2) {
                 // Only show used layouts
                 $body .= ' AND ('
                     . '     campaign.CampaignID IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
@@ -642,7 +640,7 @@ class LayoutFactory extends BaseFactory
         }
 
         // MediaID
-        if (Sanitize::getInt('mediaId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('mediaId', 0, $filterBy) != 0) {
             $body .= ' AND layout.layoutId IN (
                 SELECT DISTINCT `region`.layoutId
                   FROM `lkwidgetmedia`
@@ -656,7 +654,7 @@ class LayoutFactory extends BaseFactory
                 )
             ';
 
-            $params['mediaId'] = Sanitize::getInt('mediaId', 0, $filterBy);
+            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', 0, $filterBy);
         }
 
         // Sorting?
@@ -666,8 +664,8 @@ class LayoutFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         // The final statements
@@ -680,22 +678,22 @@ class LayoutFactory extends BaseFactory
             $layout->setApp($this->getApp());
 
             // Validate each param and add it to the array.
-            $layout->layoutId = Sanitize::int($row['layoutID']);
-            $layout->schemaVersion = Sanitize::int($row['schemaVersion']);
-            $layout->layout = Sanitize::string($row['layout']);
-            $layout->description = Sanitize::string($row['description']);
-            $layout->duration = Sanitize::int($row['duration']);
-            $layout->tags = Sanitize::string($row['tags']);
-            $layout->backgroundColor = Sanitize::string($row['backgroundColor']);
-            $layout->owner = Sanitize::string($row['owner']);
-            $layout->ownerId = Sanitize::int($row['userID']);
-            $layout->campaignId = Sanitize::int($row['CampaignID']);
-            $layout->retired = Sanitize::int($row['retired']);
-            $layout->status = Sanitize::int($row['status']);
-            $layout->backgroundImageId = Sanitize::int($row['backgroundImageId']);
-            $layout->backgroundzIndex = Sanitize::int($row['backgroundzIndex']);
-            $layout->width = Sanitize::double($row['width']);
-            $layout->height = Sanitize::double($row['height']);
+            $layout->layoutId = $this->getSanitizer()->int($row['layoutID']);
+            $layout->schemaVersion = $this->getSanitizer()->int($row['schemaVersion']);
+            $layout->layout = $this->getSanitizer()->string($row['layout']);
+            $layout->description = $this->getSanitizer()->string($row['description']);
+            $layout->duration = $this->getSanitizer()->int($row['duration']);
+            $layout->tags = $this->getSanitizer()->string($row['tags']);
+            $layout->backgroundColor = $this->getSanitizer()->string($row['backgroundColor']);
+            $layout->owner = $this->getSanitizer()->string($row['owner']);
+            $layout->ownerId = $this->getSanitizer()->int($row['userID']);
+            $layout->campaignId = $this->getSanitizer()->int($row['CampaignID']);
+            $layout->retired = $this->getSanitizer()->int($row['retired']);
+            $layout->status = $this->getSanitizer()->int($row['status']);
+            $layout->backgroundImageId = $this->getSanitizer()->int($row['backgroundImageId']);
+            $layout->backgroundzIndex = $this->getSanitizer()->int($row['backgroundzIndex']);
+            $layout->width = $this->getSanitizer()->double($row['width']);
+            $layout->height = $this->getSanitizer()->double($row['height']);
             $layout->createdDt = $row['createdDt'];
             $layout->modifiedDt = $row['modifiedDt'];
             $layout->displayOrder = $row['displayOrder'];

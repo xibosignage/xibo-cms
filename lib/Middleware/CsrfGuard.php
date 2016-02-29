@@ -67,16 +67,14 @@ class CsrfGuard extends Middleware
      */
     public function check()
     {
-        // Check sessions are enabled.
-        if (session_id() === '') {
-            throw new \Exception('Sessions are required to use the CSRF Guard middleware.');
+        $session = $this->app->session;
+        /* @var \Xibo\Helper\Session $session */
+
+        if (!$session->get($this->key)) {
+            $session->set($this->key, sha1(serialize($_SERVER) . rand(0, 0xffffffff)));
         }
 
-        if (! isset($_SESSION[$this->key])) {
-            $_SESSION[$this->key] = sha1(serialize($_SERVER) . rand(0, 0xffffffff));
-        }
-
-        $token = $_SESSION[$this->key];
+        $token = $session->get($this->key);
 
         // Validate the CSRF token.
         if (in_array($this->app->request()->getMethod(), array('POST', 'PUT', 'DELETE'))) {

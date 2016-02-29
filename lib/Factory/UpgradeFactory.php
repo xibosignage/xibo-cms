@@ -11,8 +11,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Upgrade;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Date;
-use Xibo\Helper\Sanitize;
 
 class UpgradeFactory extends BaseFactory
 {
@@ -60,14 +58,14 @@ class UpgradeFactory extends BaseFactory
         $select = 'SELECT * ';
         $body = ' FROM `upgrade` WHERE 1 = 1 ';
 
-        if (Sanitize::getInt('stepId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('stepId', $filterBy) !== null) {
             $body .= ' AND `upgrade`.stepId = :stepId ';
-            $params['stepId'] = Sanitize::getInt('stepId', $filterBy);
+            $params['stepId'] = $this->getSanitizer()->getInt('stepId', $filterBy);
         }
 
-        if (Sanitize::getInt('complete', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('complete', $filterBy) !== null) {
             $body .= ' AND `upgrade`.complete = :complete ';
-            $params['complete'] = Sanitize::getInt('complete', $filterBy);
+            $params['complete'] = $this->getSanitizer()->getInt('complete', $filterBy);
         }
 
         // Sorting?
@@ -77,8 +75,8 @@ class UpgradeFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -109,7 +107,7 @@ class UpgradeFactory extends BaseFactory
         $this->getLog()->debug('Creating upgrade steps from %d to %d', $from, $to);
 
         $steps = [];
-        $date = Date::parse();
+        $date = $this->getDate()->parse();
 
         // Go from $from to $to and get the config file from the install folder.
         for ($i = $from + 1; $i <= $to; $i++) {
@@ -137,10 +135,10 @@ class UpgradeFactory extends BaseFactory
 
             // Add the version bump
             if ($i == $to) {
-                $action = 'UPDATE `version` SET `app_ver` = \'' . WEBSITE_VERSION_NAME . '\', `DBVersion` = ' . $to . '; UPDATE `setting` SET `value` = 0 WHERE `setting` = \'PHONE_HOME_DATE\';';
+                $action = 'UPDATE `version` SET `app_ver` = \'' . $this->getConfig()->$WEBSITE_VERSION_NAME . '\', `DBVersion` = ' . $to . '; UPDATE `setting` SET `value` = 0 WHERE `setting` = \'PHONE_HOME_DATE\';';
                 $steps[] = (new Upgrade())->hydrate([
                     'dbVersion' => $to,
-                    'appVersion' => WEBSITE_VERSION_NAME,
+                    'appVersion' => $this->getConfig()->$WEBSITE_VERSION_NAME,
                     'step' => 'Finalise Upgrade',
                     'action' => $action,
                     'type' => 'sql'

@@ -25,7 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Widget;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class WidgetFactory extends BaseFactory
 {
@@ -123,13 +122,13 @@ class WidgetFactory extends BaseFactory
           FROM `widget`
         ';
 
-        if (Sanitize::getInt('mediaId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('mediaId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN `lkwidgetmedia`
                 ON `lkwidgetmedia`.widgetId = widget.widgetId
                     AND `lkwidgetmedia`.mediaId = :mediaId
             ';
-            $params['mediaId'] = Sanitize::getInt('mediaId', $filterBy);
+            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
         }
 
         $body .= ' WHERE 1 = 1 ';
@@ -137,14 +136,14 @@ class WidgetFactory extends BaseFactory
         // Permissions
         $this->viewPermissionSql('Xibo\Entity\Widget', $body, $params, 'widget.widgetId', 'widget.ownerId', $filterBy);
 
-        if (Sanitize::getInt('playlistId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('playlistId', $filterBy) !== null) {
             $body .= ' AND playlistId = :playlistId';
-            $params['playlistId'] = Sanitize::getInt('playlistId', $filterBy);
+            $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', $filterBy);
         }
 
-        if (Sanitize::getInt('widgetId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('widgetId', $filterBy) !== null) {
             $body .= ' AND widgetId = :widgetId';
-            $params['widgetId'] = Sanitize::getInt('widgetId', $filterBy);
+            $params['widgetId'] = $this->getSanitizer()->getInt('widgetId', $filterBy);
         }
 
         // Sorting?
@@ -154,8 +153,8 @@ class WidgetFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         // The final statements

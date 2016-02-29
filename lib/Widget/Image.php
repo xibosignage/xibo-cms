@@ -23,8 +23,6 @@ namespace Xibo\Widget;
 use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Sanitize;
 
 class Image extends ModuleWidget
 {
@@ -44,12 +42,12 @@ class Image extends ModuleWidget
     public function edit()
     {
         // Set the properties specific to Images
-        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setOption('name', Sanitize::getString('name', $this->getOption('name')));
-        $this->setOption('scaleType', Sanitize::getString('scaleTypeId', 'center'));
-        $this->setOption('align', Sanitize::getString('alignId', 'center'));
-        $this->setOption('valign', Sanitize::getString('valignId', 'middle'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setOption('name', $this->getSanitizer()->getString('name', $this->getOption('name')));
+        $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'center'));
+        $this->setOption('align', $this->getSanitizer()->getString('alignId', 'center'));
+        $this->setOption('valign', $this->getSanitizer()->getString('valignId', 'middle'));
 
         $this->validate();
         $this->saveWidget();
@@ -106,19 +104,19 @@ class Image extends ModuleWidget
         $this->getLog()->debug('GetResource for %d', $this->getMediaId());
 
         $media = (new MediaFactory($this->getApp()))->getById($this->getMediaId());
-        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
+        $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
         $filePath = $libraryLocation . $media->storedAs;
-        $proportional = Sanitize::getInt('proportional', 1) == 1;
-        $preview = Sanitize::getInt('preview', 0) == 1;
-        $width = intval(Sanitize::getDouble('width'));
-        $height = intval(Sanitize::getDouble('height'));
+        $proportional = $this->getSanitizer()->getInt('proportional', 1) == 1;
+        $preview = $this->getSanitizer()->getInt('preview', 0) == 1;
+        $width = intval($this->getSanitizer()->getDouble('width'));
+        $height = intval($this->getSanitizer()->getDouble('height'));
 
         // Work out the eTag first
         $this->getApp()->etag($media->md5 . $width . $height . $proportional . $preview);
         $this->getApp()->expires('+1 week');
 
         // Preview or download?
-        if (Sanitize::getInt('preview', 0) == 1) {
+        if ($this->getSanitizer()->getInt('preview', 0) == 1) {
 
             // Preview (we output the file to the browser with image headers
             Img::configure(array('driver' => 'gd'));

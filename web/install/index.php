@@ -55,8 +55,8 @@ $app->setName('install');
 
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
-    \Xibo\Helper\$this->getLog()->critical('Unexpected Error: %s', $e->getMessage());
-    \Xibo\Helper\$this->getLog()->debug($e->getTraceAsString());
+    $app->logHelper->critical('Unexpected Error: %s', $e->getMessage());
+    $app->logHelper->debug($e->getTraceAsString());
 
     $app->halt(500, 'Sorry there has been an unexpected error. ' . $e->getMessage());
 });
@@ -83,20 +83,21 @@ $twig->parserExtensions = array(
 $twig->twigTemplateDirs = [PROJECT_ROOT . '/views'];
 $app->view($twig);
 
-$twig->appendData(['theme' => Theme::getInstance()]);
+$twig->appendData(['theme' => new Theme($app, 'default')]);
 
 // Hook to setup translations
 $app->hook('slim.before.dispatch', function() use ($app) {
 
     if (file_exists(PROJECT_ROOT . '/web/settings.php')) {
-        \Xibo\Helper\Config::Load(PROJECT_ROOT . '/web/settings.php');
+        // Config
+        \Xibo\Helper\Config::Load($app, PROJECT_ROOT . '/web/settings.php');
         // Set-up the translations for get text
-        Translate::InitLocale();
+        Translate::InitLocale($app);
 
         $app->settingsExists = true;
     }
     else {
-        Translate::InitLocale('en_GB');
+        Translate::InitLocale($app, 'en_GB');
     }
 
     \Xibo\Middleware\State::setRootUri($app);

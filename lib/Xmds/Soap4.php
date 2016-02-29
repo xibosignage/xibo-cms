@@ -29,9 +29,6 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\RequiredFileFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
-use Xibo\Helper\Sanitize;
 
 
 class Soap4 extends Soap
@@ -54,20 +51,20 @@ class Soap4 extends Soap
         $this->logProcessor->setRoute('RegisterDisplay');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
-        $displayName = Sanitize::string($displayName);
-        $clientType = Sanitize::string($clientType);
-        $clientVersion = Sanitize::string($clientVersion);
-        $clientCode = Sanitize::int($clientCode);
-        $macAddress = Sanitize::string($macAddress);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $displayName = $this->getSanitizer()->string($displayName);
+        $clientType = $this->getSanitizer()->string($clientType);
+        $clientVersion = $this->getSanitizer()->string($clientVersion);
+        $clientCode = $this->getSanitizer()->int($clientCode);
+        $macAddress = $this->getSanitizer()->string($macAddress);
         $clientAddress = $this->getIp();
 
         // Audit in
         $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Check the Length of the hardwareKey
@@ -86,11 +83,11 @@ class Soap4 extends Soap
             $this->logProcessor->setDisplay($display->displayId);
 
             // Now
-            $dateNow = Date::parse();
+            $dateNow = $this->getDate()->parse();
 
             // Append the time
-            $displayElement->setAttribute('date', Date::getLocalDate($dateNow));
-            $displayElement->setAttribute('timezone', Config::GetSetting('defaultTimezone'));
+            $displayElement->setAttribute('date', $this->getDate()->getLocalDate($dateNow));
+            $displayElement->setAttribute('timezone', $this->getConfig()->GetSetting('defaultTimezone'));
 
             // Determine if we are licensed or not
             if ($display->licensed == 0) {
@@ -118,7 +115,7 @@ class Soap4 extends Soap
                         $dateNow->timezone($arrayItem['value']);
 
                         // Append Local Time
-                        $displayElement->setAttribute('localDate', Date::getLocalDate($dateNow));
+                        $displayElement->setAttribute('localDate', $this->getDate()->getLocalDate($dateNow));
                     }
 
                     $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
@@ -194,7 +191,7 @@ class Soap4 extends Soap
      */
     function RequiredFiles($serverKey, $hardwareKey)
     {
-        $httpDownloads = (Config::GetSetting('SENDFILE_MODE') != 'Off');
+        $httpDownloads = ($this->getConfig()->GetSetting('SENDFILE_MODE') != 'Off');
         return $this->doRequiredFiles($serverKey, $hardwareKey, $httpDownloads);
     }
 
@@ -214,17 +211,17 @@ class Soap4 extends Soap
         $this->logProcessor->setRoute('GetFile');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
-        $fileId = Sanitize::int($fileId);
-        $fileType = Sanitize::string($fileType);
-        $chunkOffset = Sanitize::int($chunkOffset);
-        $chunkSize = Sanitize::int($chunkSize);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $fileId = $this->getSanitizer()->int($fileId);
+        $fileType = $this->getSanitizer()->string($fileType);
+        $chunkOffset = $this->getSanitizer()->int($chunkOffset);
+        $chunkSize = $this->getSanitizer()->int($chunkSize);
 
-        $libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->getConfig()->GetSetting("LIBRARY_LOCATION");
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -240,7 +237,7 @@ class Soap4 extends Soap
 
         try {
             if ($fileType == "layout") {
-                $fileId = Sanitize::int($fileId);
+                $fileId = $this->getSanitizer()->int($fileId);
 
                 // Validate the nonce
                 $requiredFile = (new RequiredFileFactory($this->getApp()))->getByDisplayAndLayout($this->display->displayId, $fileId);
@@ -383,11 +380,11 @@ class Soap4 extends Soap
         $this->logProcessor->setRoute('NotifyStatus');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -405,10 +402,10 @@ class Soap4 extends Soap
 
         $status = json_decode($status, true);
 
-        $this->display->currentLayoutId = Sanitize::getInt('currentLayoutId', $this->display->currentLayoutId, $status);
-        $this->display->storageAvailableSpace = Sanitize::getInt('availableSpace', $this->display->storageAvailableSpace, $status);
-        $this->display->storageTotalSpace = Sanitize::getInt('totalSpace', $this->display->storageTotalSpace, $status);
-        $this->display->lastCommandSuccess = Sanitize::getCheckbox('lastCommandSuccess', $this->display->lastCommandSuccess, $status);
+        $this->display->currentLayoutId = $this->getSanitizer()->getInt('currentLayoutId', $this->display->currentLayoutId, $status);
+        $this->display->storageAvailableSpace = $this->getSanitizer()->getInt('availableSpace', $this->display->storageAvailableSpace, $status);
+        $this->display->storageTotalSpace = $this->getSanitizer()->getInt('totalSpace', $this->display->storageTotalSpace, $status);
+        $this->display->lastCommandSuccess = $this->getSanitizer()->getCheckbox('lastCommandSuccess', $this->display->lastCommandSuccess, $status);
 
         // Touch the display record
         $this->display->save(['validate' => false, 'audit' => false]);
@@ -429,8 +426,8 @@ class Soap4 extends Soap
         $this->logProcessor->setRoute('SubmitScreenShot');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         $screenShotFmt = "jpg";
         $screenShotMime = "image/jpeg";
@@ -440,7 +437,7 @@ class Soap4 extends Soap
         $needConversion = false;
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -455,8 +452,8 @@ class Soap4 extends Soap
             $this->getLog()->debug('Received Screen shot');
 
         // Open this displays screen shot file and save this.
-        Library::ensureLibraryExists();
-        $location = Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt;
+        Library::ensureLibraryExists($this->getConfig()->GetSetting('LIBRARY_LOCATION'));
+        $location = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt;
 
         foreach(array('imagick', 'gd') as $imgDriver) {
             Img::configure(array('driver' => $imgDriver));

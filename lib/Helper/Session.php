@@ -159,7 +159,7 @@ class Session implements \SessionHandlerInterface
         $empty = '';
         $this->key = $key;
 
-        $userAgent = substr(Sanitize::string($_SERVER['HTTP_USER_AGENT']), 0, 253);
+        $userAgent = substr($_SERVER['HTTP_USER_AGENT'], 0, 253);
 
         try {
             $dbh = $this->getDb();
@@ -237,8 +237,8 @@ class Session implements \SessionHandlerInterface
                 'userId2' => $this->userId,
                 'expired' => ($this->expired) ? 1 : 0,
                 'expired2' => ($this->expired) ? 1 : 0,
-                'useragent' => substr(Sanitize::getString('HTTP_USER_AGENT', 'No user agent', $_SERVER), 0, 253),
-                'remoteaddr' => Sanitize::getString('REMOTE_ADDR')
+                'useragent' => substr($_SERVER['HTTP_USER_AGENT'], 0, 253),
+                'remoteaddr' => $_SERVER['REMOTE_ADDR']
             ];
 
             //

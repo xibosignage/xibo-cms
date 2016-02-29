@@ -20,78 +20,96 @@
  */
 namespace Xibo\Helper;
 
-use Xibo\Storage\PDOConnect;
+use Slim\Slim;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Storage\StorageInterface;
-
-define('WEBSITE_VERSION_NAME', '1.8.0-alpha3');
-define('WEBSITE_VERSION', 123);
 
 class Config
 {
+    public static $WEBSITE_VERSION_NAME = '1.8.0-alpha3';
+    public static $WEBSITE_VERSION = 123;
     public static $VERSION_REQUIRED = '5.5';
 
     /**
-     * @var \Stash\Interfaces\PoolInterface
+     * @var Slim
      */
-    private static $pool = null;
+    public $app;
 
-    /**
-     * @var StorageInterface
-     */
-    private static $store = null;
-
-    private $extensions;
-    public $envTested;
-    public $envFault;
-    public $envWarning;
+    public $envTested = false;
+    public $envFault = false;
+    public $envWarning = false;
 
     public static $dbConfig = [];
-    public static $logHandlers = null;
-    public static $logProcessors = null;
-    public static $middleware = null;
-    public static $authentication = null;
-    public static $samlSettings = null;
-    public static $cacheDrivers = null;
 
-    public function __construct()
-    {
-        // Populate an array of loaded extensions just in case we need it for something.
-        $this->extensions = get_loaded_extensions();
-
-        // Assume the environment is OK
-        $this->envFault = false;
-        $this->envWarning = false;
-        $this->envTested = false;
-
-        return;
-    }
+    public $logHandlers = null;
+    public $logProcessors = null;
+    public $authentication = null;
+    public $samlSettings = null;
+    public $cacheDrivers = null;
 
     /**
-     * Set the Cache Pool
-     * @param \Stash\Interfaces\PoolInterface $pool
+     * Theme Specific Config
+     * @var array
      */
-    public static function setPool($pool)
+    public $themeConfig = [];
+
+    /**
+     * Get the App
+     * @return Slim
+     * @throws \Exception
+     */
+    public function getApp()
     {
-        self::$pool = $pool;
+        if ($this->app == null)
+            throw new \RuntimeException(__('Config called before DI has been setup'));
+
+        return $this->app;
     }
 
     /**
      * Get Cache Pool
      * @return \Stash\Interfaces\PoolInterface
      */
-    private static function getPool()
+    private function getPool()
     {
-        return self::$pool;
+        return $this->getApp()->pool;
+    }
+
+    /**
+     * Get Store
+     * @return StorageInterface
+     */
+    protected function getStore()
+    {
+        return $this->getApp()->store;
+    }
+
+    /**
+     * Get Sanitizer
+     * @return SanitizerInterface
+     */
+    protected function getSanitizer()
+    {
+        return $this->getApp()->sanitizerService;
     }
 
     /**
      * Loads the settings from file.
+     *  DO NOT CALL ANY STORE() METHODS IN HERE
+     * @param Slim $app
+     * @param string $settings
      */
-    static function Load($settings)
+    public static function Load($app, $settings)
     {
-        include ($settings);
+        $config = new Config();
 
-        Config::$dbConfig = [
+        $config->app = $app;
+
+        // Include the provided settings file.
+        @require ($settings);
+
+        // Create a DB config
+        self::$dbConfig = [
             'host' => $dbhost,
             'user' => $dbuser,
             'password' => $dbpass,
@@ -99,26 +117,103 @@ class Config
         ];
 
         // Pull in other settings
+
+        // Log handlers
         if (isset($logHandlers))
-            Config::$logHandlers = $logHandlers;
+            $config->logHandlers = $logHandlers;
+
+        // Log Processors
         if (isset($logProcessors))
-            Config::$logProcessors = $logProcessors;
-        if (isset($middleware))
-            Config::$middleware = $middleware;
+            $config->logProcessors = $logProcessors;
+
+        // Middleware
+        if (isset($middleware) && is_array($middleware)) {
+            foreach ($middleware as $object) {
+                $app->add($object);
+            }
+        }
+
+        // Authentication
         if (isset($authentication))
-            Config::$authentication = $authentication;
+            $config->authentication = $authentication;
+
+        // Saml settings
         if (isset($samlSettings))
-            Config::$samlSettings = $samlSettings;
+            $config->samlSettings = $samlSettings;
+
+        // Cache drivers
         if (isset($cacheDrivers))
-            Config::$cacheDrivers = $cacheDrivers;
+            $config->cacheDrivers = $cacheDrivers;
 
-        // Create a store to use
-        self::$store = new PDOConnect();
+        // Set this as the global config
+        $app->configService = $config;
+    }
 
-        // Configure the timezone information
-        date_default_timezone_set(Config::GetSetting("defaultTimezone"));
+    /**
+     * Loads the theme
+     * @param string[Optional] $themeName
+     * @throws ConfigurationException
+     */
+    public function loadTheme($themeName = null)
+    {
+        // What is the currently selected theme?
+        $globalTheme = ($themeName == NULL) ? $this->GetSetting('GLOBAL_THEME_NAME', 'default') : $themeName;
 
-        Config::Version();
+        // Is this theme valid?
+        if (!is_dir(PROJECT_ROOT . '/web/theme/' . $globalTheme) || !file_exists(PROJECT_ROOT . '/web/theme/' . $globalTheme . '/config.php'))
+            throw new ConfigurationException(__('The theme "%s" does not exist', $globalTheme));
+
+        require(PROJECT_ROOT . '/web/theme/' . $globalTheme . '/config.php');
+        $this->themeConfig = $config;
+        $this->themeConfig['themeCode'] = $globalTheme;
+    }
+
+    /**
+     * Get Theme Specific Settings
+     * @param null $settingName
+     * @param null $default
+     * @return null
+     */
+    public function getThemeConfig($settingName = null, $default = null)
+    {
+        if ($settingName == null)
+            return $this->themeConfig;
+
+        if (isset($this->themeConfig[$settingName]))
+            return $this->themeConfig[$settingName];
+        else
+            return $default;
+    }
+
+    /**
+     * Get theme URI
+     * @param string $uri
+     * @param bool $local
+     * @return string
+     */
+    public function uri($uri, $local = false)
+    {
+        $rootUri = ($local) ? '' : $this->getApp()->rootUri;
+
+        // Serve the appropriate theme file
+        if (is_dir(PROJECT_ROOT . '/web/theme/' . $this->themeConfig['themeCode'] . '/' . $uri)) {
+            return $rootUri . 'theme/' . $this->themeConfig['themeCode'] . '/' . $uri;
+        }
+        else if (file_exists(PROJECT_ROOT . '/web/theme/' . $this->themeConfig['themeCode'] . '/' . $uri)) {
+            return $rootUri . 'theme/' . $this->themeConfig['themeCode'] . '/' . $uri;
+        }
+        else {
+            return $rootUri . 'theme/default/' . $uri;
+        }
+    }
+
+    /**
+     * Get App Root URI
+     * @return mixed
+     */
+    public function rootUri()
+    {
+        return $this->getApp()->rootUri;
     }
 
     /**
@@ -127,12 +222,12 @@ class Config
      * @param string[optional] $default
      * @return string
      */
-    static function GetSetting($setting, $default = NULL)
+    public function GetSetting($setting, $default = NULL)
     {
         $item = null;
 
-        if (self::getPool() != null) {
-            $item = self::getPool()->getItem('config/' . $setting);
+        if ($this->getPool() != null) {
+            $item = $this->getPool()->getItem('config/' . $setting);
 
             $data = $item->get();
 
@@ -141,16 +236,16 @@ class Config
             }
         }
 
-        $sth = self::$store->getConnection()->prepare('SELECT `value` FROM `setting` WHERE `setting` = :setting');
+        $sth = $this->getStore()->getConnection()->prepare('SELECT `value` FROM `setting` WHERE `setting` = :setting');
         $sth->execute(array('setting' => $setting));
 
         if (!$result = $sth->fetch())
             $data = $default;
         else
-            $data = Sanitize::getString('value', $default, $result);
+            $data = $result['value'];
 
-        if (self::getPool() != null) {
-            self::getPool()->saveDeferred($item->set($data));
+        if ($this->getPool() != null) {
+            $this->getPool()->saveDeferred($item->set($data));
         }
 
         return $data;
@@ -161,10 +256,10 @@ class Config
      * @param string $setting
      * @param mixed $value
      */
-    public static function ChangeSetting($setting, $value)
+    public function ChangeSetting($setting, $value)
     {
 
-        $sth = self::$store->getConnection()->prepare('UPDATE `setting` SET `value` = :value WHERE `setting` = :setting');
+        $sth = $this->getStore()->getConnection()->prepare('UPDATE `setting` SET `value` = :value WHERE `setting` = :setting');
         $sth->execute(array('setting' => $setting, 'value' => $value));
 
         if (self::getPool() != null) {
@@ -173,39 +268,32 @@ class Config
         }
     }
 
-    public static function GetAll($sort_order = array('cat', 'ordering'), $filter_by = array())
+    public function GetAll($sort_order = array('cat', 'ordering'), $filter_by = array())
     {
-
         if ($sort_order == NULL)
             $sort_order = array('cat', 'ordering');
 
-        try {
+        $SQL = 'SELECT * FROM `setting` WHERE 1 = 1 ';
+        $params = array();
 
-            $SQL = 'SELECT * FROM setting WHERE 1 = 1 ';
-            $params = array();
-
-            if (Sanitize::getInt('userChange', $filter_by) != null) {
-                $SQL .= ' AND userChange = :userChange ';
-                $params['userChange'] = Sanitize::getInt('userChange', $filter_by);
-            }
-
-            if (Sanitize::getInt('userSee', $filter_by) != null) {
-                $SQL .= ' AND userSee = :userSee ';
-                $params['userSee'] = Sanitize::getInt('userSee', $filter_by);
-            }
-
-            // Sorting?
-            if (is_array($sort_order))
-                $SQL .= 'ORDER BY ' . implode(',', $sort_order);
-
-            $sth = self::$store->getConnection()->prepare($SQL);
-            $sth->execute($params);
-
-            return $sth->fetchAll();
-        } catch (\Exception $e) {
-            trigger_error($e->getMessage());
-            return false;
+        if ($this->getSanitizer()->getInt('userChange', $filter_by) !== null) {
+            $SQL .= ' AND userChange = :userChange ';
+            $params['userChange'] = $this->getSanitizer()->getInt('userChange', $filter_by);
         }
+
+        if ($this->getSanitizer()->getInt('userSee', $filter_by) !== null) {
+            $SQL .= ' AND userSee = :userSee ';
+            $params['userSee'] = $this->getSanitizer()->getInt('userSee', $filter_by);
+        }
+
+        // Sorting?
+        if (is_array($sort_order))
+            $SQL .= 'ORDER BY ' . implode(',', $sort_order);
+
+        $sth = $this->getStore()->getConnection()->prepare($SQL);
+        $sth->execute($params);
+
+        return $sth->fetchAll();
     }
 
     /**
@@ -214,18 +302,18 @@ class Config
      * @return array|string
      * @throws \Exception
      */
-    static function Version($object = '')
+    public function Version($object = '')
     {
         try {
 
-            $sth = self::$store->getConnection()->prepare('SELECT app_ver, XlfVersion, XmdsVersion, DBVersion FROM version');
+            $sth = $this->getStore()->getConnection()->prepare('SELECT app_ver, XlfVersion, XmdsVersion, DBVersion FROM version');
             $sth->execute();
 
             if (!$row = $sth->fetch(\PDO::FETCH_ASSOC))
                 throw new \Exception('No results returned');
 
-            $appVer = Sanitize::string($row['app_ver']);
-            $dbVer = Sanitize::int($row['DBVersion']);
+            $appVer = $row['app_ver'];
+            $dbVer = intval($row['DBVersion']);
 
             if (!defined('VERSION'))
                 define('VERSION', $appVer);
@@ -234,7 +322,7 @@ class Config
                 define('DBVERSION', $dbVer);
 
             if ($object != '')
-                return Sanitize::getString($object, $row);
+                return $row[$object];
 
             return $row;
         } catch (\Exception $e) {
@@ -247,9 +335,9 @@ class Config
      * Is an upgrade pending?
      * @return bool
      */
-    public static function isUpgradePending()
+    public function isUpgradePending()
     {
-        return DBVERSION != WEBSITE_VERSION;
+        return DBVERSION != Config::$WEBSITE_VERSION;
     }
 
     /**
@@ -257,9 +345,9 @@ class Config
      * @param $host
      * @return bool
     */
-    public static function isProxyException($host)
+    public function isProxyException($host)
     {
-        $proxyException = Config::GetSetting('PROXY_EXCEPTIONS');
+        $proxyException = $this->GetSetting('PROXY_EXCEPTIONS');
         return ($proxyException != '' && stripos($host, $proxyException) > -1);
     }
 
@@ -268,17 +356,17 @@ class Config
      * @param array $httpOptions
      * @return array
      */
-    public static function getGuzzleProxy($httpOptions = [])
+    public function getGuzzleProxy($httpOptions = [])
     {
         // Proxy support
-        if (Config::GetSetting('PROXY_HOST') != '') {
+        if ($this->GetSetting('PROXY_HOST') != '') {
 
-            $proxy = Config::GetSetting('PROXY_HOST') . ':' . Config::GetSetting('PROXY_PORT');
+            $proxy = $this->GetSetting('PROXY_HOST') . ':' . $this->GetSetting('PROXY_PORT');
 
-            if (Config::GetSetting('PROXY_AUTH') != '') {
+            if ($this->GetSetting('PROXY_AUTH') != '') {
                 $scheme = explode('://', $proxy);
 
-                $proxy = $scheme[0] . Config::GetSetting('PROXY_AUTH') . '@' . $scheme[1];
+                $proxy = $scheme[0] . $this->GetSetting('PROXY_AUTH') . '@' . $scheme[1];
             }
 
             $httpOptions['proxy'] = [
@@ -286,8 +374,8 @@ class Config
                 'https' => $proxy
             ];
 
-            if (Config::GetSetting('PROXY_EXCEPTIONS') != '') {
-                $httpOptions['proxy']['no'] = explode(',', Config::GetSetting('PROXY_EXCEPTIONS'));
+            if ($this->GetSetting('PROXY_EXCEPTIONS') != '') {
+                $httpOptions['proxy']['no'] = explode(',', $this->GetSetting('PROXY_EXCEPTIONS'));
             }
         }
 
@@ -299,16 +387,16 @@ class Config
      * @param string $feedUrl
      * @return null|\PicoFeed\Config\Config
      */
-    public static function getPicoFeedProxy($feedUrl)
+    public function getPicoFeedProxy($feedUrl)
     {
         $clientOptions = null;
 
-        if (Config::GetSetting('PROXY_HOST') != '' && !Config::isProxyException($feedUrl)) {
+        if ($this->GetSetting('PROXY_HOST') != '' && !$this->isProxyException($feedUrl)) {
             $clientOptions = new \PicoFeed\Config\Config();
-            $clientOptions->setProxyHostname(Config::GetSetting('PROXY_HOST'));
-            $clientOptions->setProxyPort(Config::GetSetting('PROXY_PORT'));
+            $clientOptions->setProxyHostname($this->GetSetting('PROXY_HOST'));
+            $clientOptions->setProxyPort($this->GetSetting('PROXY_PORT'));
 
-            $proxyAuth = Config::GetSetting('PROXY_AUTH');
+            $proxyAuth = $this->GetSetting('PROXY_AUTH');
             if ($proxyAuth != '') {
                 $proxyAuth = explode(':', $proxyAuth);
                 $clientOptions->setProxyUsername($proxyAuth[0]);

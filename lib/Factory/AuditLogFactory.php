@@ -23,7 +23,6 @@
 namespace Xibo\Factory;
 
 use Xibo\Entity\AuditLog;
-use Xibo\Helper\Sanitize;
 
 class AuditLogFactory extends BaseFactory
 {
@@ -37,29 +36,29 @@ class AuditLogFactory extends BaseFactory
         $select = ' SELECT logId, logDate, user.userName, message, objectAfter, entity, entityId, auditlog.userId ';
         $body = 'FROM `auditlog` LEFT OUTER JOIN user ON user.userId = auditlog.userId WHERE 1 = 1 ';
 
-        if (Sanitize::getInt('fromTimeStamp', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('fromTimeStamp', $filterBy) !== null) {
             $body .= ' AND `auditlog`.logDate >= :fromTimeStamp ';
-            $params['fromTimeStamp'] = Sanitize::getInt('fromTimeStamp', $filterBy);
+            $params['fromTimeStamp'] = $this->getSanitizer()->getInt('fromTimeStamp', $filterBy);
         }
 
-        if (Sanitize::getInt('toTimeStamp', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('toTimeStamp', $filterBy) !== null) {
             $body .= ' AND `auditlog`.logDate < :toTimeStamp ';
-            $params['toTimeStamp'] = Sanitize::getInt('toTimeStamp', $filterBy);
+            $params['toTimeStamp'] = $this->getSanitizer()->getInt('toTimeStamp', $filterBy);
         }
 
-        if (Sanitize::getString('entity', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('entity', $filterBy) != null) {
             $body .= ' AND `auditlog`.entity LIKE :entity ';
-            $params['entity'] = '%' . Sanitize::getString('entity', $filterBy) . '%';
+            $params['entity'] = '%' . $this->getSanitizer()->getString('entity', $filterBy) . '%';
         }
 
-        if (Sanitize::getString('userName', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('userName', $filterBy) != null) {
             $body .= ' AND `auditlog`.userName LIKE :userName ';
-            $params['userName'] = '%' . Sanitize::getString('userName', $filterBy) . '%';
+            $params['userName'] = '%' . $this->getSanitizer()->getString('userName', $filterBy) . '%';
         }
 
-        if (Sanitize::getString('message', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('message', $filterBy) != null) {
             $body .= ' AND `auditlog`.message LIKE :message ';
-            $params['message'] = '%' . Sanitize::getString('message', $filterBy) . '%';
+            $params['message'] = '%' . $this->getSanitizer()->getString('message', $filterBy) . '%';
         }
 
         $order = '';
@@ -69,8 +68,8 @@ class AuditLogFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         // The final statements

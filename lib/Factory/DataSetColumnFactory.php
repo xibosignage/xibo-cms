@@ -11,7 +11,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class DataSetColumnFactory extends BaseFactory
 {
@@ -70,14 +69,14 @@ class DataSetColumnFactory extends BaseFactory
                ON datasetcolumntype.DataSetColumnTypeID = datasetcolumn.DataSetColumnTypeID
              WHERE 1 = 1 ';
 
-        if (Sanitize::getInt('dataSetColumnId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('dataSetColumnId', $filterBy) !== null) {
             $body .= ' AND dataSetColumnId = :dataSetColumnId ';
-            $params['dataSetColumnId'] = Sanitize::getInt('dataSetColumnId', $filterBy);
+            $params['dataSetColumnId'] = $this->getSanitizer()->getInt('dataSetColumnId', $filterBy);
         }
 
-        if (Sanitize::getInt('dataSetId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('dataSetId', $filterBy) !== null) {
             $body .= ' AND DataSetID = :dataSetId ';
-            $params['dataSetId'] = Sanitize::getInt('dataSetId', $filterBy);
+            $params['dataSetId'] = $this->getSanitizer()->getInt('dataSetId', $filterBy);
         }
 
         // Sorting?
@@ -87,8 +86,8 @@ class DataSetColumnFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         $sql = $select . $body . $order . $limit;

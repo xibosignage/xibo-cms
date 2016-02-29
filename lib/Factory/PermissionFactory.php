@@ -26,7 +26,6 @@ namespace Xibo\Factory;
 use Xibo\Entity\Permission;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class PermissionFactory extends BaseFactory
 {
@@ -191,7 +190,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
                  WHERE IsUserSpecific = 0 ';
 
         // Permissions for the group section
-        if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
+        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
             // Normal users can only see their group
             if ($this->getUser()->userTypeId != 1) {
                 $body .= '
@@ -220,7 +219,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
                         AND retired = 0 ';
 
         // Permissions for the user section
-        if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
+        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
             // Normal users can only see themselves
             if ($this->getUser()->userTypeId == 3) {
                 $filterBy['userId'] = $this->getUser()->userId;
@@ -252,9 +251,9 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
          WHERE 1 = 1
         ';
 
-        if (Sanitize::getString('name', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('name', $filterBy) != null) {
             $body .= ' AND joinedGroup.group LIKE :name ';
-            $params['name'] = '%' . Sanitize::getString('name', $filterBy) . '%';
+            $params['name'] = '%' . $this->getSanitizer()->getString('name', $filterBy) . '%';
         }
 
         $order = '';
@@ -265,8 +264,8 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -284,7 +283,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
             $permission->entity = $entity;
             $permission->entityId = $entityId;
             $permission->isUser = $row['isuserspecific'];
-            $permission->group = \Xibo\Helper\Sanitize::string($row['group']);
+            $permission->group = $this->getSanitizer()->string($row['group']);
 
             $permissions[] = $permission;
         }

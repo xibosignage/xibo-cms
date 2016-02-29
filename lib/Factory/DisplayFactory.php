@@ -24,8 +24,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Display;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Config;
-use Xibo\Helper\Sanitize;
 
 class DisplayFactory extends BaseFactory
 {
@@ -169,14 +167,14 @@ class DisplayFactory extends BaseFactory
             ';
 
         // Restrict to members of a specific display group
-        if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN `lkdisplaydg` othergroups
                 ON othergroups.displayId = `display`.displayId
                     AND othergroups.displayGroupId = :displayGroupId
             ';
 
-            $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
+            $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
         }
 
         $body .= ' WHERE 1 = 1 ';
@@ -184,27 +182,27 @@ class DisplayFactory extends BaseFactory
         $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'display.displayId', null, $filterBy);
 
         // Filter by Display ID?
-        if (Sanitize::getInt('displayId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('displayId', $filterBy) !== null) {
             $body .= ' AND display.displayid = :displayId ';
-            $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
+            $params['displayId'] = $this->getSanitizer()->getInt('displayId', $filterBy);
         }
 
         // Filter by Wake On LAN
-        if (Sanitize::getInt('wakeOnLan', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('wakeOnLan', $filterBy) !== null) {
             $body .= ' AND display.wakeOnLan = :wakeOnLan ';
-            $params['wakeOnLan'] = Sanitize::getInt('wakeOnLan', $filterBy);
+            $params['wakeOnLan'] = $this->getSanitizer()->getInt('wakeOnLan', $filterBy);
         }
 
         // Filter by Licence?
-        if (Sanitize::getString('license', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('license', $filterBy) != null) {
             $body .= ' AND display.license = :license ';
-            $params['license'] = Sanitize::getString('license', $filterBy);
+            $params['license'] = $this->getSanitizer()->getString('license', $filterBy);
         }
 
         // Filter by Display Name?
-        if (Sanitize::getString('display', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('display', $filterBy) != null) {
             // Convert into commas
-            foreach (explode(',', Sanitize::getString('display', $filterBy)) as $term) {
+            foreach (explode(',', $this->getSanitizer()->getString('display', $filterBy)) as $term) {
 
                 // convert into a space delimited array
                 $names = explode(' ', $term);
@@ -224,18 +222,18 @@ class DisplayFactory extends BaseFactory
             }
         }
 
-        if (Sanitize::getString('macAddress', $filterBy) != '') {
+        if ($this->getSanitizer()->getString('macAddress', $filterBy) != '') {
             $body .= ' AND display.macaddress LIKE :macAddress ';
-            $params['macAddress'] = '%' . Sanitize::getString('macAddress', $filterBy) . '%';
+            $params['macAddress'] = '%' . $this->getSanitizer()->getString('macAddress', $filterBy) . '%';
         }
 
-        if (Sanitize::getString('clientVersion', $filterBy) != '') {
+        if ($this->getSanitizer()->getString('clientVersion', $filterBy) != '') {
             $body .= ' AND display.client_version LIKE :clientVersion ';
-            $params['clientVersion'] = '%' . Sanitize::getString('clientVersion', $filterBy) . '%';
+            $params['clientVersion'] = '%' . $this->getSanitizer()->getString('clientVersion', $filterBy) . '%';
         }
 
         // Exclude a group?
-        if (Sanitize::getInt('exclude_displaygroupid', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('exclude_displaygroupid', $filterBy) !== null) {
             $body .= " AND display.DisplayID NOT IN ";
             $body .= "       (SELECT display.DisplayID ";
             $body .= "       FROM    display ";
@@ -243,11 +241,11 @@ class DisplayFactory extends BaseFactory
             $body .= "               ON      lkdisplaydg.DisplayID = display.DisplayID ";
             $body .= "   WHERE  lkdisplaydg.DisplayGroupID   = :excludeDisplayGroupId ";
             $body .= "       )";
-            $params['excludeDisplayGroupId'] = Sanitize::getInt('exclude_displaygroupid', $filterBy);
+            $params['excludeDisplayGroupId'] = $this->getSanitizer()->getInt('exclude_displaygroupid', $filterBy);
         }
 
         // Only ones with a particular active campaign
-        if (Sanitize::getInt('activeCampaignId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('activeCampaignId', $filterBy) !== null) {
             // Which displays does a change to this layout effect?
             $body .= '
               AND display.displayId IN (
@@ -274,17 +272,17 @@ class DisplayFactory extends BaseFactory
             ';
 
             $currentDate = time();
-            $rfLookAhead = Config::GetSetting('REQUIRED_FILES_LOOKAHEAD');
+            $rfLookAhead = $this->getConfig()->GetSetting('REQUIRED_FILES_LOOKAHEAD');
             $rfLookAhead = intval($currentDate) + intval($rfLookAhead);
 
             $params['fromDt'] = $rfLookAhead;
             $params['toDt'] = $currentDate - 3600;
-            $params['activeCampaignId'] = Sanitize::getInt('activeCampaignId', $filterBy);
-            $params['activeCampaignId2'] = Sanitize::getInt('activeCampaignId', $filterBy);
+            $params['activeCampaignId'] = $this->getSanitizer()->getInt('activeCampaignId', $filterBy);
+            $params['activeCampaignId2'] = $this->getSanitizer()->getInt('activeCampaignId', $filterBy);
         }
 
         // Only Display Groups with a Campaign containing particular Layout assigned to them
-        if (Sanitize::getInt('assignedCampaignId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('assignedCampaignId', $filterBy) !== null) {
             $body .= '
                 AND display.displayId IN (
                     SELECT `lkdisplaydg`.displayId
@@ -297,11 +295,11 @@ class DisplayFactory extends BaseFactory
                 )
             ';
 
-            $params['assignedCampaignId'] = Sanitize::getInt('assignedCampaignId', $filterBy);
+            $params['assignedCampaignId'] = $this->getSanitizer()->getInt('assignedCampaignId', $filterBy);
         }
 
         // Only Display Groups that are running Layouts that have the provided data set on them
-        if (Sanitize::getInt('activeDataSetId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('activeDataSetId', $filterBy) !== null) {
             // Which displays does a change to this layout effect?
             $body .= '
               AND display.displayId IN (
@@ -368,14 +366,14 @@ class DisplayFactory extends BaseFactory
             ';
 
             $currentDate = time();
-            $rfLookAhead = Config::GetSetting('REQUIRED_FILES_LOOKAHEAD');
+            $rfLookAhead = $this->getConfig()->GetSetting('REQUIRED_FILES_LOOKAHEAD');
             $rfLookAhead = intval($currentDate) + intval($rfLookAhead);
 
             $params['fromDt'] = $rfLookAhead;
             $params['toDt'] = $currentDate - 3600;
-            $params['activeDataSetId'] = Sanitize::getInt('activeDataSetId', $filterBy);
-            $params['activeDataSetId2'] = Sanitize::getInt('activeDataSetId', $filterBy);
-            $params['activeDataSetId3'] = Sanitize::getInt('activeDataSetId', $filterBy);
+            $params['activeDataSetId'] = $this->getSanitizer()->getInt('activeDataSetId', $filterBy);
+            $params['activeDataSetId2'] = $this->getSanitizer()->getInt('activeDataSetId', $filterBy);
+            $params['activeDataSetId3'] = $this->getSanitizer()->getInt('activeDataSetId', $filterBy);
         }
 
         // Sorting?
@@ -385,8 +383,8 @@ class DisplayFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         $sql = $select . $body . $order . $limit;

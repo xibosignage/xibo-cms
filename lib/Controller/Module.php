@@ -29,8 +29,6 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Sanitize;
 
 
 class Module extends Base
@@ -43,7 +41,7 @@ class Module extends Base
         $data = [];
 
         // Do we have any modules to install?!
-        if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
+        if ($this->getConfig()->GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
             // Get a list of matching files in the modules folder
             $files = array_merge(glob(PROJECT_ROOT . '/modules/*.json'), glob(PROJECT_ROOT . '/custom/*.json'));
 
@@ -89,7 +87,7 @@ class Module extends Base
             $module->includeProperty('buttons');
 
             // If the module config is not locked, present some buttons
-            if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
+            if ($this->getConfig()->GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
 
                 // Edit button
                 $module->buttons[] = array(
@@ -120,7 +118,7 @@ class Module extends Base
     public function settingsForm($moduleId)
     {
         // Can we edit?
-        if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
+        if ($this->getConfig()->GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
             throw new \InvalidArgumentException(__('Module Config Locked'));
 
         if (!$this->getUser()->userTypeId == 1)
@@ -145,18 +143,18 @@ class Module extends Base
     public function settings($moduleId)
     {
         // Can we edit?
-        if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
+        if ($this->getConfig()->GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
             throw new \InvalidArgumentException(__('Module Config Locked'));
 
         if (!$this->getUser()->userTypeId == 1)
             throw new AccessDeniedException();
 
         $module = (new ModuleFactory($this->getApp()))->createById($moduleId);
-        $module->getModule()->defaultDuration = Sanitize::getInt('defaultDuration');
-        $module->getModule()->validExtensions = Sanitize::getString('validExtensions');
-        $module->getModule()->imageUri = Sanitize::getString('imageUri');
-        $module->getModule()->enabled = Sanitize::getCheckbox('enabled');
-        $module->getModule()->previewEnabled = Sanitize::getCheckbox('previewEnabled');
+        $module->getModule()->defaultDuration = $this->getSanitizer()->getInt('defaultDuration');
+        $module->getModule()->validExtensions = $this->getSanitizer()->getString('validExtensions');
+        $module->getModule()->imageUri = $this->getSanitizer()->getString('imageUri');
+        $module->getModule()->enabled = $this->getSanitizer()->getCheckbox('enabled');
+        $module->getModule()->previewEnabled = $this->getSanitizer()->getCheckbox('previewEnabled');
 
         // Install Files for this module
         $module->installFiles();
@@ -306,7 +304,7 @@ class Module extends Base
         $module->add();
 
         // Permissions
-        if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
+        if ($this->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
             // Apply permissions from the Parent
             foreach ($playlist->permissions as $permission) {
                 /* @var Permission $permission */
@@ -314,7 +312,7 @@ class Module extends Base
                 $permission->save();
             }
         } else {
-            foreach ((new PermissionFactory($this->getApp()))->createForNewEntity($this->getUser(), get_class($module->widget), $module->widget->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+            foreach ((new PermissionFactory($this->getApp()))->createForNewEntity($this->getUser(), get_class($module->widget), $module->widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT')) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
@@ -416,7 +414,7 @@ class Module extends Base
         $module->widget->delete();
 
         // Delete Media?
-        if (Sanitize::getCheckbox('deleteMedia') == 1) {
+        if ($this->getSanitizer()->getCheckbox('deleteMedia') == 1) {
             foreach ($widgetMedia as $mediaId) {
                 $media = (new MediaFactory($this->getApp()))->getById($mediaId);
 
@@ -485,16 +483,16 @@ class Module extends Base
 
         switch ($type) {
             case 'in':
-                $widget->setOptionValue('transIn', 'attrib', Sanitize::getString('transitionType'));
-                $widget->setOptionValue('transInDuration', 'attrib', Sanitize::getInt('transitionDuration'));
-                $widget->setOptionValue('transInDirection', 'attrib', Sanitize::getString('transitionDirection'));
+                $widget->setOptionValue('transIn', 'attrib', $this->getSanitizer()->getString('transitionType'));
+                $widget->setOptionValue('transInDuration', 'attrib', $this->getSanitizer()->getInt('transitionDuration'));
+                $widget->setOptionValue('transInDirection', 'attrib', $this->getSanitizer()->getString('transitionDirection'));
 
                 break;
 
             case 'out':
-                $widget->setOptionValue('transOut', 'attrib', Sanitize::getString('transitionType'));
-                $widget->setOptionValue('transOutDuration', 'attrib', Sanitize::getInt('transitionDuration'));
-                $widget->setOptionValue('transOutDirection', 'attrib', Sanitize::getString('transitionDirection'));
+                $widget->setOptionValue('transOut', 'attrib', $this->getSanitizer()->getString('transitionType'));
+                $widget->setOptionValue('transOutDuration', 'attrib', $this->getSanitizer()->getInt('transitionDuration'));
+                $widget->setOptionValue('transOutDirection', 'attrib', $this->getSanitizer()->getString('transitionDirection'));
 
                 break;
 

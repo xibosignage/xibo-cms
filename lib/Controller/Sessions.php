@@ -22,7 +22,6 @@ namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\SessionFactory;
-use Xibo\Helper\Sanitize;
 
 
 class Sessions extends Base
@@ -36,8 +35,8 @@ class Sessions extends Base
     function grid()
     {
         $sessions = (new SessionFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter([
-            'type' => Sanitize::getString('type'),
-            'fromDt' => Sanitize::getString('fromDt')
+            'type' => $this->getSanitizer()->getString('type'),
+            'fromDt' => $this->getSanitizer()->getString('fromDt')
         ]));
 
         foreach ($sessions as $row) {

@@ -25,7 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Playlist;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class PlaylistFactory extends BaseFactory
 {
@@ -78,26 +77,26 @@ class PlaylistFactory extends BaseFactory
         $params = array();
         $select = 'SELECT playlist.* ';
 
-        if (Sanitize::getInt('regionId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('regionId', $filterBy) !== null) {
             $select .= ' , lkregionplaylist.displayOrder ';
         }
 
         $body = '  FROM `playlist` ';
 
-        if (Sanitize::getInt('regionId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('regionId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN `lkregionplaylist`
                 ON lkregionplaylist.playlistId = playlist.playlistId
                     AND lkregionplaylist.regionId = :regionId
             ';
-            $params['regionId'] = Sanitize::getInt('regionId', $filterBy);
+            $params['regionId'] = $this->getSanitizer()->getInt('regionId', $filterBy);
         }
 
         $body .= ' WHERE 1 = 1 ';
 
-        if (Sanitize::getInt('playlistId', $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('playlistId', $filterBy) != 0) {
             $body .= ' AND playlistId = :playlistId ';
-            $params['playlistId'] = Sanitize::getInt('playlistId', $filterBy);
+            $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', $filterBy);
         }
 
         // Sorting?
@@ -107,8 +106,8 @@ class PlaylistFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         $sql = $select . $body . $order . $limit;

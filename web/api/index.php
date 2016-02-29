@@ -32,8 +32,6 @@ require PROJECT_ROOT . '/vendor/autoload.php';
 if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
     die('Not configured');
 
-Config::Load(PROJECT_ROOT . '/web/settings.php');
-
 // Create a logger
 $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'API',
@@ -47,11 +45,13 @@ $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
 ), false);
 
 $app = new \RKA\Slim(array(
-    'mode' => Config::GetSetting('SERVER_MODE'),
     'debug' => false,
     'log.writer' => $logger
 ));
 $app->setName('api');
+
+// Config
+Config::Load($app, PROJECT_ROOT . '/web/settings.php');
 
 $app->add(new \Xibo\Middleware\ApiAuthenticationOAuth());
 $app->add(new \Xibo\Middleware\State());

@@ -34,8 +34,6 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
 
 /**
  * Class Media
@@ -489,7 +487,7 @@ class Media implements \JsonSerializable
         // Do we need to pull a new update?
         // Is the file either expired or is force set
         if ($this->force || ($this->expires > 0 && $this->expires < time())) {
-            $this->getLog()->debug('Media %s has expired: %s. Force = %d', $this->name, Date::getLocalDate($this->expires), $this->force);
+            $this->getLog()->debug('Media %s has expired: %s. Force = %d', $this->name, $this->getDate()->getLocalDate($this->expires), $this->force);
             $this->saveFile();
         }
 
@@ -534,7 +532,7 @@ class Media implements \JsonSerializable
             $this->download();
         }
 
-        $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
+        $libraryFolder = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
 
         // Work out the extension
         $extension = strtolower(substr(strrchr($this->fileName, '.'), 1));
@@ -593,7 +591,7 @@ class Media implements \JsonSerializable
     public static function unlink($fileName)
     {
         // Library location
-        $libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->getConfig()->GetSetting("LIBRARY_LOCATION");
 
         // 3 things to check for..
         // the actual file, the thumbnail, the background
@@ -616,7 +614,7 @@ class Media implements \JsonSerializable
             throw new \InvalidArgumentException(__('Not in a suitable state to download'));
 
         // Open the temporary file
-        $storedAs = Config::GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
+        $storedAs = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
 
         $this->getLog()->debug('Downloading %s to %s', $this->fileName, $storedAs);
 
@@ -625,7 +623,7 @@ class Media implements \JsonSerializable
 
         try {
             $client = new Client();
-            $client->get($this->fileName, Config::getGuzzleProxy(['save_to' => $fileHandle]));
+            $client->get($this->fileName, $this->getConfig()->getGuzzleProxy(['save_to' => $fileHandle]));
         }
         catch (RequestException $e) {
             $this->getLog()->error('Unable to get %s, %s', $this->fileName, $e->getMessage());

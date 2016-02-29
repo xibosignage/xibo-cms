@@ -8,15 +8,18 @@ class BackupUploadHandler extends BlueImpUploadHandler
 {
     protected function handle_form_data($file, $index)
     {
+        $controller = $this->options['controller'];
+        /* @var \Xibo\Controller\Base $controller */
+
         // Handle form data, e.g. $_REQUEST['description'][$index]
         $fileName = $file->name;
 
-        $this->getLog()->debug('Upload complete for ' . $fileName . '.');
+        $controller->getLog()->debug('Upload complete for ' . $fileName . '.');
 
         // Upload and Save
         try {
             // Move the uploaded file to a temporary location in the library
-            $destination = tempnam(Config::GetSetting('LIBRARY_LOCATION') . 'temp/', 'dmp');
+            $destination = tempnam($controller->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/', 'dmp');
             rename($fileName, $destination);
 
             global $dbuser;
@@ -26,17 +29,17 @@ class BackupUploadHandler extends BlueImpUploadHandler
             // Push the file into msqldump
             exec('mysql --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname . ' < ' . escapeshellarg($fileName) . ' ');
 
-            $this->getLog()->notice('mysql --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname . ' < ' . escapeshellarg($fileName) . ' ' );
+            $controller->getLog()->notice('mysql --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname . ' < ' . escapeshellarg($fileName) . ' ' );
 
             unlink($destination);
 
         } catch (Exception $e) {
-            $this->getLog()->error('Error uploading media: %s', $e->getMessage());
-            $this->getLog()->debug($e->getTraceAsString());
+            $controller->getLog()->error('Error uploading media: %s', $e->getMessage());
+            $controller->getLog()->debug($e->getTraceAsString());
 
             $file->error = $e->getMessage();
 
-            $this->options['controller']->getApp()->commit = false;
+            $controller->getApp()->commit = false;
         }
     }
 }

@@ -12,7 +12,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
         // Handle form data, e.g. $_REQUEST['description'][$index]
         $fileName = $file->name;
 
-        $this->getLog()->debug('Upload complete for ' . $fileName . '.');
+        $this->options['controller']->getLog()->debug('Upload complete for ' . $fileName . '.');
 
         // Upload and Save
         try {
@@ -22,7 +22,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             $importTags = isset($_REQUEST['importTags']) ? $_REQUEST['importTags'][$index] : 0;
 
             $layout = (new LayoutFactory($this->options['controller']->getApp()))->createFromZip(
-                Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName,
+                $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName,
                 $name,
                 $this->options['userId'],
                 $template,
@@ -32,14 +32,14 @@ class LayoutUploadHandler extends BlueImpUploadHandler
 
             $layout->save();
 
-            @unlink(Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName);
+            @unlink($this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName);
 
             // Set the name for the return
             $file->name = $layout->layout;
 
         } catch (Exception $e) {
-            $this->getLog()->error('Error uploading media: %s', $e->getMessage());
-            $this->getLog()->debug($e->getTraceAsString());
+            $this->options['controller']->getLog()->error('Error uploading media: %s', $e->getMessage());
+            $this->options['controller']->getLog()->debug($e->getTraceAsString());
 
             $file->error = $e->getMessage();
 

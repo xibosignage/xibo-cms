@@ -66,7 +66,7 @@ class Fault extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        Config::ChangeSetting('audit', 'DEBUG');
+        $this->getConfig()->ChangeSetting('audit', 'DEBUG');
 
         // Return
         $this->getState()->hydrate([
@@ -79,7 +79,7 @@ class Fault extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        Config::ChangeSetting('audit', 'EMERGENCY');
+        $this->getConfig()->ChangeSetting('audit', 'EMERGENCY');
 
         // Return
         $this->getState()->hydrate([

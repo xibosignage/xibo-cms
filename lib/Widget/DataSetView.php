@@ -28,9 +28,6 @@ use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
-use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 class DataSetView extends ModuleWidget
@@ -217,10 +214,10 @@ class DataSetView extends ModuleWidget
      */
     public function add()
     {
-        $this->setOption('name', Sanitize::getString('name'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setUseDuration(0);
         $this->setDuration($this->getModule()->defaultDuration);
-        $this->setOption('dataSetId', Sanitize::getInt('dataSetId'));
+        $this->setOption('dataSetId', $this->getSanitizer()->getInt('dataSetId'));
 
         // Save the widget
         $this->validate();
@@ -233,32 +230,32 @@ class DataSetView extends ModuleWidget
     public function edit()
     {
         // Columns
-        $columns = Sanitize::getIntArray('dataSetColumnId');
+        $columns = $this->getSanitizer()->getIntArray('dataSetColumnId');
         if (count($columns) == 0)
             $this->SetOption('columns', '');
         else
             $this->SetOption('columns', implode(',', $columns));
 
         // Other properties
-        $this->setOption('name', Sanitize::getString('name', $this->getOption('name')));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
-        $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 120));
-        $this->setOption('name', Sanitize::getString('name'));
-        $this->setOption('rowsPerPage', Sanitize::getInt('rowsPerPage'));
-        $this->setOption('showHeadings', Sanitize::getCheckbox('showHeadings'));
-        $this->setOption('upperLimit', Sanitize::getInt('upperLimit', 0));
-        $this->setOption('lowerLimit', Sanitize::getInt('lowerLimit', 0));
-        $this->setOption('filter', Sanitize::getParam('filter', null));
-        $this->setOption('ordering', Sanitize::getString('ordering'));
-        $this->setOption('templateId', Sanitize::getString('templateId'));
-        $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
-        $this->setOption('useOrderingClause', Sanitize::getCheckbox('useOrderingClause'));
-        $this->setOption('useFilteringClause', Sanitize::getCheckbox('useFilteringClause'));
+        $this->setOption('name', $this->getSanitizer()->getString('name', $this->getOption('name')));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('rowsPerPage', $this->getSanitizer()->getInt('rowsPerPage'));
+        $this->setOption('showHeadings', $this->getSanitizer()->getCheckbox('showHeadings'));
+        $this->setOption('upperLimit', $this->getSanitizer()->getInt('upperLimit', 0));
+        $this->setOption('lowerLimit', $this->getSanitizer()->getInt('lowerLimit', 0));
+        $this->setOption('filter', $this->getSanitizer()->getParam('filter', null));
+        $this->setOption('ordering', $this->getSanitizer()->getString('ordering'));
+        $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
+        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        $this->setOption('useOrderingClause', $this->getSanitizer()->getCheckbox('useOrderingClause'));
+        $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
 
         // Order and Filter criteria
-        $orderClauses = Sanitize::getStringArray('orderClause');
-        $orderClauseDirections = Sanitize::getStringArray('orderClauseDirection');
+        $orderClauses = $this->getSanitizer()->getStringArray('orderClause');
+        $orderClauseDirections = $this->getSanitizer()->getStringArray('orderClauseDirection');
         $orderClauseMapping = [];
 
         $i = -1;
@@ -277,10 +274,10 @@ class DataSetView extends ModuleWidget
 
         $this->setOption('orderClauses', json_encode($orderClauseMapping));
 
-        $filterClauses = Sanitize::getStringArray('filterClause');
-        $filterClauseOperator = Sanitize::getStringArray('filterClauseOperator');
-        $filterClauseCriteria = Sanitize::getStringArray('filterClauseCriteria');
-        $filterClauseValue = Sanitize::getStringArray('filterClauseValue');
+        $filterClauses = $this->getSanitizer()->getStringArray('filterClause');
+        $filterClauseOperator = $this->getSanitizer()->getStringArray('filterClauseOperator');
+        $filterClauseCriteria = $this->getSanitizer()->getStringArray('filterClauseCriteria');
+        $filterClauseValue = $this->getSanitizer()->getStringArray('filterClauseValue');
         $filterClauseMapping = [];
 
         $i = -1;
@@ -302,7 +299,7 @@ class DataSetView extends ModuleWidget
         $this->setOption('filterClauses', json_encode($filterClauseMapping));
 
         // Style Sheet
-        $this->setRawNode('styleSheet', Sanitize::getParam('styleSheet', null));
+        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
 
         // Save the widget
         $this->validate();
@@ -320,7 +317,7 @@ class DataSetView extends ModuleWidget
     {
         // Load in the template
         $data = [];
-        $isPreview = (Sanitize::getCheckbox('preview') == 1);
+        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         // Clear all linked media.
         $this->clearMedia();
@@ -337,14 +334,14 @@ class DataSetView extends ModuleWidget
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
             'rowsPerPage' => $this->GetOption('rowsPerPage'),
-            'previewWidth' => Sanitize::getDouble('width', 0),
-            'previewHeight' => Sanitize::getDouble('height', 0),
-            'scaleOverride' => Sanitize::getDouble('scale_override', 0)
+            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
+            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
+            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
         );
 
         // Add our fonts.css file
         $headContent = '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
-        $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
+        $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
         $headContent .= '<style type="text/css">' . $styleSheet . '</style>';
 
         $data['head'] = $headContent;
@@ -513,16 +510,16 @@ class DataSetView extends ModuleWidget
             }
 
             // Set the timezone for SQL
-            $dateNow = Date::parse();
+            $dateNow = $this->getDate()->parse();
             if ($displayId != 0) {
                 $display = (new DisplayFactory($this->getApp()))->getById($displayId);
                 $timeZone = $display->getSetting('displayTimeZone', '');
-                $timeZone = ($timeZone == '') ? Config::GetSetting('defaultTimezone') : $timeZone;
+                $timeZone = ($timeZone == '') ? $this->getConfig()->GetSetting('defaultTimezone') : $timeZone;
                 $dateNow->timezone($timeZone);
                 $this->getLog()->debug('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString());
             }
 
-            $this->getStore()->setTimeZone(Date::getLocalDate($dateNow, 'P'));
+            $this->getStore()->setTimeZone($this->getDate()->getLocalDate($dateNow, 'P'));
 
             // Get the data (complete table, filtered)
             $dataSetResults = $dataSet->getData($filter);

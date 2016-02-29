@@ -25,7 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Resolution;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class ResolutionFactory extends BaseFactory
 {
@@ -103,39 +102,39 @@ class ResolutionFactory extends BaseFactory
            WHERE 1 = 1
         ';
 
-        if (Sanitize::getInt('enabled', -1, $filterBy) != -1) {
+        if ($this->getSanitizer()->getInt('enabled', -1, $filterBy) != -1) {
             $body .= ' AND enabled = :enabled ';
-            $params['enabled'] = Sanitize::getInt('enabled', $filterBy);
+            $params['enabled'] = $this->getSanitizer()->getInt('enabled', $filterBy);
         }
 
-        if (Sanitize::getInt('resolutionId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('resolutionId', $filterBy) !== null) {
             $body .= ' AND resolutionId = :resolutionId ';
-            $params['resolutionId'] = Sanitize::getInt('resolutionId', $filterBy);
+            $params['resolutionId'] = $this->getSanitizer()->getInt('resolutionId', $filterBy);
         }
 
-        if (Sanitize::getString('resolution', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('resolution', $filterBy) != null) {
             $body .= ' AND resolution = :resolution ';
-            $params['resolution'] = Sanitize::getString('resolution', $filterBy);
+            $params['resolution'] = $this->getSanitizer()->getString('resolution', $filterBy);
         }
 
-        if (Sanitize::getInt('width', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('width', $filterBy) !== null) {
             $body .= ' AND intended_width = :width ';
-            $params['width'] = Sanitize::getInt('width', $filterBy);
+            $params['width'] = $this->getSanitizer()->getInt('width', $filterBy);
         }
 
-        if (Sanitize::getInt('height', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('height', $filterBy) !== null) {
             $body .= ' AND intended_height = :height ';
-            $params['height'] = Sanitize::getInt('height', $filterBy);
+            $params['height'] = $this->getSanitizer()->getInt('height', $filterBy);
         }
 
-        if (Sanitize::getInt('designerWidth', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('designerWidth', $filterBy) !== null) {
             $body .= ' AND width = :designerWidth ';
-            $params['designerWidth'] = Sanitize::getInt('designerWidth', $filterBy);
+            $params['designerWidth'] = $this->getSanitizer()->getInt('designerWidth', $filterBy);
         }
 
-        if (Sanitize::getInt('designerHeight', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('designerHeight', $filterBy) !== null) {
             $body .= ' AND height = :designerHeight ';
-            $params['designerHeight'] = Sanitize::getInt('designerHeight', $filterBy);
+            $params['designerHeight'] = $this->getSanitizer()->getInt('designerHeight', $filterBy);
         }
 
         // Sorting?
@@ -145,8 +144,8 @@ class ResolutionFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . Sanitize::getInt('start', 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . $this->getSanitizer()->getInt('start', 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         // The final statements

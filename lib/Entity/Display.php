@@ -26,7 +26,6 @@ namespace Xibo\Entity;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
-use Xibo\Helper\Config;
 use Xibo\Helper\PlayerActionHelper;
 use Xibo\XMR\CollectNowAction;
 
@@ -362,7 +361,7 @@ class Display
             throw new \InvalidArgumentException(__('Wake on Lan is enabled, but you have not specified a time to wake the display'));
 
         // Check the number of licensed displays
-        $maxDisplays = Config::GetSetting('MAX_LICENSED_DISPLAYS');
+        $maxDisplays = $this->getConfig()->GetSetting('MAX_LICENSED_DISPLAYS');
 
         if ($maxDisplays > 0 && $this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
             $countLicensed = $this->getStore()->select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);

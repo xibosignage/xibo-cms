@@ -26,9 +26,41 @@ namespace Xibo\Helper;
 use Jenssegers\Date\Date;
 use Slim\Slim;
 
-class Sanitize
+class Sanitize implements SanitizerInterface
 {
-    public static function getParam($param, $default, $source = null)
+    /**
+     * @var Slim
+     */
+    protected $app;
+
+    public function __construct($app)
+    {
+        $this->app = $app;
+    }
+
+    /**
+     * Get the App
+     * @return Slim
+     * @throws \Exception
+     */
+    public function getApp()
+    {
+        if ($this->app == null)
+            throw new \RuntimeException(__('Sanitizer called before DI has been setup'));
+
+        return $this->app;
+    }
+
+    /**
+     * Get Date
+     * @return DateInterface
+     */
+    protected function getDateService()
+    {
+        return $this->getApp()->dateService;
+    }
+
+    public function getParam($param, $default, $source = null)
     {
         if (is_array($default)) {
             return isset($default[$param]) ? $default[$param] : null;
@@ -58,12 +90,12 @@ class Sanitize
             return isset($source[$param]) ? $source[$param] : $default;
     }
 
-    public static function getInt($param, $default = null, $source = null)
+    public function getInt($param, $default = null, $source = null)
     {
-        return Sanitize::int(Sanitize::getParam($param, $default, $source));
+        return $this->int($this->getParam($param, $default, $source));
     }
 
-    public static function int($param)
+    public function int($param)
     {
         if ($param === null)
             return null;
@@ -71,12 +103,12 @@ class Sanitize
         return intval(filter_var($param, FILTER_SANITIZE_NUMBER_INT));
     }
 
-    public static function getDouble($param, $default = null, $source = null)
+    public function getDouble($param, $default = null, $source = null)
     {
-        return Sanitize::double(Sanitize::getParam($param, $default, $source));
+        return $this->double($this->getParam($param, $default, $source));
     }
 
-    public static function double($param)
+    public function double($param)
     {
         if ($param === null)
             return null;
@@ -84,12 +116,12 @@ class Sanitize
         return doubleval(filter_var($param, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION));
     }
 
-    public static function getString($param, $default = null, $source = null)
+    public function getString($param, $default = null, $source = null)
     {
-        return Sanitize::string(Sanitize::getParam($param, $default, $source));
+        return $this->string($this->getParam($param, $default, $source));
     }
 
-    public static function string($param)
+    public function string($param)
     {
         if ($param === null)
             return null;
@@ -97,9 +129,9 @@ class Sanitize
         return filter_var($param, FILTER_SANITIZE_STRING);
     }
 
-    public static function getUserName($param, $default = null, $source = null)
+    public function getUserName($param, $default = null, $source = null)
     {
-        $param = Sanitize::getParam($param, $default, $source);
+        $param = $this->getParam($param, $default, $source);
 
         if ($param === null)
             return null;
@@ -109,28 +141,28 @@ class Sanitize
         return strtolower($param);
     }
 
-    public static function getPassword($param, $default = null, $source = null)
+    public function getPassword($param, $default = null, $source = null)
     {
-        return Sanitize::getString($param, $default, $source);
+        return $this->getString($param, $default, $source);
     }
 
-    public static function getCheckbox($param, $default = null, $source = null)
+    public function getCheckbox($param, $default = null, $source = null)
     {
-        $checkbox = Sanitize::getParam($param, $default, $source);
-        return Sanitize::checkbox($checkbox);
+        $checkbox = $this->getParam($param, $default, $source);
+        return $this->checkbox($checkbox);
     }
 
-    public static function checkbox($param)
+    public function checkbox($param)
     {
         return ($param === 'on' || $param === 1 || $param === '1' || $param === 'true' || $param === true) ? 1 : 0;
     }
 
-    public static function bool($param)
+    public function bool($param)
     {
         return filter_var($param, FILTER_VALIDATE_BOOLEAN);
     }
 
-    public static function htmlString($param)
+    public function htmlString($param)
     {
         // decimal notation
         $return = preg_replace_callback('/&#(\d+);/m', function($m){
@@ -152,9 +184,9 @@ class Sanitize
      * @param mixed[Optional] $source
      * @return array[mixed]|null
      */
-    public static function getStringArray($param, $default = null, $source = null)
+    public function getStringArray($param, $default = null, $source = null)
     {
-        $array = Sanitize::getParam($param, $default, $source);
+        $array = $this->getParam($param, $default, $source);
 
         if ($array == null)
             return [];
@@ -169,9 +201,9 @@ class Sanitize
      * @param mixed[Optional] $source
      * @return array[mixed]|null
      */
-    public static function getIntArray($param, $default = null, $source = null)
+    public function getIntArray($param, $default = null, $source = null)
     {
-        $array = Sanitize::getParam($param, $default, $source);
+        $array = $this->getParam($param, $default, $source);
 
         if ($array == null)
             return [];
@@ -186,9 +218,9 @@ class Sanitize
      * @param mixed[Optional] $source
      * @return Date
      */
-    public static function getDate($param, $default = null, $source = null)
+    public function getDate($param, $default = null, $source = null)
     {
-        $date = self::getString($param, $default, $source);
+        $date = $this->getString($param, $default, $source);
 
         if ($date === null)
             return null;
@@ -198,7 +230,7 @@ class Sanitize
             if ($date instanceof Date)
                 return $date;
 
-            return \Xibo\Helper\Date::parse($date);
+            return $this->getDateService()->parse($date);
         }
         catch (\Exception $e) {
             throw new \InvalidArgumentException(__('Expecting a date in %s but received %s.', $param, $date));

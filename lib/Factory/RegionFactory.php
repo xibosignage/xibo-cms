@@ -25,7 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Region;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class RegionFactory extends BaseFactory
 {
@@ -144,7 +143,7 @@ class RegionFactory extends BaseFactory
               `region`.duration
         ';
 
-        if (Sanitize::getInt('playlistId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('playlistId', $filterBy) !== null) {
             $sql .= ', `lkregionplaylist`.displayOrder ';
         }
 
@@ -152,7 +151,7 @@ class RegionFactory extends BaseFactory
             FROM `region`
         ';
 
-        if (Sanitize::getInt('playlistId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('playlistId', $filterBy) !== null) {
             // Restrict to assigned playlists
             $sql .= '
                 INNER JOIN `lkregionplaylist`
@@ -160,19 +159,19 @@ class RegionFactory extends BaseFactory
                     AND `lkregionplaylist`.playlistId = :playlistId
             ';
 
-            $params['playlistId'] = Sanitize::getInt('playlistId', $filterBy);
+            $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', $filterBy);
         }
 
         $sql .= ' WHERE 1 = 1 ';
 
-        if (Sanitize::getInt('regionId', $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('regionId', $filterBy) != 0) {
             $sql .= ' AND regionId = :regionId ';
-            $params['regionId'] = Sanitize::getInt('regionId', $filterBy);
+            $params['regionId'] = $this->getSanitizer()->getInt('regionId', $filterBy);
         }
 
-        if (Sanitize::getInt('layoutId', $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('layoutId', $filterBy) != 0) {
             $sql .= ' AND layoutId = :layoutId ';
-            $params['layoutId'] = Sanitize::getInt('layoutId', $filterBy);
+            $params['layoutId'] = $this->getSanitizer()->getInt('layoutId', $filterBy);
         }
 
         foreach ($this->getStore()->select($sql, $params) as $row) {

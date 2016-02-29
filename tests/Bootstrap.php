@@ -32,5 +32,3 @@ require_once PROJECT_ROOT . '/tests/TestAuthMiddleware.php';
 if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
     die('Not configured');
 
-\Xibo\Helper\Config::Load(PROJECT_ROOT . '/web/settings.php');
-

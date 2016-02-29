@@ -11,7 +11,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\RequiredFile;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class RequiredFileFactory extends BaseFactory
 {
@@ -180,29 +179,29 @@ class RequiredFileFactory extends BaseFactory
             WHERE 1 = 1
         ';
 
-        if (Sanitize::getString('nonce', $filterBy) !== null) {
+        if ($this->getSanitizer()->getString('nonce', $filterBy) !== null) {
             $sql .= ' AND requiredfile.nonce = :nonce';
-            $params['nonce'] = Sanitize::getString('nonce', $filterBy);
+            $params['nonce'] = $this->getSanitizer()->getString('nonce', $filterBy);
         }
 
-        if (Sanitize::getInt('displayId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('displayId', $filterBy) !== null) {
             $sql .= ' AND requiredfile.displayId = :displayId';
-            $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
+            $params['displayId'] = $this->getSanitizer()->getInt('displayId', $filterBy);
         }
 
-        if (Sanitize::getInt('layoutId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('layoutId', $filterBy) !== null) {
             $sql .= ' AND requiredfile.layoutId = :layoutId';
-            $params['layoutId'] = Sanitize::getInt('layoutId', $filterBy);
+            $params['layoutId'] = $this->getSanitizer()->getInt('layoutId', $filterBy);
         }
 
-        if (Sanitize::getInt('regionId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('regionId', $filterBy) !== null) {
             $sql .= ' AND requiredfile.regionId = :regionId';
-            $params['regionId'] = Sanitize::getInt('regionId', $filterBy);
+            $params['regionId'] = $this->getSanitizer()->getInt('regionId', $filterBy);
         }
 
-        if (Sanitize::getInt('mediaId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('mediaId', $filterBy) !== null) {
             $sql .= ' AND requiredfile.mediaId = :mediaId';
-            $params['mediaId'] = Sanitize::getInt('mediaId', $filterBy);
+            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
         }
 
         // Sorting?

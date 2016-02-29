@@ -28,8 +28,6 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TagFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
 
 /**
  * Class Layout
@@ -799,7 +797,7 @@ class Layout implements \JsonSerializable
         $zip->addFile($this->xlfToDisk(), 'layout.xml');
 
         // Add all media
-        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
+        $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
         $mappings = [];
 
         foreach ((new MediaFactory($this->getApp()))->getByLayoutId($this->layoutId) as $media) {
@@ -875,7 +873,7 @@ class Layout implements \JsonSerializable
      */
     private function getCachePath()
     {
-        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
+        $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
         return $libraryLocation . $this->layoutId . '.xlf';
     }
 
@@ -893,7 +891,7 @@ class Layout implements \JsonSerializable
         $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex)
                   VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex)';
 
-        $time = Date::getLocalDate();
+        $time = $this->getDate()->getLocalDate();
 
         $this->layoutId = $this->getStore()->insert($sql, array(
             'layout' => $this->layout,
@@ -951,7 +949,7 @@ class Layout implements \JsonSerializable
          WHERE layoutID = :layoutid
         ';
 
-        $time = Date::getLocalDate();
+        $time = $this->getDate()->getLocalDate();
 
         $this->getStore()->update($sql, array(
             'layoutid' => $this->layoutId,

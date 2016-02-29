@@ -11,12 +11,12 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a title="{% trans "Open the Filter Form" %}" href="{{ theme.getConfig("cms_release_notes_url") }}">{% trans "Release Notes" %}</a></li>
+        <li><a title="{% trans "Open the Filter Form" %}" href="{{ theme.getThemeConfig("cms_release_notes_url") }}">{% trans "Release Notes" %}</a></li>
     </ul>
 {% endblock %}
 
 {% block pageContent %}
-    {% set appName = theme.getConfig("app_name") %}
+    {% set appName = theme.getThemeConfig("app_name") %}
     <div class="widget">
         <div class="widget-title">{% trans %}Welcome to the {{ appName }} Upgrade{% endtrans %}</div>
         <div class="widget-body">

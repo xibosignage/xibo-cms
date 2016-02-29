@@ -33,9 +33,10 @@ use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Config;
+use Xibo\Helper\DateInterface;
 use Xibo\Helper\Log;
 use Xibo\Helper\Random;
-use Xibo\Helper\Sanitize;
+use Xibo\Helper\SanitizerInterface;
 use Xibo\Helper\Theme;
 use Xibo\Storage\StorageInterface;
 
@@ -107,6 +108,33 @@ class Soap
     }
 
     /**
+     * Get Date
+     * @return DateInterface
+     */
+    protected function getDate()
+    {
+        return $this->getApp()->dateService;
+    }
+
+    /**
+     * Get Sanitizer
+     * @return SanitizerInterface
+     */
+    protected function getSanitizer()
+    {
+        return $this->getApp()->sanitizerService;
+    }
+
+    /**
+     * Get Config
+     * @return Config
+     */
+    protected function getConfig()
+    {
+        return $this->getApp()->configService;
+    }
+
+    /**
      * Get Required Files (common)
      * @param $serverKey
      * @param $hardwareKey
@@ -119,19 +147,19 @@ class Soap
         $this->logProcessor->setRoute('RequiredFiles');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
-        $rfLookAhead = Sanitize::int(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'));
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $rfLookAhead = $this->getSanitizer()->int($this->getConfig()->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
-        $libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->getConfig()->GetSetting("LIBRARY_LOCATION");
 
         // auth this request...
         if (!$this->authDisplay($hardwareKey))
@@ -221,7 +249,7 @@ class Soap
 
             // Build up the other layouts into an array
             foreach ($sth->fetchAll() as $row)
-                $layouts[] = Sanitize::int($row['layoutID']);
+                $layouts[] = $this->getSanitizer()->int($row['layoutID']);
 
         } catch (\Exception $e) {
             $this->getLog()->error('Unable to get a list of layouts. ' . $e->getMessage());
@@ -294,10 +322,10 @@ class Soap
 
             foreach ($sth->fetchAll() as $row) {
                 // Media
-                $path = Sanitize::string($row['path']);
-                $id = Sanitize::string($row['id']);
+                $path = $this->getSanitizer()->string($row['path']);
+                $id = $this->getSanitizer()->string($row['id']);
                 $md5 = $row['MD5'];
-                $fileSize = Sanitize::int($row['FileSize']);
+                $fileSize = $this->getSanitizer()->int($row['FileSize']);
 
                 // Check we haven't added this before
                 if (in_array($path, $pathsAdded))
@@ -493,7 +521,7 @@ class Soap
 
         // Cache
         $cache->set($output);
-        $cache->expiresAt(\Jenssegers\Date\Date::createFromFormat('U', $toFilter));
+        $cache->expiresAt($this->getDate()->parse($toFilter, 'U'));
         $this->getPool()->saveDeferred($cache);
 
         // Log Bandwidth
@@ -516,12 +544,12 @@ class Soap
         $options = array_merge(['dependentsAsNodes' => false], $options);
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
-        $rfLookAhead = Sanitize::int(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'));
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $rfLookAhead = $this->getSanitizer()->int($this->getConfig()->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -560,7 +588,7 @@ class Soap
         // Dial both items back to the top of the hour
         $fromFilter = $fromFilter - ($fromFilter % 3600);
 
-        if (Config::GetSetting('SCHEDULE_LOOKAHEAD') == 'On')
+        if ($this->getConfig()->GetSetting('SCHEDULE_LOOKAHEAD') == 'On')
             $toFilter = $rfLookAhead - ($rfLookAhead % 3600);
         else
             $toFilter = ($fromFilter + 3600) - (($fromFilter + 3600) % 3600);
@@ -693,7 +721,7 @@ class Soap
                 $fromDt = date('Y-m-d H:i:s', $row['fromDt']);
                 $toDt = date('Y-m-d H:i:s', $row['toDt']);
                 $scheduleId = $row['eventId'];
-                $is_priority = Sanitize::int($row['is_priority']);
+                $is_priority = $this->getSanitizer()->int($row['is_priority']);
 
                 if ($eventTypeId == Schedule::$LAYOUT_EVENT) {
                     // Add a layout node to the schedule
@@ -705,7 +733,7 @@ class Soap
                     $layout->setAttribute("priority", $is_priority);
 
                     if (!$options['dependentsAsNodes']) {
-                        $dependents = Sanitize::string($row['Dependents']);
+                        $dependents = $this->getSanitizer()->string($row['Dependents']);
                         $layout->setAttribute("dependents", $dependents);
                     }
                     else if (array_key_exists($layoutId, $layoutDependents)) {
@@ -799,7 +827,7 @@ class Soap
 
         // Cache
         $cache->set($output);
-        $cache->expiresAt(\Jenssegers\Date\Date::createFromFormat('U', $toFilter));
+        $cache->expiresAt($this->getDate()->parse($toFilter, 'U'));
         $this->getPool()->saveDeferred($cache);
 
         // Log Bandwidth
@@ -822,14 +850,14 @@ class Soap
         $this->logProcessor->setRoute('BlackList');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
-        $mediaId = Sanitize::string($mediaId);
-        $type = Sanitize::string($type);
-        $reason = Sanitize::string($reason);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $mediaId = $this->getSanitizer()->string($mediaId);
+        $type = $this->getSanitizer()->string($type);
+        $reason = $this->getSanitizer()->string($reason);
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -903,11 +931,11 @@ class Soap
         $this->logProcessor->setRoute('SubmitLog');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -1003,11 +1031,11 @@ class Soap
         $this->logProcessor->setRoute('SubmitStats');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -1084,11 +1112,11 @@ class Soap
         $this->logProcessor->setRoute('MediaInventory');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -1177,14 +1205,14 @@ class Soap
         $this->logProcessor->setRoute('GetResource');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
-        $layoutId = Sanitize::int($layoutId);
-        $regionId = Sanitize::string($regionId);
-        $mediaId = Sanitize::string($mediaId);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $layoutId = $this->getSanitizer()->int($layoutId);
+        $regionId = $this->getSanitizer()->string($regionId);
+        $mediaId = $this->getSanitizer()->string($mediaId);
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -1226,10 +1254,10 @@ class Soap
      */
     protected function phoneHome()
     {
-        if (Config::GetSetting('PHONE_HOME') == 'On') {
+        if ($this->getConfig()->GetSetting('PHONE_HOME') == 'On') {
             // Find out when we last PHONED_HOME :D
             // If it's been > 28 days since last PHONE_HOME then
-            if (Config::GetSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
+            if ($this->getConfig()->GetSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
 
                 try {
                     $dbh = $this->getStore()->getConnection();
@@ -1241,9 +1269,9 @@ class Soap
                     $PHONE_HOME_CLIENTS = $sth->fetchColumn();
 
                     // Retrieve version number
-                    $PHONE_HOME_VERSION = Config::Version('app_ver');
+                    $PHONE_HOME_VERSION = $this->getConfig()->Version('app_ver');
 
-                    $PHONE_HOME_URL = Config::GetSetting('PHONE_HOME_URL') . "?id=" . urlencode(Config::GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
+                    $PHONE_HOME_URL = $this->getConfig()->GetSetting('PHONE_HOME_URL') . "?id=" . urlencode($this->getConfig()->GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
 
                     if ($this->display->isAuditing == 1)
                         $this->getLog()->notice("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL, "xmds", "RequiredFiles");
@@ -1312,7 +1340,7 @@ class Soap
 
     protected function alertDisplayUp()
     {
-        $maintenanceEnabled = Config::GetSetting('MAINTENANCE_ENABLED');
+        $maintenanceEnabled = $this->getConfig()->GetSetting('MAINTENANCE_ENABLED');
 
         if ($this->display->loggedIn == 0) {
 
@@ -1321,17 +1349,17 @@ class Soap
 
             // Do we need to email?
             if ($this->display->emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected')
-                && Config::GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On'
+                && $this->getConfig()->GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On'
             ) {
 
-                $msgTo = Config::GetSetting("mail_to");
-                $msgFrom = Config::GetSetting("mail_from");
+                $msgTo = $this->getConfig()->GetSetting("mail_to");
+                $msgFrom = $this->getConfig()->GetSetting("mail_from");
 
                 $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
                 $body = sprintf(__("Display %s with ID %d is now back online."), $this->display->display);
 
                 // Get a list of people that have view access to the display?
-                if (Config::GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1) {
+                if ($this->getConfig()->GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1) {
 
                     foreach ((new UserFactory($this->getApp()))->getByDisplayGroupId($this->display->displayGroupId) as $user) {
                         /* @var User $user */
@@ -1339,7 +1367,7 @@ class Soap
                             // Send them an email
                             $mail = new \PHPMailer();
                             $mail->From = $msgFrom;
-                            $mail->FromName = Theme::getConfig('theme_name');
+                            $mail->FromName = $this->getConfig()->getThemeConfig('theme_name');
                             $mail->Subject = $subject;
                             $mail->addAddress($user->email);
 
@@ -1355,7 +1383,7 @@ class Soap
                 // Send to the original admin contact
                 $mail = new \PHPMailer();
                 $mail->From = $msgFrom;
-                $mail->FromName = Theme::getConfig('theme_name');
+                $mail->FromName = $this->getConfig()->getThemeConfig('theme_name');
                 $mail->Subject = $subject;
                 $mail->addAddress($msgTo);
 
@@ -1392,7 +1420,7 @@ class Soap
      */
     protected function checkBandwidth()
     {
-        $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
+        $xmdsLimit = $this->getConfig()->GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 
         if ($xmdsLimit <= 0)
             return true;

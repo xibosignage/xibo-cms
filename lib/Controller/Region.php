@@ -20,8 +20,6 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Sanitize;
 
 class Region extends Base
 {
@@ -38,7 +36,7 @@ class Region extends Base
             throw new AccessDeniedException();
 
         // Set the view we have requested
-        $this->getSession()->set('timeLineView', Sanitize::getString('view', $this->getSession()->get('timeLineView')));
+        $this->getSession()->set('timeLineView', $this->getSanitizer()->getString('view', $this->getSession()->get('timeLineView')));
 
         // Load the region
         $region->load(['playlistIncludeRegionAssignments' => false]);
@@ -175,7 +173,7 @@ class Region extends Base
 
         // Add a new region
         $region = (new RegionFactory($this->getApp()))->create($this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1),
-            Sanitize::getInt('width', 250), Sanitize::getInt('height', 250), Sanitize::getInt('top', 50), Sanitize::getInt('left', 50));
+            $this->getSanitizer()->getInt('width', 250), $this->getSanitizer()->getInt('height', 250), $this->getSanitizer()->getInt('top', 50), $this->getSanitizer()->getInt('left', 50));
 
         $layout->regions[] = $region;
         $layout->save([
@@ -183,7 +181,7 @@ class Region extends Base
         ]);
 
         // Permissions
-        if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
+        if ($this->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
 
             $this->getLog()->debug('Applying permissions from parent, there are %d', count($layout->permissions));
 
@@ -204,14 +202,14 @@ class Region extends Base
             $this->getLog()->debug('Applying default permissions');
 
             // Apply the default permissions
-            foreach ((new PermissionFactory($this->getApp()))->createForNewEntity($this->getUser(), get_class($region), $region->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+            foreach ((new PermissionFactory($this->getApp()))->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT')) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
 
             foreach ($region->playlists as $playlist) {
                 /* @var Playlist $playlist */
-                foreach ((new PermissionFactory($this->getApp()))->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                foreach ((new PermissionFactory($this->getApp()))->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT')) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
                 }
@@ -323,20 +321,20 @@ class Region extends Base
         // Load before we save
         $region->load();
 
-        $region->name = Sanitize::getString('name');
-        $region->width = Sanitize::getDouble('width');
-        $region->height = Sanitize::getDouble('height');
-        $region->top = Sanitize::getDouble('top');
-        $region->left = Sanitize::getDouble('left');
-        $region->zIndex = Sanitize::getInt('zIndex');
+        $region->name = $this->getSanitizer()->getString('name');
+        $region->width = $this->getSanitizer()->getDouble('width');
+        $region->height = $this->getSanitizer()->getDouble('height');
+        $region->top = $this->getSanitizer()->getDouble('top');
+        $region->left = $this->getSanitizer()->getDouble('left');
+        $region->zIndex = $this->getSanitizer()->getInt('zIndex');
 
         // Loop
-        $region->setOptionValue('loop', Sanitize::getCheckbox('loop'));
+        $region->setOptionValue('loop', $this->getSanitizer()->getCheckbox('loop'));
 
         // Transitions
-        $region->setOptionValue('transitionType', Sanitize::getString('transitionType'));
-        $region->setOptionValue('transitionDuration', Sanitize::getInt('transitionDuration'));
-        $region->setOptionValue('transitionDirection', Sanitize::getString('transitionDirection'));
+        $region->setOptionValue('transitionType', $this->getSanitizer()->getString('transitionType'));
+        $region->setOptionValue('transitionDuration', $this->getSanitizer()->getInt('transitionDuration'));
+        $region->setOptionValue('transitionDirection', $this->getSanitizer()->getString('transitionDirection'));
 
         // Save
         $region->save();
@@ -442,7 +440,7 @@ class Region extends Base
             throw new AccessDeniedException();
 
         // Pull in the regions and convert them to stdObjects
-        $regions = Sanitize::getParam('regions', null);
+        $regions = $this->getSanitizer()->getParam('regions', null);
 
         if ($regions == null)
             throw new \InvalidArgumentException(__('No regions present'));
@@ -451,7 +449,7 @@ class Region extends Base
 
         // Go through each region and update the region in the layout we have
         foreach ($regions as $newCoordinates) {
-            $regionId = Sanitize::int($newCoordinates->regionid);
+            $regionId = $this->getSanitizer()->int($newCoordinates->regionid);
 
             // Load the region
             $region = $layout->getRegion($regionId);
@@ -461,10 +459,10 @@ class Region extends Base
                 throw new AccessDeniedException();
 
             // New coordinates
-            $region->top = Sanitize::double($newCoordinates->top);
-            $region->left = Sanitize::double($newCoordinates->left);
-            $region->width = Sanitize::double($newCoordinates->width);
-            $region->height = Sanitize::double($newCoordinates->height);
+            $region->top = $this->getSanitizer()->double($newCoordinates->top);
+            $region->left = $this->getSanitizer()->double($newCoordinates->left);
+            $region->width = $this->getSanitizer()->double($newCoordinates->width);
+            $region->height = $this->getSanitizer()->double($newCoordinates->height);
             $this->getLog()->debug('Set ' . $region);
         }
 
@@ -486,11 +484,11 @@ class Region extends Base
      */
     public function preview($regionId)
     {
-        $seqGiven = Sanitize::getInt('seq', 1);
-        $seq = Sanitize::getInt('seq', 1);
-        $width = Sanitize::getDouble('width', 0);
-        $height = Sanitize::getDouble('height', 0);
-        $scaleOverride = Sanitize::getDouble('scale_override', 0);
+        $seqGiven = $this->getSanitizer()->getInt('seq', 1);
+        $seq = $this->getSanitizer()->getInt('seq', 1);
+        $width = $this->getSanitizer()->getDouble('width', 0);
+        $height = $this->getSanitizer()->getDouble('height', 0);
+        $scaleOverride = $this->getSanitizer()->getDouble('scale_override', 0);
 
         // Load our region
         try {
@@ -587,7 +585,7 @@ class Region extends Base
         $region->load(['loadWidgets' => false]);
 
         // Get our list of widget orders
-        $playlists = Sanitize::getParam('playlists', null);
+        $playlists = $this->getSanitizer()->getParam('playlists', null);
 
         // Go through each one and move it
         foreach ($playlists as $playlistId => $position) {

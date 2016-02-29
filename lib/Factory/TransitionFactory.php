@@ -11,7 +11,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Transition;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class TransitionFactory extends BaseFactory
 {
@@ -86,24 +85,24 @@ class TransitionFactory extends BaseFactory
          WHERE 1 = 1
         ';
 
-        if (Sanitize::getInt('transitionId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('transitionId', $filterBy) !== null) {
             $sql .= ' AND transition.transitionId = :transitionId ';
-            $params['transitionId'] = Sanitize::getInt('transitionId', $filterBy);
+            $params['transitionId'] = $this->getSanitizer()->getInt('transitionId', $filterBy);
         }
 
-        if (Sanitize::getInt('availableAsIn', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('availableAsIn', $filterBy) !== null) {
             $sql .= ' AND transition.availableAsIn = :availableAsIn ';
-            $params['availableAsIn'] = Sanitize::getInt('availableAsIn', $filterBy);
+            $params['availableAsIn'] = $this->getSanitizer()->getInt('availableAsIn', $filterBy);
         }
 
-        if (Sanitize::getInt('availableAsOut', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('availableAsOut', $filterBy) !== null) {
             $sql .= ' AND transition.availableAsOut = :availableAsOut ';
-            $params['availableAsOut'] = Sanitize::getInt('availableAsOut', $filterBy);
+            $params['availableAsOut'] = $this->getSanitizer()->getInt('availableAsOut', $filterBy);
         }
 
-        if (Sanitize::getString('code', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('code', $filterBy) != null) {
             $sql .= ' AND transition.code = :code ';
-            $params['code'] = Sanitize::getString('code', $filterBy);
+            $params['code'] = $this->getSanitizer()->getString('code', $filterBy);
         }
 
         // Sorting?

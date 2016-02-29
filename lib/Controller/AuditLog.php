@@ -20,8 +20,6 @@
  */
 namespace Xibo\Controller;
 use Xibo\Factory\AuditLogFactory;
-use Xibo\Helper\Date;
-use Xibo\Helper\Sanitize;
 
 class AuditLog extends Base
 {
@@ -32,19 +30,19 @@ class AuditLog extends Base
 
     function grid()
     {
-        $filterFromDt = Sanitize::getDate('fromDt');
-        $filterToDt = Sanitize::getDate('toDt');
-        $filterUser = Sanitize::getString('user');
-        $filterEntity = Sanitize::getString('entity');
+        $filterFromDt = $this->getSanitizer()->getDate('fromDt');
+        $filterToDt = $this->getSanitizer()->getDate('toDt');
+        $filterUser = $this->getSanitizer()->getString('user');
+        $filterEntity = $this->getSanitizer()->getString('entity');
 
         $search = [];
 
         // Get the dates and times
         if ($filterFromDt == null)
-            $filterFromDt = Date::parse()->sub('1 day');
+            $filterFromDt = $this->getDate()->parse()->sub('1 day');
 
         if ($filterToDt == null)
-            $filterToDt = Date::parse();
+            $filterToDt = $this->getDate()->parse();
 
         $search['fromTimeStamp'] = $filterFromDt->format('U');
         $search['toTimeStamp'] = $filterToDt->format('U');
@@ -85,8 +83,8 @@ class AuditLog extends Base
     public function export()
     {
         // We are expecting some parameters
-        $filterFromDt = Sanitize::getDate('filterFromDt');
-        $filterToDt = Sanitize::getDate('filterToDt');
+        $filterFromDt = $this->getSanitizer()->getDate('filterFromDt');
+        $filterToDt = $this->getSanitizer()->getDate('filterToDt');
 
         if ($filterFromDt == null || $filterToDt == null)
             throw new \InvalidArgumentException(__('Please provide a from/to date.'));
@@ -109,7 +107,7 @@ class AuditLog extends Base
         // Do some post processing
         foreach ($rows as $row) {
             /* @var \Xibo\Entity\AuditLog $row */
-            fputcsv($out, [$row->logId, Date::getLocalDate($row->logDate), $row->userName, $row->entity, $row->message, $row->objectAfter]);
+            fputcsv($out, [$row->logId, $this->getDate()->getLocalDate($row->logDate), $row->userName, $row->entity, $row->message, $row->objectAfter]);
         }
 
         fclose($out);

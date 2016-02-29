@@ -22,9 +22,6 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UpgradeFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\BackupUploadHandler;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
-use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Helper\WakeOnLan;
 
@@ -44,35 +41,35 @@ class Maintenance extends Base
         print '<body>';
 
         // Should the Scheduled Task script be running at all?
-        if (Config::GetSetting("MAINTENANCE_ENABLED")=="Off") {
+        if ($this->getConfig()->GetSetting("MAINTENANCE_ENABLED")=="Off") {
             print "<h1>" . __("Maintenance Disabled") . "</h1>";
             print __("Maintenance tasks are disabled at the moment. Please enable them in the &quot;Settings&quot; dialog.");
 
         } else {
-            $quick = (Sanitize::getCheckbox('quick') == 1);
+            $quick = ($this->getSanitizer()->getCheckbox('quick') == 1);
 
             // Set defaults that don't match on purpose!
             $key = 1;
             $aKey = 2;
             $pKey = 3;
 
-            if (Config::GetSetting("MAINTENANCE_ENABLED")=="Protected") {
+            if ($this->getConfig()->GetSetting("MAINTENANCE_ENABLED")=="Protected") {
                 // Check that the magic parameter is set
-                $key = Config::GetSetting("MAINTENANCE_KEY");
+                $key = $this->getConfig()->GetSetting("MAINTENANCE_KEY");
 
                 // Get key from POST or from ARGV
-                $pKey = Sanitize::getString('key');
+                $pKey = $this->getSanitizer()->getString('key');
                 if(isset($argv[1]))
                 {
-                    $aKey = Sanitize::string($argv[1]);
+                    $aKey = $this->getSanitizer()->string($argv[1]);
                 }
             }
 
-            if (($aKey == $key) || ($pKey == $key) || (Config::GetSetting("MAINTENANCE_ENABLED")=="On")) {
+            if (($aKey == $key) || ($pKey == $key) || ($this->getConfig()->GetSetting("MAINTENANCE_ENABLED")=="On")) {
 
                 // Upgrade
                 // Is there a pending upgrade (i.e. are there any pending upgrade steps).
-                if (Config::isUpgradePending()) {
+                if ($this->getConfig()->isUpgradePending()) {
                     $steps = (new UpgradeFactory($this->getApp()))->getIncomplete();
 
                     if (count($steps) <= 0) {
@@ -94,11 +91,11 @@ class Maintenance extends Base
                         try {
                             $upgradeStep->doStep();
                             $upgradeStep->complete = 1;
-                            $upgradeStep->lastTryDate = Date::parse()->format('U');
+                            $upgradeStep->lastTryDate = $this->getDate()->parse()->format('U');
                             $upgradeStep->save();
                         }
                         catch (\Exception $e) {
-                            $upgradeStep->lastTryDate = Date::parse()->format('U');
+                            $upgradeStep->lastTryDate = $this->getDate()->parse()->format('U');
                             $upgradeStep->save();
                             $this->getLog()->error('Unable to run upgrade step. Message = %s', $e->getMessage());
                             $this->getLog()->error($e->getTraceAsString());
@@ -114,12 +111,12 @@ class Maintenance extends Base
 
                 print "<h1>" . __("Email Alerts") . "</h1>";
 
-                $emailAlerts = (Config::GetSetting("MAINTENANCE_EMAIL_ALERTS") == 'On');
-                $alwaysAlert = (Config::GetSetting("MAINTENANCE_ALWAYS_ALERT") == 'On');
-                $alertForViewUsers = (Config::GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1);
+                $emailAlerts = ($this->getConfig()->GetSetting("MAINTENANCE_EMAIL_ALERTS") == 'On');
+                $alwaysAlert = ($this->getConfig()->GetSetting("MAINTENANCE_ALWAYS_ALERT") == 'On');
+                $alertForViewUsers = ($this->getConfig()->GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1);
 
-                $msgTo = Config::GetSetting("mail_to");
-                $msgFrom = Config::GetSetting("mail_from");
+                $msgTo = $this->getConfig()->GetSetting("mail_to");
+                $msgFrom = $this->getConfig()->GetSetting("mail_from");
 
                 foreach ((new Display())->setApp($this->getApp())->validateDisplays((new DisplayFactory($this->getApp()))->query()) as $display) {
                     /* @var \Xibo\Entity\Display $display */
@@ -134,7 +131,7 @@ class Maintenance extends Base
                             if ($displayGoneOffline || $alwaysAlert) {
                                 // Fields for email
                                 $subject = sprintf(__("Email Alert for Display %s"), $display->display);
-                                $body = sprintf(__("Display %s with ID %d was last seen at %s."), $display->display, $display->displayId, Date::getLocalDate($display->lastAccessed));
+                                $body = sprintf(__("Display %s with ID %d was last seen at %s."), $display->display, $display->displayId, $this->getDate()->getLocalDate($display->lastAccessed));
 
                                 // Get a list of people that have view access to the display?
                                 if ($alertForViewUsers) {
@@ -144,7 +141,7 @@ class Maintenance extends Base
                                             // Send them an email
                                             $mail = new \PHPMailer();
                                             $mail->From = $msgFrom;
-                                            $mail->FromName = Theme::getConfig('theme_name');
+                                            $mail->FromName = $this->getConfig()->getThemeConfig('theme_name');
                                             $mail->Subject = $subject;
                                             $mail->addAddress($user->email);
 
@@ -160,7 +157,7 @@ class Maintenance extends Base
                                 // Send to the original admin contact
                                 $mail = new \PHPMailer();
                                 $mail->From = $msgFrom;
-                                $mail->FromName = Theme::getConfig('theme_name');
+                                $mail->FromName = $this->getConfig()->getThemeConfig('theme_name');
                                 $mail->Subject = $subject;
                                 $mail->addAddress($msgTo);
 
@@ -188,9 +185,9 @@ class Maintenance extends Base
 
                 // Log Tidy
                 print "<h1>" . __("Tidy Logs") . "</h1>";
-                if (!$quick && Config::GetSetting("MAINTENANCE_LOG_MAXAGE") != 0) {
+                if (!$quick && $this->getConfig()->GetSetting("MAINTENANCE_LOG_MAXAGE") != 0) {
 
-                    $maxage = date("Y-m-d H:i:s", time() - (86400 * Sanitize::int(Config::GetSetting("MAINTENANCE_LOG_MAXAGE"))));
+                    $maxage = date("Y-m-d H:i:s", time() - (86400 * $this->getSanitizer()->int($this->getConfig()->GetSetting("MAINTENANCE_LOG_MAXAGE"))));
 
                     try {
                         $dbh = $this->getStore()->getConnection();
@@ -211,9 +208,9 @@ class Maintenance extends Base
                 }
                 // Stats Tidy
                 print "<h1>" . __("Tidy Stats") . "</h1>";
-                if (!$quick &&  Config::GetSetting("MAINTENANCE_STAT_MAXAGE") != 0) {
+                if (!$quick &&  $this->getConfig()->GetSetting("MAINTENANCE_STAT_MAXAGE") != 0) {
 
-                    $maxage = date("Y-m-d H:i:s",time() - (86400 * Sanitize::int(Config::GetSetting("MAINTENANCE_STAT_MAXAGE"))));
+                    $maxage = date("Y-m-d H:i:s",time() - (86400 * $this->getSanitizer()->int($this->getConfig()->GetSetting("MAINTENANCE_STAT_MAXAGE"))));
 
                     try {
                         $dbh = $this->getStore()->getConnection();
@@ -234,7 +231,7 @@ class Maintenance extends Base
                 }
 
                 // Validate Display Licence Slots
-                $maxDisplays = Config::GetSetting('MAX_LICENSED_DISPLAYS');
+                $maxDisplays = $this->getConfig()->GetSetting('MAX_LICENSED_DISPLAYS');
 
                 if ($maxDisplays > 0) {
                     print '<h1>' . __('Licence Slot Validation') . '</h1>';
@@ -306,7 +303,7 @@ class Maintenance extends Base
 
                                 try {
                                     WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9');
-                                    print $display->display . ':Sent WOL Message. Previous WOL send time: ' . Date::getLocalDate($display->lastWakeOnLanCommandSent) . '<br/>\n';
+                                    print $display->display . ':Sent WOL Message. Previous WOL send time: ' . $this->getDate()->getLocalDate($display->lastWakeOnLanCommandSent) . '<br/>\n';
 
                                     $display->lastWakeOnLanCommandSent = time();
                                     $display->save(['validate' => false, 'audit' => true]);
@@ -316,7 +313,7 @@ class Maintenance extends Base
                                 }
                             }
                             else
-                                print $display->display . ':Display already awake. Previous WOL send time: ' . Date::getLocalDate($display->lastWakeOnLanCommandSent) . '<br/>\n';
+                                print $display->display . ':Display already awake. Previous WOL send time: ' . $this->getDate()->getLocalDate($display->lastWakeOnLanCommandSent) . '<br/>\n';
                         }
                         else
                             print $display->display . ':Sleeping<br/>\n';
@@ -376,14 +373,14 @@ class Maintenance extends Base
      */
     public function tidyLibrary()
     {
-        $tidyOldRevisions = Sanitize::getCheckBox('tidyOldRevisions');
-        $cleanUnusedFiles = Sanitize::getCheckbox('cleanUnusedFiles');
+        $tidyOldRevisions = $this->getSanitizer()->getCheckBox('tidyOldRevisions');
+        $cleanUnusedFiles = $this->getSanitizer()->getCheckbox('cleanUnusedFiles');
 
-        if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
+        if ($this->getConfig()->GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
             throw new AccessDeniedException(__('Sorry this function is disabled.'));
 
         // Also run a script to tidy up orphaned media in the library
-        $library = Config::GetSetting('LIBRARY_LOCATION');
+        $library = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
         $this->getLog()->debug('Library Location: ' . $library);
 
         // Remove temporary files
@@ -511,7 +508,7 @@ class Maintenance extends Base
         global $dbname;
 
         // get temporary file
-        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION') . 'temp/';
+        $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/';
         $fileNameStructure = $libraryLocation . 'structure.dump';
         $fileNameData = $libraryLocation . 'data.dump';
         $zipFile = $libraryLocation . 'database.tar.gz';
@@ -556,12 +553,12 @@ class Maintenance extends Base
         header('Content-Length: ' . $size);
 
         // Send via Apache X-Sendfile header?
-        if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
+        if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Apache') {
             header("X-Sendfile: $zipFile");
             $this->getApp()->halt(200);
         }
         // Send via Nginx X-Accel-Redirect?
-        if (Config::GetSetting('SENDFILE_MODE') == 'Nginx') {
+        if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Nginx') {
             header("X-Accel-Redirect: /download/temp/" . basename($zipFile));
             $this->getApp()->halt(200);
         }
@@ -579,7 +576,7 @@ class Maintenance extends Base
     {
         $response = $this->getState();
 
-        if (Config::GetSetting('SETTING_IMPORT_ENABLED') != 1)
+        if ($this->getConfig()->GetSetting('SETTING_IMPORT_ENABLED') != 1)
             throw new AccessDeniedException(__('Sorry this function is disabled.'));
 
         // Check we have permission to do this
@@ -617,13 +614,13 @@ FORM;
      */
     public function import()
     {
-        if (Config::GetSetting('SETTING_IMPORT_ENABLED') != 1)
+        if ($this->getConfig()->GetSetting('SETTING_IMPORT_ENABLED') != 1)
             trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);
 
-        $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
+        $libraryFolder = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists
-        Library::ensureLibraryExists();
+        Library::ensureLibraryExists($this->getConfig()->GetSetting('LIBRARY_LOCATION'));
 
         $options = array(
             'userId' => $this->getUser()->userId,
@@ -637,7 +634,7 @@ FORM;
         );
 
         // Make sure there is room in the library
-        $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+        $libraryLimit = $this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
         if ($libraryLimit > 0 && Library::libraryUsage() > $libraryLimit)
             throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));

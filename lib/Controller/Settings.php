@@ -20,10 +20,7 @@
  */
 namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
 use Xibo\Helper\Form;
-use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 
@@ -32,14 +29,14 @@ class Settings extends Base
     function displayPage()
     {
         // Get all of the settings in an array
-        $settings = Config::GetAll(NULL, array('userSee' => 1));
+        $settings = $this->getConfig()->GetAll(NULL, array('userSee' => 1));
 
         $currentCategory = '';
         $categories = array();
         $formFields = array();
 
         // Should we hide other themes?
-        $hideThemes = Theme::getConfig('hide_others');
+        $hideThemes = $this->getConfig()->getThemeConfig('hide_others');
 
         // Go through each setting, validate it and add it to the array
         foreach ($settings as $setting) {
@@ -99,7 +96,7 @@ class Settings extends Base
             // Time zone type requires special handling.
             if ($setting['fieldType'] == 'timezone') {
                 $options = [];
-                foreach (Date::timezoneList() as $key => $value) {
+                foreach ($this->getDate()->timezoneList() as $key => $value) {
                     $options[] = ['id' => $key, 'value' => $value];
                 }
             }
@@ -139,30 +136,30 @@ class Settings extends Base
         $this->getPool()->deleteItem('config/');
 
         // Get all of the settings in an array
-        $settings = Config::GetAll(NULL, array('userChange' => 1, 'userSee' => 1));
+        $settings = $this->getConfig()->GetAll(NULL, array('userChange' => 1, 'userSee' => 1));
 
         // Go through each setting, validate it and add it to the array
         foreach ($settings as $setting) {
             // Check to see if we have a setting that matches in the provided POST vars.
             switch ($setting['type']) {
                 case 'string':
-                    $value = Sanitize::getString($setting['setting'], $setting['default']);
+                    $value = $this->getSanitizer()->getString($setting['setting'], $setting['default']);
                     break;
 
                 case 'int':
-                    $value = Sanitize::getInt($setting['setting'], $setting['default']);
+                    $value = $this->getSanitizer()->getInt($setting['setting'], $setting['default']);
                     break;
 
                 case 'double':
-                    $value = Sanitize::getDouble($setting['setting'], $setting['default']);
+                    $value = $this->getSanitizer()->getDouble($setting['setting'], $setting['default']);
                     break;
 
                 case 'checkbox':
-                    $value = Sanitize::getCheckbox($setting['setting']);
+                    $value = $this->getSanitizer()->getCheckbox($setting['setting']);
                     break;
 
                 default:
-                    $value = Sanitize::getParam($setting['setting'], $setting['default']);
+                    $value = $this->getSanitizer()->getParam($setting['setting'], $setting['default']);
             }
 
             // Check the library location setting
@@ -180,7 +177,7 @@ class Settings extends Base
                     trigger_error(__('The Library Location you have picked is not writeable'), E_USER_ERROR);
             }
 
-            Config::ChangeSetting($setting['setting'], $value);
+            $this->getConfig()->ChangeSetting($setting['setting'], $value);
         }
 
         // Return

@@ -3,7 +3,7 @@
 {% block pageContent %}
     <div class="jumbotron">
         <div class="container">
-            {% set appName = theme.getConfig("app_name") %}
+            {% set appName = theme.getThemeConfig("app_name") %}
             <h1>{% trans %}Welcome to the {{ appName }} CMS!{% endtrans %}</h1>
             <p>{% trans "Digital Signage for Everyone" %}</p>
             <p>{% trans %}We hope you like {{ appName }} and have given you some suggestions below to get you started.{% endtrans %}</p>

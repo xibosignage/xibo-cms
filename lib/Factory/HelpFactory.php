@@ -11,7 +11,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Help;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class HelpFactory extends BaseFactory
 {
@@ -48,9 +47,9 @@ class HelpFactory extends BaseFactory
          WHERE 1 = 1
         ';
 
-        if (Sanitize::getInt('helpId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('helpId', $filterBy) !== null) {
             $body .= ' AND help.helpId = :helpId ';
-            $params['helpId'] = Sanitize::getInt('helpId', $filterBy);
+            $params['helpId'] = $this->getSanitizer()->getInt('helpId', $filterBy);
         }
 
         // Sorting?
@@ -59,8 +58,8 @@ class HelpFactory extends BaseFactory
             $order .= ' ORDER BY ' . implode(',', $sortOrder);
 
         $limit = '';
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit .= ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit .= ' LIMIT ' . intval($this->getSanitizer()->getInt('start')) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         $sql = $select . $body . $order . $limit;

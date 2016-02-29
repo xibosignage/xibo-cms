@@ -4,7 +4,7 @@
 {% block stepContent %}
     <div class="row">
         <div class="col-md-12">
-            {% set themeName = theme.getConfig("app_name") %}
+            {% set themeName = theme.getThemeConfig("app_name") %}
 
             <form action="{{ urlFor("install", {step: 5}) }}" class="form-horizontal" method="post">
 

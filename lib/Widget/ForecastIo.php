@@ -28,9 +28,6 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Cache;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
-use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 class ForecastIo extends ModuleWidget
@@ -100,13 +97,13 @@ class ForecastIo extends ModuleWidget
     public function settings()
     {
         // Process any module settings you asked for.
-        $apiKey = Sanitize::getString('apiKey');
+        $apiKey = $this->getSanitizer()->getString('apiKey');
 
         if ($apiKey == '')
             throw new \InvalidArgumentException(__('Missing API Key'));
 
         $this->module->settings['apiKey'] = $apiKey;
-        $this->module->settings['cachePeriod'] = Sanitize::getInt('cachePeriod', 300);
+        $this->module->settings['cachePeriod'] = $this->getSanitizer()->getInt('cachePeriod', 300);
     }
 
     /**
@@ -146,25 +143,25 @@ class ForecastIo extends ModuleWidget
      */
     public function add()
     {
-        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setOption('name', Sanitize::getString('name'));
-        $this->setOption('useDisplayLocation', Sanitize::getCheckbox('useDisplayLocation'));
-        $this->setOption('color', Sanitize::getString('color'));
-        $this->setOption('longitude', Sanitize::getDouble('longitude'));
-        $this->setOption('latitude', Sanitize::getDouble('latitude'));
-        $this->setOption('templateId', Sanitize::getString('templateId'));
-        $this->setOption('icons', Sanitize::getString('icons'));
-        $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
-        $this->setOption('size', Sanitize::getInt('size'));
-        $this->setOption('units', Sanitize::getString('units'));
-        $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
-        $this->setOption('lang', Sanitize::getString('lang'));
-        $this->setOption('dayConditionsOnly', Sanitize::getCheckbox('dayConditionsOnly'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('useDisplayLocation', $this->getSanitizer()->getCheckbox('useDisplayLocation'));
+        $this->setOption('color', $this->getSanitizer()->getString('color'));
+        $this->setOption('longitude', $this->getSanitizer()->getDouble('longitude'));
+        $this->setOption('latitude', $this->getSanitizer()->getDouble('latitude'));
+        $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
+        $this->setOption('icons', $this->getSanitizer()->getString('icons'));
+        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        $this->setOption('size', $this->getSanitizer()->getInt('size'));
+        $this->setOption('units', $this->getSanitizer()->getString('units'));
+        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
+        $this->setOption('lang', $this->getSanitizer()->getString('lang'));
+        $this->setOption('dayConditionsOnly', $this->getSanitizer()->getCheckbox('dayConditionsOnly'));
 
-        $this->setRawNode('styleSheet', Sanitize::getParam('styleSheet', null));
-        $this->setRawNode('currentTemplate', Sanitize::getParam('currentTemplate', null));
-        $this->setRawNode('dailyTemplate', Sanitize::getParam('dailyTemplate', null));
+        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
+        $this->setRawNode('currentTemplate', $this->getSanitizer()->getParam('currentTemplate', null));
+        $this->setRawNode('dailyTemplate', $this->getSanitizer()->getParam('dailyTemplate', null));
 
         // Save the widget
         $this->validate();
@@ -176,25 +173,25 @@ class ForecastIo extends ModuleWidget
      */
     public function edit()
     {
-        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setOption('name', Sanitize::getString('name'));
-        $this->setOption('useDisplayLocation', Sanitize::getCheckbox('useDisplayLocation'));
-        $this->setOption('color', Sanitize::getString('color'));
-        $this->setOption('longitude', Sanitize::getDouble('longitude'));
-        $this->setOption('latitude', Sanitize::getDouble('latitude'));
-        $this->setOption('templateId', Sanitize::getString('templateId'));
-        $this->setOption('icons', Sanitize::getString('icons'));
-        $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
-        $this->setOption('size', Sanitize::getInt('size'));
-        $this->setOption('units', Sanitize::getString('units'));
-        $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
-        $this->setOption('lang', Sanitize::getString('lang'));
-        $this->setOption('dayConditionsOnly', Sanitize::getCheckbox('dayConditionsOnly'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('useDisplayLocation', $this->getSanitizer()->getCheckbox('useDisplayLocation'));
+        $this->setOption('color', $this->getSanitizer()->getString('color'));
+        $this->setOption('longitude', $this->getSanitizer()->getDouble('longitude'));
+        $this->setOption('latitude', $this->getSanitizer()->getDouble('latitude'));
+        $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
+        $this->setOption('icons', $this->getSanitizer()->getString('icons'));
+        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        $this->setOption('size', $this->getSanitizer()->getInt('size'));
+        $this->setOption('units', $this->getSanitizer()->getString('units'));
+        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
+        $this->setOption('lang', $this->getSanitizer()->getString('lang'));
+        $this->setOption('dayConditionsOnly', $this->getSanitizer()->getCheckbox('dayConditionsOnly'));
 
-        $this->setRawNode('styleSheet', Sanitize::getParam('styleSheet', null));
-        $this->setRawNode('currentTemplate', Sanitize::getParam('currentTemplate', null));
-        $this->setRawNode('dailyTemplate', Sanitize::getParam('dailyTemplate', null));
+        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
+        $this->setRawNode('currentTemplate', $this->getSanitizer()->getParam('currentTemplate', null));
+        $this->setRawNode('dailyTemplate', $this->getSanitizer()->getParam('dailyTemplate', null));
 
         // Save the widget
         $this->validate();
@@ -263,7 +260,7 @@ class ForecastIo extends ModuleWidget
         $rows = array();
         foreach ($data['currently'] as $key => $value) {
             if (stripos($key, 'time')) {
-                $value = Date::getLocalDate($value);
+                $value = $this->getDate()->getLocalDate($value);
             }
 
             $rows[] = array('forecast' => __('Current'), 'key' => $key, 'value' => $value);
@@ -271,7 +268,7 @@ class ForecastIo extends ModuleWidget
 
         foreach ($data['daily']['data'][0] as $key => $value) {
             if (stripos($key, 'time')) {
-                $value = Date::getLocalDate($value);
+                $value = $this->getDate()->getLocalDate($value);
             }
 
             $rows[] = array('forecast' => __('Daily'), 'key' => $key, 'value' => $value);
@@ -287,8 +284,8 @@ class ForecastIo extends ModuleWidget
      */
     private function getForecastData($displayId)
     {
-        $defaultLat = Config::getSetting('DEFAULT_LAT');
-        $defaultLong = Config::getSetting('DEFAULT_LONG');
+        $defaultLat = $this->getConfig()->getSetting('DEFAULT_LAT');
+        $defaultLong = $this->getConfig()->getSetting('DEFAULT_LONG');
 
         if ($this->getOption('useDisplayLocation') == 1) {
             // Use the display ID or the default.
@@ -396,7 +393,7 @@ class ForecastIo extends ModuleWidget
             if (stripos($replace, 'time|') > -1) {
                 $timeSplit = explode('|', $replace);
 
-                $time = Date::getLocalDate($data['time'], $timeSplit[1]);
+                $time = $this->getDate()->getLocalDate($data['time'], $timeSplit[1]);
 
                 $this->getLog()->info('Time: ' . $time);
 
@@ -426,11 +423,11 @@ class ForecastIo extends ModuleWidget
         // Do we need to override the language?
         // TODO: I don't like this date fix, the library should really check the file exists?
         if ($this->getOption('lang', 'en') != 'en' && file_exists(PROJECT_ROOT . '/vendor/jenssegers/date/src/Lang/' . $this->getOption('lang') . '.php')) {
-            \Jenssegers\Date\Date::setLocale($this->getOption('lang'));
+            $this->getDate()->setLocale($this->getOption('lang'));
         }
 
         $data = [];
-        $isPreview = (Sanitize::getCheckbox('preview') == 1);
+        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
@@ -446,7 +443,7 @@ class ForecastIo extends ModuleWidget
 
         // Add our fonts.css file
         $headContent .= '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
-        $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
+        $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         // Replace any icon sets
         $data['head'] = str_replace('[[ICONS]]', $this->getResourceUrl('forecastio/' . $this->getOption('icons')), $headContent);
@@ -474,11 +471,11 @@ class ForecastIo extends ModuleWidget
 
         // JavaScript to control the size (override the original width and height so that the widget gets blown up )
         $options = array(
-            'previewWidth' => Sanitize::getDouble('width', 0),
-            'previewHeight' => Sanitize::getDouble('height', 0),
+            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
+            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'scaleOverride' => Sanitize::getDouble('scale_override', 0)
+            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
         );
 
         $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
@@ -534,7 +531,7 @@ class ForecastIo extends ModuleWidget
         $client = new Client();
 
         try {
-            $response = $client->get($request_url, Config::getGuzzleProxy(['connect_timeout' => 20]));
+            $response = $client->get($request_url, $this->getConfig()->getGuzzleProxy(['connect_timeout' => 20]));
 
             // Success?
             if ($response->getStatusCode() != 200) {

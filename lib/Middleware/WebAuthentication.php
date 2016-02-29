@@ -41,6 +41,7 @@ class WebAuthentication extends Middleware
 
         // Create a user
         $app->user = new \Xibo\Entity\User();
+        $app->user->setApp($app);
 
         // Create a function which we will call should the request be for a protected page
         // and the user not yet be logged in.

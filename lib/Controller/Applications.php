@@ -27,7 +27,6 @@ use Xibo\Entity\Application;
 use Xibo\Entity\ApplicationRedirectUri;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ApplicationFactory;
-use Xibo\Helper\Sanitize;
 use Xibo\Storage\ApiAccessTokenStorage;
 use Xibo\Storage\ApiAuthCodeStorage;
 use Xibo\Storage\ApiClientStorage;
@@ -107,7 +106,7 @@ class Applications extends Base
             throw new \InvalidArgumentException(__('Authorisation Parameters missing from session.'));
 
         // We are authorized
-        if (Sanitize::getString('authorization') === 'Approve') {
+        if ($this->getSanitizer()->getString('authorization') === 'Approve') {
 
             // Create a server
             $server = new AuthorizationServer();
@@ -175,7 +174,7 @@ class Applications extends Base
     public function add()
     {
         $application = (new ApplicationFactory($this->getApp()))->create();
-        $application->name = Sanitize::getString('name');
+        $application->name = $this->getSanitizer()->getString('name');
         $application->save();
 
         // Return
@@ -194,11 +193,11 @@ class Applications extends Base
         if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
             throw new AccessDeniedException();
 
-        $client->name = Sanitize::getString('name');
-        $client->authCode = Sanitize::getCheckbox('authCode');
-        $client->clientCredentials = Sanitize::getCheckbox('clientCredentials');
+        $client->name = $this->getSanitizer()->getString('name');
+        $client->authCode = $this->getSanitizer()->getCheckbox('authCode');
+        $client->clientCredentials = $this->getSanitizer()->getCheckbox('clientCredentials');
 
-        if (Sanitize::getCheckbox('resetKeys') == 1) {
+        if ($this->getSanitizer()->getCheckbox('resetKeys') == 1) {
             $client->resetKeys();
         }
 
@@ -212,7 +211,7 @@ class Applications extends Base
         $client->redirectUris = [];
 
         // Do we have a redirect?
-        $redirectUris = Sanitize::getStringArray('redirectUri');
+        $redirectUris = $this->getSanitizer()->getStringArray('redirectUri');
 
         foreach ($redirectUris as $redirectUri) {
             if ($redirectUri == '')

@@ -31,8 +31,6 @@ use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
-use Xibo\Helper\Config;
-use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Helper\XiboUploadHandler;
 
@@ -112,12 +110,12 @@ class Library extends Base
 
         // Construct the SQL
         $mediaList = (new MediaFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter([
-            'mediaId' => Sanitize::getInt('mediaId'),
-            'name' => Sanitize::getString('media'),
-            'type' => Sanitize::getString('type'),
-            'tags' => Sanitize::getString('tags'),
-            'ownerId' => Sanitize::getInt('ownerId'),
-            'retired' => Sanitize::getInt('retired')
+            'mediaId' => $this->getSanitizer()->getInt('mediaId'),
+            'name' => $this->getSanitizer()->getString('media'),
+            'type' => $this->getSanitizer()->getString('type'),
+            'tags' => $this->getSanitizer()->getString('tags'),
+            'ownerId' => $this->getSanitizer()->getInt('ownerId'),
+            'retired' => $this->getSanitizer()->getInt('retired')
         ]));
 
         // Add some additional row content
@@ -243,7 +241,7 @@ class Library extends Base
         // Check
         $media->load(['deleting' => true]);
 
-        if ($media->isUsed() && Sanitize::getCheckbox('forceDelete') == 0)
+        if ($media->isUsed() && $this->getSanitizer()->getCheckbox('forceDelete') == 0)
             throw new \InvalidArgumentException(__('This library item is in use.'));
 
         // Delete
@@ -282,14 +280,14 @@ class Library extends Base
      */
     public function add()
     {
-        $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
+        $libraryFolder = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists
         $this->ensureLibraryExists();
 
         // Get Valid Extensions
-        if (Sanitize::getInt('oldMediaId') !== null) {
-            $media = (new MediaFactory($this->getApp()))->getById(Sanitize::getInt('oldMediaId'));
+        if ($this->getSanitizer()->getInt('oldMediaId') !== null) {
+            $media = (new MediaFactory($this->getApp()))->getById($this->getSanitizer()->getInt('oldMediaId'));
             $validExt = (new ModuleFactory($this->getApp()))->getValidExtensions(['type' => $media->mediaType]);
         }
         else
@@ -298,11 +296,11 @@ class Library extends Base
         $options = array(
             'userId' => $this->getUser()->userId,
             'controller' => $this,
-            'oldMediaId' => Sanitize::getInt('oldMediaId'),
-            'widgetId' => Sanitize::getInt('widgetId'),
-            'updateInLayouts' => Sanitize::getCheckbox('updateInLayouts'),
-            'deleteOldRevisions' => Sanitize::getCheckbox('deleteOldRevisions'),
-            'playlistId' => Sanitize::getInt('playlistId'),
+            'oldMediaId' => $this->getSanitizer()->getInt('oldMediaId'),
+            'widgetId' => $this->getSanitizer()->getInt('widgetId'),
+            'updateInLayouts' => $this->getSanitizer()->getCheckbox('updateInLayouts'),
+            'deleteOldRevisions' => $this->getSanitizer()->getCheckbox('deleteOldRevisions'),
+            'playlistId' => $this->getSanitizer()->getInt('playlistId'),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
             'script_url' => $this->urlFor('library.add'),
@@ -312,7 +310,7 @@ class Library extends Base
         );
 
         // Make sure there is room in the library
-        $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+        $libraryLimit = $this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
         if ($libraryLimit > 0 && $this->libraryUsage() > $libraryLimit)
             throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
@@ -416,13 +414,13 @@ class Library extends Base
         if (!$this->getUser()->checkEditable($media))
             throw new AccessDeniedException();
 
-        $media->name = Sanitize::getString('name');
-        $media->duration = Sanitize::getInt('duration');
-        $media->retired = Sanitize::getCheckbox('retired');
-        $media->replaceTags((new TagFactory($this->getApp()))->tagsFromString(Sanitize::getString('tags')));
+        $media->name = $this->getSanitizer()->getString('name');
+        $media->duration = $this->getSanitizer()->getInt('duration');
+        $media->retired = $this->getSanitizer()->getCheckbox('retired');
+        $media->replaceTags((new TagFactory($this->getApp()))->tagsFromString($this->getSanitizer()->getString('tags')));
 
         // Should we update the media in all layouts?
-        if (Sanitize::getCheckbox('updateInLayouts') == 1) {
+        if ($this->getSanitizer()->getCheckbox('updateInLayouts') == 1) {
             foreach ((new WidgetFactory($this->getApp()))->getByMediaId($media->mediaId) as $widget) {
                 /* @var Widget $widget */
                 $widget->duration = $media->duration;
@@ -445,7 +443,7 @@ class Library extends Base
      */
     public function tidyForm()
     {
-        if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
+        if ($this->getConfig()->GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
             throw new ConfigurationException(__('Sorry this function is disabled.'));
 
         // Work out how many files there are
@@ -480,7 +478,7 @@ class Library extends Base
      */
     public function tidy()
     {
-        if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
+        if ($this->getConfig()->GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
             throw new ConfigurationException(__('Sorry this function is disabled.'));
 
         // Get a list of media that is not in use (for this user)
@@ -505,10 +503,8 @@ class Library extends Base
      * Make sure the library exists
      * @throws ConfigurationException when the library is not writable
      */
-    public static function ensureLibraryExists()
+    public static function ensureLibraryExists($libraryFolder)
     {
-        $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
-
         // Check that this location exists - and if not create it..
         if (!file_exists($libraryFolder))
             mkdir($libraryFolder, 0777, true);
@@ -527,20 +523,20 @@ class Library extends Base
             throw new ConfigurationException(__('Library not writable'));
     }
 
-    public static function getLibraryCacheUri()
+    public function getLibraryCacheUri()
     {
-        return Config::GetSetting('LIBRARY_LOCATION') . '/cache';
+        return $this->getConfig()->GetSetting('LIBRARY_LOCATION') . '/cache';
     }
 
     /**
      * Library Usage
      * @return int
      */
-    public static function libraryUsage()
+    public function libraryUsage()
     {
         $results = $this->getStore()->select('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', array());
 
-        return Sanitize::int($results[0]['SumSize']);
+        return $this->getSanitizer()->int($results[0]['SumSize']);
     }
 
     /**
@@ -665,27 +661,27 @@ class Library extends Base
         file_put_contents(PROJECT_ROOT . '/web/modules/fonts.css', $localCss);
 
         // Edit the CKEditor file
-        $ckEditor = file_get_contents(Theme::uri('libraries/ckeditor/config.js', true));
+        $ckEditor = file_get_contents($this->getConfig()->uri('libraries/ckeditor/config.js', true));
         $replace = "/*REPLACE*/ config.font_names = '" . $ckEditorString . "' + config.font_names; /*ENDREPLACE*/";
 
         $ckEditor = preg_replace('/\/\*REPLACE\*\/.*?\/\*ENDREPLACE\*\//', $replace, $ckEditor);
 
-        file_put_contents(Theme::uri('libraries/ckeditor/config.js', true), $ckEditor);
+        file_put_contents($this->getConfig()->uri('libraries/ckeditor/config.js', true), $ckEditor);
     }
 
     /**
      * Installs all files related to the enabled modules
      */
-    public static function installAllModuleFiles($app)
+    public function installAllModuleFiles()
     {
         $this->getLog()->info('Installing all module files');
 
         // Do this for all enabled modules
-        foreach ((new ModuleFactory($app))->query() as $module) {
+        foreach ((new ModuleFactory($this->getApp()))->query() as $module) {
             /* @var \Xibo\Entity\Module $module */
 
             // Install Files for this module
-            $moduleObject = (new ModuleFactory($app))->create($module->type);
+            $moduleObject = (new ModuleFactory($this->getApp()))->create($module->type);
             $moduleObject->installFiles();
         }
     }
@@ -693,9 +689,9 @@ class Library extends Base
     /**
      * Remove temporary files
      */
-    public static function removeTempFiles($app)
+    public function removeTempFiles($app)
     {
-        $library = Config::GetSetting('LIBRARY_LOCATION');
+        $library = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
 
         // Dump the files in the temp folder
         foreach (scandir($library . 'temp') as $item) {
@@ -711,7 +707,7 @@ class Library extends Base
     /**
      * Removes all expired media files
      */
-    public static function removeExpiredFiles($app)
+    public function removeExpiredFiles($app)
     {
         // Get a list of all expired files and delete them
         foreach ((new MediaFactory($app))->query(null, array('expires' => time(), 'allModules' => 1)) as $entry) {

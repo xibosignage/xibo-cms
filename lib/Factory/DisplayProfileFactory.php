@@ -11,7 +11,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DisplayProfile;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class DisplayProfileFactory extends BaseFactory
 {
@@ -80,20 +79,20 @@ class DisplayProfileFactory extends BaseFactory
 
             $body = ' FROM `displayprofile` WHERE 1 = 1 ';
 
-            if (Sanitize::getInt('displayProfileId', $filterBy) !== null) {
+            if ($this->getSanitizer()->getInt('displayProfileId', $filterBy) !== null) {
                 $body .= ' AND displayProfileId = :displayProfileId ';
-                $params['displayProfileId'] = Sanitize::getInt('displayProfileId', $filterBy);
+                $params['displayProfileId'] = $this->getSanitizer()->getInt('displayProfileId', $filterBy);
             }
 
-            if (Sanitize::getInt('isDefault', $filterBy) !== null) {
+            if ($this->getSanitizer()->getInt('isDefault', $filterBy) !== null) {
                 $body .= ' AND isDefault = :isDefault ';
-                $params['isDefault'] = Sanitize::getInt('isDefault', $filterBy);
+                $params['isDefault'] = $this->getSanitizer()->getInt('isDefault', $filterBy);
             }
 
             // Filter by DisplayProfile Name?
-            if (Sanitize::getString('displayProfile', $filterBy) != null) {
+            if ($this->getSanitizer()->getString('displayProfile', $filterBy) != null) {
                 // convert into a space delimited array
-                $names = explode(' ', Sanitize::getString('displayProfile', $filterBy));
+                $names = explode(' ', $this->getSanitizer()->getString('displayProfile', $filterBy));
 
                 $i = 0;
                 foreach ($names as $searchName) {
@@ -110,12 +109,12 @@ class DisplayProfileFactory extends BaseFactory
                 }
             }
 
-            if (Sanitize::getString('type', $filterBy) != null) {
+            if ($this->getSanitizer()->getString('type', $filterBy) != null) {
                 $body .= ' AND type = :type ';
-                $params['type'] = Sanitize::getString('type', $filterBy);
+                $params['type'] = $this->getSanitizer()->getString('type', $filterBy);
             }
 
-            if (Sanitize::getInt('commandId', $filterBy) !== null) {
+            if ($this->getSanitizer()->getInt('commandId', $filterBy) !== null) {
                 $body .= '
                     AND `displayprofile`.displayProfileId IN (
                         SELECT `lkcommanddisplayprofile`.displayProfileId
@@ -124,7 +123,7 @@ class DisplayProfileFactory extends BaseFactory
                     )
                 ';
 
-                $params['commandId'] = Sanitize::getInt('commandId', $filterBy);
+                $params['commandId'] = $this->getSanitizer()->getInt('commandId', $filterBy);
             }
 
             // Sorting?
@@ -134,8 +133,8 @@ class DisplayProfileFactory extends BaseFactory
 
             $limit = '';
             // Paging
-            if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-                $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+            if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+                $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
             }
 
             $sql = $select . $body . $order . $limit;

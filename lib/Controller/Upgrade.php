@@ -22,8 +22,6 @@ namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\UpgradeFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
 
 class Upgrade extends Base
 {
@@ -39,7 +37,7 @@ class Upgrade extends Base
 
         if (count($steps) <= 0) {
             // No pending steps, check to see if we need to insert them
-            if (!Config::isUpgradePending()) {
+            if (!$this->getConfig()->isUpgradePending()) {
                 $this->getState()->template = 'upgrade-not-required-page';
                 return;
             }
@@ -85,7 +83,7 @@ class Upgrade extends Base
         try {
             $upgradeStep->doStep();
             $upgradeStep->complete = 1;
-            $upgradeStep->lastTryDate = Date::parse()->format('U');
+            $upgradeStep->lastTryDate = $this->getDate()->parse()->format('U');
             $upgradeStep->save();
 
             // Install all module files if we are on the last step
@@ -93,7 +91,7 @@ class Upgrade extends Base
                 Library::installAllModuleFiles($this->getApp());
         }
         catch (\Exception $e) {
-            $upgradeStep->lastTryDate = Date::parse()->format('U');
+            $upgradeStep->lastTryDate = $this->getDate()->parse()->format('U');
             $upgradeStep->save();
             $this->getLog()->error('Unable to run upgrade step. Message = %s', $e->getMessage());
             $this->getLog()->error($e->getTraceAsString());

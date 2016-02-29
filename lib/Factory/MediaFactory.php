@@ -25,7 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Media;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class MediaFactory extends BaseFactory
 {
@@ -257,14 +256,14 @@ class MediaFactory extends BaseFactory
         $body .= "   ON parentmedia.MediaID = media.MediaID ";
         $body .= "   INNER JOIN `user` ON `user`.userId = `media`.userId ";
 
-        if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN `lkmediadisplaygroup`
                 ON lkmediadisplaygroup.mediaid = media.mediaid
                     AND lkmediadisplaygroup.displayGroupId = :displayGroupId
             ';
 
-            $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
+            $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
         }
 
         $body .= " WHERE 1 = 1 ";
@@ -272,12 +271,12 @@ class MediaFactory extends BaseFactory
         // View Permissions
         $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
 
-        if (Sanitize::getInt('allModules', $filterBy) == 0) {
+        if ($this->getSanitizer()->getInt('allModules', $filterBy) == 0) {
             $body .= ' AND media.type <> \'module\' ';
         }
 
         // Unused only?
-        if (Sanitize::getInt('unusedOnly', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('unusedOnly', $filterBy) !== null) {
             $body .= '
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`)
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkmediadisplaygroup`)
@@ -286,9 +285,9 @@ class MediaFactory extends BaseFactory
             ';
         }
 
-        if (Sanitize::getString('name', $filterBy) != '') {
+        if ($this->getSanitizer()->getString('name', $filterBy) != '') {
             // convert into a space delimited array
-            $names = explode(' ', Sanitize::getString('name', $filterBy));
+            $names = explode(' ', $this->getSanitizer()->getString('name', $filterBy));
             $i = 0;
             foreach($names as $searchName) {
                 $i++;
@@ -304,44 +303,44 @@ class MediaFactory extends BaseFactory
             }
         }
 
-        if (Sanitize::getInt('mediaId', -1, $filterBy) != -1) {
+        if ($this->getSanitizer()->getInt('mediaId', -1, $filterBy) != -1) {
             $body .= " AND media.mediaId = :mediaId ";
-            $params['mediaId'] = Sanitize::getInt('mediaId', $filterBy);
-        } else if (Sanitize::getInt('parentMediaId', $filterBy) !== null) {
+            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
+        } else if ($this->getSanitizer()->getInt('parentMediaId', $filterBy) !== null) {
             $body .= ' AND media.editedMediaId = :mediaId ';
-            $params['mediaId'] = Sanitize::getInt('parentMediaId', $filterBy);
+            $params['mediaId'] = $this->getSanitizer()->getInt('parentMediaId', $filterBy);
         } else {
             $body .= ' AND media.isEdited = 0 ';
         }
 
-        if (Sanitize::getString('type', $filterBy) != '') {
+        if ($this->getSanitizer()->getString('type', $filterBy) != '') {
             $body .= 'AND media.type = :type ';
-            $params['type'] = Sanitize::getString('type', $filterBy);
+            $params['type'] = $this->getSanitizer()->getString('type', $filterBy);
         }
 
-        if (Sanitize::getString('storedAs', $filterBy) != '') {
+        if ($this->getSanitizer()->getString('storedAs', $filterBy) != '') {
             $body .= 'AND media.storedAs = :storedAs ';
-            $params['storedAs'] = Sanitize::getString('storedAs', $filterBy);
+            $params['storedAs'] = $this->getSanitizer()->getString('storedAs', $filterBy);
         }
 
-        if (Sanitize::getInt('ownerId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('ownerId', $filterBy) !== null) {
             $body .= " AND media.userid = :ownerId ";
-            $params['ownerId'] = Sanitize::getInt('ownerId', $filterBy);
+            $params['ownerId'] = $this->getSanitizer()->getInt('ownerId', $filterBy);
         }
 
-        if (Sanitize::getInt('retired', -1, $filterBy) == 1)
+        if ($this->getSanitizer()->getInt('retired', -1, $filterBy) == 1)
             $body .= " AND media.retired = 1 ";
 
-        if (Sanitize::getInt('retired', -1, $filterBy) == 0)
+        if ($this->getSanitizer()->getInt('retired', -1, $filterBy) == 0)
             $body .= " AND media.retired = 0 ";
 
         // Expired files?
-        if (Sanitize::getInt('expires', $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('expires', $filterBy) != 0) {
             $body .= ' AND media.expires < :expires AND IFNULL(media.expires, 0) <> 0 ';
-            $params['expires'] = Sanitize::getInt('expires', $filterBy);
+            $params['expires'] = $this->getSanitizer()->getInt('expires', $filterBy);
         }
 
-        if (Sanitize::getInt('layoutId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('layoutId', $filterBy) !== null) {
             $body .= '
                 AND media.mediaId IN (
                     SELECT `lkwidgetmedia`.mediaId
@@ -356,11 +355,11 @@ class MediaFactory extends BaseFactory
                 )
                 AND media.type <> \'module\'
             ';
-            $params['layoutId'] = Sanitize::getInt('layoutId', $filterBy);
+            $params['layoutId'] = $this->getSanitizer()->getInt('layoutId', $filterBy);
         }
 
         // Tags
-        if (Sanitize::getString('tags', $filterBy) != '') {
+        if ($this->getSanitizer()->getString('tags', $filterBy) != '') {
             $body .= " AND `media`.mediaId IN (
                 SELECT `lktagmedia`.mediaId
                   FROM tag
@@ -368,7 +367,7 @@ class MediaFactory extends BaseFactory
                     ON `lktagmedia`.tagId = tag.tagId
                 ";
             $i = 0;
-            foreach (explode(',', Sanitize::getString('tags', $filterBy)) as $tag) {
+            foreach (explode(',', $this->getSanitizer()->getString('tags', $filterBy)) as $tag) {
                 $i++;
 
                 if ($i == 1)
@@ -389,8 +388,8 @@ class MediaFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         $sql = $select . $body . $order . $limit;

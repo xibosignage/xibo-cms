@@ -14,7 +14,6 @@ use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetColumnTypeFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DataTypeFactory;
-use Xibo\Helper\Sanitize;
 
 class DataSetColumn extends Base
 {
@@ -203,12 +202,12 @@ class DataSetColumn extends Base
 
         // Create a Column
         $column = new \Xibo\Entity\DataSetColumn();
-        $column->heading = Sanitize::getString('heading');
-        $column->listContent = Sanitize::getString('listContent');
-        $column->columnOrder = Sanitize::getInt('columnOrder');
-        $column->dataTypeId = Sanitize::getInt('dataTypeId');
-        $column->dataSetColumnTypeId = Sanitize::getInt('dataSetColumnTypeId');
-        $column->formula = Sanitize::getParam('formula', null);
+        $column->heading = $this->getSanitizer()->getString('heading');
+        $column->listContent = $this->getSanitizer()->getString('listContent');
+        $column->columnOrder = $this->getSanitizer()->getInt('columnOrder');
+        $column->dataTypeId = $this->getSanitizer()->getInt('dataTypeId');
+        $column->dataSetColumnTypeId = $this->getSanitizer()->getInt('dataSetColumnTypeId');
+        $column->formula = $this->getSanitizer()->getParam('formula', null);
 
         $dataSet->assignColumn($column);
         $dataSet->save();
@@ -332,12 +331,12 @@ class DataSetColumn extends Base
 
         // Column
         $column = (new DataSetColumnFactory($this->getApp()))->getById($dataSetColumnId);
-        $column->heading = Sanitize::getString('heading');
-        $column->listContent = Sanitize::getString('listContent');
-        $column->columnOrder = Sanitize::getInt('columnOrder');
-        $column->dataTypeId = Sanitize::getInt('dataTypeId');
-        $column->dataSetColumnTypeId = Sanitize::getInt('dataSetColumnTypeId');
-        $column->formula = Sanitize::getParam('formula', null);
+        $column->heading = $this->getSanitizer()->getString('heading');
+        $column->listContent = $this->getSanitizer()->getString('listContent');
+        $column->columnOrder = $this->getSanitizer()->getInt('columnOrder');
+        $column->dataTypeId = $this->getSanitizer()->getInt('dataTypeId');
+        $column->dataSetColumnTypeId = $this->getSanitizer()->getInt('dataSetColumnTypeId');
+        $column->formula = $this->getSanitizer()->getParam('formula', null);
         $column->save();
 
         $dataSet->notify();

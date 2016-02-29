@@ -25,7 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Tag;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class TagFactory extends BaseFactory
 {
@@ -92,8 +91,8 @@ class TagFactory extends BaseFactory
 
         $row = $tags[0];
         $tag = new Tag();
-        $tag->tagId = \Xibo\Helper\Sanitize::int($row['tagId']);
-        $tag->tag = \Xibo\Helper\Sanitize::string($row['tag']);
+        $tag->tagId = $this->getSanitizer()->int($row['tagId']);
+        $tag->tag = $this->getSanitizer()->string($row['tag']);
 
         return $tag;
     }
@@ -111,8 +110,8 @@ class TagFactory extends BaseFactory
 
         foreach ($this->getStore()->select($sql, array('layoutId' => $layoutId)) as $row) {
             $tag = new Tag();
-            $tag->tagId = \Xibo\Helper\Sanitize::int($row['tagId']);
-            $tag->tag = \Xibo\Helper\Sanitize::string($row['tag']);
+            $tag->tagId = $this->getSanitizer()->int($row['tagId']);
+            $tag->tag = $this->getSanitizer()->string($row['tag']);
             $tag->assignLayout($layoutId);
 
             $tags[] = $tag;
@@ -134,8 +133,8 @@ class TagFactory extends BaseFactory
 
         foreach ($this->getStore()->select($sql, array('mediaId' => $mediaId)) as $row) {
             $tag = new Tag();
-            $tag->tagId = Sanitize::int($row['tagId']);
-            $tag->tag = Sanitize::string($row['tag']);
+            $tag->tagId = $this->getSanitizer()->int($row['tagId']);
+            $tag->tag = $this->getSanitizer()->string($row['tag']);
             $tag->assignMedia($mediaId);
 
             $tags[] = $tag;

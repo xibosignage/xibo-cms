@@ -38,9 +38,6 @@ if (!file_exists('settings.php')) {
     }
 }
 
-// Load the config
-Config::Load('settings.php');
-
 // Log handlers
 $handlers = [new \Xibo\Helper\DatabaseLogHandler()];
 
@@ -56,7 +53,6 @@ $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
 
 // Slim Application
 $app = new \RKA\Slim(array(
-    'mode' => Config::GetSetting('SERVER_MODE'),
     'debug' => false,
     'log.writer' => $logger
 ));
@@ -80,18 +76,15 @@ $twig->twigTemplateDirs = [PROJECT_ROOT . '/views'];
 
 $app->view($twig);
 
-// Middleware (onion, outside inwards and then out again - i.e. the last one is first and last);
-if (Config::$middleware != null && is_array(Config::$middleware)) {
-    foreach (Config::$middleware as $object) {
-        $app->add($object);
-    }
-}
+// Config
+Config::Load($app, PROJECT_ROOT . '/web/settings.php');
 
+// Middleware (onion, outside inwards and then out again - i.e. the last one is first and last);
 $app->add(new \Xibo\Middleware\Actions());
 
 // Authentication middleware
-if (Config::$authentication != null && Config::$authentication instanceof \Slim\Middleware)
-    $app->add(Config::$authentication);
+if ($app->configService->authentication != null && $app->configService->authentication instanceof \Slim\Middleware)
+    $app->add($app->configService->authentication);
 else
     $app->add(new \Xibo\Middleware\WebAuthentication());
 

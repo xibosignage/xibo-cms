@@ -30,7 +30,6 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\PlayerActionHelper;
-use Xibo\Helper\Sanitize;
 use Xibo\XMR\ChangeLayoutAction;
 use Xibo\XMR\CollectNowAction;
 use Xibo\XMR\CommandAction;
@@ -85,8 +84,8 @@ class DisplayGroup extends Base
     public function grid()
     {
         $filter = [
-            'displayGroupId' => Sanitize::getInt('displayGroupId'),
-            'displayGroup' => Sanitize::getString('displayGroup')
+            'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
+            'displayGroup' => $this->getSanitizer()->getString('displayGroup')
         ];
 
         $displayGroups = (new DisplayGroupFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
@@ -364,10 +363,10 @@ class DisplayGroup extends Base
     public function add()
     {
         $displayGroup = new \Xibo\Entity\DisplayGroup();
-        $displayGroup->displayGroup = Sanitize::getString('displayGroup');
-        $displayGroup->description = Sanitize::getString('description');
-        $displayGroup->isDynamic = Sanitize::getCheckbox('isDynamic');
-        $displayGroup->dynamicCriteria = Sanitize::getString('dynamicCriteria');
+        $displayGroup->displayGroup = $this->getSanitizer()->getString('displayGroup');
+        $displayGroup->description = $this->getSanitizer()->getString('description');
+        $displayGroup->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
+        $displayGroup->dynamicCriteria = $this->getSanitizer()->getString('dynamicCriteria');
         $displayGroup->userId = $this->getUser()->userId;
         $displayGroup->save();
 
@@ -439,10 +438,10 @@ class DisplayGroup extends Base
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
-        $displayGroup->displayGroup = Sanitize::getString('displayGroup');
-        $displayGroup->description = Sanitize::getString('description');
-        $displayGroup->isDynamic = Sanitize::getCheckbox('isDynamic');
-        $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? Sanitize::getString('dynamicCriteria') : null;
+        $displayGroup->displayGroup = $this->getSanitizer()->getString('displayGroup');
+        $displayGroup->description = $this->getSanitizer()->getString('description');
+        $displayGroup->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
+        $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? $this->getSanitizer()->getString('dynamicCriteria') : null;
         $displayGroup->save();
 
         // Return
@@ -543,7 +542,7 @@ class DisplayGroup extends Base
         if ($displayGroup->isDynamic == 1)
             throw new \InvalidArgumentException(__('Displays cannot be manually assigned to a Dynamic Group'));
 
-        $displays = Sanitize::getIntArray('displayId');
+        $displays = $this->getSanitizer()->getIntArray('displayId');
 
         foreach ($displays as $displayId) {
             $display = (new DisplayFactory($this->getApp()))->getById($displayId);
@@ -555,7 +554,7 @@ class DisplayGroup extends Base
         }
 
         // Have we been provided with unassign id's as well?
-        $displays = Sanitize::getIntArray('unassignDisplayId');
+        $displays = $this->getSanitizer()->getIntArray('unassignDisplayId');
 
         foreach ($displays as $displayId) {
             $display = (new DisplayFactory($this->getApp()))->getById($displayId);
@@ -620,7 +619,7 @@ class DisplayGroup extends Base
         if ($displayGroup->isDynamic == 1)
             throw new \InvalidArgumentException(__('Displays cannot be manually unassigned to a Dynamic Group'));
 
-        $displays = Sanitize::getIntArray('displayId');
+        $displays = $this->getSanitizer()->getIntArray('displayId');
 
         foreach ($displays as $displayId) {
             $displayGroup->unassignDisplay((new DisplayFactory($this->getApp()))->getById($displayId));
@@ -687,7 +686,7 @@ class DisplayGroup extends Base
         if ($displayGroup->isDynamic == 1)
             throw new \InvalidArgumentException(__('DisplayGroups cannot be manually assigned to a Dynamic Group'));
 
-        $displayGroups = Sanitize::getIntArray('displayGroupId');
+        $displayGroups = $this->getSanitizer()->getIntArray('displayGroupId');
 
         foreach ($displayGroups as $assignDisplayGroupId) {
             $displayGroupAssign = (new DisplayGroupFactory($this->getApp()))->getById($assignDisplayGroupId);
@@ -699,7 +698,7 @@ class DisplayGroup extends Base
         }
 
         // Have we been provided with unassign id's as well?
-        $displayGroups = Sanitize::getIntArray('unassignDisplayGroupId');
+        $displayGroups = $this->getSanitizer()->getIntArray('unassignDisplayGroupId');
 
         foreach ($displayGroups as $assignDisplayGroupId) {
             $displayGroupUnassign = (new DisplayGroupFactory($this->getApp()))->getById($assignDisplayGroupId);
@@ -764,7 +763,7 @@ class DisplayGroup extends Base
         if ($displayGroup->isDynamic == 1)
             throw new \InvalidArgumentException(__('DisplayGroups cannot be manually unassigned to a Dynamic Group'));
 
-        $displayGroups = Sanitize::getIntArray('displayGroupId');
+        $displayGroups = $this->getSanitizer()->getIntArray('displayGroupId');
 
         foreach ($displayGroups as $assignDisplayGroupId) {
             $displayGroup->unassignDisplayGroup((new DisplayGroupFactory($this->getApp()))->getById($assignDisplayGroupId));
@@ -856,7 +855,7 @@ class DisplayGroup extends Base
         // Load the groups details
         $displayGroup->load();
 
-        $mediaIds = Sanitize::getIntArray('mediaId');
+        $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
 
         // Loop through all the media
         foreach ($mediaIds as $mediaId) {
@@ -870,7 +869,7 @@ class DisplayGroup extends Base
         }
 
         // Check for unassign
-        foreach (Sanitize::getIntArray('unassignMediaId') as $mediaId) {
+        foreach ($this->getSanitizer()->getIntArray('unassignMediaId') as $mediaId) {
             // Get the media record
             $media = (new MediaFactory($this->getApp()))->getById($mediaId);
 
@@ -933,7 +932,7 @@ class DisplayGroup extends Base
         // Load the groups details
         $displayGroup->load();
 
-        $mediaIds = Sanitize::getIntArray('mediaIds');
+        $mediaIds = $this->getSanitizer()->getIntArray('mediaIds');
 
         // Loop through all the media
         foreach ($mediaIds as $mediaId) {
@@ -1027,7 +1026,7 @@ class DisplayGroup extends Base
         // Load the groups details
         $displayGroup->load();
 
-        $layoutIds = Sanitize::getIntArray('layoutId');
+        $layoutIds = $this->getSanitizer()->getIntArray('layoutId');
 
         // Loop through all the media
         foreach ($layoutIds as $layoutId) {
@@ -1041,7 +1040,7 @@ class DisplayGroup extends Base
         }
 
         // Check for unassign
-        foreach (Sanitize::getIntArray('unassignLayoutId') as $layoutId) {
+        foreach ($this->getSanitizer()->getIntArray('unassignLayoutId') as $layoutId) {
             // Get the layout record
             $layout = (new LayoutFactory($this->getApp()))->getById($layoutId);
 
@@ -1104,7 +1103,7 @@ class DisplayGroup extends Base
         // Load the groups details
         $displayGroup->load();
 
-        $layoutIds = Sanitize::getIntArray('layoutIds');
+        $layoutIds = $this->getSanitizer()->getIntArray('layoutIds');
 
         // Loop through all the media
         foreach ($layoutIds as $layoutId) {
@@ -1185,7 +1184,7 @@ class DisplayGroup extends Base
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
-        $media = (new MediaFactory($this->getApp()))->getById(Sanitize::getInt('mediaId'));
+        $media = (new MediaFactory($this->getApp()))->getById($this->getSanitizer()->getInt('mediaId'));
 
         if (!$this->getUser()->checkViewable($media))
             throw new AccessDeniedException();
@@ -1310,8 +1309,8 @@ class DisplayGroup extends Base
             throw new AccessDeniedException();
 
         // Get the layoutId
-        $layoutId = Sanitize::getInt('layoutId');
-        $downloadRequired = (Sanitize::getCheckbox('downloadRequired') == 1);
+        $layoutId = $this->getSanitizer()->getInt('layoutId');
+        $downloadRequired = ($this->getSanitizer()->getCheckbox('downloadRequired') == 1);
 
         if ($layoutId == 0)
             throw new \InvalidArgumentException(__('Please provide a Layout'));
@@ -1334,9 +1333,9 @@ class DisplayGroup extends Base
 
         PlayerActionHelper::sendAction((new DisplayFactory($this->getApp()))->getByDisplayGroupId($displayGroupId), (new ChangeLayoutAction())->setLayoutDetails(
             $layoutId,
-            Sanitize::getInt('duration'),
+            $this->getSanitizer()->getInt('duration'),
             $downloadRequired,
-            Sanitize::getString('changeMode', 'queue')
+            $this->getSanitizer()->getString('changeMode', 'queue')
         ));
 
         // Return
@@ -1445,7 +1444,7 @@ class DisplayGroup extends Base
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
-        $command = (new CommandFactory($this->getApp()))->getById(Sanitize::getInt('commandId'));
+        $command = (new CommandFactory($this->getApp()))->getById($this->getSanitizer()->getInt('commandId'));
         $displays = (new DisplayFactory($this->getApp()))->getByDisplayGroupId($displayGroupId);
 
         PlayerActionHelper::sendAction($displays, (new CommandAction())->setCommandCode($command->code));

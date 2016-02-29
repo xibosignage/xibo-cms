@@ -23,9 +23,7 @@ namespace Xibo\Controller;
 use baseDAO;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\TransitionFactory;
-use Xibo\Helper\Config;
 use Xibo\Helper\Form;
-use Xibo\Helper\Sanitize;
 
 
 class Transition extends Base
@@ -46,7 +44,7 @@ class Transition extends Base
             /* @var \Xibo\Entity\Transition $transition */
 
             // If the module config is not locked, present some buttons
-            if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') != 'Checked') {
+            if ($this->getConfig()->GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') != 'Checked') {
 
                 // Edit button
                 $transition->buttons[] = array(
@@ -69,7 +67,7 @@ class Transition extends Base
      */
     public function editForm($transitionId)
     {
-        if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
+        if ($this->getConfig()->GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
             throw new AccessDeniedException(__('Transition Config Locked'));
 
         $transition = (new TransitionFactory($this->getApp()))->getById($transitionId);
@@ -87,12 +85,12 @@ class Transition extends Base
      */
     public function edit($transitionId)
     {
-        if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
+        if ($this->getConfig()->GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
             throw new AccessDeniedException(__('Transition Config Locked'));
 
         $transition = (new TransitionFactory($this->getApp()))->getById($transitionId);
-        $transition->availableAsIn = Sanitize::getCheckbox('availableAsIn');
-        $transition->availableAsOut = Sanitize::getCheckbox('availableAsOut');
+        $transition->availableAsIn = $this->getSanitizer()->getCheckbox('availableAsIn');
+        $transition->availableAsOut = $this->getSanitizer()->getCheckbox('availableAsOut');
         $transition->save();
 
         $this->getState()->hydrate([

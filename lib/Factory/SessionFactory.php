@@ -11,8 +11,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Session;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Date;
-use Xibo\Helper\Sanitize;
 
 class SessionFactory extends BaseFactory
 {
@@ -37,20 +35,20 @@ class SessionFactory extends BaseFactory
              WHERE 1 = 1
             ';
 
-            if (Sanitize::getString('fromDt', $filterBy) != '') {
+            if ($this->getSanitizer()->getString('fromDt', $filterBy) != '') {
                 $body .= ' AND session.LastAccessed < :lastAccessed ';
-                $params['lastAccessed'] = Date::getLocalDate(Sanitize::getDate('fromDt', $filterBy)->setTime(0, 0, 0));
+                $params['lastAccessed'] = $this->getDate()->getLocalDate($this->getSanitizer()->getDate('fromDt', $filterBy)->setTime(0, 0, 0));
             }
 
-            if (Sanitize::getString('type', $filterBy) == 'active') {
+            if ($this->getSanitizer()->getString('type', $filterBy) == 'active') {
                 $body .= ' AND IsExpired = 0 ';
             }
 
-            if (Sanitize::getString('type', $filterBy) == 'active') {
+            if ($this->getSanitizer()->getString('type', $filterBy) == 'active') {
                 $body .= ' AND IsExpired = 1 ';
             }
 
-            if (Sanitize::getString('type', $filterBy) == 'active') {
+            if ($this->getSanitizer()->getString('type', $filterBy) == 'active') {
                 $body .= ' AND session.userID IS NULL ';
             }
 
@@ -61,8 +59,8 @@ class SessionFactory extends BaseFactory
 
             $limit = '';
             // Paging
-            if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-                $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+            if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+                $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
             }
 
             $sql = $select . $body . $order . $limit;

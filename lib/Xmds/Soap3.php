@@ -25,8 +25,6 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\RequiredFileFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Sanitize;
 
 class Soap3 extends Soap
 {
@@ -44,11 +42,11 @@ class Soap3 extends Soap
         $this->logProcessor->setRoute('RegisterDisplay');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches the one we have
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Check the Length of the hardwareKey
@@ -117,17 +115,17 @@ class Soap3 extends Soap
         $this->logProcessor->setRoute('GetFile');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
-        $filePath = Sanitize::string($filePath);
-        $fileType = Sanitize::string($fileType);
-        $chunkOffset = Sanitize::int($chunkOffset);
-        $chunkSize = Sanitize::int($chunkSize);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $filePath = $this->getSanitizer()->string($filePath);
+        $fileType = $this->getSanitizer()->string($fileType);
+        $chunkOffset = $this->getSanitizer()->int($chunkOffset);
+        $chunkSize = $this->getSanitizer()->int($chunkSize);
 
-        $libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->getConfig()->GetSetting("LIBRARY_LOCATION");
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -146,7 +144,7 @@ class Soap3 extends Soap
         try {
             // Handle fetching the file
             if ($fileType == "layout") {
-                $fileId = Sanitize::int($filePath);
+                $fileId = $this->getSanitizer()->int($filePath);
 
                 // Validate the nonce
                 $requiredFile = (new RequiredFileFactory($this->getApp()))->getByDisplayAndLayout($this->display->displayId, $fileId);

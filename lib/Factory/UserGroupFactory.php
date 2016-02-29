@@ -11,7 +11,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\UserGroup;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class UserGroupFactory extends BaseFactory
 {
@@ -105,7 +104,7 @@ class UserGroupFactory extends BaseFactory
             ';
 
             // Permissions
-            if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
+            if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
                 // Normal users can only see their group
                 if ($this->getUser()->userTypeId != 1) {
                     $body .= '
@@ -123,31 +122,31 @@ class UserGroupFactory extends BaseFactory
             }
 
             // Filter by Group Id
-            if (Sanitize::getInt('groupId', $filterBy) !== null) {
+            if ($this->getSanitizer()->getInt('groupId', $filterBy) !== null) {
                 $body .= ' AND `group`.groupId = :groupId ';
-                $params['groupId'] = Sanitize::getInt('groupId', $filterBy);
+                $params['groupId'] = $this->getSanitizer()->getInt('groupId', $filterBy);
             }
 
             // Filter by Group Name
-            if (Sanitize::getString('group', $filterBy) != null) {
+            if ($this->getSanitizer()->getString('group', $filterBy) != null) {
                 $body .= ' AND `group`.group = :group ';
-                $params['group'] = Sanitize::getString('group', $filterBy);
+                $params['group'] = $this->getSanitizer()->getString('group', $filterBy);
             }
 
             // Filter by User Id
-            if (Sanitize::getInt('userId', $filterBy) !== null) {
+            if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
                 $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lkusergroup` WHERE userId = :userId) ';
-                $params['userId'] = Sanitize::getInt('userId', $filterBy);
+                $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
             }
 
-            if (Sanitize::getInt('isUserSpecific', $filterBy) != -1) {
+            if ($this->getSanitizer()->getInt('isUserSpecific', $filterBy) != -1) {
                 $body .= ' AND isUserSpecific = :isUserSpecific ';
-                $params['isUserSpecific'] = Sanitize::getInt('isUserSpecific', 0, $filterBy);
+                $params['isUserSpecific'] = $this->getSanitizer()->getInt('isUserSpecific', 0, $filterBy);
             }
 
-            if (Sanitize::getInt('isEveryone', $filterBy) != -1) {
+            if ($this->getSanitizer()->getInt('isEveryone', $filterBy) != -1) {
                 $body .= ' AND isEveryone = :isEveryone ';
-                $params['isEveryone'] = Sanitize::getInt('isEveryone', 0, $filterBy);
+                $params['isEveryone'] = $this->getSanitizer()->getInt('isEveryone', 0, $filterBy);
             }
 
             // Sorting?
@@ -157,8 +156,8 @@ class UserGroupFactory extends BaseFactory
 
             $limit = '';
             // Paging
-            if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-                $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+            if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+                $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
             }
 
             $sql = $select . $body . $order . $limit;

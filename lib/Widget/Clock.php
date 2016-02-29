@@ -23,7 +23,6 @@ namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Helper\Translate;
 
@@ -56,15 +55,15 @@ class Clock extends ModuleWidget
     public function add()
     {
         // You must also provide a duration (all media items must provide this field)
-        $this->setOption('name', Sanitize::getString('name'));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setDuration(Sanitize::getInt('duration'));
-        $this->setOption('theme', Sanitize::getInt('themeId', 0));
-        $this->setOption('clockTypeId', Sanitize::getInt('clockTypeId', 1));
-        $this->setOption('offset', Sanitize::getInt('offset', 0));
-        $this->setRawNode('format', Sanitize::getParam('ta_text', Sanitize::getParam('format', '')));
-        $this->setOption('showSeconds', Sanitize::getCheckbox('showSeconds', 1));
-        $this->setOption('clockFace', Sanitize::getString('clockFace', 'TwentyFourHourClock'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration'));
+        $this->setOption('theme', $this->getSanitizer()->getInt('themeId', 0));
+        $this->setOption('clockTypeId', $this->getSanitizer()->getInt('clockTypeId', 1));
+        $this->setOption('offset', $this->getSanitizer()->getInt('offset', 0));
+        $this->setRawNode('format', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('format', '')));
+        $this->setOption('showSeconds', $this->getSanitizer()->getCheckbox('showSeconds', 1));
+        $this->setOption('clockFace', $this->getSanitizer()->getString('clockFace', 'TwentyFourHourClock'));
 
         $this->validate();
 
@@ -78,15 +77,15 @@ class Clock extends ModuleWidget
     public function edit()
     {
         // You must also provide a duration (all media items must provide this field)
-        $this->setOption('name', Sanitize::getString('name', $this->getOption('name')));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setDuration(Sanitize::getInt('duration'));
-        $this->setOption('theme', Sanitize::getInt('themeId', 0));
-        $this->setOption('clockTypeId', Sanitize::getInt('clockTypeId', 1));
-        $this->setOption('offset', Sanitize::getInt('offset', 0));
-        $this->setRawNode('format', Sanitize::getParam('ta_text', Sanitize::getParam('format', '')));
-        $this->setOption('showSeconds', Sanitize::getCheckbox('showSeconds'));
-        $this->setOption('clockFace', Sanitize::getString('clockFace'));
+        $this->setOption('name', $this->getSanitizer()->getString('name', $this->getOption('name')));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration'));
+        $this->setOption('theme', $this->getSanitizer()->getInt('themeId', 0));
+        $this->setOption('clockTypeId', $this->getSanitizer()->getInt('clockTypeId', 1));
+        $this->setOption('offset', $this->getSanitizer()->getInt('offset', 0));
+        $this->setRawNode('format', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('format', '')));
+        $this->setOption('showSeconds', $this->getSanitizer()->getCheckbox('showSeconds'));
+        $this->setOption('clockFace', $this->getSanitizer()->getString('clockFace'));
 
         $this->validate();
 
@@ -118,7 +117,7 @@ class Clock extends ModuleWidget
     {
         $template = null;
         $data = [];
-        $isPreview = (Sanitize::getCheckbox('preview') == 1);
+        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         // Clock Type
         switch ($this->getOption('clockTypeId', 1)) {
@@ -166,11 +165,11 @@ class Clock extends ModuleWidget
 
                 // After body content
                 $options = array(
-                    'previewWidth' => Sanitize::getDouble('width', 0),
-                    'previewHeight' => Sanitize::getDouble('height', 0),
+                    'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
+                    'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
                     'originalWidth' => $this->region->width,
                     'originalHeight' => $this->region->height,
-                    'scaleOverride' => Sanitize::getDouble('scale_override', 0)
+                    'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
                 );
 
                 $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
@@ -199,7 +198,7 @@ class Clock extends ModuleWidget
 
                 // Add our fonts.css file
                 $headContent  = '<link href = "' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
-                $headContent .= '<style type = "text/css" > ' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
+                $headContent .= '<style type = "text/css" > ' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
                 $data['head'] = $headContent;
 
@@ -227,8 +226,8 @@ class Clock extends ModuleWidget
         }
 
         // If we are a preview, then pass in the width and height
-        $data['previewWidth'] = Sanitize::getDouble('width', 0);
-        $data['previewHeight'] = Sanitize::getDouble('height', 0);
+        $data['previewWidth'] = $this->getSanitizer()->getDouble('width', 0);
+        $data['previewHeight'] = $this->getSanitizer()->getDouble('height', 0);
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';

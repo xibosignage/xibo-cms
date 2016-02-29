@@ -23,9 +23,7 @@ namespace Xibo\Controller;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DataSetFactory;
-use Xibo\Helper\Config;
 use Xibo\Helper\DataSetUploadHandler;
-use Xibo\Helper\Sanitize;
 
 
 class DataSet extends Base
@@ -77,8 +75,8 @@ class DataSet extends Base
         $user = $this->getUser();
 
         $filter = [
-            'dataSetId' => Sanitize::getInt('dataSetId'),
-            'dataSet' => Sanitize::getString('dataSet')
+            'dataSetId' => $this->getSanitizer()->getInt('dataSetId'),
+            'dataSet' => $this->getSanitizer()->getString('dataSet')
         ];
 
         $dataSets = (new DataSetFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
@@ -209,8 +207,8 @@ class DataSet extends Base
     public function add()
     {
         $dataSet = new \Xibo\Entity\DataSet();
-        $dataSet->dataSet = Sanitize::getString('dataSet');
-        $dataSet->description = Sanitize::getString('description');
+        $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
+        $dataSet->description = $this->getSanitizer()->getString('description');
         $dataSet->userId = $this->getUser()->userId;
 
         // Also add one column
@@ -300,8 +298,8 @@ class DataSet extends Base
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
 
-        $dataSet->dataSet = Sanitize::getString('dataSet');
-        $dataSet->description = Sanitize::getString('description');
+        $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
+        $dataSet->description = $this->getSanitizer()->getString('description');
         $dataSet->save();
 
         // Return
@@ -365,7 +363,7 @@ class DataSet extends Base
             throw new AccessDeniedException();
 
         // Is there existing data?
-        if (Sanitize::getCheckbox('deleteData') == 0 && $dataSet->hasData())
+        if ($this->getSanitizer()->getCheckbox('deleteData') == 0 && $dataSet->hasData())
             throw new \InvalidArgumentException(__('There is data assigned to this data set, cannot delete.'));
 
         // Otherwise delete
@@ -412,10 +410,10 @@ class DataSet extends Base
     {
         $this->getLog()->debug('Import DataSet');
 
-        $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
+        $libraryFolder = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists
-        Library::ensureLibraryExists();
+        Library::ensureLibraryExists($this->getConfig()->GetSetting('LIBRARY_LOCATION'));
 
         $options = array(
             'userId' => $this->getUser()->userId,

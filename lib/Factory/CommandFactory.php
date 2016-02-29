@@ -11,7 +11,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Command;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class CommandFactory extends BaseFactory
 {
@@ -50,37 +49,37 @@ class CommandFactory extends BaseFactory
         $params = array();
         $select = 'SELECT `command`.commandId, `command`.command, `command`.code, `command`.description, `command`.userId ';
 
-        if (Sanitize::getInt('displayProfileId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('displayProfileId', $filterBy) !== null) {
             $select .= ', commandString, validationString ';
         }
 
         $body = ' FROM `command` ';
 
-        if (Sanitize::getInt('displayProfileId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('displayProfileId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN `lkcommanddisplayprofile`
                 ON `lkcommanddisplayprofile`.commandId = `command`.commandId
                     AND `lkcommanddisplayprofile`.displayProfileId = :displayProfileId
             ';
 
-            $params['displayProfileId'] = Sanitize::getInt('displayProfileId', $filterBy);
+            $params['displayProfileId'] = $this->getSanitizer()->getInt('displayProfileId', $filterBy);
         }
 
         $body .= ' WHERE 1 = 1 ';
 
-        if (Sanitize::getInt('commandId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('commandId', $filterBy) !== null) {
             $body .= ' AND `command`.commandId = :commandId ';
-            $params['commandId'] = Sanitize::getInt('commandId', $filterBy);
+            $params['commandId'] = $this->getSanitizer()->getInt('commandId', $filterBy);
         }
 
-        if (Sanitize::getString('command', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('command', $filterBy) != null) {
             $body .= ' AND `command`.command = :command ';
-            $params['command'] = Sanitize::getString('command', $filterBy);
+            $params['command'] = $this->getSanitizer()->getString('command', $filterBy);
         }
 
-        if (Sanitize::getString('code', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('code', $filterBy) != null) {
             $body .= ' AND `code`.code = :code ';
-            $params['code'] = Sanitize::getString('code', $filterBy);
+            $params['code'] = $this->getSanitizer()->getString('code', $filterBy);
         }
 
         // Sorting?
@@ -90,8 +89,8 @@ class CommandFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         $sql = $select . $body . $order . $limit;

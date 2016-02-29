@@ -25,7 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Page;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class PageFactory extends BaseFactory
 {
@@ -73,18 +72,18 @@ class PageFactory extends BaseFactory
         // Logged in user view permissions
         $this->viewPermissionSql('Xibo\Entity\Page', $sql, $params, 'pageId', null, $filterBy);
 
-        if (Sanitize::getString('name', $filterBy) != null) {
-            $params['name'] = Sanitize::getString('name', $filterBy);
+        if ($this->getSanitizer()->getString('name', $filterBy) != null) {
+            $params['name'] = $this->getSanitizer()->getString('name', $filterBy);
             $sql .= ' AND `name` = :name ';
         }
 
-        if (Sanitize::getInt('pageId', $filterBy) !== null) {
-            $params['pageId'] = Sanitize::getString('pageId', $filterBy);
+        if ($this->getSanitizer()->getInt('pageId', $filterBy) !== null) {
+            $params['pageId'] = $this->getSanitizer()->getString('pageId', $filterBy);
             $sql .= ' AND `pageId` = :pageId ';
         }
 
-        if (Sanitize::getInt('asHome', $filterBy) !== null) {
-            $params['asHome'] = Sanitize::getString('asHome', $filterBy);
+        if ($this->getSanitizer()->getInt('asHome', $filterBy) !== null) {
+            $params['asHome'] = $this->getSanitizer()->getString('asHome', $filterBy);
             $sql .= ' AND `asHome` = :asHome ';
         }
 

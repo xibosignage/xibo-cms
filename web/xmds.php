@@ -18,7 +18,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\Config;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
@@ -33,14 +32,14 @@ if (!file_exists(PROJECT_ROOT . '/web/settings.php')) {
 }
 
 // Load the config
-Config::Load(PROJECT_ROOT . '/web/settings.php');
+$this->getConfig()->Load(PROJECT_ROOT . '/web/settings.php');
 
 // Always have a version defined
-$version = \Xibo\Helper\Sanitize::getInt('v', 3, $_REQUEST);
+$version = $this->getSanitizer()->getInt('v', 3, $_REQUEST);
 
 // Version Request?
 if (isset($_GET['what']))
-    die(Config::Version('XmdsVersion'));
+    die($this->getConfig()->Version('XmdsVersion'));
 
 // Is the WSDL being requested.
 if (isset($_GET['wsdl']) || isset($_GET['WSDL'])) {
@@ -63,7 +62,7 @@ $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
 
 // Slim Application
 $app = new \Slim\Slim(array(
-    'mode' => Config::GetSetting('SERVER_MODE'),
+    'mode' => $this->getConfig()->GetSetting('SERVER_MODE'),
     'debug' => false,
     'log.writer' => $logger
 ));
@@ -95,7 +94,7 @@ $app->user = (new \Xibo\Factory\UserFactory($app))->getById(1);
 // Check to see if we have a file attribute set (for HTTP file downloads)
 if (isset($_GET['file'])) {
     // Check send file mode is enabled
-    $sendFileMode = Config::GetSetting('SENDFILE_MODE');
+    $sendFileMode = $this->getConfig()->GetSetting('SENDFILE_MODE');
 
     if ($sendFileMode == 'Off') {
         $app->logHelper->notice('HTTP GetFile request received but SendFile Mode is Off. Issuing 404', 'services');
@@ -112,8 +111,8 @@ if (isset($_GET['file'])) {
         // Issue magic packet
         // Send via Apache X-Sendfile header?
         if ($sendFileMode == 'Apache') {
-            $app->logHelper->notice('HTTP GetFile request redirecting to ' . Config::GetSetting('LIBRARY_LOCATION') . $file->storedAs, 'services');
-            header('X-Sendfile: ' . Config::GetSetting('LIBRARY_LOCATION') . $file->storedAs);
+            $app->logHelper->notice('HTTP GetFile request redirecting to ' . $this->getConfig()->GetSetting('LIBRARY_LOCATION') . $file->storedAs, 'services');
+            header('X-Sendfile: ' . $this->getConfig()->GetSetting('LIBRARY_LOCATION') . $file->storedAs);
         }
         // Send via Nginx X-Accel-Redirect?
         else if ($sendFileMode == 'Nginx') {

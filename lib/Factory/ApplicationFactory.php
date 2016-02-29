@@ -12,7 +12,6 @@ namespace Xibo\Factory;
 use League\OAuth2\Server\Util\SecureKey;
 use Xibo\Entity\Application;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class ApplicationFactory extends BaseFactory
 {
@@ -64,7 +63,7 @@ class ApplicationFactory extends BaseFactory
               FROM `oauth_clients`
         ';
 
-        if (Sanitize::getInt('userId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
 
             $select .= '
                 , `oauth_auth_codes`.expire_time AS expires
@@ -78,15 +77,15 @@ class ApplicationFactory extends BaseFactory
                 ON `oauth_auth_codes`.session_id = `oauth_sessions`.id
             ';
 
-            $params['userId'] = Sanitize::getInt('userId', $filterBy);
+            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
         }
 
         $body .= ' WHERE 1 = 1 ';
 
 
-        if (Sanitize::getString('clientId', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('clientId', $filterBy) != null) {
             $body .= ' AND `oauth_clients`.id = :clientId ';
-            $params['clientId'] = Sanitize::getString('clientId', $filterBy);
+            $params['clientId'] = $this->getSanitizer()->getString('clientId', $filterBy);
         }
 
         // Sorting?
@@ -96,8 +95,8 @@ class ApplicationFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         // The final statements

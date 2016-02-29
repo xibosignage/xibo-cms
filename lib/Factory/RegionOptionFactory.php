@@ -24,7 +24,6 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\RegionOption;
-use Xibo\Helper\Sanitize;
 
 class RegionOptionFactory extends BaseFactory
 {
@@ -67,7 +66,7 @@ class RegionOptionFactory extends BaseFactory
 
         $sql = 'SELECT * FROM `regionoption` WHERE regionId = :regionId';
 
-        foreach ($this->getStore()->select($sql, array('regionId' => Sanitize::getInt('regionId', $filterBy))) as $row) {
+        foreach ($this->getStore()->select($sql, array('regionId' => $this->getSanitizer()->getInt('regionId', $filterBy))) as $row) {
             $entries[] = (new RegionOption())->hydrate($row)->setApp($this->getApp());
         }
 

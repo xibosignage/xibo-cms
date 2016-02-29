@@ -1,30 +1,17 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-13 Daniel Garner
- *
- * This file is part of Xibo.
- *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
- *
- * Xibo is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2016 Spring Signage Ltd
+ * (DateJalali.php)
  */
-namespace Xibo\Helper;
-use DateTime;
 
-class Date implements DateInterface
+
+namespace Xibo\Helper;
+
+
+class DateJalali implements DateInterface
 {
     private static $timezones = null;
-
     private $app;
 
     public function __construct($app)
@@ -49,7 +36,7 @@ class Date implements DateInterface
         if ($timestamp == NULL)
             $timestamp = time();
 
-        return \Jenssegers\Date\Date::createFromTimestamp($timestamp)->format($format);
+        return \JDateTime::date($format, $timestamp, false);
     }
 
     /**
@@ -75,7 +62,19 @@ class Date implements DateInterface
         if ($format == null)
             $format = $this->getSystemFormat();
 
-        return \Jenssegers\Date\Date::createFromFormat($format, $string);
+        // If we are Jalali, then we want to convert from Jalali back to Gregorian.
+        // Split the time stamp into its component parts and pass it to the conversion.
+        $date = trim($string);
+
+        $split = (stripos($date, ' ') > 0) ? explode(' ', $date) : array($date, '');
+
+        $dateSplit = explode('-', $split[0]);
+        $timeSplit = explode(':', $split[1]);
+
+        $date = \jDateTime::toGregorian($dateSplit[0], $dateSplit[1], $dateSplit[2]);
+
+        // Create a date out of that string.
+        return \Jenssegers\Date\Date::create($date[0], $date[1], $date[2], $timeSplit[0], $timeSplit[1]);
     }
 
     public function setLocale($identifier)
@@ -194,7 +193,7 @@ class Date implements DateInterface
         if (self::$timezones === null) {
             self::$timezones = [];
             $offsets = [];
-            $now = new DateTime();
+            $now = new \DateTime();
 
             foreach (\DateTimeZone::listIdentifiers() as $timezone) {
                 $now->setTimezone(new \DateTimeZone($timezone));

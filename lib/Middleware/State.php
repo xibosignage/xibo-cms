@@ -21,7 +21,6 @@
 
 namespace Xibo\Middleware;
 
-use Jenssegers\Date\Date;
 use Slim\Middleware;
 use Slim\Slim;
 use Stash\Driver\Composite;
@@ -30,16 +29,12 @@ use Stash\Driver\FileSystem;
 use Stash\Pool;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\UpgradePendingException;
-use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\ApplicationState;
-use Xibo\Helper\ByteFormatter;
-use Xibo\Helper\Config;
 use Xibo\Helper\Help;
-use Xibo\Helper\Log;
 use Xibo\Helper\NullSession;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
-use Xibo\Storage\PDOConnect;
 
 class State extends Middleware
 {
@@ -53,43 +48,12 @@ class State extends Middleware
         // Attach a hook to log the route
         $this->app->hook('slim.before.dispatch', function() use ($app) {
 
-            $settings = [];
-            foreach (Config::GetAll() as $setting) {
-                $settings[$setting['setting']] = $setting['value'];
-            }
-
-            // Date format
-            $settings['DATE_FORMAT_JS'] = \Xibo\Helper\Date::convertPhpToMomentFormat($settings['DATE_FORMAT']);
-            $settings['DATE_FORMAT_BOOTSTRAP'] = \Xibo\Helper\Date::convertPhpToBootstrapFormat($settings['DATE_FORMAT']);
-
-            // Configure some things in the theme
-            if ($app->getName() == 'web') {
-                $app->view()->appendData(array(
-                    'baseUrl' => $app->urlFor('home'),
-                    'route' => $app->router()->getCurrentRoute()->getName(),
-                    'theme' => \Xibo\Helper\Theme::getInstance(),
-                    'settings' => $settings,
-                    'translate' => [
-                        'locale' => Translate::GetLocale(),
-                        'jsLocale' => Translate::GetJsLocale(),
-                        'jsShortLocale' => ((strlen(Translate::GetJsLocale()) > 2) ? substr(Translate::GetJsLocale(), 0, 2) : Translate::GetJsLocale()),
-                        'calendarLanguage' => ((strlen(Translate::GetJsLocale()) <= 2) ? Translate::GetJsLocale() . '-' . strtoupper(Translate::GetJsLocale()) : Translate::GetJsLocale())
-                    ],
-                    'translations' => '{}',
-                    'libraryUpload' => [
-                        'maxSize' => ByteFormatter::toBytes(Config::getMaxUploadSize()),
-                        'maxSizeMessage' => sprintf(__('This form accepts files up to a maximum size of %s'), Config::getMaxUploadSize()),
-                        'validExt' => implode('|', (new ModuleFactory($app))->getValidExtensions())
-                    ]
-                ));
-            }
-
             // Check to see if the instance has been suspended, if so call the special route
-            if (Config::GetSetting('INSTANCE_SUSPENDED') == 1)
+            if ($app->configService->GetSetting('INSTANCE_SUSPENDED') == 1)
                 throw new InstanceSuspendedException();
 
             // Get to see if upgrade is pending
-            if (Config::isUpgradePending() && $app->getName() != 'web')
+            if ($app->configService->isUpgradePending() && $app->getName() != 'web')
                 throw new UpgradePendingException();
 
             // Reset the ETAGs for GZIP
@@ -114,19 +78,26 @@ class State extends Middleware
      */
     public static function setState($app)
     {
-        // Register the log service
-        $app->container->singleton('logHelper', function() use ($app) {
-            return new Log($app->getLog(), $app->getMode());
-        });
-
-        // Register the database service
-        $app->container->singleton('store', function() use ($app) {
-            return new PDOConnect($app->logHelper);
-        });
-
         // Register the help service
         $app->container->singleton('helpService', function() use ($app) {
             return new Help($app);
+        });
+
+        // Register the date service
+        $app->container->singleton('dateService', function() use ($app) {
+            if ($app->configService->GetSetting('CALENDAR_TYPE') == 'Jalali')
+                $date = new \Xibo\Helper\DateJalali($app);
+            else
+                $date = new \Xibo\Helper\Date($app);
+
+            $date->setLocale(Translate::GetLocale(2));
+
+            return $date;
+        });
+
+        // Register the sanitizer
+        $app->container->singleton('sanitizerService', function() use ($app) {
+            return new Sanitize($app);
         });
 
         // Register Controllers with DI
@@ -138,16 +109,17 @@ class State extends Middleware
         // Set some public routes
         $app->publicRoutes = array('/login', '/logout', '/clock', '/about', '/login/ping');
 
-        // Setup the translations for gettext
-        Translate::InitLocale();
-
-        // Configure the locale for date/time
-        if (Translate::GetLocale(2) != '')
-            Date::setLocale(Translate::GetLocale(2));
-
-        // Inject
         // The state of the application response
         $app->container->singleton('state', function() { return new ApplicationState(); });
+
+        // Setup the translations for gettext
+        Translate::InitLocale($app);
+
+        // Config Version
+        $app->configService->Version();
+
+        // Default timezone
+        date_default_timezone_set($app->configService->GetSetting("defaultTimezone"));
 
         // Configure the cache
         self::configureCache($app);
@@ -159,42 +131,44 @@ class State extends Middleware
             else
                 return new NullSession();
         });
-        $app->session->get('nothing');
 
         // Do we need SSL/STS?
-        // Deal with HTTPS/STS config
         if ($app->request()->getScheme() == 'https') {
-            if (Config::GetSetting('ISSUE_STS', 0) == 1)
-                $app->response()->header('strict-transport-security', 'max-age=' . Config::GetSetting('STS_TTL', 600));
+            if ($app->configService->GetSetting('ISSUE_STS', 0) == 1)
+                $app->response()->header('strict-transport-security', 'max-age=' . $app->configService->GetSetting('STS_TTL', 600));
         }
         else {
-            if (Config::GetSetting('FORCE_HTTPS', 0) == 1) {
+            if ($app->configService->GetSetting('FORCE_HTTPS', 0) == 1) {
                 $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
                 header("Location: $redirect");
                 $app->halt(302);
             }
         }
 
+        // App Mode
+        $mode = $app->configService->GetSetting('SERVER_MODE');
+        $app->logHelper->setMode($mode);
+
         // Configure logging
-        if (strtolower($app->getMode()) == 'test') {
+        if (strtolower($mode) == 'test') {
             $app->config('log.level', \Slim\Log::DEBUG);
         }
         else {
-            $app->config('log.level', \Xibo\Helper\Log::resolveLogLevel(Config::GetSetting('audit', 'error')));
+            $app->config('log.level', \Xibo\Helper\Log::resolveLogLevel($app->configService->GetSetting('audit', 'error')));
         }
 
         // Configure any extra log handlers
-        if (Config::$logHandlers != null && is_array(Config::$logHandlers)) {
-            $app->logHelper->debug('Configuring %d additional log handlers from Config', count(Config::$logHandlers));
-            foreach (Config::$logHandlers as $handler) {
+        if ($app->configService->logHandlers != null && is_array($app->configService->logHandlers)) {
+            $app->logHelper->debug('Configuring %d additional log handlers from Config', count($app->configService->logHandlers));
+            foreach ($app->configService->logHandlers as $handler) {
                 $app->logWriter->addHandler($handler);
             }
         }
 
         // Configure any extra log processors
-        if (Config::$logProcessors != null && is_array(Config::$logProcessors)) {
-            $app->logHelper->debug('Configuring %d additional log processors from Config', count(Config::$logProcessors));
-            foreach (Config::$logProcessors as $processor) {
+        if ($app->configService->logProcessors != null && is_array($app->configService->logProcessors)) {
+            $app->logHelper->debug('Configuring %d additional log processors from Config', count($app->configService->logProcessors));
+            foreach ($app->configService->logProcessors as $processor) {
                 $app->logWriter->addProcessor($processor);
             }
         }
@@ -243,11 +217,11 @@ class State extends Middleware
     {
         $drivers = [];
 
-        if (Config::$cacheDrivers != null && is_array(Config::$cacheDrivers)) {
-            $drivers = Config::$cacheDrivers;
+        if ($app->configService->cacheDrivers != null && is_array($app->configService->cacheDrivers)) {
+            $drivers = $app->configService->cacheDrivers;
         } else {
             // File System Driver
-            $drivers[] = new FileSystem(['path' => Config::GetSetting('LIBRARY_LOCATION') . 'cache/']);
+            $drivers[] = new FileSystem(['path' => $app->configService->GetSetting('LIBRARY_LOCATION') . 'cache/']);
         }
 
         // Always add the Ephemeral driver
@@ -263,9 +237,6 @@ class State extends Middleware
             $pool->setNamespace('Xibo');
             return $pool;
         });
-
-        // Pass the pool into the config object
-        Config::setPool($app->pool);
     }
 
     /**

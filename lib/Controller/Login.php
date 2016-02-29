@@ -22,7 +22,6 @@ namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\UserFactory;
-use Xibo\Helper\Sanitize;
 
 class Login extends Base
 {
@@ -42,8 +41,8 @@ class Login extends Base
     public function login()
     {
         // Get our username and password
-        $username = Sanitize::getUserName('username');
-        $password = Sanitize::getPassword('password');
+        $username = $this->getSanitizer()->getUserName('username');
+        $password = $this->getSanitizer()->getPassword('password');
 
         $this->getLog()->debug('Login with username %s', $username);
 
@@ -127,7 +126,7 @@ class Login extends Base
      */
     public function PingPong()
     {
-        $this->getApp()->session->refreshExpiry = (Sanitize::getCheckbox('refreshSession') == 1);
+        $this->getApp()->session->refreshExpiry = ($this->getSanitizer()->getCheckbox('refreshSession') == 1);
         $this->getState()->success = true;
     }
 

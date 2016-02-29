@@ -11,7 +11,6 @@ namespace Xibo\Middleware;
 
 use Slim\Slim;
 use Slim\View;
-use Xibo\Helper\Sanitize;
 
 class ApiView extends View
 {
@@ -71,8 +70,8 @@ class ApiView extends View
                     $totalRows = $grid['recordsTotal'];
 
                     // Set some headers indicating our next/previous pages
-                    $start = Sanitize::getInt('start', 0);
-                    $size = Sanitize::getInt('size', 10);
+                    $start = $app->sanitizerService->getInt('start', 0);
+                    $size = $app->sanitizerService->getInt('size', 10);
 
                     $linkHeader = '';
                     $url = $app->request()->getUrl() . $app->request()->getPath();

@@ -34,7 +34,6 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserTypeFactory;
-use Xibo\Helper\Sanitize;
 
 class User extends Base
 {
@@ -125,10 +124,10 @@ class User extends Base
     {
         // Filter our users?
         $filterBy = [
-            'userId' => Sanitize::getInt('userId'),
-            'userTypeId' => Sanitize::getInt('userTypeId'),
-            'userName' => Sanitize::getString('userName'),
-            'retired' => Sanitize::getInt('retired')
+            'userId' => $this->getSanitizer()->getInt('userId'),
+            'userTypeId' => $this->getSanitizer()->getInt('userTypeId'),
+            'userName' => $this->getSanitizer()->getString('userName'),
+            'retired' => $this->getSanitizer()->getInt('retired')
         ];
 
         // Load results into an array
@@ -304,24 +303,24 @@ class User extends Base
     {
         // Build a user entity and save it
         $user = new \Xibo\Entity\User();
-        $user->userName = Sanitize::getString('userName');
-        $user->email = Sanitize::getString('email');
-        $user->userTypeId = Sanitize::getInt('userTypeId');
-        $user->homePageId = Sanitize::getInt('homePageId');
-        $user->libraryQuota = Sanitize::getInt('libraryQuota');
-        $user->setNewPassword(Sanitize::getString('password'));
+        $user->userName = $this->getSanitizer()->getString('userName');
+        $user->email = $this->getSanitizer()->getString('email');
+        $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
+        $user->homePageId = $this->getSanitizer()->getInt('homePageId');
+        $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
+        $user->setNewPassword($this->getSanitizer()->getString('password'));
 
-        $user->firstName = Sanitize::getString('firstName');
-        $user->lastName = Sanitize::getString('lastName');
-        $user->phone = Sanitize::getString('phone');
-        $user->ref1 = Sanitize::getString('ref1');
-        $user->ref2 = Sanitize::getString('ref2');
-        $user->ref3 = Sanitize::getString('ref3');
-        $user->ref4 = Sanitize::getString('ref4');
-        $user->ref5 = Sanitize::getString('ref5');
+        $user->firstName = $this->getSanitizer()->getString('firstName');
+        $user->lastName = $this->getSanitizer()->getString('lastName');
+        $user->phone = $this->getSanitizer()->getString('phone');
+        $user->ref1 = $this->getSanitizer()->getString('ref1');
+        $user->ref2 = $this->getSanitizer()->getString('ref2');
+        $user->ref3 = $this->getSanitizer()->getString('ref3');
+        $user->ref4 = $this->getSanitizer()->getString('ref4');
+        $user->ref5 = $this->getSanitizer()->getString('ref5');
 
         // Initial user group
-        $group = (new UserGroupFactory($this->getApp()))->getById(Sanitize::getInt('groupId'));
+        $group = (new UserGroupFactory($this->getApp()))->getById($this->getSanitizer()->getInt('groupId'));
 
         // Save the user
         $user->save();
@@ -352,21 +351,21 @@ class User extends Base
 
         // Build a user entity and save it
         $user->load();
-        $user->userName = Sanitize::getString('userName');
-        $user->email = Sanitize::getString('email');
-        $user->userTypeId = Sanitize::getInt('userTypeId');
-        $user->homePageId = Sanitize::getInt('homePageId');
-        $user->libraryQuota = Sanitize::getInt('libraryQuota');
-        $user->retired = Sanitize::getCheckbox('retired');
+        $user->userName = $this->getSanitizer()->getString('userName');
+        $user->email = $this->getSanitizer()->getString('email');
+        $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
+        $user->homePageId = $this->getSanitizer()->getInt('homePageId');
+        $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
+        $user->retired = $this->getSanitizer()->getCheckbox('retired');
 
-        $user->firstName = Sanitize::getString('firstName');
-        $user->lastName = Sanitize::getString('lastName');
-        $user->phone = Sanitize::getString('phone');
-        $user->ref1 = Sanitize::getString('ref1');
-        $user->ref2 = Sanitize::getString('ref2');
-        $user->ref3 = Sanitize::getString('ref3');
-        $user->ref4 = Sanitize::getString('ref4');
-        $user->ref5 = Sanitize::getString('ref5');
+        $user->firstName = $this->getSanitizer()->getString('firstName');
+        $user->lastName = $this->getSanitizer()->getString('lastName');
+        $user->phone = $this->getSanitizer()->getString('phone');
+        $user->ref1 = $this->getSanitizer()->getString('ref1');
+        $user->ref2 = $this->getSanitizer()->getString('ref2');
+        $user->ref3 = $this->getSanitizer()->getString('ref3');
+        $user->ref4 = $this->getSanitizer()->getString('ref4');
+        $user->ref5 = $this->getSanitizer()->getString('ref5');
 
         // Make sure the user has permission to access this page.
         if (!$user->checkViewable((new PageFactory($this->getApp()))->getById($user->homePageId)))
@@ -374,8 +373,8 @@ class User extends Base
 
         // If we are a super admin
         if ($this->getUser()->userTypeId == 1) {
-            $newPassword = Sanitize::getString('newPassword');
-            $retypeNewPassword = Sanitize::getString('retypeNewPassword');
+            $newPassword = $this->getSanitizer()->getString('newPassword');
+            $retypeNewPassword = $this->getSanitizer()->getString('retypeNewPassword');
 
             if ($newPassword != null && $newPassword != '') {
                 // Make sure they are the same
@@ -410,14 +409,14 @@ class User extends Base
         if (!$this->getUser()->checkDeleteable($user))
             throw new AccessDeniedException();
 
-        if (Sanitize::getCheckbox('deleteAllItems') != 1) {
+        if ($this->getSanitizer()->getCheckbox('deleteAllItems') != 1) {
 
             // Do we have a userId to reassign content to?
-            if (Sanitize::getInt('reassignUserId') != null) {
+            if ($this->getSanitizer()->getInt('reassignUserId') != null) {
                 // Reassign all content owned by this user to the provided user
-                $this->getLog()->debug('Reassigning content to new userId: %d', Sanitize::getInt('reassignUserId'));
+                $this->getLog()->debug('Reassigning content to new userId: %d', $this->getSanitizer()->getInt('reassignUserId'));
 
-                $user->reassignAllTo((new UserFactory($this->getApp()))->getById(Sanitize::getInt('reassignUserId')));
+                $user->reassignAllTo((new UserFactory($this->getApp()))->getById($this->getSanitizer()->getInt('reassignUserId')));
             } else {
                 // Check to see if we have any child data that would prevent us from deleting
                 $children = $user->countChildren();
@@ -522,9 +521,9 @@ class User extends Base
     {
         // Save the user
         $user = $this->getUser();
-        $oldPassword = Sanitize::getString('password');
-        $newPassword = Sanitize::getString('newPassword');
-        $retypeNewPassword = Sanitize::getString('retypeNewPassword');
+        $oldPassword = $this->getSanitizer()->getString('password');
+        $newPassword = $this->getSanitizer()->getString('newPassword');
+        $retypeNewPassword = $this->getSanitizer()->getString('retypeNewPassword');
 
         if ($newPassword != $retypeNewPassword)
             throw new \InvalidArgumentException(__('Passwords do not match'));
@@ -586,7 +585,7 @@ class User extends Base
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         // List of all Groups with a view / edit / delete check box
-        $permissions = (new PermissionFactory($this->getApp()))->getAllByObjectId(get_class($object), $objectId, $this->gridRenderSort(), $this->gridRenderFilter(['name' => Sanitize::getString('name')]));
+        $permissions = (new PermissionFactory($this->getApp()))->getAllByObjectId(get_class($object), $objectId, $this->gridRenderSort(), $this->gridRenderFilter(['name' => $this->getSanitizer()->getString('name')]));
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($permissions);
@@ -689,13 +688,13 @@ class User extends Base
         $permissions = (new PermissionFactory($this->getApp()))->getAllByObjectId(get_class($object), $objectId);
 
         // Get the provided permissions
-        $groupIds = Sanitize::getStringArray('groupIds');
+        $groupIds = $this->getSanitizer()->getStringArray('groupIds');
 
         // Run the update
         $this->updatePermissions($permissions, $groupIds);
 
         // Cascade permissions
-        if ($requestEntity == 'Campaign' && Sanitize::getCheckbox('cascade') == 1) {
+        if ($requestEntity == 'Campaign' && $this->getSanitizer()->getCheckbox('cascade') == 1) {
             /* @var Campaign $object */
             $this->getLog()->debug('Cascade permissions down');
 
@@ -825,7 +824,7 @@ class User extends Base
      */
     public function pref()
     {
-        $requestedPreference = Sanitize::getString('preference');
+        $requestedPreference = $this->getSanitizer()->getString('preference');
 
         if ($requestedPreference != '') {
             return [
@@ -863,11 +862,11 @@ class User extends Base
     {
         // Update this user preference with the preference array
         $i = 0;
-        foreach (Sanitize::getStringArray('preference') as $pref) {
+        foreach ($this->getSanitizer()->getStringArray('preference') as $pref) {
             $i++;
 
-            $option = Sanitize::string($pref['option']);
-            $value = Sanitize::string($pref['value']);
+            $option = $this->getSanitizer()->string($pref['option']);
+            $value = $this->getSanitizer()->string($pref['value']);
 
             $this->getUser()->setOptionValue($option, $value);
         }

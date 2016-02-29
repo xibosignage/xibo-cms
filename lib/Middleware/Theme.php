@@ -10,16 +10,18 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
+use Xibo\Factory\ModuleFactory;
+use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\Translate;
 
 class Theme extends Middleware
 {
     public function call()
     {
-        // Configure the Theme
-        \Xibo\Helper\Theme::getInstance();
-
         // Inject our Theme into the Twig View (if it exists)
         $app = $this->getApplication();
+
+        $app->configService->loadTheme();
 
         // Provide the view path to Twig
         $twig = $app->view()->getInstance()->getLoader();
@@ -29,10 +31,40 @@ class Theme extends Middleware
         $twig->setPaths(array_merge((new \Xibo\Factory\ModuleFactory($app))->getViewPaths(), [PROJECT_ROOT . '/views']));
 
         // Does this theme provide an alternative view path?
-        if (\Xibo\Helper\Theme::getConfig('view_path') != '') {
-
-            $twig->prependPath(\Xibo\Helper\Theme::getConfig('view_path'));
+        if ($app->configService->getThemeConfig('view_path') != '') {
+            $twig->prependPath($app->configService->getThemeConfig('view_path'));
         }
+
+        $app->hook('slim.before.dispatch', function() use($app) {
+
+            $settings = [];
+            foreach ($app->configService->GetAll() as $setting) {
+                $settings[$setting['setting']] = $setting['value'];
+            }
+
+            // Date format
+            $settings['DATE_FORMAT_JS'] = $app->dateService->convertPhpToMomentFormat($settings['DATE_FORMAT']);
+            $settings['DATE_FORMAT_BOOTSTRAP'] = $app->dateService->convertPhpToBootstrapFormat($settings['DATE_FORMAT']);
+
+            $app->view()->appendData(array(
+                'baseUrl' => $app->urlFor('home'),
+                'route' => $app->router()->getCurrentRoute()->getName(),
+                'theme' => $app->configService,
+                'settings' => $settings,
+                'translate' => [
+                    'locale' => Translate::GetLocale(),
+                    'jsLocale' => Translate::GetJsLocale(),
+                    'jsShortLocale' => ((strlen(Translate::GetJsLocale()) > 2) ? substr(Translate::GetJsLocale(), 0, 2) : Translate::GetJsLocale()),
+                    'calendarLanguage' => ((strlen(Translate::GetJsLocale()) <= 2) ? Translate::GetJsLocale() . '-' . strtoupper(Translate::GetJsLocale()) : Translate::GetJsLocale())
+                ],
+                'translations' => '{}',
+                'libraryUpload' => [
+                    'maxSize' => ByteFormatter::toBytes($app->configService->getMaxUploadSize()),
+                    'maxSizeMessage' => sprintf(__('This form accepts files up to a maximum size of %s'), $app->configService->getMaxUploadSize()),
+                    'validExt' => implode('|', (new ModuleFactory($app))->getValidExtensions())
+                ]
+            ));
+        });
 
         // Call Next
         $this->next->call();

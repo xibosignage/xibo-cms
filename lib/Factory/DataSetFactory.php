@@ -11,7 +11,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DataSet;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class DataSetFactory extends BaseFactory
 {
@@ -116,19 +115,19 @@ class DataSetFactory extends BaseFactory
             // View Permissions
             $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy);
 
-            if (Sanitize::getInt('dataSetId', $filterBy) !== null) {
+            if ($this->getSanitizer()->getInt('dataSetId', $filterBy) !== null) {
                 $body .= ' AND dataset.dataSetId = :dataSetId ';
-                $params['dataSetId'] = Sanitize::getInt('dataSetId', $filterBy);
+                $params['dataSetId'] = $this->getSanitizer()->getInt('dataSetId', $filterBy);
             }
 
-            if (Sanitize::getString('dataSet', $filterBy) != null) {
+            if ($this->getSanitizer()->getString('dataSet', $filterBy) != null) {
                 $body .= ' AND dataset.dataSet = :dataSet ';
-                $params['dataSet'] = Sanitize::getString('dataSet', $filterBy);
+                $params['dataSet'] = $this->getSanitizer()->getString('dataSet', $filterBy);
             }
 
-            if (Sanitize::getString('code', $filterBy) != null) {
+            if ($this->getSanitizer()->getString('code', $filterBy) != null) {
                 $body .= ' AND `dataset`.`code` = :code ';
-                $params['code'] = Sanitize::getString('code', $filterBy);
+                $params['code'] = $this->getSanitizer()->getString('code', $filterBy);
             }
 
             // Sorting?
@@ -138,8 +137,8 @@ class DataSetFactory extends BaseFactory
 
             $limit = '';
             // Paging
-            if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-                $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+            if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+                $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
             }
 
             $sql = $select . $body . $order . $limit;

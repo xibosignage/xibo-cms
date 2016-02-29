@@ -32,7 +32,6 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\Form;
-use Xibo\Helper\Sanitize;
 
 
 class UserGroup extends Base
@@ -82,8 +81,8 @@ class UserGroup extends Base
         $user = $this->getUser();
 
         $filterBy = [
-            'groupId' => Sanitize::getInt('userGroupId'),
-            'group' => Sanitize::getString('userGroup')
+            'groupId' => $this->getSanitizer()->getInt('userGroupId'),
+            'group' => $this->getSanitizer()->getString('userGroup')
         ];
 
         $groups = (new UserGroupFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter($filterBy));
@@ -200,8 +199,8 @@ class UserGroup extends Base
     {
         // Build a user entity and save it
         $group = new \Xibo\Entity\UserGroup();
-        $group->group = Sanitize::getString('group');
-        $group->libraryQuota = Sanitize::getInt('libraryQuota');
+        $group->group = $this->getSanitizer()->getString('group');
+        $group->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
 
         // Save
         $group->save();
@@ -225,8 +224,8 @@ class UserGroup extends Base
         if (!$this->getUser()->checkEditable($group))
             throw new AccessDeniedException();
 
-        $group->group = Sanitize::getString('group');
-        $group->libraryQuota = Sanitize::getInt('libraryQuota');
+        $group->group = $this->getSanitizer()->getString('group');
+        $group->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
 
         // Save
         $group->save();
@@ -463,7 +462,7 @@ class UserGroup extends Base
         if (!$this->getUser()->checkEditable($group))
             throw new AccessDeniedException();
 
-        $users = Sanitize::getIntArray('userId');
+        $users = $this->getSanitizer()->getIntArray('userId');
 
         foreach ($users as $userId) {
 
@@ -478,7 +477,7 @@ class UserGroup extends Base
         }
 
         // Check to see if unassign has been provided.
-        $users = Sanitize::getIntArray('unassignUserId');
+        $users = $this->getSanitizer()->getIntArray('unassignUserId');
 
         foreach ($users as $userId) {
 
@@ -512,7 +511,7 @@ class UserGroup extends Base
         if (!$this->getUser()->checkEditable($group))
             throw new AccessDeniedException();
 
-        $users = Sanitize::getIntArray('userId');
+        $users = $this->getSanitizer()->getIntArray('userId');
 
         foreach ($users as $userId) {
             $group->unassignUser((new UserFactory($this->getApp()))->getById($userId));
@@ -596,10 +595,10 @@ class UserGroup extends Base
 
         // Clone the group
         $group->load([
-            'loadUsers' => (Sanitize::getCheckbox('copyMembers') == 1)
+            'loadUsers' => ($this->getSanitizer()->getCheckbox('copyMembers') == 1)
         ]);
         $newGroup = clone $group;
-        $newGroup->group = Sanitize::getString('group');
+        $newGroup->group = $this->getSanitizer()->getString('group');
         $newGroup->save();
 
         // Copy permissions

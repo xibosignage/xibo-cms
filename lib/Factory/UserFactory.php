@@ -25,7 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
 
 class UserFactory extends BaseFactory
 {
@@ -203,7 +202,7 @@ class UserFactory extends BaseFactory
              WHERE 1 = 1
          ';
 
-        if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
+        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
             // Normal users can only see themselves
             if ($this->getUser()->userTypeId == 3) {
                 $filterBy['userId'] = $this->getUser()->userId;
@@ -226,54 +225,54 @@ class UserFactory extends BaseFactory
             }
         }
 
-        if (Sanitize::getInt('notUserId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('notUserId', $filterBy) !== null) {
             $body .= ' AND user.userId <> :notUserId ';
-            $params['notUserId'] = Sanitize::getInt('notUserId', $filterBy);
+            $params['notUserId'] = $this->getSanitizer()->getInt('notUserId', $filterBy);
         }
 
         // User Id Provided?
-        if (Sanitize::getInt('userId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
             $body .= " AND user.userId = :userId ";
-            $params['userId'] = Sanitize::getInt('userId', $filterBy);
+            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
         }
 
         // Groups Provided
-        $groups = Sanitize::getParam('groupIds', $filterBy);
+        $groups = $this->getSanitizer()->getParam('groupIds', $filterBy);
 
         if (count($groups) > 0) {
             $body .= ' AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupId IN (' . implode($groups, ',') . ')) ';
         }
 
         // User Type Provided
-        if (Sanitize::getInt('userTypeId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('userTypeId', $filterBy) !== null) {
             $body .= " AND user.userTypeId = :userTypeId ";
-            $params['userTypeId'] = Sanitize::getInt('userTypeId', $filterBy);
+            $params['userTypeId'] = $this->getSanitizer()->getInt('userTypeId', $filterBy);
         }
 
         // User Name Provided
-        if (Sanitize::getString('userName', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('userName', $filterBy) != null) {
             $body .= " AND user.userName = :userName ";
-            $params['userName'] = Sanitize::getString('userName', $filterBy);
+            $params['userName'] = $this->getSanitizer()->getString('userName', $filterBy);
         }
 
         // Email Provided
-        if (Sanitize::getString('email', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('email', $filterBy) != null) {
             $body .= " AND user.email = :email ";
-            $params['email'] = Sanitize::getString('email', $filterBy);
+            $params['email'] = $this->getSanitizer()->getString('email', $filterBy);
         }
 
         // Retired users?
-        if (Sanitize::getInt('retired', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('retired', $filterBy) !== null) {
             $body .= " AND user.retired = :retired ";
-            $params['retired'] = Sanitize::getInt('retired', $filterBy);
+            $params['retired'] = $this->getSanitizer()->getInt('retired', $filterBy);
         }
 
-        if (Sanitize::getString('clientId', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('clientId', $filterBy) != null) {
             $body .= ' AND user.userId = (SELECT userId FROM `oauth_clients` WHERE id = :clientId) ';
-            $params['clientId'] = Sanitize::getString('clientId', $filterBy);
+            $params['clientId'] = $this->getSanitizer()->getString('clientId', $filterBy);
         }
 
-        if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
             $body .= ' AND user.userId IN (
                 SELECT DISTINCT user.userId, user.userName, user.email
                   FROM `user`
@@ -286,7 +285,7 @@ class UserFactory extends BaseFactory
                         AND `permissionentity`.entity = \'Xibo\\Entity\\DisplayGroup\'
                  WHERE `permission`.objectId = :displayGroupId
             ) ';
-            $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
+            $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
         }
 
         // Sorting?
@@ -296,8 +295,8 @@ class UserFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start'), 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         $sql = $select . $body . $order . $limit;

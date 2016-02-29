@@ -26,9 +26,9 @@ use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\TransitionFactory;
-use Xibo\Helper\Config;
+use Xibo\Helper\DateInterface;
 use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
+use Xibo\Helper\SanitizerInterface;
 use Xibo\Helper\Theme;
 use Xibo\Storage\StorageInterface;
 
@@ -222,6 +222,24 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * Get Date
+     * @return DateInterface
+     */
+    protected function getDate()
+    {
+        return $this->getApp()->dateService;
+    }
+
+    /**
+     * Get Sanitizer
+     * @return SanitizerInterface
+     */
+    protected function getSanitizer()
+    {
+        return $this->getApp()->sanitizerService;
+    }
+
+    /**
      * Get Raw Node Value
      * @param string $name
      * @param mixed $default
@@ -385,9 +403,9 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function edit()
     {
-        $this->setDuration(Sanitize::getInt('duration'));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setOption('name', Sanitize::getString('name'));
+        $this->setDuration($this->getSanitizer()->getInt('duration'));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
 
         $this->widget->save();
     }
@@ -443,7 +461,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function previewIcon()
     {
-        return '<div style="text-align:center;"><img alt="' . $this->getModuleType() . ' thumbnail" src="' . Theme::uri('img/' . $this->getModule()->imageUri) . '" /></div>';
+        return '<div style="text-align:center;"><img alt="' . $this->getModuleType() . ' thumbnail" src="' . $this->getConfig()->uri('img/' . $this->getModule()->imageUri) . '" /></div>';
     }
 
     /**
@@ -471,7 +489,7 @@ abstract class ModuleWidget implements ModuleInterface
     {
         // Default Hover window contains a thumbnail, media type and duration
         $output = '<div class="well">';
-        $output .= '<div class="preview-module-image"><img alt="' . __($this->module->name) . ' thumbnail" src="' . Theme::uri('img/' . $this->module->imageUri) . '" /></div>';
+        $output .= '<div class="preview-module-image"><img alt="' . __($this->module->name) . ' thumbnail" src="' . $this->getConfig()->uri('img/' . $this->module->imageUri) . '" /></div>';
         $output .= '<div class="info">';
         $output .= '    <ul>';
         $output .= '    <li>' . __('Type') . ': ' . $this->module->name . '</li>';
@@ -513,7 +531,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function getResourceUrl($uri)
     {
-        $isPreview = (Sanitize::getCheckbox('preview') == 1);
+        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         if ($isPreview)
             $uri = $this->getApp()->rootUri . 'modules/' . $uri;
@@ -705,9 +723,9 @@ abstract class ModuleWidget implements ModuleInterface
 
         // This widget is expected to output a file - usually this is for file based media
         // Get the name with library
-        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
+        $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
         $libraryPath = $libraryLocation . $media->storedAs;
-        $attachmentName = Sanitize::getString('attachment', $media->storedAs);
+        $attachmentName = $this->getSanitizer()->getString('attachment', $media->storedAs);
 
         $size = filesize($libraryPath);
 
@@ -720,11 +738,11 @@ abstract class ModuleWidget implements ModuleInterface
         header('Content-Length: ' . $size);
 
         // Send via Apache X-Sendfile header?
-        if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
+        if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Apache') {
             header("X-Sendfile: $libraryPath");
         }
         // Send via Nginx X-Accel-Redirect?
-        else if (Config::GetSetting('SENDFILE_MODE') == 'Nginx') {
+        else if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Nginx') {
             header("X-Accel-Redirect: /download/" . $attachmentName);
         }
         else {

@@ -47,7 +47,7 @@ class Preview extends Base
                 'getXlfUrl' => $this->urlFor('layout.getXlf', ['id' => $layout->layoutId]),
                 'getResourceUrl' => $this->urlFor('module.getResource'),
                 'libraryDownloadUrl' => $this->urlFor('library.download'),
-                'loaderUrl' => Theme::uri('img/loader.gif')
+                'loaderUrl' => $this->getConfig()->uri('img/loader.gif')
             ]
         ]);
     }

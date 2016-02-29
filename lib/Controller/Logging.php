@@ -24,8 +24,6 @@ use Exception;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LogFactory;
-use Xibo\Helper\Date;
-use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 
@@ -42,20 +40,20 @@ class Logging extends Base
     function grid()
     {
         // Date time criteria
-        $seconds = Sanitize::getInt('seconds', 120);
-        $intervalType = Sanitize::getInt('intervalType', 1);
-        $fromDt = Sanitize::getDate('fromDt', Date::getLocalDate());
+        $seconds = $this->getSanitizer()->getInt('seconds', 120);
+        $intervalType = $this->getSanitizer()->getInt('intervalType', 1);
+        $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getDate()->getLocalDate());
 
         $logs = (new LogFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter([
             'fromDt' => $fromDt->format('U') - ($seconds * $intervalType),
             'toDt' => $fromDt->format('U'),
-            'type' => Sanitize::getString('level'),
-            'page' => Sanitize::getString('page'),
-            'channel' => Sanitize::getString('channel'),
-            'function' => Sanitize::getString('function'),
-            'displayId' => Sanitize::getInt('displayId'),
+            'type' => $this->getSanitizer()->getString('level'),
+            'page' => $this->getSanitizer()->getString('page'),
+            'channel' => $this->getSanitizer()->getString('channel'),
+            'function' => $this->getSanitizer()->getString('function'),
+            'displayId' => $this->getSanitizer()->getInt('displayId'),
             'excludeLog' => 1,
-            'runNo' => Sanitize::getString('runNo')
+            'runNo' => $this->getSanitizer()->getString('runNo')
         ]));
 
         $this->getState()->template = 'grid';
@@ -66,7 +64,7 @@ class Logging extends Base
     function LastHundredForDisplay()
     {
         $response = $this->getState();
-        $displayId = Sanitize::getInt('displayid');
+        $displayId = $this->getSanitizer()->getInt('displayid');
 
         try {
             $dbh = $this->getStore()->getConnection();
@@ -94,10 +92,10 @@ class Logging extends Base
 
             foreach ($log as $row) {
 
-                $row['logid'] = Sanitize::int($row['logid']);
-                $row['logdate'] = Sanitize::string($row['logdate']);
-                $row['page'] = Sanitize::string($row['page']);
-                $row['function'] = Sanitize::string($row['function']);
+                $row['logid'] = $this->getSanitizer()->int($row['logid']);
+                $row['logdate'] = $this->getSanitizer()->string($row['logdate']);
+                $row['page'] = $this->getSanitizer()->string($row['page']);
+                $row['function'] = $this->getSanitizer()->string($row['function']);
                 $row['message'] = nl2br(htmlspecialchars($row['message']));
 
                 $rows[] = $row;
