@@ -32,15 +32,16 @@ class Sanitize implements SanitizerInterface
     /**
      * @var Set
      */
-    protected $contoller;
+    protected $container;
 
     /**
      * Sanitize constructor.
-     * @param Set $app
+     * @param Set $container
+     * @param Slim[Optional] $app
      */
-    public function __construct($app)
+    public function __construct($container)
     {
-        $this->contoller = $app;
+        $this->container = $container;
     }
 
     /**
@@ -48,12 +49,12 @@ class Sanitize implements SanitizerInterface
      * @return Slim
      * @throws \Exception
      */
-    public function getContoller()
+    public function getContainer()
     {
-        if ($this->contoller == null)
+        if ($this->container == null)
             throw new \RuntimeException(__('Sanitizer called before DI has been setup'));
 
-        return $this->contoller;
+        return $this->container;
     }
 
     /**
@@ -62,7 +63,7 @@ class Sanitize implements SanitizerInterface
      */
     protected function getDateService()
     {
-        return $this->getContoller()->dateService;
+        return $this->getContainer()->dateService;
     }
 
     public function getParam($param, $default, $source = null)
@@ -71,19 +72,19 @@ class Sanitize implements SanitizerInterface
             return isset($default[$param]) ? $default[$param] : null;
         }
         else if ($source == null) {
-            $app = Slim::getInstance();
-            switch ($app->request->getMethod()) {
+
+            switch ($this->getContainer()->request->getMethod()) {
                 case 'GET':
-                    $return = $app->request->get($param, $default);
+                    $return = $this->getContainer()->request->get($param, $default);
                     break;
                 case 'POST':
-                    $return = $app->request->post($param, $default);
+                    $return = $this->getContainer()->request->post($param, $default);
                     break;
                 case 'PUT':
-                    $return = $app->request->put($param, $default);
+                    $return = $this->getContainer()->request->put($param, $default);
                     break;
                 case 'DELETE':
-                    $return = $app->request->delete($param, $default);
+                    $return = $this->getContainer()->request->delete($param, $default);
                     break;
                 default:
                     $return = $default;

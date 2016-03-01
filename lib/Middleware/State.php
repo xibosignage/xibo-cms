@@ -37,6 +37,10 @@ use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
 
+/**
+ * Class State
+ * @package Xibo\Middleware
+ */
 class State extends Middleware
 {
     public function call()
@@ -46,8 +50,23 @@ class State extends Middleware
         // Set state
         State::setState($app);
 
+        State::setRootUri($app);
+
         // Attach a hook to log the route
         $this->app->hook('slim.before.dispatch', function() use ($app) {
+
+            // Do we need SSL/STS?
+            if ($app->request()->getScheme() == 'https') {
+                if ($app->configService->GetSetting('ISSUE_STS', 0) == 1)
+                    $app->response()->header('strict-transport-security', 'max-age=' . $app->configService->GetSetting('STS_TTL', 600));
+            }
+            else {
+                if ($app->configService->GetSetting('FORCE_HTTPS', 0) == 1) {
+                    $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+                    header("Location: $redirect");
+                    $app->halt(302);
+                }
+            }
 
             // Check to see if the instance has been suspended, if so call the special route
             if ($app->configService->GetSetting('INSTANCE_SUSPENDED') == 1)
@@ -97,8 +116,8 @@ class State extends Middleware
         });
 
         // Register the sanitizer
-        $app->container->singleton('sanitizerService', function() use ($app) {
-            return new Sanitize($app);
+        $app->container->singleton('sanitizerService', function($container) {
+            return new Sanitize($container);
         });
 
         // Register Controllers with DI
@@ -119,7 +138,7 @@ class State extends Middleware
         $app->container->singleton('state', function() { return new ApplicationState(); });
 
         // Setup the translations for gettext
-        Translate::InitLocale($app);
+        Translate::InitLocale($app->container);
 
         // Config Version
         $app->configService->Version();
@@ -137,19 +156,6 @@ class State extends Middleware
             else
                 return new NullSession();
         });
-
-        // Do we need SSL/STS?
-        if ($app->request()->getScheme() == 'https') {
-            if ($app->configService->GetSetting('ISSUE_STS', 0) == 1)
-                $app->response()->header('strict-transport-security', 'max-age=' . $app->configService->GetSetting('STS_TTL', 600));
-        }
-        else {
-            if ($app->configService->GetSetting('FORCE_HTTPS', 0) == 1) {
-                $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-                header("Location: $redirect");
-                $app->halt(302);
-            }
-        }
 
         // App Mode
         $mode = $app->configService->GetSetting('SERVER_MODE');
@@ -178,8 +184,6 @@ class State extends Middleware
                 $app->logWriter->addProcessor($processor);
             }
         }
-
-        State::setRootUri($app);
     }
 
     /**

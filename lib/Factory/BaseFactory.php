@@ -41,8 +41,6 @@ class BaseFactory
     public function __construct($container)
     {
         $this->container = $container;
-
-        return $this;
     }
 
     /**
@@ -132,7 +130,7 @@ class BaseFactory
      */
     public function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [])
     {
-        $user = ($this->getSanitizer()->getInt('userCheckUserId', $filterBy) !== null) ? (new UserFactory($this->container))->getById($this->getSanitizer()->getInt('userCheckUserId', $filterBy)) : $this->getUser();
+        $user = ($this->getSanitizer()->getInt('userCheckUserId', $filterBy) !== null) ? (new UserFactory($this->getContainer()))->getById($this->getSanitizer()->getInt('userCheckUserId', $filterBy)) : $this->getUser();
 
         $permissionSql = '';
 

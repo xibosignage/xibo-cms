@@ -406,6 +406,9 @@ class Campaign extends Base
         // Check our permissions to see each one
         $layouts = $this->getSanitizer()->getParam('layoutId', null);
         $layouts = is_array($layouts) ? $layouts : [];
+
+        $this->getLog()->debug('There are %d Layouts to assign', count($layouts));
+
         foreach ($layouts as $object) {
 
             $layout = (new LayoutFactory($this->getContainer()))->getById($this->getSanitizer()->getInt('layoutId', $object));

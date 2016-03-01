@@ -316,7 +316,7 @@ class Base
                 'data' => $data
             ];
 
-            $this->container->render('', $data, $state->httpStatus);
+            $this->getApp()->render('', $data, $state->httpStatus);
         }
         else if ($this->container->request->isAjax()) {
             // WEB Ajax

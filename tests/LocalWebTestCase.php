@@ -11,19 +11,35 @@ use Monolog\Handler\PHPConsoleHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Slim\Environment;
+use Slim\Helper\Set;
+use Slim\Log;
 use Slim\Slim;
 use There4\Slim\Test\WebTestCase;
 use Xibo\Helper\AccessibleMonologWriter;
 use Xibo\Helper\Config;
+use Xibo\Helper\Sanitize;
 use Xibo\Middleware\ApiView;
+use Xibo\Middleware\Storage;
 
 class LocalWebTestCase extends WebTestCase
 {
-    protected $app;
+    /**
+     * @var Set
+     */
+    protected $container;
 
     public function getApp()
     {
         return $this->app;
+    }
+
+    /**
+     * Get non-app container
+     * @return Set
+     */
+    public function getContainer()
+    {
+        return $this->container;
     }
 
     /**
@@ -71,6 +87,7 @@ class LocalWebTestCase extends WebTestCase
 
         // Configure the Slim error handler
         $app->error(function (\Exception $e) use ($app) {
+            $app->getLog()->emergency($e->getMessage());
             throw $e;
         });
 
@@ -78,7 +95,25 @@ class LocalWebTestCase extends WebTestCase
         require PROJECT_ROOT . '/lib/routes.php';
         require PROJECT_ROOT . '/lib/routes-web.php';
 
-        $this->app = $app;
+        // Create a container for non-app calls to Factories
+        $this->container = new Set();
+        Storage::setStorage($this->container);
+
+        // Register the sanitizer
+        $this->container->singleton('sanitizerService', function($container) {
+            return new Sanitize($container);
+        });
+
+        // Create a logger for this container
+        $this->container->singleton('log', function ($c) use ($logger) {
+            $log = new \Slim\Log($logger);
+            $log->setEnabled(true);
+            $log->setLevel(Log::DEBUG);
+            $env = $c['environment'];
+            $env['slim.log'] = $log;
+
+            return $log;
+        });
 
         return $app;
     }

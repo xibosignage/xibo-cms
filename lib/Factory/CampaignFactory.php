@@ -51,9 +51,12 @@ class CampaignFactory extends BaseFactory
      */
     public function getById($campaignId)
     {
+        $this->getLog()->debug('CampaignFactory getById(%d)', $campaignId);
+
         $campaigns = $this->query(null, array('disableUserCheck' => 1, 'campaignId' => $campaignId, 'isLayoutSpecific' => -1));
 
         if (count($campaigns) <= 0) {
+            $this->getLog()->debug('Campaign not found with ID %d', $campaignId);
             throw new NotFoundException(\__('Campaign not found'));
         }
 

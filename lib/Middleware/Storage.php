@@ -23,8 +23,8 @@
 namespace Xibo\Middleware;
 
 
+use Slim\Helper\Set;
 use Slim\Middleware;
-use Slim\Slim;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
@@ -41,7 +41,7 @@ class Storage extends Middleware
         $app->commit = true;
 
         // Configure storage
-        self::setStorage($app);
+        self::setStorage($app->container);
 
         $this->next->call();
 
@@ -65,18 +65,18 @@ class Storage extends Middleware
 
     /**
      * Set Storage
-     * @param Slim $app
+     * @param Set $container
      */
-    public static function setStorage($app)
+    public static function setStorage($container)
     {
         // Register the log service
-        $app->container->singleton('logHelper', function() use ($app) {
-            return new Log($app->getLog(), $app->getMode());
+        $container->singleton('logHelper', function($container) {
+            return new Log($container->log, $container->mode);
         });
 
         // Register the database service
-        $app->container->singleton('store', function() use ($app) {
-            return new PDOConnect($app->logHelper);
+        $container->singleton('store', function($container) {
+            return new PDOConnect($container->logHelper);
         });
     }
 }

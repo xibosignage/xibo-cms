@@ -54,7 +54,7 @@ $app->setName('api');
 \Xibo\Helper\Config::Load($app->container, PROJECT_ROOT . '/web/settings.php');
 
 // Set storage
-\Xibo\Middleware\Storage::setStorage($app);
+\Xibo\Middleware\Storage::setStorage($app->container);
 
 // Set state
 \Xibo\Middleware\State::setState($app);
