@@ -111,13 +111,13 @@ class Campaign implements \JsonSerializable
             return;
 
         // Permissions
-        $this->permissions = (new PermissionFactory($this->getApp()))->getByObjectId('Campaign', $this->campaignId);
+        $this->permissions = (new PermissionFactory($this->getContainer()))->getByObjectId('Campaign', $this->campaignId);
 
         // Layouts
-        $this->layouts = (new LayoutFactory($this->getApp()))->getByCampaignId($this->campaignId);
+        $this->layouts = (new LayoutFactory($this->getContainer()))->getByCampaignId($this->campaignId);
 
         // Events
-        $this->events = (new ScheduleFactory($this->getApp()))->getByCampaignId($this->campaignId);
+        $this->events = (new ScheduleFactory($this->getContainer()))->getByCampaignId($this->campaignId);
 
         $this->loaded = true;
     }
@@ -350,7 +350,7 @@ class Campaign implements \JsonSerializable
     {
         $this->getLog()->debug('Checking for Displays to refresh on Campaign %d', $this->campaignId);
 
-        $displays = array_merge((new DisplayFactory($this->getApp()))->getByActiveCampaignId($this->campaignId), (new DisplayFactory($this->getApp()))->getByAssignedCampaignId($this->campaignId));
+        $displays = array_merge((new DisplayFactory($this->getContainer()))->getByActiveCampaignId($this->campaignId), (new DisplayFactory($this->getContainer()))->getByAssignedCampaignId($this->campaignId));
 
         foreach ($displays as $display) {
             /* @var \Xibo\Entity\Display $display */

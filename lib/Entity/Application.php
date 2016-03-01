@@ -116,7 +116,7 @@ class Application implements \JsonSerializable
         if ($this->loaded)
             return;
 
-        $this->redirectUris = (new ApplicationRedirectUriFactory($this->getApp()))->getByClientId($this->key);
+        $this->redirectUris = (new ApplicationRedirectUriFactory($this->getContainer()))->getByClientId($this->key);
 
         $this->loaded = true;
     }

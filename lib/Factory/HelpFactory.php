@@ -67,7 +67,7 @@ class HelpFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Help())->hydrate($row)->setApp($this->getApp());
+            $entries[] = (new Help())->hydrate($row)->setContainer($this->getContainer());
         }
 
         // Paging

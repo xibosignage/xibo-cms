@@ -45,7 +45,7 @@ class LayoutFactory extends BaseFactory
      */
     public function createFromResolution($resolutionId, $ownerId, $name, $description, $tags)
     {
-        $resolution = (new ResolutionFactory($this->getApp()))->getById($resolutionId);
+        $resolution = (new ResolutionFactory($this->getContainer()))->getById($resolutionId);
 
         // Create a new Layout
         $layout = new Layout();
@@ -62,10 +62,10 @@ class LayoutFactory extends BaseFactory
         $layout->setOwner($ownerId);
 
         // Create some tags
-        $layout->tags = (new TagFactory($this->getApp()))->tagsFromString($tags);
+        $layout->tags = (new TagFactory($this->getContainer()))->tagsFromString($tags);
 
         // Add a blank, full screen region
-        $layout->regions[] = (new RegionFactory($this->getApp()))->create($ownerId, $name . '-1', $layout->width, $layout->height, 0, 0);
+        $layout->regions[] = (new RegionFactory($this->getContainer()))->create($ownerId, $name . '-1', $layout->width, $layout->height, 0, 0);
 
         return $layout;
     }
@@ -94,7 +94,7 @@ class LayoutFactory extends BaseFactory
         $layout->description = $description;
 
         // Create some tags (overwriting the old ones)
-        $layout->tags = (new TagFactory($this->getApp()))->tagsFromString($tags);
+        $layout->tags = (new TagFactory($this->getContainer()))->tagsFromString($tags);
 
         // Set the owner
         $layout->setOwner($ownerId);
@@ -194,7 +194,7 @@ class LayoutFactory extends BaseFactory
             $layout = new Layout();
 
         // Get a list of modules for us to use
-        $modules = (new ModuleFactory($this->getApp()))->get();
+        $modules = (new ModuleFactory($this->getContainer()))->get();
 
         // Parse the XML and fill in the details for this layout
         $document = new \DOMDocument();
@@ -214,7 +214,7 @@ class LayoutFactory extends BaseFactory
             /* @var \DOMElement $regionNode */
             $this->getLog()->debug('Found Region');
 
-            $region = (new RegionFactory($this->getApp()))->create(
+            $region = (new RegionFactory($this->getContainer()))->create(
                 (int)$regionNode->getAttribute('userId'),
                 $regionNode->getAttribute('name'),
                 (double)$regionNode->getAttribute('width'),
@@ -304,14 +304,14 @@ class LayoutFactory extends BaseFactory
 
         // Load any existing tags
         if (!is_array($layout->tags))
-            $layout->tags = (new TagFactory($this->getApp()))->tagsFromString($layout->tags);
+            $layout->tags = (new TagFactory($this->getContainer()))->tagsFromString($layout->tags);
 
         foreach ($xpath->query('//tags/tag') as $tagNode) {
             /* @var \DOMElement $tagNode */
             if (trim($tagNode->textContent) == '')
                 continue;
 
-            $layout->tags[] = (new TagFactory($this->getApp()))->tagFromString($tagNode->textContent);
+            $layout->tags[] = (new TagFactory($this->getContainer()))->tagFromString($tagNode->textContent);
         }
 
         // The parsed, finished layout
@@ -363,11 +363,11 @@ class LayoutFactory extends BaseFactory
 
         // Add the template tag if we are importing a template
         if ($template) {
-            $layout->tags[] = (new TagFactory($this->getApp()))->getByTag('template');
+            $layout->tags[] = (new TagFactory($this->getContainer()))->getByTag('template');
         }
 
         // Tag as imported
-        $layout->tags[] = (new TagFactory($this->getApp()))->tagFromString('imported');
+        $layout->tags[] = (new TagFactory($this->getContainer()))->tagFromString('imported');
 
         // Set the owner
         $layout->setOwner($userId);
@@ -386,7 +386,7 @@ class LayoutFactory extends BaseFactory
 
             // Check we don't already have one
             try {
-                $media = (new MediaFactory($this->getApp()))->getByName($intendedMediaName);
+                $media = (new MediaFactory($this->getContainer()))->getByName($intendedMediaName);
 
                 $this->getLog()->debug('Media already exists with name: %s', $intendedMediaName);
 
@@ -400,8 +400,8 @@ class LayoutFactory extends BaseFactory
                 // Create it instead
                 $this->getLog()->debug('Media does not exist in Library, add it. %s', $file['file']);
 
-                $media = (new MediaFactory($this->getApp()))->create($intendedMediaName, $file['file'], $file['type'], $userId, $file['duration']);
-                $media->tags[] = (new TagFactory($this->getApp()))->tagFromString('imported');
+                $media = (new MediaFactory($this->getContainer()))->create($intendedMediaName, $file['file'], $file['type'], $userId, $file['duration']);
+                $media->tags[] = (new TagFactory($this->getContainer()))->tagFromString('imported');
                 $media->save();
             }
 
@@ -675,7 +675,7 @@ class LayoutFactory extends BaseFactory
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $layout = new Layout();
-            $layout->setApp($this->getApp());
+            $layout->setContainer($this->getContainer());
 
             // Validate each param and add it to the array.
             $layout->layoutId = $this->getSanitizer()->int($row['layoutID']);

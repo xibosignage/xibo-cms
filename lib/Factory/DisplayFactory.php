@@ -392,7 +392,7 @@ class DisplayFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Display())->hydrate($row)->setApp($this->getApp())->setApp($this->getApp());
+            $entries[] = (new Display())->hydrate($row)->setContainer($this->getContainer());
         }
 
         // Paging

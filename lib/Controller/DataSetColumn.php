@@ -23,7 +23,7 @@ class DataSetColumn extends Base
      */
     public function displayPage($dataSetId)
     {
-        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getContainer()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -63,12 +63,12 @@ class DataSetColumn extends Base
      */
     public function grid($dataSetId)
     {
-        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getContainer()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
 
-        $dataSetColumns = (new DataSetColumnFactory($this->getApp()))->getByDataSetId($dataSetId);
+        $dataSetColumns = (new DataSetColumnFactory($this->getContainer()))->getByDataSetId($dataSetId);
 
         foreach ($dataSetColumns as $column) {
             /* @var \Xibo\Entity\DataSetColumn $column */
@@ -108,7 +108,7 @@ class DataSetColumn extends Base
      */
     public function addForm($dataSetId)
     {
-        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getContainer()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -116,8 +116,8 @@ class DataSetColumn extends Base
         $this->getState()->template = 'dataset-column-form-add';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'dataTypes' => (new DataTypeFactory($this->getApp()))->query(),
-            'dataSetColumnTypes' => (new DataSetColumnTypeFactory($this->getApp()))->query(),
+            'dataTypes' => (new DataTypeFactory($this->getContainer()))->query(),
+            'dataSetColumnTypes' => (new DataSetColumnTypeFactory($this->getContainer()))->query(),
             'help' => $this->getHelp()->link('DataSet', 'AddColumn')
         ]);
     }
@@ -195,7 +195,7 @@ class DataSetColumn extends Base
      */
     public function add($dataSetId)
     {
-        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getContainer()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -228,7 +228,7 @@ class DataSetColumn extends Base
      */
     public function editForm($dataSetId, $dataSetColumnId)
     {
-        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getContainer()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -236,9 +236,9 @@ class DataSetColumn extends Base
         $this->getState()->template = 'dataset-column-form-edit';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'dataSetColumn' => (new DataSetColumnFactory($this->getApp()))->getById($dataSetColumnId),
-            'dataTypes' => (new DataTypeFactory($this->getApp()))->query(),
-            'dataSetColumnTypes' => (new DataSetColumnTypeFactory($this->getApp()))->query(),
+            'dataSetColumn' => (new DataSetColumnFactory($this->getContainer()))->getById($dataSetColumnId),
+            'dataTypes' => (new DataTypeFactory($this->getContainer()))->query(),
+            'dataSetColumnTypes' => (new DataSetColumnTypeFactory($this->getContainer()))->query(),
             'help' => $this->getHelp()->link('DataSet', 'EditColumn')
         ]);
     }
@@ -324,13 +324,13 @@ class DataSetColumn extends Base
      */
     public function edit($dataSetId, $dataSetColumnId)
     {
-        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getContainer()))->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
 
         // Column
-        $column = (new DataSetColumnFactory($this->getApp()))->getById($dataSetColumnId);
+        $column = (new DataSetColumnFactory($this->getContainer()))->getById($dataSetColumnId);
         $column->heading = $this->getSanitizer()->getString('heading');
         $column->listContent = $this->getSanitizer()->getString('listContent');
         $column->columnOrder = $this->getSanitizer()->getInt('columnOrder');
@@ -356,7 +356,7 @@ class DataSetColumn extends Base
      */
     public function deleteForm($dataSetId, $dataSetColumnId)
     {
-        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getContainer()))->getById($dataSetId);
 
         if (!$this->getUser()->checkDeleteable($dataSet))
             throw new AccessDeniedException();
@@ -364,7 +364,7 @@ class DataSetColumn extends Base
         $this->getState()->template = 'dataset-column-form-delete';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'dataSetColumn' => (new DataSetColumnFactory($this->getApp()))->getById($dataSetColumnId),
+            'dataSetColumn' => (new DataSetColumnFactory($this->getContainer()))->getById($dataSetColumnId),
             'help' => $this->getHelp()->link('DataSet', 'DeleteColumn')
         ]);
     }
@@ -402,13 +402,13 @@ class DataSetColumn extends Base
      */
     public function delete($dataSetId, $dataSetColumnId)
     {
-        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
+        $dataSet = (new DataSetFactory($this->getContainer()))->getById($dataSetId);
 
         if (!$this->getUser()->checkDeleteable($dataSet))
             throw new AccessDeniedException();
 
         // Get the column
-        $column = (new DataSetColumnFactory($this->getApp()))->getById($dataSetColumnId);
+        $column = (new DataSetColumnFactory($this->getContainer()))->getById($dataSetColumnId);
         $column->delete();
 
         // Return

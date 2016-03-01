@@ -53,7 +53,7 @@ class AuditLog extends Base
         if ($filterEntity != '')
             $search['entity'] = $filterEntity;
 
-        $rows = (new AuditLogFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter($search));
+        $rows = (new AuditLogFactory($this->getContainer()))->query($this->gridRenderSort(), $this->gridRenderFilter($search));
 
         // Do some post processing
         foreach ($rows as $row) {
@@ -62,7 +62,7 @@ class AuditLog extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = (new AuditLogFactory($this->getApp()))->countLast();
+        $this->getState()->recordsTotal = (new AuditLogFactory($this->getContainer()))->countLast();
         $this->getState()->setData($rows);
     }
 
@@ -99,7 +99,7 @@ class AuditLog extends Base
             return implode('|', $element);
         }, $search));
 
-        $rows = (new AuditLogFactory($this->getApp()))->query('logId', ['search' => $search]);
+        $rows = (new AuditLogFactory($this->getContainer()))->query('logId', ['search' => $search]);
 
         $out = fopen('php://output', 'w');
         fputcsv($out, ['ID', 'Date', 'User', 'Entity', 'Message', 'Object']);
@@ -113,7 +113,7 @@ class AuditLog extends Base
         fclose($out);
 
         // We want to output a load of stuff to the browser as a text file.
-        $app = $this->getApp();
+        $app = $this->getContainer();
         $app->response()->header('Content-Type', 'text/csv');
         $app->response()->header('Content-Disposition', 'attachment; filename="audittrail.csv"');
         $app->response()->header('Content-Transfer-Encoding', 'binary"');

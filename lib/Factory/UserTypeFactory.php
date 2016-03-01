@@ -37,7 +37,7 @@ class UserTypeFactory extends BaseFactory
 
 
             foreach ($this->getStore()->select($sql, $params) as $row) {
-                $entries[] = (new UserType())->hydrate($row)->setApp($this->getApp());
+                $entries[] = (new UserType())->hydrate($row)->setContainer($this->getContainer());
             }
 
             return $entries;

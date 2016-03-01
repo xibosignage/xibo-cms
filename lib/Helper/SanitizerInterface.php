@@ -62,7 +62,7 @@ interface SanitizerInterface
      * @param $param
      * @param mixed[Optional] $default
      * @param mixed[Optional] $source
-     * @return Date
+     * @return \Jenssegers\Date\Date
      */
     public function getDate($param, $default = null, $source = null);
 }

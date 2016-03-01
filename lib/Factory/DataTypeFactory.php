@@ -23,7 +23,7 @@ class DataTypeFactory extends BaseFactory
         $entries = [];
 
         foreach ($this->getStore()->select('SELECT dataTypeId, dataType FROM `datatype` ', []) as $row) {
-            $entries[] = (new DataType())->hydrate($row)->setApp($this->getApp())->setApp($this->getApp());
+            $entries[] = (new DataType())->hydrate($row)->setContainer($this->getContainer());
         }
 
         return $entries;

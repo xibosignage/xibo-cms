@@ -24,7 +24,7 @@ class DataSetUploadHandler extends BlueImpUploadHandler
             // Authenticate
             /* @var \Xibo\Controller\Base $controller */
             $controller = $this->options['controller'];
-            $dataSet = (new DataSetFactory($controller->getApp()))->getById($this->options['dataSetId']);
+            $dataSet = (new DataSetFactory($controller->getContainer()))->getById($this->options['dataSetId']);
 
             if (!$controller->getUser()->checkEditable($dataSet))
                 throw new AccessDeniedException();

@@ -83,7 +83,7 @@ class AuditLogFactory extends BaseFactory
         $sth->execute($params);
 
         foreach ($sth->fetchAll() as $row) {
-            $entries[] = (new AuditLog())->setApp($this->getApp())->hydrate($row)->setApp($this->getApp());
+            $entries[] = (new AuditLog())->setContainer($this->getContainer())->hydrate($row);
         }
 
         // Paging

@@ -24,18 +24,23 @@ namespace Xibo\Helper;
 
 
 use Jenssegers\Date\Date;
+use Slim\Helper\Set;
 use Slim\Slim;
 
 class Sanitize implements SanitizerInterface
 {
     /**
-     * @var Slim
+     * @var Set
      */
-    protected $app;
+    protected $contoller;
 
+    /**
+     * Sanitize constructor.
+     * @param Set $app
+     */
     public function __construct($app)
     {
-        $this->app = $app;
+        $this->contoller = $app;
     }
 
     /**
@@ -43,12 +48,12 @@ class Sanitize implements SanitizerInterface
      * @return Slim
      * @throws \Exception
      */
-    public function getApp()
+    public function getContoller()
     {
-        if ($this->app == null)
+        if ($this->contoller == null)
             throw new \RuntimeException(__('Sanitizer called before DI has been setup'));
 
-        return $this->app;
+        return $this->contoller;
     }
 
     /**
@@ -57,7 +62,7 @@ class Sanitize implements SanitizerInterface
      */
     protected function getDateService()
     {
-        return $this->getApp()->dateService;
+        return $this->getContoller()->dateService;
     }
 
     public function getParam($param, $default, $source = null)
@@ -216,7 +221,7 @@ class Sanitize implements SanitizerInterface
      * @param $param
      * @param mixed[Optional] $default
      * @param mixed[Optional] $source
-     * @return Date
+     * @return \Jenssegers\Date\Date
      */
     public function getDate($param, $default = null, $source = null)
     {

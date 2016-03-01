@@ -112,7 +112,7 @@ class TransitionFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Transition())->hydrate($row)->setApp($this->getApp());
+            $entries[] = (new Transition())->hydrate($row)->setContainer($this->getContainer());
         }
 
         return $entries;

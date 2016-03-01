@@ -142,7 +142,7 @@ class DisplayProfileFactory extends BaseFactory
 
 
             foreach ($this->getStore()->select($sql, $params) as $row) {
-                $profiles[] = (new DisplayProfile())->hydrate($row)->setApp($this->getApp())->setApp($this->getApp());
+                $profiles[] = (new DisplayProfile())->hydrate($row)->setContainer($this->getContainer());
             }
 
             // Paging

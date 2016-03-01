@@ -84,7 +84,7 @@ class UpgradeFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Upgrade())->hydrate($row)->setApp($this->getApp());
+            $entries[] = (new Upgrade())->hydrate($row)->setContainer($this->getContainer());
         }
 
         // Paging

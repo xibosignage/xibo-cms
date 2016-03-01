@@ -67,10 +67,10 @@ class Twitter extends ModuleWidget
      */
     public function installFiles()
     {
-        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
-        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/emojione/emojione.sprites.svg')->save();
+        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/emojione/emojione.sprites.svg')->save();
     }
 
     /**
@@ -370,7 +370,7 @@ class Twitter extends ModuleWidget
             // Use the display ID or the default.
             if ($displayId != 0) {
                 // Look up the lat/long
-                $display = (new DisplayFactory($this->getApp()))->getById($displayId);
+                $display = (new DisplayFactory($this->getContainer()))->getById($displayId);
                 $defaultLat = $display->latitude;
                 $defaultLong = $display->longitude;
             } else {
@@ -504,7 +504,7 @@ class Twitter extends ModuleWidget
                         // Grab the profile image
                         if ($tweet->user->profile_image_url != '') {
                             // Grab the profile image
-                            $file = (new MediaFactory($this->getApp()))->createModuleFile('twitter_' . $tweet->user->id, $tweet->user->profile_image_url);
+                            $file = (new MediaFactory($this->getContainer()))->createModuleFile('twitter_' . $tweet->user->id, $tweet->user->profile_image_url);
                             $file->isRemote = true;
                             $file->expires = $expires;
                             $file->save();
@@ -513,7 +513,7 @@ class Twitter extends ModuleWidget
                             $this->assignMedia($file->mediaId);
 
                             $replace = ($isPreview)
-                                ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=170&height=150" />'
+                                ? '<img src="' . $this->getContainer()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=170&height=150" />'
                                 : '<img src="' . $file->storedAs . '"  />';
                         }
                         break;
@@ -525,7 +525,7 @@ class Twitter extends ModuleWidget
                             $photoUrl = $tweet->entities->media[0]->media_url;
 
                             if ($photoUrl != '') {
-                                $file = (new MediaFactory($this->getApp()))->createModuleFile('twitter_photo_' . $tweet->user->id . '_' . $tweet->entities->media[0]->id_str, $photoUrl);
+                                $file = (new MediaFactory($this->getContainer()))->createModuleFile('twitter_photo_' . $tweet->user->id . '_' . $tweet->entities->media[0]->id_str, $photoUrl);
                                 $file->isRemote = true;
                                 $file->expires = $expires;
                                 $file->save();
@@ -534,7 +534,7 @@ class Twitter extends ModuleWidget
                                 $this->assignMedia($file->mediaId);
 
                                 $replace = ($isPreview)
-                                    ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
+                                    ? '<img src="' . $this->getContainer()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
                                     : '<img src="' . $file->storedAs . '"  />';
                             }
                         }

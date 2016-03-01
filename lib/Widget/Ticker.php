@@ -42,12 +42,12 @@ class Ticker extends ModuleWidget
      */
     public function installFiles()
     {
-        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
-        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
-        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
-        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        (new MediaFactory($this->getApp()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
+        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
+        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
     }
 
     public function layoutDesignerJavaScript()
@@ -62,7 +62,7 @@ class Ticker extends ModuleWidget
      */
     public function dataSets()
     {
-        return (new DataSetFactory($this->getApp()))->query();
+        return (new DataSetFactory($this->getContainer()))->query();
     }
 
     /**
@@ -74,7 +74,7 @@ class Ticker extends ModuleWidget
         if ($this->getOption('dataSetId') == 0)
             throw new \InvalidArgumentException(__('DataSet not selected'));
 
-       return (new DataSetColumnFactory($this->getApp()))->getByDataSetId($this->getOption('dataSetId'));
+       return (new DataSetColumnFactory($this->getContainer()))->getByDataSetId($this->getOption('dataSetId'));
     }
 
     /**
@@ -156,7 +156,7 @@ class Ticker extends ModuleWidget
                 throw new \InvalidArgumentException(__('Please select a DataSet'));
 
             // Check we have permission to use this DataSetId
-            if (!$this->getUser()->checkViewable((new DataSetFactory($this->getApp()))->getById($this->getOption('dataSetId'))))
+            if (!$this->getUser()->checkViewable((new DataSetFactory($this->getContainer()))->getById($this->getOption('dataSetId'))))
                 throw new \InvalidArgumentException(__('You do not have permission to use that dataset'));
 
             if ($this->widget->widgetId != 0) {
@@ -620,7 +620,7 @@ class Ticker extends ModuleWidget
                             // image url
                             if ($link != NULL) {
                                 // Grab the profile image
-                                $file = (new MediaFactory($this->getApp()))->createModuleFile('ticker_' . md5($this->getOption('url') . $link), $link);
+                                $file = (new MediaFactory($this->getContainer()))->createModuleFile('ticker_' . md5($this->getOption('url') . $link), $link);
                                 $file->isRemote = true;
                                 $file->expires = $expires;
                                 $file->save();
@@ -629,7 +629,7 @@ class Ticker extends ModuleWidget
                                 $this->assignMedia($file->mediaId);
 
                                 $replace = ($isPreview)
-                                    ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" ' . $attribute . '/>'
+                                    ? '<img src="' . $this->getContainer()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" ' . $attribute . '/>'
                                     : '<img src="' . $file->storedAs . '" ' . $attribute . ' />';
                             }
                         } else {
@@ -692,7 +692,7 @@ class Ticker extends ModuleWidget
                     }
 
                     if ($this->getOption('stripTags') != '') {
-                        $config = \HTMLPurifier_$this->getConfig()->createDefault();
+                        $config = \HTMLPurifier_Config::createDefault();
                         $config->set('HTML.ForbiddenElements', explode(',', $this->getOption('stripTags')));
                         $purifier = new \HTMLPurifier($config);
                         $replace = $purifier->purify($replace);
@@ -835,7 +835,7 @@ class Ticker extends ModuleWidget
 
         // Create a data set object, to get the results.
         try {
-            $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
+            $dataSet = (new DataSetFactory($this->getContainer()))->getById($dataSetId);
 
             // Get an array representing the id->heading mappings
             $mappings = [];
@@ -870,7 +870,7 @@ class Ticker extends ModuleWidget
             // Set the timezone for SQL
             $dateNow = $this->getDate()->parse();
             if ($displayId != 0) {
-                $display = (new DisplayFactory($this->getApp()))->getById($displayId);
+                $display = (new DisplayFactory($this->getContainer()))->getById($displayId);
                 $timeZone = $display->getSetting('displayTimeZone', '');
                 $timeZone = ($timeZone == '') ? $this->getConfig()->GetSetting('defaultTimezone') : $timeZone;
                 $dateNow->timezone($timeZone);
@@ -905,7 +905,7 @@ class Ticker extends ModuleWidget
                         if ($mappings[$header]['dataTypeId'] == 4) {
                             // External Image
                             // Download the image, alter the replace to wrap in an image tag
-                            $file = (new MediaFactory($this->getApp()))->createModuleFile('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
+                            $file = (new MediaFactory($this->getContainer()))->createModuleFile('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
                             $file->isRemote = true;
                             $file->expires = $expires;
                             $file->save();
@@ -914,14 +914,14 @@ class Ticker extends ModuleWidget
                             $this->assignMedia($file->mediaId);
 
                             $replace = ($isPreview)
-                                ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
+                                ? '<img src="' . $this->getContainer()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
                                 : '<img src="' . $file->storedAs . '" />';
 
                         } else if ($mappings[$header]['dataTypeId'] == 5) {
                             // Library Image
                             // The content is the ID of the image
                             try {
-                                $file = (new MediaFactory($this->getApp()))->getById($replace);
+                                $file = (new MediaFactory($this->getContainer()))->getById($replace);
                             }
                             catch (NotFoundException $e) {
                                 $this->getLog()->error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);
@@ -932,7 +932,7 @@ class Ticker extends ModuleWidget
                             $this->assignMedia($file->mediaId);
 
                             $replace = ($isPreview)
-                                ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
+                                ? '<img src="' . $this->getContainer()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
                                 : '<img src="' . $file->storedAs . '" />';
                         }
                     }

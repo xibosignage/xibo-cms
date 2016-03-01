@@ -20,7 +20,7 @@
  */
 namespace Xibo\Helper;
 
-use Slim\Slim;
+use Slim\Helper\Set;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Storage\StorageInterface;
 
@@ -31,9 +31,9 @@ class Config
     public static $VERSION_REQUIRED = '5.5';
 
     /**
-     * @var Slim
+     * @var Set
      */
-    public $app;
+    public $container;
 
     public $envTested = false;
     public $envFault = false;
@@ -55,15 +55,15 @@ class Config
 
     /**
      * Get the App
-     * @return Slim
+     * @return Set
      * @throws \Exception
      */
-    public function getApp()
+    public function getContainer()
     {
-        if ($this->app == null)
+        if ($this->container == null)
             throw new \RuntimeException(__('Config called before DI has been setup'));
 
-        return $this->app;
+        return $this->container;
     }
 
     /**
@@ -72,7 +72,7 @@ class Config
      */
     private function getPool()
     {
-        return $this->getApp()->pool;
+        return $this->getContainer()->pool;
     }
 
     /**
@@ -81,7 +81,7 @@ class Config
      */
     protected function getStore()
     {
-        return $this->getApp()->store;
+        return $this->getContainer()->store;
     }
 
     /**
@@ -90,20 +90,20 @@ class Config
      */
     protected function getSanitizer()
     {
-        return $this->getApp()->sanitizerService;
+        return $this->getContainer()->sanitizerService;
     }
 
     /**
      * Loads the settings from file.
      *  DO NOT CALL ANY STORE() METHODS IN HERE
-     * @param Slim $app
+     * @param Set $app
      * @param string $settings
      */
     public static function Load($app, $settings)
     {
         $config = new Config();
 
-        $config->app = $app;
+        $config->container = $app;
 
         // Include the provided settings file.
         @require ($settings);
@@ -193,7 +193,7 @@ class Config
      */
     public function uri($uri, $local = false)
     {
-        $rootUri = ($local) ? '' : $this->getApp()->rootUri;
+        $rootUri = ($local) ? '' : $this->getContainer()->rootUri;
 
         // Serve the appropriate theme file
         if (is_dir(PROJECT_ROOT . '/web/theme/' . $this->themeConfig['themeCode'] . '/' . $uri)) {
@@ -213,7 +213,7 @@ class Config
      */
     public function rootUri()
     {
-        return $this->getApp()->rootUri;
+        return $this->getContainer()->rootUri;
     }
 
     /**

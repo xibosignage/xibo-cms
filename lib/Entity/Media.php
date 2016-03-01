@@ -236,7 +236,7 @@ class Media implements \JsonSerializable
     public function replaceTags($tags = [])
     {
         if (!is_array($this->tags) || count($this->tags) <= 0)
-            $this->tags = (new TagFactory($this->getApp()))->loadByMediaId($this->mediaId);
+            $this->tags = (new TagFactory($this->getContainer()))->loadByMediaId($this->mediaId);
 
         $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
             /* @var Tag $a */
@@ -301,21 +301,21 @@ class Media implements \JsonSerializable
         $this->getLog()->debug('Loading Media. Options = %s', json_encode($options));
 
         // Tags
-        $this->tags = (new TagFactory($this->getApp()))->loadByMediaId($this->mediaId);
+        $this->tags = (new TagFactory($this->getContainer()))->loadByMediaId($this->mediaId);
 
         // Are we loading for a delete? If so load the child models
         if ($options['deleting'] || $options['fullInfo']) {
             // Permissions
-            $this->permissions = (new PermissionFactory($this->getApp()))->getByObjectId(get_class($this), $this->mediaId);
+            $this->permissions = (new PermissionFactory($this->getContainer()))->getByObjectId(get_class($this), $this->mediaId);
 
             // Widgets
-            $this->widgets = (new WidgetFactory($this->getApp()))->getByMediaId($this->mediaId);
+            $this->widgets = (new WidgetFactory($this->getContainer()))->getByMediaId($this->mediaId);
 
             // Layout Background Images
-            $this->layoutBackgroundImages = (new LayoutFactory($this->getApp()))->getByBackgroundImageId($this->mediaId);
+            $this->layoutBackgroundImages = (new LayoutFactory($this->getContainer()))->getByBackgroundImageId($this->mediaId);
 
             // Display Groups
-            $this->displayGroups = (new DisplayGroupFactory($this->getApp()))->getByMediaId($this->mediaId);
+            $this->displayGroups = (new DisplayGroupFactory($this->getContainer()))->getByMediaId($this->mediaId);
         }
 
         $this->loaded = true;
@@ -378,7 +378,7 @@ class Media implements \JsonSerializable
 
         // If there is a parent, bring it back
         try {
-            $parentMedia = (new MediaFactory($this->getApp()))->getParentById($this->mediaId);
+            $parentMedia = (new MediaFactory($this->getContainer()))->getParentById($this->mediaId);
             $parentMedia->isEdited = 0;
             $parentMedia->parentId = null;
             $parentMedia->save(['validate' => false]);
@@ -437,7 +437,7 @@ class Media implements \JsonSerializable
         if ($this->mediaType == 'image' && $parentMedia != null) {
             $this->getLog()->debug('Updating layouts with the old media %d as the background image.', $this->mediaId);
             // Get all Layouts with this as the background image
-            foreach ((new LayoutFactory($this->getApp()))->query(null, ['backgroundImageId' => $this->mediaId]) as $layout) {
+            foreach ((new LayoutFactory($this->getContainer()))->query(null, ['backgroundImageId' => $this->mediaId]) as $layout) {
                 /* @var Layout $layout */
                 $this->getLog()->debug('Found layout that needs updating. ID = %d. Setting background image id to %d', $layout->layoutId, $parentMedia->mediaId);
                 $layout->backgroundImageId = $parentMedia->mediaId;
@@ -581,14 +581,14 @@ class Media implements \JsonSerializable
             return;
         }
 
-        Media::unlink($this->storedAs);
+        $this->unlink($this->storedAs);
     }
 
     /**
      * Unlink a file
      * @param string $fileName
      */
-    public static function unlink($fileName)
+    public function unlink($fileName)
     {
         // Library location
         $libraryLocation = $this->getConfig()->GetSetting("LIBRARY_LOCATION");

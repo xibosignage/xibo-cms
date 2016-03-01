@@ -45,7 +45,7 @@ class Clock extends Base
     function clock()
     {
         $output = $this->getDate()->getLocalDate(null, 'H:i T');
-        $this->getApp()->session->refreshExpiry = false;
+        $this->getContainer()->session->refreshExpiry = false;
 
         $this->getState()->setData(array('time' => $output));
         $this->getState()->html = $output;

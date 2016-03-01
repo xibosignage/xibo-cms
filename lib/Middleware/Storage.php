@@ -24,9 +24,14 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
+use Slim\Slim;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class Storage
+ * @package Xibo\Middleware
+ */
 class Storage extends Middleware
 {
     public function call()
@@ -58,6 +63,10 @@ class Storage extends Middleware
         $app->store->close();
     }
 
+    /**
+     * Set Storage
+     * @param Slim $app
+     */
     public static function setStorage($app)
     {
         // Register the log service

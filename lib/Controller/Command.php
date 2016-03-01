@@ -65,7 +65,7 @@ class Command extends Base
             'code' => $this->getSanitizer()->getString('code')
         ];
 
-        $commands = (new CommandFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $commands = (new CommandFactory($this->getContainer()))->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($commands as $command) {
             /* @var \Xibo\Entity\Command $command */
@@ -92,7 +92,7 @@ class Command extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = (new CommandFactory($this->getApp()))->countLast();
+        $this->getState()->recordsTotal = (new CommandFactory($this->getContainer()))->countLast();
         $this->getState()->setData($commands);
     }
 
@@ -110,7 +110,7 @@ class Command extends Base
      */
     public function editForm($commandId)
     {
-        $command = (new CommandFactory($this->getApp()))->getById($commandId);
+        $command = (new CommandFactory($this->getContainer()))->getById($commandId);
 
         if ($command->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
@@ -127,7 +127,7 @@ class Command extends Base
      */
     public function deleteForm($commandId)
     {
-        $command = (new CommandFactory($this->getApp()))->getById($commandId);
+        $command = (new CommandFactory($this->getContainer()))->getById($commandId);
 
         if ($command->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
@@ -245,7 +245,7 @@ class Command extends Base
      */
     public function edit($commandId)
     {
-        $command = (new CommandFactory($this->getApp()))->getById($commandId);
+        $command = (new CommandFactory($this->getContainer()))->getById($commandId);
 
         if ($command->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
@@ -289,7 +289,7 @@ class Command extends Base
      */
     public function delete($commandId)
     {
-        $command = (new CommandFactory($this->getApp()))->getById($commandId);
+        $command = (new CommandFactory($this->getContainer()))->getById($commandId);
 
         if ($command->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();

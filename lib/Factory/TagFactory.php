@@ -68,6 +68,7 @@ class TagFactory extends BaseFactory
         catch (NotFoundException $e) {
             // New tag
             $tag = new Tag();
+            $tag->setContainer($this->getContainer());
             $tag->tag = $tagString;
         }
 
@@ -91,6 +92,7 @@ class TagFactory extends BaseFactory
 
         $row = $tags[0];
         $tag = new Tag();
+        $tag->setContainer($this->getContainer());
         $tag->tagId = $this->getSanitizer()->int($row['tagId']);
         $tag->tag = $this->getSanitizer()->string($row['tag']);
 
@@ -110,6 +112,7 @@ class TagFactory extends BaseFactory
 
         foreach ($this->getStore()->select($sql, array('layoutId' => $layoutId)) as $row) {
             $tag = new Tag();
+            $tag->setContainer($this->getContainer());
             $tag->tagId = $this->getSanitizer()->int($row['tagId']);
             $tag->tag = $this->getSanitizer()->string($row['tag']);
             $tag->assignLayout($layoutId);
@@ -133,6 +136,7 @@ class TagFactory extends BaseFactory
 
         foreach ($this->getStore()->select($sql, array('mediaId' => $mediaId)) as $row) {
             $tag = new Tag();
+            $tag->setContainer($this->getContainer());
             $tag->tagId = $this->getSanitizer()->int($row['tagId']);
             $tag->tag = $this->getSanitizer()->string($row['tag']);
             $tag->assignMedia($mediaId);

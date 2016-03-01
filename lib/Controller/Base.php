@@ -21,6 +21,7 @@
 
 
 namespace Xibo\Controller;
+use Slim\Helper\Set;
 use Slim\Slim;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
@@ -49,6 +50,11 @@ class Base
     protected $app;
 
     /**
+     * @var Set
+     */
+    protected $container;
+
+    /**
      * Automatically output a full page if non-ajax request arrives
      * @var bool
      */
@@ -69,7 +75,6 @@ class Base
     /**
      * Called by Slim when the Controller is instantiated from a route definition
      * @param Slim $app
-     * @return Base
      */
     public function setApp($app)
     {
@@ -77,10 +82,10 @@ class Base
 
         // Reference back to this from the app
         // but only the first time
-        if ($this->app->controller == null)
-            $this->app->controller = $this;
+        if ($app->controller == null)
+            $app->controller = $this;
 
-        return $this;
+        $this->setContainer($app->container);
     }
 
     /**
@@ -91,9 +96,33 @@ class Base
     public function getApp()
     {
         if ($this->app == null)
-            throw new ConfigurationException(__('Controller called before DI has been setup'));
+            throw new ConfigurationException(__('Controller called before Slim has been setup'));
 
         return $this->app;
+    }
+
+    /**
+     * Called by Slim when the Controller is instantiated from a route definition
+     * @param Set $container
+     * @return Base
+     */
+    public function setContainer($container)
+    {
+        $this->container = $container;
+        return $this;
+    }
+
+    /**
+     * Get the App
+     * @return Set
+     * @throws \Exception
+     */
+    public function getContainer()
+    {
+        if ($this->container == null)
+            throw new ConfigurationException(__('Controller called before DI has been setup'));
+
+        return $this->container;
     }
 
     /**
@@ -102,7 +131,7 @@ class Base
      */
     public function getUser()
     {
-        return $this->getApp()->user;
+        return $this->getContainer()->user;
     }
 
     /**
@@ -111,7 +140,7 @@ class Base
      */
     protected function getState()
     {
-        return $this->getApp()->state;
+        return $this->getContainer()->state;
     }
 
     /**
@@ -120,7 +149,7 @@ class Base
      */
     protected function getSession()
     {
-        return $this->getApp()->session;
+        return $this->getContainer()->session;
     }
 
     /**
@@ -129,7 +158,7 @@ class Base
      */
     protected function getPool()
     {
-        return $this->getApp()->pool;
+        return $this->getContainer()->pool;
     }
 
     /**
@@ -138,7 +167,7 @@ class Base
      */
     protected function getStore()
     {
-        return $this->getApp()->store;
+        return $this->getContainer()->store;
     }
 
     /**
@@ -147,7 +176,7 @@ class Base
      */
     public function getLog()
     {
-        return $this->getApp()->logHelper;
+        return $this->getContainer()->logHelper;
     }
 
     /**
@@ -156,7 +185,7 @@ class Base
      */
     protected function getHelp()
     {
-        return $this->getApp()->helpService;
+        return $this->getContainer()->helpService;
     }
 
     /**
@@ -165,7 +194,7 @@ class Base
      */
     protected function getDate()
     {
-        return $this->getApp()->dateService;
+        return $this->getContainer()->dateService;
     }
 
     /**
@@ -174,7 +203,7 @@ class Base
      */
     public function getSanitizer()
     {
-        return $this->getApp()->sanitizerService;
+        return $this->getContainer()->sanitizerService;
     }
 
     /**
@@ -183,7 +212,7 @@ class Base
      */
     public function getConfig()
     {
-        return $this->getApp()->configService;
+        return $this->getContainer()->configService;
     }
 
     /**
@@ -192,7 +221,7 @@ class Base
      */
     public function getPlayerService()
     {
-        return $this->getApp()->playerActionService;
+        return $this->getContainer()->playerActionService;
     }
 
     /**
@@ -212,7 +241,7 @@ class Base
      */
     protected function urlFor($route, $params = array())
     {
-        return $this->app->urlFor($route, $params);
+        return $this->getApp()->urlFor($route, $params);
     }
 
     /**
@@ -222,7 +251,7 @@ class Base
      */
     protected function getFlash($key)
     {
-        $template = $this->app->view()->get('flash');
+        $template = $this->getApp()->view()->get('flash');
         return isset($template[$key]) ? $template[$key] : '';
     }
 
@@ -287,9 +316,9 @@ class Base
                 'data' => $data
             ];
 
-            $this->app->render('', $data, $state->httpStatus);
+            $this->container->render('', $data, $state->httpStatus);
         }
-        else if ($this->app->request->isAjax()) {
+        else if ($this->container->request->isAjax()) {
             // WEB Ajax
             $app->response()->header('Content-Type', 'application/json');
 
@@ -327,7 +356,7 @@ class Base
      */
     protected function gridRenderFilter($extraFilter = [])
     {
-        $app = $this->getApp();
+        $app = $this->getContainer();
 
         // Handle filtering
         $filter = [

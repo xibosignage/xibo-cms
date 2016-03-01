@@ -89,7 +89,7 @@ class WidgetFactory extends BaseFactory
     public function create($ownerId, $playlistId, $type, $duration)
     {
         $widget = new Widget();
-        $widget->setApp($this->getApp());
+        $widget->setContainer($this->getContainer());
         $widget->ownerId = $ownerId;
         $widget->playlistId = $playlistId;
         $widget->type = $type;
@@ -163,7 +163,7 @@ class WidgetFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Widget())->setApp($this->getApp())->hydrate($row, ['intProperties' => ['duration']]);
+            $entries[] = (new Widget())->setContainer($this->getContainer())->hydrate($row, ['intProperties' => ['duration']]);
         }
 
         // Paging

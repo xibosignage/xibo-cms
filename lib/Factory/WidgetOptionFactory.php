@@ -71,7 +71,7 @@ class WidgetOptionFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, [
             'widgetId' => $this->getSanitizer()->getInt('widgetId', $filterBy)
         ]) as $row) {
-            $entries[] = (new WidgetOption())->hydrate($row)->setApp($this->getApp());
+            $entries[] = (new WidgetOption())->hydrate($row)->setContainer($this->getContainer());
         }
 
         return $entries;

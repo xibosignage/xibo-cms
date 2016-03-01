@@ -48,7 +48,7 @@ class Login extends Base
 
         // Get our user
         try {
-            $user = (new UserFactory($this->getApp()))->getByName($username);
+            $user = (new UserFactory($this->getContainer()))->getByName($username);
 
             // $this->getLog()->debug($user);
 
@@ -67,7 +67,7 @@ class Login extends Base
             $this->getLog()->setUserId($user->userId);
 
             // Overwrite our stored user with this new object.
-            $this->getApp()->user = $user;
+            $this->getContainer()->user = $user;
 
             // Switch Session ID's
             $session = $this->getSession();
@@ -77,8 +77,8 @@ class Login extends Base
 
             // Audit Log
             $this->getLog()->audit('User', $user->userId, 'Login Granted', [
-                'IPAddress' => $this->getApp()->request()->getIp(),
-                'UserAgent' => $this->getApp()->request()->getUserAgent()
+                'IPAddress' => $this->getContainer()->request()->getIp(),
+                'UserAgent' => $this->getContainer()->request()->getUserAgent()
             ]);
         }
         catch (NotFoundException $e) {
@@ -101,7 +101,7 @@ class Login extends Base
 
         $session = $this->getSession();
         $session->setIsExpired(1);
-        $this->getApp()->redirectTo('login');
+        $this->getContainer()->redirectTo('login');
     }
 
     /**
@@ -126,7 +126,7 @@ class Login extends Base
      */
     public function PingPong()
     {
-        $this->getApp()->session->refreshExpiry = ($this->getSanitizer()->getCheckbox('refreshSession') == 1);
+        $this->getContainer()->session->refreshExpiry = ($this->getSanitizer()->getCheckbox('refreshSession') == 1);
         $this->getState()->success = true;
     }
 
@@ -156,7 +156,7 @@ class Login extends Base
     {
         $response = $this->getState();
 
-        if ($this->getApp()->request()->isAjax()) {
+        if ($this->getContainer()->request()->isAjax()) {
             $response->template = 'about-text';
         }
         else {

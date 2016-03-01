@@ -26,7 +26,7 @@ class Error extends Base
 
         // Not found controller happens outside the normal middleware stack for some reason
         // Setup the translations for gettext
-        Translate::InitLocale($app);
+        Translate::InitLocale($this->getContainer());
 
         // Configure the locale for date/time
         if (Translate::GetLocale(2) != '')
@@ -41,7 +41,7 @@ class Error extends Base
 
             case 'web':
 
-                if ($this->getApp()->request()->isAjax()) {
+                if ($app->request()->isAjax()) {
                     $this->getState()->hydrate([
                         'success' => false,
                         'message' => $message,
@@ -104,7 +104,7 @@ class Error extends Base
 
                 $message = ($handled) ? $e->getMessage() : __('Unexpected Error, please contact support.');
 
-                if ($this->getApp()->request()->isAjax()) {
+                if ($app->request()->isAjax()) {
                     $this->getState()->hydrate([
                         'success' => false,
                         'message' => $message,

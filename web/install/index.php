@@ -31,7 +31,7 @@ ini_set('display_errors', 1);
 require PROJECT_ROOT . '/vendor/autoload.php';
 
 // Create a theme
-new Theme('default');
+new \Xibo\Middleware\Theme('default');
 
 // Create a logger
 $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
@@ -90,7 +90,7 @@ $app->hook('slim.before.dispatch', function() use ($app) {
 
     if (file_exists(PROJECT_ROOT . '/web/settings.php')) {
         // Config
-        \Xibo\Helper\Config::Load($app, PROJECT_ROOT . '/web/settings.php');
+        \Xibo\Helper\Config::Load($app->container, PROJECT_ROOT . '/web/settings.php');
         // Set-up the translations for get text
         Translate::InitLocale($app);
 

@@ -83,7 +83,7 @@ class ApplicationRedirectUriFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new ApplicationRedirectUri())->setApp($this->getApp())->hydrate($row)->setApp($this->getApp());
+            $entries[] = (new ApplicationRedirectUri())->setContainer($this->getContainer())->hydrate($row);
         }
 
         // Paging

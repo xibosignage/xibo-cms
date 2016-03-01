@@ -98,7 +98,7 @@ class CommandFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Command())->hydrate($row)->setApp($this->getApp())->setApp($this->getApp());
+            $entries[] = (new Command())->hydrate($row)->setContainer($this->getContainer());
         }
 
         // Paging

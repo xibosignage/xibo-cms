@@ -44,8 +44,8 @@ class Library extends Base
         // Users we have permission to see
         $this->getState()->template = 'library-page';
         $this->getState()->setData([
-            'users' => (new UserFactory($this->getApp()))->query(),
-            'modules' => (new ModuleFactory($this->getApp()))->query(['module'], ['regionSpecific' => 0, 'enabled' => 1])
+            'users' => (new UserFactory($this->getContainer()))->query(),
+            'modules' => (new ModuleFactory($this->getContainer()))->query(['module'], ['regionSpecific' => 0, 'enabled' => 1])
         ]);
     }
 
@@ -108,7 +108,7 @@ class Library extends Base
         $user = $this->getUser();
 
         // Construct the SQL
-        $mediaList = (new MediaFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter([
+        $mediaList = (new MediaFactory($this->getContainer()))->query($this->gridRenderSort(), $this->gridRenderFilter([
             'mediaId' => $this->getSanitizer()->getInt('mediaId'),
             'name' => $this->getSanitizer()->getString('media'),
             'type' => $this->getSanitizer()->getString('type'),
@@ -176,7 +176,7 @@ class Library extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = (new MediaFactory($this->getApp()))->countLast();
+        $this->getState()->recordsTotal = (new MediaFactory($this->getContainer()))->countLast();
         $this->getState()->setData($mediaList);
     }
 
@@ -186,7 +186,7 @@ class Library extends Base
      */
     public function deleteForm($mediaId)
     {
-        $media = (new MediaFactory($this->getApp()))->getById($mediaId);
+        $media = (new MediaFactory($this->getContainer()))->getById($mediaId);
 
         if (!$this->getUser()->checkDeleteable($media))
             throw new AccessDeniedException();
@@ -232,7 +232,7 @@ class Library extends Base
      */
     public function delete($mediaId)
     {
-        $media = (new MediaFactory($this->getApp()))->getById($mediaId);
+        $media = (new MediaFactory($this->getContainer()))->getById($mediaId);
 
         if (!$this->getUser()->checkDeleteable($media))
             throw new AccessDeniedException();
@@ -286,11 +286,11 @@ class Library extends Base
 
         // Get Valid Extensions
         if ($this->getSanitizer()->getInt('oldMediaId') !== null) {
-            $media = (new MediaFactory($this->getApp()))->getById($this->getSanitizer()->getInt('oldMediaId'));
-            $validExt = (new ModuleFactory($this->getApp()))->getValidExtensions(['type' => $media->mediaType]);
+            $media = (new MediaFactory($this->getContainer()))->getById($this->getSanitizer()->getInt('oldMediaId'));
+            $validExt = (new ModuleFactory($this->getContainer()))->getValidExtensions(['type' => $media->mediaType]);
         }
         else
-            $validExt = (new ModuleFactory($this->getApp()))->getValidExtensions();
+            $validExt = (new ModuleFactory($this->getContainer()))->getValidExtensions();
 
         $options = array(
             'userId' => $this->getUser()->userId,
@@ -334,7 +334,7 @@ class Library extends Base
      */
     public function editForm($mediaId)
     {
-        $media = (new MediaFactory($this->getApp()))->getById($mediaId);
+        $media = (new MediaFactory($this->getContainer()))->getById($mediaId);
 
         if (!$this->getUser()->checkEditable($media))
             throw new AccessDeniedException();
@@ -342,7 +342,7 @@ class Library extends Base
         $this->getState()->template = 'library-form-edit';
         $this->getState()->setData([
             'media' => $media,
-            'validExtensions' => implode('|', (new ModuleFactory($this->getApp()))->getValidExtensions(['type' => $media->mediaType])),
+            'validExtensions' => implode('|', (new ModuleFactory($this->getContainer()))->getValidExtensions(['type' => $media->mediaType])),
             'help' => $this->getHelp()->link('Library', 'Edit')
         ]);
     }
@@ -408,7 +408,7 @@ class Library extends Base
      */
     public function edit($mediaId)
     {
-        $media = (new MediaFactory($this->getApp()))->getById($mediaId);
+        $media = (new MediaFactory($this->getContainer()))->getById($mediaId);
 
         if (!$this->getUser()->checkEditable($media))
             throw new AccessDeniedException();
@@ -416,11 +416,11 @@ class Library extends Base
         $media->name = $this->getSanitizer()->getString('name');
         $media->duration = $this->getSanitizer()->getInt('duration');
         $media->retired = $this->getSanitizer()->getCheckbox('retired');
-        $media->replaceTags((new TagFactory($this->getApp()))->tagsFromString($this->getSanitizer()->getString('tags')));
+        $media->replaceTags((new TagFactory($this->getContainer()))->tagsFromString($this->getSanitizer()->getString('tags')));
 
         // Should we update the media in all layouts?
         if ($this->getSanitizer()->getCheckbox('updateInLayouts') == 1) {
-            foreach ((new WidgetFactory($this->getApp()))->getByMediaId($media->mediaId) as $widget) {
+            foreach ((new WidgetFactory($this->getContainer()))->getByMediaId($media->mediaId) as $widget) {
                 /* @var Widget $widget */
                 $widget->duration = $media->duration;
                 $widget->save();
@@ -446,7 +446,7 @@ class Library extends Base
             throw new ConfigurationException(__('Sorry this function is disabled.'));
 
         // Work out how many files there are
-        $media = (new MediaFactory($this->getApp()))->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser()->userId]);
+        $media = (new MediaFactory($this->getContainer()))->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser()->userId]);
 
         $size = ByteFormatter::format(array_sum(array_map(function ($element) {
             return $element->fileSize;
@@ -481,7 +481,7 @@ class Library extends Base
             throw new ConfigurationException(__('Sorry this function is disabled.'));
 
         // Get a list of media that is not in use (for this user)
-        $media = (new MediaFactory($this->getApp()))->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser()->userId]);
+        $media = (new MediaFactory($this->getContainer()))->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser()->userId]);
 
         $i = 0;
         foreach ($media as $item) {
@@ -586,20 +586,20 @@ class Library extends Base
     {
         $this->getLog()->debug('Download request for mediaId %d and type %s', $mediaId, $type);
 
-        $media = (new MediaFactory($this->getApp()))->getById($mediaId);
+        $media = (new MediaFactory($this->getContainer()))->getById($mediaId);
 
         if (!$this->getUser()->checkViewable($media))
             throw new AccessDeniedException();
 
         if ($type != '') {
-            $widget = (new ModuleFactory($this->getApp()))->create($type);
+            $widget = (new ModuleFactory($this->getContainer()))->create($type);
             $widgetOverride = new Widget();
             $widgetOverride->assignMedia($media->mediaId);
             $widget->setWidget($widgetOverride);
 
         } else {
             // Make a media module
-            $widget = (new ModuleFactory($this->getApp()))->createWithMedia($media);
+            $widget = (new ModuleFactory($this->getContainer()))->createWithMedia($media);
         }
 
         $widget->getResource();
@@ -620,7 +620,7 @@ class Library extends Base
         ';
 
         // Save a fonts.css file to the library for use as a module
-        $fonts = (new MediaFactory($this->getApp()))->getByMediaType('font');
+        $fonts = (new MediaFactory($this->getContainer()))->getByMediaType('font');
 
         if (count($fonts) < 1)
             return;
@@ -651,7 +651,7 @@ class Library extends Base
         file_put_contents(PROJECT_ROOT . '/web/modules/fonts.css', $css);
 
         // Install it (doesn't expire, isn't a system file, force update)
-        $media = (new MediaFactory($this->getApp()))->createModuleSystemFile('fonts.css', PROJECT_ROOT . '/web/modules/fonts.css');
+        $media = (new MediaFactory($this->getContainer()))->createModuleSystemFile('fonts.css', PROJECT_ROOT . '/web/modules/fonts.css');
         $media->expires = 0;
         $media->moduleSystemFile = true;
         $media->force = true;
@@ -677,11 +677,11 @@ class Library extends Base
         $this->getLog()->info('Installing all module files');
 
         // Do this for all enabled modules
-        foreach ((new ModuleFactory($this->getApp()))->query() as $module) {
+        foreach ((new ModuleFactory($this->getContainer()))->query() as $module) {
             /* @var \Xibo\Entity\Module $module */
 
             // Install Files for this module
-            $moduleObject = (new ModuleFactory($this->getApp()))->create($module->type);
+            $moduleObject = (new ModuleFactory($this->getContainer()))->create($module->type);
             $moduleObject->installFiles();
         }
     }
@@ -689,7 +689,7 @@ class Library extends Base
     /**
      * Remove temporary files
      */
-    public function removeTempFiles($app)
+    public function removeTempFiles()
     {
         $library = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
 
@@ -707,10 +707,10 @@ class Library extends Base
     /**
      * Removes all expired media files
      */
-    public function removeExpiredFiles($app)
+    public function removeExpiredFiles()
     {
         // Get a list of all expired files and delete them
-        foreach ((new MediaFactory($app))->query(null, array('expires' => time(), 'allModules' => 1)) as $entry) {
+        foreach ((new MediaFactory($this->getContainer()))->query(null, array('expires' => time(), 'allModules' => 1)) as $entry) {
             /* @var \Xibo\Entity\Media $entry */
             // If the media type is a module, then pretend its a generic file
             $this->getLog()->info('Removing Expired File %s', $entry->name);

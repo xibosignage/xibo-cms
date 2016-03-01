@@ -58,20 +58,18 @@ interface StorageInterface
      * Run Insert SQL
      * @param string $sql
      * @param array $params
-     * @param \PDO[Optional] $dbh
      * @return int
      * @throws \PDOException
      */
-    public function insert($sql, $params, $dbh = null);
+    public function insert($sql, $params);
 
     /**
      * Run Update SQL
      * @param string $sql
      * @param array $params
-     * @param \PDO[Optional] $dbh
      * @throws \PDOException
      */
-    public function update($sql, $params, $dbh = null);
+    public function update($sql, $params);
 
     /**
      * Run Select SQL
@@ -84,9 +82,8 @@ interface StorageInterface
 
     /**
      * Commit if necessary
-     * @param \PDO $pdo
      */
-    public function commitIfNecessary($pdo = null);
+    public function commitIfNecessary();
 
     /**
      * Set the TimeZone for this connection

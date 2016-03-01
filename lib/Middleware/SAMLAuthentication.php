@@ -76,7 +76,7 @@ class SAMLAuthentication extends Middleware
 
         // Create a user
         $app->user = new \Xibo\Entity\User();
-        $app->user->setApp($app);
+        $app->user->setContainer($app);
 
         // Register SAML routes.
         $app->excludedCsrfRoutes = SAMLAuthentication::samlRoutes();

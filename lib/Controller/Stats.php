@@ -34,9 +34,9 @@ class Stats extends Base
     {
         $data = [
             // List of Displays this user has permission for
-            'displays' => (new DisplayFactory($this->getApp()))->query(),
+            'displays' => (new DisplayFactory($this->getContainer()))->query(),
             // List of Media this user has permission for
-            'media' => (new MediaFactory($this->getApp()))->query(),
+            'media' => (new MediaFactory($this->getContainer()))->query(),
             'defaults' => [
                 'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
                 'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
@@ -153,7 +153,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $display_ids = array();
 
-        foreach ((new DisplayFactory($this->getApp()))->query() as $display) {
+        foreach ((new DisplayFactory($this->getContainer()))->query() as $display) {
             $display_ids[] = $display->displayId;
         }
 
@@ -251,7 +251,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $displayIds = array();
 
-        foreach ((new DisplayFactory($this->getApp()))->query() as $display) {
+        foreach ((new DisplayFactory($this->getContainer()))->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -341,7 +341,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $displayIds = array();
 
-        foreach ((new DisplayFactory($this->getApp()))->query() as $display) {
+        foreach ((new DisplayFactory($this->getContainer()))->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -452,7 +452,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $displayIds = array();
 
-        foreach ((new DisplayFactory($this->getApp()))->query() as $display) {
+        foreach ((new DisplayFactory($this->getContainer()))->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -506,7 +506,7 @@ class Stats extends Base
         fclose($out);
 
         // We want to output a load of stuff to the browser as a text file.
-        $app = $this->getApp();
+        $app = $this->getContainer();
         $app->response()->header('Content-Type', 'text/csv');
         $app->response()->header('Content-Disposition', 'attachment; filename="stats.csv"');
         $app->response()->header('Content-Transfer-Encoding', 'binary"');

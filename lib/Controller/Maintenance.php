@@ -10,7 +10,6 @@ namespace Xibo\Controller;
 
 
 use Xibo\Entity\Layout;
-use Xibo\Entity\Media;
 use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
@@ -69,12 +68,12 @@ class Maintenance extends Base
                 // Upgrade
                 // Is there a pending upgrade (i.e. are there any pending upgrade steps).
                 if ($this->getConfig()->isUpgradePending()) {
-                    $steps = (new UpgradeFactory($this->getApp()))->getIncomplete();
+                    $steps = (new UpgradeFactory($this->getContainer()))->getIncomplete();
 
                     if (count($steps) <= 0) {
 
                         // Insert pending upgrade steps.
-                        $steps = (new UpgradeFactory($this->getApp()))->createSteps(DBVERSION, WEBSITE_VERSION);
+                        $steps = (new UpgradeFactory($this->getContainer()))->createSteps(DBVERSION, WEBSITE_VERSION);
 
                         foreach ($steps as $step) {
                             /* @var \Xibo\Entity\Upgrade $step */
@@ -117,7 +116,7 @@ class Maintenance extends Base
                 $msgTo = $this->getConfig()->GetSetting("mail_to");
                 $msgFrom = $this->getConfig()->GetSetting("mail_from");
 
-                foreach ((new Display())->setApp($this->getApp())->validateDisplays((new DisplayFactory($this->getApp()))->query()) as $display) {
+                foreach ((new Display())->setContainer($this->getContainer())->validateDisplays((new DisplayFactory($this->getContainer()))->query()) as $display) {
                     /* @var \Xibo\Entity\Display $display */
                     // Is this the first time this display has gone "off-line"
                     $displayGoneOffline = ($display->loggedIn == 1);
@@ -134,7 +133,7 @@ class Maintenance extends Base
 
                                 // Get a list of people that have view access to the display?
                                 if ($alertForViewUsers) {
-                                    foreach ((new UserFactory($this->getApp()))->getByDisplayGroupId($display->displayGroupId) as $user) {
+                                    foreach ((new UserFactory($this->getContainer()))->getByDisplayGroupId($display->displayGroupId) as $user) {
                                         /* @var User $user */
                                         if ($user->email != '') {
                                             // Send them an email
@@ -284,7 +283,7 @@ class Maintenance extends Base
                     $sth = $dbh->prepare('SELECT DisplayID, Display, WakeOnLanTime, LastWakeOnLanCommandSent FROM `display` WHERE WakeOnLan = 1');
                     $sth->execute(array());
 
-                    foreach((new DisplayFactory($this->getApp()))->query(null, ['wakeOnLan' => 1]) as $display) {
+                    foreach((new DisplayFactory($this->getContainer()))->query(null, ['wakeOnLan' => 1]) as $display) {
 
                         // Time to WOL (with respect to today)
                         $timeToWake = strtotime(date('Y-m-d') . ' ' . $display->wakeOnLanTime);
@@ -326,19 +325,20 @@ class Maintenance extends Base
                 }
 
                 // Build Layouts
-                foreach ((new LayoutFactory($this->getApp()))->query(null, ['status' => 3]) as $layout) {
+                foreach ((new LayoutFactory($this->getContainer()))->query(null, ['status' => 3]) as $layout) {
                     /* @var Layout $layout */
                     $layout->xlfToDisk();
                 }
 
                 // Keep tidy
-                Library::removeExpiredFiles($this->getApp());
-                Library::removeTempFiles($this->getApp());
+                $libraryFactory = new Library($this->getContainer());
+                $libraryFactory->removeExpiredFiles();
+                $libraryFactory->removeTempFiles();
 
                 // Install module files
                 if (!$quick) {
                     $this->getLog()->debug('Installing Module Files');
-                    Library::installAllModuleFiles($this->getApp());
+                    $libraryFactory->installAllModuleFiles();
                 }
             }
             else {
@@ -383,7 +383,7 @@ class Maintenance extends Base
         $this->getLog()->debug('Library Location: ' . $library);
 
         // Remove temporary files
-        Library::removeTempFiles($this->getApp());
+        Library::removeTempFiles($this->getContainer());
 
         $media = array();
         $unusedMedia = array();
@@ -427,6 +427,9 @@ class Maintenance extends Base
 
         $i = 0;
 
+        // Library location
+        $libraryLocation = $this->getConfig()->GetSetting("LIBRARY_LOCATION");
+
         // Get a list of all media files
         foreach(scandir($library) as $file) {
 
@@ -452,19 +455,19 @@ class Maintenance extends Base
                 $this->getLog()->debug('Deleting file: ' . $file);
 
                 // If not, delete it
-                Media::unlink($file);
+                unlink($libraryLocation . $file);
             }
             else if (array_key_exists($file, $unusedRevisions)) {
                 // It exists but isn't being used any more
                 $this->getLog()->debug('Deleting unused revision media: ' . $media[$file]['mediaid']);
 
-                (new MediaFactory($this->getApp()))->getById($media[$file]['mediaid'])->delete();
+                (new MediaFactory($this->getContainer()))->getById($media[$file]['mediaid'])->delete();
             }
             else if (array_key_exists($file, $unusedMedia)) {
                 // It exists but isn't being used any more
                 $this->getLog()->debug('Deleting unused media: ' . $media[$file]['mediaid']);
 
-                (new MediaFactory($this->getApp()))->getById($media[$file]['mediaid'])->delete();
+                (new MediaFactory($this->getContainer()))->getById($media[$file]['mediaid'])->delete();
             }
             else {
                 $i--;
@@ -554,12 +557,12 @@ class Maintenance extends Base
         // Send via Apache X-Sendfile header?
         if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Apache') {
             header("X-Sendfile: $zipFile");
-            $this->getApp()->halt(200);
+            $this->getContainer()->halt(200);
         }
         // Send via Nginx X-Accel-Redirect?
         if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Nginx') {
             header("X-Accel-Redirect: /download/temp/" . basename($zipFile));
-            $this->getApp()->halt(200);
+            $this->getContainer()->halt(200);
         }
 
         // Return the file with PHP
@@ -647,7 +650,7 @@ FORM;
 
         } catch (\Exception $e) {
             // We must not issue an error, the file upload return should have the error object already
-            $this->app->commit = false;
+            $this->container->commit = false;
         }
 
         $this->setNoOutput(true);

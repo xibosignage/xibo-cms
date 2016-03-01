@@ -120,7 +120,7 @@ class UserFactory extends BaseFactory
      */
     public function getByDisplayGroupId($displayGroupId)
     {
-        return (new DisplayFactory($this->getApp()))->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
+        return (new DisplayFactory($this->getContainer()))->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
     }
 
     /**
@@ -302,7 +302,7 @@ class UserFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new User())->hydrate($row)->setApp($this->getApp());
+            $entries[] = (new User())->hydrate($row)->setContainer($this->getContainer());
         }
 
         // Paging

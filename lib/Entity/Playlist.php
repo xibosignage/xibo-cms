@@ -193,11 +193,11 @@ class Playlist implements \JsonSerializable
 
         // Load permissions
         if ($options['loadPermissions'])
-            $this->permissions = (new PermissionFactory($this->getApp()))->getByObjectId(get_class(), $this->playlistId);
+            $this->permissions = (new PermissionFactory($this->getContainer()))->getByObjectId(get_class(), $this->playlistId);
 
         // Load the widgets
         if ($options['loadWidgets']) {
-            foreach ((new WidgetFactory($this->getApp()))->getByPlaylistId($this->playlistId) as $widget) {
+            foreach ((new WidgetFactory($this->getContainer()))->getByPlaylistId($this->playlistId) as $widget) {
                 /* @var Widget $widget */
                 $widget->load();
                 $this->widgets[] = $widget;
@@ -206,7 +206,7 @@ class Playlist implements \JsonSerializable
 
         if ($options['playlistIncludeRegionAssignments']) {
             // Load the region assignments
-            foreach ((new RegionFactory($this->getApp()))->getByPlaylistId($this->playlistId) as $region) {
+            foreach ((new RegionFactory($this->getContainer()))->getByPlaylistId($this->playlistId) as $region) {
                 /* @var Region $region */
                 $this->regions[] = $region;
             }

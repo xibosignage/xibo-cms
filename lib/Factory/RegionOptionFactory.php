@@ -67,7 +67,7 @@ class RegionOptionFactory extends BaseFactory
         $sql = 'SELECT * FROM `regionoption` WHERE regionId = :regionId';
 
         foreach ($this->getStore()->select($sql, array('regionId' => $this->getSanitizer()->getInt('regionId', $filterBy))) as $row) {
-            $entries[] = (new RegionOption())->hydrate($row)->setApp($this->getApp());
+            $entries[] = (new RegionOption())->hydrate($row)->setContainer($this->getContainer());
         }
 
         return $entries;

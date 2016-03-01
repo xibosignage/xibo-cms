@@ -43,7 +43,7 @@ class GenericFile extends ModuleWidget
     public function getResource($displayId = 0)
     {
         $this->download();
-        $this->getApp()->halt(200);
+        $this->getContainer()->halt(200);
     }
 
     /**

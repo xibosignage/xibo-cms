@@ -10,8 +10,15 @@ namespace Xibo\Tests;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
 
+/**
+ * Class CampaignTest
+ * @package Xibo\Tests
+ */
 class CampaignTest extends LocalWebTestCase
 {
+    /**
+     * Show Campaigns
+     */
     public function testListAll()
     {
         $this->client->get('/campaign');
@@ -24,6 +31,10 @@ class CampaignTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object);
     }
 
+    /**
+     * Add Campaign
+     * @return mixed
+     */
     public function testAdd()
     {
         $name = \Xibo\Helper\Random::generateString(8, 'phpunit');
@@ -78,6 +89,11 @@ class CampaignTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
 
+    /**
+     * Assign Layout
+     * @return int
+     * @throws \Xibo\Exception\NotFoundException
+     */
     public function testAssignLayout()
     {
         // Make a campaign with a known name

@@ -24,7 +24,7 @@ use CachedFileReader;
 use Gettext\Translations;
 use Gettext\Translator;
 use gettext_reader;
-use Slim\Slim;
+use Slim\Helper\Set;
 
 class Translate
 {
@@ -34,13 +34,13 @@ class Translate
 
     /**
      * Gets and Sets the Locale
-     * @param Slim $app
+     * @param Set $container
      * @param $language string[optional] The Language to Load
      */
-    public static function InitLocale($app, $language = NULL)
+    public static function InitLocale($container, $language = NULL)
     {
         $localeDir = PROJECT_ROOT . '/locale';
-        $default = ($language == NULL) ? $app->configService->GetSetting('DEFAULT_LANGUAGE') : $language;
+        $default = ($language == NULL) ? $container->configService->GetSetting('DEFAULT_LANGUAGE') : $language;
 
         // Build an array of supported languages
         $supportedLanguages = array_map('basename', glob($localeDir . '/*.mo'));
@@ -59,7 +59,7 @@ class Translate
                 $foundLanguage = $requestedLanguage;
             }
         }
-        else if ($app->configService->GetSetting('DETECT_LANGUAGE') == 1) {
+        else if ($container->configService->GetSetting('DETECT_LANGUAGE') == 1) {
             // Detect the language, try from HTTP accept
             // Parse the language header and build a preference array
             $languagePreferenceArray = Translate::parseHttpAcceptLanguageHeader();

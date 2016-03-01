@@ -45,7 +45,7 @@ class ModuleFactory extends BaseFactory
 
         /* @var \Xibo\Widget\ModuleWidget $object */
         $object = new $className();
-        $object->setApp($this->getApp());
+        $object->setContainer($this->getContainer());
         $object->setModule($module);
 
         return $object;
@@ -136,7 +136,7 @@ class ModuleFactory extends BaseFactory
         // Do we have a regionId
         if ($regionId != 0) {
             // Load the region and set
-            $region = (new RegionFactory($this->getApp()))->getById($regionId);
+            $region = (new RegionFactory($this->getContainer()))->getById($regionId);
             $module->setRegion($region);
         }
 
@@ -147,18 +147,18 @@ class ModuleFactory extends BaseFactory
                 throw new \InvalidArgumentException(__('Neither Playlist or Widget provided'));
             }
 
-            $playlist = (new PlaylistFactory($this->getApp()))->getById($playlistId);
+            $playlist = (new PlaylistFactory($this->getContainer()))->getById($playlistId);
             $playlist->load(['playlistIncludeRegionAssignments' => false]);
 
             // Create a new widget to use
-            $widget = (new WidgetFactory($this->getApp()))->create($ownerId, $playlistId, $module->getModuleType(), 0);
+            $widget = (new WidgetFactory($this->getContainer()))->create($ownerId, $playlistId, $module->getModuleType(), 0);
             $module->setWidget($widget);
 
             $playlist->assignWidget($widget);
         }
         else {
             // Load the widget
-            $module->setWidget((new WidgetFactory($this->getApp()))->loadByWidgetId($widgetId));
+            $module->setWidget((new WidgetFactory($this->getContainer()))->loadByWidgetId($widgetId));
         }
 
         return $module;

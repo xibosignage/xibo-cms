@@ -39,7 +39,7 @@ class BackupUploadHandler extends BlueImpUploadHandler
 
             $file->error = $e->getMessage();
 
-            $controller->getApp()->commit = false;
+            $controller->getContainer()->commit = false;
         }
     }
 }

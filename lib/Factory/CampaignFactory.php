@@ -36,7 +36,7 @@ class CampaignFactory extends BaseFactory
     public function create($name, $userId)
     {
         $campaign = new Campaign();
-        $campaign->setApp($this->getApp());
+        $campaign->setContainer($this->getContainer());
         $campaign->ownerId = $userId;
         $campaign->campaign = $name;
 
@@ -178,7 +178,7 @@ class CampaignFactory extends BaseFactory
         $intProperties = ['intProperties' => ['numberLayouts']];
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $campaigns[] = (new Campaign())->hydrate($row, $intProperties)->setApp($this->getApp());
+            $campaigns[] = (new Campaign())->hydrate($row, $intProperties)->setContainer($this->getContainer());
         }
 
         // Paging

@@ -165,7 +165,7 @@ class UserGroupFactory extends BaseFactory
 
 
             foreach ($this->getStore()->select($sql, $params) as $row) {
-                $entries[] = (new UserGroup())->hydrate($row)->setApp($this->getApp());
+                $entries[] = (new UserGroup())->hydrate($row)->setContainer($this->getContainer());
             }
 
             // Paging

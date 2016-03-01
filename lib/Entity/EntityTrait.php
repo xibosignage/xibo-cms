@@ -9,7 +9,7 @@
 namespace Xibo\Entity;
 
 
-use Slim\Slim;
+use Slim\Helper\Set;
 use Xibo\Helper\Config;
 use Xibo\Helper\DateInterface;
 use Xibo\Helper\Log;
@@ -18,13 +18,18 @@ use Xibo\Helper\PlayerActionHelperInterface;
 use Xibo\Helper\SanitizerInterface;
 use Xibo\Storage\StorageInterface;
 
+/**
+ * Class EntityTrait
+ * used by all entities
+ * @package Xibo\Entity
+ */
 trait EntityTrait
 {
     /**
-     * The App
-     * @var Slim
+     * DI Container
+     * @var Set
      */
-    private $app;
+    private $container;
 
     private $hash = null;
     private $loaded = false;
@@ -120,26 +125,26 @@ trait EntityTrait
 
     /**
      * Set app
-     * @param Slim $app
+     * @param Set $container
      * @return mixed
      */
-    public function setApp($app)
+    public function setContainer($container)
     {
-        $this->app = $app;
+        $this->container = $container;
 
         return $this;
     }
 
     /**
      * Get App
-     * @return Slim
+     * @return Set
      */
-    protected function getApp()
+    protected function getContainer()
     {
-        if ($this->app == null)
+        if ($this->container == null)
             throw new \RuntimeException(__('Entity Application not set'));
 
-        return $this->app;
+        return $this->container;
     }
 
     /**
@@ -148,7 +153,7 @@ trait EntityTrait
      */
     protected function getPool()
     {
-        return $this->getApp()->pool;
+        return $this->getContainer()->pool;
     }
 
     /**
@@ -157,7 +162,7 @@ trait EntityTrait
      */
     protected function getStore()
     {
-        return $this->getApp()->store;
+        return $this->getContainer()->store;
     }
 
     /**
@@ -166,7 +171,7 @@ trait EntityTrait
      */
     protected function getLog()
     {
-        return $this->getApp()->logHelper;
+        return $this->getContainer()->logHelper;
     }
 
     /**
@@ -175,7 +180,7 @@ trait EntityTrait
      */
     protected function getDate()
     {
-        return $this->getApp()->dateService;
+        return $this->getContainer()->dateService;
     }
 
     /**
@@ -184,7 +189,7 @@ trait EntityTrait
      */
     protected function getSanitizer()
     {
-        return $this->getApp()->sanitizerService;
+        return $this->getContainer()->sanitizerService;
     }
 
     /**
@@ -193,7 +198,7 @@ trait EntityTrait
      */
     protected function getConfig()
     {
-        return $this->getApp()->configService;
+        return $this->getContainer()->configService;
     }
 
     /**
@@ -202,6 +207,6 @@ trait EntityTrait
      */
     public function getPlayerService()
     {
-        return $this->getApp()->playerActionService;
+        return $this->getContainer()->playerActionService;
     }
 }

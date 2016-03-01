@@ -93,7 +93,7 @@ class PageFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Page())->hydrate($row)->setApp($this->getApp());
+            $entries[] = (new Page())->hydrate($row)->setContainer($this->getContainer());
         }
 
         return $entries;

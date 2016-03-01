@@ -146,7 +146,7 @@ class DataSetFactory extends BaseFactory
 
 
             foreach ($this->getStore()->select($sql, $params) as $row) {
-                $entries[] = (new DataSet())->hydrate($row)->setApp($this->getApp())->setApp($this->getApp());
+                $entries[] = (new DataSet())->hydrate($row)->setContainer($this->getContainer());
             }
 
             // Paging

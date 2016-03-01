@@ -38,7 +38,7 @@ class Transition extends Base
 
     public function grid()
     {
-        $transitions = (new TransitionFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter());
+        $transitions = (new TransitionFactory($this->getContainer()))->query($this->gridRenderSort(), $this->gridRenderFilter());
 
         foreach ($transitions as $transition) {
             /* @var \Xibo\Entity\Transition $transition */
@@ -56,7 +56,7 @@ class Transition extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = (new TransitionFactory($this->getApp()))->countLast();
+        $this->getState()->recordsTotal = (new TransitionFactory($this->getContainer()))->countLast();
         $this->getState()->setData($transitions);
     }
 
@@ -70,7 +70,7 @@ class Transition extends Base
         if ($this->getConfig()->GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
             throw new AccessDeniedException(__('Transition Config Locked'));
 
-        $transition = (new TransitionFactory($this->getApp()))->getById($transitionId);
+        $transition = (new TransitionFactory($this->getContainer()))->getById($transitionId);
 
         $this->getState()->template = 'transition-form-edit';
         $this->getState()->setData([
@@ -88,7 +88,7 @@ class Transition extends Base
         if ($this->getConfig()->GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
             throw new AccessDeniedException(__('Transition Config Locked'));
 
-        $transition = (new TransitionFactory($this->getApp()))->getById($transitionId);
+        $transition = (new TransitionFactory($this->getContainer()))->getById($transitionId);
         $transition->availableAsIn = $this->getSanitizer()->getCheckbox('availableAsIn');
         $transition->availableAsOut = $this->getSanitizer()->getCheckbox('availableAsOut');
         $transition->save();

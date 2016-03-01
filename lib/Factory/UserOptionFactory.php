@@ -56,7 +56,7 @@ class UserOptionFactory extends BaseFactory
         $sql = 'SELECT * FROM `useroption` WHERE userId = :userId';
 
         foreach ($this->getStore()->select($sql, array('userId' => $this->getSanitizer()->getInt('userId', $filterBy))) as $row) {
-            $entries[] = (new UserOption())->hydrate($row)->setApp($this->getApp());
+            $entries[] = (new UserOption())->hydrate($row)->setContainer($this->getContainer());
         }
 
         return $entries;

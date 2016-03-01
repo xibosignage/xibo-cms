@@ -76,7 +76,7 @@ class PermissionFactory extends BaseFactory
             throw new \InvalidArgumentException('Entity not found: ' . $entity);
 
         $permission = new Permission();
-        $permission->groupId = (new UserGroupFactory($this->getApp()))->getEveryone()->groupId;
+        $permission->groupId = (new UserGroupFactory($this->getContainer()))->getEveryone()->groupId;
         $permission->entityId = $results[0]['entityId'];
         $permission->objectId = $objectId;
         $permission->view  =$view;

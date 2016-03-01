@@ -36,7 +36,7 @@ class ResolutionFactory extends BaseFactory
      */
     public function getById($resolutionId)
     {
-        $resolutions = (new ResolutionFactory($this->getApp()))->query(null, array('disableUserCheck' => 1, 'resolutionId' => $resolutionId));
+        $resolutions = (new ResolutionFactory($this->getContainer()))->query(null, array('disableUserCheck' => 1, 'resolutionId' => $resolutionId));
 
         if (count($resolutions) <= 0)
             throw new NotFoundException;
@@ -53,7 +53,7 @@ class ResolutionFactory extends BaseFactory
      */
     public function getByDimensions($width, $height)
     {
-        $resolutions = (new ResolutionFactory($this->getApp()))->query(null, array('disableUserCheck' => 1, 'width' => $width, 'height' => $height));
+        $resolutions = (new ResolutionFactory($this->getContainer()))->query(null, array('disableUserCheck' => 1, 'width' => $width, 'height' => $height));
 
         if (count($resolutions) <= 0)
             throw new NotFoundException('Resolution not found');
@@ -70,7 +70,7 @@ class ResolutionFactory extends BaseFactory
      */
     public function getByDesignerDimensions($width, $height)
     {
-        $resolutions = (new ResolutionFactory($this->getApp()))->query(null, array('disableUserCheck' => 1, 'designerWidth' => $width, 'designerHeight' => $height));
+        $resolutions = (new ResolutionFactory($this->getContainer()))->query(null, array('disableUserCheck' => 1, 'designerWidth' => $width, 'designerHeight' => $height));
 
         if (count($resolutions) <= 0)
             throw new NotFoundException('Resolution not found');

@@ -32,7 +32,7 @@ class Logging extends Base
     {
         $this->getState()->template = 'log-page';
         $this->getState()->setData([
-            'displays' => (new DisplayFactory($this->getApp()))->query()
+            'displays' => (new DisplayFactory($this->getContainer()))->query()
         ]);
     }
 
@@ -43,7 +43,7 @@ class Logging extends Base
         $intervalType = $this->getSanitizer()->getInt('intervalType', 1);
         $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getDate()->getLocalDate());
 
-        $logs = (new LogFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter([
+        $logs = (new LogFactory($this->getContainer()))->query($this->gridRenderSort(), $this->gridRenderFilter([
             'fromDt' => $fromDt->format('U') - ($seconds * $intervalType),
             'toDt' => $fromDt->format('U'),
             'type' => $this->getSanitizer()->getString('level'),
@@ -56,7 +56,7 @@ class Logging extends Base
         ]));
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = (new LogFactory($this->getApp()))->countLast();
+        $this->getState()->recordsTotal = (new LogFactory($this->getContainer()))->countLast();
         $this->getState()->setData($logs);
     }
 

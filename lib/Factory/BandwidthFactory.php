@@ -23,7 +23,7 @@ class BandwidthFactory extends BaseFactory
     public function createAndSave($type, $displayId, $size)
     {
         $bandwidth = new Bandwidth();
-        $bandwidth->setApp($this->getApp());
+        $bandwidth->setContainer($this->getContainer());
         $bandwidth->type = $type;
         $bandwidth->displayId = $displayId;
         $bandwidth->size = $size;

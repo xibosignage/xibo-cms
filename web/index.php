@@ -77,7 +77,7 @@ $twig->twigTemplateDirs = [PROJECT_ROOT . '/views'];
 $app->view($twig);
 
 // Config
-Config::Load($app, PROJECT_ROOT . '/web/settings.php');
+Config::Load($app->container, PROJECT_ROOT . '/web/settings.php');
 
 // Middleware (onion, outside inwards and then out again - i.e. the last one is first and last);
 $app->add(new \Xibo\Middleware\Actions());

@@ -1344,7 +1344,7 @@ class Soap
         if ($this->display->loggedIn == 0) {
 
             // Log display up
-            (new Stat())->setApp($this->getApp())->displayUp($this->display->displayId);
+            (new Stat())->setContainer($this->getApp())->displayUp($this->display->displayId);
 
             // Do we need to email?
             if ($this->display->emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected')

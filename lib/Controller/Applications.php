@@ -51,7 +51,7 @@ class Applications extends Base
     {
         $this->getState()->template = 'grid';
 
-        $applications = (new ApplicationFactory($this->getApp()))->query($this->gridRenderSort(), $this->gridRenderFilter());
+        $applications = (new ApplicationFactory($this->getContainer()))->query($this->gridRenderSort(), $this->gridRenderFilter());
 
         foreach ($applications as $application) {
             /* @var Application $application */
@@ -76,7 +76,7 @@ class Applications extends Base
         }
 
         $this->getState()->setData($applications);
-        $this->getState()->recordsTotal = (new ApplicationFactory($this->getApp()))->countLast();
+        $this->getState()->recordsTotal = (new ApplicationFactory($this->getContainer()))->countLast();
     }
 
     /**
@@ -135,7 +135,7 @@ class Applications extends Base
 
         $this->getLog()->debug('Redirect URL is %s', $redirectUri);
 
-        $this->getApp()->redirect($redirectUri, 302);
+        $this->getContainer()->redirect($redirectUri, 302);
     }
 
     /**
@@ -152,7 +152,7 @@ class Applications extends Base
     public function editForm($clientId)
     {
         // Get the client
-        $client = (new ApplicationFactory($this->getApp()))->getById($clientId);
+        $client = (new ApplicationFactory($this->getContainer()))->getById($clientId);
 
         if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
             throw new AccessDeniedException();
@@ -173,7 +173,7 @@ class Applications extends Base
      */
     public function add()
     {
-        $application = (new ApplicationFactory($this->getApp()))->create();
+        $application = (new ApplicationFactory($this->getContainer()))->create();
         $application->name = $this->getSanitizer()->getString('name');
         $application->save();
 
@@ -188,7 +188,7 @@ class Applications extends Base
     public function edit($clientId)
     {
         // Get the client
-        $client = (new ApplicationFactory($this->getApp()))->getById($clientId);
+        $client = (new ApplicationFactory($this->getContainer()))->getById($clientId);
 
         if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
             throw new AccessDeniedException();

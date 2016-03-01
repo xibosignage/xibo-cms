@@ -219,7 +219,7 @@ class Schedule implements \JsonSerializable
         if ($this->loaded || $this->eventId == null || $this->eventId == 0)
             return;
 
-        $this->displayGroups = (new DisplayGroupFactory($this->getApp()))->getByEventId($this->eventId);
+        $this->displayGroups = (new DisplayGroupFactory($this->getContainer()))->getByEventId($this->eventId);
 
         // We are fully loaded
         $this->loaded = true;

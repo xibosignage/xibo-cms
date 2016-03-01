@@ -52,7 +52,7 @@ class RegionFactory extends BaseFactory
             throw new \InvalidArgumentException(__('Height must be greater than 0'));
 
         $region = new Region();
-        $region->setApp($this->getApp());
+        $region->setContainer($this->getContainer());
         $region->ownerId = $ownerId;
         $region->name = $name;
         $region->width = $width;
@@ -63,7 +63,7 @@ class RegionFactory extends BaseFactory
 
         // Create a Playlist for this region
         // many to many relationship
-        $playlist = (new PlaylistFactory($this->getApp()))->create($name, $ownerId);
+        $playlist = (new PlaylistFactory($this->getContainer()))->create($name, $ownerId);
         $region->assignPlaylist($playlist);
 
         return $region;
@@ -175,7 +175,7 @@ class RegionFactory extends BaseFactory
         }
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Region())->setApp($this->getApp())->hydrate($row, ['intProperties' => ['zIndex']]);
+            $entries[] = (new Region())->setContainer($this->getContainer())->hydrate($row, ['intProperties' => ['zIndex']]);
         }
 
         return $entries;

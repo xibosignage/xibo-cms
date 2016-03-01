@@ -9,7 +9,7 @@
 namespace Xibo\Factory;
 
 
-use Slim\Slim;
+use Slim\Helper\Set;
 use Xibo\Entity\User;
 use Xibo\Helper\Config;
 use Xibo\Helper\DateInterface;
@@ -17,12 +17,16 @@ use Xibo\Helper\Log;
 use Xibo\Helper\SanitizerInterface;
 use Xibo\Storage\StorageInterface;
 
+/**
+ * Class BaseFactory
+ * @package Xibo\Factory
+ */
 class BaseFactory
 {
     /**
-     * @var Slim $app
+     * @var Set $container
      */
-    private $app;
+    private $container;
 
     /**
      * Count records last query
@@ -32,11 +36,11 @@ class BaseFactory
 
     /**
      * BaseFactory constructor.
-     * @param Slim $app
+     * @param Set $container
      */
-    public function __construct($app)
+    public function __construct($container)
     {
-        $this->app = $app;
+        $this->container = $container;
 
         return $this;
     }
@@ -52,14 +56,14 @@ class BaseFactory
 
     /**
      * Get App
-     * @return Slim
+     * @return Set
      */
-    public function getApp()
+    public function getContainer()
     {
-        if ($this->app == null)
+        if ($this->container == null)
             throw new \RuntimeException(__('Factory Application not set'));
 
-        return $this->app;
+        return $this->container;
     }
 
     /**
@@ -69,7 +73,7 @@ class BaseFactory
      */
     public function getUser()
     {
-        return $this->getApp()->user;
+        return $this->getContainer()->user;
     }
 
     /**
@@ -78,7 +82,7 @@ class BaseFactory
      */
     protected function getLog()
     {
-        return $this->getApp()->logHelper;
+        return $this->getContainer()->logHelper;
     }
 
     /**
@@ -87,7 +91,7 @@ class BaseFactory
      */
     protected function getStore()
     {
-        return $this->getApp()->store;
+        return $this->getContainer()->store;
     }
 
     /**
@@ -96,7 +100,7 @@ class BaseFactory
      */
     protected function getDate()
     {
-        return $this->getApp()->dateService;
+        return $this->getContainer()->dateService;
     }
 
     /**
@@ -105,7 +109,7 @@ class BaseFactory
      */
     protected function getSanitizer()
     {
-        return $this->getApp()->sanitizerService;
+        return $this->getContainer()->sanitizerService;
     }
 
     /**
@@ -114,7 +118,7 @@ class BaseFactory
      */
     protected function getConfig()
     {
-        return $this->getApp()->configService;
+        return $this->getContainer()->configService;
     }
 
     /**
@@ -128,7 +132,7 @@ class BaseFactory
      */
     public function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [])
     {
-        $user = ($this->getSanitizer()->getInt('userCheckUserId', $filterBy) !== null) ? (new UserFactory($this->app))->getById($this->getSanitizer()->getInt('userCheckUserId', $filterBy)) : $this->getUser();
+        $user = ($this->getSanitizer()->getInt('userCheckUserId', $filterBy) !== null) ? (new UserFactory($this->container))->getById($this->getSanitizer()->getInt('userCheckUserId', $filterBy)) : $this->getUser();
 
         $permissionSql = '';
 

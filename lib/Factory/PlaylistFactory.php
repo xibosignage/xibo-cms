@@ -115,7 +115,7 @@ class PlaylistFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Playlist())->hydrate($row)->setApp($this->getApp());
+            $entries[] = (new Playlist())->hydrate($row)->setContainer($this->getContainer());
         }
 
         // Paging

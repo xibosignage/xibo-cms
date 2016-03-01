@@ -103,7 +103,7 @@ class ApplicationFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Application())->setApp($this->getApp())->hydrate($row)->setApp($this->getApp());
+            $entries[] = (new Application())->setContainer($this->getContainer())->hydrate($row);
         }
 
         // Paging

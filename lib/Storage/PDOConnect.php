@@ -29,7 +29,7 @@ use Xibo\Helper\Log;
  * Manages global connection state and the creation of connections
  * @package Xibo\Storage
  */
-class PDOConnect
+class PDOConnect implements StorageInterface
 {
     /**
      * @var \PDO The connection

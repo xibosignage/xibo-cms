@@ -23,7 +23,7 @@ class DataSetColumnTypeFactory extends BaseFactory
         $entries = [];
 
         foreach ($this->getStore()->select('SELECT dataSetColumnTypeId, dataSetColumnType FROM `datasetcolumntype` ', []) as $row) {
-            $entries[] = (new DataSetColumnType())->hydrate($row)->setApp($this->getApp())->setApp($this->getApp());
+            $entries[] = (new DataSetColumnType())->hydrate($row)->setContainer($this->getContainer());
         }
 
         return $entries;

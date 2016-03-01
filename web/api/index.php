@@ -51,7 +51,7 @@ $app = new \RKA\Slim(array(
 $app->setName('api');
 
 // Config
-Config::Load($app, PROJECT_ROOT . '/web/settings.php');
+Config::Load($app->container, PROJECT_ROOT . '/web/settings.php');
 
 $app->add(new \Xibo\Middleware\ApiAuthenticationOAuth());
 $app->add(new \Xibo\Middleware\State());

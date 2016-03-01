@@ -29,7 +29,7 @@ $app->get('/', function () use ($app) {
 
     if ($user->newUserWizard == 0) {
         $controller = new \Xibo\Controller\Login();
-        $controller->setApp($app);
+        $controller->setContainer($app);
         $controller->userWelcome();
 
         // We've seen it
@@ -67,7 +67,7 @@ $app->post('/login', function () use ($app) {
 
     try {
         $controller = new \Xibo\Controller\Login();
-        $controller->setApp($app);
+        $controller->setContainer($app);
         $controller->setNoOutput();
         $controller->login();
 

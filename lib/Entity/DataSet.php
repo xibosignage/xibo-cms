@@ -289,7 +289,7 @@ class DataSet implements \JsonSerializable
             throw new \InvalidArgumentException(__('Description can not be longer than 254 characters'));
 
         try {
-            $existing = (new DataSetFactory($this->getApp()))->getByName($this->dataSet);
+            $existing = (new DataSetFactory($this->getContainer()))->getByName($this->dataSet);
 
             if ($this->dataSetId == 0 || $this->dataSetId != $existing->dataSetId)
                 throw new \InvalidArgumentException(sprintf(__('There is already dataSet called %s. Please choose another name.'), $this->dataSet));
@@ -308,10 +308,10 @@ class DataSet implements \JsonSerializable
             return;
 
         // Load Columns
-        $this->columns = (new DataSetColumnFactory($this->getApp()))->getByDataSetId($this->dataSetId);
+        $this->columns = (new DataSetColumnFactory($this->getContainer()))->getByDataSetId($this->dataSetId);
 
         // Load Permissions
-        $this->permissions = (new PermissionFactory($this->getApp()))->getByObjectId(get_class($this), $this->getId());
+        $this->permissions = (new PermissionFactory($this->getContainer()))->getByObjectId(get_class($this), $this->getId());
 
         $this->loaded = true;
     }
@@ -466,7 +466,7 @@ class DataSet implements \JsonSerializable
     {
         $this->getLog()->debug('Checking for Displays to refresh for DataSet %d', $this->dataSetId);
 
-        foreach ((new DisplayFactory($this->getApp()))->getByActiveDataSetId($this->dataSetId) as $display) {
+        foreach ((new DisplayFactory($this->getContainer()))->getByActiveDataSetId($this->dataSetId) as $display) {
             /* @var \Xibo\Entity\Display $display */
             $display->setMediaIncomplete();
             $display->setCollectRequired(false);
