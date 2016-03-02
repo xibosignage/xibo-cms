@@ -346,7 +346,7 @@ class Campaign implements \JsonSerializable
     {
         $this->getLog()->debug('Checking for Displays to refresh on Campaign %d', $this->campaignId);
 
-        $displays = array_merge($this->getFactoryService()->get('DisplayFactory($this->getContainer()))->getByActiveCampaignId($this->campaignId), (new DisplayFactory')->getByAssignedCampaignId($this->campaignId));
+        $displays = array_merge($this->getFactoryService()->get('DisplayFactory')->getByActiveCampaignId($this->campaignId), $this->getFactoryService()->get('DisplayFactory')->getByAssignedCampaignId($this->campaignId));
 
         foreach ($displays as $display) {
             /* @var \Xibo\Entity\Display $display */

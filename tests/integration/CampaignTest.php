@@ -6,6 +6,7 @@
  */
 
 namespace Xibo\Tests;
+use Xibo\Entity\Campaign;
 
 /**
  * Class CampaignTest
@@ -96,6 +97,7 @@ class CampaignTest extends LocalWebTestCase
         // Make a campaign with a known name
         $name = \Xibo\Helper\Random::generateString(8, 'phpunit');
 
+        /* @var Campaign $campaign */
         $campaign = $this->getFactoryService()->get('CampaignFactory')->create($name, 1);
         $campaign->save();
 
@@ -106,7 +108,7 @@ class CampaignTest extends LocalWebTestCase
         $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
 
         // Call assign on the default layout
-        $this->client->post('/campaign/layout/assign/' . 2, ['layoutId' => [['layoutId' => $layout[0]->layoutId, 'displayOrder' => 1]]]);
+        $this->client->post('/campaign/layout/assign/' . $campaign->campaignId, ['layoutId' => [['layoutId' => $layout[0]->layoutId, 'displayOrder' => 1]]]);
 
         $this->assertSame(200, $this->client->response->status(), '/campaign/layout/assign/' . $campaign->campaignId . '. Body: ' . $this->client->response->body());
 

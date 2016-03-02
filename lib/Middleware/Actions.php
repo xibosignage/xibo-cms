@@ -41,11 +41,11 @@ class Actions extends Middleware
             // Process Actions
             if (!$app->configService->isUpgradePending() && $app->configService->GetSetting('DEFAULTS_IMPORTED') == 0) {
 
-                $folder = $this->getConfig()->uri('layouts', true);
+                $folder = $app->configService->uri('layouts', true);
 
                 foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                     if (stripos($file, '.zip')) {
-                        $layout = (new LayoutFactory($app))->createFromZip($folder . '/' . $file, null, 1, false, false, true);
+                        $layout = (new LayoutFactory($app->container))->createFromZip($folder . '/' . $file, null, 1, false, false, true);
                         $layout->save([
                             'audit' => false
                         ]);
@@ -53,7 +53,7 @@ class Actions extends Middleware
                 }
 
                 // Install files
-                (new Library())->installAllModuleFiles();
+                (new Library())->setApp($app)->installAllModuleFiles();
 
                 $app->configService->ChangeSetting('DEFAULTS_IMPORTED', 1);
             }

@@ -615,9 +615,8 @@ class User implements \JsonSerializable
         ]);
 
         // Add the user group
-        $group = new UserGroup();
-        $group->group = $this->userName;
-        $group->libraryQuota = $this->libraryQuota;
+        /* @var UserGroup $group */
+        $group = $this->getFactoryService()->get('UserGroupFactory')->create($this->userName, $this->libraryQuota);
         $group->setOwner($this);
         $group->save();
     }

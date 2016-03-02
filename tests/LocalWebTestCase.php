@@ -17,8 +17,10 @@ use Slim\Slim;
 use There4\Slim\Test\WebTestCase;
 use Xibo\Helper\AccessibleMonologWriter;
 use Xibo\Middleware\ApiView;
+use Xibo\Middleware\State;
 use Xibo\Middleware\Storage;
 use Xibo\Service\ConfigService;
+use Xibo\Service\FactoryServiceInterface;
 use Xibo\Service\SanitizeService;
 
 class LocalWebTestCase extends WebTestCase
@@ -37,9 +39,17 @@ class LocalWebTestCase extends WebTestCase
      * Get non-app container
      * @return Set
      */
-    public function getContainer()
+    protected function getContainer()
     {
         return $this->container;
+    }
+
+    /**
+     * @return FactoryServiceInterface
+     */
+    protected function getFactoryService()
+    {
+        return $this->container->factoryService;
     }
 
     /**
@@ -97,12 +107,6 @@ class LocalWebTestCase extends WebTestCase
 
         // Create a container for non-app calls to Factories
         $this->container = new Set();
-        Storage::setStorage($this->container);
-
-        // Register the sanitizer
-        $this->container->singleton('sanitizerService', function($container) {
-            return new SanitizeService($container);
-        });
 
         // Create a logger for this container
         $this->container->singleton('log', function ($c) use ($logger) {
@@ -114,6 +118,27 @@ class LocalWebTestCase extends WebTestCase
 
             return $log;
         });
+
+        // Provide the same config
+        $this->container->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+
+        Storage::setStorage($this->container);
+
+        $this->container->configService->setDependencies($this->container->store, '/');
+
+        // Define versions, etc.
+        $this->container->configService->Version();
+
+        // Register the sanitizer
+        $this->container->singleton('sanitizerService', function($container) {
+            return new SanitizeService($container);
+        });
+
+        // Register the factory service
+        State::registerFactoriesWithDi($this->container);
+
+        // My user is always root
+        $this->container->user = $this->getFactoryService()->get('UserFactory')->getByName('phpunit');
 
         return $app;
     }

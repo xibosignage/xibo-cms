@@ -296,6 +296,7 @@ class User extends Base
     {
         // Build a user entity and save it
         $user = new \Xibo\Entity\User();
+        $user->setContainer($this->getContainer());
         $user->userName = $this->getSanitizer()->getString('userName');
         $user->email = $this->getSanitizer()->getString('email');
         $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');

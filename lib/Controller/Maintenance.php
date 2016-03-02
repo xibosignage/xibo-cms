@@ -23,7 +23,7 @@ class Maintenance extends Base
     public function run()
     {
         // Always start a transaction
-        $this->getStore()->init()->beginTransaction();
+        $this->getStore()->getConnection()->beginTransaction();
 
         // Output HTML Headers
         print '<html>';

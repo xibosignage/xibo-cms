@@ -249,7 +249,7 @@ class UserGroup
      */
     private function linkUsers()
     {
-        $insert = $this->getStore()->init()->prepare('INSERT INTO `lkusergroup` (groupId, userId) VALUES (:groupId, :userId) ON DUPLICATE KEY UPDATE groupId = groupId');
+        $insert = $this->getStore()->getConnection()->prepare('INSERT INTO `lkusergroup` (groupId, userId) VALUES (:groupId, :userId) ON DUPLICATE KEY UPDATE groupId = groupId');
 
         foreach ($this->users as $user) {
             /* @var User $user */
