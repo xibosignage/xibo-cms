@@ -25,12 +25,12 @@ use Slim\Helper\Set;
 use Slim\Slim;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
-use Xibo\Helper\Config;
-use Xibo\Helper\Log;
-use Xibo\Helper\PlayerActionHelperInterface;
-use Xibo\Helper\SanitizerInterface;
+use Xibo\Service\ConfigService;
 use Xibo\Service\DateServiceInterface;
-use Xibo\Storage\StorageInterface;
+use Xibo\Service\LogService;
+use Xibo\Service\PlayerActionServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Base
@@ -163,7 +163,7 @@ class Base
 
     /**
      * Get Store
-     * @return StorageInterface
+     * @return StorageServiceInterface
      */
     protected function getStore()
     {
@@ -172,7 +172,7 @@ class Base
 
     /**
      * Get Log
-     * @return Log
+     * @return LogService
      */
     public function getLog()
     {
@@ -181,7 +181,7 @@ class Base
 
     /**
      * Get Help
-     * @return \Xibo\Helper\Help
+     * @return \Xibo\Service\HelpService
      */
     protected function getHelp()
     {
@@ -199,7 +199,7 @@ class Base
 
     /**
      * Get Sanitizer
-     * @return SanitizerInterface
+     * @return SanitizerServiceInterface
      */
     public function getSanitizer()
     {
@@ -208,7 +208,7 @@ class Base
 
     /**
      * Get Config
-     * @return Config
+     * @return ConfigService
      */
     public function getConfig()
     {
@@ -217,7 +217,7 @@ class Base
 
     /**
      * Get Player Service
-     * @return PlayerActionHelperInterface
+     * @return PlayerActionServiceInterface
      */
     public function getPlayerService()
     {

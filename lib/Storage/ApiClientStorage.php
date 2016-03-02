@@ -55,7 +55,7 @@ class ApiClientStorage extends AbstractStorage implements ClientInterface
 
     /**
      * Get Store
-     * @return StorageInterface
+     * @return StorageServiceInterface
      */
     protected function getStore()
     {

@@ -22,6 +22,7 @@ namespace Xibo\Helper;
 
 use Slim\Slim;
 use Xibo\Exception\InstallationError;
+use Xibo\Service\ConfigService;
 
 class Install
 {
@@ -61,7 +62,7 @@ class Install
     public function Step1()
     {
         return [
-            'config' => new Config()
+            'config' => new ConfigService()
         ];
     }
 

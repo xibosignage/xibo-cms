@@ -25,8 +25,8 @@ namespace Xibo\Middleware;
 
 use Slim\Helper\Set;
 use Slim\Middleware;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogService;
+use Xibo\Storage\PdoStorageService;
 
 /**
  * Class Storage
@@ -58,7 +58,7 @@ class Storage extends Middleware
             }
         }
 
-        $app->logHelper->info('PDO stats: %s.', json_encode(PDOConnect::stats()));
+        $app->logHelper->info('PDO stats: %s.', json_encode(PdoStorageService::stats()));
 
         $app->store->close();
     }
@@ -71,12 +71,12 @@ class Storage extends Middleware
     {
         // Register the log service
         $container->singleton('logHelper', function($container) {
-            return new Log($container->log, $container->mode);
+            return new LogService($container->log, $container->mode);
         });
 
         // Register the database service
         $container->singleton('store', function($container) {
-            return new PDOConnect($container->logHelper);
+            return new PdoStorageService($container->logHelper);
         });
     }
 }

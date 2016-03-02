@@ -56,7 +56,7 @@ class ApiAuthCodeStorage extends AbstractStorage implements AuthCodeInterface
 
     /**
      * Get Store
-     * @return StorageInterface
+     * @return StorageServiceInterface
      */
     protected function getStore()
     {

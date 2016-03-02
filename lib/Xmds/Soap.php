@@ -32,12 +32,12 @@ use Xibo\Factory\RegionFactory;
 use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 use Xibo\Helper\Random;
-use Xibo\Helper\SanitizerInterface;
+use Xibo\Service\ConfigService;
 use Xibo\Service\DateServiceInterface;
-use Xibo\Storage\StorageInterface;
+use Xibo\Service\LogService;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 class Soap
 {
@@ -90,7 +90,7 @@ class Soap
 
     /**
      * Get Store
-     * @return StorageInterface
+     * @return StorageServiceInterface
      */
     protected function getStore()
     {
@@ -99,7 +99,7 @@ class Soap
 
     /**
      * Get Log
-     * @return Log
+     * @return LogService
      */
     protected function getLog()
     {
@@ -117,7 +117,7 @@ class Soap
 
     /**
      * Get Sanitizer
-     * @return SanitizerInterface
+     * @return SanitizerServiceInterface
      */
     protected function getSanitizer()
     {
@@ -126,7 +126,7 @@ class Soap
 
     /**
      * Get Config
-     * @return Config
+     * @return ConfigService
      */
     protected function getConfig()
     {

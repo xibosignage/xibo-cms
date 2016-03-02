@@ -14,6 +14,10 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Translate;
 
+/**
+ * Class Theme
+ * @package Xibo\Middleware
+ */
 class Theme extends Middleware
 {
     public function call()
@@ -28,7 +32,7 @@ class Theme extends Middleware
         /* @var \Twig_Loader_Filesystem $twig */
 
         // Append the module view paths
-        $twig->setPaths(array_merge((new \Xibo\Factory\ModuleFactory($app))->getViewPaths(), [PROJECT_ROOT . '/views']));
+        $twig->setPaths(array_merge((new \Xibo\Factory\ModuleFactory($app->container))->getViewPaths(), [PROJECT_ROOT . '/views']));
 
         // Does this theme provide an alternative view path?
         if ($app->configService->getThemeConfig('view_path') != '') {
@@ -38,7 +42,7 @@ class Theme extends Middleware
         $app->hook('slim.before.dispatch', function() use($app) {
 
             $settings = [];
-            foreach ($app->configService->GetAll() as $setting) {
+            foreach ((new \Xibo\Factory\SettingsFactory($app->container))->query() as $setting) {
                 $settings[$setting['setting']] = $setting['value'];
             }
 

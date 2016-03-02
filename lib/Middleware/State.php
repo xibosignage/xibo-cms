@@ -30,12 +30,12 @@ use Stash\Pool;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\UpgradePendingException;
 use Xibo\Helper\ApplicationState;
-use Xibo\Helper\Help;
 use Xibo\Helper\NullSession;
-use Xibo\Helper\PlayerActionHelper;
-use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
+use Xibo\Service\HelpService;
+use Xibo\Service\PlayerActionService;
+use Xibo\Service\SanitizeService;
 
 /**
  * Class State
@@ -47,10 +47,21 @@ class State extends Middleware
     {
         $app = $this->app;
 
+        // Handle additional Middleware
+        if (isset($app->configService->middleware) && is_array($app->configService->middleware)) {
+            foreach ($app->configService->middleware as $object) {
+                $app->add($object);
+            }
+        }
+
+        // Set the root Uri
+        State::setRootUri($app);
+
+        // Set the config dependencies
+        $app->configService->setDependencies($app->store, $app->rootUri);
+
         // Set state
         State::setState($app);
-
-        State::setRootUri($app);
 
         // Attach a hook to log the route
         $this->app->hook('slim.before.dispatch', function() use ($app) {
@@ -100,7 +111,7 @@ class State extends Middleware
     {
         // Register the help service
         $app->container->singleton('helpService', function() use ($app) {
-            return new Help($app);
+            return new HelpService($app);
         });
 
         // Register the date service
@@ -117,7 +128,7 @@ class State extends Middleware
 
         // Register the sanitizer
         $app->container->singleton('sanitizerService', function($container) {
-            return new Sanitize($container);
+            return new SanitizeService($container);
         });
 
         // Register Controllers with DI
@@ -128,7 +139,7 @@ class State extends Middleware
 
         // Player Action Helper
         $app->container->singleton('playerActionService', function() use($app) {
-            return new PlayerActionHelper($app);
+            return new PlayerActionService($app);
         });
 
         // Set some public routes
@@ -166,7 +177,7 @@ class State extends Middleware
             $app->config('log.level', \Slim\Log::DEBUG);
         }
         else {
-            $app->config('log.level', \Xibo\Helper\Log::resolveLogLevel($app->configService->GetSetting('audit', 'error')));
+            $app->config('log.level', \Xibo\Service\LogService::resolveLogLevel($app->configService->GetSetting('audit', 'error')));
         }
 
         // Configure any extra log handlers

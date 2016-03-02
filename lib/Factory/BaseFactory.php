@@ -11,11 +11,11 @@ namespace Xibo\Factory;
 
 use Slim\Helper\Set;
 use Xibo\Entity\User;
-use Xibo\Helper\Config;
-use Xibo\Helper\Log;
-use Xibo\Helper\SanitizerInterface;
+use Xibo\Service\ConfigService;
 use Xibo\Service\DateServiceInterface;
-use Xibo\Storage\StorageInterface;
+use Xibo\Service\LogService;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class BaseFactory
@@ -76,7 +76,7 @@ class BaseFactory
 
     /**
      * Get Log
-     * @return Log
+     * @return LogService
      */
     protected function getLog()
     {
@@ -85,7 +85,7 @@ class BaseFactory
 
     /**
      * Get Store
-     * @return StorageInterface
+     * @return StorageServiceInterface
      */
     protected function getStore()
     {
@@ -103,7 +103,7 @@ class BaseFactory
 
     /**
      * Get Sanitizer
-     * @return SanitizerInterface
+     * @return SanitizerServiceInterface
      */
     protected function getSanitizer()
     {
@@ -112,7 +112,7 @@ class BaseFactory
 
     /**
      * Get Config
-     * @return Config
+     * @return ConfigService
      */
     protected function getConfig()
     {

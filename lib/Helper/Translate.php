@@ -24,8 +24,12 @@ use CachedFileReader;
 use Gettext\Translations;
 use Gettext\Translator;
 use gettext_reader;
-use Slim\Helper\Set;
+use Xibo\Service\ConfigServiceInterface;
 
+/**
+ * Class Translate
+ * @package Xibo\Helper
+ */
 class Translate
 {
     private static $requestedLanguage;
@@ -34,13 +38,13 @@ class Translate
 
     /**
      * Gets and Sets the Locale
-     * @param Set $container
+     * @param ConfigServiceInterface $config
      * @param $language string[optional] The Language to Load
      */
-    public static function InitLocale($container, $language = NULL)
+    public static function InitLocale($config, $language = NULL)
     {
         $localeDir = PROJECT_ROOT . '/locale';
-        $default = ($language == NULL) ? $container->configService->GetSetting('DEFAULT_LANGUAGE') : $language;
+        $default = ($language == NULL) ? $config->GetSetting('DEFAULT_LANGUAGE') : $language;
 
         // Build an array of supported languages
         $supportedLanguages = array_map('basename', glob($localeDir . '/*.mo'));
@@ -59,7 +63,7 @@ class Translate
                 $foundLanguage = $requestedLanguage;
             }
         }
-        else if ($container->configService->GetSetting('DETECT_LANGUAGE') == 1) {
+        else if ($config->GetSetting('DETECT_LANGUAGE') == 1) {
             // Detect the language, try from HTTP accept
             // Parse the language header and build a preference array
             $languagePreferenceArray = Translate::parseHttpAcceptLanguageHeader();

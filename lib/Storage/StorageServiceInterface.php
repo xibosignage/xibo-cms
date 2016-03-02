@@ -8,14 +8,17 @@
 
 namespace Xibo\Storage;
 
+use Xibo\Service\LogService;
 
-use Xibo\Helper\Log;
-
-interface StorageInterface
+/**
+ * Interface StorageInterface
+ * @package Xibo\Storage
+ */
+interface StorageServiceInterface
 {
     /**
      * PDOConnect constructor.
-     * @param Log $logger
+     * @param LogService $logger
      */
     public function __construct($logger);
 

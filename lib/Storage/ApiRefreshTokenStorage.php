@@ -55,7 +55,7 @@ class ApiRefreshTokenStorage extends AbstractStorage implements RefreshTokenInte
 
     /**
      * Get Store
-     * @return StorageInterface
+     * @return StorageServiceInterface
      */
     protected function getStore()
     {

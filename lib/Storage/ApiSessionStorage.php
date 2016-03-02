@@ -58,7 +58,7 @@ class ApiSessionStorage extends AbstractStorage implements SessionInterface
 
     /**
      * Get Store
-     * @return StorageInterface
+     * @return StorageServiceInterface
      */
     protected function getStore()
     {

@@ -55,7 +55,7 @@ class ApiScopeStorage extends AbstractStorage implements ScopeInterface
 
     /**
      * Get Store
-     * @return StorageInterface
+     * @return StorageServiceInterface
      */
     protected function getStore()
     {

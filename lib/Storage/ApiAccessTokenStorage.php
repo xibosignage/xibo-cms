@@ -56,7 +56,7 @@ class ApiAccessTokenStorage extends AbstractStorage implements AccessTokenInterf
 
     /**
      * Get Store
-     * @return StorageInterface
+     * @return StorageServiceInterface
      */
     protected function getStore()
     {

@@ -32,7 +32,7 @@ use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Log;
+use Xibo\Service\LogService;
 
 
 class Ticker extends ModuleWidget
@@ -520,7 +520,7 @@ class Ticker extends ModuleWidget
             }
 
             // Enable logging if we need to
-            if (Log::resolveLogLevel($this->getConfig()->GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
+            if (LogService::resolveLogLevel($this->getConfig()->GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
                 Logger::enable();
             }
 
@@ -720,7 +720,7 @@ class Ticker extends ModuleWidget
             $this->getLog()->debug($e->getTraceAsString());
         }
 
-        if (Log::resolveLogLevel($this->getConfig()->GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
+        if (LogService::resolveLogLevel($this->getConfig()->GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
             $this->getLog()->debug(var_export(Logger::getMessages(), true));
         }
 

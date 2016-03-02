@@ -22,13 +22,13 @@ namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\LogFactory;
-use Xibo\Helper\Config;
+use Xibo\Service\ConfigService;
 
 class Fault extends Base
 {
     function displayPage()
     {
-        $config = new Config();
+        $config = new ConfigService();
         $data = [
             'environmentCheck' => $config->CheckEnvironment(),
             'environmentFault' => $config->envFault,

@@ -21,15 +21,15 @@
 
 namespace Xibo\Storage;
 
-use Xibo\Helper\Config;
-use Xibo\Helper\Log;
+use Xibo\Service\ConfigService;
+use Xibo\Service\LogService;
 
 /**
  * Class PDOConnect
  * Manages global connection state and the creation of connections
  * @package Xibo\Storage
  */
-class PDOConnect implements StorageInterface
+class PdoStorageService implements StorageServiceInterface
 {
     /**
      * @var \PDO The connection
@@ -38,7 +38,7 @@ class PDOConnect implements StorageInterface
 
     /**
      * Logger
-     * @var Log
+     * @var LogService
      */
     private $log;
 
@@ -68,14 +68,14 @@ class PDOConnect implements StorageInterface
 
     /**
      * PDOConnect constructor.
-     * @param Log $logger
+     * @param LogService $logger
      */
 	public function __construct($logger = null)
     {
         $this->log = $logger;
 
         // Create a new connection
-        $this->conn = PDOConnect::newConnection();
+        $this->conn = PdoStorageService::newConnection();
     }
 
     /**
@@ -116,10 +116,10 @@ class PDOConnect implements StorageInterface
      */
 	public static function newConnection()
     {
-        $dsn = PDOConnect::createDsn(Config::$dbConfig['host'], Config::$dbConfig['name']);
+        $dsn = PdoStorageService::createDsn(ConfigService::$dbConfig['host'], ConfigService::$dbConfig['name']);
 
 		// Open the connection and set the error mode
-		$conn = new \PDO($dsn, Config::$dbConfig['user'], Config::$dbConfig['password']);
+		$conn = new \PDO($dsn, ConfigService::$dbConfig['user'], ConfigService::$dbConfig['password']);
 		$conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
 		$conn->query("SET NAMES 'utf8'");
@@ -143,7 +143,7 @@ class PDOConnect implements StorageInterface
 			$this->close();
 		}
 
-        $dsn = PDOConnect::createDsn($host, $name);
+        $dsn = PdoStorageService::createDsn($host, $name);
 
         // Open the connection and set the error mode
 		$this->conn = new \PDO($dsn, $user, $pass);

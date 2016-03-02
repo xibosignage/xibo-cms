@@ -90,7 +90,7 @@ $app->hook('slim.before.dispatch', function() use ($app) {
 
     if (file_exists(PROJECT_ROOT . '/web/settings.php')) {
         // Config
-        \Xibo\Helper\Config::Load($app->container, PROJECT_ROOT . '/web/settings.php');
+        $app->configService = \Xibo\Service\ConfigService::Load($app->container, PROJECT_ROOT . '/web/settings.php');
         // Set-up the translations for get text
         Translate::InitLocale($app);
 

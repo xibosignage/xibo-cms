@@ -6,20 +6,23 @@
  */
 
 
-namespace Xibo\Helper;
+namespace Xibo\Service;
 
 
-use Slim\Slim;
 use Xibo\Exception\ConfigurationException;
 use Xibo\XMR\PlayerAction;
 
-interface PlayerActionHelperInterface
+/**
+ * Interface PlayerActionServiceInterface
+ * @package Xibo\Service
+ */
+interface PlayerActionServiceInterface
 {
     /**
      * PlayerActionHelper constructor.
-     * @param Slim $app
+     * @param ConfigServiceInterface
      */
-    public function __construct($app);
+    public function __construct($config);
 
     /**
      * @param array[Display]|Display $displays

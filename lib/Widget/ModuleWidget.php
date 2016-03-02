@@ -26,11 +26,11 @@ use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\TransitionFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Log;
-use Xibo\Helper\SanitizerInterface;
+use Xibo\Service\ConfigService;
 use Xibo\Service\DateServiceInterface;
-use Xibo\Storage\StorageInterface;
+use Xibo\Service\LogService;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class ModuleWidget
@@ -103,7 +103,7 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Get Store
-     * @return StorageInterface
+     * @return StorageServiceInterface
      */
     protected function getStore()
     {
@@ -112,7 +112,7 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Get Log
-     * @return Log
+     * @return LogService
      */
     protected function getLog()
     {
@@ -121,7 +121,7 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Get Config
-     * @return Config
+     * @return ConfigService
      */
     public function getConfig()
     {
@@ -241,7 +241,7 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Get Sanitizer
-     * @return SanitizerInterface
+     * @return SanitizerServiceInterface
      */
     protected function getSanitizer()
     {

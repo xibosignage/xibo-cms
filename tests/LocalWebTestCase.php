@@ -16,10 +16,10 @@ use Slim\Log;
 use Slim\Slim;
 use There4\Slim\Test\WebTestCase;
 use Xibo\Helper\AccessibleMonologWriter;
-use Xibo\Helper\Config;
-use Xibo\Helper\Sanitize;
 use Xibo\Middleware\ApiView;
 use Xibo\Middleware\Storage;
+use Xibo\Service\ConfigService;
+use Xibo\Service\SanitizeService;
 
 class LocalWebTestCase extends WebTestCase
 {
@@ -77,7 +77,7 @@ class LocalWebTestCase extends WebTestCase
         $app->setName('test');
 
         // Config
-        Config::Load($app->container, PROJECT_ROOT . '/web/settings.php');
+        $app->configService = ConfigService::Load($app->container, PROJECT_ROOT . '/web/settings.php');
 
         $app->add(new TestAuthMiddleware());
         $app->add(new \Xibo\Middleware\State());
@@ -101,7 +101,7 @@ class LocalWebTestCase extends WebTestCase
 
         // Register the sanitizer
         $this->container->singleton('sanitizerService', function($container) {
-            return new Sanitize($container);
+            return new SanitizeService($container);
         });
 
         // Create a logger for this container

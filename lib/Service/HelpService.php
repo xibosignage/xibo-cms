@@ -18,82 +18,70 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xibo\Helper;
-use Exception;
-use Slim\Slim;
-use Xibo\Storage\StorageInterface;
+namespace Xibo\Service;
+use Stash\Interfaces\PoolInterface;
+use Xibo\Storage\StorageServiceInterface;
 
-
-class Help
+/**
+ * Class HelpService
+ * @package Xibo\Service
+ */
+class HelpService
 {
     /**
-     * @var Slim
+     * @var StorageServiceInterface
      */
-    private $app;
+    private $store;
 
     /**
-     * Help constructor.
-     * @param Slim $app
+     * @var ConfigServiceInterface
      */
-    public function __construct($app)
-    {
-        $this->app = $app;
-    }
+    private $config;
 
     /**
-     * Get the App
-     * @return Slim
-     * @throws \Exception
+     * @var PoolInterface
      */
-    public function getApp()
-    {
-        if ($this->app == null)
-            throw new \RuntimeException(__('Help Application DI not configured'));
+    private $pool;
 
-        return $this->app;
+    /**
+     * @inheritdoc
+     */
+    public function __construct($store, $config, $pool)
+    {
+        $this->store = $store;
+        $this->config = $config;
+        $this->pool = $pool;
     }
 
     /**
      * Get Cache Pool
      * @return \Stash\Interfaces\PoolInterface
      */
-    protected function getPool()
+    private function getPool()
     {
-        return $this->getApp()->pool;
+        return $this->pool;
     }
 
     /**
      * Get Store
-     * @return StorageInterface
+     * @return StorageServiceInterface
      */
-    protected function getStore()
+    private function getStore()
     {
-        return $this->getApp()->store;
-    }
-
-    /**
-     * Get Log
-     * @return Log
-     */
-    protected function getLog()
-    {
-        return $this->getApp()->logHelper;
+        return $this->store;
     }
 
     /**
      * Get Config
-     * @return Config
+     * @return ConfigService
      */
-    public function getConfig()
+    private function getConfig()
     {
-        return $this->getApp()->configService;
+        return $this->config;
     }
 
     /**
-     * Get Help Link
-     * @param string $topic
-     * @param string $category
-     * @return string
+     * @inheritdoc
      */
     public function link($topic = '', $category = "General")
     {
@@ -114,9 +102,7 @@ class Help
     }
 
     /**
-     * Raw Link
-     * @param $link
-     * @return string
+     * @inheritdoc
      */
     public function rawLink($link)
     {

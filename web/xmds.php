@@ -51,7 +51,7 @@ $app = new \Slim\Slim(array(
 $app->setName('api');
 
 // Load the config
-\Xibo\Helper\Config::Load($app->container, PROJECT_ROOT . '/web/settings.php');
+$app->configService = \Xibo\Service\ConfigService::Load($app->container, PROJECT_ROOT . '/web/settings.php');
 
 // Set storage
 \Xibo\Middleware\Storage::setStorage($app->container);

@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\Config;
+use Xibo\Service\ConfigService;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
@@ -77,9 +77,11 @@ $twig->twigTemplateDirs = [PROJECT_ROOT . '/views'];
 $app->view($twig);
 
 // Config
-Config::Load($app->container, PROJECT_ROOT . '/web/settings.php');
+$app->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
 
+//
 // Middleware (onion, outside inwards and then out again - i.e. the last one is first and last);
+//
 $app->add(new \Xibo\Middleware\Actions());
 
 // Authentication middleware

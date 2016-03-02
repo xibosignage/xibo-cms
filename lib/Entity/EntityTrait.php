@@ -10,13 +10,13 @@ namespace Xibo\Entity;
 
 
 use Slim\Helper\Set;
-use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 use Xibo\Helper\ObjectVars;
-use Xibo\Helper\PlayerActionHelperInterface;
-use Xibo\Helper\SanitizerInterface;
+use Xibo\Service\ConfigService;
 use Xibo\Service\DateServiceInterface;
-use Xibo\Storage\StorageInterface;
+use Xibo\Service\LogService;
+use Xibo\Service\PlayerActionServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class EntityTrait
@@ -158,7 +158,7 @@ trait EntityTrait
 
     /**
      * Get Store
-     * @return StorageInterface
+     * @return StorageServiceInterface
      */
     protected function getStore()
     {
@@ -167,7 +167,7 @@ trait EntityTrait
 
     /**
      * Get Log
-     * @return Log
+     * @return LogService
      */
     protected function getLog()
     {
@@ -185,7 +185,7 @@ trait EntityTrait
 
     /**
      * Get Sanitizer
-     * @return SanitizerInterface
+     * @return SanitizerServiceInterface
      */
     protected function getSanitizer()
     {
@@ -194,7 +194,7 @@ trait EntityTrait
 
     /**
      * Get Config
-     * @return Config
+     * @return ConfigService
      */
     protected function getConfig()
     {
@@ -203,7 +203,7 @@ trait EntityTrait
 
     /**
      * Get Player Service
-     * @return PlayerActionHelperInterface
+     * @return PlayerActionServiceInterface
      */
     public function getPlayerService()
     {

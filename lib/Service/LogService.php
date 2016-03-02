@@ -20,12 +20,16 @@
  */
 
 
-namespace Xibo\Helper;
+namespace Xibo\Service;
 
 
-use Xibo\Storage\PDOConnect;
+use Xibo\Storage\PdoStorageService;
 
-class Log
+/**
+ * Class LogService
+ * @package Xibo\Service
+ */
+class LogService implements LogServiceInterface
 {
     /**
      * @var \Slim\Log
@@ -51,9 +55,7 @@ class Log
     private $_auditLogStatement;
 
     /**
-     * Log constructor.
-     * @param \Slim\Log $logger
-     * @param string $mode
+     * @inheritdoc
      */
     public function __construct($logger, $mode = 'production')
     {
@@ -62,32 +64,30 @@ class Log
     }
 
     /**
-     * Set the user Id
-     * @param int $userId
+     * @inheritdoc
      */
     public function setUserId($userId)
     {
         $this->userId = $userId;
     }
 
+    /**
+     * @inheritdoc
+     */
     public function setMode($mode)
     {
         $this->mode = $mode;
     }
 
     /**
-     * Audit Log
-     * @param string $entity
-     * @param int $entityId
-     * @param string $message
-     * @param string|object|array $object
+     * @inheritdoc
      */
     public function audit($entity, $entityId, $message, $object)
     {
         $this->debug(sprintf('Audit Trail message recorded for %s with id %d. Message: %s', $entity, $entityId, $message));
 
         if ($this->_auditLogStatement == null) {
-            $dbh = PDOConnect::newConnection();
+            $dbh = PdoStorageService::newConnection();
             $this->_auditLogStatement = $dbh->prepare('
                 INSERT INTO `auditlog` (logDate, userId, entity, message, entityId, objectAfter)
                   VALUES (:logDate, :userId, :entity, :message, :entityId, :objectAfter)
@@ -108,6 +108,9 @@ class Log
         ]);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function sql($sql, $params)
     {
         if (strtolower($this->mode) == 'test') {
@@ -119,50 +122,73 @@ class Log
         }
     }
 
+    /**
+     * @inheritdoc
+     */
     public function debug($object)
     {
         // Get the calling class / function
         $this->log->debug($this->prepare($object, func_get_args()));
     }
 
+    /**
+     * @inheritdoc
+     */
     public function notice($object)
     {
         $this->log->notice($this->prepare($object, func_get_args()));
     }
+
+    /**
+     * @inheritdoc
+     */
     public function info($object)
     {
         $this->log->info($this->prepare($object, func_get_args()));
     }
 
+    /**
+     * @inheritdoc
+     */
     public function warning($object)
     {
         $this->log->warning($this->prepare($object, func_get_args()));
     }
 
+    /**
+     * @inheritdoc
+     */
     public function error($object)
     {
         $this->log->error($this->prepare($object, func_get_args()));
     }
 
+    /**
+     * @inheritdoc
+     */
     public function critical($object)
     {
         $this->log->critical($this->prepare($object, func_get_args()));
     }
 
+    /**
+     * @inheritdoc
+     */
     public function alert($object)
     {
         $this->log->alert($this->prepare($object, func_get_args()));
     }
 
+    /**
+     * @inheritdoc
+     */
     public function emergency($object)
     {
         $this->log->emergency($this->prepare($object, func_get_args()));
     }
-    
+
     /**
-     * Stringify string objects
-     * @param $object
-     * @return string
+     * @inheritdoc
      */
     private function prepare($object, $args)
     {
@@ -177,9 +203,7 @@ class Log
     }
 
     /**
-     * Resolve the log level
-     * @param string $level
-     * @return int
+     * @inheritdoc
      */
     public static function resolveLogLevel($level)
     {

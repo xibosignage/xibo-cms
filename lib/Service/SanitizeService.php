@@ -20,53 +20,71 @@
  */
 
 
-namespace Xibo\Helper;
+namespace Xibo\Service;
 
 
 use Jenssegers\Date\Date;
-use Slim\Helper\Set;
-use Slim\Slim;
-use Xibo\Service\DateServiceInterface;
+use Slim\Http\Request;
 
-class Sanitize implements SanitizerInterface
+/**
+ * Class SanitizeService
+ * @package Xibo\Service
+ */
+class SanitizeService implements SanitizerServiceInterface
 {
     /**
-     * @var Set
+     * @var DateServiceInterface
      */
-    protected $container;
+    private $date;
 
     /**
-     * Sanitize constructor.
-     * @param Set $container
-     * @param Slim[Optional] $app
+     * @var Request
      */
-    public function __construct($container)
+    private $request;
+
+    /**
+     * @inheritdoc
+     */
+    public function __construct($date)
     {
-        $this->container = $container;
+        $this->date = $date;
     }
 
     /**
-     * Get the App
-     * @return Slim
-     * @throws \Exception
+     * @inheritdoc
      */
-    public function getContainer()
+    public function setRequest($request)
     {
-        if ($this->container == null)
-            throw new \RuntimeException(__('Sanitizer called before DI has been setup'));
-
-        return $this->container;
+        $this->request = $request;
     }
 
     /**
      * Get Date
      * @return DateServiceInterface
      */
-    protected function getDateService()
+    private function getDateService()
     {
-        return $this->getContainer()->dateService;
+        if ($this->date == null)
+            throw new \RuntimeException('Sanitizer called before DateService has been set');
+
+        return $this->date;
     }
 
+    /**
+     * Get Request
+     * @return Request
+     */
+    private function getRequest()
+    {
+        if ($this->request == null)
+            throw new \RuntimeException('Sanitizer called before Request has been set');
+
+        return $this->request;
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function getParam($param, $default, $source = null)
     {
         if (is_array($default)) {
@@ -74,18 +92,18 @@ class Sanitize implements SanitizerInterface
         }
         else if ($source == null) {
 
-            switch ($this->getContainer()->request->getMethod()) {
+            switch ($this->getRequest()->getMethod()) {
                 case 'GET':
-                    $return = $this->getContainer()->request->get($param, $default);
+                    $return = $this->getRequest()->get($param, $default);
                     break;
                 case 'POST':
-                    $return = $this->getContainer()->request->post($param, $default);
+                    $return = $this->getRequest()->post($param, $default);
                     break;
                 case 'PUT':
-                    $return = $this->getContainer()->request->put($param, $default);
+                    $return = $this->getRequest()->put($param, $default);
                     break;
                 case 'DELETE':
-                    $return = $this->getContainer()->request->delete($param, $default);
+                    $return = $this->getRequest()->delete($param, $default);
                     break;
                 default:
                     $return = $default;
@@ -97,11 +115,17 @@ class Sanitize implements SanitizerInterface
             return isset($source[$param]) ? $source[$param] : $default;
     }
 
+    /**
+     * @inheritdoc
+     */
     public function getInt($param, $default = null, $source = null)
     {
         return $this->int($this->getParam($param, $default, $source));
     }
 
+    /**
+     * @inheritdoc
+     */
     public function int($param)
     {
         if ($param === null)
@@ -110,11 +134,17 @@ class Sanitize implements SanitizerInterface
         return intval(filter_var($param, FILTER_SANITIZE_NUMBER_INT));
     }
 
+    /**
+     * @inheritdoc
+     */
     public function getDouble($param, $default = null, $source = null)
     {
         return $this->double($this->getParam($param, $default, $source));
     }
 
+    /**
+     * @inheritdoc
+     */
     public function double($param)
     {
         if ($param === null)
@@ -123,11 +153,17 @@ class Sanitize implements SanitizerInterface
         return doubleval(filter_var($param, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION));
     }
 
+    /**
+     * @inheritdoc
+     */
     public function getString($param, $default = null, $source = null)
     {
         return $this->string($this->getParam($param, $default, $source));
     }
 
+    /**
+     * @inheritdoc
+     */
     public function string($param)
     {
         if ($param === null)
@@ -136,6 +172,9 @@ class Sanitize implements SanitizerInterface
         return filter_var($param, FILTER_SANITIZE_STRING);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function getUserName($param, $default = null, $source = null)
     {
         $param = $this->getParam($param, $default, $source);
@@ -148,27 +187,42 @@ class Sanitize implements SanitizerInterface
         return strtolower($param);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function getPassword($param, $default = null, $source = null)
     {
         return $this->getString($param, $default, $source);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function getCheckbox($param, $default = null, $source = null)
     {
         $checkbox = $this->getParam($param, $default, $source);
         return $this->checkbox($checkbox);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function checkbox($param)
     {
         return ($param === 'on' || $param === 1 || $param === '1' || $param === 'true' || $param === true) ? 1 : 0;
     }
 
+    /**
+     * @inheritdoc
+     */
     public function bool($param)
     {
         return filter_var($param, FILTER_VALIDATE_BOOLEAN);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function htmlString($param)
     {
         // decimal notation
@@ -185,11 +239,7 @@ class Sanitize implements SanitizerInterface
     }
 
     /**
-     * Get an array of ints
-     * @param string $param
-     * @param mixed[Optional] $default
-     * @param mixed[Optional] $source
-     * @return array[mixed]|null
+     * @inheritdoc
      */
     public function getStringArray($param, $default = null, $source = null)
     {
@@ -202,11 +252,7 @@ class Sanitize implements SanitizerInterface
     }
 
     /**
-     * Get an array of ints
-     * @param string $param
-     * @param mixed[Optional] $default
-     * @param mixed[Optional] $source
-     * @return array[mixed]|null
+     * @inheritdoc
      */
     public function getIntArray($param, $default = null, $source = null)
     {
@@ -219,11 +265,7 @@ class Sanitize implements SanitizerInterface
     }
 
     /**
-     * Get a date from input.
-     * @param $param
-     * @param mixed[Optional] $default
-     * @param mixed[Optional] $source
-     * @return \Jenssegers\Date\Date
+     * @inheritdoc
      */
     public function getDate($param, $default = null, $source = null)
     {

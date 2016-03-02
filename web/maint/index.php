@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use Xibo\Helper\Config;
+use Xibo\Service\ConfigService;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/../..'));
@@ -53,7 +53,7 @@ $app = new \RKA\Slim(array(
 $app->setName('maint');
 
 // Config
-Config::Load($app->container, PROJECT_ROOT . '/web/settings.php');
+$app->configService = ConfigService::Load($app->container, PROJECT_ROOT . '/web/settings.php');
 
 \Xibo\Middleware\State::setState($app);
 

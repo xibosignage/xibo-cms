@@ -18,22 +18,36 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xibo\Helper;
+namespace Xibo\Service;
 
-use Slim\Helper\Set;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\ConfigurationException;
-use Xibo\Storage\StorageInterface;
+use Xibo\Storage\StorageServiceInterface;
 
-class Config
+/**
+ * Class ConfigService
+ * @package Xibo\Service
+ */
+class ConfigService implements ConfigServiceInterface
 {
     public static $WEBSITE_VERSION_NAME = '1.8.0-alpha3';
     public static $WEBSITE_VERSION = 123;
     public static $VERSION_REQUIRED = '5.5';
 
     /**
-     * @var Set
+     * @var StorageServiceInterface
      */
-    public $container;
+    public $store;
+
+    /**
+     * @var PoolInterface
+     */
+    public $pool;
+
+    /**
+     * @var string
+     */
+    public $rootUri;
 
     public $envTested = false;
     public $envFault = false;
@@ -41,6 +55,7 @@ class Config
 
     public static $dbConfig = [];
 
+    public $middleware = null;
     public $logHandlers = null;
     public $logProcessors = null;
     public $authentication = null;
@@ -54,16 +69,20 @@ class Config
     public $themeConfig = [];
 
     /**
-     * Get the App
-     * @return Set
-     * @throws \Exception
+     * @inheritdoc
      */
-    public function getContainer()
+    public function setDependencies($store, $rootUri)
     {
-        if ($this->container == null)
-            throw new \RuntimeException(__('Config called before DI has been setup'));
+        $this->store = $store;
+        $this->rootUri = $rootUri;
+    }
 
-        return $this->container;
+    /**
+     * @inheritdoc
+     */
+    public function setPool($pool)
+    {
+        $this->pool = $pool;
     }
 
     /**
@@ -72,38 +91,42 @@ class Config
      */
     private function getPool()
     {
-        return $this->getContainer()->pool;
+        return $this->pool;
     }
 
     /**
      * Get Store
-     * @return StorageInterface
+     * @return StorageServiceInterface
      */
     protected function getStore()
     {
-        return $this->getContainer()->store;
+        if ($this->store == null)
+            throw new \RuntimeException(__('Config Service called before setDependencies'));
+
+        return $this->store;
     }
 
     /**
-     * Get Sanitizer
-     * @return SanitizerInterface
+     * Get App Root URI
+     * @return string
      */
-    protected function getSanitizer()
+    public function rootUri()
     {
-        return $this->getContainer()->sanitizerService;
+        if ($this->rootUri == null)
+            throw new \RuntimeException(__('Config Service called before setDependencies'));
+
+        return $this->rootUri;
     }
 
     /**
      * Loads the settings from file.
      *  DO NOT CALL ANY STORE() METHODS IN HERE
-     * @param Set $app
      * @param string $settings
+     * @return ConfigServiceInterface
      */
-    public static function Load($app, $settings)
+    public static function Load($settings)
     {
-        $config = new Config();
-
-        $config->container = $app;
+        $config = new ConfigService();
 
         // Include the provided settings file.
         @require ($settings);
@@ -127,11 +150,8 @@ class Config
             $config->logProcessors = $logProcessors;
 
         // Middleware
-        if (isset($middleware) && is_array($middleware)) {
-            foreach ($middleware as $object) {
-                $app->add($object);
-            }
-        }
+        if (isset($middleware))
+            $config->middleware = $middleware;
 
         // Authentication
         if (isset($authentication))
@@ -146,7 +166,7 @@ class Config
             $config->cacheDrivers = $cacheDrivers;
 
         // Set this as the global config
-        $app->configService = $config;
+        return $config;
     }
 
     /**
@@ -193,7 +213,7 @@ class Config
      */
     public function uri($uri, $local = false)
     {
-        $rootUri = ($local) ? '' : $this->getContainer()->rootUri;
+        $rootUri = ($local) ? '' : $this->rootUri();
 
         // Serve the appropriate theme file
         if (is_dir(PROJECT_ROOT . '/web/theme/' . $this->themeConfig['themeCode'] . '/' . $uri)) {
@@ -205,15 +225,6 @@ class Config
         else {
             return $rootUri . 'theme/default/' . $uri;
         }
-    }
-
-    /**
-     * Get App Root URI
-     * @return mixed
-     */
-    public function rootUri()
-    {
-        return $this->getContainer()->rootUri;
     }
 
     /**
@@ -258,7 +269,6 @@ class Config
      */
     public function ChangeSetting($setting, $value)
     {
-
         $sth = $this->getStore()->getConnection()->prepare('UPDATE `setting` SET `value` = :value WHERE `setting` = :setting');
         $sth->execute(array('setting' => $setting, 'value' => $value));
 
@@ -266,34 +276,6 @@ class Config
             $item = self::getPool()->getItem('config/' . $setting);
             self::getPool()->saveDeferred($item->set($value));
         }
-    }
-
-    public function GetAll($sort_order = array('cat', 'ordering'), $filter_by = array())
-    {
-        if ($sort_order == NULL)
-            $sort_order = array('cat', 'ordering');
-
-        $SQL = 'SELECT * FROM `setting` WHERE 1 = 1 ';
-        $params = array();
-
-        if ($this->getSanitizer()->getInt('userChange', $filter_by) !== null) {
-            $SQL .= ' AND userChange = :userChange ';
-            $params['userChange'] = $this->getSanitizer()->getInt('userChange', $filter_by);
-        }
-
-        if ($this->getSanitizer()->getInt('userSee', $filter_by) !== null) {
-            $SQL .= ' AND userSee = :userSee ';
-            $params['userSee'] = $this->getSanitizer()->getInt('userSee', $filter_by);
-        }
-
-        // Sorting?
-        if (is_array($sort_order))
-            $SQL .= 'ORDER BY ' . implode(',', $sort_order);
-
-        $sth = $this->getStore()->getConnection()->prepare($SQL);
-        $sth->execute($params);
-
-        return $sth->fetchAll();
     }
 
     /**
@@ -337,7 +319,7 @@ class Config
      */
     public function isUpgradePending()
     {
-        return DBVERSION != Config::$WEBSITE_VERSION;
+        return DBVERSION != ConfigService::$WEBSITE_VERSION;
     }
 
     /**
@@ -416,7 +398,7 @@ class Config
         $rows = array();
 
         // Check for PHP version
-        $advice = sprintf(__("PHP version %s or later required."), Config::$VERSION_REQUIRED) . ' Detected ' . phpversion();
+        $advice = sprintf(__("PHP version %s or later required."), ConfigService::$VERSION_REQUIRED) . ' Detected ' . phpversion();
         if ($this->CheckPHP()) {
             $status = 1;
         } else {
@@ -780,7 +762,7 @@ class Config
      */
     function CheckPHP()
     {
-        return (version_compare(phpversion(), Config::$VERSION_REQUIRED) != -1);
+        return (version_compare(phpversion(), ConfigService::$VERSION_REQUIRED) != -1);
     }
 
     /**
@@ -938,8 +920,7 @@ class Config
     }
 
     /**
-     * Check ZeroMQ support
-     * @return bool
+     * @inheritdoc
      */
     public static function checkZmq()
     {

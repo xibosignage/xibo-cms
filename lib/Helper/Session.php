@@ -20,8 +20,13 @@
  */
 namespace Xibo\Helper;
 
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogService;
+use Xibo\Storage\PdoStorageService;
 
+/**
+ * Class Session
+ * @package Xibo\Helper
+ */
 class Session implements \SessionHandlerInterface
 {
     private $maxLifetime;
@@ -64,19 +69,19 @@ class Session implements \SessionHandlerInterface
 
     /**
      * The database connection
-     * @var PDOConnect
+     * @var PdoStorageService
      */
     private $pdo = null;
 
     /**
      * Log
-     * @var Log
+     * @var LogService
      */
     private $log;
 
     /**
      * Session constructor.
-     * @param Log $log
+     * @param LogService $log
      */
     function __construct($log)
     {
@@ -123,7 +128,7 @@ class Session implements \SessionHandlerInterface
 
             // Prune this session if necessary
             if ($this->pruneKey || $this->gcCalled) {
-                $db = new PDOConnect($this->log);
+                $db = new PdoStorageService($this->log);
 
                 if ($this->pruneKey) {
                     $db->update('DELETE FROM `session` WHERE session_id = :session_id', array('session_id' => $this->key));
@@ -370,12 +375,12 @@ class Session implements \SessionHandlerInterface
 
     /**
      * Get a Database
-     * @return PDOConnect
+     * @return PdoStorageService
      */
     private function getDb()
     {
         if ($this->pdo == null)
-            $this->pdo = new PDOConnect($this->log);
+            $this->pdo = new PdoStorageService($this->log);
 
         return $this->pdo;
     }

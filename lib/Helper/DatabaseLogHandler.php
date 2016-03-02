@@ -24,8 +24,12 @@ namespace Xibo\Helper;
 
 
 use Monolog\Handler\AbstractProcessingHandler;
-use Xibo\Storage\PDOConnect;
+use Xibo\Storage\PdoStorageService;
 
+/**
+ * Class DatabaseLogHandler
+ * @package Xibo\Helper
+ */
 class DatabaseLogHandler extends AbstractProcessingHandler
 {
     private static $statement;
@@ -33,7 +37,7 @@ class DatabaseLogHandler extends AbstractProcessingHandler
     protected function write(array $record)
     {
         if (self::$statement == NULL) {
-            $pdo = PDOConnect::newConnection();
+            $pdo = PdoStorageService::newConnection();
 
             $SQL = 'INSERT INTO log (runNo, logdate, channel, type, page, function, message, userid, displayid)
                       VALUES (:runNo, :logdate, :channel, :type, :page, :function, :message, :userid, :displayid)
