@@ -135,7 +135,7 @@ class StatusDashboard extends Base
             // Decide what our units are going to be, based on the size
             $base = ($maxSize == 0) ? 0 : floor(log($maxSize) / log(1024));
 
-            $output = array();
+            $output = [];
             $totalSize = 0;
             foreach ($results as $library) {
                 $output[] = array(

@@ -52,7 +52,7 @@ class Fault extends Base
         fclose($out);
 
         // We want to output a load of stuff to the browser as a text file.
-        $app = $this->getContainer();
+        $app = $this->getApp();
         $app->response()->header('Content-Type', 'text/csv');
         $app->response()->header('Content-Disposition', 'attachment; filename="troubleshoot.csv"');
         $app->response()->header('Content-Transfer-Encoding', 'binary"');

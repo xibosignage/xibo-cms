@@ -12,7 +12,6 @@ namespace Xibo\Xmds;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\DisplayFactory;
 
 class Soap5 extends Soap4
 {
@@ -69,7 +68,7 @@ class Soap5 extends Soap4
 
         // Check in the database for this hardwareKey
         try {
-            $display = (new DisplayFactory($this->getApp()))->getByLicence($hardwareKey);
+            $display = $this->getFactoryService()->get('DisplayFactory')->getByLicence($hardwareKey);
 
             $this->logProcessor->setDisplay($display->displayId);
 
