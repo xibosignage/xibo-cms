@@ -33,10 +33,10 @@ use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Config;
-use Xibo\Helper\DateInterface;
 use Xibo\Helper\Log;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerInterface;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Storage\StorageInterface;
 
 class Soap
@@ -108,7 +108,7 @@ class Soap
 
     /**
      * Get Date
-     * @return DateInterface
+     * @return DateServiceInterface
      */
     protected function getDate()
     {

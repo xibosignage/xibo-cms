@@ -106,9 +106,9 @@ class State extends Middleware
         // Register the date service
         $app->container->singleton('dateService', function() use ($app) {
             if ($app->configService->GetSetting('CALENDAR_TYPE') == 'Jalali')
-                $date = new \Xibo\Helper\DateJalali($app);
+                $date = new \Xibo\Service\DateServiceJalali($app);
             else
-                $date = new \Xibo\Helper\Date($app);
+                $date = new \Xibo\Service\DateServiceGregorian($app);
 
             $date->setLocale(Translate::GetLocale(2));
 

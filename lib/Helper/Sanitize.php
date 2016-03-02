@@ -26,6 +26,7 @@ namespace Xibo\Helper;
 use Jenssegers\Date\Date;
 use Slim\Helper\Set;
 use Slim\Slim;
+use Xibo\Service\DateServiceInterface;
 
 class Sanitize implements SanitizerInterface
 {
@@ -59,7 +60,7 @@ class Sanitize implements SanitizerInterface
 
     /**
      * Get Date
-     * @return DateInterface
+     * @return DateServiceInterface
      */
     protected function getDateService()
     {

@@ -27,9 +27,9 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Helper\Config;
-use Xibo\Helper\DateInterface;
 use Xibo\Helper\Log;
 use Xibo\Helper\SanitizerInterface;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Storage\StorageInterface;
 
 /**
@@ -232,7 +232,7 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Get Date
-     * @return DateInterface
+     * @return DateServiceInterface
      */
     protected function getDate()
     {

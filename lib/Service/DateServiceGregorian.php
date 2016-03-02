@@ -18,19 +18,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xibo\Helper;
+namespace Xibo\Service;
 use DateTime;
 
-class Date implements DateInterface
+/**
+ * Class DateServiceGregorian
+ * @package Xibo\Service
+ */
+class DateServiceGregorian implements DateServiceInterface
 {
     private static $timezones = null;
-
-    private $app;
-
-    public function __construct($app)
-    {
-        $this->app = $app;
-    }
 
     /**
      * Get a local date
@@ -78,6 +75,9 @@ class Date implements DateInterface
         return \Jenssegers\Date\Date::createFromFormat($format, $string);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function setLocale($identifier)
     {
         \Jenssegers\Date\Date::setLocale($identifier);

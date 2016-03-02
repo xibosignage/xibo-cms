@@ -6,18 +6,15 @@
  */
 
 
-namespace Xibo\Helper;
+namespace Xibo\Service;
 
-
-class DateJalali implements DateInterface
+/**
+ * Class DateServiceJalali
+ * @package Xibo\Service
+ */
+class DateServiceJalali implements DateServiceInterface
 {
     private static $timezones = null;
-    private $app;
-
-    public function __construct($app)
-    {
-        $this->app = $app;
-    }
 
     /**
      * Get a local date
@@ -36,7 +33,7 @@ class DateJalali implements DateInterface
         if ($timestamp == NULL)
             $timestamp = time();
 
-        return \JDateTime::date($format, $timestamp, false);
+        return \jDateTime::date($format, $timestamp, false);
     }
 
     /**
@@ -77,6 +74,9 @@ class DateJalali implements DateInterface
         return \Jenssegers\Date\Date::create($date[0], $date[1], $date[2], $timeSplit[0], $timeSplit[1]);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function setLocale($identifier)
     {
         \Jenssegers\Date\Date::setLocale($identifier);
@@ -207,12 +207,18 @@ class DateJalali implements DateInterface
         return self::$timezones;
     }
 
+    /**
+     * @inheritdoc
+     */
     private static function formatGmtOffset($offset) {
         $hours = intval($offset / 3600);
         $minutes = abs(intval($offset % 3600 / 60));
         return 'GMT' . ($offset ? sprintf('%+03d:%02d', $hours, $minutes) : '');
     }
 
+    /**
+     * @inheritdoc
+     */
     private static function formatTimezoneName($name) {
         $name = str_replace('/', ', ', $name);
         $name = str_replace('_', ' ', $name);

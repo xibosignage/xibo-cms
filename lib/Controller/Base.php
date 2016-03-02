@@ -26,10 +26,10 @@ use Slim\Slim;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Helper\Config;
-use Xibo\Helper\DateInterface;
 use Xibo\Helper\Log;
 use Xibo\Helper\PlayerActionHelperInterface;
 use Xibo\Helper\SanitizerInterface;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Storage\StorageInterface;
 
 /**
@@ -190,7 +190,7 @@ class Base
 
     /**
      * Get Date
-     * @return DateInterface
+     * @return DateServiceInterface
      */
     protected function getDate()
     {

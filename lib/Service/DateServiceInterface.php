@@ -5,20 +5,14 @@
  * (DateInterface.php)
  */
 
+namespace Xibo\Service;
 
-namespace Xibo\Helper;
-
-
-use Slim\Slim;
-
-interface DateInterface
+/**
+ * Interface DateServiceInterface
+ * @package Xibo\Service
+ */
+interface DateServiceInterface
 {
-    /**
-     * DateInterface constructor.
-     * @param Slim $app
-     */
-    public function __construct($app);
-
     /**
      * Get a local date
      * @param int|\Jenssegers\Date\Date $timestamp

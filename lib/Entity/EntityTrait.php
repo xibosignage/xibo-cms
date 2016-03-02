@@ -11,11 +11,11 @@ namespace Xibo\Entity;
 
 use Slim\Helper\Set;
 use Xibo\Helper\Config;
-use Xibo\Helper\DateInterface;
 use Xibo\Helper\Log;
 use Xibo\Helper\ObjectVars;
 use Xibo\Helper\PlayerActionHelperInterface;
 use Xibo\Helper\SanitizerInterface;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Storage\StorageInterface;
 
 /**
@@ -176,7 +176,7 @@ trait EntityTrait
 
     /**
      * Get Date
-     * @return DateInterface
+     * @return DateServiceInterface
      */
     protected function getDate()
     {
