@@ -77,7 +77,7 @@ class LocalWebTestCase extends WebTestCase
         $app->setName('test');
 
         // Config
-        $app->configService = ConfigService::Load($app->container, PROJECT_ROOT . '/web/settings.php');
+        $app->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
 
         $app->add(new TestAuthMiddleware());
         $app->add(new \Xibo\Middleware\State());

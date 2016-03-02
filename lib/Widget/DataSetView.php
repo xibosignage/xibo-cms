@@ -24,10 +24,6 @@ use InvalidArgumentException;
 use Respect\Validation\Validator as v;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\DataSetColumnFactory;
-use Xibo\Factory\DataSetFactory;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\MediaFactory;
 
 
 class DataSetView extends ModuleWidget
@@ -37,10 +33,10 @@ class DataSetView extends ModuleWidget
      */
     public function installFiles()
     {
-        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
-        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-dataset-render.js')->save();
+        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-dataset-render.js')->save();
     }
 
     public function layoutDesignerJavaScript()
@@ -54,7 +50,7 @@ class DataSetView extends ModuleWidget
      */
     public function dataSets()
     {
-        return (new DataSetFactory($this->getContainer()))->query();
+        return $this->getFactoryService()->get('DataSetFactory')->query();
     }
 
     /**
@@ -63,7 +59,7 @@ class DataSetView extends ModuleWidget
      */
     public function dataSetColumns()
     {
-        return (new DataSetColumnFactory($this->getContainer()))->getByDataSetId($this->getOption('dataSetId'));
+        return $this->getFactoryService()->get('DataSetColumnFactory')->getByDataSetId($this->getOption('dataSetId'));
     }
 
     /**
@@ -75,7 +71,7 @@ class DataSetView extends ModuleWidget
         if ($this->getOption('dataSetId') == 0)
             throw new \InvalidArgumentException(__('DataSet not selected'));
 
-        $columns = (new DataSetColumnFactory($this->getContainer()))->getByDataSetId($this->getOption('dataSetId'));
+        $columns = $this->getFactoryService()->get('DataSetColumnFactory')->getByDataSetId($this->getOption('dataSetId'));
         $columnsSelected = [];
         $colIds = explode(',', $this->getOption('columns'));
 
@@ -97,7 +93,7 @@ class DataSetView extends ModuleWidget
         if ($this->getOption('dataSetId') == 0)
             throw new \InvalidArgumentException(__('DataSet not selected'));
 
-        $columns = (new DataSetColumnFactory($this->getContainer()))->getByDataSetId($this->getOption('dataSetId'));
+        $columns = $this->getFactoryService()->get('DataSetColumnFactory')->getByDataSetId($this->getOption('dataSetId'));
 
         $columnsNotSelected = [];
         $colIds = explode(',', $this->getOption('columns'));
@@ -185,7 +181,7 @@ class DataSetView extends ModuleWidget
             throw new \InvalidArgumentException(__('Please select a DataSet'));
 
         // Check we have permission to use this DataSetId
-        if (!$this->getUser()->checkViewable((new DataSetFactory($this->getContainer()))->getById($this->getOption('dataSetId'))))
+        if (!$this->getUser()->checkViewable($this->getFactoryService()->get('DataSetFactory')->getById($this->getOption('dataSetId'))))
             throw new \InvalidArgumentException(__('You do not have permission to use that dataset'));
 
         if ($this->getWidgetId() != 0) {
@@ -477,7 +473,7 @@ class DataSetView extends ModuleWidget
 
         // Create a data set object, to get the results.
         try {
-            $dataSet = (new DataSetFactory($this->getContainer()))->getById($dataSetId);
+            $dataSet = $this->getFactoryService()->get('DataSetFactory')->getById($dataSetId);
 
             // Get an array representing the id->heading mappings
             $mappings = [];
@@ -512,7 +508,7 @@ class DataSetView extends ModuleWidget
             // Set the timezone for SQL
             $dateNow = $this->getDate()->parse();
             if ($displayId != 0) {
-                $display = (new DisplayFactory($this->getContainer()))->getById($displayId);
+                $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
                 $timeZone = $display->getSetting('displayTimeZone', '');
                 $timeZone = ($timeZone == '') ? $this->getConfig()->GetSetting('defaultTimezone') : $timeZone;
                 $dateNow->timezone($timeZone);
@@ -585,7 +581,7 @@ class DataSetView extends ModuleWidget
                     if ($mapping['dataTypeId'] == 4) {
 
                         // Grab the external image
-                        $file = (new MediaFactory($this->getContainer()))->createModuleFile('datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
+                        $file = $this->getFactoryService()->get('MediaFactory')->createModuleFile('datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
                         $file->isRemote = true;
                         $file->expires = $expires;
                         $file->save();
@@ -594,7 +590,7 @@ class DataSetView extends ModuleWidget
                         $this->assignMedia($file->mediaId);
 
                         $replace = ($isPreview)
-                            ? '<img src="' . $this->getContainer()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                            ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                             : '<img src="' . $file->storedAs . '" />';
 
                     } else if ($mapping['dataTypeId'] == 5) {
@@ -602,7 +598,7 @@ class DataSetView extends ModuleWidget
                         // Library Image
                         // The content is the ID of the image
                         try {
-                            $file = (new MediaFactory($this->getContainer()))->getById($replace);
+                            $file = $this->getFactoryService()->get('MediaFactory')->getById($replace);
                         }
                         catch (NotFoundException $e) {
                             $this->getLog()->error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);
@@ -613,7 +609,7 @@ class DataSetView extends ModuleWidget
                         $this->assignMedia($file->mediaId);
 
                         $replace = ($isPreview)
-                            ? '<img src="' . $this->getContainer()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                            ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                             : '<img src="' . $file->storedAs . '" />';
                     }
 

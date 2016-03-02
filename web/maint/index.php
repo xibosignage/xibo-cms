@@ -53,7 +53,7 @@ $app = new \RKA\Slim(array(
 $app->setName('maint');
 
 // Config
-$app->configService = ConfigService::Load($app->container, PROJECT_ROOT . '/web/settings.php');
+$app->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
 
 \Xibo\Middleware\State::setState($app);
 

@@ -55,8 +55,8 @@ $app->setName('install');
 
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
-    $app->logHelper->critical('Unexpected Error: %s', $e->getMessage());
-    $app->logHelper->debug($e->getTraceAsString());
+    $app->logService->critical('Unexpected Error: %s', $e->getMessage());
+    $app->logService->debug($e->getTraceAsString());
 
     $app->halt(500, 'Sorry there has been an unexpected error. ' . $e->getMessage());
 });
@@ -90,7 +90,7 @@ $app->hook('slim.before.dispatch', function() use ($app) {
 
     if (file_exists(PROJECT_ROOT . '/web/settings.php')) {
         // Config
-        $app->configService = \Xibo\Service\ConfigService::Load($app->container, PROJECT_ROOT . '/web/settings.php');
+        $app->configService = \Xibo\Service\ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
         // Set-up the translations for get text
         Translate::InitLocale($app);
 

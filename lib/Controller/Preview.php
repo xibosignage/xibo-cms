@@ -23,7 +23,6 @@ namespace Xibo\Controller;
 use baseDAO;
 use database;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Factory\LayoutFactory;
 
 
 class Preview extends Base
@@ -34,7 +33,7 @@ class Preview extends Base
      */
     public function show($layoutId)
     {
-        $layout = (new LayoutFactory($this->getContainer()))->getById($layoutId);
+        $layout = $this->getFactoryService()->get('LayoutFactory')->getById($layoutId);
 
         if (!$this->getUser()->checkViewable($layout))
             throw new AccessDeniedException();
@@ -57,7 +56,7 @@ class Preview extends Base
      */
     function getXlf($layoutId)
     {
-        $layout = (new LayoutFactory($this->getContainer()))->getById($layoutId);
+        $layout = $this->getFactoryService()->get('LayoutFactory')->getById($layoutId);
 
         if (!$this->getUser()->checkViewable($layout))
             throw new AccessDeniedException();

@@ -71,14 +71,14 @@ class Actions extends Middleware
             // Does the version in the DB match the version of the code?
             // If not then we need to run an upgrade.
             if ($app->configService->isUpgradePending() && !in_array($resource, $excludedRoutes)) {
-                $app->logHelper->debug('%s not in excluded routes, redirecting. ', $resource);
+                $app->logService->debug('%s not in excluded routes, redirecting. ', $resource);
                 $app->redirectTo('upgrade.view');
             }
 
             $notifications = [];
 
             if ($app->user->userTypeId == 1 && file_exists(PROJECT_ROOT . '/web/install/index.php')) {
-                $app->logHelper->notice('Install.php exists and shouldn\'t');
+                $app->logService->notice('Install.php exists and shouldn\'t');
 
                 $notifications[] = __('There is a problem with this installation. "install.php" should be deleted.');
             }

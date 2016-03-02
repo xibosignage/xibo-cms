@@ -13,7 +13,9 @@ use Slim\Helper\Set;
 use Xibo\Entity\User;
 use Xibo\Service\ConfigService;
 use Xibo\Service\DateServiceInterface;
+use Xibo\Service\FactoryServiceInterface;
 use Xibo\Service\LogService;
+use Xibo\Service\ModuleServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -65,6 +67,22 @@ class BaseFactory
     }
 
     /**
+     * @return FactoryServiceInterface
+     */
+    public function getFactoryService()
+    {
+        return $this->getContainer()->factoryService;
+    }
+
+    /**
+     * @return ModuleServiceInterface
+     */
+    public function getModuleService()
+    {
+        return $this->getContainer()->moduleService;
+    }
+
+    /**
      * Get User
      * @return User
      * @throws \RuntimeException
@@ -80,7 +98,7 @@ class BaseFactory
      */
     protected function getLog()
     {
-        return $this->getContainer()->logHelper;
+        return $this->getContainer()->logService;
     }
 
     /**
@@ -130,7 +148,7 @@ class BaseFactory
      */
     public function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [])
     {
-        $user = ($this->getSanitizer()->getInt('userCheckUserId', $filterBy) !== null) ? (new UserFactory($this->getContainer()))->getById($this->getSanitizer()->getInt('userCheckUserId', $filterBy)) : $this->getUser();
+        $user = ($this->getSanitizer()->getInt('userCheckUserId', $filterBy) !== null) ? $this->getFactoryService()->get('UserFactory')->getById($this->getSanitizer()->getInt('userCheckUserId', $filterBy)) : $this->getUser();
 
         $permissionSql = '';
 

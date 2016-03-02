@@ -20,7 +20,6 @@
  */
 namespace Xibo\Widget;
 
-use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Translate;
 
 class Text extends ModuleWidget
@@ -30,11 +29,11 @@ class Text extends ModuleWidget
      */
     public function installFiles()
     {
-        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
-        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
-        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
+        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
+        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
     }
 
     public function validate()

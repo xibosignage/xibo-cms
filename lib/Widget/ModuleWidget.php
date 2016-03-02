@@ -21,13 +21,13 @@
 namespace Xibo\Widget;
 
 use Slim\Helper\Set;
+use Slim\Slim;
 use Xibo\Entity\User;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\TransitionFactory;
 use Xibo\Service\ConfigService;
 use Xibo\Service\DateServiceInterface;
+use Xibo\Service\FactoryServiceInterface;
 use Xibo\Service\LogService;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -43,7 +43,7 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * @var Set
      */
-    protected $container;
+    private $app;
 
     /**
      * @var \Xibo\Entity\Module $module
@@ -73,23 +73,31 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Set App
-     * @param Set $container
+     * @param Slim $container
      */
-    public function setContainer($container)
+    public function setApp($container)
     {
-        $this->container = $container;
+        $this->app = $container;
     }
 
     /**
      * Get the App
-     * @return Set
+     * @return Slim
      */
-    protected function getContainer()
+    protected function getApp()
     {
-        if ($this->container == null)
+        if ($this->app == null)
             throw new \RuntimeException(__('Module Widget Application not set'));
 
-        return $this->container;
+        return $this->app;
+    }
+
+    /**
+     * @return FactoryServiceInterface
+     */
+    public function getFactoryService()
+    {
+        return $this->getApp()->factoryService;
     }
 
     /**
@@ -98,7 +106,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function getPool()
     {
-        return $this->container->pool;
+        return $this->app->pool;
     }
 
     /**
@@ -107,7 +115,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function getStore()
     {
-        return $this->getContainer()->store;
+        return $this->getApp()->store;
     }
 
     /**
@@ -116,7 +124,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function getLog()
     {
-        return $this->getContainer()->logHelper;
+        return $this->getApp()->logService;
     }
 
     /**
@@ -125,7 +133,25 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function getConfig()
     {
-        return $this->getContainer()->configService;
+        return $this->getApp()->configService;
+    }
+
+    /**
+     * Get Date
+     * @return DateServiceInterface
+     */
+    protected function getDate()
+    {
+        return $this->getApp()->dateService;
+    }
+
+    /**
+     * Get Sanitizer
+     * @return SanitizerServiceInterface
+     */
+    protected function getSanitizer()
+    {
+        return $this->getApp()->sanitizerService;
     }
 
     /**
@@ -228,24 +254,6 @@ abstract class ModuleWidget implements ModuleInterface
     final protected function getUser()
     {
         return $this->user;
-    }
-
-    /**
-     * Get Date
-     * @return DateServiceInterface
-     */
-    protected function getDate()
-    {
-        return $this->getContainer()->dateService;
-    }
-
-    /**
-     * Get Sanitizer
-     * @return SanitizerServiceInterface
-     */
-    protected function getSanitizer()
-    {
-        return $this->getContainer()->sanitizerService;
     }
 
     /**
@@ -440,7 +448,7 @@ abstract class ModuleWidget implements ModuleInterface
         $this->getLog()->debug('Media assigned: ' . count($this->widget->mediaIds));
 
         if ($this->getModule()->regionSpecific == 0 && count($this->widget->mediaIds) > 0) {
-            $media = (new MediaFactory($this->getContainer()))->getById($this->widget->mediaIds[0]);
+            $media = $this->getFactoryService()->get('MediaFactory')->getById($this->widget->mediaIds[0]);
             $name = $media->name;
         } else {
             $name = $this->module->name;
@@ -485,7 +493,7 @@ abstract class ModuleWidget implements ModuleInterface
         $widthPx = $width . 'px';
         $heightPx = $height . 'px';
 
-        $url = $this->getContainer()->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
+        $url = $this->getApp()->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
 
         return '<iframe scrolling="no" src="' . $url . '?raw=true&preview=true&scale_override=' . $scaleOverride . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
     }
@@ -543,7 +551,7 @@ abstract class ModuleWidget implements ModuleInterface
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         if ($isPreview)
-            $uri = $this->getContainer()->rootUri . 'modules/' . $uri;
+            $uri = $this->getApp()->rootUri . 'modules/' . $uri;
         else
             $uri = basename($uri);
 
@@ -559,7 +567,7 @@ abstract class ModuleWidget implements ModuleInterface
     protected function renderTemplate($data, $template = 'get-resource')
     {
         // Get the Twig Engine
-        return $this->getContainer()->view()->getInstance()->render($template . '.twig', $data);
+        return $this->getApp()->view()->getInstance()->render($template . '.twig', $data);
     }
 
     /**
@@ -588,7 +596,7 @@ abstract class ModuleWidget implements ModuleInterface
 
         // Look up the real transition name
         try {
-            $transition = (new TransitionFactory($this->getContainer()))->getByCode($code);
+            $transition = $this->getFactoryService()->get('TransitionFactory')->getByCode($code);
             return __($transition->transition);
         }
         catch (NotFoundException $e) {
@@ -720,7 +728,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function getMedia()
     {
-        return (new MediaFactory($this->getContainer()))->getById($this->getMediaId());
+        return $this->getFactoryService()->get('MediaFactory')->getById($this->getMediaId());
     }
 
     /**
@@ -728,7 +736,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function download()
     {
-        $media = (new MediaFactory($this->getContainer()))->getById($this->getMediaId());
+        $media = $this->getFactoryService()->get('MediaFactory')->getById($this->getMediaId());
 
         // This widget is expected to output a file - usually this is for file based media
         // Get the name with library
@@ -739,8 +747,8 @@ abstract class ModuleWidget implements ModuleInterface
         $size = filesize($libraryPath);
 
         // Issue some headers
-        $this->getContainer()->etag($media->md5);
-        $this->getContainer()->expires('+1 week');
+        $this->getApp()->etag($media->md5);
+        $this->getApp()->expires('+1 week');
         header('Content-Type: application/octet-stream');
         header('Content-Transfer-Encoding: Binary');
         header('Content-disposition: attachment; filename="' . $attachmentName . '"');
@@ -783,13 +791,13 @@ abstract class ModuleWidget implements ModuleInterface
 
             // Check that this mediaId exists and get some information about it
             try {
-                $entry = (new MediaFactory($this->getContainer()))->getById($mediaId);
+                $entry = $this->getFactoryService()->get('MediaFactory')->getById($mediaId);
 
                 // Assign it
                 $this->assignMedia($entry->mediaId);
 
                 // We have a valid mediaId to substitute
-                $replace = ($isPreview) ? $this->getContainer()->urlFor('library.download', ['id' => $entry->mediaId]) . '?preview=1' : $entry->storedAs;
+                $replace = ($isPreview) ? $this->getApp()->urlFor('library.download', ['id' => $entry->mediaId]) . '?preview=1' : $entry->storedAs;
 
                 // Substitute the replacement we have found (it might be '')
                 $parsedContent = str_replace($sub, $replace, $parsedContent);

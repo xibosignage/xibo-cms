@@ -51,10 +51,10 @@ $app = new \RKA\Slim(array(
 $app->setName('auth');
 
 // Config
-$app->configService = ConfigService::Load($app->container, PROJECT_ROOT . '/web/settings.php');
+$app->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
 
-$app->add(new \Xibo\Middleware\Storage());
 $app->add(new \Xibo\Middleware\State());
+$app->add(new \Xibo\Middleware\Storage());
 $app->view(new \Xibo\Middleware\ApiView());
 
 // Configure the Slim error handler
@@ -112,11 +112,11 @@ $app->get('/', function() use ($app) {
 // Access Token
 $app->post('/access_token', function() use ($app) {
 
-    $app->logHelper->debug('Request for access token using grant_type: %s', $app->request()->post('grant_type'));
+    $app->logService->debug('Request for access token using grant_type: %s', $app->request()->post('grant_type'));
 
     $token = json_encode($app->server->issueAccessToken());
 
-    $app->logHelper->debug('Issued token: %s', $token);
+    $app->logService->debug('Issued token: %s', $token);
 
     // Issue an access token
     $app->halt(200, $token);

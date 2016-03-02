@@ -28,29 +28,12 @@ use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Exception\NotFoundException;
 
+/**
+ * Class ModuleFactory
+ * @package Xibo\Factory
+ */
 class ModuleFactory extends BaseFactory
 {
-    /**
-     * Instantiate
-     * @param Module $module
-     * @return \Xibo\Widget\ModuleWidget
-     * @throws NotFoundException if the class does not exist
-     */
-    private function instantiate($module)
-    {
-        $className = $module->class;
-
-        if (!\class_exists($className))
-            throw new NotFoundException(__('Class %s not found', $className));
-
-        /* @var \Xibo\Widget\ModuleWidget $object */
-        $object = new $className();
-        $object->setContainer($this->getContainer());
-        $object->setModule($module);
-
-        return $object;
-    }
-
     /**
      * Create a Module
      * @param string $type
@@ -65,7 +48,7 @@ class ModuleFactory extends BaseFactory
             throw new NotFoundException(sprintf(__('Unknown type %s'), $type));
 
         // Create a module
-        return $this->instantiate($modules[0]);
+        return $this->getModuleService()->get($modules[0]);
     }
 
     /**
@@ -90,7 +73,7 @@ class ModuleFactory extends BaseFactory
      */
     public function createById($moduleId)
     {
-        return $this->instantiate($this->getById($moduleId));
+        return $this->getModuleService()->get($this->getById($moduleId));
     }
 
     /**
@@ -113,7 +96,7 @@ class ModuleFactory extends BaseFactory
         // Create a module
         /* @var \Xibo\Widget\ModuleWidget $object */
         $module = $modules[0];
-        $object = $this->instantiate($module);
+        $object = $this->getModuleService()->get($module);
         $object->setWidget($widget);
 
         return $object;
@@ -136,7 +119,7 @@ class ModuleFactory extends BaseFactory
         // Do we have a regionId
         if ($regionId != 0) {
             // Load the region and set
-            $region = (new RegionFactory($this->getContainer()))->getById($regionId);
+            $region = $this->getFactoryService()->get('RegionFactory')->getById($regionId);
             $module->setRegion($region);
         }
 
@@ -147,18 +130,18 @@ class ModuleFactory extends BaseFactory
                 throw new \InvalidArgumentException(__('Neither Playlist or Widget provided'));
             }
 
-            $playlist = (new PlaylistFactory($this->getContainer()))->getById($playlistId);
+            $playlist = $this->getFactoryService()->get('PlaylistFactory')->getById($playlistId);
             $playlist->load(['playlistIncludeRegionAssignments' => false]);
 
             // Create a new widget to use
-            $widget = (new WidgetFactory($this->getContainer()))->create($ownerId, $playlistId, $module->getModuleType(), 0);
+            $widget = $this->getFactoryService()->get('WidgetFactory')->create($ownerId, $playlistId, $module->getModuleType(), 0);
             $module->setWidget($widget);
 
             $playlist->assignWidget($widget);
         }
         else {
             // Load the widget
-            $module->setWidget((new WidgetFactory($this->getContainer()))->loadByWidgetId($widgetId));
+            $module->setWidget($this->getFactoryService()->get('WidgetFactory')->loadByWidgetId($widgetId));
         }
 
         return $module;

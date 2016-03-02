@@ -120,7 +120,7 @@ class UserFactory extends BaseFactory
      */
     public function getByDisplayGroupId($displayGroupId)
     {
-        return (new DisplayFactory($this->getContainer()))->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
+        return $this->getFactoryService()->get('DisplayFactory')->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
     }
 
     /**

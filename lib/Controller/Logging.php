@@ -22,8 +22,6 @@ namespace Xibo\Controller;
 
 use Exception;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\LogFactory;
 
 
 class Logging extends Base
@@ -32,7 +30,7 @@ class Logging extends Base
     {
         $this->getState()->template = 'log-page';
         $this->getState()->setData([
-            'displays' => (new DisplayFactory($this->getContainer()))->query()
+            'displays' => $this->getFactoryService()->get('DisplayFactory')->query()
         ]);
     }
 
@@ -43,7 +41,7 @@ class Logging extends Base
         $intervalType = $this->getSanitizer()->getInt('intervalType', 1);
         $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getDate()->getLocalDate());
 
-        $logs = (new LogFactory($this->getContainer()))->query($this->gridRenderSort(), $this->gridRenderFilter([
+        $logs = $this->getFactoryService()->get('LogFactory')->query($this->gridRenderSort(), $this->gridRenderFilter([
             'fromDt' => $fromDt->format('U') - ($seconds * $intervalType),
             'toDt' => $fromDt->format('U'),
             'type' => $this->getSanitizer()->getString('level'),
@@ -56,7 +54,7 @@ class Logging extends Base
         ]));
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = (new LogFactory($this->getContainer()))->countLast();
+        $this->getState()->recordsTotal = $this->getFactoryService()->get('LogFactory')->countLast();
         $this->getState()->setData($logs);
     }
 

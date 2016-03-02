@@ -24,15 +24,6 @@ use Respect\Validation\Validator as v;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\LibraryFullException;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\CampaignFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\PageFactory;
-use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\ScheduleFactory;
-use Xibo\Factory\UserFactory;
-use Xibo\Factory\UserGroupFactory;
-use Xibo\Factory\UserOptionFactory;
 
 // These constants may be changed without breaking existing hashes.
 define("PBKDF2_HASH_ALGORITHM", "sha256");
@@ -304,7 +295,7 @@ class User implements \JsonSerializable
             $this->getOption($option)->value = $value;
         }
         catch (NotFoundException $e) {
-            $this->userOptions[] = (new UserOptionFactory($this->getContainer()))->create($this->userId, $option, $value);
+            $this->userOptions[] = $this->getFactoryService()->get('UserOptionFactory')->create($this->userId, $option, $value);
         }
     }
 
@@ -399,16 +390,16 @@ class User implements \JsonSerializable
 
         $this->getLog()->debug('Loading %d. All Objects = %d', $this->userId, $all);
 
-        $this->groups = (new UserGroupFactory($this->getContainer()))->getByUserId($this->userId);
+        $this->groups = $this->getFactoryService()->get('UserGroupFactory')->getByUserId($this->userId);
 
         if ($all) {
-            $this->campaigns = (new CampaignFactory($this->getContainer()))->getByOwnerId($this->userId);
-            $this->layouts = (new LayoutFactory($this->getContainer()))->getbyOwnerId($this->userId);
-            $this->media = (new MediaFactory($this->getContainer()))->getByOwnerId($this->userId);
-            $this->events = (new ScheduleFactory($this->getContainer()))->getByOwnerId($this->userId);
+            $this->campaigns = $this->getFactoryService()->get('CampaignFactory')->getByOwnerId($this->userId);
+            $this->layouts = $this->getFactoryService()->get('LayoutFactory')->getbyOwnerId($this->userId);
+            $this->media = $this->getFactoryService()->get('MediaFactory')->getByOwnerId($this->userId);
+            $this->events = $this->getFactoryService()->get('ScheduleFactory')->getByOwnerId($this->userId);
         }
 
-        $this->userOptions = (new UserOptionFactory($this->getContainer()))->getByUserId($this->userId);
+        $this->userOptions = $this->getFactoryService()->get('UserOptionFactory')->getByUserId($this->userId);
 
         // Set the hash
         $this->hash = $this->hash();
@@ -489,7 +480,7 @@ class User implements \JsonSerializable
             throw new \InvalidArgumentException(__('Please enter a valid email address or leave it empty.'));
 
         try {
-            $user = (new UserFactory($this->getContainer()))->getByName($this->userName);
+            $user = $this->getFactoryService()->get('UserFactory')->getByName($this->userName);
 
             if ($this->userId == null || $this->userId != $user->userId)
                 throw new \InvalidArgumentException(__('There is already a user with this name. Please choose another.'));
@@ -499,7 +490,7 @@ class User implements \JsonSerializable
         }
 
         try {
-            (new PageFactory($this->getContainer()))->getById($this->homePageId);
+            $this->getFactoryService()->get('PageFactory')->getById($this->homePageId);
         }
         catch (NotFoundException $e) {
             throw new \InvalidArgumentException(__('Selected home page does not exist'));
@@ -552,7 +543,7 @@ class User implements \JsonSerializable
             $this->load(true);
 
         // Remove the user specific group
-        $group = (new UserGroupFactory($this->getContainer()))->getById($this->groupId);
+        $group = $this->getFactoryService()->get('UserGroupFactory')->getById($this->groupId);
         $group->delete();
 
         // Delete all user options
@@ -684,7 +675,7 @@ class User implements \JsonSerializable
 
         // Update the group
         // This is essentially a dirty edit (i.e. we don't touch the group assignments)
-        $group = (new UserGroupFactory($this->getContainer()))->getById($this->groupId);
+        $group = $this->getFactoryService()->get('UserGroupFactory')->getById($this->groupId);
         $group->group = $this->userName;
         $group->libraryQuota = $this->libraryQuota;
         $group->save(['linkUsers' => false]);
@@ -749,7 +740,7 @@ class User implements \JsonSerializable
         try {
             if ($this->pagePermissionCache == null) {
                 // Load all viewable pages into the permissions cache
-                $this->pagePermissionCache = (new PageFactory($this->getContainer()))->query();
+                $this->pagePermissionCache = $this->getFactoryService()->get('PageFactory')->query();
             }
         }
         catch (\PDOException $e) {
@@ -789,7 +780,7 @@ class User implements \JsonSerializable
             $this->permissionCache[$entity] = array();
 
             // Turn it into a ID keyed array
-            foreach ((new PermissionFactory($this->getContainer()))->getByUserId($entity, $this->userId) as $permission) {
+            foreach ($this->getFactoryService()->get('PermissionFactory')->getByUserId($entity, $this->userId) as $permission) {
                 /* @var \Xibo\Entity\Permission $permission */
                 // Always take the max
                 if (array_key_exists($permission->objectId, $this->permissionCache[$entity])) {
@@ -830,13 +821,13 @@ class User implements \JsonSerializable
 
         // Admin users
         if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId()) {
-            return (new PermissionFactory($this->getContainer()))->getFullPermissions();
+            return $this->getFactoryService()->get('PermissionFactory')->getFullPermissions();
         }
 
         // Group Admins
-        if ($this->userTypeId == 2 && count(array_intersect($this->groups, (new UserGroupFactory($this->getContainer()))->getByUserId($object->getOwnerId()))))
+        if ($this->userTypeId == 2 && count(array_intersect($this->groups, $this->getFactoryService()->get('UserGroupFactory')->getByUserId($object->getOwnerId()))))
             // Group Admin and in the same group as the owner.
-            return (new PermissionFactory($this->getContainer()))->getFullPermissions();
+            return $this->getFactoryService()->get('PermissionFactory')->getFullPermissions();
 
         // Get the permissions for that entity
         $permissions = $this->loadPermissions(get_class($object));
@@ -863,7 +854,7 @@ class User implements \JsonSerializable
             return true;
 
         // Group Admins
-        if ($this->userTypeId == 2 && count(array_intersect($this->groups, (new UserGroupFactory($this->getContainer()))->getByUserId($object->getOwnerId()))))
+        if ($this->userTypeId == 2 && count(array_intersect($this->groups, $this->getFactoryService()->get('UserGroupFactory')->getByUserId($object->getOwnerId()))))
             // Group Admin and in the same group as the owner.
             return true;
 
@@ -892,7 +883,7 @@ class User implements \JsonSerializable
             return true;
 
         // Group Admins
-        if ($this->userTypeId == 2 && count(array_intersect($this->groups, (new UserGroupFactory($this->getContainer()))->getByUserId($object->getOwnerId()))))
+        if ($this->userTypeId == 2 && count(array_intersect($this->groups, $this->getFactoryService()->get('UserGroupFactory')->getByUserId($object->getOwnerId()))))
             // Group Admin and in the same group as the owner.
             return true;
 
@@ -921,7 +912,7 @@ class User implements \JsonSerializable
             return true;
 
         // Group Admins
-        if ($this->userTypeId == 2 && count(array_intersect($this->groups, (new UserGroupFactory($this->getContainer()))->getByUserId($object->getOwnerId()))))
+        if ($this->userTypeId == 2 && count(array_intersect($this->groups, $this->getFactoryService()->get('UserGroupFactory')->getByUserId($object->getOwnerId()))))
             // Group Admin and in the same group as the owner.
             return true;
 
@@ -949,7 +940,7 @@ class User implements \JsonSerializable
         if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
             return true;
         // Group Admins
-        else if ($this->userTypeId == 2 && count(array_intersect($this->groups, (new UserGroupFactory($this->getContainer()))->getByUserId($object->getOwnerId()))))
+        else if ($this->userTypeId == 2 && count(array_intersect($this->groups, $this->getFactoryService()->get('UserGroupFactory')->getByUserId($object->getOwnerId()))))
             // Group Admin and in the same group as the owner.
             return true;
         else

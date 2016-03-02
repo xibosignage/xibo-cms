@@ -21,7 +21,6 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Factory\SessionFactory;
 
 
 class Sessions extends Base
@@ -34,7 +33,7 @@ class Sessions extends Base
 
     function grid()
     {
-        $sessions = (new SessionFactory($this->getContainer()))->query($this->gridRenderSort(), $this->gridRenderFilter([
+        $sessions = $this->getFactoryService()->get('SessionFactory')->query($this->gridRenderSort(), $this->gridRenderFilter([
             'type' => $this->getSanitizer()->getString('type'),
             'fromDt' => $this->getSanitizer()->getString('fromDt')
         ]));
@@ -51,7 +50,7 @@ class Sessions extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = (new SessionFactory($this->getContainer()))->countLast();
+        $this->getState()->recordsTotal = $this->getFactoryService()->get('SessionFactory')->countLast();
         $this->getState()->setData($sessions);
     }
 

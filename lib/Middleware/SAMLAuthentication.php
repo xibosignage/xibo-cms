@@ -295,7 +295,7 @@ class SAMLAuthentication extends Middleware
                     // Replace our user with a fully loaded one
                     $user = (new UserFactory($app))->loadById($user->userId);
 
-                    $app->logHelper->setUserId($user->userId);
+                    $app->logService->setUserId($user->userId);
 
                     // Do they have permission?
                     $user->routeAuthentication($resource);

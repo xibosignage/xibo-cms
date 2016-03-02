@@ -21,13 +21,6 @@
 namespace Xibo\Entity;
 
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\CampaignFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\ModuleFactory;
-use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\RegionFactory;
-use Xibo\Factory\TagFactory;
 
 /**
  * Class Layout
@@ -329,21 +322,21 @@ class Layout implements \JsonSerializable
 
         // Load permissions
         if ($options['loadPermissions'])
-            $this->permissions = (new PermissionFactory($this->getContainer()))->getByObjectId('Xibo\\Entity\\Campaign', $this->campaignId);
+            $this->permissions = $this->getFactoryService()->get('PermissionFactory')->getByObjectId('Xibo\\Entity\\Campaign', $this->campaignId);
 
         // Load all regions
-        $this->regions = (new RegionFactory($this->getContainer()))->getByLayoutId($this->layoutId);
+        $this->regions = $this->getFactoryService()->get('RegionFactory')->getByLayoutId($this->layoutId);
 
         if ($options['loadPlaylists'])
             $this->loadPlaylists($options);
 
         // Load all tags
         if ($options['loadTags'])
-            $this->tags = (new TagFactory($this->getContainer()))->loadByLayoutId($this->layoutId);
+            $this->tags = $this->getFactoryService()->get('TagFactory')->loadByLayoutId($this->layoutId);
 
         // Load Campaigns
         if ($options['loadCampaigns'])
-            $this->campaigns = (new CampaignFactory($this->getContainer()))->getByLayoutId($this->layoutId);
+            $this->campaigns = $this->getFactoryService()->get('CampaignFactory')->getByLayoutId($this->layoutId);
 
         // Set the hash
         $this->hash = $this->hash();
@@ -485,7 +478,7 @@ class Layout implements \JsonSerializable
         }
 
         // Delete our own Campaign
-        $campaign = (new CampaignFactory($this->getContainer()))->getById($this->campaignId);
+        $campaign = $this->getFactoryService()->get('CampaignFactory')->getById($this->campaignId);
         $campaign->delete();
 
         // Remove the Layout from any display defaults
@@ -517,7 +510,7 @@ class Layout implements \JsonSerializable
             throw new \InvalidArgumentException(__("Description can not be longer than 254 characters"));
 
         // Check for duplicates
-        $duplicates = (new LayoutFactory($this->getContainer()))->query(null, array('userId' => $this->ownerId, 'layoutExact' => $this->layout, 'notLayoutId' => $this->layoutId));
+        $duplicates = $this->getFactoryService()->get('LayoutFactory')->query(null, array('userId' => $this->ownerId, 'layoutExact' => $this->layout, 'notLayoutId' => $this->layoutId));
 
         if (count($duplicates) > 0)
             throw new \InvalidArgumentException(sprintf(__("You already own a layout called '%s'. Please choose another name."), $this->layout));
@@ -547,7 +540,7 @@ class Layout implements \JsonSerializable
     public function replaceTags($tags = [])
     {
         if (!is_array($this->tags) || count($this->tags) <= 0)
-            $this->tags = (new TagFactory($this->getContainer()))->loadByLayoutId($this->layoutId);
+            $this->tags = $this->getFactoryService()->get('TagFactory')->loadByLayoutId($this->layoutId);
 
         $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
             /* @var Tag $a */
@@ -581,7 +574,7 @@ class Layout implements \JsonSerializable
 
         if ($this->backgroundImageId != 0) {
             // Get stored as
-            $media = (new MediaFactory($this->getContainer()))->getById($this->backgroundImageId);
+            $media = $this->getFactoryService()->get('MediaFactory')->getById($this->backgroundImageId);
 
             $layoutNode->setAttribute('background', $media->storedAs);
         }
@@ -658,7 +651,7 @@ class Layout implements \JsonSerializable
                 /* @var Playlist $playlist */
                 foreach ($playlist->widgets as $widget) {
                     /* @var Widget $widget */
-                    $module = (new ModuleFactory($this->getContainer()))->createWithWidget($widget, $region);
+                    $module = $this->getFactoryService()->get('ModuleFactory')->createWithWidget($widget, $region);
 
                     // Set the Layout Status
                     $status = ($module->isValid() > $status) ? $module->isValid() : $status;
@@ -711,7 +704,7 @@ class Layout implements \JsonSerializable
                     // Inject the URI
                     $uriInjected = false;
                     if ($module->getModule()->regionSpecific == 0) {
-                        $media = (new MediaFactory($this->getContainer()))->getById($widget->mediaIds[0]);
+                        $media = $this->getFactoryService()->get('MediaFactory')->getById($widget->mediaIds[0]);
                         $optionNode = $document->createElement('uri', $media->storedAs);
                         $optionsNode->appendChild($optionNode);
                         $uriInjected = true;
@@ -800,7 +793,7 @@ class Layout implements \JsonSerializable
         $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
         $mappings = [];
 
-        foreach ((new MediaFactory($this->getContainer()))->getByLayoutId($this->layoutId) as $media) {
+        foreach ($this->getFactoryService()->get('MediaFactory')->getByLayoutId($this->layoutId) as $media) {
             /* @var Media $media */
             $zip->addFile($libraryLocation . $media->storedAs, $media->fileName);
 
@@ -816,7 +809,7 @@ class Layout implements \JsonSerializable
 
         // Add the background image
         if ($this->backgroundImageId != 0) {
-            $media = (new MediaFactory($this->getContainer()))->getById($this->backgroundImageId);
+            $media = $this->getFactoryService()->get('MediaFactory')->getById($this->backgroundImageId);
             $zip->addFile($libraryLocation . $media->storedAs, $media->fileName);
 
             $mappings[] = [
@@ -969,7 +962,7 @@ class Layout implements \JsonSerializable
         ));
 
         // Update the Campaign
-        $campaign = (new CampaignFactory($this->getContainer()))->getById($this->campaignId);
+        $campaign = $this->getFactoryService()->get('CampaignFactory')->getById($this->campaignId);
         $campaign->campaign = $this->layout;
         $campaign->ownerId = $this->ownerId;
         $campaign->save(['validate' => false, 'notify' => $options['notify']]);

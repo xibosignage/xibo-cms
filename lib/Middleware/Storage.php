@@ -52,13 +52,13 @@ class Storage extends Middleware
                 $app->store->commitIfNecessary();
             } else {
 
-                $app->logHelper->debug('Storage rollback.');
+                $app->logService->debug('Storage rollback.');
 
                 $app->store->getConnection()->rollBack();
             }
         }
 
-        $app->logHelper->info('PDO stats: %s.', json_encode(PdoStorageService::stats()));
+        $app->logService->info('PDO stats: %s.', json_encode(PdoStorageService::stats()));
 
         $app->store->close();
     }
@@ -70,13 +70,13 @@ class Storage extends Middleware
     public static function setStorage($container)
     {
         // Register the log service
-        $container->singleton('logHelper', function($container) {
+        $container->singleton('logService', function($container) {
             return new LogService($container->log, $container->mode);
         });
 
         // Register the database service
         $container->singleton('store', function($container) {
-            return new PdoStorageService($container->logHelper);
+            return new PdoStorageService($container->logService);
         });
     }
 }

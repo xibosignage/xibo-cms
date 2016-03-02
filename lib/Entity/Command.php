@@ -9,7 +9,6 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
-use Xibo\Factory\DisplayProfileFactory;
 
 /**
  * Class Command
@@ -125,7 +124,7 @@ class Command implements \JsonSerializable
         if ($this->loaded || $this->commandId == null)
             return;
 
-        $this->displayProfiles = (new DisplayProfileFactory($this->getContainer()))->getByCommandId($this->commandId);
+        $this->displayProfiles = $this->getFactoryService()->get('DisplayProfileFactory')->getByCommandId($this->commandId);
     }
 
     /**

@@ -11,8 +11,6 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\UserFactory;
-use Xibo\Factory\UserGroupFactory;
 
 /**
  * Class UserGroup
@@ -140,7 +138,7 @@ class UserGroup
             throw new \InvalidArgumentException(__('Library Quota must be a whole number.'));
 
         try {
-            $group = (new UserGroupFactory($this->getContainer()))->getByName($this->group, $this->isUserSpecific);
+            $group = $this->getFactoryService()->get('UserGroupFactory')->getByName($this->group, $this->isUserSpecific);
 
             if ($this->groupId == null || $this->groupId != $group->groupId)
                 throw new \InvalidArgumentException(__('There is already a group with this name. Please choose another.'));
@@ -165,7 +163,7 @@ class UserGroup
 
         if ($options['loadUsers'])
             // Load all assigned users
-            $this->users = (new UserFactory($this->getContainer()))->getByGroupId($this->groupId);
+            $this->users = $this->getFactoryService()->get('UserFactory')->getByGroupId($this->groupId);
 
         // Set the hash
         $this->hash = $this->hash();

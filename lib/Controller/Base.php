@@ -27,6 +27,7 @@ use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Service\ConfigService;
 use Xibo\Service\DateServiceInterface;
+use Xibo\Service\FactoryServiceInterface;
 use Xibo\Service\LogService;
 use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -75,6 +76,7 @@ class Base
     /**
      * Called by Slim when the Controller is instantiated from a route definition
      * @param Slim $app
+     * @return $this
      */
     public function setApp($app)
     {
@@ -86,6 +88,8 @@ class Base
             $app->controller = $this;
 
         $this->setContainer($app->container);
+
+        return $this;
     }
 
     /**
@@ -123,6 +127,14 @@ class Base
             throw new ConfigurationException(__('Controller called before DI has been setup'));
 
         return $this->container;
+    }
+
+    /**
+     * @return FactoryServiceInterface
+     */
+    public function getFactoryService()
+    {
+        return $this->getContainer()->factoryService;
     }
 
     /**
@@ -176,7 +188,7 @@ class Base
      */
     public function getLog()
     {
-        return $this->getContainer()->logHelper;
+        return $this->getContainer()->logService;
     }
 
     /**

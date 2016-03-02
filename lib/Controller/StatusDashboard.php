@@ -22,10 +22,6 @@ namespace Xibo\Controller;
 use Exception;
 use PicoFeed\PicoFeedException;
 use PicoFeed\Reader\Reader;
-use Xibo\Factory\BaseFactory;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\UserFactory;
 use Xibo\Helper\ByteFormatter;
 
 
@@ -40,7 +36,7 @@ class StatusDashboard extends Base
 
         try {
             // Displays this user has access to
-            $displays = (new DisplayFactory($this->getContainer()))->query(['display']);
+            $displays = $this->getFactoryService()->get('DisplayFactory')->query(['display']);
             $displayIds = array_map(function($element) {
                 return $element->displayId;
             }, $displays);
@@ -115,7 +111,7 @@ class StatusDashboard extends Base
             // Library Size in Bytes
             $params = [];
             $sql = 'SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM `media` WHERE 1 = 1 ';
-            (new BaseFactory($this->getContainer()))->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
+            $this->getFactoryService()->get('BaseFactory')->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
             $sql .= ' GROUP BY type ';
 
 
@@ -176,10 +172,10 @@ class StatusDashboard extends Base
             $data['displays'] = $displays;
 
             // Get a count of users
-            $data['countUsers'] = count((new UserFactory($this->getContainer()))->query());
+            $data['countUsers'] = count($this->getFactoryService()->get('UserFactory')->query());
 
             // Get a count of active layouts, only for display groups we have permission for
-            $displayGroups = (new DisplayGroupFactory($this->getContainer()))->query(null, ['isDisplaySpecific' => -1]);
+            $displayGroups = $this->getFactoryService()->get('DisplayGroupFactory')->query(null, ['isDisplaySpecific' => -1]);
             $displayGroupIds = array_map(function($element) {
                 return $element->displayGroupId;
             }, $displayGroups);

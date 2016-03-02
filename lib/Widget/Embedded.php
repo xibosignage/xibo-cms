@@ -20,8 +20,6 @@
  */
 namespace Xibo\Widget;
 
-use Xibo\Factory\MediaFactory;
-
 
 class Embedded extends ModuleWidget
 {
@@ -30,8 +28,8 @@ class Embedded extends ModuleWidget
      */
     public function InstallFiles()
     {
-        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
     }
 
     /**

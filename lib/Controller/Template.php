@@ -21,8 +21,6 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\TagFactory;
 
 
 class Template extends Base
@@ -57,7 +55,7 @@ class Template extends Base
      */
     function grid()
     {
-        $templates = (new LayoutFactory($this->getContainer()))->query($this->gridRenderSort(), $this->gridRenderFilter([
+        $templates = $this->getFactoryService()->get('LayoutFactory')->query($this->gridRenderSort(), $this->gridRenderFilter([
             'excludeTemplates' => 0,
             'tags' => $this->getSanitizer()->getString('tags'),
             'layout' => $this->getSanitizer()->getString('template')
@@ -158,7 +156,7 @@ class Template extends Base
     function addTemplateForm($layoutId)
     {
         // Get the layout
-        $layout = (new LayoutFactory($this->getContainer()))->getById($layoutId);
+        $layout = $this->getFactoryService()->get('LayoutFactory')->getById($layoutId);
 
         // Check Permissions
         if (!$this->getUser()->checkViewable($layout))
@@ -231,7 +229,7 @@ class Template extends Base
     function add($layoutId)
     {
         // Get the layout
-        $layout = (new LayoutFactory($this->getContainer()))->getById($layoutId);
+        $layout = $this->getFactoryService()->get('LayoutFactory')->getById($layoutId);
 
         // Check Permissions
         if (!$this->getUser()->checkViewable($layout))
@@ -253,8 +251,8 @@ class Template extends Base
         $layout = clone $layout;
 
         $layout->layout = $this->getSanitizer()->getString('name');
-        $layout->tags = (new TagFactory($this->getContainer()))->tagsFromString($this->getSanitizer()->getString('tags'));
-        $layout->tags[] = (new TagFactory($this->getContainer()))->getByTag('template');
+        $layout->tags = $this->getFactoryService()->get('TagFactory')->tagsFromString($this->getSanitizer()->getString('tags'));
+        $layout->tags[] = $this->getFactoryService()->get('TagFactory')->getByTag('template');
         $layout->description = $this->getSanitizer()->getString('description');
         $layout->save();
 

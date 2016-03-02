@@ -22,7 +22,6 @@ namespace Xibo\Widget;
 
 use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
-use Xibo\Factory\MediaFactory;
 
 class Image extends ModuleWidget
 {
@@ -71,7 +70,7 @@ class Image extends ModuleWidget
 
         $html = '<div style="display:table; width:100%; height: ' . $height . 'px">
             <div style="text-align:' . $align . '; display: table-cell; vertical-align: ' . $vAlign . ';">
-                <img src="' . $this->getContainer()->urlFor('library.download', ['id' => $this->getMediaId()]) . '?preview=1&width=' . $width . '&height=' . $height . '&proportional=' . $proportional . '" />
+                <img src="' . $this->getApp()->urlFor('library.download', ['id' => $this->getMediaId()]) . '?preview=1&width=' . $width . '&height=' . $height . '&proportional=' . $proportional . '" />
             </div>
         </div>';
 
@@ -88,7 +87,7 @@ class Image extends ModuleWidget
         // Default Hover window contains a thumbnail, media type and duration
         $output = parent::HoverPreview();
         $output .= '<div class="hoverPreview">';
-        $output .= '    <img src="' . $this->getContainer()->urlFor('library.download', ['id' => $this->getMediaId()]) . '?preview=1&width=200&height=200&proportional=1" alt="Hover Preview">';
+        $output .= '    <img src="' . $this->getApp()->urlFor('library.download', ['id' => $this->getMediaId()]) . '?preview=1&width=200&height=200&proportional=1" alt="Hover Preview">';
         $output .= '</div>';
 
         return $output;
@@ -103,7 +102,7 @@ class Image extends ModuleWidget
     {
         $this->getLog()->debug('Image Module: GetResource for %d', $this->getMediaId());
 
-        $media = (new MediaFactory($this->getContainer()))->getById($this->getMediaId());
+        $media = $this->getFactoryService()->get('MediaFactory')->getById($this->getMediaId());
         $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
         $filePath = $libraryLocation . $media->storedAs;
         $proportional = $this->getSanitizer()->getInt('proportional', 1) == 1;
@@ -112,8 +111,8 @@ class Image extends ModuleWidget
         $height = intval($this->getSanitizer()->getDouble('height'));
 
         // Work out the eTag first
-        $this->getContainer()->etag($media->md5 . $width . $height . $proportional . $preview);
-        $this->getContainer()->expires('+1 week');
+        $this->getApp()->etag($media->md5 . $width . $height . $proportional . $preview);
+        $this->getApp()->expires('+1 week');
 
         // Preview or download?
         if ($this->getSanitizer()->getInt('preview', 0) == 1) {

@@ -20,9 +20,6 @@
  */
 namespace Xibo\Controller;
 
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\ModuleFactory;
-
 
 class MediaManager extends Base
 {
@@ -32,7 +29,7 @@ class MediaManager extends Base
         $this->getState()->template .= 'media-manager-page';
         $this->getState()->setData([
             // Users we have permission to see
-            'modules' => (new ModuleFactory($this->getContainer()))->query(null, ['assignable' => 1])
+            'modules' => $this->getFactoryService()->get('ModuleFactory')->query(null, ['assignable' => 1])
         ]);
     }
 
@@ -47,7 +44,7 @@ class MediaManager extends Base
 
         $rows = array();
 
-        foreach ((new LayoutFactory($this->getContainer()))->query(null, ['layout' => $filterLayout]) as $layout) {
+        foreach ($this->getFactoryService()->get('LayoutFactory')->query(null, ['layout' => $filterLayout]) as $layout) {
             /* @var \Xibo\Entity\Layout $layout */
             // We have edit permissions?
             if (!$this->getUser()->checkEditable($layout))

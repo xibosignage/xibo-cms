@@ -21,8 +21,6 @@
 namespace Xibo\Controller;
 use Xibo\Entity\Command;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Factory\CommandFactory;
-use Xibo\Factory\DisplayProfileFactory;
 
 
 class DisplayProfile extends Base
@@ -81,7 +79,7 @@ class DisplayProfile extends Base
             'type' => $this->getSanitizer()->getString('type')
         ];
 
-        $profiles = (new DisplayProfileFactory($this->getContainer()))->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $profiles = $this->getFactoryService()->get('DisplayProfileFactory')->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($profiles as $profile) {
             /* @var \Xibo\Entity\DisplayProfile $profile */
@@ -103,7 +101,7 @@ class DisplayProfile extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = (new DisplayProfileFactory($this->getContainer()))->countLast();
+        $this->getState()->recordsTotal = $this->getFactoryService()->get('DisplayProfileFactory')->countLast();
         $this->getState()->setData($profiles);
     }
 
@@ -189,13 +187,13 @@ class DisplayProfile extends Base
     public function editForm($displayProfileId)
     {
         // Create a form out of the config object.
-        $displayProfile = (new DisplayProfileFactory($this->getContainer()))->getById($displayProfileId);
+        $displayProfile = $this->getFactoryService()->get('DisplayProfileFactory')->getById($displayProfileId);
 
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
 
         // Get a list of unassigned Commands
-        $unassignedCommands = array_udiff((new CommandFactory($this->getContainer()))->query(), $displayProfile->commands, function($a, $b) {
+        $unassignedCommands = array_udiff($this->getFactoryService()->get('CommandFactory')->query(), $displayProfile->commands, function($a, $b) {
             return $a->getId() - $b->getId();
         });
 
@@ -268,7 +266,7 @@ class DisplayProfile extends Base
     public function edit($displayProfileId)
     {
         // Create a form out of the config object.
-        $displayProfile = (new DisplayProfileFactory($this->getContainer()))->getById($displayProfileId);
+        $displayProfile = $this->getFactoryService()->get('DisplayProfileFactory')->getById($displayProfileId);
 
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
@@ -316,7 +314,7 @@ class DisplayProfile extends Base
         $displayProfile->config = $combined;
 
         // Capture and update commands
-        foreach ((new CommandFactory($this->getContainer()))->query() as $command) {
+        foreach ($this->getFactoryService()->get('CommandFactory')->query() as $command) {
             /* @var Command $command */
             if ($this->getSanitizer()->getString('commandString_' . $command->commandId) != null) {
                 // Set and assign the command
@@ -347,7 +345,7 @@ class DisplayProfile extends Base
     function deleteForm($displayProfileId)
     {
         // Create a form out of the config object.
-        $displayProfile = (new DisplayProfileFactory($this->getContainer()))->getById($displayProfileId);
+        $displayProfile = $this->getFactoryService()->get('DisplayProfileFactory')->getById($displayProfileId);
 
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
@@ -385,7 +383,7 @@ class DisplayProfile extends Base
     function delete($displayProfileId)
     {
         // Create a form out of the config object.
-        $displayProfile = (new DisplayProfileFactory($this->getContainer()))->getById($displayProfileId);
+        $displayProfile = $this->getFactoryService()->get('DisplayProfileFactory')->getById($displayProfileId);
 
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));

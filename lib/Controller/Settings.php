@@ -20,7 +20,6 @@
  */
 namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Factory\SettingsFactory;
 use Xibo\Helper\Form;
 
 
@@ -29,7 +28,7 @@ class Settings extends Base
     function displayPage()
     {
         // Get all of the settings in an array
-        $settings = (new SettingsFactory($this->getContainer()))->query(null, ['userSee' => 1]);
+        $settings = $this->getFactoryService()->get('SettingsFactory')->query(null, ['userSee' => 1]);
 
         $currentCategory = '';
         $categories = array();
@@ -136,7 +135,7 @@ class Settings extends Base
         $this->getPool()->deleteItem('config/');
 
         // Get all of the settings in an array
-        $settings = (new SettingsFactory($this->getContainer()))->query(null, ['userChange' => 1, 'userSee' => 1]);
+        $settings = $this->getFactoryService()->get('SettingsFactory')->query(null, ['userChange' => 1, 'userSee' => 1]);
 
         // Go through each setting, validate it and add it to the array
         foreach ($settings as $setting) {

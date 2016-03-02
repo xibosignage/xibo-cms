@@ -21,7 +21,6 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Factory\HelpFactory;
 
 
 class Help extends Base
@@ -36,7 +35,7 @@ class Help extends Base
 
     public function grid()
     {
-        $helpLinks = (new HelpFactory($this->getContainer()))->query($this->gridRenderSort(), $this->gridRenderFilter());
+        $helpLinks = $this->getFactoryService()->get('HelpFactory')->query($this->gridRenderSort(), $this->gridRenderFilter());
 
         foreach ($helpLinks as $row) {
             /* @var \Xibo\Entity\Help $row */
@@ -68,7 +67,7 @@ class Help extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = (new HelpFactory($this->getContainer()))->countLast();
+        $this->getState()->recordsTotal = $this->getFactoryService()->get('HelpFactory')->countLast();
         $this->getState()->setData($helpLinks);
     }
 
@@ -92,7 +91,7 @@ class Help extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $help = (new HelpFactory($this->getContainer()))->getById($helpId);
+        $help = $this->getFactoryService()->get('HelpFactory')->getById($helpId);
 
         $this->getState()->template = 'help-form-edit';
         $this->getState()->setData([
@@ -109,7 +108,7 @@ class Help extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $help = (new HelpFactory($this->getContainer()))->getById($helpId);
+        $help = $this->getFactoryService()->get('HelpFactory')->getById($helpId);
 
         $this->getState()->template = 'help-form-delete';
         $this->getState()->setData([
@@ -149,7 +148,7 @@ class Help extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $help = (new HelpFactory($this->getContainer()))->getById($helpId);
+        $help = $this->getFactoryService()->get('HelpFactory')->getById($helpId);
         $help->topic = $this->getSanitizer()->getString('topic');
         $help->category = $this->getSanitizer()->getString('category');
         $help->link = $this->getSanitizer()->getString('link');
@@ -174,7 +173,7 @@ class Help extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $help = (new HelpFactory($this->getContainer()))->getById($helpId);
+        $help = $this->getFactoryService()->get('HelpFactory')->getById($helpId);
         $help->delete();
 
         // Return

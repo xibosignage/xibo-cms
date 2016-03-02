@@ -22,7 +22,6 @@
 namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
-use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Translate;
 
 class Clock extends ModuleWidget
@@ -31,11 +30,11 @@ class Clock extends ModuleWidget
 
     public function installFiles()
     {
-        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
-        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
-        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/flipclock.min.js')->save();
-        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
+        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/flipclock.min.js')->save();
+        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
     }
 
     /**

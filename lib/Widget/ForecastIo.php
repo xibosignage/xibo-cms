@@ -25,8 +25,6 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Xibo\Entity\Media;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\MediaFactory;
 
 
 class ForecastIo extends ModuleWidget
@@ -73,10 +71,10 @@ class ForecastIo extends ModuleWidget
 
     public function installFiles()
     {
-        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        (new MediaFactory($this->getContainer()))->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
 
-        foreach ((new MediaFactory($this->getContainer()))->createModuleFileFromFolder($this->resourceFolder) as $media) {
+        foreach ($this->getFactoryService()->get('MediaFactory')->createModuleFileFromFolder($this->resourceFolder) as $media) {
             /* @var Media $media */
             $media->save();
         }
@@ -290,7 +288,7 @@ class ForecastIo extends ModuleWidget
             // Use the display ID or the default.
             if ($displayId != 0) {
 
-                $display = (new DisplayFactory($this->getContainer()))->getById($displayId);
+                $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
                 $defaultLat = $display->latitude;
                 $defaultLong = $display->longitude;
             }

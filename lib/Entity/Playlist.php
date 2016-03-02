@@ -24,9 +24,6 @@ namespace Xibo\Entity;
 
 
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\RegionFactory;
-use Xibo\Factory\WidgetFactory;
 
 /**
  * Class Playlist
@@ -193,11 +190,11 @@ class Playlist implements \JsonSerializable
 
         // Load permissions
         if ($options['loadPermissions'])
-            $this->permissions = (new PermissionFactory($this->getContainer()))->getByObjectId(get_class(), $this->playlistId);
+            $this->permissions = $this->getFactoryService()->get('PermissionFactory')->getByObjectId(get_class(), $this->playlistId);
 
         // Load the widgets
         if ($options['loadWidgets']) {
-            foreach ((new WidgetFactory($this->getContainer()))->getByPlaylistId($this->playlistId) as $widget) {
+            foreach ($this->getFactoryService()->get('WidgetFactory')->getByPlaylistId($this->playlistId) as $widget) {
                 /* @var Widget $widget */
                 $widget->load();
                 $this->widgets[] = $widget;
@@ -206,7 +203,7 @@ class Playlist implements \JsonSerializable
 
         if ($options['playlistIncludeRegionAssignments']) {
             // Load the region assignments
-            foreach ((new RegionFactory($this->getContainer()))->getByPlaylistId($this->playlistId) as $region) {
+            foreach ($this->getFactoryService()->get('RegionFactory')->getByPlaylistId($this->playlistId) as $region) {
                 /* @var Region $region */
                 $this->regions[] = $region;
             }

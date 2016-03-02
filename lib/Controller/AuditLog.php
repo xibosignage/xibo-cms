@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use Xibo\Factory\AuditLogFactory;
 
 class AuditLog extends Base
 {
@@ -53,7 +52,7 @@ class AuditLog extends Base
         if ($filterEntity != '')
             $search['entity'] = $filterEntity;
 
-        $rows = (new AuditLogFactory($this->getContainer()))->query($this->gridRenderSort(), $this->gridRenderFilter($search));
+        $rows = $this->getFactoryService()->get('AuditLogFactory')->query($this->gridRenderSort(), $this->gridRenderFilter($search));
 
         // Do some post processing
         foreach ($rows as $row) {
@@ -62,7 +61,7 @@ class AuditLog extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = (new AuditLogFactory($this->getContainer()))->countLast();
+        $this->getState()->recordsTotal = $this->getFactoryService()->get('AuditLogFactory')->countLast();
         $this->getState()->setData($rows);
     }
 
@@ -99,7 +98,7 @@ class AuditLog extends Base
             return implode('|', $element);
         }, $search));
 
-        $rows = (new AuditLogFactory($this->getContainer()))->query('logId', ['search' => $search]);
+        $rows = $this->getFactoryService()->get('AuditLogFactory')->query('logId', ['search' => $search]);
 
         $out = fopen('php://output', 'w');
         fputcsv($out, ['ID', 'Date', 'User', 'Entity', 'Message', 'Object']);

@@ -73,6 +73,12 @@ class ConfigService implements ConfigServiceInterface
      */
     public function setDependencies($store, $rootUri)
     {
+        if ($store == null)
+            throw new \RuntimeException('ConfigService setDependencies called with null store');
+
+        if ($rootUri == null)
+            throw new \RuntimeException('ConfigService setDependencies called with null rootUri');
+
         $this->store = $store;
         $this->rootUri = $rootUri;
     }
@@ -101,7 +107,7 @@ class ConfigService implements ConfigServiceInterface
     protected function getStore()
     {
         if ($this->store == null)
-            throw new \RuntimeException(__('Config Service called before setDependencies'));
+            throw new \RuntimeException('Config Service called before setDependencies');
 
         return $this->store;
     }
@@ -113,7 +119,7 @@ class ConfigService implements ConfigServiceInterface
     public function rootUri()
     {
         if ($this->rootUri == null)
-            throw new \RuntimeException(__('Config Service called before setDependencies'));
+            throw new \RuntimeException('Config Service called before setDependencies');
 
         return $this->rootUri;
     }

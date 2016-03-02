@@ -23,7 +23,6 @@ namespace Xibo\Controller;
 use baseDAO;
 use Kit;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Factory\ResolutionFactory;
 use Xibo\Helper\Form;
 
 
@@ -86,7 +85,7 @@ class Resolution extends Base
             'resolution' => $this->getSanitizer()->getString('resolution')
         ];
 
-        $resolutions = (new ResolutionFactory($this->getContainer()))->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $resolutions = $this->getFactoryService()->get('ResolutionFactory')->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($resolutions as $resolution) {
             /* @var \Xibo\Entity\Resolution $resolution */
@@ -113,7 +112,7 @@ class Resolution extends Base
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($resolutions);
-        $this->getState()->recordsTotal = (new ResolutionFactory($this->getContainer()))->countLast();
+        $this->getState()->recordsTotal = $this->getFactoryService()->get('ResolutionFactory')->countLast();
     }
 
     /**
@@ -133,7 +132,7 @@ class Resolution extends Base
      */
     function editForm($resolutionId)
     {
-        $resolution = (new ResolutionFactory($this->getContainer()))->getById($resolutionId);
+        $resolution = $this->getFactoryService()->get('ResolutionFactory')->getById($resolutionId);
 
         if (!$this->getUser()->checkEditable($resolution))
             throw new AccessDeniedException();
@@ -151,7 +150,7 @@ class Resolution extends Base
      */
     function deleteForm($resolutionId)
     {
-        $resolution = (new ResolutionFactory($this->getContainer()))->getById($resolutionId);
+        $resolution = $this->getFactoryService()->get('ResolutionFactory')->getById($resolutionId);
 
         if (!$this->getUser()->checkEditable($resolution))
             throw new AccessDeniedException();
@@ -269,7 +268,7 @@ class Resolution extends Base
      */
     function edit($resolutionId)
     {
-        $resolution = (new ResolutionFactory($this->getContainer()))->getById($resolutionId);
+        $resolution = $this->getFactoryService()->get('ResolutionFactory')->getById($resolutionId);
 
         if (!$this->getUser()->checkEditable($resolution))
             throw new AccessDeniedException();
@@ -313,7 +312,7 @@ class Resolution extends Base
      */
     function delete($resolutionId)
     {
-        $resolution = (new ResolutionFactory($this->getContainer()))->getById($resolutionId);
+        $resolution = $this->getFactoryService()->get('ResolutionFactory')->getById($resolutionId);
 
         if (!$this->getUser()->checkDeleteable($resolution))
             throw new AccessDeniedException();

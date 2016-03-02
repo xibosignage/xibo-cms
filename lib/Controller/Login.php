@@ -19,9 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\UserFactory;
 
 class Login extends Base
 {
@@ -48,7 +48,8 @@ class Login extends Base
 
         // Get our user
         try {
-            $user = (new UserFactory($this->getContainer()))->getByName($username);
+            /* @var User $user */
+            $user = $this->getFactoryService()->get('UserFactory')->getByName($username);
 
             // $this->getLog()->debug($user);
 
@@ -77,8 +78,8 @@ class Login extends Base
 
             // Audit Log
             $this->getLog()->audit('User', $user->userId, 'Login Granted', [
-                'IPAddress' => $this->getContainer()->request()->getIp(),
-                'UserAgent' => $this->getContainer()->request()->getUserAgent()
+                'IPAddress' => $this->getApp()->request()->getIp(),
+                'UserAgent' => $this->getApp()->request()->getUserAgent()
             ]);
         }
         catch (NotFoundException $e) {
@@ -156,7 +157,7 @@ class Login extends Base
     {
         $response = $this->getState();
 
-        if ($this->getContainer()->request()->isAjax()) {
+        if ($this->getApp()->request()->isAjax()) {
             $response->template = 'about-text';
         }
         else {

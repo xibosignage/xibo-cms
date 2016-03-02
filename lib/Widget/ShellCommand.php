@@ -21,7 +21,6 @@
 namespace Xibo\Widget;
 
 use InvalidArgumentException;
-use Xibo\Factory\CommandFactory;
 
 class ShellCommand extends ModuleWidget
 {
@@ -110,7 +109,7 @@ class ShellCommand extends ModuleWidget
 
     public function setTemplateData($data)
     {
-        $data['commands'] = (new CommandFactory($this->getContainer()))->query();
+        $data['commands'] = $this->getFactoryService()->get('CommandFactory')->query();
         return $data;
     }
 }

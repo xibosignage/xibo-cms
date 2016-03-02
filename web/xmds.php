@@ -51,7 +51,7 @@ $app = new \Slim\Slim(array(
 $app->setName('api');
 
 // Load the config
-$app->configService = \Xibo\Service\ConfigService::Load($app->container, PROJECT_ROOT . '/web/settings.php');
+$app->configService = \Xibo\Service\ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
 
 // Set storage
 \Xibo\Middleware\Storage::setStorage($app->container);
@@ -99,7 +99,7 @@ if (isset($_GET['file'])) {
     $sendFileMode = $app->configService->GetSetting('SENDFILE_MODE');
 
     if ($sendFileMode == 'Off') {
-        $app->logHelper->notice('HTTP GetFile request received but SendFile Mode is Off. Issuing 404', 'services');
+        $app->logService->notice('HTTP GetFile request received but SendFile Mode is Off. Issuing 404', 'services');
         header('HTTP/1.0 404 Not Found');
         exit;
     }
@@ -113,7 +113,7 @@ if (isset($_GET['file'])) {
         // Issue magic packet
         // Send via Apache X-Sendfile header?
         if ($sendFileMode == 'Apache') {
-            $app->logHelper->notice('HTTP GetFile request redirecting to ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->storedAs, 'services');
+            $app->logService->notice('HTTP GetFile request redirecting to ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->storedAs, 'services');
             header('X-Sendfile: ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->storedAs);
         }
         // Send via Nginx X-Accel-Redirect?
@@ -129,7 +129,7 @@ if (isset($_GET['file'])) {
     }
     catch (\Exception $e) {
         if ($e instanceof \Xibo\Exception\NotFoundException || $e instanceof \Xibo\Exception\FormExpiredException) {
-            $app->logHelper->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404', 'services');
+            $app->logService->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404', 'services');
             // 404
             header('HTTP/1.0 404 Not Found');
         }
@@ -153,13 +153,13 @@ try {
     $soap->setClass('\Xibo\Xmds\Soap' . $version, $app);
     $soap->handle();
 
-    $app->logHelper->info('PDO stats: %s.', json_encode($app->store->stats()));
+    $app->logService->info('PDO stats: %s.', json_encode($app->store->stats()));
 
     if ($app->store->getConnection()->inTransaction())
         $app->store->getConnection()->commit();
 }
 catch (Exception $e) {
-    $app->logHelper->error($e->getMessage());
+    $app->logService->error($e->getMessage());
 
     if ($app->store->getConnection()->inTransaction())
         $app->store->getConnection()->rollBack();

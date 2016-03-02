@@ -27,10 +27,6 @@ use Xibo\Entity\Page;
 use Xibo\Entity\Permission;
 use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Factory\PageFactory;
-use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\UserFactory;
-use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\Form;
 
 
@@ -85,7 +81,7 @@ class UserGroup extends Base
             'group' => $this->getSanitizer()->getString('userGroup')
         ];
 
-        $groups = (new UserGroupFactory($this->getContainer()))->query($this->gridRenderSort(), $this->gridRenderFilter($filterBy));
+        $groups = $this->getFactoryService()->get('UserGroupFactory')->query($this->gridRenderSort(), $this->gridRenderFilter($filterBy));
 
         foreach ($groups as $group) {
             /* @var \Xibo\Entity\UserGroup $group */
@@ -134,7 +130,7 @@ class UserGroup extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = (new UserGroupFactory($this->getContainer()))->countLast();
+        $this->getState()->recordsTotal = $this->getFactoryService()->get('UserGroupFactory')->countLast();
         $this->getState()->setData($groups);
     }
 
@@ -157,7 +153,7 @@ class UserGroup extends Base
      */
     function editForm($groupId)
     {
-        $group = (new UserGroupFactory($this->getContainer()))->getById($groupId);
+        $group = $this->getFactoryService()->get('UserGroupFactory')->getById($groupId);
 
         if (!$this->getUser()->checkEditable($group))
             throw new AccessDeniedException();
@@ -178,7 +174,7 @@ class UserGroup extends Base
      */
     function deleteForm($groupId)
     {
-        $group = (new UserGroupFactory($this->getContainer()))->getById($groupId);
+        $group = $this->getFactoryService()->get('UserGroupFactory')->getById($groupId);
 
         if (!$this->getUser()->checkDeleteable($group))
             throw new AccessDeniedException();
@@ -219,7 +215,7 @@ class UserGroup extends Base
      */
     function edit($groupId)
     {
-        $group = (new UserGroupFactory($this->getContainer()))->getById($groupId);
+        $group = $this->getFactoryService()->get('UserGroupFactory')->getById($groupId);
 
         if (!$this->getUser()->checkEditable($group))
             throw new AccessDeniedException();
@@ -245,7 +241,7 @@ class UserGroup extends Base
      */
     function delete($groupId)
     {
-        $group = (new UserGroupFactory($this->getContainer()))->getById($groupId);
+        $group = $this->getFactoryService()->get('UserGroupFactory')->getById($groupId);
 
         if (!$this->getUser()->checkDeleteable($group))
             throw new AccessDeniedException();
@@ -270,17 +266,17 @@ class UserGroup extends Base
             throw new AccessDeniedException();
 
         // Use the factory to get all the entities
-        $entities = (new PageFactory($this->getContainer()))->query();
+        $entities = $this->getFactoryService()->get('PageFactory')->query();
 
         // Load the Group we are working on
         // Get the object
         if ($groupId == 0)
             throw new \InvalidArgumentException(__('ACL form requested without a User Group'));
 
-        $group = (new UserGroupFactory($this->getContainer()))->getById($groupId);
+        $group = $this->getFactoryService()->get('UserGroupFactory')->getById($groupId);
 
         // Get all permissions for this user and this object
-        $permissions = (new PermissionFactory($this->getContainer()))->getByGroupId('Page', $groupId);
+        $permissions = $this->getFactoryService()->get('PermissionFactory')->getByGroupId('Page', $groupId);
 
         $checkboxes = array();
 
@@ -336,13 +332,13 @@ class UserGroup extends Base
         if ($groupId == 0)
             throw new \InvalidArgumentException(__('ACL form requested without a User Group'));
 
-        $group = (new UserGroupFactory($this->getContainer()))->getById($groupId);
+        $group = $this->getFactoryService()->get('UserGroupFactory')->getById($groupId);
 
         // Use the factory to get all the entities
-        $entities = (new PageFactory($this->getContainer()))->query();
+        $entities = $this->getFactoryService()->get('PageFactory')->query();
 
         // Get all permissions for this user and this object
-        $permissions = (new PermissionFactory($this->getContainer()))->getByGroupId('Page', $groupId);
+        $permissions = $this->getFactoryService()->get('PermissionFactory')->getByGroupId('Page', $groupId);
         $objectIds = $this->getContainer()->request()->params('objectId');
 
         if (!is_array($objectIds))
@@ -375,7 +371,7 @@ class UserGroup extends Base
             if ($permission == null) {
                 if ($view) {
                     // Not currently assigned and needs to be
-                    $permission = (new PermissionFactory($this->getContainer()))->create($groupId, get_class($page), $objectId, 1, 0, 0);
+                    $permission = $this->getFactoryService()->get('PermissionFactory')->create($groupId, get_class($page), $objectId, 1, 0, 0);
                     $permission->save();
                 }
             }
@@ -405,16 +401,16 @@ class UserGroup extends Base
      */
     public function membersForm($groupId)
     {
-        $group = (new UserGroupFactory($this->getContainer()))->getById($groupId);
+        $group = $this->getFactoryService()->get('UserGroupFactory')->getById($groupId);
 
         if (!$this->getUser()->checkEditable($group))
             throw new AccessDeniedException();
 
         // Users in group
-        $usersAssigned = (new UserFactory($this->getContainer()))->query(null, array('groupIds' => array($groupId)));
+        $usersAssigned = $this->getFactoryService()->get('UserFactory')->query(null, array('groupIds' => array($groupId)));
 
         // Users not in group
-        $allUsers = (new UserFactory($this->getContainer()))->query();
+        $allUsers = $this->getFactoryService()->get('UserFactory')->query();
 
         // The available users are all users except users already in assigned users
         $checkboxes = array();
@@ -457,7 +453,7 @@ class UserGroup extends Base
     {
         $this->getLog()->debug('Assign User for groupId %d', $groupId);
 
-        $group = (new UserGroupFactory($this->getContainer()))->getById($groupId);
+        $group = $this->getFactoryService()->get('UserGroupFactory')->getById($groupId);
 
         if (!$this->getUser()->checkEditable($group))
             throw new AccessDeniedException();
@@ -468,7 +464,7 @@ class UserGroup extends Base
 
             $this->getLog()->debug('Assign User %d for groupId %d', $userId, $groupId);
 
-            $user = (new UserFactory($this->getContainer()))->getById($userId);
+            $user = $this->getFactoryService()->get('UserFactory')->getById($userId);
 
             if (!$this->getUser()->checkViewable($user))
                 throw new AccessDeniedException(__('Access Denied to User'));
@@ -483,7 +479,7 @@ class UserGroup extends Base
 
             $this->getLog()->debug('Unassign User %d for groupId %d', $userId, $groupId);
 
-            $user = (new UserFactory($this->getContainer()))->getById($userId);
+            $user = $this->getFactoryService()->get('UserFactory')->getById($userId);
 
             if (!$this->getUser()->checkViewable($user))
                 throw new AccessDeniedException(__('Access Denied to User'));
@@ -506,7 +502,7 @@ class UserGroup extends Base
      */
     public function unassignUser($groupId)
     {
-        $group = (new UserGroupFactory($this->getContainer()))->getById($groupId);
+        $group = $this->getFactoryService()->get('UserGroupFactory')->getById($groupId);
 
         if (!$this->getUser()->checkEditable($group))
             throw new AccessDeniedException();
@@ -514,7 +510,7 @@ class UserGroup extends Base
         $users = $this->getSanitizer()->getIntArray('userId');
 
         foreach ($users as $userId) {
-            $group->unassignUser((new UserFactory($this->getContainer()))->getById($userId));
+            $group->unassignUser($this->getFactoryService()->get('UserFactory')->getById($userId));
         }
 
         $group->save(['validate' => false]);
@@ -532,7 +528,7 @@ class UserGroup extends Base
      */
     function copyForm($groupId)
     {
-        $group = (new UserGroupFactory($this->getContainer()))->getById($groupId);
+        $group = $this->getFactoryService()->get('UserGroupFactory')->getById($groupId);
 
         if (!$this->getUser()->checkViewable($group))
             throw new AccessDeniedException();
@@ -587,7 +583,7 @@ class UserGroup extends Base
      */
     public function copy($userGroupId)
     {
-        $group = (new UserGroupFactory($this->getContainer()))->getById($userGroupId);
+        $group = $this->getFactoryService()->get('UserGroupFactory')->getById($userGroupId);
 
         // Check we have permission to view this group
         if (!$this->getUser()->checkViewable($group))
@@ -602,7 +598,7 @@ class UserGroup extends Base
         $newGroup->save();
 
         // Copy permissions
-        foreach ((new PermissionFactory($this->getContainer()))->getByGroupId('Page', $group->groupId) as $permission) {
+        foreach ($this->getFactoryService()->get('PermissionFactory')->getByGroupId('Page', $group->groupId) as $permission) {
             /* @var Permission $permission */
             $permission = clone $permission;
             $permission->groupId = $newGroup->groupId;

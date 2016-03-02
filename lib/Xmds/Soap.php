@@ -35,6 +35,7 @@ use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Random;
 use Xibo\Service\ConfigService;
 use Xibo\Service\DateServiceInterface;
+use Xibo\Service\FactoryServiceInterface;
 use Xibo\Service\LogService;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -64,6 +65,14 @@ class Soap
         // Create a log processor
         $this->logProcessor = new LogProcessor();
         $app->logWriter->addProcessor($this->logProcessor);
+    }
+
+    /**
+     * @return FactoryServiceInterface
+     */
+    public function getFactoryService()
+    {
+        return $this->getApp()->factoryService;
     }
 
     /**
@@ -103,7 +112,7 @@ class Soap
      */
     protected function getLog()
     {
-        return $this->getApp()->logHelper;
+        return $this->getApp()->logService;
     }
 
     /**
@@ -516,7 +525,7 @@ class Soap
         $output = $requiredFilesXml->saveXML();
 
         // Remove unused required files
-        RequiredFile::removeUnusedForDisplay($this->display->displayId, $requestKey);
+        RequiredFile::removeUnusedForDisplay($this->getStore(), $this->display->displayId, $requestKey);
 
         // Cache
         $cache->set($output);
@@ -830,7 +839,7 @@ class Soap
         $this->getPool()->saveDeferred($cache);
 
         // Log Bandwidth
-        $this->LogBandwidth($this->display->displayId, Bandwidth::$SCHEDULE, strlen($output));
+        $this->logBandwidth($this->display->displayId, Bandwidth::$SCHEDULE, strlen($output));
 
         return $output;
     }
@@ -860,11 +869,11 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->CheckBandwidth())
+        if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Authenticate this request...
-        if (!$this->AuthDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', "This display client is not licensed", $hardwareKey);
 
         if ($this->display->isAuditing == 1)
@@ -938,11 +947,11 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->CheckBandwidth())
+        if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
-        if (!$this->AuthDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Sender', 'This display client is not licensed.');
 
         if ($this->display->isAuditing == 1)

@@ -95,6 +95,7 @@ class RequiredFileFactory extends BaseFactory
         }
         catch (NotFoundException $e) {
             $nonce = new RequiredFile();
+            $nonce->setContainer($this->getContainer());
         }
 
         $nonce->displayId = $displayId;
@@ -121,6 +122,7 @@ class RequiredFileFactory extends BaseFactory
         }
         catch (NotFoundException $e) {
             $nonce = new RequiredFile();
+            $nonce->setContainer($this->getContainer());
         }
 
         $nonce->displayId = $displayId;
@@ -147,6 +149,7 @@ class RequiredFileFactory extends BaseFactory
         }
         catch (NotFoundException $e) {
             $nonce = new RequiredFile();
+            $nonce->setContainer($this->getContainer());
         }
 
         $nonce->displayId = $displayId;
@@ -211,7 +214,7 @@ class RequiredFileFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new RequiredFile())->hydrate($row, ['intProperties' => ['expires', 'lastUsed', 'size']]);
+            $entries[] = (new RequiredFile())->setContainer($this->getContainer())->hydrate($row, ['intProperties' => ['expires', 'lastUsed', 'size']]);
         }
 
         return $entries;

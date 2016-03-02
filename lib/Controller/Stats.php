@@ -21,8 +21,6 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\MediaFactory;
 
 
 class Stats extends Base
@@ -34,9 +32,9 @@ class Stats extends Base
     {
         $data = [
             // List of Displays this user has permission for
-            'displays' => (new DisplayFactory($this->getContainer()))->query(),
+            'displays' => $this->getFactoryService()->get('DisplayFactory')->query(),
             // List of Media this user has permission for
-            'media' => (new MediaFactory($this->getContainer()))->query(),
+            'media' => $this->getFactoryService()->get('MediaFactory')->query(),
             'defaults' => [
                 'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
                 'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
@@ -153,7 +151,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $display_ids = array();
 
-        foreach ((new DisplayFactory($this->getContainer()))->query() as $display) {
+        foreach ($this->getFactoryService()->get('DisplayFactory')->query() as $display) {
             $display_ids[] = $display->displayId;
         }
 
@@ -251,7 +249,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $displayIds = array();
 
-        foreach ((new DisplayFactory($this->getContainer()))->query() as $display) {
+        foreach ($this->getFactoryService()->get('DisplayFactory')->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -341,7 +339,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $displayIds = array();
 
-        foreach ((new DisplayFactory($this->getContainer()))->query() as $display) {
+        foreach ($this->getFactoryService()->get('DisplayFactory')->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -452,7 +450,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $displayIds = array();
 
-        foreach ((new DisplayFactory($this->getContainer()))->query() as $display) {
+        foreach ($this->getFactoryService()->get('DisplayFactory')->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 

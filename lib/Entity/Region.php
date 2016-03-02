@@ -23,9 +23,6 @@ namespace Xibo\Entity;
 
 
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\PlaylistFactory;
-use Xibo\Factory\RegionOptionFactory;
 
 /**
  * Class Region
@@ -233,7 +230,7 @@ class Region implements \JsonSerializable
             $this->getOption($option)->value = $value;
         }
         catch (NotFoundException $e) {
-            $this->regionOptions[] = (new RegionOptionFactory($this->getContainer()))->create($this->regionId, $option, $value);
+            $this->regionOptions[] = $this->getFactoryService()->get('RegionOptionFactory')->create($this->regionId, $option, $value);
         }
     }
 
@@ -280,11 +277,11 @@ class Region implements \JsonSerializable
         $this->getLog()->debug('Load Region with %s', json_encode($options));
 
         // Load permissions
-        $this->permissions = (new PermissionFactory($this->getContainer()))->getByObjectId(get_class(), $this->regionId);
+        $this->permissions = $this->getFactoryService()->get('PermissionFactory')->getByObjectId(get_class(), $this->regionId);
 
         // Load all playlists
         if ($options['regionIncludePlaylists']) {
-            $this->playlists = (new PlaylistFactory($this->getContainer()))->getByRegionId($this->regionId);
+            $this->playlists = $this->getFactoryService()->get('PlaylistFactory')->getByRegionId($this->regionId);
 
             foreach ($this->playlists as $playlist) {
                 /* @var Playlist $playlist */
@@ -293,7 +290,7 @@ class Region implements \JsonSerializable
         }
 
         // Get region options
-        $this->regionOptions = (new RegionOptionFactory($this->getContainer()))->getByRegionId($this->regionId);
+        $this->regionOptions = $this->getFactoryService()->get('RegionOptionFactory')->getByRegionId($this->regionId);
 
         $this->hash = $this->hash();
         $this->loaded = true;

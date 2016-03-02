@@ -24,11 +24,6 @@ use Xibo\Entity\DisplayGroup;
 use Xibo\Entity\Stat;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\DisplayProfileFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\LogFactory;
 use Xibo\Helper\WakeOnLan;
 use Xibo\XMR\ScreenShotAction;
 
@@ -43,7 +38,7 @@ class Display extends Base
         // Call to render the template
         $this->getState()->template = 'display-page';
         $this->getState()->setData([
-            'displayGroups' => (new DisplayGroupFactory($this->getContainer()))->query()
+            'displayGroups' => $this->getFactoryService()->get('DisplayGroupFactory')->query()
         ]);
     }
 
@@ -54,13 +49,13 @@ class Display extends Base
      */
     function displayManage($displayId)
     {
-        $display = (new DisplayFactory($this->getContainer()))->getById($displayId);
+        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
 
         if (!$this->getUser()->checkViewable($display))
             throw new AccessDeniedException();
 
         // Errors in the last 24 hours
-        $errors = (new LogFactory($this->getContainer()))->query(null, [
+        $errors = $this->getFactoryService()->get('LogFactory')->query(null, [
             'displayId' => $display->displayId,
             'type' => 'ERROR',
             'fromDt' => $this->getDate()->getLocalDate($this->getDate()->parse()->subHours(24), 'U'),
@@ -232,7 +227,7 @@ class Display extends Base
         ];
 
         // Get a list of displays
-        $displays = (new DisplayFactory($this->getContainer()))->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $displays = $this->getFactoryService()->get('DisplayFactory')->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         // validate displays so we get a realistic view of the table
         $this->validateDisplays($displays);
@@ -395,7 +390,7 @@ class Display extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = (new DisplayFactory($this->getContainer()))->countLast();
+        $this->getState()->recordsTotal = $this->getFactoryService()->get('DisplayFactory')->countLast();
         $this->getState()->setData($displays);
     }
 
@@ -405,7 +400,7 @@ class Display extends Base
      */
     function editForm($displayId)
     {
-        $display = (new DisplayFactory($this->getContainer()))->getById($displayId);
+        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
 
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
@@ -433,8 +428,8 @@ class Display extends Base
         $this->getState()->template = 'display-form-edit';
         $this->getState()->setData([
             'display' => $display,
-            'layouts' => (new LayoutFactory($this->getContainer()))->query(),
-            'profiles' => (new DisplayProfileFactory($this->getContainer()))->query(NULL, array('type' => $display->clientType)),
+            'layouts' => $this->getFactoryService()->get('LayoutFactory')->query(),
+            'profiles' => $this->getFactoryService()->get('DisplayProfileFactory')->query(NULL, array('type' => $display->clientType)),
             'settings' => $profile,
             'help' => $this->getHelp()->link('Display', 'Edit')
         ]);
@@ -446,7 +441,7 @@ class Display extends Base
      */
     function deleteForm($displayId)
     {
-        $display = (new DisplayFactory($this->getContainer()))->getById($displayId);
+        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
 
         if (!$this->getUser()->checkDeleteable($display))
             throw new AccessDeniedException();
@@ -603,7 +598,7 @@ class Display extends Base
      */
     function edit($displayId)
     {
-        $display = (new DisplayFactory($this->getContainer()))->getById($displayId);
+        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
 
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
@@ -670,7 +665,7 @@ class Display extends Base
      */
     function delete($displayId)
     {
-        $display = (new DisplayFactory($this->getContainer()))->getById($displayId);
+        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
 
         if (!$this->getUser()->checkDeleteable($display))
             throw new AccessDeniedException();
@@ -692,16 +687,16 @@ class Display extends Base
      */
     public function membershipForm($displayId)
     {
-        $display = (new DisplayFactory($this->getContainer()))->getById($displayId);
+        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
 
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
         // Groups we are assigned to
-        $groupsAssigned = (new DisplayGroupFactory($this->getContainer()))->getByDisplayId($display->displayId);
+        $groupsAssigned = $this->getFactoryService()->get('DisplayGroupFactory')->getByDisplayId($display->displayId);
 
         // All Groups
-        $allGroups = (new DisplayGroupFactory($this->getContainer()))->getByIsDynamic(null, ['isDynamic' => 0]);
+        $allGroups = $this->getFactoryService()->get('DisplayGroupFactory')->getByIsDynamic(null, ['isDynamic' => 0]);
 
         // The available users are all users except users already in assigned users
         $checkboxes = array();
@@ -743,14 +738,14 @@ class Display extends Base
      */
     public function assignDisplayGroup($displayId)
     {
-        $display = (new DisplayFactory($this->getContainer()))->getById($displayId);
+        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
 
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
         // Go through each ID to assign
         foreach ($this->getSanitizer()->getIntArray('displayGroupId') as $displayGroupId) {
-            $displayGroup = (new DisplayGroupFactory($this->getContainer()))->getById($displayGroupId);
+            $displayGroup = $this->getFactoryService()->get('DisplayGroupFactory')->getById($displayGroupId);
 
             if (!$this->getUser()->checkEditable($displayGroup))
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
@@ -761,7 +756,7 @@ class Display extends Base
 
         // Have we been provided with unassign id's as well?
         foreach ($this->getSanitizer()->getIntArray('unassignDisplayGroupId') as $displayGroupId) {
-            $displayGroup = (new DisplayGroupFactory($this->getContainer()))->getById($displayGroupId);
+            $displayGroup = $this->getFactoryService()->get('DisplayGroupFactory')->getById($displayGroupId);
 
             if (!$this->getUser()->checkEditable($displayGroup))
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
@@ -818,7 +813,7 @@ class Display extends Base
      */
     public function requestScreenShotForm($displayId)
     {
-        $display = (new DisplayFactory($this->getContainer()))->getById($displayId);
+        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
 
         if (!$this->getUser()->checkViewable($display))
             throw new AccessDeniedException();
@@ -858,7 +853,7 @@ class Display extends Base
      */
     public function requestScreenShot($displayId)
     {
-        $display = (new DisplayFactory($this->getContainer()))->getById($displayId);
+        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
 
         if (!$this->getUser()->checkViewable($display))
             throw new AccessDeniedException();
@@ -881,7 +876,7 @@ class Display extends Base
      */
     public function wakeOnLanForm($displayId)
     {
-        $display = (new DisplayFactory($this->getContainer()))->getById($displayId);
+        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
 
         if (!$this->getUser()->checkViewable($display))
             throw new AccessDeniedException();
@@ -921,7 +916,7 @@ class Display extends Base
      */
     public function wakeOnLan($displayId)
     {
-        $display = (new DisplayFactory($this->getContainer()))->getById($displayId);
+        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
 
         if (!$this->getUser()->checkViewable($display))
             throw new AccessDeniedException();

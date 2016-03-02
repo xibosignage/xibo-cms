@@ -11,10 +11,6 @@ namespace Xibo\Entity;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\DataSetColumnFactory;
-use Xibo\Factory\DataSetFactory;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\PermissionFactory;
 
 /**
  * Class DataSet
@@ -289,7 +285,7 @@ class DataSet implements \JsonSerializable
             throw new \InvalidArgumentException(__('Description can not be longer than 254 characters'));
 
         try {
-            $existing = (new DataSetFactory($this->getContainer()))->getByName($this->dataSet);
+            $existing = $this->getFactoryService()->get('DataSetFactory')->getByName($this->dataSet);
 
             if ($this->dataSetId == 0 || $this->dataSetId != $existing->dataSetId)
                 throw new \InvalidArgumentException(sprintf(__('There is already dataSet called %s. Please choose another name.'), $this->dataSet));
@@ -308,10 +304,10 @@ class DataSet implements \JsonSerializable
             return;
 
         // Load Columns
-        $this->columns = (new DataSetColumnFactory($this->getContainer()))->getByDataSetId($this->dataSetId);
+        $this->columns = $this->getFactoryService()->get('DataSetColumnFactory')->getByDataSetId($this->dataSetId);
 
         // Load Permissions
-        $this->permissions = (new PermissionFactory($this->getContainer()))->getByObjectId(get_class($this), $this->getId());
+        $this->permissions = $this->getFactoryService()->get('PermissionFactory')->getByObjectId(get_class($this), $this->getId());
 
         $this->loaded = true;
     }
@@ -466,7 +462,7 @@ class DataSet implements \JsonSerializable
     {
         $this->getLog()->debug('Checking for Displays to refresh for DataSet %d', $this->dataSetId);
 
-        foreach ((new DisplayFactory($this->getContainer()))->getByActiveDataSetId($this->dataSetId) as $display) {
+        foreach ($this->getFactoryService()->get('DisplayFactory')->getByActiveDataSetId($this->dataSetId) as $display) {
             /* @var \Xibo\Entity\Display $display */
             $display->setMediaIncomplete();
             $display->setCollectRequired(false);

@@ -28,12 +28,6 @@ use GuzzleHttp\Exception\RequestException;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\TagFactory;
-use Xibo\Factory\WidgetFactory;
 
 /**
  * Class Media
@@ -236,7 +230,7 @@ class Media implements \JsonSerializable
     public function replaceTags($tags = [])
     {
         if (!is_array($this->tags) || count($this->tags) <= 0)
-            $this->tags = (new TagFactory($this->getContainer()))->loadByMediaId($this->mediaId);
+            $this->tags = $this->getFactoryService()->get('TagFactory')->loadByMediaId($this->mediaId);
 
         $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
             /* @var Tag $a */
@@ -301,21 +295,21 @@ class Media implements \JsonSerializable
         $this->getLog()->debug('Loading Media. Options = %s', json_encode($options));
 
         // Tags
-        $this->tags = (new TagFactory($this->getContainer()))->loadByMediaId($this->mediaId);
+        $this->tags = $this->getFactoryService()->get('TagFactory')->loadByMediaId($this->mediaId);
 
         // Are we loading for a delete? If so load the child models
         if ($options['deleting'] || $options['fullInfo']) {
             // Permissions
-            $this->permissions = (new PermissionFactory($this->getContainer()))->getByObjectId(get_class($this), $this->mediaId);
+            $this->permissions = $this->getFactoryService()->get('PermissionFactory')->getByObjectId(get_class($this), $this->mediaId);
 
             // Widgets
-            $this->widgets = (new WidgetFactory($this->getContainer()))->getByMediaId($this->mediaId);
+            $this->widgets = $this->getFactoryService()->get('WidgetFactory')->getByMediaId($this->mediaId);
 
             // Layout Background Images
-            $this->layoutBackgroundImages = (new LayoutFactory($this->getContainer()))->getByBackgroundImageId($this->mediaId);
+            $this->layoutBackgroundImages = $this->getFactoryService()->get('LayoutFactory')->getByBackgroundImageId($this->mediaId);
 
             // Display Groups
-            $this->displayGroups = (new DisplayGroupFactory($this->getContainer()))->getByMediaId($this->mediaId);
+            $this->displayGroups = $this->getFactoryService()->get('DisplayGroupFactory')->getByMediaId($this->mediaId);
         }
 
         $this->loaded = true;
@@ -378,7 +372,7 @@ class Media implements \JsonSerializable
 
         // If there is a parent, bring it back
         try {
-            $parentMedia = (new MediaFactory($this->getContainer()))->getParentById($this->mediaId);
+            $parentMedia = $this->getFactoryService()->get('MediaFactory')->getParentById($this->mediaId);
             $parentMedia->isEdited = 0;
             $parentMedia->parentId = null;
             $parentMedia->save(['validate' => false]);
@@ -437,7 +431,7 @@ class Media implements \JsonSerializable
         if ($this->mediaType == 'image' && $parentMedia != null) {
             $this->getLog()->debug('Updating layouts with the old media %d as the background image.', $this->mediaId);
             // Get all Layouts with this as the background image
-            foreach ((new LayoutFactory($this->getContainer()))->query(null, ['backgroundImageId' => $this->mediaId]) as $layout) {
+            foreach ($this->getFactoryService()->get('LayoutFactory')->query(null, ['backgroundImageId' => $this->mediaId]) as $layout) {
                 /* @var Layout $layout */
                 $this->getLog()->debug('Found layout that needs updating. ID = %d. Setting background image id to %d', $layout->layoutId, $parentMedia->mediaId);
                 $layout->backgroundImageId = $parentMedia->mediaId;

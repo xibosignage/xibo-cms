@@ -8,7 +8,6 @@
 
 namespace Xibo\Entity;
 use League\OAuth2\Server\Util\SecureKey;
-use Xibo\Factory\ApplicationRedirectUriFactory;
 
 /**
  * Class Application
@@ -116,7 +115,7 @@ class Application implements \JsonSerializable
         if ($this->loaded)
             return;
 
-        $this->redirectUris = (new ApplicationRedirectUriFactory($this->getContainer()))->getByClientId($this->key);
+        $this->redirectUris = $this->getFactoryService()->get('ApplicationRedirectUriFactory')->getByClientId($this->key);
 
         $this->loaded = true;
     }

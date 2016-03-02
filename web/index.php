@@ -38,13 +38,12 @@ if (!file_exists('settings.php')) {
     }
 }
 
-// Log handlers
-$handlers = [new \Xibo\Helper\DatabaseLogHandler()];
-
 // Create a logger
 $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'WEB',
-    'handlers' => $handlers,
+    'handlers' => [
+        new \Xibo\Helper\DatabaseLogHandler()
+    ],
     'processors' => array(
         new \Xibo\Helper\LogProcessor(),
         new \Monolog\Processor\UidProcessor(7)

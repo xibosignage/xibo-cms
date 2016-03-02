@@ -7,7 +7,7 @@
 
 $app->map('/(:step)', function($step = 1) use($app) {
 
-    $app->logHelper->info('Installer Step %s', $step);
+    $app->logService->info('Installer Step %s', $step);
 
     $install = new \Xibo\Helper\Install($app);
     $settingsExists = $app->settingsExists;
@@ -41,7 +41,7 @@ $app->map('/(:step)', function($step = 1) use($app) {
 
             // Check and validate DB details
             if (defined('MAX_EXECUTION') && MAX_EXECUTION) {
-                $app->logHelper->info('Setting unlimited max execution time.');
+                $app->logService->info('Setting unlimited max execution time.');
                 set_time_limit(0);
             }
 
@@ -53,7 +53,7 @@ $app->map('/(:step)', function($step = 1) use($app) {
             }
             catch (\Xibo\Exception\InstallationError $e) {
 
-                $app->logHelper->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
+                $app->logService->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
 
                 $app->flashNow('error', $e->getMessage());
 
@@ -85,7 +85,7 @@ $app->map('/(:step)', function($step = 1) use($app) {
             }
             catch (\Xibo\Exception\InstallationError $e) {
 
-                $app->logHelper->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
+                $app->logService->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
 
                 $app->flashNow('error', $e->getMessage());
 
@@ -110,12 +110,12 @@ $app->map('/(:step)', function($step = 1) use($app) {
                 // This will always be one folder down
                 $login = str_replace('/install', '', $app->urlFor('login'));
 
-                $app->logHelper->info('Installation Complete. Redirecting to %s', $login);
+                $app->logService->info('Installation Complete. Redirecting to %s', $login);
 
                 $app->redirect($login);
             }
             catch (\Xibo\Exception\InstallationError $e) {
-                $app->logHelper->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
+                $app->logService->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
 
                 $app->flashNow('error', $e->getMessage());
 

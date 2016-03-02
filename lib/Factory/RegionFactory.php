@@ -63,7 +63,7 @@ class RegionFactory extends BaseFactory
 
         // Create a Playlist for this region
         // many to many relationship
-        $playlist = (new PlaylistFactory($this->getContainer()))->create($name, $ownerId);
+        $playlist = $this->getFactoryService()->get('PlaylistFactory')->create($name, $ownerId);
         $region->assignPlaylist($playlist);
 
         return $region;

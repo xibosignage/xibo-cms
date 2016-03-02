@@ -10,12 +10,6 @@ namespace Xibo\Entity;
 
 
 use Respect\Validation\Validator as v;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\ScheduleFactory;
 
 /**
  * Class DisplayGroup
@@ -142,7 +136,7 @@ class DisplayGroup implements \JsonSerializable
      */
     public function setMediaIncomplete()
     {
-        foreach ((new DisplayFactory($this->getContainer()))->getByDisplayGroupId($this->displayGroupId) as $display) {
+        foreach ($this->getFactoryService()->get('DisplayFactory')->getByDisplayGroupId($this->displayGroupId) as $display) {
             /* @var Display $display */
             $display->setMediaIncomplete();
             $display->setCollectRequired($this->collectRequired);
@@ -282,17 +276,17 @@ class DisplayGroup implements \JsonSerializable
         if ($this->loaded || $this->displayGroupId == null || $this->displayGroupId == 0)
             return;
 
-        $this->permissions = (new PermissionFactory($this->getContainer()))->getByObjectId(get_class($this), $this->displayGroupId);
+        $this->permissions = $this->getFactoryService()->get('PermissionFactory')->getByObjectId(get_class($this), $this->displayGroupId);
 
-        $this->displays = (new DisplayFactory($this->getContainer()))->getByDisplayGroupId($this->displayGroupId);
+        $this->displays = $this->getFactoryService()->get('DisplayFactory')->getByDisplayGroupId($this->displayGroupId);
 
-        $this->displayGroups = (new DisplayGroupFactory($this->getContainer()))->getByParentId($this->displayGroupId);
+        $this->displayGroups = $this->getFactoryService()->get('DisplayGroupFactory')->getByParentId($this->displayGroupId);
 
-        $this->layouts = (new LayoutFactory($this->getContainer()))->getByDisplayGroupId($this->displayGroupId);
+        $this->layouts = $this->getFactoryService()->get('LayoutFactory')->getByDisplayGroupId($this->displayGroupId);
 
-        $this->media = (new MediaFactory($this->getContainer()))->getByDisplayGroupId($this->displayGroupId);
+        $this->media = $this->getFactoryService()->get('MediaFactory')->getByDisplayGroupId($this->displayGroupId);
 
-        $this->events = (new ScheduleFactory($this->getContainer()))->getByDisplayGroupId($this->displayGroupId);
+        $this->events = $this->getFactoryService()->get('ScheduleFactory')->getByDisplayGroupId($this->displayGroupId);
 
         // Set the originals
         $this->originalDisplayGroups = $this->displayGroups;
@@ -470,11 +464,11 @@ class DisplayGroup implements \JsonSerializable
 
             $this->getLog()->info('Managing Display Links for Dynamic Display Group %s', $this->displayGroup);
 
-            $originalDisplays = ($this->loaded) ? $this->displays : (new DisplayFactory($this->getContainer()))->getByDisplayGroupId($this->displayGroupId);
+            $originalDisplays = ($this->loaded) ? $this->displays : $this->getFactoryService()->get('DisplayFactory')->getByDisplayGroupId($this->displayGroupId);
 
             // Update the linked displays based on the filter criteria
             // these displays must be permission checked based on the owner of the group NOT the logged in user
-            $this->displays = (new DisplayFactory($this->getContainer()))->query(null, ['display' => $this->dynamicCriteria, 'userCheckUserId' => $this->getOwnerId()]);
+            $this->displays = $this->getFactoryService()->get('DisplayFactory')->query(null, ['display' => $this->dynamicCriteria, 'userCheckUserId' => $this->getOwnerId()]);
 
             $this->getLog()->debug('There are %d original displays and %d displays that match the filter criteria now.', count($originalDisplays), count($this->displays));
 

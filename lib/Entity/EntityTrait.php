@@ -9,14 +9,7 @@
 namespace Xibo\Entity;
 
 
-use Slim\Helper\Set;
 use Xibo\Helper\ObjectVars;
-use Xibo\Service\ConfigService;
-use Xibo\Service\DateServiceInterface;
-use Xibo\Service\LogService;
-use Xibo\Service\PlayerActionServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class EntityTrait
@@ -26,10 +19,9 @@ use Xibo\Storage\StorageServiceInterface;
 trait EntityTrait
 {
     /**
-     * DI Container
-     * @var Set
+     * Include the Entity Service Trait
      */
-    private $container;
+    use EntityServiceTrait;
 
     private $hash = null;
     private $loaded = false;
@@ -121,92 +113,5 @@ trait EntityTrait
     protected function setPermissionsClass($class)
     {
         $this->permissionsClass = $class;
-    }
-
-    /**
-     * Set app
-     * @param Set $container
-     * @return mixed
-     */
-    public function setContainer($container)
-    {
-        $this->container = $container;
-
-        return $this;
-    }
-
-    /**
-     * Get App
-     * @return Set
-     */
-    protected function getContainer()
-    {
-        if ($this->container == null)
-            throw new \RuntimeException(__('Entity Application not set'));
-
-        return $this->container;
-    }
-
-    /**
-     * Get Pool
-     * @return \Stash\Interfaces\PoolInterface
-     */
-    protected function getPool()
-    {
-        return $this->getContainer()->pool;
-    }
-
-    /**
-     * Get Store
-     * @return StorageServiceInterface
-     */
-    protected function getStore()
-    {
-        return $this->getContainer()->store;
-    }
-
-    /**
-     * Get Log
-     * @return LogService
-     */
-    protected function getLog()
-    {
-        return $this->getContainer()->logHelper;
-    }
-
-    /**
-     * Get Date
-     * @return DateServiceInterface
-     */
-    protected function getDate()
-    {
-        return $this->getContainer()->dateService;
-    }
-
-    /**
-     * Get Sanitizer
-     * @return SanitizerServiceInterface
-     */
-    protected function getSanitizer()
-    {
-        return $this->getContainer()->sanitizerService;
-    }
-
-    /**
-     * Get Config
-     * @return ConfigService
-     */
-    protected function getConfig()
-    {
-        return $this->getContainer()->configService;
-    }
-
-    /**
-     * Get Player Service
-     * @return PlayerActionServiceInterface
-     */
-    public function getPlayerService()
-    {
-        return $this->getContainer()->playerActionService;
     }
 }

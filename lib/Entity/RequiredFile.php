@@ -116,8 +116,8 @@ class RequiredFile implements \JsonSerializable
         ]);
     }
 
-    public static function removeUnusedForDisplay($displayId, $requestKey)
+    public static function removeUnusedForDisplay($store, $displayId, $requestKey)
     {
-        $this->getStore()->update('DELETE FROM `requiredfile` WHERE displayId = :displayId AND requestKey <> :requestKey ', ['displayId' => $displayId, 'requestKey' => $requestKey]);
+        $store->update('DELETE FROM `requiredfile` WHERE displayId = :displayId AND requestKey <> :requestKey ', ['displayId' => $displayId, 'requestKey' => $requestKey]);
     }
 }

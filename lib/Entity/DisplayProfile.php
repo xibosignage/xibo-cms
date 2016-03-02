@@ -9,7 +9,6 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
-use Xibo\Factory\CommandFactory;
 
 
 /**
@@ -165,7 +164,7 @@ class DisplayProfile
         }
 
         // Load any commands
-        $this->commands = (new CommandFactory($this->getContainer()))->getByDisplayProfileId($this->displayProfileId);
+        $this->commands = $this->getFactoryService()->get('CommandFactory')->getByDisplayProfileId($this->displayProfileId);
 
         // We are loaded
         $this->loaded = true;
@@ -305,7 +304,7 @@ class DisplayProfile
     /**
      * @return array
      */
-    public function getConfig()
+    public function getProfileConfig()
     {
         return $this->configDefault;
     }

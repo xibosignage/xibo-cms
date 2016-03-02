@@ -24,8 +24,6 @@ namespace Xibo\Entity;
 
 
 use Respect\Validation\Validator as v;
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\DisplayProfileFactory;
 use Xibo\XMR\CollectNowAction;
 
 /**
@@ -400,7 +398,7 @@ class Display
     public function load()
     {
         // Load this displays group membership
-        $this->displayGroups = (new DisplayGroupFactory($this->getContainer()))->getByDisplayId($this->displayId);
+        $this->displayGroups = $this->getFactoryService()->get('DisplayGroupFactory')->getByDisplayId($this->displayId);
     }
 
     /**
@@ -438,7 +436,7 @@ class Display
 
         // Trigger an update of all dynamic DisplayGroups
         if ($options['triggerDynamicDisplayGroupAssessment']) {
-            foreach ((new DisplayGroupFactory($this->getContainer()))->getByIsDynamic(1) as $group) {
+            foreach ($this->getFactoryService()->get('DisplayGroupFactory')->getByIsDynamic(1) as $group) {
                 /* @var DisplayGroup $group */
                 $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true]);
             }
@@ -461,7 +459,7 @@ class Display
         }
 
         // Delete our display specific group
-        $displayGroup = (new DisplayGroupFactory($this->getContainer()))->getById($this->displayGroupId);
+        $displayGroup = $this->getFactoryService()->get('DisplayGroupFactory')->getById($this->displayGroupId);
         $displayGroup->delete();
 
         // Delete the display
@@ -570,7 +568,7 @@ class Display
         ]);
 
         // Maintain the Display Group
-        $displayGroup = (new DisplayGroupFactory($this->getContainer()))->getById($this->displayGroupId);
+        $displayGroup = $this->getFactoryService()->get('DisplayGroupFactory')->getById($this->displayGroupId);
         $displayGroup->displayGroup = $this->display;
         $displayGroup->description = $this->description;
         $displayGroup->save(['validate' => false, 'manageDisplayLinks' => false]);
@@ -626,14 +624,14 @@ class Display
 
             if ($this->displayProfileId == 0) {
                 // Load the default profile
-                $displayProfile = (new DisplayProfileFactory($this->getContainer()))->getDefaultByType($this->clientType);
+                $displayProfile = $this->getFactoryService()->get('DisplayProfileFactory')->getDefaultByType($this->clientType);
             }
             else {
                 // Load the specified profile
-                $displayProfile = (new DisplayProfileFactory($this->getContainer()))->getById($this->displayProfileId);
+                $displayProfile = $this->getFactoryService()->get('DisplayProfileFactory')->getById($this->displayProfileId);
             }
 
-            $this->_config = $displayProfile->getConfig();
+            $this->_config = $displayProfile->getProfileConfig();
             $this->commands = $displayProfile->commands;
         }
 

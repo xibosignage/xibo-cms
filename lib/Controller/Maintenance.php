@@ -15,11 +15,6 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\LibraryFullException;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\UpgradeFactory;
-use Xibo\Factory\UserFactory;
 use Xibo\Helper\BackupUploadHandler;
 use Xibo\Helper\WakeOnLan;
 
@@ -68,12 +63,12 @@ class Maintenance extends Base
                 // Upgrade
                 // Is there a pending upgrade (i.e. are there any pending upgrade steps).
                 if ($this->getConfig()->isUpgradePending()) {
-                    $steps = (new UpgradeFactory($this->getContainer()))->getIncomplete();
+                    $steps = $this->getFactoryService()->get('UpgradeFactory')->getIncomplete();
 
                     if (count($steps) <= 0) {
 
                         // Insert pending upgrade steps.
-                        $steps = (new UpgradeFactory($this->getContainer()))->createSteps(DBVERSION, WEBSITE_VERSION);
+                        $steps = $this->getFactoryService()->get('UpgradeFactory')->createSteps(DBVERSION, WEBSITE_VERSION);
 
                         foreach ($steps as $step) {
                             /* @var \Xibo\Entity\Upgrade $step */
@@ -116,7 +111,7 @@ class Maintenance extends Base
                 $msgTo = $this->getConfig()->GetSetting("mail_to");
                 $msgFrom = $this->getConfig()->GetSetting("mail_from");
 
-                foreach ((new Display())->setContainer($this->getContainer())->validateDisplays((new DisplayFactory($this->getContainer()))->query()) as $display) {
+                foreach ((new Display())->setApp($this->getApp())->validateDisplays($this->getFactoryService()->get('DisplayFactory')->query()) as $display) {
                     /* @var \Xibo\Entity\Display $display */
                     // Is this the first time this display has gone "off-line"
                     $displayGoneOffline = ($display->loggedIn == 1);
@@ -133,7 +128,7 @@ class Maintenance extends Base
 
                                 // Get a list of people that have view access to the display?
                                 if ($alertForViewUsers) {
-                                    foreach ((new UserFactory($this->getContainer()))->getByDisplayGroupId($display->displayGroupId) as $user) {
+                                    foreach ($this->getFactoryService()->get('UserFactory')->getByDisplayGroupId($display->displayGroupId) as $user) {
                                         /* @var User $user */
                                         if ($user->email != '') {
                                             // Send them an email
@@ -283,7 +278,7 @@ class Maintenance extends Base
                     $sth = $dbh->prepare('SELECT DisplayID, Display, WakeOnLanTime, LastWakeOnLanCommandSent FROM `display` WHERE WakeOnLan = 1');
                     $sth->execute(array());
 
-                    foreach((new DisplayFactory($this->getContainer()))->query(null, ['wakeOnLan' => 1]) as $display) {
+                    foreach($this->getFactoryService()->get('DisplayFactory')->query(null, ['wakeOnLan' => 1]) as $display) {
 
                         // Time to WOL (with respect to today)
                         $timeToWake = strtotime(date('Y-m-d') . ' ' . $display->wakeOnLanTime);
@@ -325,20 +320,20 @@ class Maintenance extends Base
                 }
 
                 // Build Layouts
-                foreach ((new LayoutFactory($this->getContainer()))->query(null, ['status' => 3]) as $layout) {
+                foreach ($this->getFactoryService()->get('LayoutFactory')->query(null, ['status' => 3]) as $layout) {
                     /* @var Layout $layout */
                     $layout->xlfToDisk();
                 }
 
                 // Keep tidy
-                $libraryFactory = new Library($this->getContainer());
-                $libraryFactory->removeExpiredFiles();
-                $libraryFactory->removeTempFiles();
+                $libraryController = new Library($this->getApp());
+                $libraryController->removeExpiredFiles();
+                $libraryController->removeTempFiles();
 
                 // Install module files
                 if (!$quick) {
                     $this->getLog()->debug('Installing Module Files');
-                    $libraryFactory->installAllModuleFiles();
+                    $libraryController->installAllModuleFiles();
                 }
             }
             else {
@@ -461,13 +456,13 @@ class Maintenance extends Base
                 // It exists but isn't being used any more
                 $this->getLog()->debug('Deleting unused revision media: ' . $media[$file]['mediaid']);
 
-                (new MediaFactory($this->getContainer()))->getById($media[$file]['mediaid'])->delete();
+                $this->getFactoryService()->get('MediaFactory')->getById($media[$file]['mediaid'])->delete();
             }
             else if (array_key_exists($file, $unusedMedia)) {
                 // It exists but isn't being used any more
                 $this->getLog()->debug('Deleting unused media: ' . $media[$file]['mediaid']);
 
-                (new MediaFactory($this->getContainer()))->getById($media[$file]['mediaid'])->delete();
+                $this->getFactoryService()->get('MediaFactory')->getById($media[$file]['mediaid'])->delete();
             }
             else {
                 $i--;

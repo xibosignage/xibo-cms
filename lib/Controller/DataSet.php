@@ -22,7 +22,6 @@ namespace Xibo\Controller;
 
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Factory\DataSetFactory;
 use Xibo\Helper\DataSetUploadHandler;
 
 
@@ -79,7 +78,7 @@ class DataSet extends Base
             'dataSet' => $this->getSanitizer()->getString('dataSet')
         ];
 
-        $dataSets = (new DataSetFactory($this->getContainer()))->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $dataSets = $this->getFactoryService()->get('DataSetFactory')->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($dataSets as $dataSet) {
             /* @var \Xibo\Entity\DataSet $dataSet */
@@ -154,7 +153,7 @@ class DataSet extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = (new DataSetFactory($this->getContainer()))->countLast();
+        $this->getState()->recordsTotal = $this->getFactoryService()->get('DataSetFactory')->countLast();
         $this->getState()->setData($dataSets);
     }
 
@@ -240,7 +239,7 @@ class DataSet extends Base
      */
     public function editForm($dataSetId)
     {
-        $dataSet = (new DataSetFactory($this->getContainer()))->getById($dataSetId);
+        $dataSet = $this->getFactoryService()->get('DataSetFactory')->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -293,7 +292,7 @@ class DataSet extends Base
      */
     public function edit($dataSetId)
     {
-        $dataSet = (new DataSetFactory($this->getContainer()))->getById($dataSetId);
+        $dataSet = $this->getFactoryService()->get('DataSetFactory')->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -316,7 +315,7 @@ class DataSet extends Base
      */
     public function deleteForm($dataSetId)
     {
-        $dataSet = (new DataSetFactory($this->getContainer()))->getById($dataSetId);
+        $dataSet = $this->getFactoryService()->get('DataSetFactory')->getById($dataSetId);
 
         if (!$this->getUser()->checkDeleteable($dataSet))
             throw new AccessDeniedException();
@@ -357,7 +356,7 @@ class DataSet extends Base
      */
     public function delete($dataSetId)
     {
-        $dataSet = (new DataSetFactory($this->getContainer()))->getById($dataSetId);
+        $dataSet = $this->getFactoryService()->get('DataSetFactory')->getById($dataSetId);
 
         if (!$this->getUser()->checkDeleteable($dataSet))
             throw new AccessDeniedException();
