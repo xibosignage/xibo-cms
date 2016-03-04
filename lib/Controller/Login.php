@@ -22,9 +22,49 @@ namespace Xibo\Controller;
 use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\UserFactory;
+use Xibo\Helper\Session;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
+/**
+ * Class Login
+ * @package Xibo\Controller
+ */
 class Login extends Base
 {
+    /**
+     * @var Session
+     */
+    private $session;
+
+    /**
+     * @var UserFactory
+     */
+    private $userFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param Session $session
+     * @param UserFactory $userFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->session = $session;
+        $this->userFactory = $userFactory;
+    }
+
     /**
      * Output a login form
      */
@@ -49,7 +89,7 @@ class Login extends Base
         // Get our user
         try {
             /* @var User $user */
-            $user = $this->getFactoryService()->get('UserFactory')->getByName($username);
+            $user = $this->userFactory->getByName($username);
 
             // $this->getLog()->debug($user);
 
@@ -68,10 +108,10 @@ class Login extends Base
             $this->getLog()->setUserId($user->userId);
 
             // Overwrite our stored user with this new object.
-            $this->getContainer()->user = $user;
+            $this->getApp()->user = $user;
 
             // Switch Session ID's
-            $session = $this->getSession();
+            $session = $this->session;
             $session->setIsExpired(0);
             $session->regenerateSessionId();
             $session->setUser($user->userId);
@@ -100,9 +140,9 @@ class Login extends Base
         unset($_SESSION['username']);
         unset($_SESSION['password']);
 
-        $session = $this->getSession();
+        $session = $this->session;
         $session->setIsExpired(1);
-        $this->getContainer()->redirectTo('login');
+        $this->getApp()->redirectTo('login');
     }
 
     /**
@@ -127,7 +167,7 @@ class Login extends Base
      */
     public function PingPong()
     {
-        $this->getContainer()->session->refreshExpiry = ($this->getSanitizer()->getCheckbox('refreshSession') == 1);
+        $this->session->refreshExpiry = ($this->getSanitizer()->getCheckbox('refreshSession') == 1);
         $this->getState()->success = true;
     }
 

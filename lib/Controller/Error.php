@@ -17,9 +17,37 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Exception\TokenExpiredException;
 use Xibo\Exception\UpgradePendingException;
 use Xibo\Helper\Translate;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
+/**
+ * Class Error
+ * @package Xibo\Controller
+ */
 class Error extends Base
 {
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+    }
+
+    /**
+     * @throws ConfigurationException
+     * @throws \Slim\Exception\Stop
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
     public function notFound()
     {
         $app = $this->getApp();
@@ -82,6 +110,12 @@ class Error extends Base
         }
     }
 
+    /**
+     * @param \Exception $e
+     * @throws ConfigurationException
+     * @throws \Slim\Exception\Stop
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
     public function handler(\Exception $e)
     {
         $app = $this->getApp();

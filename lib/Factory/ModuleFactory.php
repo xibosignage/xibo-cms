@@ -55,9 +55,18 @@ class ModuleFactory extends BaseFactory
      */
     public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService, $user, $userFactory);
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->setAclDependencies($user, $userFactory);
 
         $this->moduleService = $moduleService;
+    }
+
+    /**
+     * @return Module
+     */
+    public function createEmpty()
+    {
+        return new Module($this->getStore(), $this->getLog());
     }
 
     /**
@@ -386,7 +395,7 @@ class ModuleFactory extends BaseFactory
             $sth->execute($params);
 
             foreach ($sth->fetchAll(\PDO::FETCH_ASSOC) as $row) {
-                $module = new Module();
+                $module = $this->createEmpty();
                 $module->moduleId = $this->getSanitizer()->int($row['ModuleID']);
                 $module->name = $this->getSanitizer()->string($row['Name']);
                 $module->description = $this->getSanitizer()->string($row['Description']);

@@ -25,9 +25,36 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Page;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class PageFactory
+ * @package Xibo\Factory
+ */
 class PageFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * Create empty
+     * @return Page
+     */
+    public function create()
+    {
+        return new Page($this->getStore(), $this->getLog());
+    }
+
     /**
      * Get by ID
      * @param int $pageId
@@ -93,7 +120,7 @@ class PageFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Page())->hydrate($row)->setContainer($this->getContainer());
+            $entries[] = $this->create()->hydrate($row);
         }
 
         return $entries;

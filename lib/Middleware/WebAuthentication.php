@@ -24,9 +24,12 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
-use Xibo\Factory\UserFactory;
 use Xibo\Helper\ApplicationState;
 
+/**
+ * Class WebAuthentication
+ * @package Xibo\Middleware
+ */
 class WebAuthentication extends Middleware
 {
     /**
@@ -75,7 +78,7 @@ class WebAuthentication extends Middleware
                 // Need to check
                 if ($user->hasIdentity() && !$app->session->isExpired()) {
                     // Replace our user with a fully loaded one
-                    $user = (new UserFactory($app))->loadById($user->userId);
+                    $user = $app->userFactory->loadById($user->userId);
 
                     $app->logService->setUserId($user->userId);
 

@@ -23,14 +23,45 @@
 namespace Xibo\Factory;
 
 use Xibo\Entity\AuditLog;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class AuditLogFactory
+ * @package Xibo\Factory
+ */
 class AuditLogFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * @return AuditLog
+     */
+    public function create()
+    {
+        return new AuditLog($this->getStore(), $this->getLog());
+    }
+
+    /**
+     * @param array $sortOrder
+     * @param array $filterBy
+     * @return array
+     */
     public function query($sortOrder = null, $filterBy = null)
     {
         $this->getLog()->debug('AuditLog Factory with filter: %s', var_export($filterBy, true));
 
-        $entries = array();
+        $entries = [];
         $params = [];
 
         $select = ' SELECT logId, logDate, user.userName, message, objectAfter, entity, entityId, auditlog.userId ';
@@ -83,7 +114,7 @@ class AuditLogFactory extends BaseFactory
         $sth->execute($params);
 
         foreach ($sth->fetchAll() as $row) {
-            $entries[] = (new AuditLog())->setContainer($this->getContainer())->hydrate($row);
+            $entries[] = $this->create()->hydrate($row);
         }
 
         // Paging

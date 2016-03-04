@@ -12,17 +12,55 @@ namespace Xibo\Factory;
 use League\OAuth2\Server\Util\SecureKey;
 use Xibo\Entity\Application;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class ApplicationFactory
+ * @package Xibo\Factory
+ */
 class ApplicationFactory extends BaseFactory
 {
+    /**
+     * @var ApplicationRedirectUriFactory
+     */
+    private $applicationRedirectUriFactory;
+
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
+     */
+    public function __construct($store, $log, $sanitizerService, $applicationRedirectUriFactory)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+
+        $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
+    }
+
+    /**
+     * @return Application
+     */
     public function create()
     {
-        $application = new Application();
+        $application = $this->createEmpty();
         // Make and ID/Secret
         $application->secret = SecureKey::generate(254);
         // Assign this user
         $application->userId = $this->getUser()->userId;
         return $application;
+    }
+
+    /**
+     * Create an empty application
+     * @return Application
+     */
+    public function createEmpty()
+    {
+        return new Application($this->getStore(), $this->getLog(), $this->applicationRedirectUriFactory);
     }
 
     /**
@@ -41,6 +79,10 @@ class ApplicationFactory extends BaseFactory
         return $client[0];
     }
 
+    /**
+     * @param int $userId
+     * @return array
+     */
     public function getByUserId($userId)
     {
         return $this->query(null, ['userId' => $userId]);
@@ -103,7 +145,7 @@ class ApplicationFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Application())->setContainer($this->getContainer())->hydrate($row);
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         // Paging

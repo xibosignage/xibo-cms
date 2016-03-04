@@ -94,19 +94,18 @@ $app->add(new \Xibo\Middleware\CsrfGuard());
 $app->add(new \Xibo\Middleware\Theme());
 $app->add(new \Xibo\Middleware\State());
 $app->add(new \Xibo\Middleware\Storage());
+//
+// End Middleware
+//
 
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
-    $controller = new \Xibo\Controller\Error();
-    $controller->setApp($app);
-    $controller->handler($e);
+    $app->container->get('\Xibo\Controller\Error')->handler($e);
 });
 
 // Configure a not found handler
 $app->notFound(function () use ($app) {
-    $controller = new \Xibo\Controller\Error();
-    $controller->setApp($app);
-    $controller->notFound();
+    $app->container->get('\Xibo\Controller\Error')->notFound();
 });
 
 // All application routes

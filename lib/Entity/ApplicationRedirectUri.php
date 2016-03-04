@@ -12,6 +12,10 @@ namespace Xibo\Entity;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class ApplicationRedirectUri
+ * @package Xibo\Entity
+ */
 class ApplicationRedirectUri implements \JsonSerializable
 {
     use EntityTrait;

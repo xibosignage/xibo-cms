@@ -7,6 +7,9 @@
 
 
 namespace Xibo\Factory;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class SettingsFactory
@@ -14,6 +17,17 @@ namespace Xibo\Factory;
  */
 class SettingsFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
     /**
      * Query
      * @param array $sort_order

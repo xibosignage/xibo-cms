@@ -11,9 +11,36 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\ApplicationRedirectUri;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class ApplicationRedirectUriFactory
+ * @package Xibo\Factory
+ */
 class ApplicationRedirectUriFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * Create Empty
+     * @return ApplicationRedirectUri
+     */
+    public function create()
+    {
+        return new ApplicationRedirectUri($this->getStore(), $this->getLog());
+    }
+
     /**
      * Get by ID
      * @param $id
@@ -83,7 +110,7 @@ class ApplicationRedirectUriFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new ApplicationRedirectUri())->setContainer($this->getContainer())->hydrate($row);
+            $entries[] = $this->create()->hydrate($row);
         }
 
         // Paging

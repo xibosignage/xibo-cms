@@ -281,8 +281,20 @@ class State extends Middleware
      */
     public static function registerControllersWithDi($app)
     {
-        $app->container->singleton('\Xibo\Controller\Applications', function() {
-            return new \Xibo\Controller\Applications();
+        $app->container->singleton('\Xibo\Controller\Applications', function($container) {
+            return new \Xibo\Controller\Applications(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->session,
+                $container->store,
+                $container->applicationFactory,
+                $container->applicationRedirectUriFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\Campaign', function() {
@@ -330,8 +342,18 @@ class State extends Middleware
             return new \Xibo\Controller\DisplayProfile();
         });
 
-        $app->container->singleton('\Xibo\Controller\Error', function() {
-            return new \Xibo\Controller\Error();
+        $app->container->singleton('\Xibo\Controller\Error', function($container) use ($app) {
+            $controller =  new \Xibo\Controller\Error(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService
+            );
+
+            return $controller->setApp($app);
         });
 
         $app->container->singleton('\Xibo\Controller\Fault', function() {
@@ -358,8 +380,18 @@ class State extends Middleware
             return new \Xibo\Controller\Logging();
         });
 
-        $app->container->singleton('\Xibo\Controller\Login', function() {
-            return new \Xibo\Controller\Login();
+        $app->container->singleton('\Xibo\Controller\Login', function($container) {
+            return new \Xibo\Controller\Login(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->session,
+                $container->userFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\Maintenance', function() {
@@ -453,20 +485,46 @@ class State extends Middleware
     public static function registerFactoriesWithDi($container)
     {
         $container->singleton('applicationFactory', function($container) {
-            return new \Xibo\Factory\ApplicationFactory($container);
+            return new \Xibo\Factory\ApplicationFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService,
+                $container->applicationRedirectUrlFactory
+            );
         });
+
         $container->singleton('applicationRedirectUriFactory', function($container) {
-            return new \Xibo\Factory\ApplicationRedirectUriFactory($container);
+            return new \Xibo\Factory\ApplicationRedirectUriFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('auditLogFactory', function($container) {
-            return new \Xibo\Factory\AuditLogFactory($container);
+            return new \Xibo\Factory\AuditLogFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('bandwidthFactory', function($container) {
-            return new \Xibo\Factory\BandwidthFactory($container);
+            return new \Xibo\Factory\BandwidthFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('campaignFactory', function($container) {
-            return new \Xibo\Factory\CampaignFactory($container);
+            return new \Xibo\Factory\CampaignFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('commandFactory', function($container) {
             return new \Xibo\Factory\CommandFactory(
                 $container->store,
@@ -477,39 +535,95 @@ class State extends Middleware
                 $container->displayProfileFactory
             );
         });
+
         $container->singleton('dataSetColumnFactory', function($container) {
-            return new \Xibo\Factory\DataSetColumnFactory($container);
+            return new \Xibo\Factory\DataSetColumnFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('dataSetColumnTypeFactory', function($container) {
-            return new \Xibo\Factory\DataSetColumnTypeFactory($container);
+            return new \Xibo\Factory\DataSetColumnTypeFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('dataSetFactory', function($container) {
-            return new \Xibo\Factory\DataSetFactory($container);
+            return new \Xibo\Factory\DataSetFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('dataTypeFactory', function($container) {
-            return new \Xibo\Factory\DataTypeFactory($container);
+            return new \Xibo\Factory\DataTypeFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('displayFactory', function($container) {
-            return new \Xibo\Factory\DisplayFactory($container);
+            return new \Xibo\Factory\DisplayFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('displayGroupFactory', function($container) {
-            return new \Xibo\Factory\DisplayGroupFactory($container);
+            return new \Xibo\Factory\DisplayGroupFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('displayProfileFactory', function($container) {
-            return new \Xibo\Factory\DisplayProfileFactory($container);
+            return new \Xibo\Factory\DisplayProfileFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('helpFactory', function($container) {
-            return new \Xibo\Factory\HelpFactory($container);
+            return new \Xibo\Factory\HelpFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('layoutFactory', function($container) {
-            return new \Xibo\Factory\LayoutFactory($container);
+            return new \Xibo\Factory\LayoutFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('logFactory', function($container) {
-            return new \Xibo\Factory\LogFactory($container);
+            return new \Xibo\Factory\LogFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('mediaFactory', function($container) {
-            return new \Xibo\Factory\MediaFactory($container);
+            return new \Xibo\Factory\MediaFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('moduleFactory', function($container) {
             return new \Xibo\Factory\ModuleFactory(
                 $container->store,
@@ -520,45 +634,111 @@ class State extends Middleware
                 $container->moduleService
             );
         });
+
         $container->singleton('pageFactory', function($container) {
-            return new \Xibo\Factory\PageFactory($container);
+            return new \Xibo\Factory\PageFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('permissionFactory', function($container) {
-            return new \Xibo\Factory\PermissionFactory($container);
+            return new \Xibo\Factory\PermissionFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('playlistFactory', function($container) {
-            return new \Xibo\Factory\PlaylistFactory($container);
+            return new \Xibo\Factory\PlaylistFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('regionFactory', function($container) {
-            return new \Xibo\Factory\RegionFactory($container);
+            return new \Xibo\Factory\RegionFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('regionOptionFactory', function($container) {
-            return new \Xibo\Factory\RegionOptionFactory($container);
+            return new \Xibo\Factory\RegionOptionFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('requiredFileFactory', function($container) {
-            return new \Xibo\Factory\RequiredFileFactory($container);
+            return new \Xibo\Factory\RequiredFileFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('resolutionFactory', function($container) {
-            return new \Xibo\Factory\ResolutionFactory($container);
+            return new \Xibo\Factory\ResolutionFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('scheduleFactory', function($container) {
-            return new \Xibo\Factory\ScheduleFactory($container);
+            return new \Xibo\Factory\ScheduleFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('sessionFactory', function($container) {
-            return new \Xibo\Factory\SessionFactory($container);
+            return new \Xibo\Factory\SessionFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('settingsFactory', function($container) {
-            return new \Xibo\Factory\SettingsFactory($container);
+            return new \Xibo\Factory\SettingsFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('tagFactory', function($container) {
-            return new \Xibo\Factory\TagFactory($container);
+            return new \Xibo\Factory\TagFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('transitionFactory', function($container) {
-            return new \Xibo\Factory\TransitionFactory($container);
+            return new \Xibo\Factory\TransitionFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('upgradeFactory', function($container) {
-            return new \Xibo\Factory\UpgradeFactory($container);
+            return new \Xibo\Factory\UpgradeFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('userFactory', function($container) {
             return new \Xibo\Factory\UserFactory(
                 $container->store,
@@ -575,23 +755,53 @@ class State extends Middleware
                 $container->userOptionFactory
             );
         });
+
         $container->singleton('userGroupFactory', function($container) {
-            return new \Xibo\Factory\UserGroupFactory($container);
+            return new \Xibo\Factory\UserGroupFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('userOptionFactory', function($container) {
-            return new \Xibo\Factory\UserOptionFactory($container);
+            return new \Xibo\Factory\UserOptionFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('userTypeFactory', function($container) {
-            return new \Xibo\Factory\UserTypeFactory($container);
+            return new \Xibo\Factory\UserTypeFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('widgetFactory', function($container) {
-            return new \Xibo\Factory\WidgetFactory($container);
+            return new \Xibo\Factory\WidgetFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('widgetMediaFactory', function($container) {
-            return new \Xibo\Factory\WidgetMediaFactory($container);
+            return new \Xibo\Factory\WidgetMediaFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
+
         $container->singleton('widgetOptionFactory', function($container) {
-            return new \Xibo\Factory\WidgetOptionFactory($container);
+            return new \Xibo\Factory\WidgetOptionFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
         });
     }
 }

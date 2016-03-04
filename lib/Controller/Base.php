@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 use Slim\Slim;
+use Xibo\Entity\User;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Service\ConfigService;
@@ -137,7 +138,7 @@ class Base
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
-     * @param User $user
+     * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
