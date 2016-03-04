@@ -25,9 +25,123 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class UserFactory
+ *
+ * @package Xibo\Factory
+ */
 class UserFactory extends BaseFactory
 {
+    /**
+     * @var ConfigServiceInterface
+     */
+    private $configService;
+
+    /**
+     * @var PageFactory
+     */
+    private $pageFactory;
+
+    /**
+     * @var UserGroupFactory
+     */
+    private $userGroupFactory;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var CampaignFactory
+     */
+    private $campaignFactory;
+
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+
+    /**
+     * @var MediaFactory
+     */
+    private $mediaFactory;
+
+    /**
+     * @var ScheduleFactory
+     */
+    private $scheduleFactory;
+
+    /**
+     * @var UserOptionFactory
+     */
+    private $userOptionFactory;
+
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param ConfigServiceInterface $configService
+     * @param PageFactory $pageFactory
+     * @param UserGroupFactory $userGroupFactory
+     * @param PermissionFactory $permissionFactory
+     * @param CampaignFactory $campaignFactory
+     * @param LayoutFactory $layoutFactory
+     * @param MediaFactory $mediaFactory
+     * @param ScheduleFactory $scheduleFactory
+     * @param UserOptionFactory $userOptionFactory
+     */
+    public function __construct($store, $log, $sanitizerService,
+                                $configService,
+                                $pageFactory,
+                                $userGroupFactory,
+                                $permissionFactory,
+                                $campaignFactory,
+                                $layoutFactory,
+                                $mediaFactory,
+                                $scheduleFactory,
+                                $userOptionFactory)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+
+        $this->configService = $configService;
+        $this->pageFactory = $pageFactory;
+        $this->userGroupFactory = $userGroupFactory;
+        $this->permissionFactory = $permissionFactory;
+        $this->campaignFactory = $campaignFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->mediaFactory = $mediaFactory;
+        $this->scheduleFactory = $scheduleFactory;
+        $this->userOptionFactory = $userOptionFactory;
+    }
+
+    /**
+     * Create a user
+     * @return User
+     */
+    public function create()
+    {
+        return new User($this->getStore(),
+            $this->getLog(),
+            $this->configService,
+            $this->pageFactory,
+            $this->getUserFactory(),
+            $this->userGroupFactory,
+            $this->permissionFactory,
+            $this->campaignFactory,
+            $this->layoutFactory,
+            $this->mediaFactory,
+            $this->scheduleFactory,
+            $this->userOptionFactory
+        );
+    }
+
     /**
      * Get User by ID
      * @param int $userId
@@ -111,16 +225,6 @@ class UserFactory extends BaseFactory
     public function getByGroupId($groupId)
     {
         return $this->query(null, array('disableUserCheck' => 1, 'groupIds' => [$groupId]));
-    }
-
-    /**
-     * Get users by Display Group
-     * @param $displayGroupId
-     * @return array
-     */
-    public function getByDisplayGroupId($displayGroupId)
-    {
-        return $this->getFactoryService()->get('DisplayFactory')->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
     }
 
     /**
@@ -302,7 +406,7 @@ class UserFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new User())->hydrate($row)->setContainer($this->getContainer());
+            $entries[] = $this->create()->hydrate($row);
         }
 
         // Paging

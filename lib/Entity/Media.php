@@ -28,6 +28,8 @@ use GuzzleHttp\Exception\RequestException;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Media
@@ -161,6 +163,16 @@ class Media implements \JsonSerializable
     private $displayGroups = [];
     private $layoutBackgroundImages = [];
     private $permissions = [];
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
 
     public function __clone()
     {

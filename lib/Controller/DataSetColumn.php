@@ -198,6 +198,7 @@ class DataSetColumn extends Base
 
         // Create a Column
         $column = new \Xibo\Entity\DataSetColumn();
+        $column->setContainer($this->getContainer());
         $column->heading = $this->getSanitizer()->getString('heading');
         $column->listContent = $this->getSanitizer()->getString('listContent');
         $column->columnOrder = $this->getSanitizer()->getInt('columnOrder');

@@ -125,6 +125,7 @@ class Help extends Base
             throw new AccessDeniedException();
 
         $help = new \Xibo\Entity\Help();
+        $help->setContainer($this->getContainer());
         $help->topic = $this->getSanitizer()->getString('topic');
         $help->category = $this->getSanitizer()->getString('category');
         $help->link = $this->getSanitizer()->getString('link');

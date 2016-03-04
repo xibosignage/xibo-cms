@@ -9,6 +9,9 @@
 namespace Xibo\Entity;
 
 
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
+
 class ApplicationRedirectUri implements \JsonSerializable
 {
     use EntityTrait;
@@ -27,6 +30,16 @@ class ApplicationRedirectUri implements \JsonSerializable
      * @var string
      */
     public $redirectUri;
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
 
     /**
      * Get Id

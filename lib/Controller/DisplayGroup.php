@@ -356,6 +356,7 @@ class DisplayGroup extends Base
     public function add()
     {
         $displayGroup = new \Xibo\Entity\DisplayGroup();
+        $displayGroup->setContainer($this->getContainer());
         $displayGroup->displayGroup = $this->getSanitizer()->getString('displayGroup');
         $displayGroup->description = $this->getSanitizer()->getString('description');
         $displayGroup->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');

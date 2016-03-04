@@ -29,31 +29,24 @@ use League\OAuth2\Server\Entity\ScopeEntity;
 use League\OAuth2\Server\Entity\SessionEntity;
 use League\OAuth2\Server\Storage\AbstractStorage;
 use League\OAuth2\Server\Storage\SessionInterface;
-use Slim\Slim;
 
 class ApiSessionStorage extends AbstractStorage implements SessionInterface
 {
     /**
-     * @var Slim
+     * @var StorageServiceInterface
      */
-    private $app;
-
-    public function __construct($app)
-    {
-        $this->app = $app;
-    }
+    private $store;
 
     /**
-     * Get the App
-     * @return Slim
-     * @throws \Exception
+     * ApiAccessTokenStorage constructor.
+     * @param StorageServiceInterface $store
      */
-    public function getApp()
+    public function __construct($store)
     {
-        if ($this->app == null)
-            throw new \RuntimeException(__('API Storage called before DI has been setup'));
+        if (!$store instanceof StorageServiceInterface)
+            throw new \RuntimeException('Invalid $store');
 
-        return $this->app;
+        $this->store = $store;
     }
 
     /**
@@ -62,7 +55,7 @@ class ApiSessionStorage extends AbstractStorage implements SessionInterface
      */
     protected function getStore()
     {
-        return $this->getApp()->store;
+        return $this->store;
     }
 
     /**

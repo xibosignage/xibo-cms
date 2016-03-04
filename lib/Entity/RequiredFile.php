@@ -11,6 +11,8 @@ namespace Xibo\Entity;
 
 use Xibo\Exception\FormExpiredException;
 use Xibo\Helper\Random;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 class RequiredFile implements \JsonSerializable
 {
@@ -28,6 +30,16 @@ class RequiredFile implements \JsonSerializable
     public $mediaId;
     public $bytesRequested;
     public $complete;
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
 
     public function save($options = [])
     {

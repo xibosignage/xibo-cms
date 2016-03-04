@@ -23,6 +23,10 @@ namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Service\ConfigService;
 
+/**
+ * Class Fault
+ * @package Xibo\Controller
+ */
 class Fault extends Base
 {
     function displayPage()

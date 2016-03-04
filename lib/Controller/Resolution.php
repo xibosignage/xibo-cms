@@ -206,10 +206,11 @@ class Resolution extends Base
      */
     function add()
     {
-        $resolution = new \Xibo\Entity\Resolution();
-        $resolution->resolution = $this->getSanitizer()->getString('resolution');
-        $resolution->width = $this->getSanitizer()->getInt('width');
-        $resolution->height = $this->getSanitizer()->getInt('height');
+        /* @var \Xibo\Entity\Resolution $resolution */
+        $resolution = $this->getFactoryService()->get('ResolutionFactory')->create($this->getSanitizer()->getString('resolution'),
+            $this->getSanitizer()->getInt('width'),
+            $this->getSanitizer()->getInt('height'));
+
         $resolution->save();
 
         // Return

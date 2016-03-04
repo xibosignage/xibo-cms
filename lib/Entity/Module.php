@@ -23,6 +23,8 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Module
@@ -130,6 +132,19 @@ class Module implements \JsonSerializable
      */
     public $viewPath = '../modules';
 
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
+
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return sprintf('%s - %s', $this->type, $this->name);
@@ -184,7 +199,7 @@ class Module implements \JsonSerializable
     private function edit()
     {
         $this->getStore()->update('
-          UPDATE module SET
+          UPDATE `module` SET
               enabled = :enabled,
               previewEnabled = :previewEnabled,
               validExtensions = :validExtensions,

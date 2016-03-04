@@ -24,6 +24,8 @@ namespace Xibo\Entity;
 
 
 use Respect\Validation\Validator as v;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 use Xibo\XMR\CollectNowAction;
 
 /**
@@ -299,8 +301,14 @@ class Display
 
     public static $saveOptionsMinimum = ['validate' => false, 'audit' => false, 'triggerDynamicDisplayGroupAssessment' => false];
 
-    public function __construct()
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
     {
+        $this->setCommonDependencies($store, $log);
         $this->excludeProperty('mediaInventoryXml');
     }
 

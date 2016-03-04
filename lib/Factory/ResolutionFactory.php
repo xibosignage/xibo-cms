@@ -29,6 +29,24 @@ use Xibo\Exception\NotFoundException;
 class ResolutionFactory extends BaseFactory
 {
     /**
+     * Create Resolution
+     * @param $resolution
+     * @param $width
+     * @param $height
+     * @return Resolution
+     */
+    public function create($resolution, $width, $height)
+    {
+        $resolution = new Resolution();
+        $resolution->setContainer($this->getContainer());
+        $resolution->resolution = $this->getSanitizer()->getString('resolution');
+        $resolution->width = $this->getSanitizer()->getInt('width');
+        $resolution->height = $this->getSanitizer()->getInt('height');
+
+        return $resolution;
+    }
+
+    /**
      * Load the Resolution by ID
      * @param int $resolutionId
      * @return Resolution

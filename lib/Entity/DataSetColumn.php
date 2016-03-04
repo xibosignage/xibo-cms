@@ -7,6 +7,8 @@
 
 
 namespace Xibo\Entity;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 
 /**
@@ -78,6 +80,16 @@ class DataSetColumn implements \JsonSerializable
      * @var string
      */
     public $dataSetColumnType;
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
 
     /**
      * List Content Array

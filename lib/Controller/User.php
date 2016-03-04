@@ -27,9 +27,91 @@ use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\ApplicationFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\PageFactory;
+use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\UserFactory;
+use Xibo\Factory\UserGroupFactory;
+use Xibo\Factory\UserTypeFactory;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
+/**
+ * Class User
+ * @package Xibo\Controller
+ */
 class User extends Base
 {
+    /**
+     * @var UserFactory
+     */
+    private $userFactory;
+
+    /**
+     * @var UserTypeFactory
+     */
+    private $userTypeFactory;
+
+    /**
+     * @var UserGroupFactory
+     */
+    private $userGroupFactory;
+
+    /**
+     * @var PageFactory
+     */
+    private $pageFactory;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+
+    /**
+     * @var ApplicationFactory
+     */
+    private $applicationFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param UserFactory $userFactory
+     * @param UserTypeFactory $userTypeFactory
+     * @param UserGroupFactory $userGroupFactory
+     * @param PageFactory $pageFactory
+     * @param PermissionFactory $permissionFactory
+     * @param LayoutFactory $layoutFactory
+     * @param ApplicationFactory $applicationFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
+                                $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
+                                $layoutFactory, $applicationFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->userFactory = $userFactory;
+        $this->userTypeFactory = $userTypeFactory;
+        $this->userGroupFactory = $userGroupFactory;
+        $this->pageFactory = $pageFactory;
+        $this->permissionFactory = $permissionFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->applicationFactory = $applicationFactory;
+    }
+
     /**
      * Controls which pages are to be displayed
      */
@@ -37,7 +119,7 @@ class User extends Base
     {
         $this->getState()->template = 'user-page';
         $this->getState()->setData([
-            'userTypes' => $this->getStore()->select("SELECT userTypeId, userType FROM usertype ORDER BY usertype", [])
+            'userTypes' => $this->userTypeFactory->query()
         ]);
     }
 
@@ -124,7 +206,7 @@ class User extends Base
         ];
 
         // Load results into an array
-        $users = $this->getFactoryService()->get('UserFactory')->query($this->gridRenderSort(), $this->gridRenderFilter($filterBy));
+        $users = $this->userFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filterBy));
 
         foreach ($users as $user) {
             /* @var \Xibo\Entity\User $user */
@@ -139,30 +221,30 @@ class User extends Base
             if ($this->getUser()->userTypeId == 1) {
 
                 // Edit
-                $user->buttons[] = array(
+                $user->buttons[] = [
                     'id' => 'user_button_edit',
                     'url' => $this->getApp()->urlFor('user.edit.form', ['id' => $user->userId]),
                     'text' => __('Edit')
-                );
+                ];
 
                 // Delete
-                $user->buttons[] = array(
+                $user->buttons[] = [
                     'id' => 'user_button_delete',
                     'url' => $this->getApp()->urlFor('user.delete.form', ['id' => $user->userId]),
                     'text' => __('Delete')
-                );
+                ];
 
                 // Page Security
-                $user->buttons[] = array(
+                $user->buttons[] = [
                     'id' => 'user_button_page_security',
                     'url' => $this->urlFor('group.acl.form', ['id' => $user->groupId]),
                     'text' => __('Page Security')
-                );
+                ];
             }
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->getFactoryService()->get('UserFactory')->countLast();
+        $this->getState()->recordsTotal = $this->userFactory->countLast();
         $this->getState()->setData($users);
     }
 
@@ -295,8 +377,7 @@ class User extends Base
     public function add()
     {
         // Build a user entity and save it
-        $user = new \Xibo\Entity\User();
-        $user->setContainer($this->getContainer());
+        $user = $this->userFactory->create();
         $user->userName = $this->getSanitizer()->getString('userName');
         $user->email = $this->getSanitizer()->getString('email');
         $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
@@ -314,7 +395,7 @@ class User extends Base
         $user->ref5 = $this->getSanitizer()->getString('ref5');
 
         // Initial user group
-        $group = $this->getFactoryService()->get('UserGroupFactory')->getById($this->getSanitizer()->getInt('groupId'));
+        $group = $this->userGroupFactory->getById($this->getSanitizer()->getInt('groupId'));
 
         // Save the user
         $user->save();
@@ -338,7 +419,7 @@ class User extends Base
      */
     public function edit($userId)
     {
-        $user = $this->getFactoryService()->get('UserFactory')->getById($userId);
+        $user = $this->userFactory->getById($userId);
 
         if (!$this->getUser()->checkEditable($user))
             throw new AccessDeniedException();
@@ -362,7 +443,7 @@ class User extends Base
         $user->ref5 = $this->getSanitizer()->getString('ref5');
 
         // Make sure the user has permission to access this page.
-        if (!$user->checkViewable($this->getFactoryService()->get('PageFactory')->getById($user->homePageId)))
+        if (!$user->checkViewable($this->pageFactory->getById($user->homePageId)))
             throw new \InvalidArgumentException(__('User does not have permission for this homepage'));
 
         // If we are a super admin
@@ -398,7 +479,7 @@ class User extends Base
      */
     public function delete($userId)
     {
-        $user = $this->getFactoryService()->get('UserFactory')->getById($userId);
+        $user = $this->userFactory->getById($userId);
 
         if (!$this->getUser()->checkDeleteable($user))
             throw new AccessDeniedException();
@@ -410,7 +491,7 @@ class User extends Base
                 // Reassign all content owned by this user to the provided user
                 $this->getLog()->debug('Reassigning content to new userId: %d', $this->getSanitizer()->getInt('reassignUserId'));
 
-                $user->reassignAllTo($this->getFactoryService()->get('UserFactory')->getById($this->getSanitizer()->getInt('reassignUserId')));
+                $user->reassignAllTo($this->userFactory->getById($this->getSanitizer()->getInt('reassignUserId')));
             } else {
                 // Check to see if we have any child data that would prevent us from deleting
                 $children = $user->countChildren();
@@ -438,9 +519,9 @@ class User extends Base
         $this->getState()->template = 'user-form-add';
         $this->getState()->setData([
             'options' => [
-                'homepage' => $this->getFactoryService()->get('PageFactory')->query(null, ['asHome' => 1]),
-                'groups' => $this->getFactoryService()->get('UserGroupFactory')->query(),
-                'userTypes' => $this->getFactoryService()->get('UserTypeFactory')->query()
+                'homepage' => $this->pageFactory->query(null, ['asHome' => 1]),
+                'groups' => $this->userGroupFactory->query(),
+                'userTypes' => $this->userTypeFactory->query()
             ],
             'help' => [
                 'add' => $this->getHelp()->link('User', 'Add')
@@ -455,7 +536,7 @@ class User extends Base
      */
     public function editForm($userId)
     {
-        $user = $this->getFactoryService()->get('UserFactory')->getById($userId);
+        $user = $this->userFactory->getById($userId);
 
         if (!$this->getUser()->checkEditable($user))
             throw new AccessDeniedException();
@@ -464,8 +545,8 @@ class User extends Base
         $this->getState()->setData([
             'user' => $user,
             'options' => [
-                'homepage' => $this->getFactoryService()->get('PageFactory')->query(),
-                'userTypes' => $this->getFactoryService()->get('UserTypeFactory')->query()
+                'homepage' => $this->pageFactory->query(),
+                'userTypes' => $this->userTypeFactory->query()
             ],
             'help' => [
                 'edit' => $this->getHelp()->link('User', 'Edit')
@@ -480,7 +561,7 @@ class User extends Base
      */
     public function deleteForm($userId)
     {
-        $user = $this->getFactoryService()->get('UserFactory')->getById($userId);
+        $user = $this->userFactory->getById($userId);
 
         if (!$this->getUser()->checkDeleteable($user))
             throw new AccessDeniedException();
@@ -488,7 +569,7 @@ class User extends Base
         $this->getState()->template = 'user-form-delete';
         $this->getState()->setData([
             'user' => $user,
-            'users' => $this->getFactoryService()->get('UserFactory')->query(null, ['notUserId' => $userId]),
+            'users' => $this->userFactory->query(null, ['notUserId' => $userId]),
             'help' => [
                 'delete' => $this->getHelp()->link('User', 'Delete')
             ]
@@ -572,18 +653,18 @@ class User extends Base
         $entity = $this->parsePermissionsEntity($entity, $objectId);
 
         // Load our object
-        $object = $entity::getById($objectId);
+        $object = $entity->getById($objectId);
 
         // Does this user have permission to edit the permissions?!
         if (!$this->getUser()->checkPermissionsModifyable($object))
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         // List of all Groups with a view / edit / delete check box
-        $permissions = $this->getFactoryService()->get('PermissionFactory')->getAllByObjectId(get_class($object), $objectId, $this->gridRenderSort(), $this->gridRenderFilter(['name' => $this->getSanitizer()->getString('name')]));
+        $permissions = $this->permissionFactory->getAllByObjectId(get_class($object), $objectId, $this->gridRenderSort(), $this->gridRenderFilter(['name' => $this->getSanitizer()->getString('name')]));
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($permissions);
-        $this->getState()->recordsTotal = $this->getFactoryService()->get('PermissionFactory')->countLast();
+        $this->getState()->recordsTotal = $this->permissionFactory->countLast();
     }
 
     /**
@@ -599,14 +680,14 @@ class User extends Base
         $entity = $this->parsePermissionsEntity($entity, $objectId);
 
         // Load our object
-        $object = $entity::getById($objectId);
+        $object = $entity->getById($objectId);
 
         // Does this user have permission to edit the permissions?!
         if (!$this->getUser()->checkPermissionsModifyable($object))
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         $currentPermissions = [];
-        foreach ($this->getFactoryService()->get('PermissionFactory')->getAllByObjectId(get_class($object), $objectId) as $permission) {
+        foreach ($this->permissionFactory->getAllByObjectId(get_class($object), $objectId) as $permission) {
             /* @var Permission $permission */
             $currentPermissions[$permission->groupId] = [
                 'view' => ($permission->view == null) ? 0 : $permission->view,
@@ -672,14 +753,14 @@ class User extends Base
         $entity = $this->parsePermissionsEntity($entity, $objectId);
 
         // Load our object
-        $object = $entity::getById($objectId);
+        $object = $entity->getById($objectId);
 
         // Does this user have permission to edit the permissions?!
         if (!$this->getUser()->checkPermissionsModifyable($object))
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         // Get all current permissions
-        $permissions = $this->getFactoryService()->get('PermissionFactory')->getAllByObjectId(get_class($object), $objectId);
+        $permissions = $this->permissionFactory->getAllByObjectId(get_class($object), $objectId);
 
         // Get the provided permissions
         $groupIds = $this->getSanitizer()->getStringArray('groupIds');
@@ -697,26 +778,26 @@ class User extends Base
                 // Regions
                 foreach ($layout->regions as $region) {
                     /* @var Region $region */
-                    $this->updatePermissions($this->getFactoryService()->get('PermissionFactory')->getAllByObjectId(get_class($region), $region->getId()), $groupIds);
+                    $this->updatePermissions($this->permissionFactory->getAllByObjectId(get_class($region), $region->getId()), $groupIds);
 
                     // Playlists
                     foreach ($region->playlists as $playlist) {
                         /* @var Playlist $playlist */
-                        $this->updatePermissions($this->getFactoryService()->get('PermissionFactory')->getAllByObjectId(get_class($playlist), $playlist->getId()), $groupIds);
+                        $this->updatePermissions($this->permissionFactory->getAllByObjectId(get_class($playlist), $playlist->getId()), $groupIds);
 
                         // Widgets
                         foreach ($playlist->widgets as $widget) {
                             /* @var Widget $widget */
-                            $this->updatePermissions($this->getFactoryService()->get('PermissionFactory')->getAllByObjectId(get_class($widget), $widget->getId()), $groupIds);
+                            $this->updatePermissions($this->permissionFactory->getAllByObjectId(get_class($widget), $widget->getId()), $groupIds);
                         }
                     }
                 }
             };
 
-            foreach ($this->getFactoryService()->get('LayoutFactory')->getByCampaignId($object->campaignId) as $layout) {
+            foreach ($this->layoutFactory->getByCampaignId($object->campaignId) as $layout) {
                 /* @var Layout $layout */
                 // Assign the same permissions to the Layout
-                $this->updatePermissions($this->getFactoryService()->get('PermissionFactory')->getAllByObjectId(get_class($object), $layout->campaignId), $groupIds);
+                $this->updatePermissions($this->permissionFactory->getAllByObjectId(get_class($object), $layout->campaignId), $groupIds);
 
                 // Load the layout
                 $layout->load();
@@ -734,6 +815,7 @@ class User extends Base
 
     /**
      * Parse the Permissions Entity
+     * //TODO: this does some nasty service location via $app, if anyone has a better idea, please submit a PR
      * @param string $entity
      * @param int $objectId
      * @return string
@@ -743,17 +825,16 @@ class User extends Base
         if ($entity == '')
             throw new \InvalidArgumentException(__('Permissions requested without an entity'));
 
-        // Check to see that we can resolve the entity
-        $entity = 'Xibo\\Factory\\' . $entity . 'Factory';
-
-        if (!class_exists($entity) || !method_exists($entity, 'getById'))
-            throw new \InvalidArgumentException(__('Permissions form requested with an invalid entity'));
-
-        // Get the object
         if ($objectId == 0)
             throw new \InvalidArgumentException(__('Permissions form requested without an object'));
 
-        return $entity;
+        // Check to see that we can resolve the entity
+        $entity = $entity . 'Factory';
+
+        if (!$this->getApp()->container->has($entity) || !method_exists($this->getApp()->container->get($entity), 'getById'))
+            throw new \InvalidArgumentException(__('Permissions form requested with an invalid entity'));
+
+        return $this->getApp()->container->get($entity);
     }
 
     /**
@@ -787,7 +868,7 @@ class User extends Base
     {
         $this->getState()->template = 'user-applications-form';
         $this->getState()->setData([
-            'applications' => $this->getFactoryService()->get('ApplicationFactory')->getByUserId($this->getUser()->userId),
+            'applications' => $this->applicationFactory->getByUserId($this->getUser()->userId),
             'help' => $this->getHelp()->link('User', 'Applications')
         ]);
     }

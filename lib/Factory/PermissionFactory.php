@@ -59,6 +59,15 @@ class PermissionFactory extends BaseFactory
     }
 
     /**
+     * Create empty permission
+     * @return Permission
+     */
+    public function createEmpty()
+    {
+        return new Permission();
+    }
+
+    /**
      * Create a new Permission
      * @param string $entity
      * @param int $objectId

@@ -72,22 +72,6 @@ $app->notFound(function () use ($app) {
     $controller->notFound();
 });
 
-// oAuth Resource
-$sessionStorage = new \Xibo\Storage\ApiSessionStorage($app);
-$accessTokenStorage = new \Xibo\Storage\ApiAccessTokenStorage($app);
-$clientStorage = new \Xibo\Storage\ApiClientStorage($app);
-$scopeStorage = new \Xibo\Storage\ApiScopeStorage($app);
-
-$server = new \League\OAuth2\Server\ResourceServer(
-    $sessionStorage,
-    $accessTokenStorage,
-    $clientStorage,
-    $scopeStorage
-);
-
-// DI in the server
-$app->server = $server;
-
 // All routes
 require PROJECT_ROOT . '/lib/routes.php';
 

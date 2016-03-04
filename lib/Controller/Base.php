@@ -21,17 +21,16 @@
 
 
 namespace Xibo\Controller;
-use Slim\Helper\Set;
 use Slim\Slim;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Service\ConfigService;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\FactoryServiceInterface;
 use Xibo\Service\LogService;
-use Xibo\Service\PlayerActionServiceInterface;
+use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Base
@@ -51,9 +50,39 @@ class Base
     protected $app;
 
     /**
-     * @var Set
+     * @var LogServiceInterface
      */
-    protected $container;
+    private $log;
+
+    /**
+     * @var SanitizerServiceInterface
+     */
+    private $sanitizerService;
+
+    /**
+     * @var \Xibo\Helper\ApplicationState
+     */
+    private $state;
+
+    /**
+     * @var \Xibo\Service\HelpServiceInterface
+     */
+    private $helpService;
+
+    /**
+     * @var \Xibo\Service\DateServiceInterface
+     */
+    private $dateService;
+
+    /**
+     * @var ConfigServiceInterface
+     */
+    private $configService;
+
+    /**
+     * @var User
+     */
+    private $user;
 
     /**
      * Automatically output a full page if non-ajax request arrives
@@ -87,8 +116,6 @@ class Base
         if ($app->controller == null)
             $app->controller = $this;
 
-        $this->setContainer($app->container);
-
         return $this;
     }
 
@@ -106,35 +133,27 @@ class Base
     }
 
     /**
-     * Called by Slim when the Controller is instantiated from a route definition
-     * @param Set $container
-     * @return Base
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @return $this
      */
-    public function setContainer($container)
+    protected function setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config)
     {
-        $this->container = $container;
+        $this->log = $log;
+        $this->sanitizerService = $sanitizerService;
+        $this->state = $state;
+        $this->user = $user;
+        $this->helpService = $help;
+        $this->dateService = $date;
+        $this->configService = $config;
+
         return $this;
-    }
-
-    /**
-     * Get the App
-     * @return Set
-     * @throws \Exception
-     */
-    public function getContainer()
-    {
-        if ($this->container == null)
-            throw new ConfigurationException(__('Controller called before DI has been setup'));
-
-        return $this->container;
-    }
-
-    /**
-     * @return FactoryServiceInterface
-     */
-    public function getFactoryService()
-    {
-        return $this->getContainer()->factoryService;
     }
 
     /**
@@ -143,7 +162,7 @@ class Base
      */
     public function getUser()
     {
-        return $this->getContainer()->user;
+        return $this->user;
     }
 
     /**
@@ -152,34 +171,7 @@ class Base
      */
     protected function getState()
     {
-        return $this->getContainer()->state;
-    }
-
-    /**
-     * Get the Session
-     * @return \Xibo\Helper\Session
-     */
-    protected function getSession()
-    {
-        return $this->getContainer()->session;
-    }
-
-    /**
-     * Get Cache Pool
-     * @return \Stash\Interfaces\PoolInterface
-     */
-    protected function getPool()
-    {
-        return $this->getContainer()->pool;
-    }
-
-    /**
-     * Get Store
-     * @return StorageServiceInterface
-     */
-    protected function getStore()
-    {
-        return $this->getContainer()->store;
+        return $this->state;
     }
 
     /**
@@ -188,7 +180,16 @@ class Base
      */
     public function getLog()
     {
-        return $this->getContainer()->logService;
+        return $this->log;
+    }
+
+    /**
+     * Get Sanitizer
+     * @return SanitizerServiceInterface
+     */
+    protected function getSanitizer()
+    {
+        return $this->sanitizerService;
     }
 
     /**
@@ -197,7 +198,7 @@ class Base
      */
     protected function getHelp()
     {
-        return $this->getContainer()->helpService;
+        return $this->helpService;
     }
 
     /**
@@ -206,16 +207,7 @@ class Base
      */
     protected function getDate()
     {
-        return $this->getContainer()->dateService;
-    }
-
-    /**
-     * Get Sanitizer
-     * @return SanitizerServiceInterface
-     */
-    public function getSanitizer()
-    {
-        return $this->getContainer()->sanitizerService;
+        return $this->dateService;
     }
 
     /**
@@ -224,16 +216,7 @@ class Base
      */
     public function getConfig()
     {
-        return $this->getContainer()->configService;
-    }
-
-    /**
-     * Get Player Service
-     * @return PlayerActionServiceInterface
-     */
-    public function getPlayerService()
-    {
-        return $this->getContainer()->playerActionService;
+        return $this->configService;
     }
 
     /**
@@ -330,7 +313,7 @@ class Base
 
             $this->getApp()->render('', $data, $state->httpStatus);
         }
-        else if ($this->container->request->isAjax()) {
+        else if ($this->getApp()->request->isAjax()) {
             // WEB Ajax
             $app->response()->header('Content-Type', 'application/json');
 
@@ -368,7 +351,7 @@ class Base
      */
     protected function gridRenderFilter($extraFilter = [])
     {
-        $app = $this->getContainer();
+        $app = $this->getApp();
 
         // Handle filtering
         $filter = [

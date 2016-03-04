@@ -23,6 +23,8 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Campaign
@@ -67,6 +69,16 @@ class Campaign implements \JsonSerializable
     private $layouts = [];
     private $permissions = [];
     private $events = [];
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
 
     public function __toString()
     {

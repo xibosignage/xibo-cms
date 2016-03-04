@@ -10,6 +10,8 @@ namespace Xibo\Entity;
 
 
 use Respect\Validation\Validator as v;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class DisplayGroup
@@ -99,6 +101,16 @@ class DisplayGroup implements \JsonSerializable
      * @var bool
      */
     private $collectRequired = false;
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
 
     public function getId()
     {

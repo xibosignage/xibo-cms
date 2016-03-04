@@ -8,6 +8,8 @@
 
 namespace Xibo\Entity;
 use League\OAuth2\Server\Util\SecureKey;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Application
@@ -75,6 +77,16 @@ class Application implements \JsonSerializable
      * @var array[ApplicationRedirectUri]
      */
     public $redirectUris = [];
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
 
     /**
      * @param ApplicationRedirectUri $redirectUri

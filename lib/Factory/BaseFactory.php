@@ -9,13 +9,9 @@
 namespace Xibo\Factory;
 
 
-use Slim\Helper\Set;
 use Xibo\Entity\User;
-use Xibo\Service\ConfigService;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\FactoryServiceInterface;
-use Xibo\Service\LogService;
-use Xibo\Service\ModuleServiceInterface;
+use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -26,23 +22,108 @@ use Xibo\Storage\StorageServiceInterface;
 class BaseFactory
 {
     /**
-     * @var Set $container
-     */
-    private $container;
-
-    /**
      * Count records last query
      * @var int
      */
     protected $_countLast = 0;
 
     /**
-     * BaseFactory constructor.
-     * @param Set $container
+     * @var StorageServiceInterface
      */
-    public function __construct($container)
+    private $store;
+
+    /**
+     * @var LogServiceInterface
+     */
+    private $log;
+
+    /**
+     * @var SanitizerServiceInterface
+     */
+    private $sanitizerService;
+
+    /**
+     * @var User
+     */
+    private $user;
+
+    /**
+     * @var UserFactory
+     */
+    private $userFactory;
+
+    /**
+     * Set common dependencies.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @return $this
+     */
+    protected function setCommonDependencies($store, $log, $sanitizerService)
     {
-        $this->container = $container;
+        $this->store = $store;
+        $this->log = $log;
+        $this->sanitizerService = $sanitizerService;
+
+        return $this;
+    }
+
+    /**
+     * Set Acl Dependencies
+     * @param User $user
+     * @param UserFactory $userFactory
+     * @return $this
+     */
+    protected function setAclDependencies($user, $userFactory)
+    {
+        $this->user = $user;
+        $this->userFactory = $userFactory;
+        return $this;
+    }
+
+    /**
+     * Get Store
+     * @return StorageServiceInterface
+     */
+    protected function getStore()
+    {
+        return $this->store;
+    }
+
+    /**
+     * Get Log
+     * @return LogServiceInterface
+     */
+    protected function getLog()
+    {
+        return $this->log;
+    }
+
+    /**
+     * Get Sanitizer
+     * @return SanitizerServiceInterface
+     */
+    protected function getSanitizer()
+    {
+        return $this->sanitizerService;
+    }
+
+    /**
+     * Get User
+     * @return User
+     */
+    public function getUser()
+    {
+        return $this->user;
+    }
+
+    /**
+     * Get User Factory
+     * @return UserFactory
+     */
+    public function getUserFactory()
+    {
+        return $this->userFactory;
     }
 
     /**
@@ -52,89 +133,6 @@ class BaseFactory
     public function countLast()
     {
         return $this->_countLast;
-    }
-
-    /**
-     * Get App
-     * @return Set
-     */
-    public function getContainer()
-    {
-        if ($this->container == null)
-            throw new \RuntimeException(__('Factory Application not set'));
-
-        return $this->container;
-    }
-
-    /**
-     * @return FactoryServiceInterface
-     */
-    public function getFactoryService()
-    {
-        return $this->getContainer()->factoryService;
-    }
-
-    /**
-     * @return ModuleServiceInterface
-     */
-    public function getModuleService()
-    {
-        return $this->getContainer()->moduleService;
-    }
-
-    /**
-     * Get User
-     * @return User
-     * @throws \RuntimeException
-     */
-    public function getUser()
-    {
-        return $this->getContainer()->user;
-    }
-
-    /**
-     * Get Log
-     * @return LogService
-     */
-    protected function getLog()
-    {
-        return $this->getContainer()->logService;
-    }
-
-    /**
-     * Get Store
-     * @return StorageServiceInterface
-     */
-    protected function getStore()
-    {
-        return $this->getContainer()->store;
-    }
-
-    /**
-     * Get Date
-     * @return DateServiceInterface
-     */
-    protected function getDate()
-    {
-        return $this->getContainer()->dateService;
-    }
-
-    /**
-     * Get Sanitizer
-     * @return SanitizerServiceInterface
-     */
-    protected function getSanitizer()
-    {
-        return $this->getContainer()->sanitizerService;
-    }
-
-    /**
-     * Get Config
-     * @return ConfigService
-     */
-    protected function getConfig()
-    {
-        return $this->getContainer()->configService;
     }
 
     /**
@@ -149,7 +147,7 @@ class BaseFactory
     public function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [])
     {
         $checkUserId = $this->getSanitizer()->getInt('userCheckUserId', $filterBy);
-        $user = ($checkUserId !== null) ? $this->getFactoryService()->get('UserFactory')->getById($checkUserId) : $this->getUser();
+        $user = ($checkUserId !== null) ? $this->getUserFactory()->getById($checkUserId) : $this->getUser();
 
         $permissionSql = '';
 

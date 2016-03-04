@@ -206,6 +206,7 @@ class DataSet extends Base
     public function add()
     {
         $dataSet = new \Xibo\Entity\DataSet();
+        $dataSet->setContainer($this->getContainer());
         $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
         $dataSet->description = $this->getSanitizer()->getString('description');
         $dataSet->userId = $this->getUser()->userId;

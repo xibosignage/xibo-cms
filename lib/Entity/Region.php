@@ -23,6 +23,8 @@ namespace Xibo\Entity;
 
 
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Region
@@ -125,6 +127,16 @@ class Region implements \JsonSerializable
      * @var string read only string
      */
     public $tempId = null;
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
 
     public function __clone()
     {

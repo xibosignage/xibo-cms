@@ -10,6 +10,8 @@ namespace Xibo\Entity;
 
 
 use Xibo\Helper\Install;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 use Xibo\Upgrade\Step;
 
 class Upgrade implements \JsonSerializable
@@ -27,6 +29,16 @@ class Upgrade implements \JsonSerializable
     public $step;
     public $action;
     public $type;
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
 
     public function doStep()
     {
@@ -110,7 +122,7 @@ class Upgrade implements \JsonSerializable
         ]);
     }
 
-    public static function createTable()
+    public function createTable()
     {
         // Insert the table.
         $this->getStore()->update('

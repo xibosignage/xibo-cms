@@ -10,9 +10,42 @@ namespace Xibo\Controller;
 
 
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\CommandFactory;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
+/**
+ * Class Command
+ * Command Controller
+ * @package Xibo\Controller
+ */
 class Command extends Base
 {
+    /**
+     * @var CommandFactory
+     */
+    private $commandFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param CommandFactory $commandFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $commandFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->commandFactory = $commandFactory;
+    }
+
     public function displayPage()
     {
         $this->getState()->template = 'command-page';
@@ -64,7 +97,7 @@ class Command extends Base
             'code' => $this->getSanitizer()->getString('code')
         ];
 
-        $commands = $this->getFactoryService()->get('CommandFactory')->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $commands = $this->commandFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($commands as $command) {
             /* @var \Xibo\Entity\Command $command */
@@ -91,7 +124,7 @@ class Command extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->getFactoryService()->get('CommandFactory')->countLast();
+        $this->getState()->recordsTotal = $this->commandFactory->countLast();
         $this->getState()->setData($commands);
     }
 
@@ -109,7 +142,7 @@ class Command extends Base
      */
     public function editForm($commandId)
     {
-        $command = $this->getFactoryService()->get('CommandFactory')->getById($commandId);
+        $command = $this->commandFactory->getById($commandId);
 
         if ($command->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
@@ -126,7 +159,7 @@ class Command extends Base
      */
     public function deleteForm($commandId)
     {
-        $command = $this->getFactoryService()->get('CommandFactory')->getById($commandId);
+        $command = $this->commandFactory->getById($commandId);
 
         if ($command->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
@@ -181,7 +214,7 @@ class Command extends Base
      */
     public function add()
     {
-        $command = new \Xibo\Entity\Command();
+        $command = $this->commandFactory->create();
         $command->command = $this->getSanitizer()->getString('command');
         $command->description = $this->getSanitizer()->getString('description');
         $command->code = $this->getSanitizer()->getString('code');
@@ -244,7 +277,7 @@ class Command extends Base
      */
     public function edit($commandId)
     {
-        $command = $this->getFactoryService()->get('CommandFactory')->getById($commandId);
+        $command = $this->commandFactory->getById($commandId);
 
         if ($command->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
@@ -288,7 +321,7 @@ class Command extends Base
      */
     public function delete($commandId)
     {
-        $command = $this->getFactoryService()->get('CommandFactory')->getById($commandId);
+        $command = $this->commandFactory->getById($commandId);
 
         if ($command->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();

@@ -9,10 +9,6 @@
 namespace Xibo\Tests;
 
 
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\ScheduleFactory;
-
 class ScheduleTest extends LocalWebTestCase
 {
     protected $route = '/schedule';
@@ -36,9 +32,9 @@ class ScheduleTest extends LocalWebTestCase
     public function testAdd()
     {
         // Get a layout to schedule
-        $layout = (new LayoutFactory($this->getApp()))->query(null, ['start' => 1, 'length' => 1])[0];
+        $layout = $this->getFactoryService()->get('LayoutFactory')->query(null, ['start' => 1, 'length' => 1])[0];
         // Get a Display Group Id
-        $displayGroup = (new DisplayGroupFactory($this->getApp()))->query(null, ['start' => 1, 'length' => 1])[0];
+        $displayGroup = $this->getFactoryService()->get('DisplayGroupFactory')->query(null, ['start' => 1, 'length' => 1])[0];
 
         $fromDt = time();
         $toDt = time() + 3600;
@@ -71,15 +67,15 @@ class ScheduleTest extends LocalWebTestCase
     public function testEdit($eventId)
     {
         // Get the scheduled event
-        $event = (new ScheduleFactory($this->getApp()))->getById($eventId);
+        $event = $this->getFactoryService()->get('ScheduleFactory')->getById($eventId);
         $event->load();
 
         $fromDt = time();
         $toDt = time() + 86400;
 
         $this->client->put($this->route . '/' . $eventId, [
-            'fromDt' => date('Y-m-d h:i:s', $event->fromDt),
-            'toDt' => date('Y-m-d h:i:s', $event->toDt),
+            'fromDt' => date('Y-m-d h:i:s', $fromDt),
+            'toDt' => date('Y-m-d h:i:s', $toDt),
             'campaignId' => $event->campaignId,
             'displayGroupIds' => $event->displayGroups,
             'displayOrder' => 1,

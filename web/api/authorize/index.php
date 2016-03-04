@@ -53,6 +53,7 @@ $app->setName('auth');
 // Config
 $app->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
 
+$app->add(new \Xibo\Middleware\ApiAuthorizationOAuth());
 $app->add(new \Xibo\Middleware\State());
 $app->add(new \Xibo\Middleware\Storage());
 $app->view(new \Xibo\Middleware\ApiView());
@@ -70,31 +71,6 @@ $app->notFound(function () use ($app) {
     $controller->setApp($app);
     $controller->notFound();
 });
-
-// oAuth Resource
-$server = new \League\OAuth2\Server\AuthorizationServer;
-
-$server->setSessionStorage(new \Xibo\Storage\ApiSessionStorage($app));
-$server->setAccessTokenStorage(new \Xibo\Storage\ApiAccessTokenStorage($app));
-$server->setRefreshTokenStorage(new \Xibo\Storage\ApiRefreshTokenStorage($app));
-$server->setClientStorage(new \Xibo\Storage\ApiClientStorage($app));
-$server->setScopeStorage(new \Xibo\Storage\ApiScopeStorage($app));
-$server->setAuthCodeStorage(new \Xibo\Storage\ApiAuthCodeStorage($app));
-
-// Allow auth code grant
-$authCodeGrant = new \League\OAuth2\Server\Grant\AuthCodeGrant();
-$server->addGrantType($authCodeGrant);
-
-// Allow client credentials grant
-$clientCredentialsGrant = new \League\OAuth2\Server\Grant\ClientCredentialsGrant();
-$server->addGrantType($clientCredentialsGrant);
-
-// Add refresh tokens
-$refreshTokenGrant = new \League\OAuth2\Server\Grant\RefreshTokenGrant();
-$server->addGrantType($refreshTokenGrant);
-
-// DI in the server
-$app->server = $server;
 
 // Auth Routes
 $app->get('/', function() use ($app) {

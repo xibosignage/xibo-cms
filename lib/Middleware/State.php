@@ -119,9 +119,9 @@ class State extends Middleware
         // Register the date service
         $app->container->singleton('dateService', function() use ($app) {
             if ($app->configService->GetSetting('CALENDAR_TYPE') == 'Jalali')
-                $date = new \Xibo\Service\DateServiceJalali($app);
+                $date = new \Xibo\Service\DateServiceJalali();
             else
-                $date = new \Xibo\Service\DateServiceGregorian($app);
+                $date = new \Xibo\Service\DateServiceGregorian();
 
             $date->setLocale(Translate::GetLocale(2));
 
@@ -293,8 +293,17 @@ class State extends Middleware
             return new \Xibo\Controller\Clock();
         });
 
-        $app->container->singleton('\Xibo\Controller\Command', function() {
-            return new \Xibo\Controller\Command();
+        $app->container->singleton('\Xibo\Controller\Command', function($container) {
+            return new \Xibo\Controller\Command(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->commandFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\DataSet', function() {
@@ -413,8 +422,23 @@ class State extends Middleware
             return new \Xibo\Controller\Upgrade();
         });
 
-        $app->container->singleton('\Xibo\Controller\User', function() {
-            return new \Xibo\Controller\User();
+        $app->container->singleton('\Xibo\Controller\User', function($container) {
+            return new \Xibo\Controller\User(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->userFactory,
+                $container->userTypeFactory,
+                $container->userGroupFactory,
+                $container->pageFactory,
+                $container->permissionFactory,
+                $container->layoutFactory,
+                $container->applicationFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\UserGroup', function() {
@@ -428,121 +452,145 @@ class State extends Middleware
      */
     public static function registerFactoriesWithDi($container)
     {
-        $container->singleton('factoryService', function ($container) {
-            return new FactoryService($container);
-        });
-        $container->singleton('\Xibo\Factory\ApplicationFactory', function($container) {
+        $container->singleton('applicationFactory', function($container) {
             return new \Xibo\Factory\ApplicationFactory($container);
         });
-        $container->singleton('\Xibo\Factory\ApplicationRedirectUriFactory', function($container) {
+        $container->singleton('applicationRedirectUriFactory', function($container) {
             return new \Xibo\Factory\ApplicationRedirectUriFactory($container);
         });
-        $container->singleton('\Xibo\Factory\AuditLogFactory', function($container) {
+        $container->singleton('auditLogFactory', function($container) {
             return new \Xibo\Factory\AuditLogFactory($container);
         });
-        $container->singleton('\Xibo\Factory\BandwidthFactory', function($container) {
+        $container->singleton('bandwidthFactory', function($container) {
             return new \Xibo\Factory\BandwidthFactory($container);
         });
-        $container->singleton('\Xibo\Factory\CampaignFactory', function($container) {
+        $container->singleton('campaignFactory', function($container) {
             return new \Xibo\Factory\CampaignFactory($container);
         });
-        $container->singleton('\Xibo\Factory\CommandFactory', function($container) {
-            return new \Xibo\Factory\CommandFactory($container);
+        $container->singleton('commandFactory', function($container) {
+            return new \Xibo\Factory\CommandFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService,
+                $container->user,
+                $container->userFactory,
+                $container->displayProfileFactory
+            );
         });
-        $container->singleton('\Xibo\Factory\DataSetColumnFactory', function($container) {
+        $container->singleton('dataSetColumnFactory', function($container) {
             return new \Xibo\Factory\DataSetColumnFactory($container);
         });
-        $container->singleton('\Xibo\Factory\DataSetColumnTypeFactory', function($container) {
+        $container->singleton('dataSetColumnTypeFactory', function($container) {
             return new \Xibo\Factory\DataSetColumnTypeFactory($container);
         });
-        $container->singleton('\Xibo\Factory\DataSetFactory', function($container) {
+        $container->singleton('dataSetFactory', function($container) {
             return new \Xibo\Factory\DataSetFactory($container);
         });
-        $container->singleton('\Xibo\Factory\DataTypeFactory', function($container) {
+        $container->singleton('dataTypeFactory', function($container) {
             return new \Xibo\Factory\DataTypeFactory($container);
         });
-        $container->singleton('\Xibo\Factory\DisplayFactory', function($container) {
+        $container->singleton('displayFactory', function($container) {
             return new \Xibo\Factory\DisplayFactory($container);
         });
-        $container->singleton('\Xibo\Factory\DisplayGroupFactory', function($container) {
+        $container->singleton('displayGroupFactory', function($container) {
             return new \Xibo\Factory\DisplayGroupFactory($container);
         });
-        $container->singleton('\Xibo\Factory\DisplayProfileFactory', function($container) {
+        $container->singleton('displayProfileFactory', function($container) {
             return new \Xibo\Factory\DisplayProfileFactory($container);
         });
-        $container->singleton('\Xibo\Factory\HelpFactory', function($container) {
+        $container->singleton('helpFactory', function($container) {
             return new \Xibo\Factory\HelpFactory($container);
         });
-        $container->singleton('\Xibo\Factory\LayoutFactory', function($container) {
+        $container->singleton('layoutFactory', function($container) {
             return new \Xibo\Factory\LayoutFactory($container);
         });
-        $container->singleton('\Xibo\Factory\LogFactory', function($container) {
+        $container->singleton('logFactory', function($container) {
             return new \Xibo\Factory\LogFactory($container);
         });
-        $container->singleton('\Xibo\Factory\MediaFactory', function($container) {
+        $container->singleton('mediaFactory', function($container) {
             return new \Xibo\Factory\MediaFactory($container);
         });
-        $container->singleton('\Xibo\Factory\ModuleFactory', function($container) {
-            return new \Xibo\Factory\ModuleFactory($container);
+        $container->singleton('moduleFactory', function($container) {
+            return new \Xibo\Factory\ModuleFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService,
+                $container->user,
+                $container->userFactory,
+                $container->moduleService
+            );
         });
-        $container->singleton('\Xibo\Factory\PageFactory', function($container) {
+        $container->singleton('pageFactory', function($container) {
             return new \Xibo\Factory\PageFactory($container);
         });
-        $container->singleton('\Xibo\Factory\PermissionFactory', function($container) {
+        $container->singleton('permissionFactory', function($container) {
             return new \Xibo\Factory\PermissionFactory($container);
         });
-        $container->singleton('\Xibo\Factory\PlaylistFactory', function($container) {
+        $container->singleton('playlistFactory', function($container) {
             return new \Xibo\Factory\PlaylistFactory($container);
         });
-        $container->singleton('\Xibo\Factory\RegionFactory', function($container) {
+        $container->singleton('regionFactory', function($container) {
             return new \Xibo\Factory\RegionFactory($container);
         });
-        $container->singleton('\Xibo\Factory\RegionOptionFactory', function($container) {
+        $container->singleton('regionOptionFactory', function($container) {
             return new \Xibo\Factory\RegionOptionFactory($container);
         });
-        $container->singleton('\Xibo\Factory\RequiredFileFactory', function($container) {
+        $container->singleton('requiredFileFactory', function($container) {
             return new \Xibo\Factory\RequiredFileFactory($container);
         });
-        $container->singleton('\Xibo\Factory\ResolutionFactory', function($container) {
+        $container->singleton('resolutionFactory', function($container) {
             return new \Xibo\Factory\ResolutionFactory($container);
         });
-        $container->singleton('\Xibo\Factory\ScheduleFactory', function($container) {
+        $container->singleton('scheduleFactory', function($container) {
             return new \Xibo\Factory\ScheduleFactory($container);
         });
-        $container->singleton('\Xibo\Factory\SessionFactory', function($container) {
+        $container->singleton('sessionFactory', function($container) {
             return new \Xibo\Factory\SessionFactory($container);
         });
-        $container->singleton('\Xibo\Factory\SettingsFactory', function($container) {
+        $container->singleton('settingsFactory', function($container) {
             return new \Xibo\Factory\SettingsFactory($container);
         });
-        $container->singleton('\Xibo\Factory\TagFactory', function($container) {
+        $container->singleton('tagFactory', function($container) {
             return new \Xibo\Factory\TagFactory($container);
         });
-        $container->singleton('\Xibo\Factory\TransitionFactory', function($container) {
+        $container->singleton('transitionFactory', function($container) {
             return new \Xibo\Factory\TransitionFactory($container);
         });
-        $container->singleton('\Xibo\Factory\UpgradeFactory', function($container) {
+        $container->singleton('upgradeFactory', function($container) {
             return new \Xibo\Factory\UpgradeFactory($container);
         });
-        $container->singleton('\Xibo\Factory\UserFactory', function($container) {
-            return new \Xibo\Factory\UserFactory($container);
+        $container->singleton('userFactory', function($container) {
+            return new \Xibo\Factory\UserFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService,
+                $container->configService,
+                $container->pageFactory,
+                $container->userGroupFactory,
+                $container->permissionFactory,
+                $container->campaignFactory,
+                $container->layoutFactory,
+                $container->mediaFactory,
+                $container->scheduleFactory,
+                $container->userOptionFactory
+            );
         });
-        $container->singleton('\Xibo\Factory\UserGroupFactory', function($container) {
+        $container->singleton('userGroupFactory', function($container) {
             return new \Xibo\Factory\UserGroupFactory($container);
         });
-        $container->singleton('\Xibo\Factory\UserOptionFactory', function($container) {
+        $container->singleton('userOptionFactory', function($container) {
             return new \Xibo\Factory\UserOptionFactory($container);
         });
-        $container->singleton('\Xibo\Factory\UserTypeFactory', function($container) {
+        $container->singleton('userTypeFactory', function($container) {
             return new \Xibo\Factory\UserTypeFactory($container);
         });
-        $container->singleton('\Xibo\Factory\WidgetFactory', function($container) {
+        $container->singleton('widgetFactory', function($container) {
             return new \Xibo\Factory\WidgetFactory($container);
         });
-        $container->singleton('\Xibo\Factory\WidgetMediaFactory', function($container) {
+        $container->singleton('widgetMediaFactory', function($container) {
             return new \Xibo\Factory\WidgetMediaFactory($container);
         });
-        $container->singleton('\Xibo\Factory\WidgetOptionFactory', function($container) {
+        $container->singleton('widgetOptionFactory', function($container) {
             return new \Xibo\Factory\WidgetOptionFactory($container);
         });
     }

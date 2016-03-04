@@ -21,6 +21,8 @@
 namespace Xibo\Entity;
 
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Layout
@@ -197,8 +199,14 @@ class Layout implements \JsonSerializable
         'audit' => false
     ];
 
-    public function __construct()
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
     {
+        $this->setCommonDependencies($store, $log);
         $this->setPermissionsClass('Xibo\Entity\Campaign');
     }
 

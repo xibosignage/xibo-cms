@@ -10,7 +10,6 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
-use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Translate;
 
@@ -32,7 +31,7 @@ class Theme extends Middleware
         /* @var \Twig_Loader_Filesystem $twig */
 
         // Append the module view paths
-        $twig->setPaths(array_merge((new \Xibo\Factory\ModuleFactory($app->container))->getViewPaths(), [PROJECT_ROOT . '/views']));
+        $twig->setPaths(array_merge($app->moduleFactory->getViewPaths(), [PROJECT_ROOT . '/views']));
 
         // Does this theme provide an alternative view path?
         if ($app->configService->getThemeConfig('view_path') != '') {
@@ -42,7 +41,7 @@ class Theme extends Middleware
         $app->hook('slim.before.dispatch', function() use($app) {
 
             $settings = [];
-            foreach ((new \Xibo\Factory\SettingsFactory($app->container))->query() as $setting) {
+            foreach ($app->settingsFactory->query() as $setting) {
                 $settings[$setting['setting']] = $setting['value'];
             }
 
@@ -65,7 +64,7 @@ class Theme extends Middleware
                 'libraryUpload' => [
                     'maxSize' => ByteFormatter::toBytes($app->configService->getMaxUploadSize()),
                     'maxSizeMessage' => sprintf(__('This form accepts files up to a maximum size of %s'), $app->configService->getMaxUploadSize()),
-                    'validExt' => implode('|', (new ModuleFactory($app))->getValidExtensions())
+                    'validExt' => implode('|', $app->moduleFactory->getValidExtensions())
                 ]
             ));
         });

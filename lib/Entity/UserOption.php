@@ -7,6 +7,8 @@
 
 
 namespace Xibo\Entity;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 
 /**
@@ -37,8 +39,14 @@ class UserOption implements \JsonSerializable
      */
     public $value;
 
-    public function __construct()
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
     {
+        $this->setCommonDependencies($store, $log);
         $this->excludeProperty('userId');
     }
 

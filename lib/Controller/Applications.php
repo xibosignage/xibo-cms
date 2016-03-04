@@ -110,11 +110,11 @@ class Applications extends Base
             // Create a server
             $server = new AuthorizationServer();
 
-            $server->setSessionStorage(new ApiSessionStorage());
-            $server->setAccessTokenStorage(new ApiAccessTokenStorage());
-            $server->setClientStorage(new ApiClientStorage());
-            $server->setScopeStorage(new ApiScopeStorage());
-            $server->setAuthCodeStorage(new ApiAuthCodeStorage());
+            $server->setSessionStorage(new ApiSessionStorage($this->getStore()));
+            $server->setAccessTokenStorage(new ApiAccessTokenStorage($this->getStore()));
+            $server->setClientStorage(new ApiClientStorage($this->getStore()));
+            $server->setScopeStorage(new ApiScopeStorage($this->getStore()));
+            $server->setAuthCodeStorage(new ApiAuthCodeStorage($this->getStore()));
 
             $authCodeGrant = new AuthCodeGrant();
             $server->addGrantType($authCodeGrant);

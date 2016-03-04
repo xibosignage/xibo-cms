@@ -10,6 +10,8 @@ namespace Xibo\Entity;
 
 
 use Xibo\Helper\ObjectVars;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class EntityTrait
@@ -18,17 +20,53 @@ use Xibo\Helper\ObjectVars;
  */
 trait EntityTrait
 {
-    /**
-     * Include the Entity Service Trait
-     */
-    use EntityServiceTrait;
-
     private $hash = null;
     private $loaded = false;
     private $permissionsClass = null;
 
     public $buttons = [];
     private $jsonExclude = ['buttons', 'jsonExclude'];
+
+    /**
+     * @var StorageServiceInterface
+     */
+    private $store;
+
+    /**
+     * @var LogServiceInterface
+     */
+    private $log;
+
+    /**
+     * Set common dependencies.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @return $this
+     */
+    protected function setCommonDependencies($store, $log)
+    {
+        $this->store = $store;
+        $this->log = $log;
+        return $this;
+    }
+
+    /**
+     * Get Store
+     * @return StorageServiceInterface
+     */
+    protected function getStore()
+    {
+        return $this->store;
+    }
+
+    /**
+     * Get Log
+     * @return LogServiceInterface
+     */
+    protected function getLog()
+    {
+        return $this->log;
+    }
 
     /**
      * Hydrate an entity with properties
@@ -50,7 +88,7 @@ trait EntityTrait
                 if (stripos(strrev($prop), 'dI') === 0 || in_array($prop, $intProperties))
                     $val = intval($val);
                 else if (in_array($prop, $stringProperties))
-                    $val = $this->getSanitizer()->string($val);
+                    $val = filter_var($val, FILTER_SANITIZE_STRING);
                 else if (in_array($prop, $htmlStringProperties))
                     $val = htmlentities($val);
 

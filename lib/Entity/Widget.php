@@ -23,6 +23,8 @@
 namespace Xibo\Entity;
 
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 use Xibo\Widget\ModuleWidget;
 
 /**
@@ -131,8 +133,14 @@ class Widget implements \JsonSerializable
      */
     public static $widgetMinDuration = 1;
 
-    public function __construct()
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
     {
+        $this->setCommonDependencies($store, $log);
         $this->excludeProperty('module');
     }
 

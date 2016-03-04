@@ -32,6 +32,22 @@ class ApiAuthenticationOAuth extends Middleware
     {
         $app = $this->app;
 
+        // oAuth Resource
+        $sessionStorage = new \Xibo\Storage\ApiSessionStorage($app->store);
+        $accessTokenStorage = new \Xibo\Storage\ApiAccessTokenStorage($app->store);
+        $clientStorage = new \Xibo\Storage\ApiClientStorage($app->store);
+        $scopeStorage = new \Xibo\Storage\ApiScopeStorage($app->store);
+
+        $server = new \League\OAuth2\Server\ResourceServer(
+            $sessionStorage,
+            $accessTokenStorage,
+            $clientStorage,
+            $scopeStorage
+        );
+
+        // DI in the server
+        $app->server = $server;
+
         $isAuthorised = function() use ($app) {
             // Validate we are a valid auth
             /* @var ResourceServer $server */

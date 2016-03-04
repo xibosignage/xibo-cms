@@ -9,6 +9,9 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Command
@@ -83,6 +86,24 @@ class Command implements \JsonSerializable
     private $displayProfiles = [];
 
     /**
+     * @var DisplayProfileFactory
+     */
+    private $displayProfileFactory;
+
+    /**
+     * Command constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param DisplayProfileFactory $displayProfileFactory
+     */
+    public function __construct($store, $log, $displayProfileFactory)
+    {
+        $this->setCommonDependencies($store, $log);
+
+        $this->displayProfileFactory = $displayProfileFactory;
+    }
+
+    /**
      * Get Id
      * @return int
      */
@@ -124,7 +145,7 @@ class Command implements \JsonSerializable
         if ($this->loaded || $this->commandId == null)
             return;
 
-        $this->displayProfiles = $this->getFactoryService()->get('DisplayProfileFactory')->getByCommandId($this->commandId);
+        $this->displayProfiles = $this->displayProfileFactory->getByCommandId($this->commandId);
     }
 
     /**

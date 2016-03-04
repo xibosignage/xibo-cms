@@ -139,6 +139,7 @@ class Soap4 extends Soap
             // Add a new display
             try {
                 $display = new Display();
+                $display->setContainer($this->getContainer());
                 $display->display = $displayName;
                 $display->isAuditing = 0;
                 $display->defaultLayoutId = 4;

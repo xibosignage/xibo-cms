@@ -26,7 +26,7 @@ class Error extends Base
 
         // Not found controller happens outside the normal middleware stack for some reason
         // Setup the translations for gettext
-        Translate::InitLocale($this->getContainer());
+        Translate::InitLocale($this->getConfig());
 
         // Configure the locale for date/time
         if (Translate::GetLocale(2) != '')

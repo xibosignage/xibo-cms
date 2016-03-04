@@ -164,6 +164,7 @@ class DisplayProfile extends Base
     public function add()
     {
         $displayProfile = new \Xibo\Entity\DisplayProfile();
+        $displayProfile->setContainer($this->getContainer());
         $displayProfile->name = $this->getSanitizer()->getString('name');
         $displayProfile->type = $this->getSanitizer()->getString('type');
         $displayProfile->isDefault = $this->getSanitizer()->getCheckbox('isDefault');

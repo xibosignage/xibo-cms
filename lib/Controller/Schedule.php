@@ -363,6 +363,7 @@ class Schedule extends Base
         $this->getLog()->debug('Add Schedule');
 
         $schedule = new \Xibo\Entity\Schedule();
+        $schedule->setContainer($this->getContainer());
         $schedule->userId = $this->getUser()->userId;
         $schedule->eventTypeId = $this->getSanitizer()->getInt('eventTypeId');
         $schedule->campaignId = $this->getSanitizer()->getInt('campaignId');

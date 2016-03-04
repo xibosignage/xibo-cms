@@ -25,8 +25,13 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Media;
 use Xibo\Entity\Module;
+use Xibo\Entity\User;
 use Xibo\Entity\Widget;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\ModuleServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class ModuleFactory
@@ -34,6 +39,27 @@ use Xibo\Exception\NotFoundException;
  */
 class ModuleFactory extends BaseFactory
 {
+    /**
+     * @var ModuleServiceInterface
+     */
+    private $moduleService;
+
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param User $user
+     * @param UserFactory $userFactory
+     * @param ModuleServiceInterface $moduleService
+     */
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService, $user, $userFactory);
+
+        $this->moduleService = $moduleService;
+    }
+
     /**
      * Create a Module
      * @param string $type
@@ -48,7 +74,7 @@ class ModuleFactory extends BaseFactory
             throw new NotFoundException(sprintf(__('Unknown type %s'), $type));
 
         // Create a module
-        return $this->getModuleService()->get($modules[0]);
+        return $this->moduleService->get($modules[0]);
     }
 
     /**
@@ -73,7 +99,7 @@ class ModuleFactory extends BaseFactory
      */
     public function createById($moduleId)
     {
-        return $this->getModuleService()->get($this->getById($moduleId));
+        return $this->moduleService->get($this->getById($moduleId));
     }
 
     /**
@@ -96,7 +122,7 @@ class ModuleFactory extends BaseFactory
         // Create a module
         /* @var \Xibo\Widget\ModuleWidget $object */
         $module = $modules[0];
-        $object = $this->getModuleService()->get($module);
+        $object = $this->moduleService->get($module);
         $object->setWidget($widget);
 
         return $object;

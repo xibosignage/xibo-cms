@@ -27,7 +27,6 @@ use Slim\Middleware;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\PageFactory;
-use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Random;
@@ -75,8 +74,7 @@ class SAMLAuthentication extends Middleware
         $app = $this->app;
 
         // Create a user
-        $app->user = new \Xibo\Entity\User();
-        $app->user->setContainer($app);
+        $app->user = new $app->userFactory->create();
 
         // Register SAML routes.
         $app->excludedCsrfRoutes = SAMLAuthentication::samlRoutes();
@@ -108,6 +106,7 @@ class SAMLAuthentication extends Middleware
 
         $app->post('/saml/acs', function () {
             // Assertion Consumer Endpoint
+            $app = $this->getApplication();
 
             // Inject the POST parameters required by the SAML toolkit
             $_POST = $this->app->request->post();
@@ -157,11 +156,11 @@ class SAMLAuthentication extends Middleware
 
                 try {
                     if ($identityField == 'UserID') {
-                        $user = (new UserFactory($this->app))->getById($userData[$identityField][0]);
+                        $user = $app->userFactory->getById($userData[$identityField][0]);
                     } else if ($identityField == 'UserName') {
-                        $user = (new UserFactory($this->app))->getByName($userData[$identityField][0]);
+                        $user = $app->userFactory->getByName($userData[$identityField][0]);
                     } else {
-                        $user = (new UserFactory($this->app))->getByEmail($userData[$identityField][0]);
+                        $user = $app->userFactory->getByEmail($userData[$identityField][0]);
                     }
                 } catch (NotFoundException $e) {
                     $user = null;
@@ -237,7 +236,7 @@ class SAMLAuthentication extends Middleware
                 }
 
                 // Redirect to User Homepage
-                $page = (new \Xibo\Factory\PageFactory($this->app))->getById($user->homePageId);
+                $page = $app->pageFactory->getById($user->homePageId);
                 $this->app->redirectTo($page->getName() . '.view');
             }
         });
@@ -293,7 +292,7 @@ class SAMLAuthentication extends Middleware
                 // Need to check
                 if ($user->hasIdentity() && !$app->session->isExpired()) {
                     // Replace our user with a fully loaded one
-                    $user = (new UserFactory($app))->loadById($user->userId);
+                    $user = $app->userFactory->loadById($user->userId);
 
                     $app->logService->setUserId($user->userId);
 

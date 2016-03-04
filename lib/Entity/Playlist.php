@@ -24,6 +24,8 @@ namespace Xibo\Entity;
 
 
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Playlist
@@ -83,9 +85,14 @@ class Playlist implements \JsonSerializable
      */
     public $displayOrder;
 
-    public function __construct()
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
     {
-        // Exclude properties that will cause recursion
+        $this->setCommonDependencies($store, $log);
         $this->excludeProperty('regions');
     }
 

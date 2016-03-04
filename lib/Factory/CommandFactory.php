@@ -10,10 +10,49 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Command;
+use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class CommandFactory
+ * @package Xibo\Factory
+ */
 class CommandFactory extends BaseFactory
 {
+    /**
+     * @var DisplayProfileFactory
+     */
+    private $displayProfileFactory;
+
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param User $user
+     * @param UserFactory $userFactory
+     * @param DisplayProfileFactory $displayProfileFactory
+     */
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $displayProfileFactory)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->setAclDependencies($user, $userFactory);
+
+        $this->displayProfileFactory = $displayProfileFactory;
+    }
+
+    /**
+     * Create Command
+     * @return Command
+     */
+    public function create()
+    {
+        return new Command($this->getStore(), $this->getLog(), $this->displayProfileFactory);
+    }
+
     /**
      * Get by Id
      * @param $commandId
@@ -39,6 +78,11 @@ class CommandFactory extends BaseFactory
         return $this->query(null, ['displayProfileId' => $displayProfileId]);
     }
 
+    /**
+     * @param array $sortOrder
+     * @param array $filterBy
+     * @return array
+     */
     public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
@@ -98,7 +142,7 @@ class CommandFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Command())->hydrate($row)->setContainer($this->getContainer());
+            $entries[] = (new Command($this->getStore(), $this->getLog(), $this->displayProfileFactory))->hydrate($row);
         }
 
         // Paging
