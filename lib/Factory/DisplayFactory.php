@@ -23,22 +23,48 @@
 namespace Xibo\Factory;
 
 use Xibo\Entity\Display;
+use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class DisplayFactory
+ * @package Xibo\Factory
+ */
 class DisplayFactory extends BaseFactory
 {
+    /**
+     * @var ConfigServiceInterface
+     */
+    private $config;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param User $user
+     * @param UserFactory $userFactory
+     * @param ConfigServiceInterface $config
      */
-    public function __construct($store, $log, $sanitizerService)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->setAclDependencies($user, $userFactory);
+
+        $this->config = $config;
+    }
+
+    /**
+     * Create Empty Display Object
+     * @return Display
+     */
+    public function createEmpty()
+    {
+        return new Display($this->getStore(), $this->getLog());
     }
 
     /**
@@ -286,7 +312,7 @@ class DisplayFactory extends BaseFactory
             ';
 
             $currentDate = time();
-            $rfLookAhead = $this->getConfig()->GetSetting('REQUIRED_FILES_LOOKAHEAD');
+            $rfLookAhead = $this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD');
             $rfLookAhead = intval($currentDate) + intval($rfLookAhead);
 
             $params['fromDt'] = $rfLookAhead;
@@ -380,7 +406,7 @@ class DisplayFactory extends BaseFactory
             ';
 
             $currentDate = time();
-            $rfLookAhead = $this->getConfig()->GetSetting('REQUIRED_FILES_LOOKAHEAD');
+            $rfLookAhead = $this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD');
             $rfLookAhead = intval($currentDate) + intval($rfLookAhead);
 
             $params['fromDt'] = $rfLookAhead;
@@ -406,7 +432,7 @@ class DisplayFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Display())->hydrate($row)->setContainer($this->getContainer());
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         // Paging

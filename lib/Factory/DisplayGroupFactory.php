@@ -10,11 +10,16 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\DisplayGroup;
+use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class DisplayGroupFactory
+ * @package Xibo\Factory
+ */
 class DisplayGroupFactory extends BaseFactory
 {
     /**
@@ -22,10 +27,22 @@ class DisplayGroupFactory extends BaseFactory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param User $user
+     * @param UserFactory $userFactory
      */
-    public function __construct($store, $log, $sanitizerService)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->setAclDependencies($user, $userFactory);
+    }
+
+    /**
+     * Create Empty
+     * @return DisplayGroup
+     */
+    public function createEmpty()
+    {
+        return new DisplayGroup($this->getStore(), $this->getLog());
     }
 
     /**
@@ -200,10 +217,8 @@ class DisplayGroupFactory extends BaseFactory
 
         $sql = $select . $body . $order . $limit;
 
-
-
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new DisplayGroup())->hydrate($row)->setContainer($this->getContainer());
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         // Paging

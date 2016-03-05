@@ -58,26 +58,6 @@ class UserFactory extends BaseFactory
     private $permissionFactory;
 
     /**
-     * @var CampaignFactory
-     */
-    private $campaignFactory;
-
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
-     * @var ScheduleFactory
-     */
-    private $scheduleFactory;
-
-    /**
      * @var UserOptionFactory
      */
     private $userOptionFactory;
@@ -91,10 +71,6 @@ class UserFactory extends BaseFactory
      * @param PageFactory $pageFactory
      * @param UserGroupFactory $userGroupFactory
      * @param PermissionFactory $permissionFactory
-     * @param CampaignFactory $campaignFactory
-     * @param LayoutFactory $layoutFactory
-     * @param MediaFactory $mediaFactory
-     * @param ScheduleFactory $scheduleFactory
      * @param UserOptionFactory $userOptionFactory
      */
     public function __construct($store, $log, $sanitizerService,
@@ -102,10 +78,6 @@ class UserFactory extends BaseFactory
                                 $pageFactory,
                                 $userGroupFactory,
                                 $permissionFactory,
-                                $campaignFactory,
-                                $layoutFactory,
-                                $mediaFactory,
-                                $scheduleFactory,
                                 $userOptionFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
@@ -114,10 +86,6 @@ class UserFactory extends BaseFactory
         $this->pageFactory = $pageFactory;
         $this->userGroupFactory = $userGroupFactory;
         $this->permissionFactory = $permissionFactory;
-        $this->campaignFactory = $campaignFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->scheduleFactory = $scheduleFactory;
         $this->userOptionFactory = $userOptionFactory;
     }
 
@@ -134,10 +102,6 @@ class UserFactory extends BaseFactory
             $this->getUserFactory(),
             $this->userGroupFactory,
             $this->permissionFactory,
-            $this->campaignFactory,
-            $this->layoutFactory,
-            $this->mediaFactory,
-            $this->scheduleFactory,
             $this->userOptionFactory
         );
     }

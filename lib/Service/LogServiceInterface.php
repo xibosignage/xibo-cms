@@ -50,49 +50,49 @@ interface LogServiceInterface
     public function sql($sql, $params);
 
     /**
-     * @param $object
+     * @param string ...$object
      * @return mixed
      */
     public function debug($object);
 
     /**
-     * @param $object
+     * @param ...$object
      * @return mixed
      */
     public function notice($object);
 
     /**
-     * @param $object
+     * @param ...$object
      * @return mixed
      */
     public function info($object);
 
     /**
-     * @param $object
+     * @param ...$object
      * @return mixed
      */
     public function warning($object);
 
     /**
-     * @param $object
+     * @param ...$object
      * @return mixed
      */
     public function error($object);
 
     /**
-     * @param $object
+     * @param ...$object
      * @return mixed
      */
     public function critical($object);
 
     /**
-     * @param $object
+     * @param ...$object
      * @return mixed
      */
     public function alert($object);
 
     /**
-     * @param $object
+     * @param ...$object
      * @return mixed
      */
     public function emergency($object);

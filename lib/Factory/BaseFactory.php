@@ -74,7 +74,7 @@ class BaseFactory
      * @param UserFactory $userFactory
      * @return $this
      */
-    protected function setAclDependencies($user, $userFactory)
+    public function setAclDependencies($user, $userFactory)
     {
         $this->user = $user;
         $this->userFactory = $userFactory;

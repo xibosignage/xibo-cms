@@ -22,11 +22,85 @@ namespace Xibo\Controller;
 use Exception;
 use PicoFeed\PicoFeedException;
 use PicoFeed\Reader\Reader;
+use Stash\Interfaces\PoolInterface;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\MediaFactory;
+use Xibo\Factory\UserFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
-
+/**
+ * Class StatusDashboard
+ * @package Xibo\Controller
+ */
 class StatusDashboard extends Base
 {
+    /**
+     * @var StorageServiceInterface
+     */
+    private $store;
+
+    /**
+     * @var PoolInterface
+     */
+    private $pool;
+
+    /**
+     * @var UserFactory
+     */
+    private $userFactory;
+
+    /**
+     * @var DisplayFactory
+     */
+    private $displayFactory;
+
+    /**
+     * @var DisplayGroupFactory
+     */
+    private $displayGroupFactory;
+
+    /**
+     * @var MediaFactory
+     */
+    private $mediaFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param StorageServiceInterface $store
+     * @param PoolInterface $pool
+     * @param UserFactory $userFactory
+     * @param DisplayFactory $displayFactory
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param MediaFactory $mediaFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $displayFactory, $displayGroupFactory, $mediaFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->store = $store;
+        $this->pool = $pool;
+        $this->userFactory = $userFactory;
+        $this->displayFactory = $displayFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
+        $this->mediaFactory = $mediaFactory;
+    }
+
+    /**
+     * View
+     */
     function displayPage()
     {
         $data = [];
@@ -36,14 +110,14 @@ class StatusDashboard extends Base
 
         try {
             // Displays this user has access to
-            $displays = $this->getFactoryService()->get('DisplayFactory')->query(['display']);
+            $displays = $this->displayFactory->query(['display']);
             $displayIds = array_map(function($element) {
                 return $element->displayId;
             }, $displays);
             $displayIds[] = -1;
 
             // Get some data for a bandwidth chart
-            $dbh = $this->getStore()->getConnection();
+            $dbh = $this->store->getConnection();
 
             $sql = '
               SELECT MAX(FROM_UNIXTIME(month)) AS month,
@@ -55,7 +129,7 @@ class StatusDashboard extends Base
             $params = array('month' => time() - (86400 * 365));
 
 
-            $results = $this->getStore()->select($sql, $params);
+            $results = $this->store->select($sql, $params);
 
             // Monthly bandwidth - optionally tested against limits
             $xmdsLimit = $this->getConfig()->GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
@@ -111,10 +185,8 @@ class StatusDashboard extends Base
             // Library Size in Bytes
             $params = [];
             $sql = 'SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM `media` WHERE 1 = 1 ';
-            $this->getFactoryService()->get('MediaFactory')->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
+            $this->mediaFactory->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
             $sql .= ' GROUP BY type ';
-
-
 
             $sth = $dbh->prepare($sql);
             $sth->execute($params);
@@ -172,10 +244,10 @@ class StatusDashboard extends Base
             $data['displays'] = $displays;
 
             // Get a count of users
-            $data['countUsers'] = count($this->getFactoryService()->get('UserFactory')->query());
+            $data['countUsers'] = count($this->userFactory->query());
 
             // Get a count of active layouts, only for display groups we have permission for
-            $displayGroups = $this->getFactoryService()->get('DisplayGroupFactory')->query(null, ['isDisplaySpecific' => -1]);
+            $displayGroups = $this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]);
             $displayGroupIds = array_map(function($element) {
                 return $element->displayGroupId;
             }, $displayGroups);
@@ -184,8 +256,6 @@ class StatusDashboard extends Base
 
             $sql = 'SELECT IFNULL(COUNT(*), 0) AS count_scheduled FROM `schedule_detail` WHERE :now BETWEEN FromDT AND ToDT AND eventId IN (SELECT eventId FROM `lkscheduledisplaygroup` WHERE displayGroupId IN (' . implode(',', $displayGroupIds) . '))';
             $params = array('now' => time());
-
-
 
             $sth = $dbh->prepare($sql);
             $sth->execute($params);
@@ -199,7 +269,7 @@ class StatusDashboard extends Base
 
                 try {
                     $feedUrl = $this->getConfig()->getThemeConfig('latest_news_url');
-                    $cache = $this->getPool()->getItem('rss/' . md5($feedUrl));
+                    $cache = $this->pool->getItem('rss/' . md5($feedUrl));
 
                     $latestNews = $cache->get();
 
@@ -232,7 +302,7 @@ class StatusDashboard extends Base
                         $cache->set($latestNews);
                         $cache->expiresAfter(86400);
 
-                        $this->getPool()->saveDeferred($cache);
+                        $this->pool->saveDeferred($cache);
                     }
 
                     $data['latestNews'] = $latestNews;
@@ -251,6 +321,7 @@ class StatusDashboard extends Base
         catch (Exception $e) {
 
             $this->getLog()->error($e->getMessage());
+            $this->getLog()->debug($e->getTraceAsString());
 
             // Show the error in place of the bandwidth chart
             $data['widget-error'] = 'Unable to get widget details';

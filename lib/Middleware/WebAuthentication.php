@@ -80,6 +80,9 @@ class WebAuthentication extends Middleware
                     // Replace our user with a fully loaded one
                     $user = $app->userFactory->loadById($user->userId);
 
+                    // Set the user factory ACL dependencies (used for working out intra-user permissions)
+                    $app->userFactory->setAclDependencies($user, $app->userFactory);
+
                     $app->logService->setUserId($user->userId);
 
                     // Do they have permission?

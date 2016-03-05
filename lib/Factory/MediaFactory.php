@@ -24,11 +24,16 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Media;
+use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class MediaFactory
+ * @package Xibo\Factory
+ */
 class MediaFactory extends BaseFactory
 {
     /**
@@ -36,10 +41,22 @@ class MediaFactory extends BaseFactory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param User $user
+     * @param UserFactory $userFactory
      */
-    public function __construct($store, $log, $sanitizerService)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->setAclDependencies($user, $userFactory);
+    }
+
+    /**
+     * Create Empty
+     * @return Media
+     */
+    public function createEmpty()
+    {
+        return new Media($this->getStore(), $this->getLog());
     }
 
     /**
@@ -53,8 +70,7 @@ class MediaFactory extends BaseFactory
      */
     public function create($name, $fileName, $type, $ownerId, $duration = 0)
     {
-        $media = new Media();
-        $media->setContainer($this->getContainer());
+        $media = $this->createEmpty();
         $media->name = $name;
         $media->fileName = $fileName;
         $media->mediaType = $type;
@@ -100,8 +116,7 @@ class MediaFactory extends BaseFactory
                 throw new NotFoundException();
         }
         catch (NotFoundException $e) {
-            $media = new Media();
-            $media->setContainer($this->getContainer());
+            $media = $this->createEmpty();
             $media->name = $name;
             $media->fileName = $file;
             $media->mediaType = 'module';
@@ -413,7 +428,7 @@ class MediaFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Media())->hydrate($row, [
+            $entries[] = $media = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
                     'duration', 'size'
                 ]

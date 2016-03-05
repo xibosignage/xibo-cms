@@ -26,8 +26,6 @@ namespace Xibo\Middleware;
 use Slim\Middleware;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\PageFactory;
-use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Random;
 
@@ -171,7 +169,7 @@ class SAMLAuthentication extends Middleware
                         throw new AccessDeniedException(__('User logged at the IdP but the account does not exist in the CMS and Just-In-Time provisioning is disabled'));
                     } else {
                         // Provision the user
-                        $user = new \Xibo\Entity\User();
+                        $user = $app->userFactory->create();
                         if (isset($userData["UserName"])) {
                             $user->userName = $userData["UserName"][0];
                         }
@@ -192,9 +190,9 @@ class SAMLAuthentication extends Middleware
 
                         // Home page
                         if (isset($this->app->configService->samlSettings['workflow']['homePage'])) {
-                            $user->homePageId = (new PageFactory($this->app))->getByName($this->app->configService->samlSettings['workflow']['homePage'])->pageId;
+                            $user->homePageId = $app->pageFactory->getByName($this->app->configService->samlSettings['workflow']['homePage'])->pageId;
                         } else {
-                            $user->homePageId = (new PageFactory($this->app))->getByName('dashboard')->pageId;
+                            $user->homePageId = $app->pageFactory->getByName('dashboard')->pageId;
                         }
 
                         // Library Quota
@@ -209,9 +207,9 @@ class SAMLAuthentication extends Middleware
 
                         // Assign the initial group
                         if (isset($this->app->configService->samlSettings['workflow']['group'])) {
-                            $group = (new UserGroupFactory($this->app))->getByName($this->app->configService->samlSettings['workflow']['group']);
+                            $group = $app->userGroupFactory->getByName($this->app->configService->samlSettings['workflow']['group']);
                         } else {
-                            $group = (new UserGroupFactory($this->app))->getByName('Users');
+                            $group = $app->userGroupFactory->getByName('Users');
                         }
 
                         $group->assignUser($user);
@@ -228,6 +226,9 @@ class SAMLAuthentication extends Middleware
 
                     // Overwrite our stored user with this new object.
                     $this->app->user = $user;
+
+                    // Set the user factory ACL dependencies (used for working out intra-user permissions)
+                    $app->userFactory->setAclDependencies($user, $app->userFactory);
 
                     // Switch Session ID's
                     $this->app->session->setIsExpired(0);

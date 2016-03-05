@@ -24,7 +24,6 @@ namespace Xibo\Middleware;
 
 use League\OAuth2\Server\ResourceServer;
 use Slim\Middleware;
-use Xibo\Factory\UserFactory;
 
 class ApiAuthenticationOAuth extends Middleware
 {
@@ -57,9 +56,12 @@ class ApiAuthenticationOAuth extends Middleware
 
             // What type of access has been requested?
             if ($server->getAccessToken()->getSession()->getOwnerType() == 'user')
-                $this->app->user = (new UserFactory($this->app))->loadById($server->getAccessToken()->getSession()->getOwnerId());
+                $this->app->user = $app->userFactory->loadById($server->getAccessToken()->getSession()->getOwnerId());
             else
-                $this->app->user = (new UserFactory($this->app))->loadByClientId($server->getAccessToken()->getSession()->getOwnerId());
+                $this->app->user = $app->userFactory->loadByClientId($server->getAccessToken()->getSession()->getOwnerId());
+
+            // Set the user factory ACL dependencies (used for working out intra-user permissions)
+            $app->userFactory->setAclDependencies($this->app->user, $app->userFactory);
 
             // Get the current route pattern
             $resource = $app->router->getCurrentRoute()->getPattern();

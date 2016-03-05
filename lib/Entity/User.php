@@ -295,10 +295,6 @@ class User implements \JsonSerializable
      * @param UserFactory $userFactory
      * @param UserGroupFactory $userGroupFactory
      * @param PermissionFactory $permissionFactory
-     * @param CampaignFactory $campaignFactory
-     * @param LayoutFactory $layoutFactory
-     * @param MediaFactory $mediaFactory
-     * @param ScheduleFactory $scheduleFactory
      * @param UserOptionFactory $userOptionFactory
      */
     public function __construct($store,
@@ -308,10 +304,6 @@ class User implements \JsonSerializable
                                 $userFactory,
                                 $userGroupFactory,
                                 $permissionFactory,
-                                $campaignFactory,
-                                $layoutFactory,
-                                $mediaFactory,
-                                $scheduleFactory,
                                 $userOptionFactory)
     {
         $this->setCommonDependencies($store, $log);
@@ -321,11 +313,25 @@ class User implements \JsonSerializable
         $this->userFactory = $userFactory;
         $this->userGroupFactory = $userGroupFactory;
         $this->permissionFactory = $permissionFactory;
+        $this->userOptionFactory = $userOptionFactory;
+    }
+
+    /**
+     * Set Child Object Depencendies
+     *  must be set before calling Load with all objects
+     * @param CampaignFactory $campaignFactory
+     * @param LayoutFactory $layoutFactory
+     * @param MediaFactory $mediaFactory
+     * @param ScheduleFactory $scheduleFactory
+     * @return $this
+     */
+    public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory)
+    {
         $this->campaignFactory = $campaignFactory;
         $this->layoutFactory = $layoutFactory;
         $this->mediaFactory = $mediaFactory;
         $this->scheduleFactory = $scheduleFactory;
-        $this->userOptionFactory = $userOptionFactory;
+        return $this;
     }
 
     /**
@@ -509,6 +515,9 @@ class User implements \JsonSerializable
         $this->groups = $this->userGroupFactory->getByUserId($this->userId);
 
         if ($all) {
+            if ($this->campaignFactory == null || $this->layoutFactory == null || $this->mediaFactory == null || $this->scheduleFactory == null)
+                throw new \RuntimeException('Cannot load user with all objects without first calling setChildObjectDependencies');
+
             $this->campaigns = $this->campaignFactory->getByOwnerId($this->userId);
             $this->layouts = $this->layoutFactory->getByOwnerId($this->userId);
             $this->media = $this->mediaFactory->getByOwnerId($this->userId);

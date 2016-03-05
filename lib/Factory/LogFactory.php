@@ -9,10 +9,15 @@
 namespace Xibo\Factory;
 
 
+use Xibo\Entity\LogEntry;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class LogFactory
+ * @package Xibo\Factory
+ */
 class LogFactory extends BaseFactory
 {
     /**
@@ -24,6 +29,15 @@ class LogFactory extends BaseFactory
     public function __construct($store, $log, $sanitizerService)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * Create Empty
+     * @return LogEntry
+     */
+    public function createEmpty()
+    {
+        return new LogEntry($this->getStore(), $this->getLog());
     }
 
     /**
@@ -108,7 +122,7 @@ class LogFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new \Xibo\Entity\LogEntry())->hydrate($row,  ['htmlStringProperties' => ['message']]);
+            $entries[] = $this->createEmpty()->hydrate($row,  ['htmlStringProperties' => ['message']]);
         }
 
         // Paging
