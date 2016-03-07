@@ -11,21 +11,54 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DisplayProfile;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class DisplayProfileFactory
+ * @package Xibo\Factory
+ */
 class DisplayProfileFactory extends BaseFactory
 {
+    /**
+     * @var ConfigServiceInterface
+     */
+    private $config;
+
+    /**
+     * @var CommandFactory
+     */
+    private $commandFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param ConfigServiceInterface $config
+     * @param CommandFactory $commandFactory
      */
-    public function __construct($store, $log, $sanitizerService)
+    public function __construct($store, $log, $sanitizerService, $config, $commandFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+
+        $this->config = $config;
+        $this->commandFactory = $commandFactory;
+    }
+
+    /**
+     * @return DisplayProfile
+     */
+    public function createEmpty()
+    {
+        return new DisplayProfile(
+            $this->getStore(),
+            $this->getLog(),
+            $this->config,
+            $this->commandFactory
+        );
     }
 
     /**
@@ -156,7 +189,7 @@ class DisplayProfileFactory extends BaseFactory
 
 
             foreach ($this->getStore()->select($sql, $params) as $row) {
-                $profiles[] = (new DisplayProfile())->hydrate($row)->setContainer($this->getContainer());
+                $profiles[] = $this->createEmpty()->hydrate($row);
             }
 
             // Paging

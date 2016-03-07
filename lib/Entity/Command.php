@@ -94,12 +94,17 @@ class Command implements \JsonSerializable
      * Command constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param DisplayProfileFactory $displayProfileFactory
      */
-    public function __construct($store, $log, $displayProfileFactory)
+    public function __construct($store, $log)
     {
         $this->setCommonDependencies($store, $log);
+    }
 
+    /**
+     * @param DisplayProfileFactory $displayProfileFactory
+     */
+    public function setChildObjectDependencies($displayProfileFactory)
+    {
         $this->displayProfileFactory = $displayProfileFactory;
     }
 

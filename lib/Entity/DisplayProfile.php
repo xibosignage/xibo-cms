@@ -9,6 +9,8 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Xibo\Factory\CommandFactory;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -78,13 +80,28 @@ class DisplayProfile
     public $commands = [];
 
     /**
+     * @var ConfigServiceInterface
+     */
+    private $configService;
+
+    /**
+     * @var CommandFactory
+     */
+    private $commandFactory;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param ConfigServiceInterface $config
+     * @param CommandFactory $commandFactory
      */
-    public function __construct($store, $log)
+    public function __construct($store, $log, $config, $commandFactory)
     {
         $this->setCommonDependencies($store, $log);
+
+        $this->configService = $config;
+        $this->commandFactory = $commandFactory;
     }
 
     /**
@@ -96,6 +113,9 @@ class DisplayProfile
         return $this->displayProfileId;
     }
 
+    /**
+     * @return int
+     */
     public function getOwnerId()
     {
         return $this->userId;
@@ -176,7 +196,7 @@ class DisplayProfile
         }
 
         // Load any commands
-        $this->commands = $this->getFactoryService()->get('CommandFactory')->getByDisplayProfileId($this->displayProfileId);
+        $this->commands = $this->commandFactory->getByDisplayProfileId($this->displayProfileId);
 
         // We are loaded
         $this->loaded = true;
@@ -633,7 +653,7 @@ class DisplayProfile
                         'fieldType' => 'checkbox',
                         'default' => 0,
                         'helpText' => __('When enabled the client will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN.'),
-                        'enabled' => $this->getConfig()->getThemeConfig('client_sendCurrentLayoutAsStatusUpdate_enabled', true),
+                        'enabled' => $this->configService->getThemeConfig('client_sendCurrentLayoutAsStatusUpdate_enabled', true),
                         'groupClass' => NULL
                     ),
                     array(
@@ -644,7 +664,7 @@ class DisplayProfile
                         'fieldType' => 'number',
                         'default' => 0,
                         'helpText' => __('The duration between status screen shots in minutes. 0 to disable. Warning: This is bandwidth intensive.'),
-                        'enabled' => $this->getConfig()->getThemeConfig('client_screenShotRequestInterval_enabled', true),
+                        'enabled' => $this->configService->getThemeConfig('client_screenShotRequestInterval_enabled', true),
                         'groupClass' => NULL
                     ),
                     array(
@@ -897,7 +917,7 @@ class DisplayProfile
                         'fieldType' => 'checkbox',
                         'default' => 0,
                         'helpText' => __('When enabled the client will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN.'),
-                        'enabled' => $this->getConfig()->getThemeConfig('client_sendCurrentLayoutAsStatusUpdate_enabled', true),
+                        'enabled' => $this->configService->getThemeConfig('client_sendCurrentLayoutAsStatusUpdate_enabled', true),
                         'groupClass' => NULL
                     ),
                     array(
@@ -908,7 +928,7 @@ class DisplayProfile
                         'fieldType' => 'number',
                         'default' => 0,
                         'helpText' => __('The duration between status screen shots in minutes. 0 to disable. Warning: This is bandwidth intensive.'),
-                        'enabled' => $this->getConfig()->getThemeConfig('client_screenShotRequestInterval_enabled', true),
+                        'enabled' => $this->configService->getThemeConfig('client_screenShotRequestInterval_enabled', true),
                         'groupClass' => NULL
                     ),
                     array(

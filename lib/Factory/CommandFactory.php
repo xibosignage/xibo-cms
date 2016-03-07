@@ -34,14 +34,11 @@ class CommandFactory extends BaseFactory
      * @param SanitizerServiceInterface $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
-     * @param DisplayProfileFactory $displayProfileFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $displayProfileFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
-
-        $this->displayProfileFactory = $displayProfileFactory;
     }
 
     /**
@@ -50,7 +47,7 @@ class CommandFactory extends BaseFactory
      */
     public function create()
     {
-        return new Command($this->getStore(), $this->getLog(), $this->displayProfileFactory);
+        return new Command($this->getStore(), $this->getLog());
     }
 
     /**

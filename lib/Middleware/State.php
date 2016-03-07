@@ -334,7 +334,8 @@ class State extends Middleware
                 $container->helpService,
                 $container->dateService,
                 $container->configService,
-                $container->commandFactory
+                $container->commandFactory,
+                $container->displayProfileFactory
             );
         });
 
@@ -374,8 +375,18 @@ class State extends Middleware
             return new \Xibo\Controller\DisplayGroup();
         });
 
-        $app->container->singleton('\Xibo\Controller\DisplayProfile', function() {
-            return new \Xibo\Controller\DisplayProfile();
+        $app->container->singleton('\Xibo\Controller\DisplayProfile', function($container) {
+            return new \Xibo\Controller\DisplayProfile(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->displayProfileFactory,
+                $container->commandFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\Error', function($container) use ($app) {
@@ -692,8 +703,7 @@ class State extends Middleware
                 $container->logService,
                 $container->sanitizerService,
                 $container->user,
-                $container->userFactory,
-                $container->displayProfileFactory
+                $container->userFactory
             );
         });
 
@@ -758,7 +768,9 @@ class State extends Middleware
             return new \Xibo\Factory\DisplayProfileFactory(
                 $container->store,
                 $container->logService,
-                $container->sanitizerService
+                $container->sanitizerService,
+                $container->configService,
+                $container->commandFactory
             );
         });
 

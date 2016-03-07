@@ -11,6 +11,7 @@ namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CommandFactory;
+use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -29,17 +30,23 @@ class Command extends Base
     private $commandFactory;
 
     /**
+     * @var DisplayProfileFactory
+     */
+    private $displayProfileFactory;
+
+    /**
      * Set common dependencies.
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
-     * @param User $user
+     * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param CommandFactory $commandFactory
+     * @param DisplayProfileFactory $displayProfileFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $commandFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $commandFactory, $displayProfileFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -326,6 +333,7 @@ class Command extends Base
         if ($command->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
+        $command->setChildObjectDependencies($this->displayProfileFactory);
         $command->delete();
 
         // Return

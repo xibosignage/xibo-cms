@@ -21,10 +21,49 @@
 namespace Xibo\Controller;
 use Xibo\Entity\Command;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\CommandFactory;
+use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
-
+/**
+ * Class DisplayProfile
+ * @package Xibo\Controller
+ */
 class DisplayProfile extends Base
 {
+    /**
+     * @var DisplayProfileFactory
+     */
+    private $displayProfileFactory;
+
+    /**
+     * @var CommandFactory
+     */
+    private $commandFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param DisplayProfileFactory $displayProfileFactory
+     * @param CommandFactory $commandFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $displayProfileFactory, $commandFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->displayProfileFactory = $displayProfileFactory;
+        $this->commandFactory = $commandFactory;
+    }
+
     /**
      * Include display page template page based on sub page selected
      */
@@ -79,7 +118,7 @@ class DisplayProfile extends Base
             'type' => $this->getSanitizer()->getString('type')
         ];
 
-        $profiles = $this->getFactoryService()->get('DisplayProfileFactory')->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $profiles = $this->displayProfileFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($profiles as $profile) {
             /* @var \Xibo\Entity\DisplayProfile $profile */
@@ -101,7 +140,7 @@ class DisplayProfile extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->getFactoryService()->get('DisplayProfileFactory')->countLast();
+        $this->getState()->recordsTotal = $this->displayProfileFactory->countLast();
         $this->getState()->setData($profiles);
     }
 
@@ -163,8 +202,7 @@ class DisplayProfile extends Base
      */
     public function add()
     {
-        $displayProfile = new \Xibo\Entity\DisplayProfile();
-        $displayProfile->setContainer($this->getContainer());
+        $displayProfile = $this->displayProfileFactory->createEmpty();
         $displayProfile->name = $this->getSanitizer()->getString('name');
         $displayProfile->type = $this->getSanitizer()->getString('type');
         $displayProfile->isDefault = $this->getSanitizer()->getCheckbox('isDefault');
@@ -188,13 +226,13 @@ class DisplayProfile extends Base
     public function editForm($displayProfileId)
     {
         // Create a form out of the config object.
-        $displayProfile = $this->getFactoryService()->get('DisplayProfileFactory')->getById($displayProfileId);
+        $displayProfile = $this->displayProfileFactory->getById($displayProfileId);
 
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
 
         // Get a list of unassigned Commands
-        $unassignedCommands = array_udiff($this->getFactoryService()->get('CommandFactory')->query(), $displayProfile->commands, function($a, $b) {
+        $unassignedCommands = array_udiff($this->commandFactory->query(), $displayProfile->commands, function($a, $b) {
             return $a->getId() - $b->getId();
         });
 
@@ -267,7 +305,7 @@ class DisplayProfile extends Base
     public function edit($displayProfileId)
     {
         // Create a form out of the config object.
-        $displayProfile = $this->getFactoryService()->get('DisplayProfileFactory')->getById($displayProfileId);
+        $displayProfile = $this->displayProfileFactory->getById($displayProfileId);
 
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
@@ -315,7 +353,7 @@ class DisplayProfile extends Base
         $displayProfile->config = $combined;
 
         // Capture and update commands
-        foreach ($this->getFactoryService()->get('CommandFactory')->query() as $command) {
+        foreach ($this->commandFactory->query() as $command) {
             /* @var Command $command */
             if ($this->getSanitizer()->getString('commandString_' . $command->commandId) != null) {
                 // Set and assign the command
@@ -346,7 +384,7 @@ class DisplayProfile extends Base
     function deleteForm($displayProfileId)
     {
         // Create a form out of the config object.
-        $displayProfile = $this->getFactoryService()->get('DisplayProfileFactory')->getById($displayProfileId);
+        $displayProfile = $this->displayProfileFactory->getById($displayProfileId);
 
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
@@ -384,7 +422,7 @@ class DisplayProfile extends Base
     function delete($displayProfileId)
     {
         // Create a form out of the config object.
-        $displayProfile = $this->getFactoryService()->get('DisplayProfileFactory')->getById($displayProfileId);
+        $displayProfile = $this->displayProfileFactory->getById($displayProfileId);
 
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
