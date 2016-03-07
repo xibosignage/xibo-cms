@@ -22,11 +22,13 @@
 
 namespace Xibo\Factory;
 
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Display;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -42,6 +44,26 @@ class DisplayFactory extends BaseFactory
     private $config;
 
     /**
+     * @var PoolInterface
+     */
+    private $pool;
+
+    /**
+     * @var PlayerActionServiceInterface
+     */
+    private $playerAction;
+
+    /**
+     * @var DisplayGroupFactory
+     */
+    private $displayGroupFactory;
+
+    /**
+     * @var DisplayProfileFactory
+     */
+    private $displayProfileFactory;
+
+    /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
@@ -49,13 +71,21 @@ class DisplayFactory extends BaseFactory
      * @param User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
+     * @param PoolInterface $pool
+     * @param PlayerActionServiceInterface $playerAction
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param DisplayProfileFactory $displayProfileFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool, $playerAction, $displayGroupFactory, $displayProfileFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
         $this->config = $config;
+        $this->pool = $pool;
+        $this->displayGroupFactory = $displayGroupFactory;
+        $this->displayProfileFactory = $displayProfileFactory;
+        $this->playerAction = $playerAction;
     }
 
     /**
@@ -64,7 +94,7 @@ class DisplayFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Display($this->getStore(), $this->getLog());
+        return new Display($this->getStore(), $this->getLog(), $this->config, $this->pool, $this->playerAction, $this->displayGroupFactory, $this->displayProfileFactory);
     }
 
     /**

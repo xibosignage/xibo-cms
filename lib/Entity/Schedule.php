@@ -9,6 +9,8 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -169,20 +171,40 @@ class Schedule implements \JsonSerializable
     private $isInScheduleLookAhead = false;
 
     /**
+     * @var ConfigServiceInterface
+     */
+    private $config;
+
+    /**
+     * @var DisplayGroupFactory
+     */
+    private $displayGroupFactory;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param ConfigServiceInterface $config
+     * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($store, $log)
+    public function __construct($store, $log, $config, $displayGroupFactory)
     {
         $this->setCommonDependencies($store, $log);
+        $this->config = $config;
+        $this->displayGroupFactory = $displayGroupFactory;
     }
 
+    /**
+     * @return int
+     */
     public function getId()
     {
         return $this->eventId;
     }
 
+    /**
+     * @return int
+     */
     public function getOwnerId()
     {
         return $this->userId;
@@ -210,7 +232,7 @@ class Schedule implements \JsonSerializable
 
         // From Date and To Date are in UNIX format
         $currentDate = time();
-        $rfLookAhead = intval($currentDate) + intval($this->getConfig()->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
+        $rfLookAhead = intval($currentDate) + intval($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         if ($toDt == null)
             $toDt = $fromDt;
@@ -229,7 +251,7 @@ class Schedule implements \JsonSerializable
         if ($this->loaded || $this->eventId == null || $this->eventId == 0)
             return;
 
-        $this->displayGroups = $this->getFactoryService()->get('DisplayGroupFactory')->getByEventId($this->eventId);
+        $this->displayGroups = $this->displayGroupFactory->getByEventId($this->eventId);
 
         // We are fully loaded
         $this->loaded = true;

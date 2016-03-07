@@ -350,8 +350,24 @@ class State extends Middleware
             return new \Xibo\Controller\DataSetData();
         });
 
-        $app->container->singleton('\Xibo\Controller\Display', function() {
-            return new \Xibo\Controller\Display();
+        $app->container->singleton('\Xibo\Controller\Display', function($container) {
+            return new \Xibo\Controller\Display(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->store,
+                $container->pool,
+                $container->playerActionService,
+                $container->displayFactory,
+                $container->displayGroupFactory,
+                $container->logFactory,
+                $container->layoutFactory,
+                $container->displayProfileFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\DisplayGroup', function() {
@@ -478,8 +494,21 @@ class State extends Middleware
             );
         });
 
-        $app->container->singleton('\Xibo\Controller\Schedule', function() {
-            return new \Xibo\Controller\Schedule();
+        $app->container->singleton('\Xibo\Controller\Schedule', function($container) {
+            return new \Xibo\Controller\Schedule(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->session,
+                $container->scheduleFactory,
+                $container->displayGroupFactory,
+                $container->campaignFactory,
+                $container->commandFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\Sessions', function($container) {
@@ -707,7 +736,11 @@ class State extends Middleware
                 $container->sanitizerService,
                 $container->user,
                 $container->userFactory,
-                $container->configService
+                $container->configService,
+                $container->pool,
+                $container->playerActionService,
+                $container->displayGroupFactory,
+                $container->displayProfileFactory
             );
         });
 
@@ -849,7 +882,9 @@ class State extends Middleware
             return new \Xibo\Factory\ScheduleFactory(
                 $container->store,
                 $container->logService,
-                $container->sanitizerService
+                $container->sanitizerService,
+                $container->config,
+                $container->displayGroupFactory
             );
         });
 

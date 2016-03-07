@@ -24,7 +24,12 @@ namespace Xibo\Entity;
 
 
 use Respect\Validation\Validator as v;
+use Stash\Interfaces\PoolInterface;
+use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\XMR\CollectNowAction;
 
@@ -302,21 +307,63 @@ class Display
     public static $saveOptionsMinimum = ['validate' => false, 'audit' => false, 'triggerDynamicDisplayGroupAssessment' => false];
 
     /**
+     * @var ConfigServiceInterface
+     */
+    private $config;
+
+    /**
+     * @var PoolInterface
+     */
+    private $pool;
+
+    /**
+     * @var PlayerActionServiceInterface
+     */
+    private $playerAction;
+
+    /**
+     * @var DisplayGroupFactory
+     */
+    private $displayGroupFactory;
+
+    /**
+     * @var DisplayProfileFactory
+     */
+    private $displayProfileFactory;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param ConfigServiceInterface $config
+     * @param PoolInterface $pool
+     * @param PlayerActionServiceInterface $playerAction
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param DisplayProfileFactory $displayProfileFactory
      */
-    public function __construct($store, $log)
+    public function __construct($store, $log, $config, $pool, $playerAction, $displayGroupFactory, $displayProfileFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->excludeProperty('mediaInventoryXml');
+
+        $this->config = $config;
+        $this->pool = $pool;
+        $this->displayGroupFactory = $displayGroupFactory;
+        $this->displayProfileFactory = $displayProfileFactory;
+        $this->playerAction = $playerAction;
     }
 
+    /**
+     * @return int
+     */
     public function getId()
     {
         return $this->displayId;
     }
 
+    /**
+     * @return int
+     */
     public function getOwnerId()
     {
         return 1;
@@ -342,7 +389,7 @@ class Display
         $this->setCollectRequired(true);
 
         // remove from the cache
-        $this->getPool()->deleteItem($this->getCacheKey());
+        $this->pool->deleteItem($this->getCacheKey());
     }
 
     /**
@@ -366,7 +413,7 @@ class Display
             throw new \InvalidArgumentException(__('Wake on Lan is enabled, but you have not specified a time to wake the display'));
 
         // Check the number of licensed displays
-        $maxDisplays = $this->getConfig()->GetSetting('MAX_LICENSED_DISPLAYS');
+        $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
 
         if ($maxDisplays > 0 && $this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
             $countLicensed = $this->getStore()->select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
@@ -406,7 +453,7 @@ class Display
     public function load()
     {
         // Load this displays group membership
-        $this->displayGroups = $this->getFactoryService()->get('DisplayGroupFactory')->getByDisplayId($this->displayId);
+        $this->displayGroups = $this->displayGroupFactory->getByDisplayId($this->displayId);
     }
 
     /**
@@ -436,7 +483,7 @@ class Display
             $this->getLog()->debug('Collect Now Action for Display %s', $this->display);
 
             try {
-                $this->getPlayerService()->sendAction($this, new CollectNowAction());
+                $this->playerAction->sendAction($this, new CollectNowAction());
             } catch (\Exception $e) {
                 $this->getLog()->notice('Display Save would have triggered Player Action, but the action failed with message: %s', $e->getMessage());
             }
@@ -444,7 +491,7 @@ class Display
 
         // Trigger an update of all dynamic DisplayGroups
         if ($options['triggerDynamicDisplayGroupAssessment']) {
-            foreach ($this->getFactoryService()->get('DisplayGroupFactory')->getByIsDynamic(1) as $group) {
+            foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
                 /* @var DisplayGroup $group */
                 $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true]);
             }
@@ -467,7 +514,7 @@ class Display
         }
 
         // Delete our display specific group
-        $displayGroup = $this->getFactoryService()->get('DisplayGroupFactory')->getById($this->displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
         $displayGroup->delete();
 
         // Delete the display
@@ -495,7 +542,7 @@ class Display
             'xmrPubKey' => $this->xmrPubKey
         ]);
 
-        $displayGroup = new DisplayGroup();
+        $displayGroup = $this->displayGroupFactory->createEmpty();
         $displayGroup->displayGroup = $this->display;
         $displayGroup->setOwner($this);
         $displayGroup->save();
@@ -576,7 +623,7 @@ class Display
         ]);
 
         // Maintain the Display Group
-        $displayGroup = $this->getFactoryService()->get('DisplayGroupFactory')->getById($this->displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
         $displayGroup->displayGroup = $this->display;
         $displayGroup->description = $this->description;
         $displayGroup->save(['validate' => false, 'manageDisplayLinks' => false]);
@@ -591,6 +638,9 @@ class Display
         return $this->setConfig();
     }
 
+    /**
+     * @return array
+     */
     public function getCommands()
     {
         if ($this->commands == null) {
@@ -632,11 +682,11 @@ class Display
 
             if ($this->displayProfileId == 0) {
                 // Load the default profile
-                $displayProfile = $this->getFactoryService()->get('DisplayProfileFactory')->getDefaultByType($this->clientType);
+                $displayProfile = $this->displayProfileFactory->getDefaultByType($this->clientType);
             }
             else {
                 // Load the specified profile
-                $displayProfile = $this->getFactoryService()->get('DisplayProfileFactory')->getById($this->displayProfileId);
+                $displayProfile = $this->displayProfileFactory->getById($this->displayProfileId);
             }
 
             $this->_config = $displayProfile->getProfileConfig();

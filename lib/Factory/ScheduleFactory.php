@@ -11,21 +11,49 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Schedule;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class ScheduleFactory
+ * @package Xibo\Factory
+ */
 class ScheduleFactory extends BaseFactory
 {
+    /**
+     * @var ConfigServiceInterface
+     */
+    private $config;
+
+    /**
+     * @var DisplayGroupFactory
+     */
+    private $displayGroupFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param ConfigServiceInterface $config
+     * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($store, $log, $sanitizerService)
+    public function __construct($store, $log, $sanitizerService, $config, $displayGroupFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->config = $config;
+        $this->displayGroupFactory = $displayGroupFactory;
+    }
+
+    /**
+     * Create Empty
+     * @return Schedule
+     */
+    public function createEmpty()
+    {
+        return new Schedule($this->getStore(), $this->getLog(), $this->config, $this->displayGroupFactory);
     }
 
     /**
@@ -194,7 +222,7 @@ class ScheduleFactory extends BaseFactory
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Schedule())->hydrate($row, ['intProperties' => ['isPriority']])->setContainer($this->getContainer());
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isPriority']]);
         }
 
         return $entries;

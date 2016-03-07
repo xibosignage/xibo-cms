@@ -20,16 +20,103 @@
  */
 namespace Xibo\Controller;
 use finfo;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\DisplayGroup;
 use Xibo\Entity\Stat;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\LogFactory;
 use Xibo\Helper\WakeOnLan;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\PlayerActionServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 use Xibo\XMR\ScreenShotAction;
 
-
+/**
+ * Class Display
+ * @package Xibo\Controller
+ */
 class Display extends Base
 {
+    /**
+     * @var StorageServiceInterface
+     */
+    private $store;
+
+    /**
+     * @var PoolInterface
+     */
+    private $pool;
+
+    /**
+     * @var PlayerActionServiceInterface
+     */
+    private $playerAction;
+
+    /**
+     * @var DisplayFactory
+     */
+    private $displayFactory;
+
+    /**
+     * @var DisplayGroupFactory
+     */
+    private $displayGroupFactory;
+
+    /**
+     * @var LogFactory
+     */
+    private $logFactory;
+
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+
+    /**
+     * @var DisplayProfileFactory
+     */
+    private $displayProfileFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param StorageServiceInterface $store
+     * @param PoolInterface $pool
+     * @param PlayerActionServiceInterface $playerAction
+     * @param DisplayFactory $displayFactory
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param LogFactory $logFactory
+     * @param LayoutFactory $layoutFactory
+     * @param DisplayProfileFactory $displayProfileFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->store = $store;
+        $this->pool = $pool;
+        $this->playerAction = $playerAction;
+        $this->displayFactory = $displayFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
+        $this->logFactory = $logFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->displayProfileFactory = $displayProfileFactory;
+    }
+
     /**
      * Include display page template page based on sub page selected
      */
@@ -38,7 +125,7 @@ class Display extends Base
         // Call to render the template
         $this->getState()->template = 'display-page';
         $this->getState()->setData([
-            'displayGroups' => $this->getFactoryService()->get('DisplayGroupFactory')->query()
+            'displayGroups' => $this->displayGroupFactory->query()
         ]);
     }
 
@@ -49,13 +136,13 @@ class Display extends Base
      */
     function displayManage($displayId)
     {
-        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
+        $display = $this->displayFactory->getById($displayId);
 
         if (!$this->getUser()->checkViewable($display))
             throw new AccessDeniedException();
 
         // Errors in the last 24 hours
-        $errors = $this->getFactoryService()->get('LogFactory')->query(null, [
+        $errors = $this->logFactory->query(null, [
             'displayId' => $display->displayId,
             'type' => 'ERROR',
             'fromDt' => $this->getDate()->getLocalDate($this->getDate()->parse()->subHours(24), 'U'),
@@ -63,7 +150,7 @@ class Display extends Base
         ]);
 
         // Widget for file status
-        $status = $this->getStore()->select('
+        $status = $this->store->select('
             SELECT IFNULL(SUM(size), 0) AS sizeTotal,
                 SUM(CASE WHEN complete = 1 THEN size ELSE 0 END) AS sizeComplete,
                 COUNT(*) AS countTotal,
@@ -85,7 +172,7 @@ class Display extends Base
         $this->getLog()->debug('Base for size is %d and suffix is %s', $base, $units);
 
         // Show 3 widgets
-        $layouts = $this->getStore()->select('
+        $layouts = $this->store->select('
             SELECT `layout`.layout,
                 `requiredfile`.*
               FROM `requiredfile`
@@ -99,7 +186,7 @@ class Display extends Base
         ]);
 
         // Media
-        $media = $this->getStore()->select('
+        $media = $this->store->select('
             SELECT `media`.name,
                 `media`.type,
                 `requiredfile`.*
@@ -114,7 +201,7 @@ class Display extends Base
         ]);
 
         // Widgets
-        $widgets = $this->getStore()->select('
+        $widgets = $this->store->select('
             SELECT `widget`.type,
                 `widgetoption`.value AS widgetName,
                 `requiredfile`.*
@@ -227,7 +314,7 @@ class Display extends Base
         ];
 
         // Get a list of displays
-        $displays = $this->getFactoryService()->get('DisplayFactory')->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $displays = $this->displayFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         // validate displays so we get a realistic view of the table
         $this->validateDisplays($displays);
@@ -390,7 +477,7 @@ class Display extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->getFactoryService()->get('DisplayFactory')->countLast();
+        $this->getState()->recordsTotal = $this->displayFactory->countLast();
         $this->getState()->setData($displays);
     }
 
@@ -400,7 +487,7 @@ class Display extends Base
      */
     function editForm($displayId)
     {
-        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
+        $display = $this->displayFactory->getById($displayId);
 
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
@@ -428,8 +515,8 @@ class Display extends Base
         $this->getState()->template = 'display-form-edit';
         $this->getState()->setData([
             'display' => $display,
-            'layouts' => $this->getFactoryService()->get('LayoutFactory')->query(),
-            'profiles' => $this->getFactoryService()->get('DisplayProfileFactory')->query(NULL, array('type' => $display->clientType)),
+            'layouts' => $this->layoutFactory->query(),
+            'profiles' => $this->displayProfileFactory->query(NULL, array('type' => $display->clientType)),
             'settings' => $profile,
             'help' => $this->getHelp()->link('Display', 'Edit')
         ]);
@@ -441,7 +528,7 @@ class Display extends Base
      */
     function deleteForm($displayId)
     {
-        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
+        $display = $this->displayFactory->getById($displayId);
 
         if (!$this->getUser()->checkDeleteable($display))
             throw new AccessDeniedException();
@@ -598,7 +685,7 @@ class Display extends Base
      */
     function edit($displayId)
     {
-        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
+        $display = $this->displayFactory->getById($displayId);
 
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
@@ -629,7 +716,7 @@ class Display extends Base
 
         // Remove the cache if the display licenced state has changed
         if ($licensed != $display->licensed) {
-            $this->getPool()->deleteItem($display->getCacheKey());
+            $this->pool->deleteItem($display->getCacheKey());
         }
 
         // Return
@@ -665,7 +752,7 @@ class Display extends Base
      */
     function delete($displayId)
     {
-        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
+        $display = $this->displayFactory->getById($displayId);
 
         if (!$this->getUser()->checkDeleteable($display))
             throw new AccessDeniedException();
@@ -687,16 +774,16 @@ class Display extends Base
      */
     public function membershipForm($displayId)
     {
-        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
+        $display = $this->displayFactory->getById($displayId);
 
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
         // Groups we are assigned to
-        $groupsAssigned = $this->getFactoryService()->get('DisplayGroupFactory')->getByDisplayId($display->displayId);
+        $groupsAssigned = $this->displayGroupFactory->getByDisplayId($display->displayId);
 
         // All Groups
-        $allGroups = $this->getFactoryService()->get('DisplayGroupFactory')->getByIsDynamic(null, ['isDynamic' => 0]);
+        $allGroups = $this->displayGroupFactory->getByIsDynamic(0);
 
         // The available users are all users except users already in assigned users
         $checkboxes = array();
@@ -738,14 +825,14 @@ class Display extends Base
      */
     public function assignDisplayGroup($displayId)
     {
-        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
+        $display = $this->displayFactory->getById($displayId);
 
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
         // Go through each ID to assign
         foreach ($this->getSanitizer()->getIntArray('displayGroupId') as $displayGroupId) {
-            $displayGroup = $this->getFactoryService()->get('DisplayGroupFactory')->getById($displayGroupId);
+            $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
             if (!$this->getUser()->checkEditable($displayGroup))
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
@@ -756,7 +843,7 @@ class Display extends Base
 
         // Have we been provided with unassign id's as well?
         foreach ($this->getSanitizer()->getIntArray('unassignDisplayGroupId') as $displayGroupId) {
-            $displayGroup = $this->getFactoryService()->get('DisplayGroupFactory')->getById($displayGroupId);
+            $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
             if (!$this->getUser()->checkEditable($displayGroup))
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
@@ -813,7 +900,7 @@ class Display extends Base
      */
     public function requestScreenShotForm($displayId)
     {
-        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
+        $display = $this->displayFactory->getById($displayId);
 
         if (!$this->getUser()->checkViewable($display))
             throw new AccessDeniedException();
@@ -853,7 +940,7 @@ class Display extends Base
      */
     public function requestScreenShot($displayId)
     {
-        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
+        $display = $this->displayFactory->getById($displayId);
 
         if (!$this->getUser()->checkViewable($display))
             throw new AccessDeniedException();
@@ -861,7 +948,7 @@ class Display extends Base
         $display->screenShotRequested = 1;
         $display->save(['validate' => false, 'audit' => false]);
 
-        $this->getPlayerService()->sendAction($display, new ScreenShotAction());
+        $this->playerAction->sendAction($display, new ScreenShotAction());
 
         // Return
         $this->getState()->hydrate([
@@ -876,7 +963,7 @@ class Display extends Base
      */
     public function wakeOnLanForm($displayId)
     {
-        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
+        $display = $this->displayFactory->getById($displayId);
 
         if (!$this->getUser()->checkViewable($display))
             throw new AccessDeniedException();
@@ -916,7 +1003,7 @@ class Display extends Base
      */
     public function wakeOnLan($displayId)
     {
-        $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
+        $display = $this->displayFactory->getById($displayId);
 
         if (!$this->getUser()->checkViewable($display))
             throw new AccessDeniedException();
@@ -955,7 +1042,7 @@ class Display extends Base
 
             // Should we test against the collection interval or the preset alert timeout?
             if ($display->alertTimeout == 0 && $display->clientType != '') {
-                $timeoutToTestAgainst = $display->GetSetting('collectInterval', $globalTimeout);
+                $timeoutToTestAgainst = $display->getSetting('collectInterval', $globalTimeout);
             }
             else {
                 $timeoutToTestAgainst = $globalTimeout;
@@ -981,8 +1068,7 @@ class Display extends Base
                     $display->loggedIn = 1;
 
                     // Log the down event
-                    $stat = new Stat();
-                    $stat->setContainer($this->getContainer());
+                    $stat = new Stat($this->store, $this->getLog());
                     $stat->type = 'displaydown';
                     $stat->displayId = $display->displayId;
                     $stat->fromDt = $display->lastAccessed;
