@@ -11,6 +11,7 @@ namespace Xibo\Factory;
 
 use League\OAuth2\Server\Util\SecureKey;
 use Xibo\Entity\Application;
+use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -32,13 +33,18 @@ class ApplicationFactory extends BaseFactory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param User $user
      * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
      */
-    public function __construct($store, $log, $sanitizerService, $applicationRedirectUriFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $applicationRedirectUriFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->setAclDependencies($user, null);
 
         $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
+
+        if ($this->applicationRedirectUriFactory == null)
+            throw new \RuntimeException('Missing dependency: ApplicationRedirectUriFactory');
     }
 
     /**
@@ -60,6 +66,9 @@ class ApplicationFactory extends BaseFactory
      */
     public function createEmpty()
     {
+        if ($this->applicationRedirectUriFactory == null)
+            throw new \RuntimeException('Missing dependency: ApplicationRedirectUriFactory');
+
         return new Application($this->getStore(), $this->getLog(), $this->applicationRedirectUriFactory);
     }
 

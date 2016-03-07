@@ -21,10 +21,57 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\MediaFactory;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
-
+/**
+ * Class Stats
+ * @package Xibo\Controller
+ */
 class Stats extends Base
 {
+    /**
+     * @var StorageServiceInterface
+     */
+    private $store;
+
+    /**
+     * @var DisplayFactory
+     */
+    private $displayFactory;
+
+    /**
+     * @var MediaFactory
+     */
+    private $mediaFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param StorageServiceInterface $store
+     * @param DisplayFactory $displayFactory
+     * @param MediaFactory $mediaFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $displayFactory, $mediaFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->store = $store;
+        $this->displayFactory = $displayFactory;
+        $this->mediaFactory = $mediaFactory;
+    }
+
     /**
      * Stats page
      */
@@ -32,9 +79,9 @@ class Stats extends Base
     {
         $data = [
             // List of Displays this user has permission for
-            'displays' => $this->getFactoryService()->get('DisplayFactory')->query(),
+            'displays' => $this->displayFactory->query(),
             // List of Media this user has permission for
-            'media' => $this->getFactoryService()->get('MediaFactory')->query(),
+            'media' => $this->mediaFactory->query(),
             'defaults' => [
                 'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
                 'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
@@ -151,7 +198,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $display_ids = array();
 
-        foreach ($this->getFactoryService()->get('DisplayFactory')->query() as $display) {
+        foreach ($this->displayFactory->query() as $display) {
             $display_ids[] = $display->displayId;
         }
 
@@ -222,7 +269,7 @@ class Stats extends Base
 
 
 
-        foreach ($this->getStore()->select($sql, $params) as $row) {
+        foreach ($this->store->select($sql, $params) as $row) {
             $entry = [];
             $entry['type'] = $this->getSanitizer()->string($row['type']);
             $entry['display'] = $this->getSanitizer()->string($row['Display']);
@@ -249,7 +296,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $displayIds = array();
 
-        foreach ($this->getFactoryService()->get('DisplayFactory')->query() as $display) {
+        foreach ($this->displayFactory->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -257,7 +304,7 @@ class Stats extends Base
             trigger_error(__('No displays with View permissions'), E_USER_ERROR);
 
         // Get some data for a bandwidth chart
-        $dbh = $this->getStore()->getConnection();
+        $dbh = $this->store->getConnection();
 
         $params = array(
             'type' => 'displaydown',
@@ -339,7 +386,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $displayIds = array();
 
-        foreach ($this->getFactoryService()->get('DisplayFactory')->query() as $display) {
+        foreach ($this->displayFactory->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -347,7 +394,7 @@ class Stats extends Base
             trigger_error(__('No displays with View permissions'), E_USER_ERROR);
 
         // Get some data for a bandwidth chart
-        $dbh = $this->getStore()->getConnection();
+        $dbh = $this->store->getConnection();
 
         $displayId = $this->getSanitizer()->getInt('displayId');
         $params = array(
@@ -450,7 +497,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $displayIds = array();
 
-        foreach ($this->getFactoryService()->get('DisplayFactory')->query() as $display) {
+        foreach ($this->displayFactory->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -488,7 +535,7 @@ class Stats extends Base
         fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag']);
 
         // Do some post processing
-        foreach ($this->getStore()->select($sql, $params) as $row) {
+        foreach ($this->store->select($sql, $params) as $row) {
             // Read the columns
             $type = $this->getSanitizer()->string($row['Type']);
             $fromDt = $this->getSanitizer()->string($row['start']);
@@ -504,7 +551,7 @@ class Stats extends Base
         fclose($out);
 
         // We want to output a load of stuff to the browser as a text file.
-        $app = $this->getContainer();
+        $app = $this->getApp();
         $app->response()->header('Content-Type', 'text/csv');
         $app->response()->header('Content-Disposition', 'attachment; filename="stats.csv"');
         $app->response()->header('Content-Transfer-Encoding', 'binary"');

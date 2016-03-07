@@ -19,16 +19,58 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\SettingsFactory;
 use Xibo\Helper\Form;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
-
+/**
+ * Class Settings
+ * @package Xibo\Controller
+ */
 class Settings extends Base
 {
+    /**
+     * @var PoolInterface
+     */
+    private $pool;
+
+    /**
+     * @var SettingsFactory
+     */
+    private $settingsFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param PoolInterface $pool
+     * @param SettingsFactory $settingsFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $settingsFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->pool = $pool;
+        $this->settingsFactory = $settingsFactory;
+    }
+
+    /**
+     *
+     */
     function displayPage()
     {
         // Get all of the settings in an array
-        $settings = $this->getFactoryService()->get('SettingsFactory')->query(null, ['userSee' => 1]);
+        $settings = $this->settingsFactory->query(null, ['userSee' => 1]);
 
         $currentCategory = '';
         $categories = array();
@@ -132,10 +174,10 @@ class Settings extends Base
             throw new AccessDeniedException();
 
         // Clear all cache
-        $this->getPool()->deleteItem('config/');
+        $this->pool->deleteItem('config/');
 
         // Get all of the settings in an array
-        $settings = $this->getFactoryService()->get('SettingsFactory')->query(null, ['userChange' => 1, 'userSee' => 1]);
+        $settings = $this->settingsFactory->query(null, ['userChange' => 1, 'userSee' => 1]);
 
         // Go through each setting, validate it and add it to the array
         foreach ($settings as $setting) {

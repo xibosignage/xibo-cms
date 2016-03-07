@@ -15,6 +15,10 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class UserTypeFactory
+ * @package Xibo\Factory
+ */
 class UserTypeFactory extends BaseFactory
 {
     /**
@@ -26,6 +30,14 @@ class UserTypeFactory extends BaseFactory
     public function __construct($store, $log, $sanitizerService)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * @return UserType
+     */
+    public function createEmpty()
+    {
+        return new UserType($this->getStore(), $this->getLog());
     }
 
     /**
@@ -51,7 +63,7 @@ class UserTypeFactory extends BaseFactory
 
 
             foreach ($this->getStore()->select($sql, $params) as $row) {
-                $entries[] = (new UserType())->hydrate($row)->setContainer($this->getContainer());
+                $entries[] = $this->createEmpty()->hydrate($row);
             }
 
             return $entries;

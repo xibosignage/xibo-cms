@@ -291,7 +291,6 @@ class State extends Middleware
                 $container->dateService,
                 $container->configService,
                 $container->session,
-                $container->store,
                 $container->applicationFactory,
                 $container->applicationRedirectUriFactory
             );
@@ -497,12 +496,33 @@ class State extends Middleware
             );
         });
 
-        $app->container->singleton('\Xibo\Controller\Settings', function() {
-            return new \Xibo\Controller\Settings();
+        $app->container->singleton('\Xibo\Controller\Settings', function($container) {
+            return new \Xibo\Controller\Settings(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->pool,
+                $container->settingsFactory
+            );
         });
 
-        $app->container->singleton('\Xibo\Controller\Stats', function() {
-            return new \Xibo\Controller\Stats();
+        $app->container->singleton('\Xibo\Controller\Stats', function($container) {
+            return new \Xibo\Controller\Stats(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->store,
+                $container->displayFactory,
+                $container->mediaFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\StatusDashboard', function($container) {
@@ -595,7 +615,8 @@ class State extends Middleware
                 $container->store,
                 $container->logService,
                 $container->sanitizerService,
-                $container->applicationRedirectUrlFactory
+                $container->user,
+                $container->applicationRedirectUriFactory
             );
         });
 
