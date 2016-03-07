@@ -291,29 +291,36 @@ class User implements \JsonSerializable
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $configService
-     * @param PageFactory $pageFactory
      * @param UserFactory $userFactory
-     * @param UserGroupFactory $userGroupFactory
      * @param PermissionFactory $permissionFactory
      * @param UserOptionFactory $userOptionFactory
      */
     public function __construct($store,
                                 $log,
                                 $configService,
-                                $pageFactory,
                                 $userFactory,
-                                $userGroupFactory,
                                 $permissionFactory,
                                 $userOptionFactory)
     {
         $this->setCommonDependencies($store, $log);
 
         $this->configService = $configService;
-        $this->pageFactory = $pageFactory;
         $this->userFactory = $userFactory;
-        $this->userGroupFactory = $userGroupFactory;
         $this->permissionFactory = $permissionFactory;
         $this->userOptionFactory = $userOptionFactory;
+    }
+
+    /**
+     * Set the user group factory
+     * @param $userGroupFactory
+     * @param PageFactory $pageFactory
+     * @return $this
+     */
+    public function setChildAclDependencies($userGroupFactory, $pageFactory)
+    {
+        $this->userGroupFactory = $userGroupFactory;
+        $this->pageFactory = $pageFactory;
+        return $this;
     }
 
     /**
@@ -509,6 +516,9 @@ class User implements \JsonSerializable
     {
         if ($this->userId == null || $this->loaded)
             return;
+
+        if ($this->userGroupFactory == null)
+            throw new \RuntimeException('Cannot load user without first calling setUserGroupFactory');
 
         $this->getLog()->debug('Loading %d. All Objects = %d', $this->userId, $all);
 

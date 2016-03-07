@@ -21,10 +21,48 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\SessionFactory;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
-
+/**
+ * Class Sessions
+ * @package Xibo\Controller
+ */
 class Sessions extends Base
 {
+    /**
+     * @var StorageServiceInterface
+     */
+    private $store;
+
+    /**
+     * @var SessionFactory
+     */
+    private $sessionFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param StorageServiceInterface $store
+     * @param SessionFactory $sessionFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $sessionFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->store = $store;
+        $this->sessionFactory = $sessionFactory;
+    }
 
     function displayPage()
     {
@@ -33,7 +71,7 @@ class Sessions extends Base
 
     function grid()
     {
-        $sessions = $this->getFactoryService()->get('SessionFactory')->query($this->gridRenderSort(), $this->gridRenderFilter([
+        $sessions = $this->sessionFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'type' => $this->getSanitizer()->getString('type'),
             'fromDt' => $this->getSanitizer()->getString('fromDt')
         ]));
@@ -50,7 +88,7 @@ class Sessions extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->getFactoryService()->get('SessionFactory')->countLast();
+        $this->getState()->recordsTotal = $this->sessionFactory->countLast();
         $this->getState()->setData($sessions);
     }
 
@@ -79,7 +117,7 @@ class Sessions extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $this->getStore()->update('UPDATE `session` SET IsExpired = 1 WHERE userID = :userId ', ['userId' => $userId]);
+        $this->store->update('UPDATE `session` SET IsExpired = 1 WHERE userID = :userId ', ['userId' => $userId]);
 
         // Return
         $this->getState()->hydrate([

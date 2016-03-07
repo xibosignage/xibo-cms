@@ -54,11 +54,19 @@ class ApiAuthenticationOAuth extends Middleware
 
             $app->server->isValidRequest(false);
 
+            /* @var \Xibo\Entity\User $user */
+            $user = null;
+
             // What type of access has been requested?
             if ($server->getAccessToken()->getSession()->getOwnerType() == 'user')
-                $this->app->user = $app->userFactory->loadById($server->getAccessToken()->getSession()->getOwnerId());
+                $user = $app->userFactory->getById($server->getAccessToken()->getSession()->getOwnerId());
             else
-                $this->app->user = $app->userFactory->loadByClientId($server->getAccessToken()->getSession()->getOwnerId());
+                $user = $app->userFactory->loadByClientId($server->getAccessToken()->getSession()->getOwnerId());
+
+            $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
+            $user->load();
+
+            $this->app->user = $user;
 
             // Set the user factory ACL dependencies (used for working out intra-user permissions)
             $app->userFactory->setAclDependencies($this->app->user, $app->userFactory);

@@ -28,9 +28,12 @@ use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ApplicationFactory;
+use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserTypeFactory;
@@ -81,11 +84,26 @@ class User extends Base
     private $applicationFactory;
 
     /**
+     * @var CampaignFactory
+     */
+    private $campaignFactory;
+
+    /**
+     * @var MediaFactory
+     */
+    private $mediaFactory;
+
+    /**
+     * @var ScheduleFactory
+     */
+    private $scheduleFactory;
+
+    /**
      * Set common dependencies.
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
-     * @param User $user
+     * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
@@ -96,10 +114,13 @@ class User extends Base
      * @param PermissionFactory $permissionFactory
      * @param LayoutFactory $layoutFactory
      * @param ApplicationFactory $applicationFactory
+     * @param CampaignFactory $campaignFactory
+     * @param MediaFactory $mediaFactory
+     * @param ScheduleFactory $scheduleFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
-                                $layoutFactory, $applicationFactory)
+                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -110,6 +131,9 @@ class User extends Base
         $this->permissionFactory = $permissionFactory;
         $this->layoutFactory = $layoutFactory;
         $this->applicationFactory = $applicationFactory;
+        $this->campaignFactory = $campaignFactory;
+        $this->mediaFactory = $mediaFactory;
+        $this->scheduleFactory = $scheduleFactory;
     }
 
     /**
@@ -425,6 +449,7 @@ class User extends Base
             throw new AccessDeniedException();
 
         // Build a user entity and save it
+        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
         $user->load();
         $user->userName = $this->getSanitizer()->getString('userName');
         $user->email = $this->getSanitizer()->getString('email');
@@ -483,6 +508,9 @@ class User extends Base
 
         if (!$this->getUser()->checkDeleteable($user))
             throw new AccessDeniedException();
+
+        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
+        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
         if ($this->getSanitizer()->getCheckbox('deleteAllItems') != 1) {
 
@@ -660,7 +688,7 @@ class User extends Base
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         // List of all Groups with a view / edit / delete check box
-        $permissions = $this->permissionFactory->getAllByObjectId(get_class($object), $objectId, $this->gridRenderSort(), $this->gridRenderFilter(['name' => $this->getSanitizer()->getString('name')]));
+        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object), $objectId, $this->gridRenderSort(), $this->gridRenderFilter(['name' => $this->getSanitizer()->getString('name')]));
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($permissions);
@@ -687,7 +715,7 @@ class User extends Base
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         $currentPermissions = [];
-        foreach ($this->permissionFactory->getAllByObjectId(get_class($object), $objectId) as $permission) {
+        foreach ($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object), $objectId) as $permission) {
             /* @var Permission $permission */
             $currentPermissions[$permission->groupId] = [
                 'view' => ($permission->view == null) ? 0 : $permission->view,
@@ -760,7 +788,7 @@ class User extends Base
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         // Get all current permissions
-        $permissions = $this->permissionFactory->getAllByObjectId(get_class($object), $objectId);
+        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object), $objectId);
 
         // Get the provided permissions
         $groupIds = $this->getSanitizer()->getStringArray('groupIds');
@@ -778,17 +806,17 @@ class User extends Base
                 // Regions
                 foreach ($layout->regions as $region) {
                     /* @var Region $region */
-                    $this->updatePermissions($this->permissionFactory->getAllByObjectId(get_class($region), $region->getId()), $groupIds);
+                    $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($region), $region->getId()), $groupIds);
 
                     // Playlists
                     foreach ($region->playlists as $playlist) {
                         /* @var Playlist $playlist */
-                        $this->updatePermissions($this->permissionFactory->getAllByObjectId(get_class($playlist), $playlist->getId()), $groupIds);
+                        $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($playlist), $playlist->getId()), $groupIds);
 
                         // Widgets
                         foreach ($playlist->widgets as $widget) {
                             /* @var Widget $widget */
-                            $this->updatePermissions($this->permissionFactory->getAllByObjectId(get_class($widget), $widget->getId()), $groupIds);
+                            $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($widget), $widget->getId()), $groupIds);
                         }
                     }
                 }
@@ -797,7 +825,7 @@ class User extends Base
             foreach ($this->layoutFactory->getByCampaignId($object->campaignId) as $layout) {
                 /* @var Layout $layout */
                 // Assign the same permissions to the Layout
-                $this->updatePermissions($this->permissionFactory->getAllByObjectId(get_class($object), $layout->campaignId), $groupIds);
+                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object), $layout->campaignId), $groupIds);
 
                 // Load the layout
                 $layout->load();
@@ -829,10 +857,12 @@ class User extends Base
             throw new \InvalidArgumentException(__('Permissions form requested without an object'));
 
         // Check to see that we can resolve the entity
-        $entity = $entity . 'Factory';
+        $entity = lcfirst($entity) . 'Factory';
 
-        if (!$this->getApp()->container->has($entity) || !method_exists($this->getApp()->container->get($entity), 'getById'))
+        if (!$this->getApp()->container->has($entity) || !method_exists($this->getApp()->container->get($entity), 'getById')) {
+            $this->getLog()->error('Invalid Entity %s', $entity);
             throw new \InvalidArgumentException(__('Permissions form requested with an invalid entity'));
+        }
 
         return $this->getApp()->container->get($entity);
     }

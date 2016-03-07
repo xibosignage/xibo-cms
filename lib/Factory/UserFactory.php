@@ -43,16 +43,6 @@ class UserFactory extends BaseFactory
     private $configService;
 
     /**
-     * @var PageFactory
-     */
-    private $pageFactory;
-
-    /**
-     * @var UserGroupFactory
-     */
-    private $userGroupFactory;
-
-    /**
      * @var PermissionFactory
      */
     private $permissionFactory;
@@ -68,23 +58,17 @@ class UserFactory extends BaseFactory
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
      * @param ConfigServiceInterface $configService
-     * @param PageFactory $pageFactory
-     * @param UserGroupFactory $userGroupFactory
      * @param PermissionFactory $permissionFactory
      * @param UserOptionFactory $userOptionFactory
      */
     public function __construct($store, $log, $sanitizerService,
                                 $configService,
-                                $pageFactory,
-                                $userGroupFactory,
                                 $permissionFactory,
                                 $userOptionFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
 
         $this->configService = $configService;
-        $this->pageFactory = $pageFactory;
-        $this->userGroupFactory = $userGroupFactory;
         $this->permissionFactory = $permissionFactory;
         $this->userOptionFactory = $userOptionFactory;
     }
@@ -98,9 +82,7 @@ class UserFactory extends BaseFactory
         return new User($this->getStore(),
             $this->getLog(),
             $this->configService,
-            $this->pageFactory,
-            $this->getUserFactory(),
-            $this->userGroupFactory,
+            $this,
             $this->permissionFactory,
             $this->userOptionFactory
         );
@@ -120,20 +102,6 @@ class UserFactory extends BaseFactory
             throw new NotFoundException(__('User not found'));
 
         return $users[0];
-    }
-
-    /**
-     * Load User by ID
-     * @param int $userId
-     * @return User
-     * @throws NotFoundException if the user cannot be found
-     */
-    public function loadById($userId)
-    {
-        $user = $this->getById($userId);
-        $user->load();
-
-        return $user;
     }
 
     /**

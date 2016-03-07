@@ -93,11 +93,17 @@ class Resolution implements \JsonSerializable
         $this->setCommonDependencies($store, $log);
     }
 
+    /**
+     * @return int
+     */
     public function getId()
     {
         return $this->resolutionId;
     }
 
+    /**
+     * @return int
+     */
     public function getOwnerId()
     {
         // No owner
@@ -122,6 +128,10 @@ class Resolution implements \JsonSerializable
         $this->designerHeight = round($this->height * $factor);
     }
 
+    /**
+     * Save
+     * @param bool|true $validate
+     */
     public function save($validate = true)
     {
         if ($validate)

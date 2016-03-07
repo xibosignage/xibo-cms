@@ -42,6 +42,15 @@ class WidgetOptionFactory extends BaseFactory
     }
 
     /**
+     * Create Empty
+     * @return WidgetOption
+     */
+    public function createEmpty()
+    {
+        return new WidgetOption($this->getStore(), $this->getLog());
+    }
+
+    /**
      * Create a Widget Option
      * @param int $widgetId
      * @param string $type
@@ -51,7 +60,7 @@ class WidgetOptionFactory extends BaseFactory
      */
     public function create($widgetId, $type, $option, $value)
     {
-        $widgetOption = new WidgetOption();
+        $widgetOption = $this->createEmpty();
         $widgetOption->widgetId = $widgetId;
         $widgetOption->type = $type;
         $widgetOption->option = $option;
@@ -85,7 +94,7 @@ class WidgetOptionFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, [
             'widgetId' => $this->getSanitizer()->getInt('widgetId', $filterBy)
         ]) as $row) {
-            $entries[] = (new WidgetOption())->hydrate($row)->setContainer($this->getContainer());
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         return $entries;

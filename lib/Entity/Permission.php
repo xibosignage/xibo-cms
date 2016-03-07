@@ -30,8 +30,10 @@ use Xibo\Storage\StorageServiceInterface;
  *
  * @SWG\Definition()
  */
-class Permission
+class Permission implements \JsonSerializable
 {
+    use EntityTrait;
+
     /**
      * @SWG\Property(description="The ID of this Permission Record")
      * @var int

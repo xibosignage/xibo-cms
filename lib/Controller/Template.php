@@ -21,10 +21,49 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\TagFactory;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
-
+/**
+ * Class Template
+ * @package Xibo\Controller
+ */
 class Template extends Base
 {
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+
+    /**
+     * @var TagFactory
+     */
+    private $tagFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param LayoutFactory $layoutFactory
+     * @param TagFactory $tagFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $layoutFactory, $tagFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->layoutFactory = $layoutFactory;
+        $this->tagFactory = $tagFactory;
+    }
+
     /**
      * Display page logic
      */
@@ -55,7 +94,7 @@ class Template extends Base
      */
     function grid()
     {
-        $templates = $this->getFactoryService()->get('LayoutFactory')->query($this->gridRenderSort(), $this->gridRenderFilter([
+        $templates = $this->layoutFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'excludeTemplates' => 0,
             'tags' => $this->getSanitizer()->getString('tags'),
             'layout' => $this->getSanitizer()->getString('template')
@@ -156,7 +195,7 @@ class Template extends Base
     function addTemplateForm($layoutId)
     {
         // Get the layout
-        $layout = $this->getFactoryService()->get('LayoutFactory')->getById($layoutId);
+        $layout = $this->layoutFactory->getById($layoutId);
 
         // Check Permissions
         if (!$this->getUser()->checkViewable($layout))
@@ -229,7 +268,7 @@ class Template extends Base
     function add($layoutId)
     {
         // Get the layout
-        $layout = $this->getFactoryService()->get('LayoutFactory')->getById($layoutId);
+        $layout = $this->layoutFactory->getById($layoutId);
 
         // Check Permissions
         if (!$this->getUser()->checkViewable($layout))
@@ -251,8 +290,8 @@ class Template extends Base
         $layout = clone $layout;
 
         $layout->layout = $this->getSanitizer()->getString('name');
-        $layout->tags = $this->getFactoryService()->get('TagFactory')->tagsFromString($this->getSanitizer()->getString('tags'));
-        $layout->tags[] = $this->getFactoryService()->get('TagFactory')->getByTag('template');
+        $layout->tags = $this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags'));
+        $layout->tags[] = $this->tagFactory->getByTag('template');
         $layout->description = $this->getSanitizer()->getString('description');
         $layout->save();
 

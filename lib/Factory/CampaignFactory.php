@@ -23,22 +23,59 @@
 namespace Xibo\Factory;
 
 use Xibo\Entity\Campaign;
+use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class CampaignFactory
+ * @package Xibo\Factory
+ */
 class CampaignFactory extends BaseFactory
 {
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var ScheduleFactory
+     */
+    private $scheduleFactory;
+
+    /**
+     * @var DisplayFactory
+     */
+    private $displayFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param User $user
+     * @param UserFactory $userFactory
+     * @param PermissionFactory $permissionFactory
+     * @param ScheduleFactory $scheduleFactory
+     * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log, $sanitizerService)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $permissionFactory, $scheduleFactory, $displayFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->setAclDependencies($user, $userFactory);
+        $this->permissionFactory = $permissionFactory;
+        $this->scheduleFactory = $scheduleFactory;
+        $this->displayFactory = $displayFactory;
+    }
+
+    /**
+     * @return Campaign
+     */
+    public function createEmpty()
+    {
+        return new Campaign($this->getStore(), $this->getLog(), $this->permissionFactory, $this->scheduleFactory, $this->displayFactory);
     }
 
     /**
@@ -49,8 +86,7 @@ class CampaignFactory extends BaseFactory
      */
     public function create($name, $userId)
     {
-        $campaign = new Campaign();
-        $campaign->setContainer($this->getContainer());
+        $campaign = $this->createEmpty();
         $campaign->ownerId = $userId;
         $campaign->campaign = $name;
 
@@ -195,7 +231,7 @@ class CampaignFactory extends BaseFactory
         $intProperties = ['intProperties' => ['numberLayouts']];
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $campaigns[] = (new Campaign())->hydrate($row, $intProperties)->setContainer($this->getContainer());
+            $campaigns[] = $this->createEmpty()->hydrate($row, $intProperties);
         }
 
         // Paging

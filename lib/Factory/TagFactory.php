@@ -29,6 +29,10 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class TagFactory
+ * @package Xibo\Factory
+ */
 class TagFactory extends BaseFactory
 {
     /**
@@ -40,6 +44,14 @@ class TagFactory extends BaseFactory
     public function __construct($store, $log, $sanitizerService)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * @return Tag
+     */
+    public function createEmpty()
+    {
+        return new Tag($this->getStore(), $this->getLog());
     }
 
     /**
@@ -81,8 +93,7 @@ class TagFactory extends BaseFactory
         }
         catch (NotFoundException $e) {
             // New tag
-            $tag = new Tag();
-            $tag->setContainer($this->getContainer());
+            $tag = $this->createEmpty();
             $tag->tag = $tagString;
         }
 
@@ -105,8 +116,7 @@ class TagFactory extends BaseFactory
             throw new NotFoundException(sprintf(__('Unable to find Tag %s'), $tagName));
 
         $row = $tags[0];
-        $tag = new Tag();
-        $tag->setContainer($this->getContainer());
+        $tag = $this->createEmpty();
         $tag->tagId = $this->getSanitizer()->int($row['tagId']);
         $tag->tag = $this->getSanitizer()->string($row['tag']);
 
@@ -125,8 +135,7 @@ class TagFactory extends BaseFactory
         $sql = 'SELECT tag.tagId, tag.tag FROM `tag` INNER JOIN `lktaglayout` ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = :layoutId';
 
         foreach ($this->getStore()->select($sql, array('layoutId' => $layoutId)) as $row) {
-            $tag = new Tag();
-            $tag->setContainer($this->getContainer());
+            $tag = $this->createEmpty();
             $tag->tagId = $this->getSanitizer()->int($row['tagId']);
             $tag->tag = $this->getSanitizer()->string($row['tag']);
             $tag->assignLayout($layoutId);
@@ -149,8 +158,7 @@ class TagFactory extends BaseFactory
         $sql = 'SELECT tag.tagId, tag.tag FROM `tag` INNER JOIN `lktagmedia` ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = :mediaId';
 
         foreach ($this->getStore()->select($sql, array('mediaId' => $mediaId)) as $row) {
-            $tag = new Tag();
-            $tag->setContainer($this->getContainer());
+            $tag = $this->createEmpty();
             $tag->tagId = $this->getSanitizer()->int($row['tagId']);
             $tag->tag = $this->getSanitizer()->string($row['tag']);
             $tag->assignMedia($mediaId);

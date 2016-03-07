@@ -23,6 +23,10 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -71,15 +75,56 @@ class Campaign implements \JsonSerializable
     private $events = [];
 
     /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+
+    /**
+     * @var ScheduleFactory
+     */
+    private $scheduleFactory;
+
+    /**
+     * @var DisplayFactory
+     */
+    private $displayFactory;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param PermissionFactory $permissionFactory
+     * @param ScheduleFactory $scheduleFactory
+     * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log)
+    public function __construct($store, $log, $permissionFactory, $scheduleFactory, $displayFactory)
     {
         $this->setCommonDependencies($store, $log);
+        $this->permissionFactory = $permissionFactory;
+        $this->scheduleFactory = $scheduleFactory;
+        $this->displayFactory = $displayFactory;
     }
 
+    /**
+     * Set Child Object Depencendies
+     *  must be set before calling Load with all objects
+     * @param LayoutFactory $layoutFactory
+     * @return $this
+     */
+    public function setChildObjectDependencies($layoutFactory)
+    {
+        $this->layoutFactory = $layoutFactory;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return sprintf('CampaignId %d, Campaign %s, LayoutSpecific %d', $this->campaignId, $this->campaign, $this->isLayoutSpecific);
@@ -118,14 +163,17 @@ class Campaign implements \JsonSerializable
         if ($this->campaignId == null || $this->loaded)
             return;
 
+        if ($this->layoutFactory == null)
+            throw new \RuntimeException('Cannot load campaign with all objects without first calling setChildObjectDependencies');
+
         // Permissions
-        $this->permissions = $this->getFactoryService()->get('PermissionFactory')->getByObjectId('Campaign', $this->campaignId);
+        $this->permissions = $this->permissionFactory->getByObjectId('Campaign', $this->campaignId);
 
         // Layouts
-        $this->layouts = $this->getFactoryService()->get('LayoutFactory')->getByCampaignId($this->campaignId);
+        $this->layouts = $this->layoutFactory->getByCampaignId($this->campaignId);
 
         // Events
-        $this->events = $this->getFactoryService()->get('ScheduleFactory')->getByCampaignId($this->campaignId);
+        $this->events = $this->scheduleFactory->getByCampaignId($this->campaignId);
 
         $this->loaded = true;
     }
@@ -358,7 +406,7 @@ class Campaign implements \JsonSerializable
     {
         $this->getLog()->debug('Checking for Displays to refresh on Campaign %d', $this->campaignId);
 
-        $displays = array_merge($this->getFactoryService()->get('DisplayFactory')->getByActiveCampaignId($this->campaignId), $this->getFactoryService()->get('DisplayFactory')->getByAssignedCampaignId($this->campaignId));
+        $displays = array_merge($this->displayFactory->getByActiveCampaignId($this->campaignId), $this->displayFactory->getByAssignedCampaignId($this->campaignId));
 
         foreach ($displays as $display) {
             /* @var \Xibo\Entity\Display $display */

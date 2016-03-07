@@ -11,21 +11,42 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Session;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class SessionFactory
+ * @package Xibo\Factory
+ */
 class SessionFactory extends BaseFactory
 {
+    /**
+     * @var DateServiceInterface
+     */
+    private $date;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param DateServiceInterface $dateService
      */
-    public function __construct($store, $log, $sanitizerService)
+    public function __construct($store, $log, $sanitizerService, $dateService)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+
+        $this->date = $dateService;
+    }
+
+    /**
+     * @return Session
+     */
+    public function createEmpty()
+    {
+        return new Session($this->getStore(), $this->getLog());
     }
 
     /**
@@ -51,7 +72,7 @@ class SessionFactory extends BaseFactory
 
             if ($this->getSanitizer()->getString('fromDt', $filterBy) != '') {
                 $body .= ' AND session.LastAccessed < :lastAccessed ';
-                $params['lastAccessed'] = $this->getDate()->getLocalDate($this->getSanitizer()->getDate('fromDt', $filterBy)->setTime(0, 0, 0));
+                $params['lastAccessed'] = $this->date->getLocalDate($this->getSanitizer()->getDate('fromDt', $filterBy)->setTime(0, 0, 0));
             }
 
             if ($this->getSanitizer()->getString('type', $filterBy) == 'active') {
@@ -82,7 +103,7 @@ class SessionFactory extends BaseFactory
 
 
             foreach ($this->getStore()->select($sql, $params) as $row) {
-                $entries[] = (new Session())->hydrate($row)->setContainer($this->getContainer());
+                $entries[] = $this->createEmpty()->hydrate($row);
             }
 
             // Paging

@@ -87,7 +87,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 $controller->getLog()->debug('Copying permissions to new media');
 
-                foreach ((new PermissionFactory($controller->getContainer()))->getAllByObjectId(get_class($oldMedia), $oldMedia->mediaId) as $permission) {
+                foreach ((new PermissionFactory($controller->getContainer()))->getAllByObjectId($controller->getUser(), get_class($oldMedia), $oldMedia->mediaId) as $permission) {
                     /* @var Permission $permission */
                     $permission = clone $permission;
                     $permission->objectId = $media->mediaId;
@@ -185,7 +185,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $media->save();
 
                 // Permissions
-                foreach ((new PermissionFactory($controller->getContainer()))->createForNewEntity($controller->getUser(), get_class($media), $media->getId(), $controller->getConfig()->GetSetting('MEDIA_DEFAULT')) as $permission) {
+                foreach ((new PermissionFactory($controller->getContainer()))->createForNewEntity($controller->getUser(), get_class($media), $media->getId(), $controller->getConfig()->GetSetting('MEDIA_DEFAULT'), $controller->userGroupFactory) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
                 }

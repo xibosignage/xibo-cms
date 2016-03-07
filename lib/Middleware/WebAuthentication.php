@@ -77,8 +77,11 @@ class WebAuthentication extends Middleware
                 $app->public = false;
                 // Need to check
                 if ($user->hasIdentity() && !$app->session->isExpired()) {
+
                     // Replace our user with a fully loaded one
-                    $user = $app->userFactory->loadById($user->userId);
+                    $user = $app->userFactory->getById($user->userId);
+                    $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
+                    $user->load();
 
                     // Set the user factory ACL dependencies (used for working out intra-user permissions)
                     $app->userFactory->setAclDependencies($user, $app->userFactory);

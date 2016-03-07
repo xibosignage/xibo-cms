@@ -297,12 +297,33 @@ class State extends Middleware
             );
         });
 
-        $app->container->singleton('\Xibo\Controller\Campaign', function() {
-            return new \Xibo\Controller\Campaign();
+        $app->container->singleton('\Xibo\Controller\Campaign', function($container) {
+            return new \Xibo\Controller\Campaign(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->campaignFactory,
+                $container->layoutFactory,
+                $container->permissionFactory,
+                $container->userGroupFactory
+            );
         });
 
-        $app->container->singleton('\Xibo\Controller\Clock', function() {
-            return new \Xibo\Controller\Clock();
+        $app->container->singleton('\Xibo\Controller\Clock', function($container) {
+            return new \Xibo\Controller\Clock(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->session
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\Command', function($container) {
@@ -368,8 +389,25 @@ class State extends Middleware
             return new \Xibo\Controller\IconDashboard();
         });
 
-        $app->container->singleton('\Xibo\Controller\Layout', function() {
-            return new \Xibo\Controller\Layout();
+        $app->container->singleton('\Xibo\Controller\Layout', function($container) {
+            return new \Xibo\Controller\Layout(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->session,
+                $container->userFactory,
+                $container->resolutionFactory,
+                $container->layoutFactory,
+                $container->moduleFactory,
+                $container->permissionFactory,
+                $container->userGroupFactory,
+                $container->tagFactory,
+                $container->mediaFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\Library', function() {
@@ -428,16 +466,35 @@ class State extends Middleware
             return new \Xibo\Controller\Region();
         });
 
-        $app->container->singleton('\Xibo\Controller\Resolution', function() {
-            return new \Xibo\Controller\Resolution();
+        $app->container->singleton('\Xibo\Controller\Resolution', function($container) {
+            return new \Xibo\Controller\Resolution(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->resolutionFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\Schedule', function() {
             return new \Xibo\Controller\Schedule();
         });
 
-        $app->container->singleton('\Xibo\Controller\Sessions', function() {
-            return new \Xibo\Controller\Sessions();
+        $app->container->singleton('\Xibo\Controller\Sessions', function($container) {
+            return new \Xibo\Controller\Sessions(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->store,
+                $container->sessionFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\Settings', function() {
@@ -466,8 +523,18 @@ class State extends Middleware
             );
         });
 
-        $app->container->singleton('\Xibo\Controller\Template', function() {
-            return new \Xibo\Controller\Template();
+        $app->container->singleton('\Xibo\Controller\Template', function($container) {
+            return new \Xibo\Controller\Template(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->layoutFactory,
+                $container->tagFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\Transition', function() {
@@ -493,12 +560,27 @@ class State extends Middleware
                 $container->pageFactory,
                 $container->permissionFactory,
                 $container->layoutFactory,
-                $container->applicationFactory
+                $container->applicationFactory,
+                $container->campaignFactory,
+                $container->mediaFactory,
+                $container->scheduleFactory
             );
         });
 
-        $app->container->singleton('\Xibo\Controller\UserGroup', function() {
-            return new \Xibo\Controller\UserGroup();
+        $app->container->singleton('\Xibo\Controller\UserGroup', function($container) {
+            return new \Xibo\Controller\UserGroup(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->userGroupFactory,
+                $container->pageFactory,
+                $container->permissionFactory,
+                $container->userFactory
+            );
         });
     }
 
@@ -545,7 +627,12 @@ class State extends Middleware
             return new \Xibo\Factory\CampaignFactory(
                 $container->store,
                 $container->logService,
-                $container->sanitizerService
+                $container->sanitizerService,
+                $container->user,
+                $container->userFactory,
+                $container->permissionFactory,
+                $container->scheduleFactory,
+                $container->displayFactory
             );
         });
 
@@ -633,7 +720,20 @@ class State extends Middleware
             return new \Xibo\Factory\LayoutFactory(
                 $container->store,
                 $container->logService,
-                $container->sanitizerService
+                $container->sanitizerService,
+                $container->user,
+                $container->userFactory,
+                $container->config,
+                $container->dateService,
+                $container->permissionFactory,
+                $container->regionFactory,
+                $container->tagFactory,
+                $container->campaignFactory,
+                $container->mediaFactory,
+                $container->moduleFactory,
+                $container->resolutionFactory,
+                $container->widgetFactory,
+                $container->widgetOptionFactory
             );
         });
 
@@ -670,7 +770,9 @@ class State extends Middleware
             return new \Xibo\Factory\PageFactory(
                 $container->store,
                 $container->logService,
-                $container->sanitizerService
+                $container->sanitizerService,
+                $container->user,
+                $container->userFactory
             );
         });
 
@@ -734,7 +836,8 @@ class State extends Middleware
             return new \Xibo\Factory\SessionFactory(
                 $container->store,
                 $container->logService,
-                $container->sanitizerService
+                $container->sanitizerService,
+                $container->dateService
             );
         });
 
@@ -776,8 +879,6 @@ class State extends Middleware
                 $container->logService,
                 $container->sanitizerService,
                 $container->configService,
-                $container->pageFactory,
-                $container->userGroupFactory,
                 $container->permissionFactory,
                 $container->userOptionFactory
             );
@@ -787,7 +888,9 @@ class State extends Middleware
             return new \Xibo\Factory\UserGroupFactory(
                 $container->store,
                 $container->logService,
-                $container->sanitizerService
+                $container->sanitizerService,
+                $container->user,
+                $container->userFactory
             );
         });
 

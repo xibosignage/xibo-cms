@@ -24,11 +24,23 @@ use Parsedown;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
+use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\LibraryFullException;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\ResolutionFactory;
+use Xibo\Factory\TagFactory;
+use Xibo\Factory\UserFactory;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\LayoutUploadHandler;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class Layout
@@ -38,13 +50,92 @@ use Xibo\Helper\LayoutUploadHandler;
 class Layout extends Base
 {
     /**
+     * @var Session
+     */
+    private $session;
+
+    /**
+     * @var UserFactory
+     */
+    private $userFactory;
+
+    /**
+     * @var ResolutionFactory
+     */
+    private $resolutionFactory;
+
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+
+    /**
+     * @var ModuleFactory
+     */
+    private $moduleFactory;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var UserGroupFactory
+     */
+    private $userGroupFactory;
+
+    /**
+     * @var TagFactory
+     */
+    private $tagFactory;
+
+    /**
+     * @var MediaFactory
+     */
+    private $mediaFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param Session $session
+     * @param UserFactory $userFactory
+     * @param ResolutionFactory $resolutionFactory
+     * @param LayoutFactory $layoutFactory
+     * @param ModuleFactory $moduleFactory
+     * @param PermissionFactory $permissionFactory
+     * @param UserGroupFactory $userGroupFactory
+     * @param TagFactory $tagFactory
+     * @param MediaFactory $mediaFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->session = $session;
+        $this->userFactory = $userFactory;
+        $this->resolutionFactory = $resolutionFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->moduleFactory = $moduleFactory;
+        $this->permissionFactory = $permissionFactory;
+        $this->userGroupFactory = $userGroupFactory;
+        $this->tagFactory = $tagFactory;
+        $this->mediaFactory = $mediaFactory;
+    }
+
+    /**
      * Displays the Layout Page
      */
     function displayPage()
     {
         // Call to render the template
         $this->getState()->template = 'layout-page';
-        $this->getState()->setData(['users' => $this->getFactoryService()->get('UserFactory')->query()]);
+        $this->getState()->setData(['users' => $this->userFactory->query()]);
     }
 
     /**
@@ -53,25 +144,25 @@ class Layout extends Base
      */
     public function displayDesigner($layoutId)
     {
-        $layout = $this->getFactoryService()->get('LayoutFactory')->loadById($layoutId);
+        $layout = $this->layoutFactory->loadById($layoutId);
 
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
         // Work out our resolution
         if ($layout->schemaVersion < 2)
-            $resolution = $this->getFactoryService()->get('ResolutionFactory')->getByDesignerDimensions($layout->width, $layout->height);
+            $resolution = $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
         else
-            $resolution = $this->getFactoryService()->get('ResolutionFactory')->getByDimensions($layout->width, $layout->height);
+            $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
 
-        $moduleFactory = new ModuleFactory($this->getContainer());
+        $moduleFactory = $this->moduleFactory;
 
         // Set up any JavaScript translations
         $data = [
             'layout' => $layout,
             'resolution' => $resolution,
             'isTemplate' => $layout->hasTag('template'),
-            'layouts' => $this->getFactoryService()->get('LayoutFactory')->query(),
+            'layouts' => $this->layoutFactory->query(),
             'zoom' => $this->getSanitizer()->getDouble('zoom', $this->getUser()->getOptionValue('defaultDesignerZoom', 1)),
             'modules' => array_map(function($element) use ($moduleFactory) { return $moduleFactory->createForInstall($element->class); }, $moduleFactory->getAssignableModules())
         ];
@@ -137,36 +228,36 @@ class Layout extends Base
         $resolutionId = $this->getSanitizer()->getInt('resolutionId');
 
         if ($templateId != 0)
-            $layout = $this->getFactoryService()->get('LayoutFactory')->createFromTemplate($templateId, $this->getUser()->userId, $name, $description, $this->getSanitizer()->getString('tags'));
+            $layout = $this->layoutFactory->createFromTemplate($templateId, $this->getUser()->userId, $name, $description, $this->getSanitizer()->getString('tags'));
         else
-            $layout = $this->getFactoryService()->get('LayoutFactory')->createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, $this->getSanitizer()->getString('tags'));
+            $layout = $this->layoutFactory->createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, $this->getSanitizer()->getString('tags'));
 
         // Save
         $layout->save();
 
         // Permissions
-        foreach ($this->getFactoryService()->get('PermissionFactory')->createForNewEntity($this->getUser(), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT')) as $permission) {
+        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
             /* @var Permission $permission */
             $permission->save();
         }
 
         foreach ($layout->regions as $region) {
             /* @var Region $region */
-            foreach ($this->getFactoryService()->get('PermissionFactory')->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT')) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
 
             foreach ($region->playlists as $playlist) {
                 /* @var Playlist $playlist */
-                foreach ($this->getFactoryService()->get('PermissionFactory')->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
                 }
 
                 foreach ($playlist->widgets as $widget) {
                     /* @var Widget $widget */
-                    foreach ($this->getFactoryService()->get('PermissionFactory')->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                    foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                         /* @var Permission $permission */
                         $permission->save();
                     }
@@ -266,7 +357,7 @@ class Layout extends Base
      */
     function edit($layoutId)
     {
-        $layout = $this->getFactoryService()->get('LayoutFactory')->getById($layoutId);
+        $layout = $this->layoutFactory->getById($layoutId);
 
         // Make sure we have permission
         if (!$this->getUser()->checkEditable($layout))
@@ -274,7 +365,7 @@ class Layout extends Base
 
         $layout->layout = $this->getSanitizer()->getString('name');
         $layout->description = $this->getSanitizer()->getString('description');
-        $layout->replaceTags($this->getFactoryService()->get('TagFactory')->tagsFromString($this->getSanitizer()->getString('tags')));
+        $layout->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
         $layout->retired = $this->getSanitizer()->getCheckbox('retired');
         $layout->backgroundColor = $this->getSanitizer()->getString('backgroundColor');
         $layout->backgroundImageId = $this->getSanitizer()->getInt('backgroundImageId');
@@ -282,7 +373,7 @@ class Layout extends Base
 
         // Resolution
         $saveRegions = false;
-        $resolution = $this->getFactoryService()->get('ResolutionFactory')->getById($this->getSanitizer()->getInt('resolutionId'));
+        $resolution = $this->resolutionFactory->getById($this->getSanitizer()->getInt('resolutionId'));
 
         if ($layout->width != $resolution->width || $layout->height != $resolution->height) {
             $saveRegions = true;
@@ -312,7 +403,7 @@ class Layout extends Base
      */
     function deleteForm($layoutId)
     {
-        $layout = $this->getFactoryService()->get('LayoutFactory')->getById($layoutId);
+        $layout = $this->layoutFactory->getById($layoutId);
 
         if (!$this->getUser()->checkDeleteable($layout))
             throw new AccessDeniedException(__('You do not have permissions to delete this layout'));
@@ -334,7 +425,7 @@ class Layout extends Base
      */
     public function retireForm($layoutId)
     {
-        $layout = $this->getFactoryService()->get('LayoutFactory')->getById($layoutId);
+        $layout = $this->layoutFactory->getById($layoutId);
 
         // Make sure we have permission
         if (!$this->getUser()->checkEditable($layout))
@@ -376,7 +467,7 @@ class Layout extends Base
      */
     function delete($layoutId)
     {
-        $layout = $this->getFactoryService()->get('LayoutFactory')->loadById($layoutId);
+        $layout = $this->layoutFactory->loadById($layoutId);
 
         if (!$this->getUser()->checkDeleteable($layout))
             throw new AccessDeniedException(__('You do not have permissions to delete this layout'));
@@ -415,7 +506,7 @@ class Layout extends Base
      */
     function retire($layoutId)
     {
-        $layout = $this->getFactoryService()->get('LayoutFactory')->getById($layoutId);
+        $layout = $this->layoutFactory->getById($layoutId);
 
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
@@ -507,7 +598,7 @@ class Layout extends Base
         $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
 
         // Get all layouts
-        $layouts = $this->getFactoryService()->get('LayoutFactory')->query($this->gridRenderSort(), $this->gridRenderFilter([
+        $layouts = $this->layoutFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'layout' => $this->getSanitizer()->getString('layout'),
             'userId' => $this->getSanitizer()->getInt('userId'),
             'retired' => $this->getSanitizer()->getInt('retired'),
@@ -673,7 +764,7 @@ class Layout extends Base
         }
 
         // Store the table rows
-        $this->getState()->recordsTotal = $this->getFactoryService()->get('LayoutFactory')->countLast();
+        $this->getState()->recordsTotal = $this->layoutFactory->countLast();
         $this->getState()->setData($layouts);
     }
 
@@ -684,8 +775,8 @@ class Layout extends Base
     {
         $this->getState()->template = 'layout-form-add';
         $this->getState()->setData([
-            'layouts' => $this->getFactoryService()->get('LayoutFactory')->query(['layout'], ['excludeTemplates' => 0, 'tags' => 'template']),
-            'resolutions' => $this->getFactoryService()->get('ResolutionFactory')->query(['resolution']),
+            'layouts' => $this->layoutFactory->query(['layout'], ['excludeTemplates' => 0, 'tags' => 'template']),
+            'resolutions' => $this->resolutionFactory->query(['resolution']),
             'help' => $this->getHelp()->link('Layout', 'Add')
         ]);
     }
@@ -697,21 +788,21 @@ class Layout extends Base
     function editForm($layoutId)
     {
         // Get the layout
-        $layout = $this->getFactoryService()->get('LayoutFactory')->getById($layoutId);
+        $layout = $this->layoutFactory->getById($layoutId);
 
         // Check Permissions
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
-        $resolution = $this->getFactoryService()->get('ResolutionFactory')->getByDimensions($layout->width, $layout->height);
+        $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
 
         $this->getState()->template = 'layout-form-edit';
         $this->getState()->setData([
             'layout' => $layout,
             'resolution' => $resolution,
-            'resolutions' => $this->getFactoryService()->get('ResolutionFactory')->query(['resolution'], ['withCurrent' => $resolution->resolutionId]),
+            'resolutions' => $this->resolutionFactory->query(['resolution'], ['withCurrent' => $resolution->resolutionId]),
             'backgroundId' => $this->getSanitizer()->getInt('backgroundOveride', $layout->backgroundImageId),
-            'backgrounds' => $this->getFactoryService()->get('MediaFactory')->query(null, ['type' => 'image']),
+            'backgrounds' => $this->mediaFactory->query(null, ['type' => 'image']),
             'help' => $this->getHelp()->link('Layout', 'Edit')
         ]);
     }
@@ -723,7 +814,7 @@ class Layout extends Base
     public function copyForm($layoutId)
     {
         // Get the layout
-        $layout = $this->getFactoryService()->get('LayoutFactory')->getById($layoutId);
+        $layout = $this->layoutFactory->getById($layoutId);
 
         // Check Permissions
         if (!$this->getUser()->checkViewable($layout))
@@ -789,7 +880,7 @@ class Layout extends Base
     public function copy($layoutId)
     {
         // Get the layout
-        $layout = $this->getFactoryService()->get('LayoutFactory')->getById($layoutId);
+        $layout = $this->layoutFactory->getById($layoutId);
 
         // Check Permissions
         if (!$this->getUser()->checkViewable($layout))
@@ -811,28 +902,28 @@ class Layout extends Base
         $layout->save();
 
         // Permissions
-        foreach ($this->getFactoryService()->get('PermissionFactory')->createForNewEntity($this->getUser(), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT')) as $permission) {
+        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
             /* @var Permission $permission */
             $permission->save();
         }
 
         foreach ($layout->regions as $region) {
             /* @var Region $region */
-            foreach ($this->getFactoryService()->get('PermissionFactory')->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT')) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
 
             foreach ($region->playlists as $playlist) {
                 /* @var Playlist $playlist */
-                foreach ($this->getFactoryService()->get('PermissionFactory')->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
                 }
 
                 foreach ($playlist->widgets as $widget) {
                     /* @var Widget $widget */
-                    foreach ($this->getFactoryService()->get('PermissionFactory')->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                    foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                         /* @var Permission $permission */
                         $permission->save();
                     }
@@ -857,7 +948,7 @@ class Layout extends Base
     {
         // Get the layout
         /* @var \Xibo\Entity\Layout $layout */
-        $layout = $this->getFactoryService()->get('LayoutFactory')->getById($layoutId);
+        $layout = $this->layoutFactory->getById($layoutId);
         $layout->xlfToDisk();
 
         switch ($layout->status) {
@@ -889,7 +980,7 @@ class Layout extends Base
         ];
 
         $this->getState()->success = true;
-        $this->getSession()->refreshExpiry = false;
+        $this->session->refreshExpiry = false;
     }
 
     /**
@@ -900,7 +991,7 @@ class Layout extends Base
         $this->setNoOutput(true);
 
         // Get the layout
-        $layout = $this->getFactoryService()->get('LayoutFactory')->getById($layoutId);
+        $layout = $this->layoutFactory->getById($layoutId);
 
         // Check Permissions
         if (!$this->getUser()->checkViewable($layout))
@@ -921,12 +1012,12 @@ class Layout extends Base
         // Send via Apache X-Sendfile header?
         if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Apache') {
             header("X-Sendfile: $fileName");
-            $this->getContainer()->halt(200);
+            $this->getApp()->halt(200);
         }
         // Send via Nginx X-Accel-Redirect?
         if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Nginx') {
             header("X-Accel-Redirect: /download/temp/" . basename($fileName));
-            $this->getContainer()->halt(200);
+            $this->getApp()->halt(200);
         }
 
         // Return the file with PHP
@@ -979,7 +1070,7 @@ class Layout extends Base
         // Make sure there is room in the library
         $libraryLimit = $this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
-        if ($libraryLimit > 0 && Library::libraryUsage() > $libraryLimit)
+        if ($libraryLimit > 0 && $this->getApp()->container->get('\Xibo\Controller\Library')->libraryUsage() > $libraryLimit)
             throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
 
         // Check for a user quota
@@ -992,7 +1083,7 @@ class Layout extends Base
         } catch (\Exception $e) {
             // We must not issue an error, the file upload return should have the error object already
             //TODO: for some reason this commits... it shouldn't
-            $this->container->commit = false;
+            $this->getApp()->container->commit = false;
         }
 
         $this->setNoOutput(true);
@@ -1004,7 +1095,7 @@ class Layout extends Base
      */
     public function upgradeForm($layoutId)
     {
-        $layout = $this->getFactoryService()->get('LayoutFactory')->getById($layoutId);
+        $layout = $this->layoutFactory->getById($layoutId);
 
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
@@ -1012,7 +1103,7 @@ class Layout extends Base
         $this->getState()->template = 'layout-form-upgrade';
         $this->getState()->setData([
             'layout' => $layout,
-            'resolutions' => $this->getFactoryService()->get('ResolutionFactory')->query(null, ['enabled' => 1])
+            'resolutions' => $this->resolutionFactory->query(null, ['enabled' => 1])
         ]);
     }
 
@@ -1023,13 +1114,13 @@ class Layout extends Base
      */
     public function upgrade($layoutId)
     {
-        $layout = $this->getFactoryService()->get('LayoutFactory')->loadById($layoutId);
+        $layout = $this->layoutFactory->loadById($layoutId);
 
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
         // Resolution
-        $resolution = $this->getFactoryService()->get('ResolutionFactory')->getById($this->getSanitizer()->getInt('resolutionId'));
+        $resolution = $this->resolutionFactory->getById($this->getSanitizer()->getInt('resolutionId'));
         $scaleContent = ($this->getSanitizer()->getCheckbox('scaleContent') == 1);
 
         // Upgrade the Layout

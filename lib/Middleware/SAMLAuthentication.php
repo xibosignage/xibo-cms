@@ -293,7 +293,9 @@ class SAMLAuthentication extends Middleware
                 // Need to check
                 if ($user->hasIdentity() && !$app->session->isExpired()) {
                     // Replace our user with a fully loaded one
-                    $user = $app->userFactory->loadById($user->userId);
+                    $user = $app->userFactory->getById($user->userId);
+                    $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
+                    $user->load();
 
                     $app->logService->setUserId($user->userId);
 

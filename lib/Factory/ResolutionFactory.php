@@ -29,6 +29,10 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class ResolutionFactory
+ * @package Xibo\Factory
+ */
 class ResolutionFactory extends BaseFactory
 {
     /**
@@ -43,19 +47,27 @@ class ResolutionFactory extends BaseFactory
     }
 
     /**
+     * Create Empty
+     * @return Resolution
+     */
+    public function createEmpty()
+    {
+        return new Resolution($this->getStore(), $this->getLog());
+    }
+
+    /**
      * Create Resolution
-     * @param $resolution
+     * @param $resolutionName
      * @param $width
      * @param $height
      * @return Resolution
      */
-    public function create($resolution, $width, $height)
+    public function create($resolutionName, $width, $height)
     {
-        $resolution = new Resolution();
-        $resolution->setContainer($this->getContainer());
-        $resolution->resolution = $this->getSanitizer()->getString('resolution');
-        $resolution->width = $this->getSanitizer()->getInt('width');
-        $resolution->height = $this->getSanitizer()->getInt('height');
+        $resolution = $this->createEmpty();
+        $resolution->resolution = $resolutionName;
+        $resolution->width = $width;
+        $resolution->height = $height;
 
         return $resolution;
     }
@@ -68,7 +80,7 @@ class ResolutionFactory extends BaseFactory
      */
     public function getById($resolutionId)
     {
-        $resolutions = $this->getFactoryService()->get('ResolutionFactory')->query(null, array('disableUserCheck' => 1, 'resolutionId' => $resolutionId));
+        $resolutions = $this->query(null, array('disableUserCheck' => 1, 'resolutionId' => $resolutionId));
 
         if (count($resolutions) <= 0)
             throw new NotFoundException;
@@ -85,7 +97,7 @@ class ResolutionFactory extends BaseFactory
      */
     public function getByDimensions($width, $height)
     {
-        $resolutions = $this->getFactoryService()->get('ResolutionFactory')->query(null, array('disableUserCheck' => 1, 'width' => $width, 'height' => $height));
+        $resolutions = $this->query(null, array('disableUserCheck' => 1, 'width' => $width, 'height' => $height));
 
         if (count($resolutions) <= 0)
             throw new NotFoundException('Resolution not found');
@@ -102,7 +114,7 @@ class ResolutionFactory extends BaseFactory
      */
     public function getByDesignerDimensions($width, $height)
     {
-        $resolutions = $this->getFactoryService()->get('ResolutionFactory')->query(null, array('disableUserCheck' => 1, 'designerWidth' => $width, 'designerHeight' => $height));
+        $resolutions = $this->query(null, array('disableUserCheck' => 1, 'designerWidth' => $width, 'designerHeight' => $height));
 
         if (count($resolutions) <= 0)
             throw new NotFoundException('Resolution not found');
@@ -186,7 +198,7 @@ class ResolutionFactory extends BaseFactory
 
 
         foreach($this->getStore()->select($sql, $params) as $record) {
-            $entities[] = (new Resolution())->hydrate($record, ['intProperties' => ['width', 'height', 'version', 'enabled']]);
+            $entities[] = $this->createEmpty()->hydrate($record, ['intProperties' => ['width', 'height', 'version', 'enabled']]);
         }
 
         // Paging

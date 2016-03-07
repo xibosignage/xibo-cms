@@ -43,6 +43,18 @@ class WidgetFactory extends BaseFactory
     }
 
     /**
+     * Create Empty
+     * @return Widget
+     */
+    public function createEmpty()
+    {
+        return new Widget(
+            $this->getStore(),
+            $this->getLog()
+        );
+    }
+
+    /**
      * Load widgets by Playlist ID
      * @param int $playlistId
      * @return array[Widget]
@@ -102,8 +114,7 @@ class WidgetFactory extends BaseFactory
      */
     public function create($ownerId, $playlistId, $type, $duration)
     {
-        $widget = new Widget();
-        $widget->setContainer($this->getContainer());
+        $widget = $this->createEmpty();
         $widget->ownerId = $ownerId;
         $widget->playlistId = $playlistId;
         $widget->type = $type;
@@ -177,7 +188,7 @@ class WidgetFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Widget())->setContainer($this->getContainer())->hydrate($row, ['intProperties' => ['duration']]);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['duration']]);
         }
 
         // Paging

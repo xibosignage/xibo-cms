@@ -11,6 +11,8 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\UserFactory;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -58,21 +60,42 @@ class UserGroup
     private $users = [];
 
     /**
+     * @var UserGroupFactory
+     */
+    private $userGroupFactory;
+
+    /**
+     * @var UserFactory
+     */
+    private $userFactory;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param UserGroupFactory $userGroupFactory
+     * @param UserFactory $userFactory
      */
-    public function __construct($store, $log)
+    public function __construct($store, $log, $userGroupFactory, $userFactory)
     {
         $this->setCommonDependencies($store, $log);
+
+        $this->userGroupFactory = $userGroupFactory;
+        $this->userFactory = $userFactory;
     }
 
+    /**
+     *
+     */
     public function __clone()
     {
         // Clear the groupId
         $this->groupId = null;
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return sprintf('ID = %d, Group = %s, IsUserSpecific = %d', $this->groupId, $this->group, $this->isUserSpecific);
@@ -86,11 +109,17 @@ class UserGroup
         return md5(json_encode($this));
     }
 
+    /**
+     * @return int
+     */
     public function getId()
     {
         return $this->groupId;
     }
 
+    /**
+     * @return int
+     */
     public function getOwnerId()
     {
         return 1;
@@ -146,11 +175,11 @@ class UserGroup
         if (!v::string()->length(1, 50)->validate($this->group))
             throw new \InvalidArgumentException(__('User Group Name cannot be empty.') . $this);
 
-        if (!v::int()->validate($this->libraryQuota))
+        if ($this->libraryQuota !== null && !v::int()->validate($this->libraryQuota))
             throw new \InvalidArgumentException(__('Library Quota must be a whole number.'));
 
         try {
-            $group = $this->getFactoryService()->get('UserGroupFactory')->getByName($this->group, $this->isUserSpecific);
+            $group = $this->userGroupFactory->getByName($this->group, $this->isUserSpecific);
 
             if ($this->groupId == null || $this->groupId != $group->groupId)
                 throw new \InvalidArgumentException(__('There is already a group with this name. Please choose another.'));
@@ -173,9 +202,13 @@ class UserGroup
         if ($this->loaded || $this->groupId == 0)
             return;
 
-        if ($options['loadUsers'])
+        if ($options['loadUsers']) {
+            if ($this->userFactory == null)
+                throw new \RuntimeException('Cannot load without first calling setChildObjectDependencies');
+
             // Load all assigned users
-            $this->users = $this->getFactoryService()->get('UserFactory')->getByGroupId($this->groupId);
+            $this->users = $this->userFactory->getByGroupId($this->groupId);
+        }
 
         // Set the hash
         $this->hash = $this->hash();

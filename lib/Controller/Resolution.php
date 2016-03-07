@@ -23,11 +23,42 @@ namespace Xibo\Controller;
 use baseDAO;
 use Kit;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\ResolutionFactory;
 use Xibo\Helper\Form;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
-
+/**
+ * Class Resolution
+ * @package Xibo\Controller
+ */
 class Resolution extends Base
 {
+    /**
+     * @var ResolutionFactory
+     */
+    private $resolutionFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param ResolutionFactory $resolutionFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $resolutionFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->resolutionFactory = $resolutionFactory;
+    }
+
     /**
      * Display the Resolution Page
      */
@@ -85,7 +116,7 @@ class Resolution extends Base
             'resolution' => $this->getSanitizer()->getString('resolution')
         ];
 
-        $resolutions = $this->getFactoryService()->get('ResolutionFactory')->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $resolutions = $this->resolutionFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($resolutions as $resolution) {
             /* @var \Xibo\Entity\Resolution $resolution */
@@ -112,7 +143,7 @@ class Resolution extends Base
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($resolutions);
-        $this->getState()->recordsTotal = $this->getFactoryService()->get('ResolutionFactory')->countLast();
+        $this->getState()->recordsTotal = $this->resolutionFactory->countLast();
     }
 
     /**
@@ -132,7 +163,7 @@ class Resolution extends Base
      */
     function editForm($resolutionId)
     {
-        $resolution = $this->getFactoryService()->get('ResolutionFactory')->getById($resolutionId);
+        $resolution = $this->resolutionFactory->getById($resolutionId);
 
         if (!$this->getUser()->checkEditable($resolution))
             throw new AccessDeniedException();
@@ -150,7 +181,7 @@ class Resolution extends Base
      */
     function deleteForm($resolutionId)
     {
-        $resolution = $this->getFactoryService()->get('ResolutionFactory')->getById($resolutionId);
+        $resolution = $this->resolutionFactory->getById($resolutionId);
 
         if (!$this->getUser()->checkEditable($resolution))
             throw new AccessDeniedException();
@@ -207,7 +238,7 @@ class Resolution extends Base
     function add()
     {
         /* @var \Xibo\Entity\Resolution $resolution */
-        $resolution = $this->getFactoryService()->get('ResolutionFactory')->create($this->getSanitizer()->getString('resolution'),
+        $resolution = $this->resolutionFactory->create($this->getSanitizer()->getString('resolution'),
             $this->getSanitizer()->getInt('width'),
             $this->getSanitizer()->getInt('height'));
 
@@ -269,7 +300,7 @@ class Resolution extends Base
      */
     function edit($resolutionId)
     {
-        $resolution = $this->getFactoryService()->get('ResolutionFactory')->getById($resolutionId);
+        $resolution = $this->resolutionFactory->getById($resolutionId);
 
         if (!$this->getUser()->checkEditable($resolution))
             throw new AccessDeniedException();
@@ -313,7 +344,7 @@ class Resolution extends Base
      */
     function delete($resolutionId)
     {
-        $resolution = $this->getFactoryService()->get('ResolutionFactory')->getById($resolutionId);
+        $resolution = $this->resolutionFactory->getById($resolutionId);
 
         if (!$this->getUser()->checkDeleteable($resolution))
             throw new AccessDeniedException();
