@@ -589,16 +589,55 @@ class State extends Middleware
             );
         });
 
-        $app->container->singleton('\Xibo\Controller\Playlist', function() {
-            return new \Xibo\Controller\Playlist();
+        $app->container->singleton('\Xibo\Controller\Playlist', function($container) {
+            return new \Xibo\Controller\Playlist(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->playlistFactory,
+                $container->regionFactory,
+                $container->permissionsFactory,
+                $container->transitionFactory,
+                $container->widgetFactory,
+                $container->moduleFactory,
+                $container->userGroupFactory
+            );
         });
 
-        $app->container->singleton('\Xibo\Controller\Preview', function() {
-            return new \Xibo\Controller\Preview();
+        $app->container->singleton('\Xibo\Controller\Preview', function($container) {
+            return new \Xibo\Controller\Preview(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->layoutFactory
+            );
         });
 
-        $app->container->singleton('\Xibo\Controller\Region', function() {
-            return new \Xibo\Controller\Region();
+        $app->container->singleton('\Xibo\Controller\Region', function($container) {
+            return new \Xibo\Controller\Region(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->session,
+                $container->regionFactory,
+                $container->permissionFactory,
+                $container->transitionFactory,
+                $container->moduleFactory,
+                $container->layoutFactory,
+                $container->userGroupFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\Resolution', function($container) {

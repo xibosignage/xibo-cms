@@ -625,7 +625,7 @@ class Module extends Base
      */
     public function getResource($regionId, $widgetId)
     {
-        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId), $this->getFactoryService()->get('RegionFactory')->getById($regionId));
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId), $this->regionFactory->getById($regionId));
 
         if (!$this->getUser()->checkViewable($module->widget))
             throw new AccessDeniedException();
