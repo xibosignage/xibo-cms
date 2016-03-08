@@ -21,8 +21,6 @@
 namespace Xibo\Widget;
 
 
-use Xibo\Controller\Library;
-
 class Font extends ModuleWidget
 {
     /*
@@ -51,7 +49,7 @@ class Font extends ModuleWidget
     public function settings()
     {
         if ($this->getSanitizer()->getCheckbox('rebuildFonts', 0) == 1) {
-            (new Library())->installFonts();
+            $this->getApp()->container->get('\Xibo\Controller\Library')->installFonts();
         }
     }
 

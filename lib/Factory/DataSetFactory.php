@@ -15,6 +15,10 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class DataSetFactory
+ * @package Xibo\Factory
+ */
 class DataSetFactory extends BaseFactory
 {
     /**
@@ -26,6 +30,14 @@ class DataSetFactory extends BaseFactory
     public function __construct($store, $log, $sanitizerService)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * @return DataSet
+     */
+    public function createEmpty()
+    {
+        return new DataSet($this->getStore(), $this->getLog());
     }
 
     /**

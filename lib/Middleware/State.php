@@ -142,7 +142,15 @@ class State extends Middleware
         self::registerFactoriesWithDi($app->container);
 
         $app->container->singleton('moduleService', function () use($app) {
-            return new ModuleService($app);
+            return new ModuleService(
+                $app,
+                $app->store,
+                $app->pool,
+                $app->logService,
+                $app->configService,
+                $app->dateService,
+                $app->sanitizerService
+            );
         });
 
         // Player Action Helper
@@ -576,7 +584,8 @@ class State extends Middleware
                 $container->permissionsFactory,
                 $container->userGroupFactory,
                 $container->widgetFactory,
-                $container->transitionFactory
+                $container->transitionFactory,
+                $container->regionFactory
             );
         });
 
@@ -930,7 +939,8 @@ class State extends Middleware
                 $container->userFactory,
                 $container->configService,
                 $container->permissionFactory,
-                $container->tagFactory
+                $container->tagFactory,
+                $container->playlistFactory
             );
         });
 
@@ -944,7 +954,13 @@ class State extends Middleware
                 $container->moduleService,
                 $container->widgetFactory,
                 $container->regionFactory,
-                $container->playlistFactory
+                $container->playlistFactory,
+                $container->mediaFactory,
+                $container->dataSetFactory,
+                $container->dataSetColumnFactory,
+                $container->transitionFactory,
+                $container->displayFactory,
+                $container->commandFactory
             );
         });
 
@@ -970,7 +986,10 @@ class State extends Middleware
             return new \Xibo\Factory\PlaylistFactory(
                 $container->store,
                 $container->logService,
-                $container->sanitizerService
+                $container->sanitizerService,
+                $container->date,
+                $container->permissionFactory,
+                $container->widgetFactory
             );
         });
 
@@ -978,7 +997,10 @@ class State extends Middleware
             return new \Xibo\Factory\RegionFactory(
                 $container->store,
                 $container->logService,
-                $container->sanitizerService
+                $container->sanitizerService,
+                $container->permissionFactory,
+                $container->regionOptionFactory,
+                $container->playlistFactory
             );
         });
 
@@ -1098,7 +1120,10 @@ class State extends Middleware
             return new \Xibo\Factory\WidgetFactory(
                 $container->store,
                 $container->logService,
-                $container->sanitizerService
+                $container->sanitizerService,
+                $container->widgetOptionFactory,
+                $container->widgetMediaFactory,
+                $container->permissionFactory
             );
         });
 

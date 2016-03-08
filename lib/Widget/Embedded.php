@@ -28,8 +28,8 @@ class Embedded extends ModuleWidget
      */
     public function InstallFiles()
     {
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
     }
 
     /**
@@ -40,9 +40,9 @@ class Embedded extends ModuleWidget
         // Required Attributes
         $this->setDuration($this->getSanitizer()->getInt('duration'));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->SetOption('name', $this->getSanitizer()->getString('name'));
-        $this->SetOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
-        $this->SetOption('scaleContent', $this->getSanitizer()->getCheckbox('scaleContent'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
+        $this->setOption('scaleContent', $this->getSanitizer()->getCheckbox('scaleContent'));
         $this->setRawNode('embedHtml', $this->getSanitizer()->getParam('embedHtml', null));
         $this->setRawNode('embedScript', $this->getSanitizer()->getParam('embedScript', null));
         $this->setRawNode('embedStyle', $this->getSanitizer()->getParam('embedStyle', null));
@@ -58,9 +58,9 @@ class Embedded extends ModuleWidget
     {
         $this->setDuration($this->getSanitizer()->getInt('duration'));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->SetOption('name', $this->getSanitizer()->getString('name'));
-        $this->SetOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
-        $this->SetOption('scaleContent', $this->getSanitizer()->getCheckbox('scaleContent'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
+        $this->setOption('scaleContent', $this->getSanitizer()->getCheckbox('scaleContent'));
         $this->setRawNode('embedHtml', $this->getSanitizer()->getParam('embedHtml', null));
         $this->setRawNode('embedScript', $this->getSanitizer()->getParam('embedScript', null));
         $this->setRawNode('embedStyle', $this->getSanitizer()->getParam('embedStyle', null));
@@ -122,7 +122,7 @@ class Embedded extends ModuleWidget
         $javaScriptContent .= '</script>';
 
         // Do we want to scale?
-        if ($this->GetOption('scaleContent') == 1) {
+        if ($this->getOption('scaleContent') == 1) {
             $javaScriptContent .= '<script>
                 $(document).ready(function() {
                     $("body").xiboLayoutScaler(options);

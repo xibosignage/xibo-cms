@@ -25,21 +25,56 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Playlist;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class PlaylistFactory
+ * @package Xibo\Factory
+ */
 class PlaylistFactory extends BaseFactory
 {
+    /**
+     * @var DateServiceInterface
+     */
+    public $dateService;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var WidgetFactory
+     */
+    private $widgetFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param DateServiceInterface $date
+     * @param PermissionFactory $permissionFactory
+     * @param WidgetFactory $widgetFactory
      */
-    public function __construct($store, $log, $sanitizerService)
+    public function __construct($store, $log, $sanitizerService, $date, $permissionFactory, $widgetFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+
+        $this->dateService = $date;
+        $this->permissionFactory = $permissionFactory;
+        $this->widgetFactory = $widgetFactory;
+    }
+
+    /**
+     * @return Playlist
+     */
+    public function createEmpty()
+    {
+        return new Playlist($this->getStore(), $this->getLog(), $this->dateService, $this->permissionFactory, $this->widgetFactory);
     }
 
     /**
@@ -77,7 +112,7 @@ class PlaylistFactory extends BaseFactory
      */
     public function create($name, $ownerId)
     {
-        $playlist = new Playlist();
+        $playlist = $this->createEmpty();
         $playlist->name = $name;
         $playlist->ownerId = $ownerId;
 
@@ -129,7 +164,7 @@ class PlaylistFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Playlist())->hydrate($row)->setContainer($this->getContainer());
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         // Paging

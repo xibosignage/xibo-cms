@@ -85,7 +85,7 @@ class Image extends ModuleWidget
     public function hoverPreview()
     {
         // Default Hover window contains a thumbnail, media type and duration
-        $output = parent::HoverPreview();
+        $output = parent::hoverPreview();
         $output .= '<div class="hoverPreview">';
         $output .= '    <img src="' . $this->getApp()->urlFor('library.download', ['id' => $this->getMediaId()]) . '?preview=1&width=200&height=200&proportional=1" alt="Hover Preview">';
         $output .= '</div>';
@@ -102,7 +102,7 @@ class Image extends ModuleWidget
     {
         $this->getLog()->debug('Image Module: GetResource for %d', $this->getMediaId());
 
-        $media = $this->getFactoryService()->get('MediaFactory')->getById($this->getMediaId());
+        $media = $this->mediaFactory->getById($this->getMediaId());
         $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
         $filePath = $libraryLocation . $media->storedAs;
         $proportional = $this->getSanitizer()->getInt('proportional', 1) == 1;

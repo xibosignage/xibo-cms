@@ -60,6 +60,36 @@ class ModuleFactory extends BaseFactory
     private $playlistFactory;
 
     /**
+     * @var MediaFactory
+     */
+    protected $mediaFactory;
+
+    /**
+     * @var DataSetFactory
+     */
+    protected $dataSetFactory;
+
+    /**
+     * @var DataSetColumnFactory
+     */
+    protected $dataSetColumnFactory;
+
+    /**
+     * @var TransitionFactory
+     */
+    protected $transitionFactory;
+
+    /**
+     * @var DisplayFactory
+     */
+    protected $displayFactory;
+
+    /**
+     * @var CommandFactory
+     */
+    protected $commandFactory;
+
+    /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
@@ -70,8 +100,14 @@ class ModuleFactory extends BaseFactory
      * @param WidgetFactory $widgetFactory
      * @param RegionFactory $regionFactory
      * @param PlaylistFactory $playlistFactory
+     * @param MediaFactory $mediaFactory
+     * @param DataSetFactory $dataSetFactory
+     * @param DataSetColumnFactory $dataSetColumnFactory
+     * @param TransitionFactory $transitionFactory
+     * @param DisplayFactory $displayFactory
+     * @param CommandFactory $commandFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService, $widgetFactory, $regionFactory, $playlistFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService, $widgetFactory, $regionFactory, $playlistFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
@@ -80,6 +116,12 @@ class ModuleFactory extends BaseFactory
         $this->widgetFactory = $widgetFactory;
         $this->regionFactory = $regionFactory;
         $this->playlistFactory = $playlistFactory;
+        $this->mediaFactory = $mediaFactory;
+        $this->dataSetFactory = $dataSetFactory;
+        $this->dataSetColumnFactory = $dataSetColumnFactory;
+        $this->transitionFactory = $transitionFactory;
+        $this->displayFactory = $displayFactory;
+        $this->commandFactory = $commandFactory;
     }
 
     /**
@@ -104,21 +146,35 @@ class ModuleFactory extends BaseFactory
             throw new NotFoundException(sprintf(__('Unknown type %s'), $type));
 
         // Create a module
-        return $this->moduleService->get($modules[0]);
+        return $this->moduleService->get(
+            $modules[0],
+            $this->mediaFactory,
+            $this->dataSetFactory,
+            $this->dataSetColumnFactory,
+            $this->transitionFactory,
+            $this->displayFactory,
+            $this->commandFactory
+        );
     }
 
     /**
      * Create a Module
-     * @param string $class
+     * @param string $className
      * @return \Xibo\Widget\ModuleWidget
      * @throws NotFoundException
      */
-    public function createForInstall($class)
+    public function createForInstall($className)
     {
-        $type = new $class();
-        /* @var \Xibo\Widget\ModuleWidget $type */
-
-        return $type;
+        // Create a module
+        return $this->moduleService->getByClass(
+            $className,
+            $this->mediaFactory,
+            $this->dataSetFactory,
+            $this->dataSetColumnFactory,
+            $this->transitionFactory,
+            $this->displayFactory,
+            $this->commandFactory
+        );
     }
 
     /**
@@ -129,7 +185,15 @@ class ModuleFactory extends BaseFactory
      */
     public function createById($moduleId)
     {
-        return $this->moduleService->get($this->getById($moduleId));
+        return $this->moduleService->get(
+            $this->getById($moduleId),
+            $this->mediaFactory,
+            $this->dataSetFactory,
+            $this->dataSetColumnFactory,
+            $this->transitionFactory,
+            $this->displayFactory,
+            $this->commandFactory
+        );
     }
 
     /**
@@ -152,7 +216,15 @@ class ModuleFactory extends BaseFactory
         // Create a module
         /* @var \Xibo\Widget\ModuleWidget $object */
         $module = $modules[0];
-        $object = $this->moduleService->get($module);
+        $object = $this->moduleService->get(
+            $module,
+            $this->mediaFactory,
+            $this->dataSetFactory,
+            $this->dataSetColumnFactory,
+            $this->transitionFactory,
+            $this->displayFactory,
+            $this->commandFactory
+        );
         $object->setWidget($widget);
 
         return $object;
@@ -187,6 +259,7 @@ class ModuleFactory extends BaseFactory
             }
 
             $playlist = $this->playlistFactory->getById($playlistId);
+            $playlist->setChildObjectDependencies($this->regionFactory);
             $playlist->load(['playlistIncludeRegionAssignments' => false]);
 
             // Create a new widget to use

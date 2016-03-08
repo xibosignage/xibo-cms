@@ -26,6 +26,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
+use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
@@ -82,6 +83,11 @@ class Module extends Base
     private $transitionFactory;
 
     /**
+     * @var RegionFactory
+     */
+    private $regionFactory;
+
+    /**
      * Set common dependencies.
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
@@ -98,9 +104,9 @@ class Module extends Base
      * @param UserGroupFactory $userGroupFactory
      * @param WidgetFactory $widgetFactory
      * @param TransitionFactory $transitionFactory
-     *
+     * @param RegionFactory $regionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -112,6 +118,7 @@ class Module extends Base
         $this->userGroupFactory = $userGroupFactory;
         $this->widgetFactory = $widgetFactory;
         $this->transitionFactory = $transitionFactory;
+        $this->regionFactory = $regionFactory;
     }
 
     /**
@@ -322,7 +329,7 @@ class Module extends Base
         // All modules should be capable of autoload
         $module = $this->moduleFactory->createForInstall($moduleDetails->class);
         $module->setUser($this->getUser());
-        $module->installOrUpdate();
+        $module->installOrUpdate($this->moduleFactory);
 
         $this->getLog()->notice('Module Installed: ' . $module->getModuleType());
 
@@ -370,6 +377,7 @@ class Module extends Base
             throw new AccessDeniedException();
 
         // Load some information about this playlist
+        $playlist->setChildObjectDependencies($this->regionFactory);
         $playlist->load([
             'playlistIncludeRegionAssignments' => false,
             'loadWidgets' => false

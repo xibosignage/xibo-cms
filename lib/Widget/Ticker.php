@@ -38,14 +38,17 @@ class Ticker extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
     }
 
+    /**
+     * @return string
+     */
     public function layoutDesignerJavaScript()
     {
         // We use the same javascript as the data set view designer
@@ -58,7 +61,7 @@ class Ticker extends ModuleWidget
      */
     public function dataSets()
     {
-        return $this->getFactoryService()->get('DataSetFactory')->query();
+        return $this->dataSetFactory->query();
     }
 
     /**
@@ -70,7 +73,7 @@ class Ticker extends ModuleWidget
         if ($this->getOption('dataSetId') == 0)
             throw new \InvalidArgumentException(__('DataSet not selected'));
 
-       return $this->getFactoryService()->get('DataSetColumnFactory')->getByDataSetId($this->getOption('dataSetId'));
+       return $this->dataSetColumnFactory->getByDataSetId($this->getOption('dataSetId'));
     }
 
     /**
@@ -152,7 +155,7 @@ class Ticker extends ModuleWidget
                 throw new \InvalidArgumentException(__('Please select a DataSet'));
 
             // Check we have permission to use this DataSetId
-            if (!$this->getUser()->checkViewable($this->getFactoryService()->get('DataSetFactory')->getById($this->getOption('dataSetId'))))
+            if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId'))))
                 throw new \InvalidArgumentException(__('You do not have permission to use that dataset'));
 
             if ($this->widget->widgetId != 0) {
@@ -616,7 +619,7 @@ class Ticker extends ModuleWidget
                             // image url
                             if ($link != NULL) {
                                 // Grab the profile image
-                                $file = $this->getFactoryService()->get('MediaFactory')->createModuleFile('ticker_' . md5($this->getOption('url') . $link), $link);
+                                $file = $this->mediaFactory->createModuleFile('ticker_' . md5($this->getOption('url') . $link), $link);
                                 $file->isRemote = true;
                                 $file->expires = $expires;
                                 $file->save();
@@ -831,7 +834,7 @@ class Ticker extends ModuleWidget
 
         // Create a data set object, to get the results.
         try {
-            $dataSet = $this->getFactoryService()->get('DataSetFactory')->getById($dataSetId);
+            $dataSet = $this->dataSetFactory->getById($dataSetId);
 
             // Get an array representing the id->heading mappings
             $mappings = [];
@@ -866,7 +869,7 @@ class Ticker extends ModuleWidget
             // Set the timezone for SQL
             $dateNow = $this->getDate()->parse();
             if ($displayId != 0) {
-                $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
+                $display = $this->displayFactory->getById($displayId);
                 $timeZone = $display->getSetting('displayTimeZone', '');
                 $timeZone = ($timeZone == '') ? $this->getConfig()->GetSetting('defaultTimezone') : $timeZone;
                 $dateNow->timezone($timeZone);
@@ -901,7 +904,7 @@ class Ticker extends ModuleWidget
                         if ($mappings[$header]['dataTypeId'] == 4) {
                             // External Image
                             // Download the image, alter the replace to wrap in an image tag
-                            $file = $this->getFactoryService()->get('MediaFactory')->createModuleFile('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
+                            $file = $this->mediaFactory->createModuleFile('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
                             $file->isRemote = true;
                             $file->expires = $expires;
                             $file->save();
@@ -917,7 +920,7 @@ class Ticker extends ModuleWidget
                             // Library Image
                             // The content is the ID of the image
                             try {
-                                $file = $this->getFactoryService()->get('MediaFactory')->getById($replace);
+                                $file = $this->mediaFactory->getById($replace);
                             }
                             catch (NotFoundException $e) {
                                 $this->getLog()->error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);

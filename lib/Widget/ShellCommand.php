@@ -107,9 +107,13 @@ class ShellCommand extends ModuleWidget
         return 2;
     }
 
+    /**
+     * @param array $data
+     * @return array
+     */
     public function setTemplateData($data)
     {
-        $data['commands'] = $this->getFactoryService()->get('CommandFactory')->query();
+        $data['commands'] = $this->commandFactory->query();
         return $data;
     }
 }

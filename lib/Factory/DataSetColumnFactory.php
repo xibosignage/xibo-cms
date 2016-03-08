@@ -29,6 +29,14 @@ class DataSetColumnFactory extends BaseFactory
     }
 
     /**
+     * @return DataSetColumn
+     */
+    public function createEmpty()
+    {
+        return new DataSetColumn($this->getStore(), $this->getLog());
+    }
+
+    /**
      * Get by Id
      * @param int $dataSetColumnId
      * @return DataSetColumn

@@ -29,11 +29,11 @@ class Text extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
     }
 
     public function validate()
@@ -107,12 +107,12 @@ class Text extends ModuleWidget
         $text = $this->parseLibraryReferences($isPreview, $this->getRawNode('text', null));
 
         // Handle older layouts that have a direction node but no effect node
-        $oldDirection = $this->GetOption('direction', 'none');
+        $oldDirection = $this->getOption('direction', 'none');
 
         if ($oldDirection != 'none')
             $oldDirection = 'marquee' . ucfirst($oldDirection);
 
-        $effect = $this->GetOption('effect', $oldDirection);
+        $effect = $this->getOption('effect', $oldDirection);
 
         // Set some options
         $options = array(
@@ -123,13 +123,13 @@ class Text extends ModuleWidget
             'numItems' => 1,
             'takeItemsFrom' => 'start',
             'itemsPerPage' => 0,
-            'speed' => $this->GetOption('speed', 0),
+            'speed' => $this->getOption('speed', 0),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
             'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
             'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
             'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
-            'marqueeInlineSelector' => $this->GetOption('marqueeInlineSelector', '.item, .item p')
+            'marqueeInlineSelector' => $this->getOption('marqueeInlineSelector', '.item, .item p')
         );
 
         // See if we need to replace out any [clock] or [date] tags

@@ -101,7 +101,7 @@ class DataSetData extends Base
         $this->getState()->template = 'dataset-data-form-add';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'images' => $this->getFactoryService()->get('MediaFactory')->query(null, ['type' => 'image'])
+            'images' => $this->mediaFactory->query(null, ['type' => 'image'])
         ]);
     }
 
@@ -209,7 +209,7 @@ class DataSetData extends Base
         $this->getState()->setData([
             'dataSet' => $dataSet,
             'row' => $dataSet->getData(['id' => $rowId])[0],
-            'images' => $this->getFactoryService()->get('MediaFactory')->query(null, ['type' => 'image'])
+            'images' => $this->mediaFactory->query(null, ['type' => 'image'])
         ]);
     }
 

@@ -83,6 +83,9 @@ $app->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
 //
 $app->add(new \Xibo\Middleware\Actions());
 
+// Theme Middleware
+$app->add(new \Xibo\Middleware\Theme());
+
 // Authentication middleware
 if ($app->configService->authentication != null && $app->configService->authentication instanceof \Slim\Middleware)
     $app->add($app->configService->authentication);
@@ -91,7 +94,6 @@ else
 
 // Standard Xibo middleware
 $app->add(new \Xibo\Middleware\CsrfGuard());
-$app->add(new \Xibo\Middleware\Theme());
 $app->add(new \Xibo\Middleware\State());
 $app->add(new \Xibo\Middleware\Storage());
 //

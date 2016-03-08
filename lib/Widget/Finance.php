@@ -24,6 +24,7 @@ namespace Xibo\Widget;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\ModuleFactory;
 
 
 class Finance extends ModuleWidget
@@ -32,12 +33,13 @@ class Finance extends ModuleWidget
 
     /**
      * Install or Update this module
+     * @param ModuleFactory $moduleFactory
      */
-    public function installOrUpdate()
+    public function installOrUpdate($moduleFactory)
     {
         if ($this->module == null) {
             // Install
-            $module = new \Xibo\Entity\Module();
+            $module = $moduleFactory->createEmpty();
             $module->name = 'Finance';
             $module->type = 'finance';
             $module->class = 'Xibo\Widget\Finance';
@@ -65,9 +67,9 @@ class Finance extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
     }
 
     /**

@@ -36,14 +36,36 @@ use Xibo\Storage\StorageServiceInterface;
 class WidgetFactory extends BaseFactory
 {
     /**
+     * @var WidgetOptionFactory
+     */
+    private $widgetOptionFactory;
+
+    /**
+     * @var WidgetMediaFactory
+     */
+    private $widgetMediaFactory;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param WidgetOptionFactory $widgetOptionFactory
+     * @param WidgetMediaFactory $widgetMediaFactory
+     * @param PermissionFactory $permissionFactory
+     *
      */
-    public function __construct($store, $log, $sanitizerService)
+    public function __construct($store, $log, $sanitizerService, $widgetOptionFactory, $widgetMediaFactory, $permissionFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->widgetOptionFactory = $widgetOptionFactory;
+        $this->widgetMediaFactory = $widgetMediaFactory;
+        $this->permissionFactory = $permissionFactory;
     }
 
     /**
@@ -54,7 +76,10 @@ class WidgetFactory extends BaseFactory
     {
         return new Widget(
             $this->getStore(),
-            $this->getLog()
+            $this->getLog(),
+            $this->widgetOptionFactory,
+            $this->widgetMediaFactory,
+            $this->permissionFactory
         );
     }
 

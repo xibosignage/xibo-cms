@@ -24,6 +24,10 @@ namespace Xibo\Entity;
 
 
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\RegionFactory;
+use Xibo\Factory\WidgetFactory;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -86,14 +90,52 @@ class Playlist implements \JsonSerializable
     public $displayOrder;
 
     /**
+     * @var DateServiceInterface
+     */
+    public $dateService;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var WidgetFactory
+     */
+    private $widgetFactory;
+
+    /**
+     * @var RegionFactory
+     */
+    private $regionFactory;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param DateServiceInterface $date
+     * @param PermissionFactory $permissionFactory
+     * @param WidgetFactory $widgetFactory
      */
-    public function __construct($store, $log)
+    public function __construct($store, $log, $date, $permissionFactory, $widgetFactory)
     {
         $this->setCommonDependencies($store, $log);
+
+        $this->dateService = $date;
+        $this->permissionFactory = $permissionFactory;
+        $this->widgetFactory = $widgetFactory;
+
         $this->excludeProperty('regions');
+    }
+
+    /**
+     * @param $regionFactory
+     * @return $this
+     */
+    public function setChildObjectDependencies($regionFactory)
+    {
+        $this->regionFactory = $regionFactory;
+        return $this;
     }
 
     public function __clone()
@@ -197,11 +239,11 @@ class Playlist implements \JsonSerializable
 
         // Load permissions
         if ($options['loadPermissions'])
-            $this->permissions = $this->getFactoryService()->get('PermissionFactory')->getByObjectId(get_class(), $this->playlistId);
+            $this->permissions = $this->permissionFactory->getByObjectId(get_class(), $this->playlistId);
 
         // Load the widgets
         if ($options['loadWidgets']) {
-            foreach ($this->getFactoryService()->get('WidgetFactory')->getByPlaylistId($this->playlistId) as $widget) {
+            foreach ($this->widgetFactory->getByPlaylistId($this->playlistId) as $widget) {
                 /* @var Widget $widget */
                 $widget->load();
                 $this->widgets[] = $widget;
@@ -210,7 +252,7 @@ class Playlist implements \JsonSerializable
 
         if ($options['playlistIncludeRegionAssignments']) {
             // Load the region assignments
-            foreach ($this->getFactoryService()->get('RegionFactory')->getByPlaylistId($this->playlistId) as $region) {
+            foreach ($this->regionFactory->getByPlaylistId($this->playlistId) as $region) {
                 /* @var Region $region */
                 $this->regions[] = $region;
             }

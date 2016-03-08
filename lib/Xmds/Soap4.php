@@ -253,7 +253,7 @@ class Soap4 extends Soap
                 // Validate the nonce
                 $requiredFile = $this->getFactoryService()->get('RequiredFileFactory')->getByDisplayAndMedia($this->display->displayId, $fileId);
 
-                $media = $this->getFactoryService()->get('MediaFactory')->getById($fileId);
+                $media = $this->mediaFactory->getById($fileId);
 
                 // Return the Chunk size specified
                 $f = fopen($libraryLocation . $media->storedAs, 'r');

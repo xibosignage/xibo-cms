@@ -26,19 +26,19 @@ class Theme extends Middleware
 
         $app->configService->loadTheme();
 
-        // Provide the view path to Twig
-        $twig = $app->view()->getInstance()->getLoader();
-        /* @var \Twig_Loader_Filesystem $twig */
-
-        // Append the module view paths
-        $twig->setPaths(array_merge($app->moduleFactory->getViewPaths(), [PROJECT_ROOT . '/views']));
-
-        // Does this theme provide an alternative view path?
-        if ($app->configService->getThemeConfig('view_path') != '') {
-            $twig->prependPath($app->configService->getThemeConfig('view_path'));
-        }
-
         $app->hook('slim.before.dispatch', function() use($app) {
+
+            // Provide the view path to Twig
+            $twig = $app->view()->getInstance()->getLoader();
+            /* @var \Twig_Loader_Filesystem $twig */
+
+            // Append the module view paths
+            $twig->setPaths(array_merge($app->moduleFactory->getViewPaths(), [PROJECT_ROOT . '/views']));
+
+            // Does this theme provide an alternative view path?
+            if ($app->configService->getThemeConfig('view_path') != '') {
+                $twig->prependPath($app->configService->getThemeConfig('view_path'));
+            }
 
             $settings = [];
             foreach ($app->settingsFactory->query() as $setting) {

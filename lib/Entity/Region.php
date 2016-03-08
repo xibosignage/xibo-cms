@@ -23,6 +23,10 @@ namespace Xibo\Entity;
 
 
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlaylistFactory;
+use Xibo\Factory\RegionFactory;
+use Xibo\Factory\RegionOptionFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -129,13 +133,41 @@ class Region implements \JsonSerializable
     public $tempId = null;
 
     /**
+     * @var RegionFactory
+     */
+    private $regionFactory;
+
+    /**
+     * @var RegionOptionFactory
+     */
+    private $regionOptionFactory;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var PlaylistFactory
+     */
+    private $playlistFactory;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param RegionFactory $regionFactory
+     * @param PermissionFactory $permissionFactory
+     * @param RegionOptionFactory $regionOptionFactory
+     * @param PlaylistFactory $playlistFactory
      */
-    public function __construct($store, $log)
+    public function __construct($store, $log, $regionFactory, $permissionFactory, $regionOptionFactory, $playlistFactory)
     {
         $this->setCommonDependencies($store, $log);
+        $this->regionFactory = $regionFactory;
+        $this->permissionFactory = $permissionFactory;
+        $this->regionOptionFactory = $regionOptionFactory;
+        $this->playlistFactory = $playlistFactory;
     }
 
     public function __clone()
@@ -242,7 +274,7 @@ class Region implements \JsonSerializable
             $this->getOption($option)->value = $value;
         }
         catch (NotFoundException $e) {
-            $this->regionOptions[] = $this->getFactoryService()->get('RegionOptionFactory')->create($this->regionId, $option, $value);
+            $this->regionOptions[] = $this->regionOptionFactory->create($this->regionId, $option, $value);
         }
     }
 
@@ -289,20 +321,21 @@ class Region implements \JsonSerializable
         $this->getLog()->debug('Load Region with %s', json_encode($options));
 
         // Load permissions
-        $this->permissions = $this->getFactoryService()->get('PermissionFactory')->getByObjectId(get_class(), $this->regionId);
+        $this->permissions = $this->permissionFactory->getByObjectId(get_class(), $this->regionId);
 
         // Load all playlists
         if ($options['regionIncludePlaylists']) {
-            $this->playlists = $this->getFactoryService()->get('PlaylistFactory')->getByRegionId($this->regionId);
+            $this->playlists = $this->playlistFactory->getByRegionId($this->regionId);
 
             foreach ($this->playlists as $playlist) {
                 /* @var Playlist $playlist */
+                $playlist->setChildObjectDependencies($this->regionFactory);
                 $playlist->load($options);
             }
         }
 
         // Get region options
-        $this->regionOptions = $this->getFactoryService()->get('RegionOptionFactory')->getByRegionId($this->regionId);
+        $this->regionOptions = $this->regionOptionFactory->getByRegionId($this->regionId);
 
         $this->hash = $this->hash();
         $this->loaded = true;

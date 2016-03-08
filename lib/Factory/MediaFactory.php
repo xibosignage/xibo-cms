@@ -53,6 +53,11 @@ class MediaFactory extends BaseFactory
     private $tagFactory;
 
     /**
+     * @var PlaylistFactory
+     */
+    private $playlistFactory;
+
+    /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
@@ -62,8 +67,9 @@ class MediaFactory extends BaseFactory
      * @param ConfigServiceInterface $config
      * @param PermissionFactory $permissionFactory
      * @param TagFactory $tagFactory
+     * @param PlaylistFactory $playlistFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $permissionFactory, $tagFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $permissionFactory, $tagFactory, $playlistFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
@@ -71,6 +77,7 @@ class MediaFactory extends BaseFactory
         $this->config = $config;
         $this->permissionFactory = $permissionFactory;
         $this->tagFactory = $tagFactory;
+        $this->playlistFactory = $playlistFactory;
     }
 
     /**
@@ -79,7 +86,7 @@ class MediaFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Media($this->getStore(), $this->getLog(), $this->config, $this, $this->permissionFactory, $this->tagFactory);
+        return new Media($this->getStore(), $this->getLog(), $this->config, $this, $this->permissionFactory, $this->tagFactory, $this->playlistFactory);
     }
 
     /**

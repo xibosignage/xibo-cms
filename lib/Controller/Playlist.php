@@ -302,7 +302,7 @@ class Playlist extends Base
         // Loop through all the media
         foreach ($media as $mediaId) {
             /* @var int $mediaId */
-            $item = $this->getFactoryService()->get('MediaFactory')->getById($mediaId);
+            $item = $this->mediaFactory->getById($mediaId);
 
             if (!$this->getUser()->checkViewable($item))
                 throw new AccessDeniedException(__('You do not have permissions to use this media'));

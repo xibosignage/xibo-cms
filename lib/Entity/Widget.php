@@ -23,6 +23,10 @@
 namespace Xibo\Entity;
 
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlaylistFactory;
+use Xibo\Factory\WidgetMediaFactory;
+use Xibo\Factory\WidgetOptionFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Widget\ModuleWidget;
@@ -134,14 +138,50 @@ class Widget implements \JsonSerializable
     public static $widgetMinDuration = 1;
 
     /**
+     * @var WidgetOptionFactory
+     */
+    private $widgetOptionFactory;
+
+    /**
+     * @var WidgetMediaFactory
+     */
+    private $widgetMediaFactory;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var PlaylistFactory
+     */
+    private $playlistFactory;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param WidgetOptionFactory $widgetOptionFactory
+     * @param WidgetMediaFactory $widgetMediaFactory
+     * @param PermissionFactory $permissionFactory
      */
-    public function __construct($store, $log)
+    public function __construct($store, $log, $widgetOptionFactory, $widgetMediaFactory, $permissionFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->excludeProperty('module');
+        $this->widgetOptionFactory = $widgetOptionFactory;
+        $this->widgetMediaFactory = $widgetMediaFactory;
+        $this->permissionFactory = $permissionFactory;
+    }
+
+    /**
+     * @param $playlistFactory
+     * @return $this
+     */
+    public function setChildObjectDepencencies($playlistFactory)
+    {
+        $this->playlistFactory = $playlistFactory;
+        return $this;
     }
 
     public function __clone()
@@ -249,7 +289,7 @@ class Widget implements \JsonSerializable
             $widgetOption->value = $value;
         }
         catch (NotFoundException $e) {
-            $this->widgetOptions[] = $this->getFactoryService()->get('WidgetOptionFactory')->create($this->widgetId, $type, $option, $value);
+            $this->widgetOptions[] = $this->widgetOptionFactory->create($this->widgetId, $type, $option, $value);
         }
     }
 
@@ -312,13 +352,13 @@ class Widget implements \JsonSerializable
             return;
 
         // Load permissions
-        $this->permissions = $this->getFactoryService()->get('PermissionFactory')->getByObjectId(get_class(), $this->widgetId);
+        $this->permissions = $this->permissionFactory->getByObjectId(get_class(), $this->widgetId);
 
         // Load the widget options
-        $this->widgetOptions = $this->getFactoryService()->get('WidgetOptionFactory')->getByWidgetId($this->widgetId);
+        $this->widgetOptions = $this->widgetOptionFactory->getByWidgetId($this->widgetId);
 
         // Load any media assignments for this widget
-        $this->mediaIds = $this->getFactoryService()->get('WidgetMediaFactory')->getByWidgetId($this->widgetId);
+        $this->mediaIds = $this->widgetMediaFactory->getByWidgetId($this->widgetId);
 
         $this->hash = $this->hash();
         $this->mediaHash = $this->mediaHash();
@@ -363,7 +403,7 @@ class Widget implements \JsonSerializable
         if ($options['notify']) {
             $this->getLog()->debug('Notify playlistId %d', $this->playlistId);
             // Notify the Layout
-            $playlist = $this->getFactoryService()->get('PlaylistFactory')->getById($this->playlistId);
+            $playlist = $this->playlistFactory->getById($this->playlistId);
             $playlist->notifyLayouts();
         }
     }
@@ -404,7 +444,7 @@ class Widget implements \JsonSerializable
             $this->getLog()->debug('Notifying upstream playlist');
 
             // Notify the Layout
-            $playlist = $this->getFactoryService()->get('PlaylistFactory')->getById($this->playlistId);
+            $playlist = $this->playlistFactory->getById($this->playlistId);
             $playlist->notifyLayouts();
         }
 

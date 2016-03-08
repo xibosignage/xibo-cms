@@ -24,6 +24,7 @@ namespace Xibo\Widget;
 use Emojione\Client;
 use Emojione\Ruleset;
 use Respect\Validation\Validator as v;
+use Xibo\Factory\ModuleFactory;
 
 
 class Twitter extends ModuleWidget
@@ -32,12 +33,13 @@ class Twitter extends ModuleWidget
 
     /**
      * Install or Update this module
+     * @param ModuleFactory $moduleFactory
      */
-    public function installOrUpdate()
+    public function installOrUpdate($moduleFactory)
     {
         if ($this->module == null) {
             // Install
-            $module = new \Xibo\Entity\Module();
+            $module = $moduleFactory->createEmpty();
             $module->name = 'Twitter';
             $module->type = 'twitter';
             $module->class = 'Xibo\Widget\Twitter';
@@ -65,10 +67,10 @@ class Twitter extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile(PROJECT_ROOT . '/web/modules/emojione/emojione.sprites.svg')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/emojione/emojione.sprites.svg')->save();
     }
 
     /**
@@ -368,7 +370,7 @@ class Twitter extends ModuleWidget
             // Use the display ID or the default.
             if ($displayId != 0) {
                 // Look up the lat/long
-                $display = $this->getFactoryService()->get('DisplayFactory')->getById($displayId);
+                $display = $this->displayFactory->getById($displayId);
                 $defaultLat = $display->latitude;
                 $defaultLong = $display->longitude;
             } else {
@@ -502,7 +504,7 @@ class Twitter extends ModuleWidget
                         // Grab the profile image
                         if ($tweet->user->profile_image_url != '') {
                             // Grab the profile image
-                            $file = $this->getFactoryService()->get('MediaFactory')->createModuleFile('twitter_' . $tweet->user->id, $tweet->user->profile_image_url);
+                            $file = $this->mediaFactory->createModuleFile('twitter_' . $tweet->user->id, $tweet->user->profile_image_url);
                             $file->isRemote = true;
                             $file->expires = $expires;
                             $file->save();
@@ -523,7 +525,7 @@ class Twitter extends ModuleWidget
                             $photoUrl = $tweet->entities->media[0]->media_url;
 
                             if ($photoUrl != '') {
-                                $file = $this->getFactoryService()->get('MediaFactory')->createModuleFile('twitter_photo_' . $tweet->user->id . '_' . $tweet->entities->media[0]->id_str, $photoUrl);
+                                $file = $this->mediaFactory->createModuleFile('twitter_photo_' . $tweet->user->id . '_' . $tweet->entities->media[0]->id_str, $photoUrl);
                                 $file->isRemote = true;
                                 $file->expires = $expires;
                                 $file->save();

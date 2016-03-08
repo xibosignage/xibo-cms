@@ -29,17 +29,58 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class RegionFactory
+ * @package Xibo\Factory
+ */
 class RegionFactory extends BaseFactory
 {
+    /**
+     * @var RegionOptionFactory
+     */
+    private $regionOptionFactory;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var PlaylistFactory
+     */
+    private $playlistFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param PermissionFactory $permissionFactory
+     * @param RegionOptionFactory $regionOptionFactory
+     * @param PlaylistFactory $playlistFactory
      */
-    public function __construct($store, $log, $sanitizerService)
+    public function __construct($store, $log, $sanitizerService, $permissionFactory, $regionOptionFactory, $playlistFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+
+        $this->permissionFactory = $permissionFactory;
+        $this->regionOptionFactory = $regionOptionFactory;
+        $this->playlistFactory = $playlistFactory;
+    }
+
+    /**
+     * @return Region
+     */
+    public function createEmpty()
+    {
+        return new Region(
+            $this->getStore(),
+            $this->getLog(),
+            $this,
+            $this->permissionFactory,
+            $this->regionOptionFactory,
+            $this->playlistFactory
+        );
     }
 
     /**
@@ -65,8 +106,7 @@ class RegionFactory extends BaseFactory
         if ($height <= 0)
             throw new \InvalidArgumentException(__('Height must be greater than 0'));
 
-        $region = new Region();
-        $region->setContainer($this->getContainer());
+        $region = $this->createEmpty();
         $region->ownerId = $ownerId;
         $region->name = $name;
         $region->width = $width;
@@ -77,7 +117,7 @@ class RegionFactory extends BaseFactory
 
         // Create a Playlist for this region
         // many to many relationship
-        $playlist = $this->getFactoryService()->get('PlaylistFactory')->create($name, $ownerId);
+        $playlist = $this->playlistFactory->create($name, $ownerId);
         $region->assignPlaylist($playlist);
 
         return $region;
@@ -189,7 +229,7 @@ class RegionFactory extends BaseFactory
         }
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Region())->setContainer($this->getContainer())->hydrate($row, ['intProperties' => ['zIndex']]);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['zIndex']]);
         }
 
         return $entries;

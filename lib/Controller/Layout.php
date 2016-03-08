@@ -971,7 +971,7 @@ class Layout extends Base
 
         // Keep things tidy
         // Maintenance should also do this.
-        (new Library())->setApp($this->getApp())->removeExpiredFiles();
+        $this->getApp()->container->get('\Xibo\Controller\Library')->removeExpiredFiles();
 
         $this->getState()->html = $status;
         $this->getState()->extra = [

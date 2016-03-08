@@ -20,15 +20,24 @@
  */
 namespace Xibo\Widget;
 
-use Slim\Helper\Set;
 use Slim\Slim;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\User;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\CommandFactory;
+use Xibo\Factory\DataSetColumnFactory;
+use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\TransitionFactory;
 use Xibo\Service\ConfigService;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\FactoryServiceInterface;
 use Xibo\Service\LogService;
+use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -41,7 +50,7 @@ use Xibo\Storage\StorageServiceInterface;
 abstract class ModuleWidget implements ModuleInterface
 {
     /**
-     * @var Set
+     * @var Slim
      */
     private $app;
 
@@ -71,13 +80,104 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected $codeSchemaVersion = -1;
 
+    //
+    // Injected Factory Classes and Services Follow
+    //
+
     /**
-     * Set App
-     * @param Slim $container
+     * @var StorageServiceInterface
      */
-    public function setApp($container)
+    private $store;
+
+    /**
+     * @var PoolInterface
+     */
+    private $pool;
+
+    /**
+     * @var LogServiceInterface
+     */
+    private $logService;
+
+    /**
+     * @var ConfigServiceInterface
+     */
+    private $configService;
+
+    /**
+     * @var DateServiceInterface
+     */
+    private $dateService;
+
+    /**
+     * @var SanitizerServiceInterface
+     */
+    private $sanitizerService;
+
+    /**
+     * @var MediaFactory
+     */
+    protected $mediaFactory;
+
+    /**
+     * @var DataSetFactory
+     */
+    protected $dataSetFactory;
+
+    /**
+     * @var DataSetColumnFactory
+     */
+    protected $dataSetColumnFactory;
+
+    /**
+     * @var TransitionFactory
+     */
+    protected $transitionFactory;
+
+    /**
+     * @var DisplayFactory
+     */
+    protected $displayFactory;
+
+    /**
+     * @var CommandFactory
+     */
+    protected $commandFactory;
+
+    /**
+     * ModuleWidget constructor.
+     * @param Slim $app
+     * @param StorageServiceInterface $store
+     * @param PoolInterface $pool
+     * @param LogServiceInterface $log
+     * @param ConfigServiceInterface $config
+     * @param DateServiceInterface $date
+     * @param SanitizerServiceInterface $sanitizer
+     * @param MediaFactory $mediaFactory
+     * @param DataSetFactory $dataSetFactory
+     * @param DataSetColumnFactory $dataSetColumnFactory
+     * @param TransitionFactory $transitionFactory
+     * @param DisplayFactory $displayFactory
+     * @param CommandFactory $commandFactory
+     */
+    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory)
     {
-        $this->app = $container;
+        $this->app = $app;
+        $this->store = $store;
+        $this->pool = $pool;
+        $this->logService = $log;
+        $this->configService = $config;
+        $this->dateService = $date;
+        $this->sanitizerService = $sanitizer;
+
+        $this->mediaFactory = $mediaFactory;
+        $this->dataSetFactory = $dataSetFactory;
+        $this->dataSetColumnFactory = $dataSetColumnFactory;
+        $this->transitionFactory = $transitionFactory;
+        $this->displayFactory = $displayFactory;
+        $this->commandFactory = $commandFactory;
+
+        $this->init();
     }
 
     /**
@@ -93,20 +193,12 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
-     * @return FactoryServiceInterface
-     */
-    public function getFactoryService()
-    {
-        return $this->getApp()->factoryService;
-    }
-
-    /**
      * Get Cache Pool
      * @return \Stash\Interfaces\PoolInterface
      */
     protected function getPool()
     {
-        return $this->app->pool;
+        return $this->pool;
     }
 
     /**
@@ -115,7 +207,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function getStore()
     {
-        return $this->getApp()->store;
+        return $this->store;
     }
 
     /**
@@ -124,7 +216,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function getLog()
     {
-        return $this->getApp()->logService;
+        return $this->logService;
     }
 
     /**
@@ -133,7 +225,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function getConfig()
     {
-        return $this->getApp()->configService;
+        return $this->configService;
     }
 
     /**
@@ -142,7 +234,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function getDate()
     {
-        return $this->getApp()->dateService;
+        return $this->dateService;
     }
 
     /**
@@ -151,7 +243,16 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function getSanitizer()
     {
-        return $this->getApp()->sanitizerService;
+        return $this->sanitizerService;
+    }
+
+    //
+    // End of Injected Factories and Services
+    //
+
+    public function init()
+    {
+
     }
 
     /**
@@ -448,7 +549,7 @@ abstract class ModuleWidget implements ModuleInterface
         $this->getLog()->debug('Media assigned: ' . count($this->widget->mediaIds));
 
         if ($this->getModule()->regionSpecific == 0 && count($this->widget->mediaIds) > 0) {
-            $media = $this->getFactoryService()->get('MediaFactory')->getById($this->widget->mediaIds[0]);
+            $media = $this->mediaFactory->getById($this->widget->mediaIds[0]);
             $name = $media->name;
         } else {
             $name = $this->module->name;
@@ -533,6 +634,7 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Gets a Tab
+     * @param string $tab
      * @return mixed
      * @throws ControllerNotImplemented
      */
@@ -596,7 +698,7 @@ abstract class ModuleWidget implements ModuleInterface
 
         // Look up the real transition name
         try {
-            $transition = $this->getFactoryService()->get('TransitionFactory')->getByCode($code);
+            $transition = $this->transitionFactory->getByCode($code);
             return __($transition->transition);
         }
         catch (NotFoundException $e) {
@@ -608,8 +710,10 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Default behaviour for install / upgrade
      * this should be overridden for new modules
+     * @param ModuleFactory $moduleFactory
+     * @throws ControllerNotImplemented
      */
-    public function installOrUpdate()
+    public function installOrUpdate($moduleFactory)
     {
         if ($this->module->renderAs != 'native')
             throw new ControllerNotImplemented(__('Module must implement InstallOrUpgrade'));
@@ -728,7 +832,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function getMedia()
     {
-        return $this->getFactoryService()->get('MediaFactory')->getById($this->getMediaId());
+        return $this->mediaFactory->getById($this->getMediaId());
     }
 
     /**
@@ -736,7 +840,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function download()
     {
-        $media = $this->getFactoryService()->get('MediaFactory')->getById($this->getMediaId());
+        $media = $this->mediaFactory->getById($this->getMediaId());
 
         // This widget is expected to output a file - usually this is for file based media
         // Get the name with library
@@ -791,7 +895,7 @@ abstract class ModuleWidget implements ModuleInterface
 
             // Check that this mediaId exists and get some information about it
             try {
-                $entry = $this->getFactoryService()->get('MediaFactory')->getById($mediaId);
+                $entry = $this->mediaFactory->getById($mediaId);
 
                 // Assign it
                 $this->assignMedia($entry->mediaId);

@@ -32,6 +32,7 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -207,6 +208,11 @@ class Media implements \JsonSerializable
     private $permissionFactory;
 
     /**
+     * @var PlaylistFactory
+     */
+    private $playlistFactory;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
@@ -214,8 +220,9 @@ class Media implements \JsonSerializable
      * @param MediaFactory $mediaFactory
      * @param PermissionFactory $permissionFactory
      * @param TagFactory $tagFactory
+     * @param PlaylistFactory $playlistFactory
      */
-    public function __construct($store, $log, $config, $mediaFactory, $permissionFactory, $tagFactory)
+    public function __construct($store, $log, $config, $mediaFactory, $permissionFactory, $tagFactory, $playlistFactory)
     {
         $this->setCommonDependencies($store, $log);
 
@@ -223,6 +230,7 @@ class Media implements \JsonSerializable
         $this->mediaFactory = $mediaFactory;
         $this->permissionFactory = $permissionFactory;
         $this->tagFactory = $tagFactory;
+        $this->playlistFactory = $playlistFactory;
     }
 
     /**
@@ -482,8 +490,10 @@ class Media implements \JsonSerializable
                 $widget->assignMedia($parentMedia->mediaId);
 
             // This action might result in us deleting a widget (unless we are a temporary file with an expiry date)
-            if ($this->expires == 0 && count($widget->mediaIds) <= 0)
+            if ($this->expires == 0 && count($widget->mediaIds) <= 0) {
+                $widget->setChildObjectDepencencies($this->playlistFactory);
                 $widget->delete();
+            }
             else
                 $widget->save(['saveWidgetOptions' => false]);
         }

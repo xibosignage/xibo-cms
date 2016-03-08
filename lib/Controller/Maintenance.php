@@ -456,13 +456,13 @@ class Maintenance extends Base
                 // It exists but isn't being used any more
                 $this->getLog()->debug('Deleting unused revision media: ' . $media[$file]['mediaid']);
 
-                $this->getFactoryService()->get('MediaFactory')->getById($media[$file]['mediaid'])->delete();
+                $this->mediaFactory->getById($media[$file]['mediaid'])->delete();
             }
             else if (array_key_exists($file, $unusedMedia)) {
                 // It exists but isn't being used any more
                 $this->getLog()->debug('Deleting unused media: ' . $media[$file]['mediaid']);
 
-                $this->getFactoryService()->get('MediaFactory')->getById($media[$file]['mediaid'])->delete();
+                $this->mediaFactory->getById($media[$file]['mediaid'])->delete();
             }
             else {
                 $i--;
