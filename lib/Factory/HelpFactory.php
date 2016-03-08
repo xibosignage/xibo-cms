@@ -29,6 +29,17 @@ class HelpFactory extends BaseFactory
     }
 
     /**
+     * @return Help
+     */
+    public function createEmpty()
+    {
+        return new Help(
+            $this->getStore(),
+            $this->getLog()
+        );
+    }
+
+    /**
      * @param int $helpId
      * @return Help
      * @throws NotFoundException
@@ -81,7 +92,7 @@ class HelpFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Help())->hydrate($row)->setContainer($this->getContainer());
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         // Paging

@@ -21,7 +21,12 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\LogFactory;
 use Xibo\Service\ConfigService;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class Fault
@@ -29,6 +34,29 @@ use Xibo\Service\ConfigService;
  */
 class Fault extends Base
 {
+    /**
+     * @var LogFactory
+     */
+    private $logFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param LogFactory $logFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $logFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->logFactory = $logFactory;
+    }
+
     function displayPage()
     {
         $config = new ConfigService();
@@ -48,7 +76,7 @@ class Fault extends Base
         fputcsv($out, ['logId', 'runNo', 'logDate', 'channel', 'page', 'function', 'message', 'display.display', 'type']);
 
         // Do some post processing
-        foreach ($this->getFactoryService()->get('LogFactory')->query(['logId'], ['fromDt' => (time() - (60 * 10))]) as $row) {
+        foreach ($this->logFactory->query(['logId'], ['fromDt' => (time() - (60 * 10))]) as $row) {
             /* @var \Xibo\Entity\LogEntry $row */
             fputcsv($out, [$row->logId, $row->runNo, $row->logDate, $row->channel, $row->page, $row->function, $row->message, $row->display, $row->type]);
         }

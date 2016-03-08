@@ -39,6 +39,9 @@ class ScheduleFactory extends BaseFactory
      * @param SanitizerServiceInterface $sanitizerService
      * @param ConfigServiceInterface $config
      * @param DisplayGroupFactory $displayGroupFactory
+     * @param DisplayFactory $displayFactory
+     * @param LayoutFactory $layoutFactory
+     * @param MediaFactory $mediaFactory
      */
     public function __construct($store, $log, $sanitizerService, $config, $displayGroupFactory)
     {
@@ -53,7 +56,12 @@ class ScheduleFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Schedule($this->getStore(), $this->getLog(), $this->config, $this->displayGroupFactory);
+        return new Schedule(
+            $this->getStore(),
+            $this->getLog(),
+            $this->config,
+            $this->displayGroupFactory
+        );
     }
 
     /**

@@ -147,7 +147,7 @@ class State extends Middleware
 
         // Player Action Helper
         $app->container->singleton('playerActionService', function() use($app) {
-            return new PlayerActionService($app);
+            return new PlayerActionService($app->configService);
         });
 
         // Set some public routes
@@ -296,6 +296,19 @@ class State extends Middleware
             );
         });
 
+        $app->container->singleton('\Xibo\Controller\AuditLog', function($container) {
+            return new \Xibo\Controller\AuditLog(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->auditLogFactory
+            );
+        });
+
         $app->container->singleton('\Xibo\Controller\Campaign', function($container) {
             return new \Xibo\Controller\Campaign(
                 $container->logService,
@@ -371,8 +384,24 @@ class State extends Middleware
             );
         });
 
-        $app->container->singleton('\Xibo\Controller\DisplayGroup', function() {
-            return new \Xibo\Controller\DisplayGroup();
+        $app->container->singleton('\Xibo\Controller\DisplayGroup', function($container) {
+            return new \Xibo\Controller\DisplayGroup(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->playerActionService,
+                $container->displayFactory,
+                $container->displayGroupFactory,
+                $container->layoutFactory,
+                $container->moduleFactory,
+                $container->mediaFactory,
+                $container->commandFactory,
+                $container->scheduleFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\DisplayProfile', function($container) {
@@ -403,16 +432,42 @@ class State extends Middleware
             return $controller->setApp($app);
         });
 
-        $app->container->singleton('\Xibo\Controller\Fault', function() {
-            return new \Xibo\Controller\Fault();
+        $app->container->singleton('\Xibo\Controller\Fault', function($container) {
+            return new \Xibo\Controller\Fault(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->logFactory
+            );
         });
 
-        $app->container->singleton('\Xibo\Controller\Help', function() {
-            return new \Xibo\Controller\Help();
+        $app->container->singleton('\Xibo\Controller\Help', function($container) {
+            return new \Xibo\Controller\Help(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->helpFactory
+            );
         });
 
-        $app->container->singleton('\Xibo\Controller\IconDashboard', function() {
-            return new \Xibo\Controller\IconDashboard();
+        $app->container->singleton('\Xibo\Controller\IconDashboard', function($container) {
+            return new \Xibo\Controller\IconDashboard(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\Layout', function($container) {
@@ -472,8 +527,18 @@ class State extends Middleware
             return new \Xibo\Controller\Maintenance();
         });
 
-        $app->container->singleton('\Xibo\Controller\MediaManager', function() {
-            return new \Xibo\Controller\MediaManager();
+        $app->container->singleton('\Xibo\Controller\MediaManager', function($container) {
+            return new \Xibo\Controller\MediaManager(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->moduleFactory,
+                $container->layoutFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\Module', function() {
@@ -760,7 +825,8 @@ class State extends Middleware
                 $container->logService,
                 $container->sanitizerService,
                 $container->user,
-                $container->userFactory
+                $container->userFactory,
+                $container->permissionFactory
             );
         });
 

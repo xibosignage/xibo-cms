@@ -19,17 +19,54 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\ModuleFactory;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
-
+/**
+ * Class MediaManager
+ * @package Xibo\Controller
+ */
 class MediaManager extends Base
 {
+    /**
+     * @var ModuleFactory
+     */
+    private $moduleFactory;
+
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param ModuleFactory $moduleFactory
+     * @param LayoutFactory $layoutFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $moduleFactory, $layoutFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->moduleFactory = $moduleFactory;
+        $this->layoutFactory = $layoutFactory;
+    }
 
     public function displayPage()
     {
         $this->getState()->template .= 'media-manager-page';
         $this->getState()->setData([
             // Users we have permission to see
-            'modules' => $this->getFactoryService()->get('ModuleFactory')->query(null, ['assignable' => 1])
+            'modules' => $this->moduleFactory->query(null, ['assignable' => 1])
         ]);
     }
 
@@ -44,7 +81,7 @@ class MediaManager extends Base
 
         $rows = array();
 
-        foreach ($this->getFactoryService()->get('LayoutFactory')->query(null, ['layout' => $filterLayout]) as $layout) {
+        foreach ($this->layoutFactory->query(null, ['layout' => $filterLayout]) as $layout) {
             /* @var \Xibo\Entity\Layout $layout */
             // We have edit permissions?
             if (!$this->getUser()->checkEditable($layout))

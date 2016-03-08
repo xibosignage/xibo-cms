@@ -23,17 +23,25 @@ use Xibo\Storage\StorageServiceInterface;
 class DisplayGroupFactory extends BaseFactory
 {
     /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
+     * @param PermissionFactory $permissionFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $permissionFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
+
+        $this->permissionFactory = $permissionFactory;
     }
 
     /**
@@ -42,7 +50,12 @@ class DisplayGroupFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new DisplayGroup($this->getStore(), $this->getLog());
+        return new DisplayGroup(
+            $this->getStore(),
+            $this->getLog(),
+            $this,
+            $this->permissionFactory
+        );
     }
 
     /**

@@ -19,9 +19,41 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use Xibo\Factory\AuditLogFactory;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
+/**
+ * Class AuditLog
+ * @package Xibo\Controller
+ */
 class AuditLog extends Base
 {
+    /**
+     * @var AuditLogFactory
+     */
+    private $auditLogFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param AuditLogFactory $auditLogFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $auditLogFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->auditLogFactory = $auditLogFactory;
+    }
+
     public function displayPage()
     {
         $this->getState()->template = 'auditlog-page';
@@ -52,7 +84,7 @@ class AuditLog extends Base
         if ($filterEntity != '')
             $search['entity'] = $filterEntity;
 
-        $rows = $this->getFactoryService()->get('AuditLogFactory')->query($this->gridRenderSort(), $this->gridRenderFilter($search));
+        $rows = $this->auditLogFactory->query($this->gridRenderSort(), $this->gridRenderFilter($search));
 
         // Do some post processing
         foreach ($rows as $row) {
@@ -61,7 +93,7 @@ class AuditLog extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->getFactoryService()->get('AuditLogFactory')->countLast();
+        $this->getState()->recordsTotal = $this->auditLogFactory->countLast();
         $this->getState()->setData($rows);
     }
 
@@ -98,7 +130,7 @@ class AuditLog extends Base
             return implode('|', $element);
         }, $search));
 
-        $rows = $this->getFactoryService()->get('AuditLogFactory')->query('logId', ['search' => $search]);
+        $rows = $this->auditLogFactory->query('logId', ['search' => $search]);
 
         $out = fopen('php://output', 'w');
         fputcsv($out, ['ID', 'Date', 'User', 'Entity', 'Message', 'Object']);

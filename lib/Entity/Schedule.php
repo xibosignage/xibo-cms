@@ -357,6 +357,7 @@ class Schedule implements \JsonSerializable
             $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify %d display groups', $this->displayGroups);
             foreach ($this->displayGroups as $displayGroup) {
                 /* @var DisplayGroup $displayGroup */
+                $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
                 $displayGroup->setCollectRequired();
                 $displayGroup->setMediaIncomplete();
             }
