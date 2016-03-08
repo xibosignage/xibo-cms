@@ -4,6 +4,10 @@ namespace Xibo\Helper;
 
 use Exception;
 
+/**
+ * Class BackupUploadHandler
+ * @package Xibo\Helper
+ */
 class BackupUploadHandler extends BlueImpUploadHandler
 {
     protected function handle_form_data($file, $index)
@@ -39,7 +43,7 @@ class BackupUploadHandler extends BlueImpUploadHandler
 
             $file->error = $e->getMessage();
 
-            $controller->getContainer()->commit = false;
+            $controller->getApp()->commit = false;
         }
     }
 }

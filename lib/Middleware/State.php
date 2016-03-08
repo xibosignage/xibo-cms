@@ -550,8 +550,22 @@ class State extends Middleware
             );
         });
 
-        $app->container->singleton('\Xibo\Controller\Maintenance', function() {
-            return new \Xibo\Controller\Maintenance();
+        $app->container->singleton('\Xibo\Controller\Maintenance', function($container) {
+            return new \Xibo\Controller\Maintenance(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->store,
+                $container->userFactory,
+                $container->layoutFactory,
+                $container->displayFactory,
+                $container->upgradeFactory,
+                $container->mediaFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\MediaManager', function($container) {

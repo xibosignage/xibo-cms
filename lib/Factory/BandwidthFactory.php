@@ -14,6 +14,10 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class BandwidthFactory
+ * @package Xibo\Factory
+ */
 class BandwidthFactory extends BaseFactory
 {
     /**
@@ -28,6 +32,14 @@ class BandwidthFactory extends BaseFactory
     }
 
     /**
+     * @return Bandwidth
+     */
+    public function createEmpty()
+    {
+        return new Bandwidth($this->getStore(), $this->getLog());
+    }
+
+    /**
      * Create and Save Bandwidth record
      * @param int $type
      * @param int $displayId
@@ -36,8 +48,7 @@ class BandwidthFactory extends BaseFactory
      */
     public function createAndSave($type, $displayId, $size)
     {
-        $bandwidth = new Bandwidth();
-        $bandwidth->setContainer($this->getContainer());
+        $bandwidth = $this->createEmpty();
         $bandwidth->type = $type;
         $bandwidth->displayId = $displayId;
         $bandwidth->size = $size;

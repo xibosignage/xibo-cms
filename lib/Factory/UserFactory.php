@@ -160,6 +160,16 @@ class UserFactory extends BaseFactory
     }
 
     /**
+     * Get by Display Group
+     * @param $displayGroupId
+     * @return array[User]
+     */
+    public function getByDisplayGroupId($displayGroupId)
+    {
+        return $this->query(null, array('disableUserCheck' => 1, 'displayGroupId' => [$displayGroupId]));
+    }
+
+    /**
      * Query for users
      * @param array[mixed] $sortOrder
      * @param array[mixed] $filterBy

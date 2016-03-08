@@ -11,7 +11,7 @@ namespace Xibo\Xmds;
 define('BLACKLIST_ALL', "All");
 define('BLACKLIST_SINGLE', "Single");
 
-use Slim\Slim;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Entity\Playlist;
@@ -23,14 +23,28 @@ use Xibo\Entity\User;
 use Xibo\Entity\Widget;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\BandwidthFactory;
+use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\RequiredFileFactory;
+use Xibo\Factory\UserFactory;
 use Xibo\Helper\Random;
 use Xibo\Service\ConfigService;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\FactoryServiceInterface;
 use Xibo\Service\LogService;
+use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class Soap
+ * @package Xibo\Xmds
+ */
 class Soap
 {
     /**
@@ -43,40 +57,83 @@ class Soap
      */
     protected $logProcessor;
 
+    /** @var  PoolInterface */
+    private $pool;
+
+    /** @var  StorageServiceInterface */
+    private $store;
+
+    /** @var  LogServiceInterface */
+    private $logService;
+
+    /** @var  DateServiceInterface */
+    private $dateService;
+
+    /** @var  SanitizerServiceInterface */
+    private $sanitizerService;
+
+    /** @var  ConfigServiceInterface */
+    private $configService;
+
+    /** @var  RequiredFileFactory */
+    protected $requiredFileFactory;
+
+    /** @var  ModuleFactory */
+    protected $moduleFactory;
+
+    /** @var  LayoutFactory */
+    protected $layoutFactory;
+
+    /** @var  DataSetFactory */
+    protected $dataSetFactory;
+
+    /** @var  DisplayFactory */
+    protected $displayFactory;
+
+    /** @var  UserFactory */
+    protected $userFactory;
+
+    /** @var  BandwidthFactory */
+    protected $bandwidthFactory;
+
+    /** @var  MediaFactory */
+    protected $mediaFactory;
+
     /**
-     * @var Slim
+     * Soap constructor.
+     * @param LogProcessor $logProcessor
+     * @param PoolInterface $pool
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param DateServiceInterface $date
+     * @param SanitizerServiceInterface $sanitizer
+     * @param ConfigServiceInterface $config
+     * @param RequiredFileFactory $requiredFileFactory
+     * @param ModuleFactory $moduleFactory
+     * @param LayoutFactory $layoutFactory
+     * @param DataSetFactory $dataSetFactory
+     * @param DisplayFactory $displayFactory
+     * @param UserFactory $userFactory
+     * @param BandwidthFactory $bandwidthFactory
+     * @param MediaFactory $mediaFactory
      */
-    protected $app;
-
-
-    public function __construct($app)
+    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userFactory, $bandwidthFactory, $mediaFactory)
     {
-        $this->app = $app;
-
-        // Create a log processor
-        $this->logProcessor = new LogProcessor();
-        $app->logWriter->addProcessor($this->logProcessor);
-    }
-
-    /**
-     * @return FactoryServiceInterface
-     */
-    public function getFactoryService()
-    {
-        return $this->getApp()->factoryService;
-    }
-
-    /**
-     * Get the App
-     * @return Slim
-     * @throws \Exception
-     */
-    public function getApp()
-    {
-        if ($this->app == null)
-            throw new \RuntimeException(__('XMDS called before DI has been setup'));
-
-        return $this->app;
+        $this->logProcessor = $logProcessor;
+        $this->pool = $pool;
+        $this->store = $store;
+        $this->logService = $log;
+        $this->dateService = $date;
+        $this->sanitizerService = $sanitizer;
+        $this->configService = $config;
+        $this->requiredFileFactory = $requiredFileFactory;
+        $this->moduleFactory = $moduleFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->dataSetFactory = $dataSetFactory;
+        $this->displayFactory = $displayFactory;
+        $this->userFactory = $userFactory;
+        $this->bandwidthFactory = $bandwidthFactory;
+        $this->mediaFactory = $mediaFactory;
     }
 
     /**
@@ -85,7 +142,7 @@ class Soap
      */
     protected function getPool()
     {
-        return $this->getApp()->pool;
+        return $this->pool;
     }
 
     /**
@@ -94,7 +151,7 @@ class Soap
      */
     protected function getStore()
     {
-        return $this->getApp()->store;
+        return $this->store;
     }
 
     /**
@@ -103,7 +160,7 @@ class Soap
      */
     protected function getLog()
     {
-        return $this->getApp()->logService;
+        return $this->logService;
     }
 
     /**
@@ -112,7 +169,7 @@ class Soap
      */
     protected function getDate()
     {
-        return $this->getApp()->dateService;
+        return $this->dateService;
     }
 
     /**
@@ -121,7 +178,7 @@ class Soap
      */
     protected function getSanitizer()
     {
-        return $this->getApp()->sanitizerService;
+        return $this->sanitizerService;
     }
 
     /**
@@ -130,7 +187,7 @@ class Soap
      */
     protected function getConfig()
     {
-        return $this->getApp()->configService;
+        return $this->configService;
     }
 
     /**
@@ -173,7 +230,7 @@ class Soap
             $this->getLog()->info('Returning required files from Cache for display %s', $this->display->display);
 
             // Log Bandwidth
-            $this->LogBandwidth($this->display->displayId, Bandwidth::$RF, strlen($output));
+            $this->logBandwidth($this->display->displayId, Bandwidth::$RF, strlen($output));
 
             return $output;
         }
@@ -342,7 +399,7 @@ class Soap
                 }
 
                 // Add nonce
-                $mediaNonce = $this->getFactoryService()->get('RequiredFileFactory');
+                $mediaNonce = $this->requiredFileFactory->createForMedia($this->display->displayId, $requestKey, $id, $fileSize, $path);
                 $mediaNonce->save();
 
                 // Add the file node
@@ -375,7 +432,7 @@ class Soap
         }
 
         // Get an array of modules to use
-        $modules = $this->getFactoryService()->get('ModuleFactory');
+        $modules = $this->moduleFactory->get();
 
         // Reset the paths added array to start again with layouts
         $pathsAdded = [];
@@ -388,7 +445,7 @@ class Soap
                 continue;
 
             // Load this layout
-            $layout = $this->getFactoryService()->get('LayoutFactory')->loadById($layoutId);
+            $layout = $this->layoutFactory->loadById($layoutId);
             $layout->loadPlaylists();
 
             // Make sure its XLF is up to date
@@ -403,7 +460,7 @@ class Soap
                 $this->getLog()->debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
 
             // Add nonce
-            $layoutNonce = $this->getFactoryService()->get('RequiredFileFactory')->createForLayout($this->display->displayId, $requestKey, $layoutId, $fileSize, basename($path));
+            $layoutNonce = $this->requiredFileFactory->createForLayout($this->display->displayId, $requestKey, $layoutId, $fileSize, basename($path));
             $layoutNonce->save();
 
             // Add the Layout file element
@@ -444,7 +501,7 @@ class Soap
                             $modules[$widget->type]->renderAs == 'html'
                         ) {
                             // Add nonce
-                            $this->getFactoryService()->get('RequiredFileFactory')->save();
+                            $this->requiredFileFactory->createForGetResource($this->display->displayId, $requestKey, $layoutId, $region->regionId, $widget->widgetId)->save();
 
                             // Does the media provide a modified Date?
                             $widgetModifiedDt = $layoutModifiedDt->getTimestamp();
@@ -452,7 +509,7 @@ class Soap
                             if ($widget->type == 'datasetview' || $widget->type == 'ticker') {
                                 try {
                                     $dataSetId = $widget->getOption('dataSetId');
-                                    $dataSet = $this->getFactoryService()->get('DataSetFactory')->getById($dataSetId);
+                                    $dataSet = $this->dataSetFactory->getById($dataSetId);
                                     $widgetModifiedDt = $dataSet->lastDataEdit;
                                 }
                                 catch (NotFoundException $e) {
@@ -552,11 +609,11 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->CheckBandwidth())
+        if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
-        //auth this request...
-        if (!$this->AuthDisplay($hardwareKey))
+        // auth this request...
+        if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Sender', "This display client is not licensed");
 
         // Check the cache
@@ -568,7 +625,7 @@ class Soap
             $this->getLog()->info('Returning Schedule from Cache for display %s', $this->display->display);
 
             // Log Bandwidth
-            $this->LogBandwidth($this->display->displayId, Bandwidth::$SCHEDULE, strlen($output));
+            $this->logBandwidth($this->display->displayId, Bandwidth::$SCHEDULE, strlen($output));
 
             return $output;
         }
@@ -920,11 +977,18 @@ class Soap
             return new \SoapFault('Sender', "Unable to query for BlackList records.");
         }
 
-        $this->LogBandwidth($this->display->displayId, Bandwidth::$BLACKLIST, strlen($reason));
+        $this->logBandwidth($this->display->displayId, Bandwidth::$BLACKLIST, strlen($reason));
 
         return true;
     }
 
+    /**
+     * @param $serverKey
+     * @param $hardwareKey
+     * @param $logXml
+     * @return bool
+     * @throws \SoapFault
+     */
     protected function doSubmitLog($serverKey, $hardwareKey, $logXml)
     {
         $this->logProcessor->setRoute('SubmitLog');
@@ -1013,7 +1077,7 @@ class Soap
             $this->getLog()->notice('%s,%s,%s,%s,%s,%s,%s,%s', $logType, $message, 'Client', $thread . $method . $type, $date, $scheduleId, $layoutId, $mediaId);
         }
 
-        $this->LogBandwidth($this->display->displayId, Bandwidth::$SUBMITLOG, strlen($logXml));
+        $this->logBandwidth($this->display->displayId, Bandwidth::$SUBMITLOG, strlen($logXml));
 
         return true;
     }
@@ -1038,11 +1102,11 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->CheckBandwidth())
+        if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
-        if (!$this->AuthDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
         if ($this->display->isAuditing == 1)
@@ -1078,7 +1142,7 @@ class Soap
 
             // Write the stat record with the information we have available to us.
             try {
-                $stat = new Stat();
+                $stat = new Stat($this->getStore(), $this->getLog());
                 $stat->type = $type;
                 $stat->fromDt = $fromdt;
                 $stat->toDt = $todt;
@@ -1094,7 +1158,7 @@ class Soap
             }
         }
 
-        $this->LogBandwidth($this->display->displayId, Bandwidth::$SUBMITSTATS, strlen($statXml));
+        $this->logBandwidth($this->display->displayId, Bandwidth::$SUBMITSTATS, strlen($statXml));
 
         return true;
     }
@@ -1119,11 +1183,11 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->CheckBandwidth())
+        if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
-        if (!$this->AuthDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->display->isAuditing == 1)
@@ -1151,15 +1215,15 @@ class Soap
                 switch ($node->getAttribute('type')) {
 
                     case 'media':
-                        $requiredFile = $this->getFactoryService()->get('RequiredFileFactory')->getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
+                        $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
                         break;
 
                     case 'layout':
-                        $requiredFile = $this->getFactoryService()->get('RequiredFileFactory')->getByDisplayAndLayout($this->display->displayId, $node->getAttribute('id'));
+                        $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($this->display->displayId, $node->getAttribute('id'));
                         break;
 
                     case 'resource':
-                        $requiredFile = $this->getFactoryService()->get('RequiredFileFactory')->getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
+                        $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
                         break;
 
                     default:
@@ -1185,7 +1249,7 @@ class Soap
         $this->display->mediaInventoryStatus = $mediaInventoryComplete;
         $this->display->save(['validate' => false, 'audit' => false]);
 
-        $this->LogBandwidth($this->display->displayId, Bandwidth::$MEDIAINVENTORY, strlen($inventory));
+        $this->logBandwidth($this->display->displayId, Bandwidth::$MEDIAINVENTORY, strlen($inventory));
 
         return true;
     }
@@ -1215,19 +1279,19 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->CheckBandwidth())
+        if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
-        if (!$this->AuthDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
         // The MediaId is actually the widgetId
         try {
-            $requiredFile = $this->getFactoryService()->get('RequiredFileFactory')->getByDisplayAndResource($this->display->displayId, $layoutId, $regionId, $mediaId);
+            $requiredFile = $this->requiredFileFactory->getByDisplayAndResource($this->display->displayId, $layoutId, $regionId, $mediaId);
 
-            $module = $this->getFactoryService()->get('ModuleFactory')->createWithWidget($this->getFactoryService()->get('WidgetFactory')->loadByWidgetId($mediaId), $this->getFactoryService()->get('RegionFactory')->getById($regionId));
-            $resource = $module->GetResource($this->display->displayId);
+            $module = $this->moduleFactory->createWithWidget($this->getFactoryService()->get('WidgetFactory')->loadByWidgetId($mediaId), $this->getFactoryService()->get('RegionFactory')->getById($regionId));
+            $resource = $module->getResource($this->display->displayId);
 
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
             $requiredFile->markUsed();
@@ -1243,7 +1307,7 @@ class Soap
         }
 
         // Log Bandwidth
-        $this->LogBandwidth($this->display->displayId, Bandwidth::$GETRESOURCE, strlen($resource));
+        $this->logBandwidth($this->display->displayId, Bandwidth::$GETRESOURCE, strlen($resource));
 
         return $resource;
     }
@@ -1305,7 +1369,7 @@ class Soap
     protected function authDisplay($hardwareKey)
     {
         try {
-            $this->display = $this->getFactoryService()->get('DisplayFactory')->getByLicence($hardwareKey);
+            $this->display = $this->displayFactory->getByLicence($hardwareKey);
 
             if ($this->display->licensed != 1)
                 return false;
@@ -1343,8 +1407,10 @@ class Soap
 
         if ($this->display->loggedIn == 0) {
 
+            $this->getLog()->info('Display %s was down, now its up.', $this->display->display);
+
             // Log display up
-            (new Stat())->setContainer($this->getApp())->displayUp($this->display->displayId);
+            (new Stat($this->getStore(), $this->getLog()))->displayUp($this->display->displayId);
 
             // Do we need to email?
             if ($this->display->emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected')
@@ -1360,7 +1426,7 @@ class Soap
                 // Get a list of people that have view access to the display?
                 if ($this->getConfig()->GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1) {
 
-                    foreach ($this->getFactoryService()->get('UserFactory')->getByDisplayGroupId($this->display->displayGroupId) as $user) {
+                    foreach ($this->userFactory->getByDisplayGroupId($this->display->displayGroupId) as $user) {
                         /* @var User $user */
                         if ($user->email != '') {
                             // Send them an email
@@ -1451,6 +1517,6 @@ class Soap
      */
     protected function logBandwidth($displayId, $type, $sizeInBytes)
     {
-        $this->getFactoryService()->get('BandwidthFactory')->createAndSave($type, $displayId, $sizeInBytes);
+        $this->bandwidthFactory->createAndSave($type, $displayId, $sizeInBytes);
     }
 }

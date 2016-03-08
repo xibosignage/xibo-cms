@@ -23,6 +23,10 @@ namespace Xibo\Xmds;
 use Xibo\Entity\Bandwidth;
 use Xibo\Exception\NotFoundException;
 
+/**
+ * Class Soap3
+ * @package Xibo\Xmds
+ */
 class Soap3 extends Soap
 {
     /**
@@ -52,7 +56,7 @@ class Soap3 extends Soap
 
         // Check in the database for this hardwareKey
         try {
-            $display = $this->getFactoryService()->get('DisplayFactory')->getByLicence($hardwareKey);
+            $display = $this->displayFactory->getByLicence($hardwareKey);
 
             $this->logProcessor->setDisplay($display->displayId);
 
@@ -144,10 +148,10 @@ class Soap3 extends Soap
                 $fileId = $this->getSanitizer()->int($filePath);
 
                 // Validate the nonce
-                $requiredFile = $this->getFactoryService()->get('RequiredFileFactory')->getByDisplayAndLayout($this->display->displayId, $fileId);
+                $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($this->display->displayId, $fileId);
 
                 // Load the layout
-                $layout = $this->getFactoryService()->get('LayoutFactory')->getById($fileId);
+                $layout = $this->layoutFactory->getById($fileId);
                 $path = $layout->xlfToDisk();
 
                 $file = file_get_contents($path);
@@ -164,7 +168,7 @@ class Soap3 extends Soap
                 $fileId = explode('.', $filePath);
 
                 // Validate the nonce
-                $requiredFile = $this->getFactoryService()->get('RequiredFileFactory')->getByDisplayAndMedia($this->display->displayId, $fileId[0]);
+                $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $fileId[0]);
 
                 // Return the Chunk size specified
                 $f = fopen($libraryLocation . $filePath, 'r');

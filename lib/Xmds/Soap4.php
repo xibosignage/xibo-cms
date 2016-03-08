@@ -21,12 +21,14 @@
 namespace Xibo\Xmds;
 
 use Intervention\Image\ImageManagerStatic as Img;
-use Xibo\Controller\Library;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Exception\NotFoundException;
 
-
+/**
+ * Class Soap4
+ * @package Xibo\Xmds
+ */
 class Soap4 extends Soap
 {
     /**
@@ -42,7 +44,7 @@ class Soap4 extends Soap
      * @return string
      * @throws \SoapFault
      */
-    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress)
+    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel = null, $xmrPubKey = null)
     {
         $this->logProcessor->setRoute('RegisterDisplay');
 
@@ -74,7 +76,7 @@ class Soap4 extends Soap
 
         // Check in the database for this hardwareKey
         try {
-            $display = $this->getFactoryService()->get('DisplayFactory')->getByLicence($hardwareKey);
+            $display = $this->displayFactory->getByLicence($hardwareKey);
 
             $this->logProcessor->setDisplay($display->displayId);
 
@@ -131,15 +133,14 @@ class Soap4 extends Soap
                 $displayElement->appendChild($node);
 
                 // Send Notification if required
-                $this->AlertDisplayUp();
+                $this->alertDisplayUp();
             }
 
         } catch (NotFoundException $e) {
 
             // Add a new display
             try {
-                $display = new Display();
-                $display->setContainer($this->getContainer());
+                $display = $this->displayFactory->createEmpty();
                 $display->display = $displayName;
                 $display->isAuditing = 0;
                 $display->defaultLayoutId = 4;
@@ -170,7 +171,7 @@ class Soap4 extends Soap
 
         // Log Bandwidth
         $returnXml = $return->saveXML();
-        $this->LogBandwidth($display->displayId, Bandwidth::$REGISTER, strlen($returnXml));
+        $this->logBandwidth($display->displayId, Bandwidth::$REGISTER, strlen($returnXml));
 
         // Audit our return
         if ($display->isAuditing == 1)
@@ -222,11 +223,11 @@ class Soap4 extends Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->CheckBandwidth())
+        if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Authenticate this request...
-        if (!$this->AuthDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
         if ($this->display->isAuditing == 1)
@@ -237,10 +238,10 @@ class Soap4 extends Soap
                 $fileId = $this->getSanitizer()->int($fileId);
 
                 // Validate the nonce
-                $requiredFile = $this->getFactoryService()->get('RequiredFileFactory')->getByDisplayAndLayout($this->display->displayId, $fileId);
+                $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($this->display->displayId, $fileId);
 
                 // Load the layout
-                $layout = $this->getFactoryService()->get('LayoutFactory')->getById($fileId);
+                $layout = $this->layoutFactory->getById($fileId);
                 $path = $layout->xlfToDisk();
 
                 $file = file_get_contents($path);
@@ -251,7 +252,7 @@ class Soap4 extends Soap
 
             } else if ($fileType == "media") {
                 // Validate the nonce
-                $requiredFile = $this->getFactoryService()->get('RequiredFileFactory')->getByDisplayAndMedia($this->display->displayId, $fileId);
+                $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $fileId);
 
                 $media = $this->mediaFactory->getById($fileId);
 
@@ -278,7 +279,7 @@ class Soap4 extends Soap
         }
 
         // Log Bandwidth
-        $this->LogBandwidth($this->display->displayId, Bandwidth::$GETFILE, $chunkSize);
+        $this->logBandwidth($this->display->displayId, Bandwidth::$GETFILE, $chunkSize);
 
         return $file;
     }
@@ -385,17 +386,17 @@ class Soap4 extends Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->CheckBandwidth())
+        if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
-        if (!$this->AuthDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->display->isAuditing == 1)
             $this->getLog()->debug($status);
 
-        $this->LogBandwidth($this->display->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
+        $this->logBandwidth($this->display->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
 
         $status = json_decode($status, true);
 
@@ -405,7 +406,7 @@ class Soap4 extends Soap
         $this->display->lastCommandSuccess = $this->getSanitizer()->getCheckbox('lastCommandSuccess', $this->display->lastCommandSuccess, $status);
 
         // Touch the display record
-        $this->display->save(['validate' => false, 'audit' => false]);
+        $this->display->save(Display::$saveOptionsMinimum);
 
         return true;
     }
@@ -438,18 +439,17 @@ class Soap4 extends Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->CheckBandwidth())
+        if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
-        if (!$this->AuthDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->display->isAuditing == 1)
             $this->getLog()->debug('Received Screen shot');
 
         // Open this displays screen shot file and save this.
-        Library::ensureLibraryExists($this->getConfig()->GetSetting('LIBRARY_LOCATION'));
         $location = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt;
 
         foreach(array('imagick', 'gd') as $imgDriver) {
@@ -467,7 +467,7 @@ class Soap4 extends Soap
             }
         }
 
-        if($screenShotImg !== false) {
+        if ($screenShotImg !== false) {
             $imgMime = $screenShotImg->mime(); 
 
             if($imgMime != $screenShotMime) {
@@ -485,10 +485,9 @@ class Soap4 extends Soap
         }
 
         // return early with false, keep screenShotRequested intact, let the Player retry.
-        if($needConversion && !$converted) {
-            //$this->LogBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
-
-            return false;
+        if ($needConversion && !$converted) {
+            $this->logBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
+            throw new \SoapFault('Receiver', __('Incorrect Screen shot Format'));
         }
 
 
@@ -500,7 +499,7 @@ class Soap4 extends Soap
         $this->display->screenShotRequested = 0;
         $this->display->save(['validate' => false, 'audit' => false]);
 
-        $this->LogBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
+        $this->logBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
 
         return true;
     }

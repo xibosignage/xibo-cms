@@ -68,7 +68,7 @@ class Soap5 extends Soap4
 
         // Check in the database for this hardwareKey
         try {
-            $display = $this->getFactoryService()->get('DisplayFactory')->getByLicence($hardwareKey);
+            $display = $this->displayFactory->getByLicence($hardwareKey);
 
             $this->logProcessor->setDisplay($display->displayId);
 
@@ -158,15 +158,14 @@ class Soap5 extends Soap4
                     $display->xmrPubKey = $xmrPubKey;
 
                 // Send Notification if required
-                $this->AlertDisplayUp();
+                $this->alertDisplayUp();
             }
 
         } catch (NotFoundException $e) {
 
             // Add a new display
             try {
-                $display = new Display();
-                $display->setContainer($this->getContainer());
+                $display = $this->displayFactory->createEmpty();
                 $display->display = $displayName;
                 $display->isAuditing = 0;
                 $display->defaultLayoutId = 4;
@@ -195,11 +194,11 @@ class Soap5 extends Soap4
         $display->clientVersion = $clientVersion;
         $display->clientCode = $clientCode;
         //$display->operatingSystem = $operatingSystem;
-        $display->save(['validate' => false, 'audit' => false]);
+        $display->save(Display::$saveOptionsMinimum);
 
         // Log Bandwidth
         $returnXml = $return->saveXML();
-        $this->LogBandwidth($display->displayId, Bandwidth::$REGISTER, strlen($returnXml));
+        $this->logBandwidth($display->displayId, Bandwidth::$REGISTER, strlen($returnXml));
 
         // Audit our return
         if ($display->isAuditing == 1)

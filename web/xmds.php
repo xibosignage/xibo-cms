@@ -31,7 +31,7 @@ if (!file_exists(PROJECT_ROOT . '/web/settings.php')) {
     die('Not configured');
 }
 
-// We create a Slim Object ONLY for logging (calls to Slim::getInstance())
+// We create a Slim Object ONLY for logging
 // Create a logger
 $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'XMDS',
@@ -86,12 +86,12 @@ $twig->parserExtensions = array(
     new \Xibo\Twig\UrlDecodeTwigExtension()
 );
 
-// Configure the template folder
-$twig->twigTemplateDirs = array_merge((new \Xibo\Factory\ModuleFactory($app))->getViewPaths(), [PROJECT_ROOT . '/views']);
-$app->view($twig);
-
 // Configure a user
-$app->user = (new \Xibo\Factory\UserFactory($app))->getById(1);
+$app->user = $app->userFactory->getById(1);
+
+// Configure the template folder
+$twig->twigTemplateDirs = array_merge($app->moduleFactory->getViewPaths(), [PROJECT_ROOT . '/views']);
+$app->view($twig);
 
 // Check to see if we have a file attribute set (for HTTP file downloads)
 if (isset($_GET['file'])) {
@@ -106,7 +106,8 @@ if (isset($_GET['file'])) {
 
     // Check nonce, output appropriate headers, log bandwidth and stop.
     try {
-        $file = (new \Xibo\Factory\RequiredFileFactory($app))->getByNonce($_REQUEST['file']);
+        /** @var \Xibo\Entity\RequiredFile $file */
+        $file = $app->requiredFileFactory->getByNonce($_REQUEST['file']);
         $file->bytesRequested = $file->bytesRequested + $file->size;
         $file->isValid();
 
@@ -125,7 +126,7 @@ if (isset($_GET['file'])) {
         }
 
         // Log bandwidth
-        (new \Xibo\Factory\BandwidthFactory($app))->createAndSave(4, $file->displayId, $file->size);
+        $app->bandwidthFactory->createAndSave(4, $file->displayId, $file->size);
     }
     catch (\Exception $e) {
         if ($e instanceof \Xibo\Exception\NotFoundException || $e instanceof \Xibo\Exception\FormExpiredException) {
@@ -147,10 +148,30 @@ try {
     if (!file_exists($wsdl))
         throw new InvalidArgumentException(__('Your client is not the correct version to communicate with this CMS.'));
 
+    // Create a log processor
+    $logProcessor = new \Xibo\Xmds\LogProcessor();
+    $app->logWriter->addProcessor($logProcessor);
+
     // Create a SoapServer
     //$soap = new SoapServer($wsdl);
     $soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
-    $soap->setClass('\Xibo\Xmds\Soap' . $version, $app);
+    $soap->setClass('\Xibo\Xmds\Soap' . $version,
+        $logProcessor,
+        $app->pool,
+        $app->store,
+        $app->logService,
+        $app->dateService,
+        $app->sanitizerService,
+        $app->configService,
+        $app->requiredFileFactory,
+        $app->moduleFactory,
+        $app->layoutFactory,
+        $app->dataSetFactory,
+        $app->displayFactory,
+        $app->userFactory,
+        $app->bandwidthFactory,
+        $app->mediaFactory
+    );
     $soap->handle();
 
     $app->logService->info('PDO stats: %s.', json_encode($app->store->stats()));

@@ -14,16 +14,82 @@ use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
-use Xibo\Exception\LibraryFullException;
-use Xibo\Helper\BackupUploadHandler;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
+use Xibo\Factory\UpgradeFactory;
+use Xibo\Factory\UserFactory;
 use Xibo\Helper\WakeOnLan;
+use Xibo\Service\ConfigService;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class Maintenance
+ * @package Xibo\Controller
+ */
 class Maintenance extends Base
 {
+    /**
+     * @var StorageServiceInterface
+     */
+    private $store;
+
+    /** @var  UserFactory */
+    private $userFactory;
+
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+
+    /**
+     * @var DisplayFactory
+     */
+    private $displayFactory;
+
+    /** @var  UpgradeFactory */
+    private $upgradeFactory;
+
+    /** @var  MediaFactory */
+    private $mediaFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param StorageServiceInterface $store
+     * @param UserFactory $userFactory
+     * @param LayoutFactory $layoutFactory
+     * @param DisplayFactory $displayFactory
+     * @param UpgradeFactory $upgradeFactory
+     * @param MediaFactory $mediaFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $userFactory, $layoutFactory, $displayFactory, $upgradeFactory, $mediaFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->store = $store;
+        $this->userFactory = $userFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->displayFactory = $displayFactory;
+        $this->upgradeFactory = $upgradeFactory;
+        $this->mediaFactory = $mediaFactory;
+    }
+
+
     public function run()
     {
         // Always start a transaction
-        $this->getStore()->getConnection()->beginTransaction();
+        $this->store->getConnection()->beginTransaction();
 
         // Output HTML Headers
         print '<html>';
@@ -63,12 +129,12 @@ class Maintenance extends Base
                 // Upgrade
                 // Is there a pending upgrade (i.e. are there any pending upgrade steps).
                 if ($this->getConfig()->isUpgradePending()) {
-                    $steps = $this->getFactoryService()->get('UpgradeFactory')->getIncomplete();
+                    $steps = $this->upgradeFactory->getIncomplete();
 
                     if (count($steps) <= 0) {
 
                         // Insert pending upgrade steps.
-                        $steps = $this->getFactoryService()->get('UpgradeFactory')->createSteps(DBVERSION, WEBSITE_VERSION);
+                        $steps = $this->upgradeFactory->createSteps(DBVERSION, ConfigService::$WEBSITE_VERSION);
 
                         foreach ($steps as $step) {
                             /* @var \Xibo\Entity\Upgrade $step */
@@ -111,7 +177,7 @@ class Maintenance extends Base
                 $msgTo = $this->getConfig()->GetSetting("mail_to");
                 $msgFrom = $this->getConfig()->GetSetting("mail_from");
 
-                foreach ((new Display())->setApp($this->getApp())->validateDisplays($this->getFactoryService()->get('DisplayFactory')->query()) as $display) {
+                foreach ((new Display())->setApp($this->getApp())->validateDisplays($this->displayFactory->query()) as $display) {
                     /* @var \Xibo\Entity\Display $display */
                     // Is this the first time this display has gone "off-line"
                     $displayGoneOffline = ($display->loggedIn == 1);
@@ -128,7 +194,7 @@ class Maintenance extends Base
 
                                 // Get a list of people that have view access to the display?
                                 if ($alertForViewUsers) {
-                                    foreach ($this->getFactoryService()->get('UserFactory')->getByDisplayGroupId($display->displayGroupId) as $user) {
+                                    foreach ($this->userFactory->getByDisplayGroupId($display->displayGroupId) as $user) {
                                         /* @var User $user */
                                         if ($user->email != '') {
                                             // Send them an email
@@ -183,7 +249,7 @@ class Maintenance extends Base
                     $maxage = date("Y-m-d H:i:s", time() - (86400 * $this->getSanitizer()->int($this->getConfig()->GetSetting("MAINTENANCE_LOG_MAXAGE"))));
 
                     try {
-                        $dbh = $this->getStore()->getConnection();
+                        $dbh = $this->store->getConnection();
 
                         $sth = $dbh->prepare('DELETE FROM `log` WHERE logdate < :maxage');
                         $sth->execute(array(
@@ -206,7 +272,7 @@ class Maintenance extends Base
                     $maxage = date("Y-m-d H:i:s",time() - (86400 * $this->getSanitizer()->int($this->getConfig()->GetSetting("MAINTENANCE_STAT_MAXAGE"))));
 
                     try {
-                        $dbh = $this->getStore()->getConnection();
+                        $dbh = $this->store->getConnection();
 
                         $sth = $dbh->prepare('DELETE FROM `stat` WHERE statDate < :maxage');
                         $sth->execute(array(
@@ -231,7 +297,7 @@ class Maintenance extends Base
 
                     // Get a list of all displays
                     try {
-                        $dbh = $this->getStore()->getConnection();
+                        $dbh = $this->store->getConnection();
                         $sth = $dbh->prepare('SELECT displayId, display FROM `display` WHERE licensed = 1 ORDER BY lastAccessed');
                         $sth->execute();
 
@@ -268,17 +334,14 @@ class Maintenance extends Base
                 // Wake On LAN
                 print '<h1>' . __('Wake On LAN') . '</h1>';
 
-                // Create a display object to use later
-                $displayObject = new Display();
-
                 try {
-                    $dbh = $this->getStore()->getConnection();
+                    $dbh = $this->store->getConnection();
 
                     // Get a list of all displays which have WOL enabled
                     $sth = $dbh->prepare('SELECT DisplayID, Display, WakeOnLanTime, LastWakeOnLanCommandSent FROM `display` WHERE WakeOnLan = 1');
                     $sth->execute(array());
 
-                    foreach($this->getFactoryService()->get('DisplayFactory')->query(null, ['wakeOnLan' => 1]) as $display) {
+                    foreach($this->displayFactory->query(null, ['wakeOnLan' => 1]) as $display) {
 
                         // Time to WOL (with respect to today)
                         $timeToWake = strtotime(date('Y-m-d') . ' ' . $display->wakeOnLanTime);
@@ -302,7 +365,7 @@ class Maintenance extends Base
                                     $display->save(['validate' => false, 'audit' => true]);
                                 }
                                 catch (\Exception $e) {
-                                    print $display->display . ':Error=' . $displayObject->GetErrorMessage() . '<br/>\n';
+                                    print $display->display . ':Error=' . $e->getMessage() . '<br/>\n';
                                 }
                             }
                             else
@@ -320,13 +383,13 @@ class Maintenance extends Base
                 }
 
                 // Build Layouts
-                foreach ($this->getFactoryService()->get('LayoutFactory')->query(null, ['status' => 3]) as $layout) {
+                foreach ($this->layoutFactory->query(null, ['status' => 3]) as $layout) {
                     /* @var Layout $layout */
                     $layout->xlfToDisk();
                 }
 
                 // Keep tidy
-                $libraryController = new Library($this->getApp());
+                $libraryController = $this->getApp()->container->get('\Xibo\Controller\Library');
                 $libraryController->removeExpiredFiles();
                 $libraryController->removeTempFiles();
 
@@ -367,7 +430,7 @@ class Maintenance extends Base
      */
     public function tidyLibrary()
     {
-        $tidyOldRevisions = $this->getSanitizer()->getCheckBox('tidyOldRevisions');
+        $tidyOldRevisions = $this->getSanitizer()->getCheckbox('tidyOldRevisions');
         $cleanUnusedFiles = $this->getSanitizer()->getCheckbox('cleanUnusedFiles');
 
         if ($this->getConfig()->GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
@@ -378,7 +441,7 @@ class Maintenance extends Base
         $this->getLog()->debug('Library Location: ' . $library);
 
         // Remove temporary files
-        Library::removeTempFiles($this->getContainer());
+        $this->getApp()->container->get('\Xibo\Controller\Library')->removeTempFiles();
 
         $media = array();
         $unusedMedia = array();
@@ -400,7 +463,7 @@ class Maintenance extends Base
             GROUP BY media.mediaid, media.storedAs, media.type, media.isedited
           ';
 
-        foreach ($this->getStore()->select($sql, []) as $row) {
+        foreach ($this->store->select($sql, []) as $row) {
             $media[$row['storedAs']] = $row;
 
             // Ignore any module files or fonts
@@ -416,9 +479,6 @@ class Maintenance extends Base
                 $unusedMedia[$row['storedAs']] = $row;
             }
         }
-
-        //$this->getLog()->debug(var_export($media, true));
-        //$this->getLog()->debug(var_export($unusedMedia, true));
 
         $i = 0;
 
@@ -525,7 +585,7 @@ class Maintenance extends Base
         // Zippy
         $this->getLog()->debug($zipFile);
         $zip = new \ZipArchive();
-        $zip->open($zipFile, \ZIPARCHIVE::OVERWRITE);
+        $zip->open($zipFile, \ZipArchive::OVERWRITE);
         $zip->addFile($fileNameStructure, 'structure.dump');
         $zip->addFile($fileNameData, 'data.dump');
         $zip->close();
@@ -552,101 +612,16 @@ class Maintenance extends Base
         // Send via Apache X-Sendfile header?
         if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Apache') {
             header("X-Sendfile: $zipFile");
-            $this->getContainer()->halt(200);
+            $this->getApp()->halt(200);
         }
         // Send via Nginx X-Accel-Redirect?
         if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Nginx') {
             header("X-Accel-Redirect: /download/temp/" . basename($zipFile));
-            $this->getContainer()->halt(200);
+            $this->getApp()->halt(200);
         }
 
         // Return the file with PHP
         readfile($zipFile);
-
-        $this->setNoOutput(true);
-    }
-
-    /**
-     * Show an upload form to restore a database dump file
-     */
-    public function importForm()
-    {
-        $response = $this->getState();
-
-        if ($this->getConfig()->GetSetting('SETTING_IMPORT_ENABLED') != 1)
-            throw new AccessDeniedException(__('Sorry this function is disabled.'));
-
-        // Check we have permission to do this
-        if ($this->getUser()->userTypeId != 1)
-            throw new AccessDeniedException();
-
-        $msgDumpFile = __('Backup File');
-        $msgWarn = __('Warning: Importing a file here will overwrite your existing database. This action cannot be reversed.');
-        $msgMore = __('Select a file to import and then click the import button below. You will be taken to another page where the file will be imported.');
-        $msgInfo = __('Please note: The folder location for mysqldump must be available in your path environment variable for this to work and the php "exec" command must be enabled.');
-
-        $form = <<<FORM
-        <p>$msgWarn</p>
-        <p>$msgInfo</p>
-        <form id="file_upload" method="post" action="index.php?p=admin&q=RestoreDatabase" enctype="multipart/form-data">
-            <table>
-                <tr>
-                    <td><label for="file">$msgDumpFile<span class="required">*</span></label></td>
-                    <td>
-                        <input type="file" name="dumpFile" />
-                    </td>
-                </tr>
-            </table>
-        </form>
-        <p>$msgMore</p>
-FORM;
-        $response->SetFormRequestResponse($form, __('Import Database Backup'), '550px', '375px');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Import'), '$("#file_upload").submit()');
-
-    }
-
-    /**
-     * Restore the Database
-     */
-    public function import()
-    {
-        if ($this->getConfig()->GetSetting('SETTING_IMPORT_ENABLED') != 1)
-            trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);
-
-        $libraryFolder = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
-
-        // Make sure the library exists
-        Library::ensureLibraryExists($this->getConfig()->GetSetting('LIBRARY_LOCATION'));
-
-        $options = array(
-            'userId' => $this->getUser()->userId,
-            'controller' => $this,
-            'upload_dir' => $libraryFolder . 'temp/',
-            'download_via_php' => true,
-            'script_url' => $this->urlFor('maintenance.import'),
-            'upload_url' => $this->urlFor('maintenance.import'),
-            'image_versions' => array(),
-            'accept_file_types' => '/\.tar.gz/i'
-        );
-
-        // Make sure there is room in the library
-        $libraryLimit = $this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
-
-        if ($libraryLimit > 0 && Library::libraryUsage() > $libraryLimit)
-            throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
-
-        // Check for a user quota
-        $this->getUser()->isQuotaFullByUser();
-
-        try {
-            // Hand off to the Upload Handler provided by jquery-file-upload
-            new BackupUploadHandler($options);
-
-        } catch (\Exception $e) {
-            // We must not issue an error, the file upload return should have the error object already
-            $this->container->commit = false;
-        }
 
         $this->setNoOutput(true);
     }

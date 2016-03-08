@@ -55,17 +55,12 @@ $app->setName('install');
 
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
-    $app->logService->critical('Unexpected Error: %s', $e->getMessage());
-    $app->logService->debug($e->getTraceAsString());
-
-    $app->halt(500, 'Sorry there has been an unexpected error. ' . $e->getMessage());
+    $app->container->get('\Xibo\Controller\Error')->handler($e);
 });
 
 // Configure a not found handler
 $app->notFound(function () use ($app) {
-    $controller = new \Xibo\Controller\Error();
-    $controller->setApp($app);
-    $controller->notFound();
+    $app->container->get('\Xibo\Controller\Error')->notFound();
 });
 
 // Twig templating

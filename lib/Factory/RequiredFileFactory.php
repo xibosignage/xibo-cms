@@ -15,6 +15,10 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class RequiredFileFactory
+ * @package Xibo\Factory
+ */
 class RequiredFileFactory extends BaseFactory
 {
     /**
@@ -26,6 +30,14 @@ class RequiredFileFactory extends BaseFactory
     public function __construct($store, $log, $sanitizerService)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * @return RequiredFile
+     */
+    public function createEmpty()
+    {
+        return new RequiredFile($this->getStore(), $this->getLog());
     }
 
     /**
@@ -108,8 +120,7 @@ class RequiredFileFactory extends BaseFactory
             $nonce = $this->getByDisplayAndLayout($displayId, $layoutId);
         }
         catch (NotFoundException $e) {
-            $nonce = new RequiredFile();
-            $nonce->setContainer($this->getContainer());
+            $nonce = $this->createEmpty();
         }
 
         $nonce->displayId = $displayId;
@@ -135,8 +146,7 @@ class RequiredFileFactory extends BaseFactory
             $nonce = $this->getByDisplayAndResource($displayId, $layoutId, $regionId, $mediaId);
         }
         catch (NotFoundException $e) {
-            $nonce = new RequiredFile();
-            $nonce->setContainer($this->getContainer());
+            $nonce = $this->createEmpty();
         }
 
         $nonce->displayId = $displayId;
@@ -162,8 +172,7 @@ class RequiredFileFactory extends BaseFactory
             $nonce = $this->getByDisplayAndMedia($displayId, $mediaId);
         }
         catch (NotFoundException $e) {
-            $nonce = new RequiredFile();
-            $nonce->setContainer($this->getContainer());
+            $nonce = $this->createEmpty();
         }
 
         $nonce->displayId = $displayId;
@@ -226,9 +235,8 @@ class RequiredFileFactory extends BaseFactory
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
 
-
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new RequiredFile())->setContainer($this->getContainer())->hydrate($row, ['intProperties' => ['expires', 'lastUsed', 'size']]);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['expires', 'lastUsed', 'size']]);
         }
 
         return $entries;
