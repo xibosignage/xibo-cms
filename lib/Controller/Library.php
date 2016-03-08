@@ -25,12 +25,178 @@ use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\LibraryFullException;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlaylistFactory;
+use Xibo\Factory\TagFactory;
+use Xibo\Factory\UserFactory;
+use Xibo\Factory\UserGroupFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\XiboUploadHandler;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
-
+/**
+ * Class Library
+ * @package Xibo\Controller
+ */
 class Library extends Base
 {
+    /**
+     * @var StorageServiceInterface
+     */
+    private $store;
+
+    /**
+     * @var UserFactory
+     */
+    private $userFactory;
+
+    /**
+     * @var ModuleFactory
+     */
+    private $moduleFactory;
+
+    /**
+     * @var TagFactory
+     */
+    private $tagFactory;
+
+    /**
+     * @var MediaFactory
+     */
+    private $mediaFactory;
+
+    /**
+     * @var WidgetFactory
+     */
+    private $widgetFactory;
+
+    /**
+     * @var PlaylistFactory
+     */
+    private $playlistFactory;
+
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var UserGroupFactory
+     */
+    private $userGroupFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param StorageServiceInterface $store
+     * @param UserFactory $userFactory
+     * @param ModuleFactory $moduleFactory
+     * @param TagFactory $tagFactory
+     * @param MediaFactory $mediaFactory
+     * @param WidgetFactory $widgetFactory
+     * @param PermissionFactory $permissionFactory
+     * @param LayoutFactory $layoutFactory
+     * @param PlaylistFactory $playlistFactory
+     * @param UserGroupFactory $userGroupFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->store = $store;
+        $this->moduleFactory = $moduleFactory;
+        $this->mediaFactory = $mediaFactory;
+        $this->widgetFactory = $widgetFactory;
+        $this->userFactory = $userFactory;
+        $this->tagFactory = $tagFactory;
+        $this->permissionFactory = $permissionFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->playlistFactory = $playlistFactory;
+        $this->userGroupFactory = $userGroupFactory;
+    }
+
+    /**
+     * Get Module Factory
+     * @return ModuleFactory
+     */
+    public function getModuleFactory()
+    {
+        return $this->moduleFactory;
+    }
+
+    /**
+     * Get Media Factory
+     * @return MediaFactory
+     */
+    public function getMediaFactory()
+    {
+        return $this->mediaFactory;
+    }
+
+    /**
+     * Get Permission Factory
+     * @return PermissionFactory
+     */
+    public function getPermissionFactory()
+    {
+        return $this->permissionFactory;
+    }
+
+    /**
+     * Get Widget Factory
+     * @return WidgetFactory
+     */
+    public function getWidgetFactory()
+    {
+        return $this->widgetFactory;
+    }
+
+    /**
+     * Get Layout Factory
+     * @return LayoutFactory
+     */
+    public function getLayoutFactory()
+    {
+        return $this->layoutFactory;
+    }
+
+    /**
+     * Get Playlist Factory
+     * @return PlaylistFactory
+     */
+    public function getPlaylistFactory()
+    {
+        return $this->playlistFactory;
+    }
+
+    /**
+     * Get UserGroup Factory
+     * @return UserGroupFactory
+     */
+    public function getUserGroupFactory()
+    {
+        return $this->userGroupFactory;
+    }
+
     /**
      * Displays the page logic
      */
@@ -39,8 +205,8 @@ class Library extends Base
         // Users we have permission to see
         $this->getState()->template = 'library-page';
         $this->getState()->setData([
-            'users' => $this->getFactoryService()->get('UserFactory')->query(),
-            'modules' => $this->getFactoryService()->get('ModuleFactory')->query(['module'], ['regionSpecific' => 0, 'enabled' => 1])
+            'users' => $this->userFactory->query(),
+            'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1])
         ]);
     }
 
@@ -103,7 +269,7 @@ class Library extends Base
         $user = $this->getUser();
 
         // Construct the SQL
-        $mediaList = $this->getFactoryService()->get('MediaFactory')->query($this->gridRenderSort(), $this->gridRenderFilter([
+        $mediaList = $this->mediaFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'mediaId' => $this->getSanitizer()->getInt('mediaId'),
             'name' => $this->getSanitizer()->getString('media'),
             'type' => $this->getSanitizer()->getString('type'),
@@ -171,7 +337,7 @@ class Library extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->getFactoryService()->get('MediaFactory')->countLast();
+        $this->getState()->recordsTotal = $this->mediaFactory->countLast();
         $this->getState()->setData($mediaList);
     }
 
@@ -181,7 +347,7 @@ class Library extends Base
      */
     public function deleteForm($mediaId)
     {
-        $media = $this->getFactoryService()->get('MediaFactory')->getById($mediaId);
+        $media = $this->mediaFactory->getById($mediaId);
 
         if (!$this->getUser()->checkDeleteable($media))
             throw new AccessDeniedException();
@@ -227,7 +393,7 @@ class Library extends Base
      */
     public function delete($mediaId)
     {
-        $media = $this->getFactoryService()->get('MediaFactory')->getById($mediaId);
+        $media = $this->mediaFactory->getById($mediaId);
 
         if (!$this->getUser()->checkDeleteable($media))
             throw new AccessDeniedException();
@@ -281,11 +447,11 @@ class Library extends Base
 
         // Get Valid Extensions
         if ($this->getSanitizer()->getInt('oldMediaId') !== null) {
-            $media = $this->getFactoryService()->get('MediaFactory')->getById($this->getSanitizer()->getInt('oldMediaId'));
-            $validExt = $this->getFactoryService()->get('ModuleFactory')->getValidExtensions(['type' => $media->mediaType]);
+            $media = $this->mediaFactory->getById($this->getSanitizer()->getInt('oldMediaId'));
+            $validExt = $this->moduleFactory->getValidExtensions(['type' => $media->mediaType]);
         }
         else
-            $validExt = $this->getFactoryService()->get('ModuleFactory')->getValidExtensions();
+            $validExt = $this->moduleFactory->getValidExtensions();
 
         $options = array(
             'userId' => $this->getUser()->userId,
@@ -329,7 +495,7 @@ class Library extends Base
      */
     public function editForm($mediaId)
     {
-        $media = $this->getFactoryService()->get('MediaFactory')->getById($mediaId);
+        $media = $this->mediaFactory->getById($mediaId);
 
         if (!$this->getUser()->checkEditable($media))
             throw new AccessDeniedException();
@@ -337,7 +503,7 @@ class Library extends Base
         $this->getState()->template = 'library-form-edit';
         $this->getState()->setData([
             'media' => $media,
-            'validExtensions' => implode('|', $this->getFactoryService()->get('ModuleFactory')->getValidExtensions(['type' => $media->mediaType])),
+            'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $media->mediaType])),
             'help' => $this->getHelp()->link('Library', 'Edit')
         ]);
     }
@@ -403,7 +569,7 @@ class Library extends Base
      */
     public function edit($mediaId)
     {
-        $media = $this->getFactoryService()->get('MediaFactory')->getById($mediaId);
+        $media = $this->mediaFactory->getById($mediaId);
 
         if (!$this->getUser()->checkEditable($media))
             throw new AccessDeniedException();
@@ -411,11 +577,11 @@ class Library extends Base
         $media->name = $this->getSanitizer()->getString('name');
         $media->duration = $this->getSanitizer()->getInt('duration');
         $media->retired = $this->getSanitizer()->getCheckbox('retired');
-        $media->replaceTags($this->getFactoryService()->get('TagFactory')->tagsFromString($this->getSanitizer()->getString('tags')));
+        $media->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
 
         // Should we update the media in all layouts?
         if ($this->getSanitizer()->getCheckbox('updateInLayouts') == 1) {
-            foreach ($this->getFactoryService()->get('WidgetFactory')->getByMediaId($media->mediaId) as $widget) {
+            foreach ($this->widgetFactory->getByMediaId($media->mediaId) as $widget) {
                 /* @var Widget $widget */
                 $widget->duration = $media->duration;
                 $widget->save();
@@ -441,7 +607,7 @@ class Library extends Base
             throw new ConfigurationException(__('Sorry this function is disabled.'));
 
         // Work out how many files there are
-        $media = $this->getFactoryService()->get('MediaFactory')->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser()->userId]);
+        $media = $this->mediaFactory->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser()->userId]);
 
         $size = ByteFormatter::format(array_sum(array_map(function ($element) {
             return $element->fileSize;
@@ -476,7 +642,7 @@ class Library extends Base
             throw new ConfigurationException(__('Sorry this function is disabled.'));
 
         // Get a list of media that is not in use (for this user)
-        $media = $this->getFactoryService()->get('MediaFactory')->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser()->userId]);
+        $media = $this->mediaFactory->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser()->userId]);
 
         $i = 0;
         foreach ($media as $item) {
@@ -518,6 +684,9 @@ class Library extends Base
             throw new ConfigurationException(__('Library not writable'));
     }
 
+    /**
+     * @return string
+     */
     public function getLibraryCacheUri()
     {
         return $this->getConfig()->GetSetting('LIBRARY_LOCATION') . '/cache';
@@ -529,7 +698,7 @@ class Library extends Base
      */
     public function libraryUsage()
     {
-        $results = $this->getStore()->select('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', array());
+        $results = $this->store->select('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', array());
 
         return $this->getSanitizer()->int($results[0]['SumSize']);
     }
@@ -581,20 +750,20 @@ class Library extends Base
     {
         $this->getLog()->debug('Download request for mediaId %d and type %s', $mediaId, $type);
 
-        $media = $this->getFactoryService()->get('MediaFactory')->getById($mediaId);
+        $media = $this->mediaFactory->getById($mediaId);
 
         if (!$this->getUser()->checkViewable($media))
             throw new AccessDeniedException();
 
         if ($type != '') {
-            $widget = $this->getFactoryService()->get('ModuleFactory')->create($type);
-            $widgetOverride = new Widget();
+            $widget = $this->moduleFactory->create($type);
+            $widgetOverride = $this->widgetFactory->createEmpty();
             $widgetOverride->assignMedia($media->mediaId);
             $widget->setWidget($widgetOverride);
 
         } else {
             // Make a media module
-            $widget = $this->getFactoryService()->get('ModuleFactory')->createWithMedia($media);
+            $widget = $this->moduleFactory->createWithMedia($media);
         }
 
         $widget->getResource();
@@ -615,7 +784,7 @@ class Library extends Base
         ';
 
         // Save a fonts.css file to the library for use as a module
-        $fonts = $this->getFactoryService()->get('MediaFactory')->getByMediaType('font');
+        $fonts = $this->mediaFactory->getByMediaType('font');
 
         if (count($fonts) < 1)
             return;
@@ -646,7 +815,7 @@ class Library extends Base
         file_put_contents(PROJECT_ROOT . '/web/modules/fonts.css', $css);
 
         // Install it (doesn't expire, isn't a system file, force update)
-        $media = $this->getFactoryService()->get('MediaFactory')->createModuleSystemFile('fonts.css', PROJECT_ROOT . '/web/modules/fonts.css');
+        $media = $this->mediaFactory->createModuleSystemFile('fonts.css', PROJECT_ROOT . '/web/modules/fonts.css');
         $media->expires = 0;
         $media->moduleSystemFile = true;
         $media->force = true;
@@ -672,11 +841,11 @@ class Library extends Base
         $this->getLog()->info('Installing all module files');
 
         // Do this for all enabled modules
-        foreach ($this->getFactoryService()->get('ModuleFactory')->query() as $module) {
+        foreach ($this->moduleFactory->query() as $module) {
             /* @var \Xibo\Entity\Module $module */
 
             // Install Files for this module
-            $moduleObject = $this->getFactoryService()->get('ModuleFactory')->create($module->type);
+            $moduleObject = $this->moduleFactory->create($module->type);
             $moduleObject->installFiles();
         }
     }
@@ -705,7 +874,7 @@ class Library extends Base
     public function removeExpiredFiles()
     {
         // Get a list of all expired files and delete them
-        foreach ($this->getFactoryService()->get('MediaFactory')->query(null, array('expires' => time(), 'allModules' => 1)) as $entry) {
+        foreach ($this->mediaFactory->query(null, array('expires' => time(), 'allModules' => 1)) as $entry) {
             /* @var \Xibo\Entity\Media $entry */
             // If the media type is a module, then pretend its a generic file
             $this->getLog()->info('Removing Expired File %s', $entry->name);

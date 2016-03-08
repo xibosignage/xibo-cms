@@ -28,6 +28,13 @@ use GuzzleHttp\Exception\RequestException;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
+use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\TagFactory;
+use Xibo\Factory\WidgetFactory;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -165,13 +172,72 @@ class Media implements \JsonSerializable
     private $permissions = [];
 
     /**
+     * @var ConfigServiceInterface
+     */
+    private $config;
+
+    /**
+     * @var MediaFactory
+     */
+    private $mediaFactory;
+
+    /**
+     * @var TagFactory
+     */
+    private $tagFactory;
+
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+
+    /**
+     * @var WidgetFactory
+     */
+    private $widgetFactory;
+
+    /**
+     * @var DisplayGroupFactory
+     */
+    private $displayGroupFactory;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param ConfigServiceInterface $config
+     * @param MediaFactory $mediaFactory
+     * @param PermissionFactory $permissionFactory
+     * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log)
+    public function __construct($store, $log, $config, $mediaFactory, $permissionFactory, $tagFactory)
     {
         $this->setCommonDependencies($store, $log);
+
+        $this->config = $config;
+        $this->mediaFactory = $mediaFactory;
+        $this->permissionFactory = $permissionFactory;
+        $this->tagFactory = $tagFactory;
+    }
+
+    /**
+     * Set Child Object Dependencies
+     * @param LayoutFactory $layoutFactory
+     * @param WidgetFactory $widgetFactory
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @return $this
+     */
+    public function setChildObjectDependencies($layoutFactory, $widgetFactory, $displayGroupFactory)
+    {
+        $this->layoutFactory = $layoutFactory;
+        $this->widgetFactory = $widgetFactory;
+        $this->displayGroupFactory  = $displayGroupFactory;
+        return $this;
     }
 
     public function __clone()
@@ -219,6 +285,9 @@ class Media implements \JsonSerializable
         $this->ownerId = $ownerId;
     }
 
+    /**
+     * @return int
+     */
     private function countUsages()
     {
         $this->load(['fullInfo' => true]);
@@ -242,7 +311,7 @@ class Media implements \JsonSerializable
     public function replaceTags($tags = [])
     {
         if (!is_array($this->tags) || count($this->tags) <= 0)
-            $this->tags = $this->getFactoryService()->get('TagFactory')->loadByMediaId($this->mediaId);
+            $this->tags = $this->tagFactory->loadByMediaId($this->mediaId);
 
         $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
             /* @var Tag $a */
@@ -307,21 +376,21 @@ class Media implements \JsonSerializable
         $this->getLog()->debug('Loading Media. Options = %s', json_encode($options));
 
         // Tags
-        $this->tags = $this->getFactoryService()->get('TagFactory')->loadByMediaId($this->mediaId);
+        $this->tags = $this->tagFactory->loadByMediaId($this->mediaId);
 
         // Are we loading for a delete? If so load the child models
         if ($options['deleting'] || $options['fullInfo']) {
             // Permissions
-            $this->permissions = $this->getFactoryService()->get('PermissionFactory')->getByObjectId(get_class($this), $this->mediaId);
+            $this->permissions = $this->permissionFactory->getByObjectId(get_class($this), $this->mediaId);
 
             // Widgets
-            $this->widgets = $this->getFactoryService()->get('WidgetFactory')->getByMediaId($this->mediaId);
+            $this->widgets = $this->widgetFactory->getByMediaId($this->mediaId);
 
             // Layout Background Images
-            $this->layoutBackgroundImages = $this->getFactoryService()->get('LayoutFactory')->getByBackgroundImageId($this->mediaId);
+            $this->layoutBackgroundImages = $this->layoutFactory->getByBackgroundImageId($this->mediaId);
 
             // Display Groups
-            $this->displayGroups = $this->getFactoryService()->get('DisplayGroupFactory')->getByMediaId($this->mediaId);
+            $this->displayGroups = $this->displayGroupFactory->getByMediaId($this->mediaId);
         }
 
         $this->loaded = true;
@@ -384,7 +453,7 @@ class Media implements \JsonSerializable
 
         // If there is a parent, bring it back
         try {
-            $parentMedia = $this->getFactoryService()->get('MediaFactory')->getParentById($this->mediaId);
+            $parentMedia = $this->mediaFactory->getParentById($this->mediaId);
             $parentMedia->isEdited = 0;
             $parentMedia->parentId = null;
             $parentMedia->save(['validate' => false]);
@@ -443,7 +512,7 @@ class Media implements \JsonSerializable
         if ($this->mediaType == 'image' && $parentMedia != null) {
             $this->getLog()->debug('Updating layouts with the old media %d as the background image.', $this->mediaId);
             // Get all Layouts with this as the background image
-            foreach ($this->getFactoryService()->get('LayoutFactory')->query(null, ['backgroundImageId' => $this->mediaId]) as $layout) {
+            foreach ($this->layoutFactory->query(null, ['backgroundImageId' => $this->mediaId]) as $layout) {
                 /* @var Layout $layout */
                 $this->getLog()->debug('Found layout that needs updating. ID = %d. Setting background image id to %d', $layout->layoutId, $parentMedia->mediaId);
                 $layout->backgroundImageId = $parentMedia->mediaId;
@@ -538,7 +607,7 @@ class Media implements \JsonSerializable
             $this->download();
         }
 
-        $libraryFolder = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
+        $libraryFolder = $this->config->GetSetting('LIBRARY_LOCATION');
 
         // Work out the extension
         $extension = strtolower(substr(strrchr($this->fileName, '.'), 1));
@@ -597,7 +666,7 @@ class Media implements \JsonSerializable
     public function unlink($fileName)
     {
         // Library location
-        $libraryLocation = $this->getConfig()->GetSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->config->GetSetting("LIBRARY_LOCATION");
 
         // 3 things to check for..
         // the actual file, the thumbnail, the background
@@ -620,7 +689,7 @@ class Media implements \JsonSerializable
             throw new \InvalidArgumentException(__('Not in a suitable state to download'));
 
         // Open the temporary file
-        $storedAs = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
+        $storedAs = $this->config->GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
 
         $this->getLog()->debug('Downloading %s to %s', $this->fileName, $storedAs);
 
@@ -629,7 +698,7 @@ class Media implements \JsonSerializable
 
         try {
             $client = new Client();
-            $client->get($this->fileName, $this->getConfig()->getGuzzleProxy(['save_to' => $fileHandle]));
+            $client->get($this->fileName, $this->config->getGuzzleProxy(['save_to' => $fileHandle]));
         }
         catch (RequestException $e) {
             $this->getLog()->error('Unable to get %s, %s', $this->fileName, $e->getMessage());

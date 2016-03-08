@@ -8,15 +8,18 @@ use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\ModuleFactory;
-use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\PlaylistFactory;
-use Xibo\Factory\WidgetFactory;
 
+/**
+ * Class XiboUploadHandler
+ * @package Xibo\Helper
+ */
 class XiboUploadHandler extends BlueImpUploadHandler
 {
+    /**
+     * Handle form data from BlueImp
+     * @param $file
+     * @param $index
+     */
     protected function handle_form_data($file, $index)
     {
         $controller = $this->options['controller'];
@@ -46,8 +49,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
             }
 
             // Guess the type
-            $module = (new ModuleFactory($controller->getContainer()))->getByExtension(strtolower(substr(strrchr($fileName, '.'), 1)));
-            $module = (new ModuleFactory($controller->getContainer()))->create($module->type);
+            $module = $controller->getModuleFactory()->getByExtension(strtolower(substr(strrchr($fileName, '.'), 1)));
+            $module = $controller->getModuleFactory()->create($module->type);
 
             $controller->getLog()->debug('Module Type = %s', $module->getModuleType());
 
@@ -63,7 +66,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $controller->getLog()->debug('Replacing old with new - updateInLayouts = %d, deleteOldRevisions = %d', $updateInLayouts, $deleteOldRevisions);
 
                 // Load old media
-                $oldMedia = (new MediaFactory($controller->getContainer()))->getById($this->options['oldMediaId']);
+                $oldMedia = $controller->getMediaFactory()->getById($this->options['oldMediaId']);
 
                 // Check permissions
                 if (!$controller->getUser()->checkEditable($oldMedia))
@@ -77,7 +80,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $name = ($name == '') ? $oldMedia->name : $name;
 
                 // Add the Media
-                $media = (new MediaFactory($controller->getContainer()))->create($name, $fileName, $module->getModuleType(), $this->options['userId']);
+                $media = $controller->getMediaFactory()->create($name, $fileName, $module->getModuleType(), $this->options['userId']);
 
                 // Set the duration
                 $media->duration = $module->determineDuration($filePath);
@@ -87,7 +90,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 $controller->getLog()->debug('Copying permissions to new media');
 
-                foreach ((new PermissionFactory($controller->getContainer()))->getAllByObjectId($controller->getUser(), get_class($oldMedia), $oldMedia->mediaId) as $permission) {
+                foreach ($controller->getPermissionFactory()->getAllByObjectId($controller->getUser(), get_class($oldMedia), $oldMedia->mediaId) as $permission) {
                     /* @var Permission $permission */
                     $permission = clone $permission;
                     $permission->objectId = $media->mediaId;
@@ -98,7 +101,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 if ($updateInLayouts) {
                     $controller->getLog()->debug('Replace in all Layouts selected. Getting associated widgets');
 
-                    foreach ((new WidgetFactory($controller->getContainer()))->getByMediaId($oldMedia->mediaId) as $widget) {
+                    foreach ($controller->getWidgetFactory()->getByMediaId($oldMedia->mediaId) as $widget) {
                         /* @var Widget $widget */
                         if ($controller->getUser()->checkEditable($widget)) {
                             // Widget that we cannot update, this means we can't delete the original mediaId when it comes time to do so.
@@ -117,7 +120,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     if ($media->mediaType == 'image') {
                         $controller->getLog()->debug('Updating layouts with the old media %d as the background image.', $oldMedia->mediaId);
                         // Get all Layouts with this as the background image
-                        foreach ((new LayoutFactory($controller->getContainer()))->query(null, ['disableUserCheck' => 1, 'backgroundImageId' => $oldMedia->mediaId]) as $layout) {
+                        foreach ($controller->getLayoutFactory()->query(null, ['disableUserCheck' => 1, 'backgroundImageId' => $oldMedia->mediaId]) as $layout) {
                             /* @var Layout $layout */
 
                             if ($controller->getUser()->checkEditable($layout)) {
@@ -136,7 +139,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 } else if ($this->options['widgetId'] != 0) {
                     $controller->getLog()->debug('Swapping a specific widget only.');
                     // swap this one
-                    $widget = (new WidgetFactory($controller->getContainer()))->getById($this->options['widgetId']);
+                    $widget = $controller->getWidgetFactory()->getById($this->options['widgetId']);
 
                     if (!$controller->getUser()->checkEditable($widget))
                         throw new AccessDeniedException();
@@ -155,7 +158,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                     try {
                         // Join the prior revision up with the new media.
-                        $priorMedia = (new MediaFactory($controller->getContainer()))->getParentById($oldMedia->mediaId);
+                        $priorMedia = $controller->getMediaFactory()->getParentById($oldMedia->mediaId);
                         $priorMedia->parentId = $media->mediaId;
                         $priorMedia->save(['validate' => false]);
                     }
@@ -176,7 +179,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $name = ($name == '') ? $fileName : $name;
 
                 // Add the Media
-                $media = (new MediaFactory($controller->getContainer()))->create($name, $fileName, $module->getModuleType(), $this->options['userId']);
+                $media = $controller->getMediaFactory()->create($name, $fileName, $module->getModuleType(), $this->options['userId']);
 
                 // Set the duration
                 $media->duration = $module->determineDuration($filePath);
@@ -185,7 +188,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $media->save();
 
                 // Permissions
-                foreach ((new PermissionFactory($controller->getContainer()))->createForNewEntity($controller->getUser(), get_class($media), $media->getId(), $controller->getConfig()->GetSetting('MEDIA_DEFAULT'), $controller->userGroupFactory) as $permission) {
+                foreach ($controller->getPermissionFactory()->createForNewEntity($controller->getUser(), get_class($media), $media->getId(), $controller->getConfig()->GetSetting('MEDIA_DEFAULT'), $controller->getUserGroupFactory()) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
                 }
@@ -208,10 +211,10 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $controller->getLog()->debug('Assigning uploaded media to playlistId ' . $this->options['playlistId']);
 
                 // Get the Playlist
-                $playlist = (new PlaylistFactory($controller->getContainer()))->getById($this->options['playlistId']);
+                $playlist = $controller->getPlaylistFactory()->getById($this->options['playlistId']);
 
                 // Create a Widget and add it to our region
-                $widget = (new WidgetFactory($controller->getContainer()))->create($this->options['userId'], $playlist->playlistId, $module->getModuleType(), $media->duration);
+                $widget = $controller->getWidgetFactory()->create($this->options['userId'], $playlist->playlistId, $module->getModuleType(), $media->duration);
 
                 // Assign the widget to the module
                 $module->setWidget($widget);

@@ -26,6 +26,7 @@ namespace Xibo\Factory;
 use Xibo\Entity\Media;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -37,17 +38,39 @@ use Xibo\Storage\StorageServiceInterface;
 class MediaFactory extends BaseFactory
 {
     /**
+     * @var ConfigServiceInterface
+     */
+    private $config;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var TagFactory
+     */
+    private $tagFactory;
+
+    /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
+     * @param ConfigServiceInterface $config
+     * @param PermissionFactory $permissionFactory
+     * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $permissionFactory, $tagFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
+
+        $this->config = $config;
+        $this->permissionFactory = $permissionFactory;
+        $this->tagFactory = $tagFactory;
     }
 
     /**
@@ -56,7 +79,7 @@ class MediaFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Media($this->getStore(), $this->getLog());
+        return new Media($this->getStore(), $this->getLog(), $this->config, $this, $this->permissionFactory, $this->tagFactory);
     }
 
     /**

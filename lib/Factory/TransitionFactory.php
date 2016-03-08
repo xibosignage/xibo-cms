@@ -15,6 +15,10 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class TransitionFactory
+ * @package Xibo\Factory
+ */
 class TransitionFactory extends BaseFactory
 {
     /**
@@ -26,6 +30,14 @@ class TransitionFactory extends BaseFactory
     public function __construct($store, $log, $sanitizerService)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * @return Transition
+     */
+    public function createEmpty()
+    {
+        return new Transition($this->getStore(), $this->getLog());
     }
 
     /**
@@ -126,7 +138,7 @@ class TransitionFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Transition())->hydrate($row)->setContainer($this->getContainer());
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         return $entries;

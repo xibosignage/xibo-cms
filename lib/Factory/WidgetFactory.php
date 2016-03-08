@@ -29,6 +29,10 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class WidgetFactory
+ * @package Xibo\Factory
+ */
 class WidgetFactory extends BaseFactory
 {
     /**

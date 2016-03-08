@@ -491,8 +491,26 @@ class State extends Middleware
             );
         });
 
-        $app->container->singleton('\Xibo\Controller\Library', function() {
-            return new \Xibo\Controller\Library();
+        $app->container->singleton('\Xibo\Controller\Library', function($container) {
+            return new \Xibo\Controller\Library(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->store,
+                $container->userFactory,
+                $container->moduleFactory,
+                $container->tagFactory,
+                $container->mediaFactory,
+                $container->widgetFactory,
+                $container->permissionFactory,
+                $container->layoutFactory,
+                $container->playlistFactory,
+                $container->userGroupFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\Logging', function($container) {
@@ -506,7 +524,8 @@ class State extends Middleware
                 $container->configService,
                 $container->store,
                 $container->logFactory,
-                $container->displayFactory);
+                $container->displayFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\Login', function($container) {
@@ -541,8 +560,24 @@ class State extends Middleware
             );
         });
 
-        $app->container->singleton('\Xibo\Controller\Module', function() {
-            return new \Xibo\Controller\Module();
+        $app->container->singleton('\Xibo\Controller\Module', function($container) {
+            return new \Xibo\Controller\Module(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->store,
+                $container->moduleFactory,
+                $container->playlistFactory,
+                $container->mediaFactory,
+                $container->permissionsFactory,
+                $container->userGroupFactory,
+                $container->widgetFactory,
+                $container->transitionFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\Playlist', function() {
@@ -662,8 +697,17 @@ class State extends Middleware
             );
         });
 
-        $app->container->singleton('\Xibo\Controller\Transition', function() {
-            return new \Xibo\Controller\Transition();
+        $app->container->singleton('\Xibo\Controller\Transition', function($container) {
+            return new \Xibo\Controller\Transition(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->transitionFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\Upgrade', function() {
@@ -855,7 +899,7 @@ class State extends Middleware
                 $container->sanitizerService,
                 $container->user,
                 $container->userFactory,
-                $container->config,
+                $container->configService,
                 $container->dateService,
                 $container->permissionFactory,
                 $container->regionFactory,
@@ -883,7 +927,10 @@ class State extends Middleware
                 $container->logService,
                 $container->sanitizerService,
                 $container->user,
-                $container->userFactory
+                $container->userFactory,
+                $container->configService,
+                $container->permissionFactory,
+                $container->tagFactory
             );
         });
 
@@ -894,7 +941,10 @@ class State extends Middleware
                 $container->sanitizerService,
                 $container->user,
                 $container->userFactory,
-                $container->moduleService
+                $container->moduleService,
+                $container->widgetFactory,
+                $container->regionFactory,
+                $container->playlistFactory
             );
         });
 
@@ -961,7 +1011,7 @@ class State extends Middleware
                 $container->store,
                 $container->logService,
                 $container->sanitizerService,
-                $container->config,
+                $container->configService,
                 $container->displayGroupFactory
             );
         });

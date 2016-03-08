@@ -22,11 +22,43 @@ namespace Xibo\Controller;
 
 use baseDAO;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\TransitionFactory;
 use Xibo\Helper\Form;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
-
+/**
+ * Class Transition
+ * @package Xibo\Controller
+ */
 class Transition extends Base
 {
+    /**
+     * @var TransitionFactory
+     */
+    private $transitionFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param TransitionFactory $transitionFactory
+     *
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $transitionFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->transitionFactory = $transitionFactory;
+    }
+
     /**
      * No display page functionaility
      */
@@ -37,7 +69,7 @@ class Transition extends Base
 
     public function grid()
     {
-        $transitions = $this->getFactoryService()->get('TransitionFactory')->query($this->gridRenderSort(), $this->gridRenderFilter());
+        $transitions = $this->transitionFactory->query($this->gridRenderSort(), $this->gridRenderFilter());
 
         foreach ($transitions as $transition) {
             /* @var \Xibo\Entity\Transition $transition */
@@ -55,7 +87,7 @@ class Transition extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->getFactoryService()->get('TransitionFactory')->countLast();
+        $this->getState()->recordsTotal = $this->transitionFactory->countLast();
         $this->getState()->setData($transitions);
     }
 
@@ -69,7 +101,7 @@ class Transition extends Base
         if ($this->getConfig()->GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
             throw new AccessDeniedException(__('Transition Config Locked'));
 
-        $transition = $this->getFactoryService()->get('TransitionFactory')->getById($transitionId);
+        $transition = $this->transitionFactory->getById($transitionId);
 
         $this->getState()->template = 'transition-form-edit';
         $this->getState()->setData([
@@ -87,7 +119,7 @@ class Transition extends Base
         if ($this->getConfig()->GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
             throw new AccessDeniedException(__('Transition Config Locked'));
 
-        $transition = $this->getFactoryService()->get('TransitionFactory')->getById($transitionId);
+        $transition = $this->transitionFactory->getById($transitionId);
         $transition->availableAsIn = $this->getSanitizer()->getCheckbox('availableAsIn');
         $transition->availableAsOut = $this->getSanitizer()->getCheckbox('availableAsOut');
         $transition->save();

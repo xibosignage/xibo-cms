@@ -45,6 +45,21 @@ class ModuleFactory extends BaseFactory
     private $moduleService;
 
     /**
+     * @var WidgetFactory
+     */
+    private $widgetFactory;
+
+    /**
+     * @var RegionFactory
+     */
+    private $regionFactory;
+
+    /**
+     * @var PlaylistFactory
+     */
+    private $playlistFactory;
+
+    /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
@@ -52,13 +67,19 @@ class ModuleFactory extends BaseFactory
      * @param User $user
      * @param UserFactory $userFactory
      * @param ModuleServiceInterface $moduleService
+     * @param WidgetFactory $widgetFactory
+     * @param RegionFactory $regionFactory
+     * @param PlaylistFactory $playlistFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService, $widgetFactory, $regionFactory, $playlistFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
         $this->moduleService = $moduleService;
+        $this->widgetFactory = $widgetFactory;
+        $this->regionFactory = $regionFactory;
+        $this->playlistFactory = $playlistFactory;
     }
 
     /**
@@ -125,7 +146,7 @@ class ModuleFactory extends BaseFactory
             throw new NotFoundException(sprintf(__('Unknown type %s'), $media->mediaType));
 
         // Create a widget
-        $widget = new Widget();
+        $widget = $this->widgetFactory->createEmpty();
         $widget->assignMedia($media->mediaId);
 
         // Create a module
@@ -154,7 +175,7 @@ class ModuleFactory extends BaseFactory
         // Do we have a regionId
         if ($regionId != 0) {
             // Load the region and set
-            $region = $this->getFactoryService()->get('RegionFactory')->getById($regionId);
+            $region = $this->regionFactory->getById($regionId);
             $module->setRegion($region);
         }
 
@@ -165,18 +186,18 @@ class ModuleFactory extends BaseFactory
                 throw new \InvalidArgumentException(__('Neither Playlist or Widget provided'));
             }
 
-            $playlist = $this->getFactoryService()->get('PlaylistFactory')->getById($playlistId);
+            $playlist = $this->playlistFactory->getById($playlistId);
             $playlist->load(['playlistIncludeRegionAssignments' => false]);
 
             // Create a new widget to use
-            $widget = $this->getFactoryService()->get('WidgetFactory')->create($ownerId, $playlistId, $module->getModuleType(), 0);
+            $widget = $this->widgetFactory->create($ownerId, $playlistId, $module->getModuleType(), 0);
             $module->setWidget($widget);
 
             $playlist->assignWidget($widget);
         }
         else {
             // Load the widget
-            $module->setWidget($this->getFactoryService()->get('WidgetFactory')->loadByWidgetId($widgetId));
+            $module->setWidget($this->widgetFactory->loadByWidgetId($widgetId));
         }
 
         return $module;
