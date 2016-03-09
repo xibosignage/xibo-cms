@@ -29,6 +29,7 @@ use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\CampaignFactory;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PageFactory;
@@ -98,6 +99,9 @@ class User extends Base
      */
     private $scheduleFactory;
 
+    /** @var  DisplayFactory */
+    private $displayFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -117,10 +121,11 @@ class User extends Base
      * @param CampaignFactory $campaignFactory
      * @param MediaFactory $mediaFactory
      * @param ScheduleFactory $scheduleFactory
+     * @param DisplayFactory $displayFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
-                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory)
+                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -134,6 +139,7 @@ class User extends Base
         $this->campaignFactory = $campaignFactory;
         $this->mediaFactory = $mediaFactory;
         $this->scheduleFactory = $scheduleFactory;
+        $this->displayFactory = $displayFactory;
     }
 
     /**
@@ -510,7 +516,7 @@ class User extends Base
             throw new AccessDeniedException();
 
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
-        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory);
 
         if ($this->getSanitizer()->getCheckbox('deleteAllItems') != 1) {
 

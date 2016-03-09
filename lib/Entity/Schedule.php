@@ -9,7 +9,11 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -180,6 +184,18 @@ class Schedule implements \JsonSerializable
      */
     private $displayGroupFactory;
 
+    /** @var  DisplayFactory */
+    private $displayFactory;
+
+    /** @var  LayoutFactory */
+    private $layoutFactory;
+
+    /** @var  MediaFactory */
+    private $mediaFactory;
+
+    /** @var  ScheduleFactory */
+    private $scheduleFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -192,6 +208,20 @@ class Schedule implements \JsonSerializable
         $this->setCommonDependencies($store, $log);
         $this->config = $config;
         $this->displayGroupFactory = $displayGroupFactory;
+    }
+
+    /**
+     * @param DisplayFactory $displayFactory
+     * @param LayoutFactory $layoutFactory
+     * @param MediaFactory $mediaFactory
+     * @param ScheduleFactory $scheduleFactory
+     */
+    public function setChildObjectDependencies($displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory)
+    {
+        $this->displayFactory = $displayFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->mediaFactory = $mediaFactory;
+        $this->scheduleFactory = $scheduleFactory;
     }
 
     /**

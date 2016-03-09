@@ -23,7 +23,10 @@ use Xibo\Entity\DisplayGroup;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
@@ -62,6 +65,15 @@ class Schedule extends Base
      */
     private $commandFactory;
 
+    /** @var  DisplayFactory */
+    private $displayFactory;
+
+    /** @var  LayoutFactory */
+    private $layoutFactory;
+
+    /** @var  MediaFactory */
+    private $mediaFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -77,7 +89,7 @@ class Schedule extends Base
      * @param CampaignFactory $campaignFactory
      * @param CommandFactory $commandFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $mediaFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -86,6 +98,9 @@ class Schedule extends Base
         $this->displayGroupFactory = $displayGroupFactory;
         $this->campaignFactory = $campaignFactory;
         $this->commandFactory = $commandFactory;
+        $this->displayFactory = $displayFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->mediaFactory = $mediaFactory;
     }
 
     function displayPage()
@@ -462,6 +477,7 @@ class Schedule extends Base
         }
 
         // Ready to do the add
+        $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $schedule->save();
 
         // Return
@@ -682,6 +698,7 @@ class Schedule extends Base
         }
 
         // Ready to do the add
+        $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $schedule->save();
 
         // Return

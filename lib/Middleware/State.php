@@ -712,7 +712,10 @@ class State extends Middleware
                 $container->scheduleFactory,
                 $container->displayGroupFactory,
                 $container->campaignFactory,
-                $container->commandFactory
+                $container->commandFactory,
+                $container->displayFactory,
+                $container->layoutFactory,
+                $container->mediaFactory
             );
         });
 
@@ -835,7 +838,8 @@ class State extends Middleware
                 $container->applicationFactory,
                 $container->campaignFactory,
                 $container->mediaFactory,
-                $container->scheduleFactory
+                $container->scheduleFactory,
+                $container->displayFactory
             );
         });
 

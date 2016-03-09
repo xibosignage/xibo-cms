@@ -25,6 +25,7 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\LibraryFullException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PageFactory;
@@ -286,6 +287,9 @@ class User implements \JsonSerializable
      */
     private $userOptionFactory;
 
+    /** @var  DisplayFactory */
+    private $displayFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -330,14 +334,16 @@ class User implements \JsonSerializable
      * @param LayoutFactory $layoutFactory
      * @param MediaFactory $mediaFactory
      * @param ScheduleFactory $scheduleFactory
+     * @param DisplayFactory $displayFactory
      * @return $this
      */
-    public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory)
+    public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory)
     {
         $this->campaignFactory = $campaignFactory;
         $this->layoutFactory = $layoutFactory;
         $this->mediaFactory = $mediaFactory;
         $this->scheduleFactory = $scheduleFactory;
+        $this->displayFactory = $displayFactory;
         return $this;
     }
 
@@ -577,6 +583,7 @@ class User implements \JsonSerializable
         foreach ($this->events as $event) {
             /* @var Schedule $event */
             $event->setOwner($user->getOwnerId());
+            $event->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $event->save();
         }
         foreach ($this->layouts as $layout) {
