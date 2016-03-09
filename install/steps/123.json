@@ -9,6 +9,10 @@
     {
       "step": "Make fromDt on Schedule NULLable.",
       "action": "ALTER TABLE  `schedule` CHANGE  `FromDT`  `FromDT` BIGINT( 20 ) NULL;"
+    },
+    {
+      "step": "Add CDN setting",
+      "action": "INSERT INTO `setting` (`setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES ('CDN_URL', '', 'text', 'Content Delivery Network Address for serving file requests to Players', '', 'network', 0, 'CDN Address', '', 33, '', 0, 'string');"
     }
   ]
 }

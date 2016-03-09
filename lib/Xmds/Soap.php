@@ -411,7 +411,7 @@ class Soap
 
                 if ($httpDownloads) {
                     // Serve a link instead (standard HTTP link)
-                    $file->setAttribute("path", Wsdl::getRoot() . '?file=' . $mediaNonce->nonce);
+                    $file->setAttribute("path", $this->generateRequiredFileDownloadPath($mediaNonce->nonce));
                     $file->setAttribute("saveAs", $path);
                     $file->setAttribute("download", 'http');
                 }
@@ -472,7 +472,7 @@ class Soap
 
             if ($httpDownloads) {
                 // Serve a link instead (standard HTTP link)
-                $file->setAttribute("path", Wsdl::getRoot() . '?file=' . $layoutNonce->nonce);
+                $file->setAttribute("path", $this->generateRequiredFileDownloadPath($layoutNonce->nonce));
                 $file->setAttribute("saveAs", $path);
                 $file->setAttribute("download", 'http');
             }
@@ -1518,5 +1518,24 @@ class Soap
     protected function logBandwidth($displayId, $type, $sizeInBytes)
     {
         $this->bandwidthFactory->createAndSave($type, $displayId, $sizeInBytes);
+    }
+
+    /**
+     * Generate a file download path for HTTP downloads, taking into account the precence of a CDN.
+     * @param $nonce
+     * @return string
+     */
+    protected function generateRequiredFileDownloadPath($nonce)
+    {
+        $saveAsPath = Wsdl::getRoot() . '?file=' . $nonce;
+        // CDN?
+        $cdnUrl = $this->configService->GetSetting('CDN_URL');
+        if ($cdnUrl != '') {
+            // Serve a link to the CDN
+            return 'http' . ((isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ? 's' : '') . '://' . $cdnUrl . urlencode($saveAsPath);
+        } else {
+            // Serve a HTTP link to XMDS
+            return $saveAsPath;
+        }
     }
 }

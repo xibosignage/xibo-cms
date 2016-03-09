@@ -25,8 +25,12 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\PlayerActionServiceInterface;
@@ -332,6 +336,26 @@ class Display
     private $displayProfileFactory;
 
     /**
+     * @var DisplayFactory
+     */
+    private $displayFactory;
+
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+
+    /**
+     * @var MediaFactory
+     */
+    private $mediaFactory;
+
+    /**
+     * @var ScheduleFactory
+     */
+    private $scheduleFactory;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
@@ -351,6 +375,23 @@ class Display
         $this->displayGroupFactory = $displayGroupFactory;
         $this->displayProfileFactory = $displayProfileFactory;
         $this->playerAction = $playerAction;
+    }
+
+    /**
+     * Set child object dependencies
+     * @param DisplayFactory $displayFactory
+     * @param LayoutFactory $layoutFactory
+     * @param MediaFactory $mediaFactory
+     * @param ScheduleFactory $scheduleFactory
+     * @return $this
+     */
+    public function setChildObjectDependencies($displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory)
+    {
+        $this->displayFactory = $displayFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->mediaFactory = $mediaFactory;
+        $this->scheduleFactory = $scheduleFactory;
+        return $this;
     }
 
     /**
@@ -465,7 +506,7 @@ class Display
         $options = array_merge([
             'validate' => true,
             'audit' => true,
-            'triggerDynamicDisplayGroupAssessment' => true
+            'triggerDynamicDisplayGroupAssessment' => false
         ], $options);
 
         if ($options['validate'])
@@ -493,6 +534,7 @@ class Display
         if ($options['triggerDynamicDisplayGroupAssessment']) {
             foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
                 /* @var DisplayGroup $group */
+                $group->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
                 $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true]);
             }
         }

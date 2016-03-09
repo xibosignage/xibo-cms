@@ -65,8 +65,6 @@ class RequiredFile implements \JsonSerializable
     {
         if (($this->lastUsed != 0 && $this->bytesRequested > $this->size) || $this->expiry < time())
             throw new FormExpiredException();
-
-        $this->markUsed();
     }
 
     public function markUsed()
@@ -128,6 +126,12 @@ class RequiredFile implements \JsonSerializable
         ]);
     }
 
+    /**
+     * Remove unused nonces
+     * @param $store
+     * @param $displayId
+     * @param $requestKey
+     */
     public static function removeUnusedForDisplay($store, $displayId, $requestKey)
     {
         $store->update('DELETE FROM `requiredfile` WHERE displayId = :displayId AND requestKey <> :requestKey ', ['displayId' => $displayId, 'requestKey' => $requestKey]);
