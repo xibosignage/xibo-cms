@@ -11,13 +11,49 @@ namespace Xibo\Upgrade;
 
 use Xibo\Entity\DataSet;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class DataSetConvertStep
+ * @package Xibo\Upgrade
+ */
 class DataSetConvertStep implements Step
 {
-    public static function doStep()
+    /** @var  StorageServiceInterface */
+    private $store;
+
+    /** @var  LogServiceInterface */
+    private $log;
+
+    /** @var  ConfigServiceInterface */
+    private $config;
+
+    /**
+     * DataSetConvertStep constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param ConfigServiceInterface $config
+     */
+    public function __construct($store, $log, $config)
     {
+        $this->store = $store;
+        $this->log = $log;
+        $this->config = $config;
+    }
+
+    /**
+     * @param \Slim\Helper\Set $container
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function doStep($container)
+    {
+        /** @var DataSetFactory $dataSetFactory */
+        $dataSetFactory = $container->get('dataSetFactory');
+
         // Get all DataSets
-        foreach ((new DataSetFactory($this->getApp()))->query() as $dataSet) {
+        foreach ($dataSetFactory->query() as $dataSet) {
             /* @var \Xibo\Entity\DataSet $dataSet */
             $dataSet->load();
 
@@ -31,7 +67,7 @@ class DataSetConvertStep implements Step
         }
 
         // Drop data set data
-        $this->getStore()->update('DROP TABLE `datasetdata`;', []);
+        $this->store->update('DROP TABLE `datasetdata`;', []);
     }
 
     /**
@@ -39,9 +75,9 @@ class DataSetConvertStep implements Step
      * @param DataSet $dataSet
      * @return array
      */
-    public static function getExistingData($dataSet)
+    public function getExistingData($dataSet)
     {
-        $dbh = $this->getStore()->getConnection();
+        $dbh = $this->store->getConnection();
         $params = array('dataSetId' => $dataSet->dataSetId);
 
         $selectSQL = '';

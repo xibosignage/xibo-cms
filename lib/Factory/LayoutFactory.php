@@ -310,7 +310,7 @@ class LayoutFactory extends BaseFactory
 
         // New Layout
         if ($layout == null)
-            $layout = new Layout();
+            $layout = $this->createEmpty();
 
         // Get a list of modules for us to use
         $modules = $this->moduleFactory->get();

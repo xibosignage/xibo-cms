@@ -9,7 +9,7 @@ $app->map('/(:step)', function($step = 1) use($app) {
 
     $app->logService->info('Installer Step %s', $step);
 
-    $install = new \Xibo\Helper\Install($app);
+    $install = new \Xibo\Helper\Install($app->sanitizerService);
     $settingsExists = $app->settingsExists;
     $template = '';
     $data = [];
@@ -46,7 +46,9 @@ $app->map('/(:step)', function($step = 1) use($app) {
             }
 
             try {
-                $install->Step3();
+                // We won't have a storageservice registered with the app yet,
+                // so we create one for this step.
+                $install->Step3((new \Xibo\Storage\PdoStorageService($app->logService)));
 
                 // Redirect to step 4
                 $app->redirectTo('install', ['step' => 4]);
@@ -78,7 +80,7 @@ $app->map('/(:step)', function($step = 1) use($app) {
         case 5:
             // Create a user account
             try {
-                $install->Step5();
+                $install->Step5($app->store);
 
                 // Redirect to step 6
                 $app->redirectTo('install', ['step' => 6]);
@@ -104,7 +106,7 @@ $app->map('/(:step)', function($step = 1) use($app) {
             // Create a user account
             try {
                 $template = 'install-step7';
-                $install->Step7();
+                $install->Step7($app->store);
 
                 // Redirect to login
                 // This will always be one folder down

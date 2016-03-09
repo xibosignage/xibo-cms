@@ -10,12 +10,45 @@ namespace Xibo\Upgrade;
 
 
 use Xibo\Helper\Install;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class OAuthServerInstallStep
+ * @package Xibo\Upgrade
+ */
 class OAuthServerInstallStep implements Step
 {
-    public static function doStep()
+    /** @var  StorageServiceInterface */
+    private $store;
+
+    /** @var  LogServiceInterface */
+    private $log;
+
+    /** @var  ConfigServiceInterface */
+    private $config;
+
+    /**
+     * DataSetConvertStep constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param ConfigServiceInterface $config
+     */
+    public function __construct($store, $log, $config)
     {
-        $dbh = $this->getStore()->getConnection();
+        $this->store = $store;
+        $this->log = $log;
+        $this->config = $config;
+    }
+
+    /**
+     * @param \Slim\Helper\Set $container
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function doStep($container)
+    {
+        $dbh = $this->store->getConnection();
 
         // Run the SQL to create the necessary tables
         $statements = Install::remove_remarks(self::$dbStructure);

@@ -24,9 +24,9 @@ namespace Xibo\Entity;
 
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\WidgetMediaFactory;
 use Xibo\Factory\WidgetOptionFactory;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Widget\ModuleWidget;
@@ -137,6 +137,9 @@ class Widget implements \JsonSerializable
      */
     public static $widgetMinDuration = 1;
 
+    /** @var  DateServiceInterface */
+    private $dateService;
+
     /**
      * @var WidgetOptionFactory
      */
@@ -153,22 +156,19 @@ class Widget implements \JsonSerializable
     private $permissionFactory;
 
     /**
-     * @var PlaylistFactory
-     */
-    private $playlistFactory;
-
-    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param DateServiceInterface $date
      * @param WidgetOptionFactory $widgetOptionFactory
      * @param WidgetMediaFactory $widgetMediaFactory
      * @param PermissionFactory $permissionFactory
      */
-    public function __construct($store, $log, $widgetOptionFactory, $widgetMediaFactory, $permissionFactory)
+    public function __construct($store, $log, $date, $widgetOptionFactory, $widgetMediaFactory, $permissionFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->excludeProperty('module');
+        $this->dateService = $date;
         $this->widgetOptionFactory = $widgetOptionFactory;
         $this->widgetMediaFactory = $widgetMediaFactory;
         $this->permissionFactory = $permissionFactory;
@@ -400,14 +400,13 @@ class Widget implements \JsonSerializable
         $this->linkMedia();
         $this->unlinkMedia();
 
-        if ($options['notify']) {
-            $this->getLog()->debug('Notify playlistId %d', $this->playlistId);
-            // Notify the Layout
-            $playlist = $this->playlistFactory->getById($this->playlistId);
-            $playlist->notifyLayouts();
-        }
+        if ($options['notify'])
+            $this->notify();
     }
 
+    /**
+     * @param array $options
+     */
     public function delete($options = [])
     {
         $options = array_merge([
@@ -439,16 +438,32 @@ class Widget implements \JsonSerializable
         // Delete this
         $this->getStore()->update('DELETE FROM `widget` WHERE widgetId = :widgetId', array('widgetId' => $this->widgetId));
 
-        if ($options['notify']) {
-
-            $this->getLog()->debug('Notifying upstream playlist');
-
-            // Notify the Layout
-            $playlist = $this->playlistFactory->getById($this->playlistId);
-            $playlist->notifyLayouts();
-        }
+        if ($options['notify'])
+            $this->notify();
 
         $this->getLog()->debug('Delete Widget Complete');
+    }
+
+    /**
+     * Notify
+     */
+    private function notify()
+    {
+        $this->getLog()->debug('Notifying upstream playlist');
+
+        // Notify the Layout
+        $this->getStore()->update('
+            UPDATE `layout` SET `status` = 3, `modifiedDT` = :modifiedDt WHERE layoutId IN (
+              SELECT `region`.layoutId
+                FROM `lkregionplaylist`
+                  INNER JOIN `region`
+                  ON region.regionId = `lkregionplaylist`.regionId
+               WHERE `lkregionplaylist`.playlistId = :playlistId
+            )
+        ', [
+            'playlistId' => $this->playlistId,
+            'modifiedDt' => $this->dateService->getLocalDate()
+        ]);
     }
 
     private function add()

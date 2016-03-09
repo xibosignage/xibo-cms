@@ -380,7 +380,7 @@ class Playlist implements \JsonSerializable
             )
         ', [
             'playlistId' => $this->playlistId,
-            'modifiedDt' => $this->getDate()->getLocalDate()
+            'modifiedDt' => $this->dateService->getLocalDate()
         ]);
     }
 

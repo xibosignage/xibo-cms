@@ -73,9 +73,17 @@ class PdoStorageService implements StorageServiceInterface
 	public function __construct($logger = null)
     {
         $this->log = $logger;
+    }
 
+    /**
+     * Set Connection
+     * @return $this
+     */
+    public function setConnection()
+    {
         // Create a new connection
         $this->conn = PdoStorageService::newConnection();
+        return $this;
     }
 
     /**

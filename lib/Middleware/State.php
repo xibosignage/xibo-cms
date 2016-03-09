@@ -804,8 +804,17 @@ class State extends Middleware
             );
         });
 
-        $app->container->singleton('\Xibo\Controller\Upgrade', function() {
-            return new \Xibo\Controller\Upgrade();
+        $app->container->singleton('\Xibo\Controller\Upgrade', function($container) {
+            return new \Xibo\Controller\Upgrade(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->upgradeFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\User', function($container) {
@@ -1166,7 +1175,9 @@ class State extends Middleware
             return new \Xibo\Factory\UpgradeFactory(
                 $container->store,
                 $container->logService,
-                $container->sanitizerService
+                $container->sanitizerService,
+                $container->dateService,
+                $container->configService
             );
         });
 
@@ -1212,6 +1223,7 @@ class State extends Middleware
                 $container->store,
                 $container->logService,
                 $container->sanitizerService,
+                $container->dateService,
                 $container->widgetOptionFactory,
                 $container->widgetMediaFactory,
                 $container->permissionFactory

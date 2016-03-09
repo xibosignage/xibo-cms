@@ -55,12 +55,12 @@ $app->setName('install');
 
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
-    $app->container->get('\Xibo\Controller\Error')->handler($e);
+    $app->render('install-error.twig', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
 });
 
 // Configure a not found handler
 $app->notFound(function () use ($app) {
-    $app->container->get('\Xibo\Controller\Error')->notFound();
+    $app->render('install-error.twig', ['error' => __('Page not found'), 'trace' => __('Sorry this page cannot be found.')], 500);
 });
 
 // Twig templating
@@ -78,7 +78,20 @@ $twig->parserExtensions = array(
 $twig->twigTemplateDirs = [PROJECT_ROOT . '/views'];
 $app->view($twig);
 
-$twig->appendData(['theme' => new Theme($app, 'default')]);
+// Set root URI
+\Xibo\Middleware\State::setRootUri($app);
+
+// Create an empty config object
+$emptyConfigService = new \Xibo\Service\ConfigService();
+$emptyConfigService->loadTheme('default');
+
+// Set the config root Uri
+$emptyConfigService->rootUri = $app->rootUri;
+
+$twig->appendData(['theme' => $emptyConfigService]);
+
+// Store this in our collection
+$app->configService = $emptyConfigService;
 
 // Hook to setup translations
 $app->hook('slim.before.dispatch', function() use ($app) {
@@ -86,16 +99,32 @@ $app->hook('slim.before.dispatch', function() use ($app) {
     if (file_exists(PROJECT_ROOT . '/web/settings.php')) {
         // Config
         $app->configService = \Xibo\Service\ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+
+        // Configure Store
+        \Xibo\Middleware\Storage::setStorage($app->container);
+
+        // Inject into Config Service
+        $app->configService->setDependencies($app->store, $app->rootUri);
+
         // Set-up the translations for get text
-        Translate::InitLocale($app);
+        Translate::InitLocale($app->configService);
 
         $app->settingsExists = true;
     }
     else {
-        Translate::InitLocale($app, 'en_GB');
-    }
+        Translate::InitLocale($app->configService, 'en_GB');
 
-    \Xibo\Middleware\State::setRootUri($app);
+        $app->container->singleton('logService', function($container) {
+            return new \Xibo\Service\LogService($container->log, $container->mode);
+        });
+
+        // Register the sanitizer
+        $app->container->singleton('sanitizerService', function($container) {
+            $sanitizer = new \Xibo\Service\SanitizeService($container->dateService);
+            $sanitizer->setRequest($container->request);
+            return $sanitizer;
+        });
+    }
 });
 
 require PROJECT_ROOT . '/lib/routes-install.php';

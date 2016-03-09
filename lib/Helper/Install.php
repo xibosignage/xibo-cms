@@ -20,17 +20,18 @@
  */
 namespace Xibo\Helper;
 
-use Slim\Slim;
 use Xibo\Exception\InstallationError;
 use Xibo\Service\ConfigService;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Service\SanitizeService;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class Install
+ * @package Xibo\Helper
+ */
 class Install
 {
-    /**
-     * @var Slim
-     */
-    private $app;
-
     // DB Details
     public $db_create;
     public $db_admin_user;
@@ -44,21 +45,21 @@ class Install
     public $existing_db_pass;
     public $existing_db_name;
 
-    public function __construct($app)
+    /** @var SanitizerServiceInterface */
+    private $sanitizer;
+
+    /**
+     * Install constructor.
+     * @param SanitizeService $sanitizer
+     */
+    public function __construct($sanitizer)
     {
-        $this->app = $app;
+        $this->sanitizer = $sanitizer;
     }
 
     /**
-     * Get the App
-     * @return Slim
-     * @throws \Exception
+     * @return array
      */
-    public function getApp()
-    {
-        return $this->app;
-    }
-
     public function Step1()
     {
         return [
@@ -66,29 +67,36 @@ class Install
         ];
     }
 
+    /**
+     * @return array
+     */
     public function Step2()
     {
         return [];
     }
 
-    public function Step3()
+    /**
+     * @param StorageServiceInterface $store
+     * @throws InstallationError
+     */
+    public function Step3($store)
     {
         // Have we been told to create a new database
-        $this->db_create = $this->getSanitizer()->getInt('db_create');
+        $this->db_create = $this->sanitizer->getInt('db_create');
 
         // Check all parameters have been specified
-        $this->db_admin_user = $this->getSanitizer()->getString('admin_username');
-        $this->db_admin_pass = $this->getSanitizer()->getString('admin_password');
+        $this->db_admin_user = $this->sanitizer->getString('admin_username');
+        $this->db_admin_pass = $this->sanitizer->getString('admin_password');
 
-        $this->new_db_host = $this->getSanitizer()->getString('host');
-        $this->new_db_user = $this->getSanitizer()->getString('db_username');
-        $this->new_db_pass = $this->getSanitizer()->getString('db_password');
-        $this->new_db_name = $this->getSanitizer()->getString('db_name');
+        $this->new_db_host = $this->sanitizer->getString('host');
+        $this->new_db_user = $this->sanitizer->getString('db_username');
+        $this->new_db_pass = $this->sanitizer->getString('db_password');
+        $this->new_db_name = $this->sanitizer->getString('db_name');
 
-        $this->existing_db_host = $this->getSanitizer()->getString('existing_host');
-        $this->existing_db_user = $this->getSanitizer()->getString('existing_db_username');
-        $this->existing_db_pass = $this->getSanitizer()->getString('existing_db_password');
-        $this->existing_db_name = $this->getSanitizer()->getString('existing_db_name');
+        $this->existing_db_host = $this->sanitizer->getString('existing_host');
+        $this->existing_db_user = $this->sanitizer->getString('existing_db_username');
+        $this->existing_db_pass = $this->sanitizer->getString('existing_db_password');
+        $this->existing_db_name = $this->sanitizer->getString('existing_db_name');
 
         // If an administrator user name / password has been specified then we should create a new DB
         if ($this->db_create == 1) {
@@ -111,14 +119,14 @@ class Install
             // Try to create the new database
             // Try and connect using these details and create the new database
             try {
-                $this->getStore()->connect($this->new_db_host, $this->db_admin_user, $this->db_admin_pass);
+                $store->connect($this->new_db_host, $this->db_admin_user, $this->db_admin_pass);
             } catch (\PDOException $e) {
                 throw new InstallationError(sprintf(__('Could not connect to MySQL with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
             }
 
             // Try to create the new database
             try {
-                $dbh = $this->getStore()->getConnection();
+                $dbh = $store->getConnection();
                 $dbh->exec(sprintf('CREATE DATABASE `%s` CHARACTER SET utf8 COLLATE utf8_general_ci', $this->new_db_name));
             } catch (\PDOException $e) {
                 throw new InstallationError(sprintf(__('Could not create a new database with the administrator details [%s]. Please check and try again. Error Message = [%s]'), $this->db_admin_user, $e->getMessage()));
@@ -126,7 +134,7 @@ class Install
 
             // Try to create the new user
             try {
-                $dbh = $this->getStore()->getConnection();
+                $dbh = $store->getConnection();
 
                 // Create the user and grant privileges
                 if ($this->new_db_host == 'localhost') {
@@ -157,7 +165,8 @@ class Install
             $this->existing_db_name = $this->new_db_name;
 
             // Close the connection
-            $this->getStore()->close();
+            $store->close();
+
         } else {
             // Check details for a new database
             if ($this->existing_db_host == '')
@@ -175,7 +184,7 @@ class Install
 
         // Try and make a connection with this database
         try {
-            $this->getStore()->connect($this->existing_db_host, $this->existing_db_user, $this->existing_db_pass, $this->existing_db_name);
+            $store->connect($this->existing_db_host, $this->existing_db_user, $this->existing_db_pass, $this->existing_db_name);
         } catch (\PDOException $e) {
             throw new InstallationError(sprintf(__('Could not connect to MySQL with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
         }
@@ -187,7 +196,7 @@ class Install
         $sql = '';
 
         try {
-            $dbh = $this->getStore()->getConnection();
+            $dbh = $store->getConnection();
 
             foreach ($sql_files as $filename) {
                 $delimiter = ';';
@@ -215,7 +224,7 @@ class Install
         $secretKey = Install::generateSecret();
 
         // Escape the password before we write it to disk
-        $dbh = $this->getStore()->getConnection();
+        $dbh = $store->getConnection();
         $existing_db_pass = addslashes($this->existing_db_pass);
 
         $settings = <<<END
@@ -262,16 +271,23 @@ END;
         // This is handled by the calling function (i.e. there is no output from this call, we just reload and move on)
     }
 
+    /**
+     * @return array
+     */
     public function Step4()
     {
         return [];
     }
 
-    public function Step5()
+    /**
+     * @param StorageServiceInterface $store
+     * @throws InstallationError
+     */
+    public function Step5($store)
     {
         // Configure the user account
-        $username = $this->getSanitizer()->getString('admin_username');
-        $password = $this->getSanitizer()->getString('admin_password');
+        $username = $this->sanitizer->getString('admin_username');
+        $password = $this->sanitizer->getString('admin_password');
 
         if ($username == '')
             throw new InstallationError(__('Missing the admin username.'));
@@ -281,7 +297,7 @@ END;
 
         // Update user id 1 with these details.
         try {
-            $dbh = $this->getStore()->getConnection();
+            $dbh = $store->getConnection();
 
             $sth = $dbh->prepare('UPDATE `user` SET UserName = :username, UserPassword = :password WHERE UserID = 1 LIMIT 1');
             $sth->execute(array(
@@ -300,6 +316,9 @@ END;
         }
     }
 
+    /**
+     * @return array
+     */
     public function Step6()
     {
         return [
@@ -307,11 +326,15 @@ END;
         ];
     }
 
-    public function Step7()
+    /**
+     * @param StorageServiceInterface $store
+     * @throws InstallationError
+     */
+    public function Step7($store)
     {
-        $server_key = $this->getSanitizer()->getString('server_key');
-        $library_location = $this->getSanitizer()->getString('library_location');
-        $stats = $this->getSanitizer()->getCheckbox('stats');
+        $server_key = $this->sanitizer->getString('server_key');
+        $library_location = $this->sanitizer->getString('library_location');
+        $stats = $this->sanitizer->getCheckbox('stats');
 
         if ($server_key == '')
             throw new InstallationError(__('Missing the server key.'));
@@ -349,7 +372,7 @@ END;
         }
 
         try {
-            $dbh = $this->getStore()->getConnection();
+            $dbh = $store->getConnection();
 
             // Library Location
             $sth = $dbh->prepare('UPDATE `setting` SET `value` = :value WHERE `setting`.`setting` = \'LIBRARY_LOCATION\' LIMIT 1');
@@ -476,6 +499,10 @@ END;
         return $all;
     }
 
+    /**
+     * @param int $length
+     * @return string
+     */
     public static function generateSecret($length = 12)
     {
         # Generates a random 12 character alphanumeric string to use as a salt

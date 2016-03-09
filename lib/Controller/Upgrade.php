@@ -21,18 +21,53 @@
 namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Factory\UpgradeFactory;
+use Xibo\Service\ConfigService;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
+/**
+ * Class Upgrade
+ * @package Xibo\Controller
+ */
 class Upgrade extends Base
 {
+    /** @var  UpgradeFactory */
+    private $upgradeFactory;
+
+    /** @var  string */
     public $errorMessage;
 
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param UpgradeFactory $upgradeFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $upgradeFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->upgradeFactory = $upgradeFactory;
+    }
+
+    /**
+     *
+     */
     public function displayPage()
     {
         // Assume we will show the upgrade page
         $this->getState()->template = 'upgrade-page';
 
         // Is there a pending upgrade (i.e. are there any pending upgrade steps).
-        $steps = $this->getFactoryService()->get('UpgradeFactory')->getIncomplete();
+        $steps = $this->upgradeFactory->getIncomplete();
 
         if (count($steps) <= 0) {
             // No pending steps, check to see if we need to insert them
@@ -47,7 +82,7 @@ class Upgrade extends Base
             }
 
             // Insert pending upgrade steps.
-            $steps = $this->getFactoryService()->get('UpgradeFactory')->createSteps(DBVERSION, WEBSITE_VERSION);
+            $steps = $this->upgradeFactory->createSteps(DBVERSION, ConfigService::$WEBSITE_VERSION);
 
             foreach ($steps as $step) {
                 /* @var \Xibo\Entity\Upgrade $step */
@@ -74,7 +109,7 @@ class Upgrade extends Base
             throw new AccessDeniedException();
 
         // Get upgrade step
-        $upgradeStep = $this->getFactoryService()->get('UpgradeFactory')->getByStepId($stepId);
+        $upgradeStep = $this->upgradeFactory->getByStepId($stepId);
 
         if ($upgradeStep->complete == 1)
             throw new \InvalidArgumentException(__('Upgrade step already complete'));
@@ -86,8 +121,8 @@ class Upgrade extends Base
             $upgradeStep->save();
 
             // Install all module files if we are on the last step
-            if (count($this->getFactoryService()->get('UpgradeFactory')->getIncomplete()) <= 0)
-                Library::installAllModuleFiles($this->getContainer());
+            if (count($this->upgradeFactory->getIncomplete()) <= 0)
+                $this->getApp()->container->get('\Xibo\Controller\Library')->installAllModuleFiles();
         }
         catch (\Exception $e) {
             $upgradeStep->lastTryDate = $this->getDate()->parse()->format('U');

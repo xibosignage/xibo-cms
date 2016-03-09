@@ -24,10 +24,12 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
-use Xibo\Controller\Library;
-use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\Translate;
 
+/**
+ * Class Actions
+ * @package Xibo\Middleware
+ */
 class Actions extends Middleware
 {
     public function call()
@@ -45,7 +47,7 @@ class Actions extends Middleware
 
                 foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                     if (stripos($file, '.zip')) {
-                        $layout = (new LayoutFactory($app->container))->createFromZip($folder . '/' . $file, null, 1, false, false, true);
+                        $layout = $app->layoutFactory->createFromZip($folder . '/' . $file, null, 1, false, false, true);
                         $layout->save([
                             'audit' => false
                         ]);
@@ -53,7 +55,7 @@ class Actions extends Middleware
                 }
 
                 // Install files
-                (new Library())->setApp($app)->installAllModuleFiles();
+                $app->container->get('\Xibo\Controller\Library')->installAllModuleFiles();
 
                 $app->configService->ChangeSetting('DEFAULTS_IMPORTED', 1);
             }

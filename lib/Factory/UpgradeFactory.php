@@ -11,23 +11,48 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Upgrade;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\ConfigService;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class UpgradeFactory
+ * @package Xibo\Factory
+ */
 class UpgradeFactory extends BaseFactory
 {
     private $provisioned = false;
+
+    /** @var  DateServiceInterface */
+    private $date;
+
+    /** @var  ConfigServiceInterface */
+    private $config;
 
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
      */
-    public function __construct($store, $log, $sanitizerService)
+    public function __construct($store, $log, $sanitizerService, $date, $config)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->date = $date;
+        $this->config = $config;
+    }
+
+    /**
+     * @return Upgrade
+     */
+    public function createEmpty()
+    {
+        return new Upgrade($this->getStore(), $this->getLog(), $this->config);
     }
 
     /**
@@ -98,7 +123,7 @@ class UpgradeFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Upgrade())->hydrate($row)->setContainer($this->getContainer());
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         // Paging
@@ -121,7 +146,7 @@ class UpgradeFactory extends BaseFactory
         $this->getLog()->debug('Creating upgrade steps from %d to %d', $from, $to);
 
         $steps = [];
-        $date = $this->getDate()->parse();
+        $date = $this->date->parse();
 
         // Go from $from to $to and get the config file from the install folder.
         for ($i = $from + 1; $i <= $to; $i++) {
@@ -143,16 +168,16 @@ class UpgradeFactory extends BaseFactory
                     $step['dbVersion'] = $config['dbVersion'];
                     $step['appVersion'] = $config['appVersion'];
                     $step['requestDate'] = $date->format('U');
-                    $steps[] = (new Upgrade())->hydrate($step);
+                    $steps[] = $this->createEmpty()->hydrate($step);
                 }
             }
 
             // Add the version bump
             if ($i == $to) {
-                $action = 'UPDATE `version` SET `app_ver` = \'' . $this->getConfig()->$WEBSITE_VERSION_NAME . '\', `DBVersion` = ' . $to . '; UPDATE `setting` SET `value` = 0 WHERE `setting` = \'PHONE_HOME_DATE\';';
-                $steps[] = (new Upgrade())->hydrate([
+                $action = 'UPDATE `version` SET `app_ver` = \'' . ConfigService::$WEBSITE_VERSION . '\', `DBVersion` = ' . $to . '; UPDATE `setting` SET `value` = 0 WHERE `setting` = \'PHONE_HOME_DATE\';';
+                $steps[] = $this->createEmpty()->hydrate([
                     'dbVersion' => $to,
-                    'appVersion' => $this->getConfig()->$WEBSITE_VERSION_NAME,
+                    'appVersion' => ConfigService::$WEBSITE_VERSION_NAME,
                     'step' => 'Finalise Upgrade',
                     'action' => $action,
                     'type' => 'sql'
@@ -170,15 +195,15 @@ class UpgradeFactory extends BaseFactory
      */
     private function checkAndProvision()
     {
-        if ($this->$provisioned)
+        if ($this->provisioned)
             return;
 
         // Check if the table exists
         $results = $this->getStore()->select('SHOW TABLES LIKE :table', ['table' => 'upgrade']);
 
         if (count($results) <= 0)
-            Upgrade::createTable();
+            $this->createEmpty()->createTable();
 
-        $this->$provisioned = true;
+        $this->provisioned = true;
     }
 }

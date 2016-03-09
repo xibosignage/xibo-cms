@@ -76,7 +76,7 @@ class Storage extends Middleware
 
         // Register the database service
         $container->singleton('store', function($container) {
-            return new PdoStorageService($container->logService);
+            return (new PdoStorageService($container->logService))->setConnection();
         });
     }
 }

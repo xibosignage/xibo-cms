@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Widget;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -35,6 +36,10 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class WidgetFactory extends BaseFactory
 {
+
+    /** @var  DateServiceInterface */
+    private $dateService;
+
     /**
      * @var WidgetOptionFactory
      */
@@ -55,14 +60,16 @@ class WidgetFactory extends BaseFactory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param DateServiceInterface $date
      * @param WidgetOptionFactory $widgetOptionFactory
      * @param WidgetMediaFactory $widgetMediaFactory
      * @param PermissionFactory $permissionFactory
      *
      */
-    public function __construct($store, $log, $sanitizerService, $widgetOptionFactory, $widgetMediaFactory, $permissionFactory)
+    public function __construct($store, $log, $sanitizerService, $date, $widgetOptionFactory, $widgetMediaFactory, $permissionFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->dateService = $date;
         $this->widgetOptionFactory = $widgetOptionFactory;
         $this->widgetMediaFactory = $widgetMediaFactory;
         $this->permissionFactory = $permissionFactory;
@@ -77,6 +84,7 @@ class WidgetFactory extends BaseFactory
         return new Widget(
             $this->getStore(),
             $this->getLog(),
+            $this->dateService,
             $this->widgetOptionFactory,
             $this->widgetMediaFactory,
             $this->permissionFactory

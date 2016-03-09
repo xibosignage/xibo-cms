@@ -129,6 +129,7 @@ class Session implements \SessionHandlerInterface
             // Prune this session if necessary
             if ($this->pruneKey || $this->gcCalled) {
                 $db = new PdoStorageService($this->log);
+                $db->setConnection();
 
                 if ($this->pruneKey) {
                     $db->update('DELETE FROM `session` WHERE session_id = :session_id', array('session_id' => $this->key));
@@ -380,7 +381,7 @@ class Session implements \SessionHandlerInterface
     private function getDb()
     {
         if ($this->pdo == null)
-            $this->pdo = new PdoStorageService($this->log);
+            $this->pdo = (new PdoStorageService($this->log))->setConnection();
 
         return $this->pdo;
     }

@@ -10,10 +10,15 @@ namespace Xibo\Entity;
 
 
 use Xibo\Helper\Install;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Upgrade\Step;
 
+/**
+ * Class Upgrade
+ * @package Xibo\Entity
+ */
 class Upgrade implements \JsonSerializable
 {
     use EntityTrait;
@@ -30,16 +35,24 @@ class Upgrade implements \JsonSerializable
     public $action;
     public $type;
 
+    /** @var  ConfigServiceInterface */
+    private $config;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param ConfigServiceInterface $config
      */
-    public function __construct($store, $log)
+    public function __construct($store, $log, $config)
     {
         $this->setCommonDependencies($store, $log);
+        $this->config = $config;
     }
 
+    /**
+     * Do the upgrade step
+     */
     public function doStep()
     {
         // SQL or not?

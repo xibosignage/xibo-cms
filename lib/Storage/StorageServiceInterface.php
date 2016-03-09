@@ -23,6 +23,11 @@ interface StorageServiceInterface
     public function __construct($logger);
 
     /**
+     * @return $this
+     */
+    public function setConnection();
+
+    /**
      * Closes the stored connection
      */
     public function close();
