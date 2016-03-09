@@ -418,8 +418,17 @@ class XMDSSoap4
                 $file->setAttribute("md5", $md5);
 
                 if ($recordType == 'media' && $sendFileMode != 'Off') {
-                    // Serve a link instead (standard HTTP link)
-                    $file->setAttribute("path", Kit::GetXiboRoot() . '?file=' . $mediaNonce);
+                    $saveAsPath = Kit::GetXiboRoot() . '?file=' . $mediaNonce;
+                    // CDN?
+                    $cdnUrl = Config::GetSetting('CDN_URL');
+                    if ($cdnUrl != '') {
+                        // Serve a link instead (standard HTTP link)
+                        $file->setAttribute("path", 'http' . ((isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ? 's' : '') . '://' . $cdnUrl . urlencode($saveAsPath));
+                    } else {
+                        // Serve a link instead (standard HTTP link)
+                        $file->setAttribute("path", $saveAsPath);
+                    }
+
                     $file->setAttribute("saveAs", $path);
                     $file->setAttribute("download", 'http');
                 }

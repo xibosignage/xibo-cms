@@ -215,8 +215,6 @@ class Nonce extends Data {
             // Mark it as used
             $row = $results[0];
 
-            $this->MarkUsed($row['nonceId']);
-
             // Check whether its valid or not
             if ($row['lastUsed'] != 0 || $row['expiry'] < time())
             //if ($row['expiry'] < time())
@@ -235,7 +233,7 @@ class Nonce extends Data {
         }
     }
 
-    private function MarkUsed($id) {
+    public function MarkUsed($id) {
         try {
             $dbh = PDOConnect::init();
         
