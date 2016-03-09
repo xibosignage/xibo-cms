@@ -4,14 +4,21 @@ namespace Xibo\Helper;
 
 use Exception;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Factory\DataSetFactory;
 
+/**
+ * Class DataSetUploadHandler
+ * @package Xibo\Helper
+ */
 class DataSetUploadHandler extends BlueImpUploadHandler
 {
+    /**
+     * @param $file
+     * @param $index
+     */
     protected function handle_form_data($file, $index)
     {
         $controller = $this->options['controller'];
-        /* @var \Xibo\Controller\Library $controller */
+        /* @var \Xibo\Controller\DataSet $controller */
 
         // Handle form data, e.g. $_REQUEST['description'][$index]
         $fileName = $file->name;
@@ -22,9 +29,8 @@ class DataSetUploadHandler extends BlueImpUploadHandler
         try {
 
             // Authenticate
-            /* @var \Xibo\Controller\Base $controller */
             $controller = $this->options['controller'];
-            $dataSet = (new DataSetFactory($controller->getContainer()))->getById($this->options['dataSetId']);
+            $dataSet = $controller->getDataSetFactory()->getById($this->options['dataSetId']);
 
             if (!$controller->getUser()->checkEditable($dataSet))
                 throw new AccessDeniedException();

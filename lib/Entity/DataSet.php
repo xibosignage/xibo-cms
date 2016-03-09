@@ -11,7 +11,13 @@ namespace Xibo\Entity;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\DataSetColumnFactory;
+use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\PermissionFactory;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
@@ -83,21 +89,57 @@ class DataSet implements \JsonSerializable
 
     private $countLast = 0;
 
+    /** @var  SanitizerServiceInterface */
+    private $sanitizer;
+
+    /** @var  ConfigServiceInterface */
+    private $config;
+
+    /** @var  DataSetFactory */
+    private $dataSetFactory;
+
+    /** @var  DataSetColumnFactory */
+    private $dataSetColumnFactory;
+
+    /** @var  PermissionFactory */
+    private $permissionFactory;
+
+    /** @var  DisplayFactory */
+    private $displayFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizer
+     * @param ConfigServiceInterface $config
+     * @param DataSetFactory $dataSetFactory
+     * @param DataSetColumnFactory $dataSetColumnFactory
+     * @param PermissionFactory $permissionFactory
+     * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log)
+    public function __construct($store, $log, $sanitizer, $config, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory)
     {
         $this->setCommonDependencies($store, $log);
+        $this->sanitizer = $sanitizer;
+        $this->config = $config;
+        $this->dataSetFactory = $dataSetFactory;
+        $this->dataSetColumnFactory = $dataSetColumnFactory;
+        $this->permissionFactory = $permissionFactory;
+        $this->displayFactory = $displayFactory;
     }
 
+    /**
+     * @return int
+     */
     public function getId()
     {
         return $this->dataSetId;
     }
 
+    /**
+     * @return int
+     */
     public function getOwnerId()
     {
         return $this->userId;
@@ -144,11 +186,11 @@ class DataSet implements \JsonSerializable
      */
     public function getData($filterBy = [])
     {
-        $start = $this->getSanitizer()->getInt('start', 0, $filterBy);
-        $size = $this->getSanitizer()->getInt('size', 0, $filterBy);
-        $filter = $this->getSanitizer()->getParam('filter', $filterBy);
-        $ordering = $this->getSanitizer()->getString('order', $filterBy);
-        $displayId = $this->getSanitizer()->getInt('displayId', 0, $filterBy);
+        $start = $this->sanitizer->getInt('start', 0, $filterBy);
+        $size = $this->sanitizer->getInt('size', 0, $filterBy);
+        $filter = $this->sanitizer->getParam('filter', $filterBy);
+        $ordering = $this->sanitizer->getString('order', $filterBy);
+        $displayId = $this->sanitizer->getInt('displayId', 0, $filterBy);
 
         // Params
         $params = [];
@@ -158,7 +200,7 @@ class DataSet implements \JsonSerializable
 
         // Get the Latitude and Longitude ( might be used in a formula )
         if ($displayId == 0) {
-            $displayGeoLocation = "GEOMFROMTEXT('POINT(" . $this->getConfig()->GetSetting('DEFAULT_LAT') . " " . $this->getConfig()->GetSetting('DEFAULT_LONG') . ")')";
+            $displayGeoLocation = "GEOMFROMTEXT('POINT(" . $this->config->GetSetting('DEFAULT_LAT') . " " . $this->config->GetSetting('DEFAULT_LONG') . ")')";
         }
         else {
             $displayGeoLocation = '(SELECT GeoLocation FROM `display` WHERE DisplayID = :displayId)';
@@ -201,9 +243,9 @@ class DataSet implements \JsonSerializable
 
         // Filter by ID
         if (
-            $this->getSanitizer()->getInt('id', $filterBy) !== null) {
+            $this->sanitizer->getInt('id', $filterBy) !== null) {
             $body .= ' AND id = :id ';
-            $params['id'] = $this->getSanitizer()->getInt('id', $filterBy);
+            $params['id'] = $this->sanitizer->getInt('id', $filterBy);
         }
 
         // Ordering
@@ -219,7 +261,7 @@ class DataSet implements \JsonSerializable
 
                 // Check allowable
                 if (!in_array($sanitized, $allowedOrderCols)) {
-                    $this->getLog()->Info('Disallowed column: ' . $sanitized);
+                    $this->getLog()->info('Disallowed column: ' . $sanitized);
                     continue;
                 }
 
@@ -297,7 +339,7 @@ class DataSet implements \JsonSerializable
             throw new \InvalidArgumentException(__('Description can not be longer than 254 characters'));
 
         try {
-            $existing = $this->getFactoryService()->get('DataSetFactory')->getByName($this->dataSet);
+            $existing = $this->dataSetFactory->getByName($this->dataSet);
 
             if ($this->dataSetId == 0 || $this->dataSetId != $existing->dataSetId)
                 throw new \InvalidArgumentException(sprintf(__('There is already dataSet called %s. Please choose another name.'), $this->dataSet));
@@ -316,10 +358,10 @@ class DataSet implements \JsonSerializable
             return;
 
         // Load Columns
-        $this->columns = $this->getFactoryService()->get('DataSetColumnFactory')->getByDataSetId($this->dataSetId);
+        $this->columns = $this->dataSetColumnFactory->getByDataSetId($this->dataSetId);
 
         // Load Permissions
-        $this->permissions = $this->getFactoryService()->get('PermissionFactory')->getByObjectId(get_class($this), $this->getId());
+        $this->permissions = $this->permissionFactory->getByObjectId(get_class($this), $this->getId());
 
         $this->loaded = true;
     }
@@ -474,7 +516,7 @@ class DataSet implements \JsonSerializable
     {
         $this->getLog()->debug('Checking for Displays to refresh for DataSet %d', $this->dataSetId);
 
-        foreach ($this->getFactoryService()->get('DisplayFactory')->getByActiveDataSetId($this->dataSetId) as $display) {
+        foreach ($this->displayFactory->getByActiveDataSetId($this->dataSetId) as $display) {
             /* @var \Xibo\Entity\Display $display */
             $display->setMediaIncomplete();
             $display->setCollectRequired(false);

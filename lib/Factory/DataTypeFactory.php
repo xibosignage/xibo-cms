@@ -14,6 +14,10 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class DataTypeFactory
+ * @package Xibo\Factory
+ */
 class DataTypeFactory extends BaseFactory
 {
     /**
@@ -28,6 +32,14 @@ class DataTypeFactory extends BaseFactory
     }
 
     /**
+     * @return DataType
+     */
+    public function createEmpty()
+    {
+        return new DataType($this->getStore(), $this->getLog());
+    }
+
+    /**
      * @param null $sortOrder
      * @param null $filterBy
      * @return array[DataType]
@@ -37,7 +49,7 @@ class DataTypeFactory extends BaseFactory
         $entries = [];
 
         foreach ($this->getStore()->select('SELECT dataTypeId, dataType FROM `datatype` ', []) as $row) {
-            $entries[] = (new DataType())->hydrate($row)->setContainer($this->getContainer());
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         return $entries;

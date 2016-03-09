@@ -11,6 +11,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DataSet;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -21,15 +22,38 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class DataSetFactory extends BaseFactory
 {
+    /** @var  ConfigServiceInterface */
+    private $config;
+
+    /** @var  DataSetColumnFactory */
+    private $dataSetColumnFactory;
+
+    /** @var  PermissionFactory */
+    private $permissionFactory;
+
+    /** @var  DisplayFactory */
+    private $displayFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Entity\User $user
+     * @param UserFactory $userFactory
+     * @param ConfigServiceInterface $config
+     * @param DataSetColumnFactory $dataSetColumnFactory
+     * @param PermissionFactory $permissionFactory
+     * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log, $sanitizerService)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $dataSetColumnFactory, $permissionFactory, $displayFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->setAclDependencies($user, $userFactory);
+        $this->config = $config;
+        $this->dataSetColumnFactory = $dataSetColumnFactory;
+        $this->permissionFactory = $permissionFactory;
+        $this->displayFactory = $displayFactory;
     }
 
     /**
@@ -37,7 +61,16 @@ class DataSetFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new DataSet($this->getStore(), $this->getLog());
+        return new DataSet(
+            $this->getStore(),
+            $this->getLog(),
+            $this->getSanitizer(),
+            $this->config,
+            $this,
+            $this->dataSetColumnFactory,
+            $this->permissionFactory,
+            $this->displayFactory
+        );
     }
 
     /**
@@ -172,7 +205,7 @@ class DataSetFactory extends BaseFactory
 
 
             foreach ($this->getStore()->select($sql, $params) as $row) {
-                $entries[] = (new DataSet())->hydrate($row)->setContainer($this->getContainer());
+                $entries[] = $this->createEmpty()->hydrate($row);
             }
 
             // Paging

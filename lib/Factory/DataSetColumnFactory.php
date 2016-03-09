@@ -15,6 +15,10 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class DataSetColumnFactory
+ * @package Xibo\Factory
+ */
 class DataSetColumnFactory extends BaseFactory
 {
     /**
@@ -117,7 +121,7 @@ class DataSetColumnFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new DataSetColumn())->hydrate($row)->setContainer($this->getContainer());
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         // Paging

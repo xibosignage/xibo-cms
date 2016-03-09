@@ -14,6 +14,10 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class DataSetColumnTypeFactory
+ * @package Xibo\Factory
+ */
 class DataSetColumnTypeFactory extends BaseFactory
 {
     /**
@@ -28,6 +32,14 @@ class DataSetColumnTypeFactory extends BaseFactory
     }
 
     /**
+     * @return DataSetColumnType
+     */
+    public function createEmpty()
+    {
+        return new DataSetColumnType($this->getStore(), $this->getLog());
+    }
+
+    /**
      * @param null $sortOrder
      * @param null $filterBy
      * @return array[DataSetColumnType]
@@ -37,7 +49,7 @@ class DataSetColumnTypeFactory extends BaseFactory
         $entries = [];
 
         foreach ($this->getStore()->select('SELECT dataSetColumnTypeId, dataSetColumnType FROM `datasetcolumntype` ', []) as $row) {
-            $entries[] = (new DataSetColumnType())->hydrate($row)->setContainer($this->getContainer());
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         return $entries;

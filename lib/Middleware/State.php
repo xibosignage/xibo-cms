@@ -360,16 +360,48 @@ class State extends Middleware
             );
         });
 
-        $app->container->singleton('\Xibo\Controller\DataSet', function() {
-            return new \Xibo\Controller\DataSet();
+        $app->container->singleton('\Xibo\Controller\DataSet', function($container) {
+            return new \Xibo\Controller\DataSet(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->dataSetFactory,
+                $container->dataSetColumnFactory
+            );
         });
 
-        $app->container->singleton('\Xibo\Controller\DataSetColumn', function() {
-            return new \Xibo\Controller\DataSetColumn();
+        $app->container->singleton('\Xibo\Controller\DataSetColumn', function($container) {
+            return new \Xibo\Controller\DataSetColumn(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->dataSetFactory,
+                $container->dataSetColumnFactory,
+                $container->dataSetColumnTypeFactory,
+                $container->dataTypeFactory
+            );
         });
 
-        $app->container->singleton('\Xibo\Controller\DataSetData', function() {
-            return new \Xibo\Controller\DataSetData();
+        $app->container->singleton('\Xibo\Controller\DataSetData', function($container) {
+            return new \Xibo\Controller\DataSetData(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->dataSetFactory,
+                $container->mediaFactory
+            );
         });
 
         $app->container->singleton('\Xibo\Controller\Display', function($container) {
@@ -898,7 +930,13 @@ class State extends Middleware
             return new \Xibo\Factory\DataSetFactory(
                 $container->store,
                 $container->logService,
-                $container->sanitizerService
+                $container->sanitizerService,
+                $container->user,
+                $container->userFactory,
+                $container->configService,
+                $container->dataSetColumnFactory,
+                $container->permissionFactory,
+                $container->displayFactory
             );
         });
 
