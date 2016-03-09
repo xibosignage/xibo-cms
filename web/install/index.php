@@ -117,14 +117,14 @@ $app->hook('slim.before.dispatch', function() use ($app) {
         $app->container->singleton('logService', function($container) {
             return new \Xibo\Service\LogService($container->log, $container->mode);
         });
-
-        // Register the sanitizer
-        $app->container->singleton('sanitizerService', function($container) {
-            $sanitizer = new \Xibo\Service\SanitizeService($container->dateService);
-            $sanitizer->setRequest($container->request);
-            return $sanitizer;
-        });
     }
+
+    // Register the sanitizer
+    $app->container->singleton('sanitizerService', function($container) {
+        $sanitizer = new \Xibo\Service\SanitizeService($container->dateService);
+        $sanitizer->setRequest($container->request);
+        return $sanitizer;
+    });
 });
 
 require PROJECT_ROOT . '/lib/routes-install.php';
