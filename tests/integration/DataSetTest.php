@@ -5,13 +5,11 @@
  * (DataSetTest.php)
  */
 
-
-namespace Xibo\Tests;
-
+namespace Xibo\Tests\Integration;
 
 use Xibo\Entity\DataSet;
-use Xibo\Factory\DataSetFactory;
 use Xibo\Helper\Random;
+use Xibo\Tests\LocalWebTestCase;
 
 class DataSetTest extends LocalWebTestCase
 {
@@ -58,7 +56,7 @@ class DataSetTest extends LocalWebTestCase
      */
     public function testEdit($dataSetId)
     {
-        $dataSet = (new DataSetFactory($this->getApp()))->getById($dataSetId);
+        $dataSet = $this->container->dataSetFactory->getById($dataSetId);
 
         $name = Random::generateString(8, 'phpunit');
 
@@ -74,7 +72,7 @@ class DataSetTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object);
 
         // Deeper check by querying for resolution again
-        $object = (new DataSetFactory($this->getApp()))->getById($dataSetId);
+        $object = $this->container->dataSetFactory->getById($dataSetId);
 
         $this->assertSame($name, $object->dataSet);
 
@@ -98,7 +96,8 @@ class DataSetTest extends LocalWebTestCase
     public function testColumnAdd()
     {
         // Create a new dataset to use
-        $dataSet = new DataSet();
+        /** @var DataSet $dataSet */
+        $dataSet = $this->container->dataSetFactory->createEmpty();
         $dataSet->dataSet = Random::generateString(8, 'phpunit');
         $dataSet->description = 'PHP Unit column assign';
         $dataSet->userId = 1;

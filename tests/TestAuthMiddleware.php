@@ -11,6 +11,10 @@ namespace Xibo\tests;
 
 use Slim\Middleware;
 
+/**
+ * Class TestAuthMiddleware
+ * @package Xibo\tests
+ */
 class TestAuthMiddleware extends Middleware
 {
     public function call()
@@ -19,7 +23,7 @@ class TestAuthMiddleware extends Middleware
 
         $this->app->hook('slim.before.dispatch', function() use ($app) {
             // Super User
-            $app->user = (new \Xibo\Factory\UserFactory($app))->getById(1);
+            $app->user = $app->userFactory->getByName('phpunit');
         });
 
         $this->next->call();

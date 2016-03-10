@@ -5,8 +5,9 @@
  * (CampaignTest.php)
  */
 
-namespace Xibo\Tests;
+namespace Xibo\Tests\Integration;
 use Xibo\Entity\Campaign;
+use Xibo\Tests\LocalWebTestCase;
 
 /**
  * Class CampaignTest
@@ -98,12 +99,12 @@ class CampaignTest extends LocalWebTestCase
         $name = \Xibo\Helper\Random::generateString(8, 'phpunit');
 
         /* @var Campaign $campaign */
-        $campaign = $this->getFactoryService()->get('CampaignFactory')->create($name, 1);
+        $campaign = $this->container->campaignFactory->create($name, 1);
         $campaign->save();
 
         $this->getContainer()->store->commitIfNecessary();
 
-        $layout = $this->getFactoryService()->get('LayoutFactory')->query(null, ['start' => 1, 'length' => 1]);
+        $layout = $this->container->layoutFactory->query(null, ['start' => 1, 'length' => 1]);
 
         $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
 
@@ -113,7 +114,7 @@ class CampaignTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), '/campaign/layout/assign/' . $campaign->campaignId . '. Body: ' . $this->client->response->body());
 
         // Get this campaign and check it has 1 layout
-        $campaignCheck = $this->getFactoryService()->get('CampaignFactory')->getById($campaign->campaignId);
+        $campaignCheck = $this->container->campaignFactory->getById($campaign->campaignId);
 
         $this->assertSame($campaign->campaignId, $campaignCheck->campaignId, $this->client->response->body());
         $this->assertSame(1, $campaignCheck->numberLayouts, $this->client->response->body());
@@ -128,7 +129,7 @@ class CampaignTest extends LocalWebTestCase
     public function testUnassignLayout($campaignId)
     {
         // Get any old layout
-        $layout = $this->getFactoryService()->get('LayoutFactory')->query(null, ['start' => 1, 'length' => 1]);
+        $layout = $this->container->layoutFactory->query(null, ['start' => 1, 'length' => 1]);
 
         // Call assign on the default layout
         $this->client->post('/campaign/layout/unassign/' . $campaignId, ['layoutId' => [['layoutId' => $layout[0]->layoutId, 'displayOrder' => 1]]]);
@@ -136,7 +137,7 @@ class CampaignTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
 
         // Get this campaign and check it has 0 layouts
-        $campaign = $this->getFactoryService()->get('CampaignFactory')->getById($campaignId);
+        $campaign = $this->container->campaignFactory->getById($campaignId);
 
         $this->assertSame($campaignId, $campaign->campaignId, $this->client->response->body());
         $this->assertSame(0, $campaign->numberLayouts, $this->client->response->body());
@@ -145,7 +146,7 @@ class CampaignTest extends LocalWebTestCase
     public function testDeleteAllTests()
     {
         // Get a list of all phpunit related campaigns
-        $campaigns = $this->getFactoryService()->get('CampaignFactory')->query(null, ['name' => 'phpunit']);
+        $campaigns = $this->container->campaignFactory->query(null, ['name' => 'phpunit']);
 
         foreach ($campaigns as $campaign) {
 
@@ -153,7 +154,9 @@ class CampaignTest extends LocalWebTestCase
             $this->assertStringStartsWith('phpunit', $campaign->campaign, 'Non-phpunit campaign found');
 
             // Issue a delete
-            $delete = $this->getFactoryService()->get('CampaignFactory')->getById($campaign->campaignId);
+            /** @var Campaign $delete */
+            $delete = $this->container->campaignFactory->getById($campaign->campaignId);
+            $delete->setChildObjectDependencies($this->container->layoutFactory);
             $delete->delete();
         }
     }

@@ -5,7 +5,7 @@
  * (AuditLogTest.php)
  */
 
-namespace Xibo\Tests;
+namespace Xibo\Tests\Integration;
 
 class FaultTest extends \Xibo\Tests\LocalWebTestCase
 {

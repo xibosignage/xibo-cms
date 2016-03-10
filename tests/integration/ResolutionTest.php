@@ -5,9 +5,10 @@
  * (ResolutionTest.php)
  */
 
-namespace Xibo\Tests;
+namespace Xibo\Tests\Integration;
 
 use Xibo\Helper\Random;
+use Xibo\Tests\LocalWebTestCase;
 
 class ResolutionTest extends LocalWebTestCase
 {
@@ -60,7 +61,7 @@ class ResolutionTest extends LocalWebTestCase
      */
     public function testEdit($resolutionId)
     {
-        $resolution =$this->getFactoryService()->get('ResolutionFactory')->getById($resolutionId);
+        $resolution = $this->container->resolutionFactory->getById($resolutionId);
 
         $name = Random::generateString(8, 'phpunit');
 
@@ -78,7 +79,7 @@ class ResolutionTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object);
 
         // Deeper check by querying for resolution again
-        $object = $this->getFactoryService()->get('ResolutionFactory')->getById($resolutionId);
+        $object = $this->container->resolutionFactory->getById($resolutionId);
 
         $this->assertSame($name, $object->resolution);
         $this->assertSame(1, $object->enabled, 'Enabled has been switched');
@@ -93,7 +94,7 @@ class ResolutionTest extends LocalWebTestCase
      */
     public function testEditEnabled($resolutionId)
     {
-        $resolution = $this->getFactoryService()->get('ResolutionFactory')->getById($resolutionId);
+        $resolution = $this->container->resolutionFactory->getById($resolutionId);
 
         $this->client->put('/resolution/' . $resolutionId, [
             'resolution' => $resolution->resolution,
@@ -109,7 +110,7 @@ class ResolutionTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object);
 
         // Deeper check by querying for resolution again
-        $object = $this->getFactoryService()->get('ResolutionFactory')->getById($resolutionId);
+        $object = $this->container->resolutionFactory->getById($resolutionId);
 
         $this->assertSame($resolution->resolution, $object->resolution);
         $this->assertSame(1080, $object->width);

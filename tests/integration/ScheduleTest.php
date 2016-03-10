@@ -6,9 +6,16 @@
  */
 
 
-namespace Xibo\Tests;
+namespace Xibo\Tests\Integration;
 
 
+use Xibo\Entity\Schedule;
+use Xibo\Tests\LocalWebTestCase;
+
+/**
+ * Class ScheduleTest
+ * @package Xibo\Tests\Integration
+ */
 class ScheduleTest extends LocalWebTestCase
 {
     protected $route = '/schedule';
@@ -32,9 +39,9 @@ class ScheduleTest extends LocalWebTestCase
     public function testAdd()
     {
         // Get a layout to schedule
-        $layout = $this->getFactoryService()->get('LayoutFactory')->query(null, ['start' => 1, 'length' => 1])[0];
+        $layout = $this->container->layoutFactory->query(null, ['start' => 1, 'length' => 1])[0];
         // Get a Display Group Id
-        $displayGroup = $this->getFactoryService()->get('DisplayGroupFactory')->query(null, ['start' => 1, 'length' => 1])[0];
+        $displayGroup = $this->container->displayGroupFactory->query(null, ['start' => 1, 'length' => 1])[0];
 
         $fromDt = time();
         $toDt = time() + 3600;
@@ -42,6 +49,7 @@ class ScheduleTest extends LocalWebTestCase
         $this->client->post($this->route, [
             'fromDt' => date('Y-m-d h:i:s', $fromDt),
             'toDt' => date('Y-m-d h:i:s', $toDt),
+            'eventTypeId' => Schedule::$LAYOUT_EVENT,
             'campaignId' => $layout->campaignId,
             'displayGroupIds' => [$displayGroup->displayGroupId],
             'displayOrder' => 1,
@@ -67,8 +75,13 @@ class ScheduleTest extends LocalWebTestCase
     public function testEdit($eventId)
     {
         // Get the scheduled event
-        $event = $this->getFactoryService()->get('ScheduleFactory')->getById($eventId);
+        $event = $this->container->scheduleFactory->getById($eventId);
         $event->load();
+
+        $displayGroups = array_map(function ($displayGroup) {
+            /** DisplayGroup $displayGroup */
+            return $displayGroup->displayGroupId;
+        }, $event->displayGroups);
 
         $fromDt = time();
         $toDt = time() + 86400;
@@ -76,8 +89,9 @@ class ScheduleTest extends LocalWebTestCase
         $this->client->put($this->route . '/' . $eventId, [
             'fromDt' => date('Y-m-d h:i:s', $fromDt),
             'toDt' => date('Y-m-d h:i:s', $toDt),
+            'eventTypeId' => Schedule::$LAYOUT_EVENT,
             'campaignId' => $event->campaignId,
-            'displayGroupIds' => $event->displayGroups,
+            'displayGroupIds' => $displayGroups,
             'displayOrder' => 1,
             'isPriority' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);

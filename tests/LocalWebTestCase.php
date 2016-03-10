@@ -20,9 +20,12 @@ use Xibo\Middleware\ApiView;
 use Xibo\Middleware\State;
 use Xibo\Middleware\Storage;
 use Xibo\Service\ConfigService;
-use Xibo\Service\FactoryServiceInterface;
 use Xibo\Service\SanitizeService;
 
+/**
+ * Class LocalWebTestCase
+ * @package Xibo\Tests
+ */
 class LocalWebTestCase extends WebTestCase
 {
     /**
@@ -30,6 +33,10 @@ class LocalWebTestCase extends WebTestCase
      */
     protected $container;
 
+    /**
+     * Get App
+     * @return Slim
+     */
     public function getApp()
     {
         return $this->app;
@@ -42,14 +49,6 @@ class LocalWebTestCase extends WebTestCase
     protected function getContainer()
     {
         return $this->container;
-    }
-
-    /**
-     * @return FactoryServiceInterface
-     */
-    protected function getFactoryService()
-    {
-        return $this->container->factoryService;
     }
 
     /**
@@ -137,8 +136,8 @@ class LocalWebTestCase extends WebTestCase
         // Register the factory service
         State::registerFactoriesWithDi($this->container);
 
-        // My user is always root
-        $this->container->user = $this->getFactoryService()->get('UserFactory')->getByName('phpunit');
+        // Find the PHPUnit user
+        $this->container->user = $this->container->userFactory->getByName('phpunit');
 
         return $app;
     }
