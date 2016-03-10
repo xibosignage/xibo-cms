@@ -161,6 +161,9 @@ if (isset($_GET['file'])) {
             throw $e;
     }
 
+    if ($app->store->getConnection()->inTransaction())
+        $app->store->getConnection()->commit();
+
     exit;
 }
 
