@@ -21,6 +21,8 @@
 
 
 namespace Xibo\Entity;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class AuditLog
@@ -79,4 +81,14 @@ class AuditLog implements \JsonSerializable
      * @var string
      */
     public $userName;
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
 }

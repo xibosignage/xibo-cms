@@ -18,12 +18,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xibo\Helper;
+namespace Xibo\Service;
 use DateTime;
-use jDateTime;
 
-
-class Date
+/**
+ * Class DateServiceGregorian
+ * @package Xibo\Service
+ */
+class DateServiceGregorian implements DateServiceInterface
 {
     private static $timezones = null;
 
@@ -33,10 +35,10 @@ class Date
      * @param string $format
      * @return string
      */
-    public static function getLocalDate($timestamp = NULL, $format = NULL)
+    public function getLocalDate($timestamp = NULL, $format = NULL)
     {
         if ($format == NULL)
-            $format = Date::getSystemFormat();
+            $format = $this->getSystemFormat();
 
         if ($timestamp instanceof \Jenssegers\Date\Date)
             return $timestamp->format($format);
@@ -44,28 +46,14 @@ class Date
         if ($timestamp == NULL)
             $timestamp = time();
 
-        if (Date::getCalendarType() == 'Jalali') {
-            return JDateTime::date($format, $timestamp, false);
-        }
-        else {
-            return \Jenssegers\Date\Date::createFromTimestamp($timestamp)->format($format);
-        }
-    }
-
-    /**
-     * Get the Calendar Type
-     * @return string
-     */
-    private static function getCalendarType()
-    {
-        return Config::GetSetting('CALENDAR_TYPE');
+        return \Jenssegers\Date\Date::createFromTimestamp($timestamp)->format($format);
     }
 
     /**
      * Get the default date format
      * @return string
      */
-    private static function getSystemFormat()
+    private function getSystemFormat()
     {
         return 'Y-m-d H:i:s';
     }
@@ -76,32 +64,23 @@ class Date
      * @param string $format
      * @return \Jenssegers\Date\Date
      */
-    public static function parse($string = null, $format = null)
+    public function parse($string = null, $format = null)
     {
         if ($string == null)
-            $string = Date::getLocalDate();
+            $string = $this->getLocalDate();
 
         if ($format == null)
-            $format = Date::getSystemFormat();
+            $format = $this->getSystemFormat();
 
-        if (Date::getCalendarType() == 'Jalali') {
-            // If we are Jalali, then we want to convert from Jalali back to Gregorian.
-            // Split the time stamp into its component parts and pass it to the conversion.
-            $date = trim($string);
+        return \Jenssegers\Date\Date::createFromFormat($format, $string);
+    }
 
-            $split = (stripos($date, ' ') > 0) ? explode(' ', $date) : array($date, '');
-
-            $dateSplit = explode('-', $split[0]);
-            $timeSplit = explode(':', $split[1]);
-
-            $date = jDateTime::toGregorian($dateSplit[0], $dateSplit[1], $dateSplit[2]);
-
-            // Create a date out of that string.
-            return \Jenssegers\Date\Date::create($date[0], $date[1], $date[2], $timeSplit[0], $timeSplit[1]);
-        }
-        else {
-            return \Jenssegers\Date\Date::createFromFormat($format, $string);
-        }
+    /**
+     * @inheritdoc
+     */
+    public function setLocale($identifier)
+    {
+        \Jenssegers\Date\Date::setLocale($identifier);
     }
 
     /**
@@ -110,7 +89,7 @@ class Date
      * @param $format
      * @return string
      */
-    public static function convertPhpToMomentFormat($format)
+    public function convertPhpToMomentFormat($format)
     {
         $replacements = [
             'd' => 'DD',
@@ -161,7 +140,7 @@ class Date
      * @param $format
      * @return string
      */
-    public static function convertPhpToBootstrapFormat($format)
+    public function convertPhpToBootstrapFormat($format)
     {
         $replacements = [
             'd' => 'dd',
@@ -210,7 +189,7 @@ class Date
      * Timezone identifiers
      * @return array
      */
-    public static function timezoneList()
+    public function timezoneList()
     {
         if (self::$timezones === null) {
             self::$timezones = [];

@@ -11,20 +11,64 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DisplayProfile;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class DisplayProfileFactory
+ * @package Xibo\Factory
+ */
 class DisplayProfileFactory extends BaseFactory
 {
+    /**
+     * @var ConfigServiceInterface
+     */
+    private $config;
+
+    /**
+     * @var CommandFactory
+     */
+    private $commandFactory;
+
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param ConfigServiceInterface $config
+     * @param CommandFactory $commandFactory
+     */
+    public function __construct($store, $log, $sanitizerService, $config, $commandFactory)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+
+        $this->config = $config;
+        $this->commandFactory = $commandFactory;
+    }
+
+    /**
+     * @return DisplayProfile
+     */
+    public function createEmpty()
+    {
+        return new DisplayProfile(
+            $this->getStore(),
+            $this->getLog(),
+            $this->config,
+            $this->commandFactory
+        );
+    }
+
     /**
      * @param int $displayProfileId
      * @return DisplayProfile
      * @throws NotFoundException
      */
-    public static function getById($displayProfileId)
+    public function getById($displayProfileId)
     {
-        $profiles = DisplayProfileFactory::query(null, ['disableUserCheck' => 1, 'displayProfileId' => $displayProfileId]);
+        $profiles = $this->query(null, ['disableUserCheck' => 1, 'displayProfileId' => $displayProfileId]);
 
         if (count($profiles) <= 0)
             throw new NotFoundException();
@@ -41,9 +85,9 @@ class DisplayProfileFactory extends BaseFactory
      * @return DisplayProfile
      * @throws NotFoundException
      */
-    public static function getDefaultByType($type)
+    public function getDefaultByType($type)
     {
-        $profiles = DisplayProfileFactory::query(null, ['disableUserCheck' => 1, 'type' => $type, 'isDefault' => 1]);
+        $profiles = $this->query(null, ['disableUserCheck' => 1, 'type' => $type, 'isDefault' => 1]);
 
         if (count($profiles) <= 0)
             throw new NotFoundException();
@@ -61,9 +105,9 @@ class DisplayProfileFactory extends BaseFactory
      * @return array[DisplayProfile]
      * @throws NotFoundException
      */
-    public static function getByCommandId($commandId)
+    public function getByCommandId($commandId)
     {
-        return DisplayProfileFactory::query(null, ['disableUserCheck' => 1, 'commandId' => $commandId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'commandId' => $commandId]);
     }
 
     /**
@@ -72,7 +116,7 @@ class DisplayProfileFactory extends BaseFactory
      * @return array[DisplayProfile]
      * @throws NotFoundException
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $profiles = array();
 
@@ -82,20 +126,20 @@ class DisplayProfileFactory extends BaseFactory
 
             $body = ' FROM `displayprofile` WHERE 1 = 1 ';
 
-            if (Sanitize::getInt('displayProfileId', $filterBy) !== null) {
+            if ($this->getSanitizer()->getInt('displayProfileId', $filterBy) !== null) {
                 $body .= ' AND displayProfileId = :displayProfileId ';
-                $params['displayProfileId'] = Sanitize::getInt('displayProfileId', $filterBy);
+                $params['displayProfileId'] = $this->getSanitizer()->getInt('displayProfileId', $filterBy);
             }
 
-            if (Sanitize::getInt('isDefault', $filterBy) !== null) {
+            if ($this->getSanitizer()->getInt('isDefault', $filterBy) !== null) {
                 $body .= ' AND isDefault = :isDefault ';
-                $params['isDefault'] = Sanitize::getInt('isDefault', $filterBy);
+                $params['isDefault'] = $this->getSanitizer()->getInt('isDefault', $filterBy);
             }
 
             // Filter by DisplayProfile Name?
-            if (Sanitize::getString('displayProfile', $filterBy) != null) {
+            if ($this->getSanitizer()->getString('displayProfile', $filterBy) != null) {
                 // convert into a space delimited array
-                $names = explode(' ', Sanitize::getString('displayProfile', $filterBy));
+                $names = explode(' ', $this->getSanitizer()->getString('displayProfile', $filterBy));
 
                 $i = 0;
                 foreach ($names as $searchName) {
@@ -112,12 +156,12 @@ class DisplayProfileFactory extends BaseFactory
                 }
             }
 
-            if (Sanitize::getString('type', $filterBy) != null) {
+            if ($this->getSanitizer()->getString('type', $filterBy) != null) {
                 $body .= ' AND type = :type ';
-                $params['type'] = Sanitize::getString('type', $filterBy);
+                $params['type'] = $this->getSanitizer()->getString('type', $filterBy);
             }
 
-            if (Sanitize::getInt('commandId', $filterBy) !== null) {
+            if ($this->getSanitizer()->getInt('commandId', $filterBy) !== null) {
                 $body .= '
                     AND `displayprofile`.displayProfileId IN (
                         SELECT `lkcommanddisplayprofile`.displayProfileId
@@ -126,7 +170,7 @@ class DisplayProfileFactory extends BaseFactory
                     )
                 ';
 
-                $params['commandId'] = Sanitize::getInt('commandId', $filterBy);
+                $params['commandId'] = $this->getSanitizer()->getInt('commandId', $filterBy);
             }
 
             // Sorting?
@@ -136,29 +180,29 @@ class DisplayProfileFactory extends BaseFactory
 
             $limit = '';
             // Paging
-            if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-                $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+            if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+                $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
             }
 
             $sql = $select . $body . $order . $limit;
 
 
 
-            foreach (PDOConnect::select($sql, $params) as $row) {
-                $profiles[] = (new DisplayProfile())->hydrate($row);
+            foreach ($this->getStore()->select($sql, $params) as $row) {
+                $profiles[] = $this->createEmpty()->hydrate($row);
             }
 
             // Paging
             if ($limit != '' && count($profiles) > 0) {
-                $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-                self::$_countLast = intval($results[0]['total']);
+                $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+                $this->_countLast = intval($results[0]['total']);
             }
 
             return $profiles;
 
         } catch (\Exception $e) {
 
-            Log::error($e);
+            $this->getLog()->error($e);
 
             throw new NotFoundException();
         }

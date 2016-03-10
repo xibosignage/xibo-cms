@@ -26,11 +26,39 @@ namespace Xibo\Factory;
 use Xibo\Entity\Permission;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class PermissionFactory
+ * @package Xibo\Factory
+ */
 class PermissionFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * Create Empty
+     * @return Permission
+     */
+    public function createEmpty()
+    {
+        return new Permission(
+            $this->getStore(),
+            $this->getLog()
+        );
+    }
+
     /**
      * Create a new Permission
      * @param int $groupId
@@ -41,15 +69,15 @@ class PermissionFactory extends BaseFactory
      * @param int $delete
      * @return Permission
      */
-    public static function create($groupId, $entity, $objectId, $view, $edit, $delete)
+    public function create($groupId, $entity, $objectId, $view, $edit, $delete)
     {
         // Lookup the entityId
-        $results = PDOConnect::select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => $entity]);
+        $results = $this->getStore()->select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => $entity]);
 
         if (count($results) <= 0)
             throw new \InvalidArgumentException('Entity not found: ' . $entity);
 
-        $permission = new Permission();
+        $permission = $this->createEmpty();
         $permission->groupId = $groupId;
         $permission->entityId = $results[0]['entityId'];
         $permission->objectId = $objectId;
@@ -62,6 +90,7 @@ class PermissionFactory extends BaseFactory
 
     /**
      * Create a new Permission
+     * @param UserGroupFactory $userGroupFactory
      * @param string $entity
      * @param int $objectId
      * @param int $view
@@ -69,16 +98,16 @@ class PermissionFactory extends BaseFactory
      * @param int $delete
      * @return Permission
      */
-    public static function createForEveryone($entity, $objectId, $view, $edit, $delete)
+    public function createForEveryone($userGroupFactory, $entity, $objectId, $view, $edit, $delete)
     {
         // Lookup the entityId
-        $results = PDOConnect::select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => $entity]);
+        $results = $this->getStore()->select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => $entity]);
 
         if (count($results) <= 0)
             throw new \InvalidArgumentException('Entity not found: ' . $entity);
 
-        $permission = new Permission();
-        $permission->groupId = UserGroupFactory::getEveryone()->groupId;
+        $permission = $this->createEmpty();
+        $permission->groupId = $userGroupFactory->getEveryone()->groupId;
         $permission->entityId = $results[0]['entityId'];
         $permission->objectId = $objectId;
         $permission->view  =$view;
@@ -94,21 +123,22 @@ class PermissionFactory extends BaseFactory
      * @param string $entity
      * @param int $objectId
      * @param string $level
+     * @param UserGroupFactory $userGroupFactory
      * @return array[Permission]
      */
-    public static function createForNewEntity($user, $entity, $objectId, $level)
+    public function createForNewEntity($user, $entity, $objectId, $level, $userGroupFactory)
     {
         $permissions = [];
 
         switch ($level) {
 
             case 'public':
-                $permissions[] = PermissionFactory::createForEveryone($entity, $objectId, 1, 0, 0);
+                $permissions[] = $this->createForEveryone($userGroupFactory, $entity, $objectId, 1, 0, 0);
                 break;
 
             case 'group':
                 foreach ($user->groups as $group) {
-                    $permission = PermissionFactory::create($group->groupId, $entity, $objectId, 1, 0, 0);
+                    $permission = $this->create($group->groupId, $entity, $objectId, 1, 0, 0);
                     $permission->save();
                 }
                 break;
@@ -129,23 +159,23 @@ class PermissionFactory extends BaseFactory
      * @param int $objectId
      * @return array[Permission]
      */
-    public static function getByObjectId($entity, $objectId)
+    public function getByObjectId($entity, $objectId)
     {
         $permissions = array();
 
         $sql = '
-SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.entityId
-  FROM `permission`
-    INNER JOIN `permissionentity`
-    ON `permissionentity`.entityId = permission.entityId
- WHERE entity = :entity
-    AND objectId = :objectId
-';
+            SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.entityId
+              FROM `permission`
+                INNER JOIN `permissionentity`
+                ON `permissionentity`.entityId = permission.entityId
+             WHERE entity = :entity
+                AND objectId = :objectId
+        ';
+
         $params = array('entity' => $entity, 'objectId' => $objectId);
 
-
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $permission = new Permission();
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $permission = $this->createEmpty();
             $permission->permissionId = $row['permissionId'];
             $permission->groupId = $row['groupId'];
             $permission->view = $row['view'];
@@ -163,6 +193,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
 
     /**
      * Get All Permissions by Entity ObjectId
+     * @param User $user
      * @param string $entity
      * @param int $objectId
      * @param array[string] $sortOrder
@@ -170,10 +201,10 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
      * @return array[Permission]
      * @throws NotFoundException
      */
-    public static function getAllByObjectId($entity, $objectId, $sortOrder = null, $filterBy = null)
+    public function getAllByObjectId($user, $entity, $objectId, $sortOrder = null, $filterBy = null)
     {
         // Look up the entityId for any add operation that might occur
-        $entityId = PDOConnect::select('SELECT entityId FROM permissionentity WHERE entity = :entity', array('entity' => $entity));
+        $entityId = $this->getStore()->select('SELECT entityId FROM permissionentity WHERE entity = :entity', array('entity' => $entity));
 
         if (count($entityId) <= 0)
             throw new NotFoundException(__('Entity not found'));
@@ -192,9 +223,9 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
                  WHERE IsUserSpecific = 0 ';
 
         // Permissions for the group section
-        if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
+        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
             // Normal users can only see their group
-            if (self::getUser()->userTypeId != 1) {
+            if ($user->userTypeId != 1) {
                 $body .= '
                     AND `group`.groupId IN (
                         SELECT `group`.groupId
@@ -205,7 +236,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
                          WHERE `lkusergroup`.userId = :currentUserId
                     )
                     ';
-                $params['currentUserId'] = self::getUser()->userId;
+                $params['currentUserId'] = $user->userId;
             }
         }
 
@@ -221,13 +252,13 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
                         AND retired = 0 ';
 
         // Permissions for the user section
-        if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
+        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
             // Normal users can only see themselves
-            if (self::getUser()->userTypeId == 3) {
-                $filterBy['userId'] = self::getUser()->userId;
+            if ($user->userTypeId == 3) {
+                $filterBy['userId'] = $user->userId;
             }
             // Group admins can only see users from their groups.
-            else if (self::getUser()->userTypeId == 2) {
+            else if ($user->userTypeId == 2) {
                 $body .= '
                     AND user.userId IN (
                         SELECT `otherUserLinks`.userId
@@ -240,7 +271,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
                          WHERE `lkusergroup`.userId = :currentUserId
                     )
                 ';
-                $params['currentUserId'] = self::getUser()->userId;
+                $params['currentUserId'] = $user->userId;
             }
         }
 
@@ -253,9 +284,9 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
          WHERE 1 = 1
         ';
 
-        if (Sanitize::getString('name', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('name', $filterBy) != null) {
             $body .= ' AND joinedGroup.group LIKE :name ';
-            $params['name'] = '%' . Sanitize::getString('name', $filterBy) . '%';
+            $params['name'] = '%' . $this->getSanitizer()->getString('name', $filterBy) . '%';
         }
 
         $order = '';
@@ -266,16 +297,16 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
 
         $sql = $select . $body . $order . $limit;
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $permission = new Permission();
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $permission = $this->createEmpty();
             $permission->permissionId = $row['permissionId'];
             $permission->groupId = $row['groupId'];
             $permission->view = $row['view'];
@@ -285,15 +316,15 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
             $permission->entity = $entity;
             $permission->entityId = $entityId;
             $permission->isUser = $row['isuserspecific'];
-            $permission->group = \Xibo\Helper\Sanitize::string($row['group']);
+            $permission->group = $this->getSanitizer()->string($row['group']);
 
             $permissions[] = $permission;
         }
 
         // Paging
         if ($limit != '' && count($permissions) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $permissions;
@@ -305,7 +336,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
      * @param int $groupId
      * @return array[Permission]
      */
-    public static function getByGroupId($entity, $groupId)
+    public function getByGroupId($entity, $groupId)
     {
         $permissions = array();
 
@@ -323,8 +354,8 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $permission = new Permission();
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $permission = $this->createEmpty();
             $permission->permissionId = $row['permissionId'];
             $permission->groupId = $row['groupId'];
             $permission->view = $row['view'];
@@ -346,29 +377,29 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
      * @param int $userId
      * @return array[Permission]
      */
-    public static function getByUserId($entity, $userId)
+    public function getByUserId($entity, $userId)
     {
         $permissions = array();
 
         $sql = '
-SELECT `permission`.`permissionId`, `permission`.`groupId`, `permission`.`objectId`, `permission`.`view`, `permission`.`edit`, `permission`.`delete`, permissionentity.entityId
-  FROM `permission`
-    INNER JOIN `permissionentity`
-    ON `permissionentity`.entityId = permission.entityId
-    INNER JOIN `group`
-    ON `group`.groupId = `permission`.groupId
-    LEFT OUTER JOIN `lkusergroup`
-    ON `lkusergroup`.groupId = `group`.groupId
-    LEFT OUTER JOIN `user`
-    ON lkusergroup.UserID = `user`.UserID
-      AND `user`.userId = :userId
- WHERE entity = :entity
-    AND (`user`.userId IS NOT NULL OR `group`.IsEveryone = 1)
-';
+            SELECT `permission`.`permissionId`, `permission`.`groupId`, `permission`.`objectId`, `permission`.`view`, `permission`.`edit`, `permission`.`delete`, permissionentity.entityId
+              FROM `permission`
+                INNER JOIN `permissionentity`
+                ON `permissionentity`.entityId = permission.entityId
+                INNER JOIN `group`
+                ON `group`.groupId = `permission`.groupId
+                LEFT OUTER JOIN `lkusergroup`
+                ON `lkusergroup`.groupId = `group`.groupId
+                LEFT OUTER JOIN `user`
+                ON lkusergroup.UserID = `user`.UserID
+                  AND `user`.userId = :userId
+             WHERE entity = :entity
+                AND (`user`.userId IS NOT NULL OR `group`.IsEveryone = 1)
+        ';
         $params = array('entity' => $entity, 'userId' => $userId);
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $permission = new Permission();
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $permission = $this->createEmpty();
             $permission->permissionId = $row['permissionId'];
             $permission->groupId = $row['groupId'];
             $permission->view = $row['view'];
@@ -388,9 +419,9 @@ SELECT `permission`.`permissionId`, `permission`.`groupId`, `permission`.`object
      * Get Full Permissions
      * @return Permission
      */
-    public static function getFullPermissions()
+    public function getFullPermissions()
     {
-        $permission = new Permission();
+        $permission = $this->createEmpty();
         $permission->view = 1;
         $permission->edit = 1;
         $permission->delete = 1;

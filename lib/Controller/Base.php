@@ -22,10 +22,16 @@
 
 namespace Xibo\Controller;
 use Slim\Slim;
+use Xibo\Entity\User;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
-use Xibo\Helper\Date;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
+use Xibo\Service\ConfigService;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\FactoryServiceInterface;
+use Xibo\Service\LogService;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class Base
@@ -43,6 +49,41 @@ class Base
      * @var Slim
      */
     protected $app;
+
+    /**
+     * @var LogServiceInterface
+     */
+    private $log;
+
+    /**
+     * @var SanitizerServiceInterface
+     */
+    private $sanitizerService;
+
+    /**
+     * @var \Xibo\Helper\ApplicationState
+     */
+    private $state;
+
+    /**
+     * @var \Xibo\Service\HelpServiceInterface
+     */
+    private $helpService;
+
+    /**
+     * @var \Xibo\Service\DateServiceInterface
+     */
+    private $dateService;
+
+    /**
+     * @var ConfigServiceInterface
+     */
+    private $configService;
+
+    /**
+     * @var User
+     */
+    private $user;
 
     /**
      * Automatically output a full page if non-ajax request arrives
@@ -63,25 +104,57 @@ class Base
     private $noOutput = false;
 
     /**
-     * Create the controller
+     * Called by Slim when the Controller is instantiated from a route definition
+     * @param Slim $app
+     * @return $this
      */
-    public function __construct()
+    public function setApp($app)
     {
-        $this->app = Slim::getInstance();
+        $this->app = $app;
 
         // Reference back to this from the app
         // but only the first time
-        if ($this->app->controller == null)
-            $this->app->controller = $this;
+        if ($app->controller == null)
+            $app->controller = $this;
+
+        return $this;
     }
 
     /**
      * Get the App
      * @return Slim
+     * @throws \Exception
      */
     public function getApp()
     {
+        if ($this->app == null)
+            throw new ConfigurationException(__('Controller called before Slim has been setup'));
+
         return $this->app;
+    }
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @return $this
+     */
+    protected function setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config)
+    {
+        $this->log = $log;
+        $this->sanitizerService = $sanitizerService;
+        $this->state = $state;
+        $this->user = $user;
+        $this->helpService = $help;
+        $this->dateService = $date;
+        $this->configService = $config;
+
+        return $this;
     }
 
     /**
@@ -90,7 +163,7 @@ class Base
      */
     public function getUser()
     {
-        return $this->app->user;
+        return $this->user;
     }
 
     /**
@@ -99,25 +172,52 @@ class Base
      */
     protected function getState()
     {
-        return $this->app->state;
+        return $this->state;
     }
 
     /**
-     * Get the Session
-     * @return \Xibo\Helper\Session
+     * Get Log
+     * @return LogService
      */
-    protected function getSession()
+    public function getLog()
     {
-        return $this->app->session;
+        return $this->log;
     }
 
     /**
-     * Get Cache Pool
-     * @return \Stash\Interfaces\PoolInterface
+     * Get Sanitizer
+     * @return SanitizerServiceInterface
      */
-    protected function getPool()
+    protected function getSanitizer()
     {
-        return $this->app->pool;
+        return $this->sanitizerService;
+    }
+
+    /**
+     * Get Help
+     * @return \Xibo\Service\HelpService
+     */
+    protected function getHelp()
+    {
+        return $this->helpService;
+    }
+
+    /**
+     * Get Date
+     * @return DateServiceInterface
+     */
+    protected function getDate()
+    {
+        return $this->dateService;
+    }
+
+    /**
+     * Get Config
+     * @return ConfigService
+     */
+    public function getConfig()
+    {
+        return $this->configService;
     }
 
     /**
@@ -137,7 +237,7 @@ class Base
      */
     protected function urlFor($route, $params = array())
     {
-        return $this->app->urlFor($route, $params);
+        return $this->getApp()->urlFor($route, $params);
     }
 
     /**
@@ -147,7 +247,7 @@ class Base
      */
     protected function getFlash($key)
     {
-        $template = $this->app->view()->get('flash');
+        $template = $this->getApp()->view()->get('flash');
         return isset($template[$key]) ? $template[$key] : '';
     }
 
@@ -178,6 +278,7 @@ class Base
             return;
 
         $app = $this->getApp();
+
         // State will contain the current ApplicationState, including a success flag that can be used to determine
         // if we are in error or not.
         $state = $this->getState();
@@ -191,7 +292,7 @@ class Base
             $recordsFiltered = ($state->recordsFiltered == null) ? $recordsTotal : $state->recordsFiltered;
 
             $data = [
-                'draw' => intval(Sanitize::getInt('draw')),
+                'draw' => intval($this->getSanitizer()->getInt('draw')),
                 'recordsTotal' => $recordsTotal,
                 'recordsFiltered' => $recordsFiltered,
                 'data' => $data
@@ -211,9 +312,9 @@ class Base
                 'data' => $data
             ];
 
-            $this->app->render('', $data, $state->httpStatus);
+            $this->getApp()->render('', $data, $state->httpStatus);
         }
-        else if ($this->app->request->isAjax()) {
+        else if ($this->getApp()->request->isAjax()) {
             // WEB Ajax
             $app->response()->header('Content-Type', 'application/json');
 
@@ -235,15 +336,13 @@ class Base
                 throw new ControllerNotImplemented(__('Template Missing'));
 
             // Append the side bar content
-            $data['clock'] = Date::getLocalDate(null, 'H:i T');
+            $data['clock'] = $this->getDate()->getLocalDate(null, 'H:i T');
             $data['currentUser'] = $this->getUser();
 
-            $this->app->render($state->template . '.twig', $data, $state->httpStatus);
+            $app->render($state->template . '.twig', $data, $state->httpStatus);
         }
 
         $this->rendered = true;
-
-        //Log::debug('Updating Session Data.' . json_encode($_SESSION, JSON_PRETTY_PRINT));
     }
 
     /**
@@ -257,8 +356,8 @@ class Base
 
         // Handle filtering
         $filter = [
-            'start' => Sanitize::getInt('start', 0),
-            'length' => Sanitize::getInt('length', 10)
+            'start' => $this->getSanitizer()->getInt('start', 0),
+            'length' => $this->getSanitizer()->getInt('length', 10)
         ];
 
         $search = $app->request->get('search', array());
@@ -310,10 +409,10 @@ class Base
         $view = $app->view()->render($state->template . '.twig', $data);
 
         // Log Rendered View
-        // Log::debug('%s View: %s', $state->template, $view);
+        // $this->getLog()->debug('%s View: %s', $state->template, $view);
 
         if (!$view = json_decode($view, true)) {
-            Log::error('Problem with Template: View = %s ', $state->template);
+            $this->getLog()->error('Problem with Template: View = %s ', $state->template);
             throw new ControllerNotImplemented(__('Problem with Form Template'));
         }
 
@@ -338,7 +437,7 @@ class Base
                 $button = explode(',', trim($button));
 
                 if (count($button) != 2) {
-                    Log::error('There is a problem with the buttons in the template: %s. Buttons: %s.', $state->template, var_export($view['buttons'], true));
+                    $this->getLog()->error('There is a problem with the buttons in the template: %s. Buttons: %s.', $state->template, var_export($view['buttons'], true));
                     throw new ControllerNotImplemented(__('Problem with Form Template'));
                 }
 

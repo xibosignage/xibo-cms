@@ -22,8 +22,8 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Resolution
@@ -83,11 +83,27 @@ class Resolution implements \JsonSerializable
      */
     public $enabled = 1;
 
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
+
+    /**
+     * @return int
+     */
     public function getId()
     {
         return $this->resolutionId;
     }
 
+    /**
+     * @return int
+     */
     public function getOwnerId()
     {
         // No owner
@@ -112,6 +128,10 @@ class Resolution implements \JsonSerializable
         $this->designerHeight = round($this->height * $factor);
     }
 
+    /**
+     * Save
+     * @param bool|true $validate
+     */
     public function save($validate = true)
     {
         if ($validate)
@@ -122,17 +142,17 @@ class Resolution implements \JsonSerializable
         else
             $this->edit();
 
-        Log::audit('Resolution', $this->resolutionId, 'Saving', $this);
+        $this->getLog()->audit('Resolution', $this->resolutionId, 'Saving', $this);
     }
 
     public function delete()
     {
-        PDOConnect::update('DELETE FROM resolution WHERE resolutionID = :resolutionId', ['resolutionId' => $this->resolutionId]);
+        $this->getStore()->update('DELETE FROM resolution WHERE resolutionID = :resolutionId', ['resolutionId' => $this->resolutionId]);
     }
 
     private function add()
     {
-        $this->resolutionId = PDOConnect::insert('
+        $this->resolutionId = $this->getStore()->insert('
           INSERT INTO `resolution` (resolution, width, height, intended_width, intended_height, version, enabled)
             VALUES (:resolution, :width, :height, :intended_width, :intended_height, :version, :enabled)
         ', [
@@ -148,7 +168,7 @@ class Resolution implements \JsonSerializable
 
     private function edit()
     {
-        PDOConnect::update('
+        $this->getStore()->update('
           UPDATE resolution SET resolution = :resolution,
                 width = :width,
                 height = :height,

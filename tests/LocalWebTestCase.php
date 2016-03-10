@@ -7,14 +7,50 @@
 
 namespace Xibo\Tests;
 
+use Monolog\Handler\PHPConsoleHandler;
+use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Slim\Environment;
+use Slim\Helper\Set;
+use Slim\Log;
 use Slim\Slim;
 use There4\Slim\Test\WebTestCase;
+use Xibo\Helper\AccessibleMonologWriter;
 use Xibo\Middleware\ApiView;
+use Xibo\Middleware\State;
+use Xibo\Middleware\Storage;
+use Xibo\Service\ConfigService;
+use Xibo\Service\SanitizeService;
 
+/**
+ * Class LocalWebTestCase
+ * @package Xibo\Tests
+ */
 class LocalWebTestCase extends WebTestCase
 {
+    /**
+     * @var Set
+     */
+    protected $container;
+
+    /**
+     * Get App
+     * @return Slim
+     */
+    public function getApp()
+    {
+        return $this->app;
+    }
+
+    /**
+     * Get non-app container
+     * @return Set
+     */
+    protected function getContainer()
+    {
+        return $this->container;
+    }
+
     /**
      * Gets the Slim instance configured
      * @return Slim
@@ -30,10 +66,10 @@ class LocalWebTestCase extends WebTestCase
         ]);
 
         // Create a logger
-        $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
+        $logger = new AccessibleMonologWriter(array(
             'name' => 'PHPUNIT',
             'handlers' => array(
-                new \Xibo\Helper\DatabaseLogHandler(Logger::DEBUG)
+                new StreamHandler('test.log')
             ),
             'processors' => array(
                 new \Xibo\Helper\LogProcessor(),
@@ -41,7 +77,7 @@ class LocalWebTestCase extends WebTestCase
             )
         ), false);
 
-        $app = new Slim(array(
+        $app = new \RKA\Slim(array(
             'mode' => 'phpunit',
             'debug' => false,
             'log.writer' => $logger
@@ -49,6 +85,10 @@ class LocalWebTestCase extends WebTestCase
         $app->setName('default');
         $app->setName('test');
 
+        // Config
+        $app->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+
+        $app->add(new TestAuthMiddleware());
         $app->add(new \Xibo\Middleware\State());
         $app->add(new \Xibo\Middleware\Storage());
 
@@ -56,15 +96,48 @@ class LocalWebTestCase extends WebTestCase
 
         // Configure the Slim error handler
         $app->error(function (\Exception $e) use ($app) {
+            $app->getLog()->emergency($e->getMessage());
             throw $e;
         });
-
-        // Super User
-        $app->user = \Xibo\Factory\UserFactory::getById(1);
 
         // All routes
         require PROJECT_ROOT . '/lib/routes.php';
         require PROJECT_ROOT . '/lib/routes-web.php';
+
+        // Create a container for non-app calls to Factories
+        $this->container = new Set();
+
+        // Create a logger for this container
+        $this->container->singleton('log', function ($c) use ($logger) {
+            $log = new \Slim\Log($logger);
+            $log->setEnabled(true);
+            $log->setLevel(Log::DEBUG);
+            $env = $c['environment'];
+            $env['slim.log'] = $log;
+
+            return $log;
+        });
+
+        // Provide the same config
+        $this->container->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+
+        Storage::setStorage($this->container);
+
+        $this->container->configService->setDependencies($this->container->store, '/');
+
+        // Define versions, etc.
+        $this->container->configService->Version();
+
+        // Register the sanitizer
+        $this->container->singleton('sanitizerService', function($container) {
+            return new SanitizeService($container);
+        });
+
+        // Register the factory service
+        State::registerFactoriesWithDi($this->container);
+
+        // Find the PHPUnit user
+        $this->container->user = $this->container->userFactory->getByName('phpunit');
 
         return $app;
     }

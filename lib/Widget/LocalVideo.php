@@ -22,7 +22,6 @@ namespace Xibo\Widget;
 
 use InvalidArgumentException;
 use Respect\Validation\Validator as v;
-use Xibo\Helper\Sanitize;
 
 class LocalVideo extends ModuleWidget
 {
@@ -45,10 +44,10 @@ class LocalVideo extends ModuleWidget
     public function add()
     {
         // Set some options
-        $this->setDuration(Sanitize::getInt('duration'));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setOption('uri', urlencode(Sanitize::getString('uri')));
-        $this->setOption('scaleType', Sanitize::getString('scaleTypeId', 'aspect'));
+        $this->setDuration($this->getSanitizer()->getInt('duration'));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
+        $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'aspect'));
 
         $this->validate();
 
@@ -62,10 +61,10 @@ class LocalVideo extends ModuleWidget
     public function edit()
     {
         // Set some options
-        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setOption('uri', urlencode(Sanitize::getString('uri')));
-        $this->setOption('scaleType', Sanitize::getString('scaleTypeId', 'aspect'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
+        $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'aspect'));
 
         $this->validate();
 

@@ -10,9 +10,15 @@ namespace Xibo\Entity;
 
 
 use Xibo\Helper\Install;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 use Xibo\Upgrade\Step;
 
+/**
+ * Class Upgrade
+ * @package Xibo\Entity
+ */
 class Upgrade implements \JsonSerializable
 {
     use EntityTrait;
@@ -29,6 +35,24 @@ class Upgrade implements \JsonSerializable
     public $action;
     public $type;
 
+    /** @var  ConfigServiceInterface */
+    private $config;
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param ConfigServiceInterface $config
+     */
+    public function __construct($store, $log, $config)
+    {
+        $this->setCommonDependencies($store, $log);
+        $this->config = $config;
+    }
+
+    /**
+     * Do the upgrade step
+     */
     public function doStep()
     {
         // SQL or not?
@@ -38,7 +62,7 @@ class Upgrade implements \JsonSerializable
 
                 // Split the statement and run
                 // DDL doesn't rollback, so ideally we'd only have 1 statement
-                $dbh = PDOConnect::init();
+                $dbh = $this->getStore()->getConnection();
 
                 // Run the SQL to create the necessary tables
                 $statements = Install::remove_remarks($this->action);
@@ -79,7 +103,7 @@ class Upgrade implements \JsonSerializable
 
     private function add()
     {
-        $this->stepId = PDOConnect::insert('
+        $this->stepId = $this->getStore()->insert('
             INSERT INTO `upgrade` (appVersion, dbVersion, step, `action`, `type`, `requestDate`)
             VALUES (:appVersion, :dbVersion, :step, :action, :type, :requestDate)
         ', [
@@ -96,7 +120,7 @@ class Upgrade implements \JsonSerializable
     {
         // We use a new connection so that if/when the upgrade steps do not run successfully we can still update
         // the state and rollback the executed steps
-        $dbh = PDOConnect::newConnection();
+        $dbh = $this->getStore()->newConnection();
         $sth = $dbh->prepare('
             UPDATE `upgrade` SET
               `complete` = :complete,
@@ -111,10 +135,10 @@ class Upgrade implements \JsonSerializable
         ]);
     }
 
-    public static function createTable()
+    public function createTable()
     {
         // Insert the table.
-        PDOConnect::update('
+        $this->getStore()->update('
                 CREATE TABLE IF NOT EXISTS `upgrade` (
                   `stepId` int(11) NOT NULL AUTO_INCREMENT,
                   `appVersion` varchar(20) NOT NULL,

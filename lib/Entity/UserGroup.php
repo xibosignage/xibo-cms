@@ -13,8 +13,8 @@ use Respect\Validation\Validator as v;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class UserGroup
@@ -59,12 +59,43 @@ class UserGroup
     // Users
     private $users = [];
 
+    /**
+     * @var UserGroupFactory
+     */
+    private $userGroupFactory;
+
+    /**
+     * @var UserFactory
+     */
+    private $userFactory;
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param UserGroupFactory $userGroupFactory
+     * @param UserFactory $userFactory
+     */
+    public function __construct($store, $log, $userGroupFactory, $userFactory)
+    {
+        $this->setCommonDependencies($store, $log);
+
+        $this->userGroupFactory = $userGroupFactory;
+        $this->userFactory = $userFactory;
+    }
+
+    /**
+     *
+     */
     public function __clone()
     {
         // Clear the groupId
         $this->groupId = null;
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return sprintf('ID = %d, Group = %s, IsUserSpecific = %d', $this->groupId, $this->group, $this->isUserSpecific);
@@ -78,11 +109,17 @@ class UserGroup
         return md5(json_encode($this));
     }
 
+    /**
+     * @return int
+     */
     public function getId()
     {
         return $this->groupId;
     }
 
+    /**
+     * @return int
+     */
     public function getOwnerId()
     {
         return 1;
@@ -138,11 +175,11 @@ class UserGroup
         if (!v::string()->length(1, 50)->validate($this->group))
             throw new \InvalidArgumentException(__('User Group Name cannot be empty.') . $this);
 
-        if (!v::int()->validate($this->libraryQuota))
+        if ($this->libraryQuota !== null && !v::int()->validate($this->libraryQuota))
             throw new \InvalidArgumentException(__('Library Quota must be a whole number.'));
 
         try {
-            $group = UserGroupFactory::getByName($this->group, $this->isUserSpecific);
+            $group = $this->userGroupFactory->getByName($this->group, $this->isUserSpecific);
 
             if ($this->groupId == null || $this->groupId != $group->groupId)
                 throw new \InvalidArgumentException(__('There is already a group with this name. Please choose another.'));
@@ -165,9 +202,13 @@ class UserGroup
         if ($this->loaded || $this->groupId == 0)
             return;
 
-        if ($options['loadUsers'])
+        if ($options['loadUsers']) {
+            if ($this->userFactory == null)
+                throw new \RuntimeException('Cannot load without first calling setChildObjectDependencies');
+
             // Load all assigned users
-            $this->users = UserFactory::getByGroupId($this->groupId);
+            $this->users = $this->userFactory->getByGroupId($this->groupId);
+        }
 
         // Set the hash
         $this->hash = $this->hash();
@@ -211,8 +252,8 @@ class UserGroup
         // Unlink users
         $this->removeAssignments();
 
-        PDOConnect::update('DELETE FROM `permission` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
-        PDOConnect::update('DELETE FROM `group` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
+        $this->getStore()->update('DELETE FROM `permission` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
+        $this->getStore()->update('DELETE FROM `group` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
     }
 
     /**
@@ -229,7 +270,7 @@ class UserGroup
      */
     private function add()
     {
-        $this->groupId = PDOConnect::insert('INSERT INTO `group` (`group`, IsUserSpecific, libraryQuota) VALUES (:group, :isUserSpecific, :libraryQuota)', [
+        $this->groupId = $this->getStore()->insert('INSERT INTO `group` (`group`, IsUserSpecific, libraryQuota) VALUES (:group, :isUserSpecific, :libraryQuota)', [
             'group' => $this->group,
             'isUserSpecific' => $this->isUserSpecific,
             'libraryQuota' => $this->libraryQuota
@@ -241,7 +282,7 @@ class UserGroup
      */
     private function edit()
     {
-        PDOConnect::update('UPDATE `group` SET `group` = :group, libraryQuota = :libraryQuota WHERE groupId = :groupId', [
+        $this->getStore()->update('UPDATE `group` SET `group` = :group, libraryQuota = :libraryQuota WHERE groupId = :groupId', [
             'groupId' => $this->groupId,
             'group' => $this->group,
             'libraryQuota' => $this->libraryQuota
@@ -253,11 +294,11 @@ class UserGroup
      */
     private function linkUsers()
     {
-        $insert = PDOConnect::init()->prepare('INSERT INTO `lkusergroup` (groupId, userId) VALUES (:groupId, :userId) ON DUPLICATE KEY UPDATE groupId = groupId');
+        $insert = $this->getStore()->getConnection()->prepare('INSERT INTO `lkusergroup` (groupId, userId) VALUES (:groupId, :userId) ON DUPLICATE KEY UPDATE groupId = groupId');
 
         foreach ($this->users as $user) {
             /* @var User $user */
-            Log::debug('Linking %s to %s', $user->userName, $this->group);
+            $this->getLog()->debug('Linking %s to %s', $user->userName, $this->group);
 
             $insert->execute([
                 'groupId' => $this->groupId,
@@ -287,6 +328,6 @@ class UserGroup
 
 
 
-        PDOConnect::update($sql, $params);
+        $this->getStore()->update($sql, $params);
     }
 }

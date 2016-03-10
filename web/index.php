@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\Config;
+use Xibo\Service\ConfigService;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
@@ -38,16 +38,12 @@ if (!file_exists('settings.php')) {
     }
 }
 
-// Load the config
-Config::Load('settings.php');
-
-// Log handlers
-$handlers = [new \Xibo\Helper\DatabaseLogHandler()];
-
 // Create a logger
 $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'WEB',
-    'handlers' => $handlers,
+    'handlers' => [
+        new \Xibo\Helper\DatabaseLogHandler()
+    ],
     'processors' => array(
         new \Xibo\Helper\LogProcessor(),
         new \Monolog\Processor\UidProcessor(7)
@@ -55,8 +51,7 @@ $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
 ), false);
 
 // Slim Application
-$app = new \Slim\Slim(array(
-    'mode' => Config::GetSetting('SERVER_MODE'),
+$app = new \RKA\Slim(array(
     'debug' => false,
     'log.writer' => $logger
 ));
@@ -76,41 +71,43 @@ $twig->parserExtensions = array(
 );
 
 // Configure the template folder
-$twig->twigTemplateDirs = array_merge(\Xibo\Factory\ModuleFactory::getViewPaths(), [PROJECT_ROOT . '/views']);
+$twig->twigTemplateDirs = [PROJECT_ROOT . '/views'];
 
 $app->view($twig);
 
-// Middleware (onion, outside inwards and then out again - i.e. the last one is first and last);
-if (Config::$middleware != null && is_array(Config::$middleware)) {
-    foreach (Config::$middleware as $object) {
-        $app->add($object);
-    }
-}
+// Config
+$app->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
 
+//
+// Middleware (onion, outside inwards and then out again - i.e. the last one is first and last);
+//
 $app->add(new \Xibo\Middleware\Actions());
 
+// Theme Middleware
+$app->add(new \Xibo\Middleware\Theme());
+
 // Authentication middleware
-if (Config::$authentication != null && Config::$authentication instanceof \Slim\Middleware)
-    $app->add(Config::$authentication);
+if ($app->configService->authentication != null && $app->configService->authentication instanceof \Slim\Middleware)
+    $app->add($app->configService->authentication);
 else
     $app->add(new \Xibo\Middleware\WebAuthentication());
 
 // Standard Xibo middleware
 $app->add(new \Xibo\Middleware\CsrfGuard());
-$app->add(new \Xibo\Middleware\Theme());
 $app->add(new \Xibo\Middleware\State());
 $app->add(new \Xibo\Middleware\Storage());
+//
+// End Middleware
+//
 
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
-    $controller = new \Xibo\Controller\Error();
-    $controller->handler($e);
+    $app->container->get('\Xibo\Controller\Error')->handler($e);
 });
 
 // Configure a not found handler
 $app->notFound(function () use ($app) {
-    $controller = new \Xibo\Controller\Error();
-    $controller->notFound();
+    $app->container->get('\Xibo\Controller\Error')->notFound();
 });
 
 // All application routes

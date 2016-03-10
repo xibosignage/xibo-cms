@@ -4,33 +4,42 @@ namespace Xibo\Helper;
 
 use Exception;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Factory\DataSetFactory;
 
+/**
+ * Class DataSetUploadHandler
+ * @package Xibo\Helper
+ */
 class DataSetUploadHandler extends BlueImpUploadHandler
 {
+    /**
+     * @param $file
+     * @param $index
+     */
     protected function handle_form_data($file, $index)
     {
+        $controller = $this->options['controller'];
+        /* @var \Xibo\Controller\DataSet $controller */
+
         // Handle form data, e.g. $_REQUEST['description'][$index]
         $fileName = $file->name;
 
-        Log::debug('Upload complete for ' . $fileName . '.');
+        $controller->getLog()->debug('Upload complete for ' . $fileName . '.');
 
         // Upload and Save
         try {
 
             // Authenticate
-            /* @var \Xibo\Controller\Base $controller */
             $controller = $this->options['controller'];
-            $dataSet = DataSetFactory::getById($this->options['dataSetId']);
+            $dataSet = $controller->getDataSetFactory()->getById($this->options['dataSetId']);
 
             if (!$controller->getUser()->checkEditable($dataSet))
                 throw new AccessDeniedException();
 
             // We are allowed to edit - pull all required parameters from the request object
-            $overwrite = Sanitize::getCheckbox('overwrite');
-            $ignoreFirstRow = Sanitize::getCheckbox('ignorefirstrow');
+            $overwrite = $controller->getSanitizer()->getCheckbox('overwrite');
+            $ignoreFirstRow = $controller->getSanitizer()->getCheckbox('ignorefirstrow');
 
-            Log::debug('Options provided - overwrite = %d, ignore first row = %d', $overwrite, $ignoreFirstRow);
+            $controller->getLog()->debug('Options provided - overwrite = %d, ignore first row = %d', $overwrite, $ignoreFirstRow);
 
             // Enumerate over the columns in the DataSet and set a row value for each
             $spreadSheetMapping = [];
@@ -56,7 +65,7 @@ class DataSetUploadHandler extends BlueImpUploadHandler
 
             $firstRow = true;
 
-            $handle = fopen(Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName, 'r');
+            $handle = fopen($controller->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName, 'r');
             while (($data = fgetcsv($handle)) !== FALSE ) {
 
                 $row = [];
@@ -93,7 +102,7 @@ class DataSetUploadHandler extends BlueImpUploadHandler
             $dataSet->save(['validate' => false, 'saveColumns' => false]);
 
             // Tidy up the temporary file
-            @unlink(Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName);
+            @unlink($controller->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName);
 
         } catch (Exception $e) {
             $file->error = $e->getMessage();

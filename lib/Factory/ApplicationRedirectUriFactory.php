@@ -11,20 +11,45 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\ApplicationRedirectUri;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class ApplicationRedirectUriFactory
+ * @package Xibo\Factory
+ */
 class ApplicationRedirectUriFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * Create Empty
+     * @return ApplicationRedirectUri
+     */
+    public function create()
+    {
+        return new ApplicationRedirectUri($this->getStore(), $this->getLog());
+    }
+
     /**
      * Get by ID
      * @param $id
      * @return ApplicationRedirectUri
      * @throws NotFoundException
      */
-    public static function getById($id)
+    public function getById($id)
     {
-        $clientRedirectUri = self::query(null, ['id' => $id]);
+        $clientRedirectUri = $this->query(null, ['id' => $id]);
 
         if (count($clientRedirectUri) <= 0)
             throw new NotFoundException();
@@ -38,9 +63,9 @@ class ApplicationRedirectUriFactory extends BaseFactory
      * @return array[ApplicationRedirectUri]
      * @throws NotFoundException
      */
-    public static function getByClientId($clientId)
+    public function getByClientId($clientId)
     {
-        return self::query(null, ['clientId' => $clientId]);
+        return $this->query(null, ['clientId' => $clientId]);
     }
 
     /**
@@ -49,7 +74,7 @@ class ApplicationRedirectUriFactory extends BaseFactory
      * @param null $filterBy
      * @return array
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
         $params = array();
@@ -58,14 +83,14 @@ class ApplicationRedirectUriFactory extends BaseFactory
 
         $body = ' FROM `oauth_client_redirect_uris` WHERE 1 = 1 ';
 
-        if (Sanitize::getString('clientId', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('clientId', $filterBy) != null) {
             $body .= ' AND `oauth_client_redirect_uris`.client_id = :clientId ';
-            $params['clientId'] = Sanitize::getString('clientId', $filterBy);
+            $params['clientId'] = $this->getSanitizer()->getString('clientId', $filterBy);
         }
 
-        if (Sanitize::getString('id', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('id', $filterBy) != null) {
             $body .= ' AND `oauth_client_redirect_uris`.client_id = :id ';
-            $params['id'] = Sanitize::getString('id', $filterBy);
+            $params['id'] = $this->getSanitizer()->getString('id', $filterBy);
         }
 
         // Sorting?
@@ -75,8 +100,8 @@ class ApplicationRedirectUriFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
 
         // The final statements
@@ -84,14 +109,14 @@ class ApplicationRedirectUriFactory extends BaseFactory
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new ApplicationRedirectUri())->hydrate($row);
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $this->create()->hydrate($row);
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

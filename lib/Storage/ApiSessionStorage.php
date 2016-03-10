@@ -33,11 +33,37 @@ use League\OAuth2\Server\Storage\SessionInterface;
 class ApiSessionStorage extends AbstractStorage implements SessionInterface
 {
     /**
+     * @var StorageServiceInterface
+     */
+    private $store;
+
+    /**
+     * ApiAccessTokenStorage constructor.
+     * @param StorageServiceInterface $store
+     */
+    public function __construct($store)
+    {
+        if (!$store instanceof StorageServiceInterface)
+            throw new \RuntimeException('Invalid $store');
+
+        $this->store = $store;
+    }
+
+    /**
+     * Get Store
+     * @return StorageServiceInterface
+     */
+    protected function getStore()
+    {
+        return $this->store;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getByAccessToken(AccessTokenEntity $accessToken)
     {
-        $result = PDOConnect::select('
+        $result = $this->getStore()->select('
             SELECT oauth_sessions.id, oauth_sessions.owner_type, oauth_sessions.owner_id, oauth_sessions.client_id, oauth_sessions.client_redirect_uri
               FROM oauth_sessions
                 INNER JOIN oauth_access_tokens ON oauth_access_tokens.session_id =oauth_sessions.id
@@ -62,7 +88,7 @@ class ApiSessionStorage extends AbstractStorage implements SessionInterface
      */
     public function getByAuthCode(AuthCodeEntity $authCode)
     {
-        $result = PDOConnect::select('
+        $result = $this->getStore()->select('
             SELECT oauth_sessions.id, oauth_sessions.owner_type, oauth_sessions.owner_id, oauth_sessions.client_id, oauth_sessions.client_redirect_uri
               FROM oauth_sessions
                 INNER JOIN oauth_auth_codes ON oauth_auth_codes.session_id = oauth_sessions.id
@@ -87,7 +113,7 @@ class ApiSessionStorage extends AbstractStorage implements SessionInterface
      */
     public function getScopes(SessionEntity $session)
     {
-        $result = PDOConnect::select('
+        $result = $this->getStore()->select('
             SELECT oauth_scopes.*
               FROM oauth_sessions
                 INNER JOIN oauth_session_scopes ON oauth_sessions.id = oauth_session_scopes.session_id
@@ -114,7 +140,7 @@ class ApiSessionStorage extends AbstractStorage implements SessionInterface
      */
     public function create($ownerType, $ownerId, $clientId, $clientRedirectUri = null)
     {
-        $id = PDOConnect::insert('
+        $id = $this->getStore()->insert('
             INSERT INTO oauth_sessions (owner_type, owner_id, client_id)
               VALUES (:owner_type, :owner_id, :client_id)
         ', [
@@ -131,7 +157,7 @@ class ApiSessionStorage extends AbstractStorage implements SessionInterface
      */
     public function associateScope(SessionEntity $session, ScopeEntity $scope)
     {
-        PDOConnect::insert('
+        $this->getStore()->insert('
             INSERT INTO oauth_session_scopes (session_id, scope)
               VALUES (:session_id, :scope)
         ', [

@@ -10,33 +10,86 @@ namespace Xibo\Controller;
 
 
 use Xibo\Entity\Layout;
-use Xibo\Entity\Media;
 use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
-use Xibo\Exception\LibraryFullException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UpgradeFactory;
 use Xibo\Factory\UserFactory;
-use Xibo\Helper\BackupUploadHandler;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
 use Xibo\Helper\WakeOnLan;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\ConfigService;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class Maintenance
+ * @package Xibo\Controller
+ */
 class Maintenance extends Base
 {
+    /**
+     * @var StorageServiceInterface
+     */
+    private $store;
+
+    /** @var  UserFactory */
+    private $userFactory;
+
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+
+    /**
+     * @var DisplayFactory
+     */
+    private $displayFactory;
+
+    /** @var  UpgradeFactory */
+    private $upgradeFactory;
+
+    /** @var  MediaFactory */
+    private $mediaFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param StorageServiceInterface $store
+     * @param UserFactory $userFactory
+     * @param LayoutFactory $layoutFactory
+     * @param DisplayFactory $displayFactory
+     * @param UpgradeFactory $upgradeFactory
+     * @param MediaFactory $mediaFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $userFactory, $layoutFactory, $displayFactory, $upgradeFactory, $mediaFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->store = $store;
+        $this->userFactory = $userFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->displayFactory = $displayFactory;
+        $this->upgradeFactory = $upgradeFactory;
+        $this->mediaFactory = $mediaFactory;
+    }
+
+
     public function run()
     {
         // Always start a transaction
-        PDOConnect::init()->beginTransaction();
+        $this->store->getConnection()->beginTransaction();
 
         // Output HTML Headers
         print '<html>';
@@ -47,41 +100,41 @@ class Maintenance extends Base
         print '<body>';
 
         // Should the Scheduled Task script be running at all?
-        if (Config::GetSetting("MAINTENANCE_ENABLED")=="Off") {
+        if ($this->getConfig()->GetSetting("MAINTENANCE_ENABLED")=="Off") {
             print "<h1>" . __("Maintenance Disabled") . "</h1>";
             print __("Maintenance tasks are disabled at the moment. Please enable them in the &quot;Settings&quot; dialog.");
 
         } else {
-            $quick = (Sanitize::getCheckbox('quick') == 1);
+            $quick = ($this->getSanitizer()->getCheckbox('quick') == 1);
 
             // Set defaults that don't match on purpose!
             $key = 1;
             $aKey = 2;
             $pKey = 3;
 
-            if (Config::GetSetting("MAINTENANCE_ENABLED")=="Protected") {
+            if ($this->getConfig()->GetSetting("MAINTENANCE_ENABLED")=="Protected") {
                 // Check that the magic parameter is set
-                $key = Config::GetSetting("MAINTENANCE_KEY");
+                $key = $this->getConfig()->GetSetting("MAINTENANCE_KEY");
 
                 // Get key from POST or from ARGV
-                $pKey = Sanitize::getString('key');
+                $pKey = $this->getSanitizer()->getString('key');
                 if(isset($argv[1]))
                 {
-                    $aKey = Sanitize::string($argv[1]);
+                    $aKey = $this->getSanitizer()->string($argv[1]);
                 }
             }
 
-            if (($aKey == $key) || ($pKey == $key) || (Config::GetSetting("MAINTENANCE_ENABLED")=="On")) {
+            if (($aKey == $key) || ($pKey == $key) || ($this->getConfig()->GetSetting("MAINTENANCE_ENABLED")=="On")) {
 
                 // Upgrade
                 // Is there a pending upgrade (i.e. are there any pending upgrade steps).
-                if (Config::isUpgradePending()) {
-                    $steps = UpgradeFactory::getIncomplete();
+                if ($this->getConfig()->isUpgradePending()) {
+                    $steps = $this->upgradeFactory->getIncomplete();
 
                     if (count($steps) <= 0) {
 
                         // Insert pending upgrade steps.
-                        $steps = UpgradeFactory::createSteps(DBVERSION, WEBSITE_VERSION);
+                        $steps = $this->upgradeFactory->createSteps(DBVERSION, ConfigService::$WEBSITE_VERSION);
 
                         foreach ($steps as $step) {
                             /* @var \Xibo\Entity\Upgrade $step */
@@ -97,14 +150,14 @@ class Maintenance extends Base
                         try {
                             $upgradeStep->doStep();
                             $upgradeStep->complete = 1;
-                            $upgradeStep->lastTryDate = Date::parse()->format('U');
+                            $upgradeStep->lastTryDate = $this->getDate()->parse()->format('U');
                             $upgradeStep->save();
                         }
                         catch (\Exception $e) {
-                            $upgradeStep->lastTryDate = Date::parse()->format('U');
+                            $upgradeStep->lastTryDate = $this->getDate()->parse()->format('U');
                             $upgradeStep->save();
-                            Log::error('Unable to run upgrade step. Message = %s', $e->getMessage());
-                            Log::error($e->getTraceAsString());
+                            $this->getLog()->error('Unable to run upgrade step. Message = %s', $e->getMessage());
+                            $this->getLog()->error($e->getTraceAsString());
 
                             throw new ConfigurationException($e->getMessage());
                         }
@@ -117,14 +170,14 @@ class Maintenance extends Base
 
                 print "<h1>" . __("Email Alerts") . "</h1>";
 
-                $emailAlerts = (Config::GetSetting("MAINTENANCE_EMAIL_ALERTS") == 'On');
-                $alwaysAlert = (Config::GetSetting("MAINTENANCE_ALWAYS_ALERT") == 'On');
-                $alertForViewUsers = (Config::GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1);
+                $emailAlerts = ($this->getConfig()->GetSetting("MAINTENANCE_EMAIL_ALERTS") == 'On');
+                $alwaysAlert = ($this->getConfig()->GetSetting("MAINTENANCE_ALWAYS_ALERT") == 'On');
+                $alertForViewUsers = ($this->getConfig()->GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1);
 
-                $msgTo = Config::GetSetting("mail_to");
-                $msgFrom = Config::GetSetting("mail_from");
+                $msgTo = $this->getConfig()->GetSetting("mail_to");
+                $msgFrom = $this->getConfig()->GetSetting("mail_from");
 
-                foreach (Display::validateDisplays(DisplayFactory::query()) as $display) {
+                foreach ((new Display())->setApp($this->getApp())->validateDisplays($this->displayFactory->query()) as $display) {
                     /* @var \Xibo\Entity\Display $display */
                     // Is this the first time this display has gone "off-line"
                     $displayGoneOffline = ($display->loggedIn == 1);
@@ -137,17 +190,17 @@ class Maintenance extends Base
                             if ($displayGoneOffline || $alwaysAlert) {
                                 // Fields for email
                                 $subject = sprintf(__("Email Alert for Display %s"), $display->display);
-                                $body = sprintf(__("Display %s with ID %d was last seen at %s."), $display->display, $display->displayId, Date::getLocalDate($display->lastAccessed));
+                                $body = sprintf(__("Display %s with ID %d was last seen at %s."), $display->display, $display->displayId, $this->getDate()->getLocalDate($display->lastAccessed));
 
                                 // Get a list of people that have view access to the display?
                                 if ($alertForViewUsers) {
-                                    foreach (UserFactory::getByDisplayGroupId($display->displayGroupId) as $user) {
+                                    foreach ($this->userFactory->getByDisplayGroupId($display->displayGroupId) as $user) {
                                         /* @var User $user */
                                         if ($user->email != '') {
                                             // Send them an email
                                             $mail = new \PHPMailer();
                                             $mail->From = $msgFrom;
-                                            $mail->FromName = Theme::getConfig('theme_name');
+                                            $mail->FromName = $this->getConfig()->getThemeConfig('theme_name');
                                             $mail->Subject = $subject;
                                             $mail->addAddress($user->email);
 
@@ -155,7 +208,7 @@ class Maintenance extends Base
                                             $mail->Body = $body;
 
                                             if (!$mail->send())
-                                                Log::error('Unable to send Display Up mail to %s', $user->email);
+                                                $this->getLog()->error('Unable to send Display Up mail to %s', $user->email);
                                         }
                                     }
                                 }
@@ -163,7 +216,7 @@ class Maintenance extends Base
                                 // Send to the original admin contact
                                 $mail = new \PHPMailer();
                                 $mail->From = $msgFrom;
-                                $mail->FromName = Theme::getConfig('theme_name');
+                                $mail->FromName = $this->getConfig()->getThemeConfig('theme_name');
                                 $mail->Subject = $subject;
                                 $mail->addAddress($msgTo);
 
@@ -191,12 +244,12 @@ class Maintenance extends Base
 
                 // Log Tidy
                 print "<h1>" . __("Tidy Logs") . "</h1>";
-                if (!$quick && Config::GetSetting("MAINTENANCE_LOG_MAXAGE") != 0) {
+                if (!$quick && $this->getConfig()->GetSetting("MAINTENANCE_LOG_MAXAGE") != 0) {
 
-                    $maxage = date("Y-m-d H:i:s", time() - (86400 * Sanitize::int(Config::GetSetting("MAINTENANCE_LOG_MAXAGE"))));
+                    $maxage = date("Y-m-d H:i:s", time() - (86400 * $this->getSanitizer()->int($this->getConfig()->GetSetting("MAINTENANCE_LOG_MAXAGE"))));
 
                     try {
-                        $dbh = PDOConnect::init();
+                        $dbh = $this->store->getConnection();
 
                         $sth = $dbh->prepare('DELETE FROM `log` WHERE logdate < :maxage');
                         $sth->execute(array(
@@ -206,7 +259,7 @@ class Maintenance extends Base
                         print __('Done.');
                     }
                     catch (\PDOException $e) {
-                        Log::error($e->getMessage());
+                        $this->getLog()->error($e->getMessage());
                     }
                 }
                 else {
@@ -214,12 +267,12 @@ class Maintenance extends Base
                 }
                 // Stats Tidy
                 print "<h1>" . __("Tidy Stats") . "</h1>";
-                if (!$quick &&  Config::GetSetting("MAINTENANCE_STAT_MAXAGE") != 0) {
+                if (!$quick &&  $this->getConfig()->GetSetting("MAINTENANCE_STAT_MAXAGE") != 0) {
 
-                    $maxage = date("Y-m-d H:i:s",time() - (86400 * Sanitize::int(Config::GetSetting("MAINTENANCE_STAT_MAXAGE"))));
+                    $maxage = date("Y-m-d H:i:s",time() - (86400 * $this->getSanitizer()->int($this->getConfig()->GetSetting("MAINTENANCE_STAT_MAXAGE"))));
 
                     try {
-                        $dbh = PDOConnect::init();
+                        $dbh = $this->store->getConnection();
 
                         $sth = $dbh->prepare('DELETE FROM `stat` WHERE statDate < :maxage');
                         $sth->execute(array(
@@ -229,7 +282,7 @@ class Maintenance extends Base
                         print __('Done.');
                     }
                     catch (\PDOException $e) {
-                        Log::error($e->getMessage());
+                        $this->getLog()->error($e->getMessage());
                     }
                 }
                 else {
@@ -237,14 +290,14 @@ class Maintenance extends Base
                 }
 
                 // Validate Display Licence Slots
-                $maxDisplays = Config::GetSetting('MAX_LICENSED_DISPLAYS');
+                $maxDisplays = $this->getConfig()->GetSetting('MAX_LICENSED_DISPLAYS');
 
                 if ($maxDisplays > 0) {
                     print '<h1>' . __('Licence Slot Validation') . '</h1>';
 
                     // Get a list of all displays
                     try {
-                        $dbh = PDOConnect::init();
+                        $dbh = $this->store->getConnection();
                         $sth = $dbh->prepare('SELECT displayId, display FROM `display` WHERE licensed = 1 ORDER BY lastAccessed');
                         $sth->execute();
 
@@ -274,24 +327,21 @@ class Maintenance extends Base
                         }
                     }
                     catch (\Exception $e) {
-                        Log::error($e);
+                        $this->getLog()->error($e);
                     }
                 }
 
                 // Wake On LAN
                 print '<h1>' . __('Wake On LAN') . '</h1>';
 
-                // Create a display object to use later
-                $displayObject = new Display();
-
                 try {
-                    $dbh = PDOConnect::init();
+                    $dbh = $this->store->getConnection();
 
                     // Get a list of all displays which have WOL enabled
                     $sth = $dbh->prepare('SELECT DisplayID, Display, WakeOnLanTime, LastWakeOnLanCommandSent FROM `display` WHERE WakeOnLan = 1');
                     $sth->execute(array());
 
-                    foreach(DisplayFactory::query(null, ['wakeOnLan' => 1]) as $display) {
+                    foreach($this->displayFactory->query(null, ['wakeOnLan' => 1]) as $display) {
 
                         // Time to WOL (with respect to today)
                         $timeToWake = strtotime(date('Y-m-d') . ' ' . $display->wakeOnLanTime);
@@ -305,21 +355,21 @@ class Maintenance extends Base
                                 if ($display->macAddress == '' || $display->broadCastAddress == '')
                                     throw new \InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
 
-                                Log::notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);
+                                $this->getLog()->notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);
 
                                 try {
                                     WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9');
-                                    print $display->display . ':Sent WOL Message. Previous WOL send time: ' . Date::getLocalDate($display->lastWakeOnLanCommandSent) . '<br/>\n';
+                                    print $display->display . ':Sent WOL Message. Previous WOL send time: ' . $this->getDate()->getLocalDate($display->lastWakeOnLanCommandSent) . '<br/>\n';
 
                                     $display->lastWakeOnLanCommandSent = time();
                                     $display->save(['validate' => false, 'audit' => true]);
                                 }
                                 catch (\Exception $e) {
-                                    print $display->display . ':Error=' . $displayObject->GetErrorMessage() . '<br/>\n';
+                                    print $display->display . ':Error=' . $e->getMessage() . '<br/>\n';
                                 }
                             }
                             else
-                                print $display->display . ':Display already awake. Previous WOL send time: ' . Date::getLocalDate($display->lastWakeOnLanCommandSent) . '<br/>\n';
+                                print $display->display . ':Display already awake. Previous WOL send time: ' . $this->getDate()->getLocalDate($display->lastWakeOnLanCommandSent) . '<br/>\n';
                         }
                         else
                             print $display->display . ':Sleeping<br/>\n';
@@ -329,23 +379,24 @@ class Maintenance extends Base
                     print __('Done.');
                 }
                 catch (\PDOException $e) {
-                    Log::error($e->getMessage());
+                    $this->getLog()->error($e->getMessage());
                 }
 
                 // Build Layouts
-                foreach (LayoutFactory::query(null, ['status' => 3]) as $layout) {
+                foreach ($this->layoutFactory->query(null, ['status' => 3]) as $layout) {
                     /* @var Layout $layout */
                     $layout->xlfToDisk();
                 }
 
                 // Keep tidy
-                Library::removeExpiredFiles();
-                Library::removeTempFiles();
+                $libraryController = $this->getApp()->container->get('\Xibo\Controller\Library');
+                $libraryController->removeExpiredFiles();
+                $libraryController->removeTempFiles();
 
                 // Install module files
                 if (!$quick) {
-                    Log::debug('Installing Module Files');
-                    Library::installAllModuleFiles();
+                    $this->getLog()->debug('Installing Module Files');
+                    $libraryController->installAllModuleFiles();
                 }
             }
             else {
@@ -357,7 +408,7 @@ class Maintenance extends Base
         print "\n  </body>\n";
         print "</html>";
 
-        Log::debug('Maintenance Complete');
+        $this->getLog()->debug('Maintenance Complete');
 
         // No output
         $this->setNoOutput(true);
@@ -370,7 +421,7 @@ class Maintenance extends Base
     {
         $this->getState()->template = 'maintenance-form-tidy';
         $this->getState()->setData([
-            'help' => Help::Link('Settings', 'TidyLibrary')
+            'help' => $this->getHelp()->link('Settings', 'TidyLibrary')
         ]);
     }
 
@@ -379,18 +430,18 @@ class Maintenance extends Base
      */
     public function tidyLibrary()
     {
-        $tidyOldRevisions = Sanitize::getCheckBox('tidyOldRevisions');
-        $cleanUnusedFiles = Sanitize::getCheckbox('cleanUnusedFiles');
+        $tidyOldRevisions = $this->getSanitizer()->getCheckbox('tidyOldRevisions');
+        $cleanUnusedFiles = $this->getSanitizer()->getCheckbox('cleanUnusedFiles');
 
-        if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
+        if ($this->getConfig()->GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
             throw new AccessDeniedException(__('Sorry this function is disabled.'));
 
         // Also run a script to tidy up orphaned media in the library
-        $library = Config::GetSetting('LIBRARY_LOCATION');
-        Log::debug('Library Location: ' . $library);
+        $library = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
+        $this->getLog()->debug('Library Location: ' . $library);
 
         // Remove temporary files
-        Library::removeTempFiles();
+        $this->getApp()->container->get('\Xibo\Controller\Library')->removeTempFiles();
 
         $media = array();
         $unusedMedia = array();
@@ -412,7 +463,7 @@ class Maintenance extends Base
             GROUP BY media.mediaid, media.storedAs, media.type, media.isedited
           ';
 
-        foreach (PDOConnect::select($sql, []) as $row) {
+        foreach ($this->store->select($sql, []) as $row) {
             $media[$row['storedAs']] = $row;
 
             // Ignore any module files or fonts
@@ -429,10 +480,10 @@ class Maintenance extends Base
             }
         }
 
-        //Log::debug(var_export($media, true));
-        //Log::debug(var_export($unusedMedia, true));
-
         $i = 0;
+
+        // Library location
+        $libraryLocation = $this->getConfig()->GetSetting("LIBRARY_LOCATION");
 
         // Get a list of all media files
         foreach(scandir($library) as $file) {
@@ -456,22 +507,22 @@ class Maintenance extends Base
             // Is this file in the system anywhere?
             if (!array_key_exists($file, $media)) {
                 // Totally missing
-                Log::debug('Deleting file: ' . $file);
+                $this->getLog()->debug('Deleting file: ' . $file);
 
                 // If not, delete it
-                Media::unlink($file);
+                unlink($libraryLocation . $file);
             }
             else if (array_key_exists($file, $unusedRevisions)) {
                 // It exists but isn't being used any more
-                Log::debug('Deleting unused revision media: ' . $media[$file]['mediaid']);
+                $this->getLog()->debug('Deleting unused revision media: ' . $media[$file]['mediaid']);
 
-                MediaFactory::getById($media[$file]['mediaid'])->delete();
+                $this->mediaFactory->getById($media[$file]['mediaid'])->delete();
             }
             else if (array_key_exists($file, $unusedMedia)) {
                 // It exists but isn't being used any more
-                Log::debug('Deleting unused media: ' . $media[$file]['mediaid']);
+                $this->getLog()->debug('Deleting unused media: ' . $media[$file]['mediaid']);
 
-                MediaFactory::getById($media[$file]['mediaid'])->delete();
+                $this->mediaFactory->getById($media[$file]['mediaid'])->delete();
             }
             else {
                 $i--;
@@ -514,7 +565,7 @@ class Maintenance extends Base
         global $dbname;
 
         // get temporary file
-        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION') . 'temp/';
+        $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/';
         $fileNameStructure = $libraryLocation . 'structure.dump';
         $fileNameData = $libraryLocation . 'data.dump';
         $zipFile = $libraryLocation . 'database.tar.gz';
@@ -532,9 +583,9 @@ class Maintenance extends Base
             throw new ConfigurationException(__('Database dump failed.'));
 
         // Zippy
-        Log::debug($zipFile);
+        $this->getLog()->debug($zipFile);
         $zip = new \ZipArchive();
-        $zip->open($zipFile, \ZIPARCHIVE::OVERWRITE);
+        $zip->open($zipFile, \ZipArchive::OVERWRITE);
         $zip->addFile($fileNameStructure, 'structure.dump');
         $zip->addFile($fileNameData, 'data.dump');
         $zip->close();
@@ -559,103 +610,18 @@ class Maintenance extends Base
         header('Content-Length: ' . $size);
 
         // Send via Apache X-Sendfile header?
-        if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
+        if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Apache') {
             header("X-Sendfile: $zipFile");
             $this->getApp()->halt(200);
         }
         // Send via Nginx X-Accel-Redirect?
-        if (Config::GetSetting('SENDFILE_MODE') == 'Nginx') {
+        if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Nginx') {
             header("X-Accel-Redirect: /download/temp/" . basename($zipFile));
             $this->getApp()->halt(200);
         }
 
         // Return the file with PHP
         readfile($zipFile);
-
-        $this->setNoOutput(true);
-    }
-
-    /**
-     * Show an upload form to restore a database dump file
-     */
-    public function importForm()
-    {
-        $response = $this->getState();
-
-        if (Config::GetSetting('SETTING_IMPORT_ENABLED') != 1)
-            throw new AccessDeniedException(__('Sorry this function is disabled.'));
-
-        // Check we have permission to do this
-        if ($this->getUser()->userTypeId != 1)
-            throw new AccessDeniedException();
-
-        $msgDumpFile = __('Backup File');
-        $msgWarn = __('Warning: Importing a file here will overwrite your existing database. This action cannot be reversed.');
-        $msgMore = __('Select a file to import and then click the import button below. You will be taken to another page where the file will be imported.');
-        $msgInfo = __('Please note: The folder location for mysqldump must be available in your path environment variable for this to work and the php "exec" command must be enabled.');
-
-        $form = <<<FORM
-        <p>$msgWarn</p>
-        <p>$msgInfo</p>
-        <form id="file_upload" method="post" action="index.php?p=admin&q=RestoreDatabase" enctype="multipart/form-data">
-            <table>
-                <tr>
-                    <td><label for="file">$msgDumpFile<span class="required">*</span></label></td>
-                    <td>
-                        <input type="file" name="dumpFile" />
-                    </td>
-                </tr>
-            </table>
-        </form>
-        <p>$msgMore</p>
-FORM;
-        $response->SetFormRequestResponse($form, __('Import Database Backup'), '550px', '375px');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Import'), '$("#file_upload").submit()');
-
-    }
-
-    /**
-     * Restore the Database
-     */
-    public function import()
-    {
-        if (Config::GetSetting('SETTING_IMPORT_ENABLED') != 1)
-            trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);
-
-        $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
-
-        // Make sure the library exists
-        Library::ensureLibraryExists();
-
-        $options = array(
-            'userId' => $this->getUser()->userId,
-            'controller' => $this,
-            'upload_dir' => $libraryFolder . 'temp/',
-            'download_via_php' => true,
-            'script_url' => $this->urlFor('maintenance.import'),
-            'upload_url' => $this->urlFor('maintenance.import'),
-            'image_versions' => array(),
-            'accept_file_types' => '/\.tar.gz/i'
-        );
-
-        // Make sure there is room in the library
-        $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
-
-        if ($libraryLimit > 0 && Library::libraryUsage() > $libraryLimit)
-            throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
-
-        // Check for a user quota
-        $this->getUser()->isQuotaFullByUser();
-
-        try {
-            // Hand off to the Upload Handler provided by jquery-file-upload
-            new BackupUploadHandler($options);
-
-        } catch (\Exception $e) {
-            // We must not issue an error, the file upload return should have the error object already
-            $this->app->commit = false;
-        }
 
         $this->setNoOutput(true);
     }

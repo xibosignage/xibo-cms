@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use Xibo\Helper\Config;
+use Xibo\Service\ConfigService;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/../..'));
@@ -31,8 +31,6 @@ require PROJECT_ROOT . '/vendor/autoload.php';
 
 if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
     die('Not configured');
-
-Config::Load(PROJECT_ROOT . '/web/settings.php');
 
 // Create a logger
 $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
@@ -46,12 +44,14 @@ $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     )
 ), false);
 
-$app = new \Slim\Slim(array(
-    'mode' => Config::GetSetting('SERVER_MODE'),
+$app = new \RKA\Slim(array(
     'debug' => false,
     'log.writer' => $logger
 ));
 $app->setName('api');
+
+// Config
+$app->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
 
 $app->add(new \Xibo\Middleware\ApiAuthenticationOAuth());
 $app->add(new \Xibo\Middleware\State());
@@ -60,31 +60,13 @@ $app->view(new \Xibo\Middleware\ApiView());
 
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
-    $controller = new \Xibo\Controller\Error();
-    $controller->handler($e);
+    $app->container->get('\Xibo\Controller\Error')->handler($e);
 });
 
 // Configure a not found handler
 $app->notFound(function () use ($app) {
-    $controller = new \Xibo\Controller\Error();
-    $controller->notFound();
+    $app->container->get('\Xibo\Controller\Error')->notFound();
 });
-
-// oAuth Resource
-$sessionStorage = new \Xibo\Storage\ApiSessionStorage();
-$accessTokenStorage = new \Xibo\Storage\ApiAccessTokenStorage();
-$clientStorage = new \Xibo\Storage\ApiClientStorage();
-$scopeStorage = new \Xibo\Storage\ApiScopeStorage();
-
-$server = new \League\OAuth2\Server\ResourceServer(
-    $sessionStorage,
-    $accessTokenStorage,
-    $clientStorage,
-    $scopeStorage
-);
-
-// DI in the server
-$app->server = $server;
 
 // All routes
 require PROJECT_ROOT . '/lib/routes.php';

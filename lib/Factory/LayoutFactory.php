@@ -24,13 +24,14 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Layout;
+use Xibo\Entity\User;
 use Xibo\Entity\Widget;
-use Xibo\Entity\WidgetOption;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Config;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class LayoutFactory
@@ -38,6 +39,120 @@ use Xibo\Storage\PDOConnect;
  */
 class LayoutFactory extends BaseFactory
 {
+    /**
+     * @var ConfigServiceInterface
+     */
+    private $config;
+
+    /**
+     * @var DateServiceInterface
+     */
+    private $date;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var RegionFactory
+     */
+    private $regionFactory;
+
+    /**
+     * @var TagFactory
+     */
+    private $tagFactory;
+
+    /**
+     * @var CampaignFactory
+     */
+    private $campaignFactory;
+
+    /**
+     * @var MediaFactory
+     */
+    private $mediaFactory;
+
+    /**
+     * @var ModuleFactory
+     */
+    private $moduleFactory;
+
+    /**
+     * @var ResolutionFactory
+     */
+    private $resolutionFactory;
+
+    /**
+     * @var WidgetFactory
+     */
+    private $widgetFactory;
+
+    /**
+     * @var WidgetOptionFactory
+     */
+    private $widgetOptionFactory;
+
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param User $user
+     * @param UserFactory $userFactory
+     * @param ConfigServiceInterface $config
+     * @param DateServiceInterface $date
+     * @param PermissionFactory $permissionFactory
+     * @param RegionFactory $regionFactory
+     * @param TagFactory $tagFactory
+     * @param CampaignFactory $campaignFactory
+     * @param MediaFactory $mediaFactory
+     * @param ModuleFactory $moduleFactory
+     * @param ResolutionFactory $resolutionFactory
+     * @param WidgetFactory $widgetFactory
+     * @param WidgetOptionFactory $widgetOptionFactory
+     */
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $date, $permissionFactory,
+                                $regionFactory, $tagFactory, $campaignFactory, $mediaFactory, $moduleFactory, $resolutionFactory,
+                                $widgetFactory, $widgetOptionFactory)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->setAclDependencies($user, $userFactory);
+        $this->config = $config;
+        $this->date = $date;
+        $this->permissionFactory = $permissionFactory;
+        $this->regionFactory = $regionFactory;
+        $this->tagFactory = $tagFactory;
+        $this->campaignFactory = $campaignFactory;
+        $this->mediaFactory = $mediaFactory;
+        $this->moduleFactory = $moduleFactory;
+        $this->resolutionFactory = $resolutionFactory;
+        $this->widgetFactory = $widgetFactory;
+        $this->widgetOptionFactory = $widgetOptionFactory;
+    }
+
+    /**
+     * Create an empty layout
+     * @return Layout
+     */
+    public function createEmpty()
+    {
+        return new Layout(
+            $this->getStore(),
+            $this->getLog(),
+            $this->config,
+            $this->date,
+            $this->permissionFactory,
+            $this->regionFactory,
+            $this->tagFactory,
+            $this->campaignFactory,
+            $this,
+            $this->mediaFactory,
+            $this->moduleFactory
+        );
+    }
+
     /**
      * Create Layout from Resolution
      * @param int $resolutionId
@@ -47,12 +162,12 @@ class LayoutFactory extends BaseFactory
      * @param string $tags
      * @return Layout
      */
-    public static function createFromResolution($resolutionId, $ownerId, $name, $description, $tags)
+    public function createFromResolution($resolutionId, $ownerId, $name, $description, $tags)
     {
-        $resolution = ResolutionFactory::getById($resolutionId);
+        $resolution = $this->resolutionFactory->getById($resolutionId);
 
         // Create a new Layout
-        $layout = new Layout();
+        $layout = $this->createEmpty();
         $layout->width = $resolution->width;
         $layout->height = $resolution->height;
 
@@ -66,10 +181,10 @@ class LayoutFactory extends BaseFactory
         $layout->setOwner($ownerId);
 
         // Create some tags
-        $layout->tags = TagFactory::tagsFromString($tags);
+        $layout->tags = $this->tagFactory->tagsFromString($tags);
 
         // Add a blank, full screen region
-        $layout->regions[] = RegionFactory::create($ownerId, $name . '-1', $layout->width, $layout->height, 0, 0);
+        $layout->regions[] = $this->regionFactory->create($ownerId, $name . '-1', $layout->width, $layout->height, 0, 0);
 
         return $layout;
     }
@@ -84,10 +199,10 @@ class LayoutFactory extends BaseFactory
      * @return Layout
      * @throws NotFoundException
      */
-    public static function createFromTemplate($layoutId, $ownerId, $name, $description, $tags)
+    public function createFromTemplate($layoutId, $ownerId, $name, $description, $tags)
     {
         // Load the template
-        $template = LayoutFactory::loadById($layoutId);
+        $template = $this->loadById($layoutId);
         $template->load();
 
         // Empty all of the ID's
@@ -98,7 +213,7 @@ class LayoutFactory extends BaseFactory
         $layout->description = $description;
 
         // Create some tags (overwriting the old ones)
-        $layout->tags = TagFactory::tagsFromString($tags);
+        $layout->tags = $this->tagFactory->tagsFromString($tags);
 
         // Set the owner
         $layout->setOwner($ownerId);
@@ -113,10 +228,10 @@ class LayoutFactory extends BaseFactory
      * @return Layout The Layout
      * @throws NotFoundException
      */
-    public static function loadById($layoutId)
+    public function loadById($layoutId)
     {
         // Get the layout
-        $layout = LayoutFactory::getById($layoutId);
+        $layout = $this->getById($layoutId);
         // Load the layout
         $layout->load();
 
@@ -129,9 +244,9 @@ class LayoutFactory extends BaseFactory
      * @return Layout
      * @throws NotFoundException
      */
-    public static function getById($layoutId)
+    public function getById($layoutId)
     {
-        $layouts = LayoutFactory::query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
+        $layouts = $this->query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
 
         if (count($layouts) <= 0) {
             throw new NotFoundException(\__('Layout not found'));
@@ -147,9 +262,9 @@ class LayoutFactory extends BaseFactory
      * @return array[Layout]
      * @throws NotFoundException
      */
-    public static function getByOwnerId($ownerId)
+    public function getByOwnerId($ownerId)
     {
-        return LayoutFactory::query(null, array('userId' => $ownerId, 'excludeTemplates' => -1, 'retired' => -1));
+        return $this->query(null, array('userId' => $ownerId, 'excludeTemplates' => -1, 'retired' => -1));
     }
 
     /**
@@ -158,9 +273,9 @@ class LayoutFactory extends BaseFactory
      * @return array[Layout]
      * @throws NotFoundException
      */
-    public static function getByCampaignId($campaignId)
+    public function getByCampaignId($campaignId)
     {
-        return LayoutFactory::query(['displayOrder'], array('campaignId' => $campaignId, 'excludeTemplates' => -1, 'retired' => -1));
+        return $this->query(['displayOrder'], array('campaignId' => $campaignId, 'excludeTemplates' => -1, 'retired' => -1));
     }
 
     /**
@@ -168,9 +283,9 @@ class LayoutFactory extends BaseFactory
      * @param int $displayGroupId
      * @return array[Media]
      */
-    public static function getByDisplayGroupId($displayGroupId)
+    public function getByDisplayGroupId($displayGroupId)
     {
-        return LayoutFactory::query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
     }
 
     /**
@@ -178,9 +293,9 @@ class LayoutFactory extends BaseFactory
      * @param int $backgroundImageId
      * @return array[Media]
      */
-    public static function getByBackgroundImageId($backgroundImageId)
+    public function getByBackgroundImageId($backgroundImageId)
     {
-        return LayoutFactory::query(null, ['disableUserCheck' => 1, 'backgroundImageId' => $backgroundImageId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'backgroundImageId' => $backgroundImageId]);
     }
 
     /**
@@ -189,16 +304,16 @@ class LayoutFactory extends BaseFactory
      * @param Layout[Optional] $layout
      * @return Layout
      */
-    public static function loadByXlf($layoutXlf, $layout = null)
+    public function loadByXlf($layoutXlf, $layout = null)
     {
-        Log::debug('Loading Layout by XLF');
+        $this->getLog()->debug('Loading Layout by XLF');
 
         // New Layout
         if ($layout == null)
-            $layout = new Layout();
+            $layout = $this->createEmpty();
 
         // Get a list of modules for us to use
-        $modules = ModuleFactory::get();
+        $modules = $this->moduleFactory->get();
 
         // Parse the XML and fill in the details for this layout
         $document = new \DOMDocument();
@@ -216,9 +331,9 @@ class LayoutFactory extends BaseFactory
         // Populate Region Nodes
         foreach ($document->getElementsByTagName('region') as $regionNode) {
             /* @var \DOMElement $regionNode */
-            Log::debug('Found Region');
+            $this->getLog()->debug('Found Region');
 
-            $region = RegionFactory::create(
+            $region = $this->regionFactory->create(
                 (int)$regionNode->getAttribute('userId'),
                 $regionNode->getAttribute('name'),
                 (double)$regionNode->getAttribute('width'),
@@ -240,7 +355,7 @@ class LayoutFactory extends BaseFactory
             // Get all widgets
             foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media') as $mediaNode) {
                 /* @var \DOMElement $mediaNode */
-                $widget = new Widget();
+                $widget = $this->widgetFactory->createEmpty();
                 $widget->type = $mediaNode->getAttribute('type');
                 $widget->ownerId = $mediaNode->getAttribute('userId');
                 $widget->duration = $mediaNode->getAttribute('duration');
@@ -248,11 +363,11 @@ class LayoutFactory extends BaseFactory
                 $widget->useDuration = ($widget->useDuration == '') ? 0 : 1;
                 $widget->tempId = $mediaNode->getAttribute('id');
 
-                Log::debug('Adding Widget to object model. %s', $widget);
+                $this->getLog()->debug('Adding Widget to object model. %s', $widget);
 
                 // Does this module type exist?
                 if (!array_key_exists($widget->type, $modules)) {
-                    Log::error('Module Type [%s] in imported Layout does not exist. Allowable types: %s', $widget->type, json_encode(array_keys($modules)));
+                    $this->getLog()->error('Module Type [%s] in imported Layout does not exist. Allowable types: %s', $widget->type, json_encode(array_keys($modules)));
                     continue;
                 }
 
@@ -268,7 +383,7 @@ class LayoutFactory extends BaseFactory
                     /* @var \DOMElement $optionsNode */
                     foreach ($optionsNode->childNodes as $mediaOption) {
                         /* @var \DOMElement $mediaOption */
-                        $widgetOption = new WidgetOption();
+                        $widgetOption = $this->widgetOptionFactory->createEmpty();
                         $widgetOption->type = 'attrib';
                         $widgetOption->option = $mediaOption->nodeName;
                         $widgetOption->value = $mediaOption->textContent;
@@ -286,7 +401,7 @@ class LayoutFactory extends BaseFactory
                         if ($mediaOption->textContent == null)
                             continue;
 
-                        $widgetOption = new WidgetOption();
+                        $widgetOption = $this->widgetOptionFactory->createEmpty();
                         $widgetOption->type = 'cdata';
                         $widgetOption->option = $mediaOption->nodeName;
                         $widgetOption->value = $mediaOption->textContent;
@@ -304,18 +419,18 @@ class LayoutFactory extends BaseFactory
             $layout->regions[] = $region;
         }
 
-        Log::debug('Finished loading layout - there are %d regions.', count($layout->regions));
+        $this->getLog()->debug('Finished loading layout - there are %d regions.', count($layout->regions));
 
         // Load any existing tags
         if (!is_array($layout->tags))
-            $layout->tags = TagFactory::tagsFromString($layout->tags);
+            $layout->tags = $this->tagFactory->tagsFromString($layout->tags);
 
         foreach ($xpath->query('//tags/tag') as $tagNode) {
             /* @var \DOMElement $tagNode */
             if (trim($tagNode->textContent) == '')
                 continue;
 
-            $layout->tags[] = TagFactory::tagFromString($tagNode->textContent);
+            $layout->tags[] = $this->tagFactory->tagFromString($tagNode->textContent);
         }
 
         // The parsed, finished layout
@@ -332,11 +447,11 @@ class LayoutFactory extends BaseFactory
      * @param int $importTags
      * @return Layout
      */
-    public static function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags)
+    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags)
     {
-        Log::debug('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName);
+        $this->getLog()->debug('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName);
 
-        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION') . 'temp/';
+        $libraryLocation = $this->config->GetSetting('LIBRARY_LOCATION') . 'temp/';
 
         // Do some pre-checks on the arguments we have been provided
         if (!file_exists($zipFile))
@@ -351,9 +466,9 @@ class LayoutFactory extends BaseFactory
         $layoutDetails = json_decode($zip->getFromName('layout.json'), true);
 
         // Construct the Layout
-        $layout = LayoutFactory::loadByXlf($zip->getFromName('layout.xml'));
+        $layout = $this->loadByXlf($zip->getFromName('layout.xml'));
 
-        Log::debug('Layout Loaded: %s.', $layout);
+        $this->getLog()->debug('Layout Loaded: %s.', $layout);
 
         // Override the name/description
         $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);
@@ -361,22 +476,22 @@ class LayoutFactory extends BaseFactory
 
         // Remove the tags if necessary
         if (!$importTags) {
-            Log::debug('Removing tags from imported layout');
+            $this->getLog()->debug('Removing tags from imported layout');
             $layout->tags = [];
         }
 
         // Add the template tag if we are importing a template
         if ($template) {
-            $layout->tags[] = TagFactory::getByTag('template');
+            $layout->tags[] = $this->tagFactory->getByTag('template');
         }
 
         // Tag as imported
-        $layout->tags[] = TagFactory::tagFromString('imported');
+        $layout->tags[] = $this->tagFactory->tagFromString('imported');
 
         // Set the owner
         $layout->setOwner($userId);
 
-        Log::debug('Process mapping.json file.');
+        $this->getLog()->debug('Process mapping.json file.');
 
         // Go through each region and add the media (updating the media ids)
         $mappings = json_decode($zip->getFromName('mapping.json'), true);
@@ -390,9 +505,9 @@ class LayoutFactory extends BaseFactory
 
             // Check we don't already have one
             try {
-                $media = MediaFactory::getByName($intendedMediaName);
+                $media = $this->mediaFactory->getByName($intendedMediaName);
 
-                Log::debug('Media already exists with name: %s', $intendedMediaName);
+                $this->getLog()->debug('Media already exists with name: %s', $intendedMediaName);
 
                 if ($replaceExisting) {
                     // Media with this name already exists, but we don't want to use it.
@@ -402,10 +517,10 @@ class LayoutFactory extends BaseFactory
 
             } catch (NotFoundException $e) {
                 // Create it instead
-                Log::debug('Media does not exist in Library, add it. %s', $file['file']);
+                $this->getLog()->debug('Media does not exist in Library, add it. %s', $file['file']);
 
-                $media = MediaFactory::create($intendedMediaName, $file['file'], $file['type'], $userId, $file['duration']);
-                $media->tags[] = TagFactory::tagFromString('imported');
+                $media = $this->mediaFactory->create($intendedMediaName, $file['file'], $file['type'], $userId, $file['duration']);
+                $media->tags[] = $this->tagFactory->tagFromString('imported');
                 $media->save();
             }
 
@@ -414,7 +529,7 @@ class LayoutFactory extends BaseFactory
             $oldMediaId = $file['mediaid'];
             $newMediaId = $media->mediaId;
 
-            Log::debug('Layout has %d widgets', count($widgets));
+            $this->getLog()->debug('Layout has %d widgets', count($widgets));
 
             if ($file['background'] == 1) {
                 $layout->backgroundImageId = $newMediaId;
@@ -425,11 +540,11 @@ class LayoutFactory extends BaseFactory
                 foreach ($widgets as $widget) {
                     /* @var Widget $widget */
 
-                    Log::debug('Checking Widget for the old mediaID [%d] so we can replace it with the new mediaId [%d] and storedAs [%s]. Media assigned to widget %s.', $oldMediaId, $newMediaId, $media->storedAs, json_encode($widget->mediaIds));
+                    $this->getLog()->debug('Checking Widget for the old mediaID [%d] so we can replace it with the new mediaId [%d] and storedAs [%s]. Media assigned to widget %s.', $oldMediaId, $newMediaId, $media->storedAs, json_encode($widget->mediaIds));
 
                     if (in_array($oldMediaId, $widget->mediaIds)) {
 
-                        Log::debug('Removing %d and replacing with %d', $oldMediaId, $newMediaId);
+                        $this->getLog()->debug('Removing %d and replacing with %d', $oldMediaId, $newMediaId);
 
                         // Unassign the old ID
                         $widget->unassignMedia($oldMediaId);
@@ -444,7 +559,7 @@ class LayoutFactory extends BaseFactory
             }
         }
 
-        Log::debug('Finished creating from Zip');
+        $this->getLog()->debug('Finished creating from Zip');
 
         // Finished
         $zip->close();
@@ -459,7 +574,7 @@ class LayoutFactory extends BaseFactory
      * @return array[Layout]
      * @throws NotFoundException
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
         $params = array();
@@ -487,7 +602,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.backgroundzIndex, ";
         $select .= "        layout.schemaVersion, ";
 
-        if (Sanitize::getInt('campaignId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('campaignId', 0, $filterBy) != 0) {
             $select .= ' lkcl.displayOrder, ';
         }
         else {
@@ -514,31 +629,31 @@ class LayoutFactory extends BaseFactory
         $body .= "       AND campaign.IsLayoutSpecific = 1";
         $body .= "   INNER JOIN `user` ON `user`.userId = `campaign`.userId ";
 
-        if (Sanitize::getInt('campaignId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('campaignId', 0, $filterBy) != 0) {
             // Join Campaign back onto it again
             $body .= " INNER JOIN `lkcampaignlayout` lkcl ON lkcl.layoutid = layout.layoutid AND lkcl.CampaignID = :campaignId ";
-            $params['campaignId'] = Sanitize::getInt('campaignId', 0, $filterBy);
+            $params['campaignId'] = $this->getSanitizer()->getInt('campaignId', 0, $filterBy);
         }
 
-        if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN `lklayoutdisplaygroup`
                 ON lklayoutdisplaygroup.layoutId = `layout`.layoutId
                     AND lklayoutdisplaygroup.displayGroupId = :displayGroupId
             ';
 
-            $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
+            $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
         }
 
         $body .= " WHERE 1 = 1 ";
 
         // Logged in user view permissions
-        self::viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy);
 
         // Layout Like
-        if (Sanitize::getString('layout', $filterBy) != '') {
+        if ($this->getSanitizer()->getString('layout', $filterBy) != '') {
             // convert into a space delimited array
-            $names = explode(' ', Sanitize::getString('layout', $filterBy));
+            $names = explode(' ', $this->getSanitizer()->getString('layout', $filterBy));
 
             foreach($names as $searchName)
             {
@@ -554,49 +669,49 @@ class LayoutFactory extends BaseFactory
             }
         }
 
-        if (Sanitize::getString('layoutExact', $filterBy) != '') {
+        if ($this->getSanitizer()->getString('layoutExact', $filterBy) != '') {
             $body.= " AND layout.layout = :exact ";
-            $params['exact'] = Sanitize::getString('layoutExact', $filterBy);
+            $params['exact'] = $this->getSanitizer()->getString('layoutExact', $filterBy);
         }
 
         // Layout
-        if (Sanitize::getInt('layoutId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('layoutId', 0, $filterBy) != 0) {
             $body .= " AND layout.layoutId = :layoutId ";
-            $params['layoutId'] = Sanitize::getInt('layoutId', 0, $filterBy);
+            $params['layoutId'] = $this->getSanitizer()->getInt('layoutId', 0, $filterBy);
         }
 
         // Layout Status
-        if (Sanitize::getInt('status', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('status', $filterBy) !== null) {
             $body .= " AND layout.status = :status ";
-            $params['status'] = Sanitize::getInt('status', $filterBy);
+            $params['status'] = $this->getSanitizer()->getInt('status', $filterBy);
         }
 
         // Background Image
-        if (Sanitize::getInt('backgroundImageId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('backgroundImageId', $filterBy) !== null) {
             $body .= " AND layout.backgroundImageId = :backgroundImageId ";
-            $params['backgroundImageId'] = Sanitize::getInt('backgroundImageId', 0, $filterBy);
+            $params['backgroundImageId'] = $this->getSanitizer()->getInt('backgroundImageId', 0, $filterBy);
         }
 
         // Not Layout
-        if (Sanitize::getInt('notLayoutId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('notLayoutId', 0, $filterBy) != 0) {
             $body .= " AND layout.layoutId <> :notLayoutId ";
-            $params['notLayoutId'] = Sanitize::getInt('notLayoutId', 0, $filterBy);
+            $params['notLayoutId'] = $this->getSanitizer()->getInt('notLayoutId', 0, $filterBy);
         }
 
         // Owner filter
-        if (Sanitize::getInt('userId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('userId', 0, $filterBy) != 0) {
             $body .= " AND layout.userid = :userId ";
-            $params['userId'] = Sanitize::getInt('userId', 0, $filterBy);
+            $params['userId'] = $this->getSanitizer()->getInt('userId', 0, $filterBy);
         }
 
         // Retired options (default to 0 - provide -1 to return all
-        if (Sanitize::getInt('retired', 0, $filterBy) != -1) {
+        if ($this->getSanitizer()->getInt('retired', 0, $filterBy) != -1) {
             $body .= " AND layout.retired = :retired ";
-            $params['retired'] = Sanitize::getInt('retired', 0, $filterBy);
+            $params['retired'] = $this->getSanitizer()->getInt('retired', 0, $filterBy);
         }
 
         // Tags
-        if (Sanitize::getString('tags', $filterBy) != '') {
+        if ($this->getSanitizer()->getString('tags', $filterBy) != '') {
             $body .= " AND layout.layoutID IN (
                 SELECT lktaglayout.layoutId
                   FROM tag
@@ -604,7 +719,7 @@ class LayoutFactory extends BaseFactory
                     ON lktaglayout.tagId = tag.tagId
                 ";
             $i = 0;
-            foreach (explode(',', Sanitize::getString('tags', $filterBy)) as $tag) {
+            foreach (explode(',', $this->getSanitizer()->getString('tags', $filterBy)) as $tag) {
                 $i++;
 
                 if ($i == 1)
@@ -619,8 +734,8 @@ class LayoutFactory extends BaseFactory
         }
 
         // Exclude templates by default
-        if (Sanitize::getInt('excludeTemplates', 1, $filterBy) != -1) {
-            if (Sanitize::getInt('excludeTemplates', 1, $filterBy) == 1) {
+        if ($this->getSanitizer()->getInt('excludeTemplates', 1, $filterBy) != -1) {
+            if ($this->getSanitizer()->getInt('excludeTemplates', 1, $filterBy) == 1) {
                 $body .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
             } else {
                 $body .= " AND layout.layoutID IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
@@ -628,8 +743,8 @@ class LayoutFactory extends BaseFactory
         }
 
         // Show All, Used or UnUsed
-        if (Sanitize::getInt('filterLayoutStatusId', 1, $filterBy) != 1)  {
-            if (Sanitize::getInt('filterLayoutStatusId', $filterBy) == 2) {
+        if ($this->getSanitizer()->getInt('filterLayoutStatusId', 1, $filterBy) != 1)  {
+            if ($this->getSanitizer()->getInt('filterLayoutStatusId', $filterBy) == 2) {
                 // Only show used layouts
                 $body .= ' AND ('
                     . '     campaign.CampaignID IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
@@ -644,7 +759,7 @@ class LayoutFactory extends BaseFactory
         }
 
         // MediaID
-        if (Sanitize::getInt('mediaId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('mediaId', 0, $filterBy) != 0) {
             $body .= ' AND layout.layoutId IN (
                 SELECT DISTINCT `region`.layoutId
                   FROM `lkwidgetmedia`
@@ -658,7 +773,7 @@ class LayoutFactory extends BaseFactory
                 )
             ';
 
-            $params['mediaId'] = Sanitize::getInt('mediaId', 0, $filterBy);
+            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', 0, $filterBy);
         }
 
         // Sorting?
@@ -668,35 +783,33 @@ class LayoutFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
 
         // The final statements
         $sql = $select . $body . $order . $limit;
 
-
-
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $layout = new Layout();
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $layout = $this->createEmpty();
 
             // Validate each param and add it to the array.
-            $layout->layoutId = Sanitize::int($row['layoutID']);
-            $layout->schemaVersion = Sanitize::int($row['schemaVersion']);
-            $layout->layout = Sanitize::string($row['layout']);
-            $layout->description = Sanitize::string($row['description']);
-            $layout->duration = Sanitize::int($row['duration']);
-            $layout->tags = Sanitize::string($row['tags']);
-            $layout->backgroundColor = Sanitize::string($row['backgroundColor']);
-            $layout->owner = Sanitize::string($row['owner']);
-            $layout->ownerId = Sanitize::int($row['userID']);
-            $layout->campaignId = Sanitize::int($row['CampaignID']);
-            $layout->retired = Sanitize::int($row['retired']);
-            $layout->status = Sanitize::int($row['status']);
-            $layout->backgroundImageId = Sanitize::int($row['backgroundImageId']);
-            $layout->backgroundzIndex = Sanitize::int($row['backgroundzIndex']);
-            $layout->width = Sanitize::double($row['width']);
-            $layout->height = Sanitize::double($row['height']);
+            $layout->layoutId = $this->getSanitizer()->int($row['layoutID']);
+            $layout->schemaVersion = $this->getSanitizer()->int($row['schemaVersion']);
+            $layout->layout = $this->getSanitizer()->string($row['layout']);
+            $layout->description = $this->getSanitizer()->string($row['description']);
+            $layout->duration = $this->getSanitizer()->int($row['duration']);
+            $layout->tags = $this->getSanitizer()->string($row['tags']);
+            $layout->backgroundColor = $this->getSanitizer()->string($row['backgroundColor']);
+            $layout->owner = $this->getSanitizer()->string($row['owner']);
+            $layout->ownerId = $this->getSanitizer()->int($row['userID']);
+            $layout->campaignId = $this->getSanitizer()->int($row['CampaignID']);
+            $layout->retired = $this->getSanitizer()->int($row['retired']);
+            $layout->status = $this->getSanitizer()->int($row['status']);
+            $layout->backgroundImageId = $this->getSanitizer()->int($row['backgroundImageId']);
+            $layout->backgroundzIndex = $this->getSanitizer()->int($row['backgroundzIndex']);
+            $layout->width = $this->getSanitizer()->double($row['width']);
+            $layout->height = $this->getSanitizer()->double($row['height']);
             $layout->createdDt = $row['createdDt'];
             $layout->modifiedDt = $row['modifiedDt'];
             $layout->displayOrder = $row['displayOrder'];
@@ -709,8 +822,8 @@ class LayoutFactory extends BaseFactory
         // Paging
         if ($limit != '' && count($entries) > 0) {
             unset($params['permissionEntityForGroup']);
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

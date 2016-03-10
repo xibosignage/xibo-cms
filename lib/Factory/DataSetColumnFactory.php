@@ -11,20 +11,44 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class DataSetColumnFactory
+ * @package Xibo\Factory
+ */
 class DataSetColumnFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * @return DataSetColumn
+     */
+    public function createEmpty()
+    {
+        return new DataSetColumn($this->getStore(), $this->getLog());
+    }
+
     /**
      * Get by Id
      * @param int $dataSetColumnId
      * @return DataSetColumn
      * @throws NotFoundException
      */
-    public static function getById($dataSetColumnId)
+    public function getById($dataSetColumnId)
     {
-        $columns = DataSetColumnFactory::query(null, ['dataSetColumnId' => $dataSetColumnId]);
+        $columns = $this->query(null, ['dataSetColumnId' => $dataSetColumnId]);
 
         if (count($columns) <= 0)
             throw new NotFoundException();
@@ -37,12 +61,12 @@ class DataSetColumnFactory extends BaseFactory
      * @param $dataSetId
      * @return array[DataSetColumn]
      */
-    public static function getByDataSetId($dataSetId)
+    public function getByDataSetId($dataSetId)
     {
-        return DataSetColumnFactory::query(null, ['dataSetId' => $dataSetId]);
+        return $this->query(null, ['dataSetId' => $dataSetId]);
     }
 
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = [];
         $params = [];
@@ -71,14 +95,14 @@ class DataSetColumnFactory extends BaseFactory
                ON datasetcolumntype.DataSetColumnTypeID = datasetcolumn.DataSetColumnTypeID
              WHERE 1 = 1 ';
 
-        if (Sanitize::getInt('dataSetColumnId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('dataSetColumnId', $filterBy) !== null) {
             $body .= ' AND dataSetColumnId = :dataSetColumnId ';
-            $params['dataSetColumnId'] = Sanitize::getInt('dataSetColumnId', $filterBy);
+            $params['dataSetColumnId'] = $this->getSanitizer()->getInt('dataSetColumnId', $filterBy);
         }
 
-        if (Sanitize::getInt('dataSetId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('dataSetId', $filterBy) !== null) {
             $body .= ' AND DataSetID = :dataSetId ';
-            $params['dataSetId'] = Sanitize::getInt('dataSetId', $filterBy);
+            $params['dataSetId'] = $this->getSanitizer()->getInt('dataSetId', $filterBy);
         }
 
         // Sorting?
@@ -88,22 +112,22 @@ class DataSetColumnFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
 
         $sql = $select . $body . $order . $limit;
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new DataSetColumn())->hydrate($row);
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

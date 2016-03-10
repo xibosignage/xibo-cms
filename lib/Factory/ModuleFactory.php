@@ -25,32 +25,111 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Media;
 use Xibo\Entity\Module;
+use Xibo\Entity\User;
 use Xibo\Entity\Widget;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\ModuleServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class ModuleFactory
+ * @package Xibo\Factory
+ */
 class ModuleFactory extends BaseFactory
 {
     /**
-     * Instantiate
-     * @param Module $module
-     * @return \Xibo\Widget\ModuleWidget
-     * @throws NotFoundException if the class does not exist
+     * @var ModuleServiceInterface
      */
-    private static function instantiate($module)
+    private $moduleService;
+
+    /**
+     * @var WidgetFactory
+     */
+    private $widgetFactory;
+
+    /**
+     * @var RegionFactory
+     */
+    private $regionFactory;
+
+    /**
+     * @var PlaylistFactory
+     */
+    private $playlistFactory;
+
+    /**
+     * @var MediaFactory
+     */
+    protected $mediaFactory;
+
+    /**
+     * @var DataSetFactory
+     */
+    protected $dataSetFactory;
+
+    /**
+     * @var DataSetColumnFactory
+     */
+    protected $dataSetColumnFactory;
+
+    /**
+     * @var TransitionFactory
+     */
+    protected $transitionFactory;
+
+    /**
+     * @var DisplayFactory
+     */
+    protected $displayFactory;
+
+    /**
+     * @var CommandFactory
+     */
+    protected $commandFactory;
+
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param User $user
+     * @param UserFactory $userFactory
+     * @param ModuleServiceInterface $moduleService
+     * @param WidgetFactory $widgetFactory
+     * @param RegionFactory $regionFactory
+     * @param PlaylistFactory $playlistFactory
+     * @param MediaFactory $mediaFactory
+     * @param DataSetFactory $dataSetFactory
+     * @param DataSetColumnFactory $dataSetColumnFactory
+     * @param TransitionFactory $transitionFactory
+     * @param DisplayFactory $displayFactory
+     * @param CommandFactory $commandFactory
+     */
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService, $widgetFactory, $regionFactory, $playlistFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory)
     {
-        $className = $module->class;
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->setAclDependencies($user, $userFactory);
 
-        if (!\class_exists($className))
-            throw new NotFoundException(__('Class %s not found', $className));
+        $this->moduleService = $moduleService;
+        $this->widgetFactory = $widgetFactory;
+        $this->regionFactory = $regionFactory;
+        $this->playlistFactory = $playlistFactory;
+        $this->mediaFactory = $mediaFactory;
+        $this->dataSetFactory = $dataSetFactory;
+        $this->dataSetColumnFactory = $dataSetColumnFactory;
+        $this->transitionFactory = $transitionFactory;
+        $this->displayFactory = $displayFactory;
+        $this->commandFactory = $commandFactory;
+    }
 
-        /* @var \Xibo\Widget\ModuleWidget $object */
-        $object = new $className();
-        $object->setModule($module);
-
-        return $object;
+    /**
+     * @return Module
+     */
+    public function createEmpty()
+    {
+        return new Module($this->getStore(), $this->getLog());
     }
 
     /**
@@ -59,29 +138,43 @@ class ModuleFactory extends BaseFactory
      * @return \Xibo\Widget\ModuleWidget
      * @throws NotFoundException
      */
-    public static function create($type)
+    public function create($type)
     {
-        $modules = ModuleFactory::query(['enabled'], array('type' => $type));
+        $modules = $this->query(['enabled'], array('type' => $type));
 
         if (count($modules) <= 0)
             throw new NotFoundException(sprintf(__('Unknown type %s'), $type));
 
         // Create a module
-        return self::instantiate($modules[0]);
+        return $this->moduleService->get(
+            $modules[0],
+            $this->mediaFactory,
+            $this->dataSetFactory,
+            $this->dataSetColumnFactory,
+            $this->transitionFactory,
+            $this->displayFactory,
+            $this->commandFactory
+        );
     }
 
     /**
      * Create a Module
-     * @param string $class
+     * @param string $className
      * @return \Xibo\Widget\ModuleWidget
      * @throws NotFoundException
      */
-    public static function createForInstall($class)
+    public function createForInstall($className)
     {
-        $type = new $class();
-        /* @var \Xibo\Widget\ModuleWidget $type */
-
-        return $type;
+        // Create a module
+        return $this->moduleService->getByClass(
+            $className,
+            $this->mediaFactory,
+            $this->dataSetFactory,
+            $this->dataSetColumnFactory,
+            $this->transitionFactory,
+            $this->displayFactory,
+            $this->commandFactory
+        );
     }
 
     /**
@@ -90,9 +183,17 @@ class ModuleFactory extends BaseFactory
      * @return \Xibo\Widget\ModuleWidget
      * @throws NotFoundException
      */
-    public static function createById($moduleId)
+    public function createById($moduleId)
     {
-        return self::instantiate(ModuleFactory::getById($moduleId));
+        return $this->moduleService->get(
+            $this->getById($moduleId),
+            $this->mediaFactory,
+            $this->dataSetFactory,
+            $this->dataSetColumnFactory,
+            $this->transitionFactory,
+            $this->displayFactory,
+            $this->commandFactory
+        );
     }
 
     /**
@@ -101,21 +202,29 @@ class ModuleFactory extends BaseFactory
      * @return \Xibo\Widget\ModuleWidget
      * @throws NotFoundException
      */
-    public static function createWithMedia($media)
+    public function createWithMedia($media)
     {
-        $modules = ModuleFactory::query(null, array('type' => $media->mediaType));
+        $modules = $this->query(null, array('type' => $media->mediaType));
 
         if (count($modules) <= 0)
             throw new NotFoundException(sprintf(__('Unknown type %s'), $media->mediaType));
 
         // Create a widget
-        $widget = new Widget();
+        $widget = $this->widgetFactory->createEmpty();
         $widget->assignMedia($media->mediaId);
 
         // Create a module
         /* @var \Xibo\Widget\ModuleWidget $object */
         $module = $modules[0];
-        $object = self::instantiate($module);
+        $object = $this->moduleService->get(
+            $module,
+            $this->mediaFactory,
+            $this->dataSetFactory,
+            $this->dataSetColumnFactory,
+            $this->transitionFactory,
+            $this->displayFactory,
+            $this->commandFactory
+        );
         $object->setWidget($widget);
 
         return $object;
@@ -131,14 +240,14 @@ class ModuleFactory extends BaseFactory
      * @return \Xibo\Widget\ModuleWidget
      * @throws NotFoundException
      */
-    public static function createForWidget($type, $widgetId = 0, $ownerId = 0, $playlistId = 0, $regionId = 0)
+    public function createForWidget($type, $widgetId = 0, $ownerId = 0, $playlistId = 0, $regionId = 0)
     {
-        $module = ModuleFactory::create($type);
+        $module = $this->create($type);
 
         // Do we have a regionId
         if ($regionId != 0) {
             // Load the region and set
-            $region = RegionFactory::getById($regionId);
+            $region = $this->regionFactory->getById($regionId);
             $module->setRegion($region);
         }
 
@@ -149,18 +258,19 @@ class ModuleFactory extends BaseFactory
                 throw new \InvalidArgumentException(__('Neither Playlist or Widget provided'));
             }
 
-            $playlist = PlaylistFactory::getById($playlistId);
+            $playlist = $this->playlistFactory->getById($playlistId);
+            $playlist->setChildObjectDependencies($this->regionFactory);
             $playlist->load(['playlistIncludeRegionAssignments' => false]);
 
             // Create a new widget to use
-            $widget = WidgetFactory::create($ownerId, $playlistId, $module->getModuleType(), 0);
+            $widget = $this->widgetFactory->create($ownerId, $playlistId, $module->getModuleType(), 0);
             $module->setWidget($widget);
 
             $playlist->assignWidget($widget);
         }
         else {
             // Load the widget
-            $module->setWidget(WidgetFactory::loadByWidgetId($widgetId));
+            $module->setWidget($this->widgetFactory->loadByWidgetId($widgetId));
         }
 
         return $module;
@@ -172,9 +282,9 @@ class ModuleFactory extends BaseFactory
      * @param Region[optional] $region
      * @return \Xibo\Widget\ModuleWidget
      */
-    public static function createWithWidget($widget, $region = null)
+    public function createWithWidget($widget, $region = null)
     {
-        $module = ModuleFactory::create($widget->type);
+        $module = $this->create($widget->type);
         $module->setWidget($widget);
 
         if ($region != null)
@@ -183,9 +293,9 @@ class ModuleFactory extends BaseFactory
         return $module;
     }
 
-    public static function get($key = 'type')
+    public function get($key = 'type')
     {
-        $modules = ModuleFactory::query();
+        $modules = $this->query();
 
         if ($key != null && $key != '') {
 
@@ -201,9 +311,9 @@ class ModuleFactory extends BaseFactory
         return $modules;
     }
 
-    public static function getAssignableModules()
+    public function getAssignableModules()
     {
-        return ModuleFactory::query(null, array('assignable' => 1, 'enabled' => 1));
+        return $this->query(null, array('assignable' => 1, 'enabled' => 1));
     }
 
     /**
@@ -212,9 +322,9 @@ class ModuleFactory extends BaseFactory
      * @return Module
      * @throws NotFoundException
      */
-    public static function getById($moduleId)
+    public function getById($moduleId)
     {
-        $modules = ModuleFactory::query(null, array('moduleId' => $moduleId));
+        $modules = $this->query(null, array('moduleId' => $moduleId));
 
         if (count($modules) <= 0)
             throw new NotFoundException();
@@ -228,9 +338,9 @@ class ModuleFactory extends BaseFactory
      * @return Module
      * @throws NotFoundException
      */
-    public static function getByExtension($extension)
+    public function getByExtension($extension)
     {
-        $modules = ModuleFactory::query(null, array('extension' => $extension));
+        $modules = $this->query(null, array('extension' => $extension));
 
         if (count($modules) <= 0)
             throw new NotFoundException(sprintf(__('Extension %s does not match any enabled Module'), $extension));
@@ -243,9 +353,9 @@ class ModuleFactory extends BaseFactory
      * @param array[Optional] $filterBy
      * @return array[string]
      */
-    public static function getValidExtensions($filterBy = [])
+    public function getValidExtensions($filterBy = [])
     {
-        $modules = ModuleFactory::query(null, $filterBy);
+        $modules = $this->query(null, $filterBy);
         $extensions = array();
 
         foreach($modules as $module) {
@@ -264,9 +374,9 @@ class ModuleFactory extends BaseFactory
      * Get View Paths
      * @return array[string]
      */
-    public static function getViewPaths()
+    public function getViewPaths()
     {
-        $modules = ModuleFactory::query();
+        $modules = $this->query();
         $paths = array_map(function ($module) {
             /* @var Module $module */
             return $module->viewPath;
@@ -277,7 +387,7 @@ class ModuleFactory extends BaseFactory
         return $paths;
     }
 
-    public static function query($sortOrder = null, $filterBy = array())
+    public function query($sortOrder = null, $filterBy = array())
     {
         if ($sortOrder == null)
             $sortOrder = array('Module');
@@ -285,7 +395,7 @@ class ModuleFactory extends BaseFactory
         $entries = array();
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             $params = array();
 
@@ -325,39 +435,39 @@ class ModuleFactory extends BaseFactory
                  WHERE 1 = 1
             ';
 
-            if (Sanitize::getInt('moduleId', $filterBy) !== null) {
-                $params['moduleId'] = Sanitize::getInt('moduleId', $filterBy);
+            if ($this->getSanitizer()->getInt('moduleId', $filterBy) !== null) {
+                $params['moduleId'] = $this->getSanitizer()->getInt('moduleId', $filterBy);
                 $body .= ' AND ModuleID = :moduleId ';
             }
 
-            if (Sanitize::getString('name', $filterBy) != '') {
-                $params['name'] = Sanitize::getString('name', $filterBy);
+            if ($this->getSanitizer()->getString('name', $filterBy) != '') {
+                $params['name'] = $this->getSanitizer()->getString('name', $filterBy);
                 $body .= ' AND name = :name ';
             }
 
-            if (Sanitize::getString('type', $filterBy) != '') {
-                $params['type'] = Sanitize::getString('type', $filterBy);
+            if ($this->getSanitizer()->getString('type', $filterBy) != '') {
+                $params['type'] = $this->getSanitizer()->getString('type', $filterBy);
                 $body .= ' AND module = :type ';
             }
 
-            if (Sanitize::getString('extension', $filterBy) != '') {
-                $params['extension'] = '%' . Sanitize::getString('extension', $filterBy) . '%';
+            if ($this->getSanitizer()->getString('extension', $filterBy) != '') {
+                $params['extension'] = '%' . $this->getSanitizer()->getString('extension', $filterBy) . '%';
                 $body .= ' AND ValidExtensions LIKE :extension ';
             }
 
-            if (Sanitize::getInt('assignable', -1, $filterBy) != -1) {
+            if ($this->getSanitizer()->getInt('assignable', -1, $filterBy) != -1) {
                 $body .= " AND assignable = :assignable ";
-                $params['assignable'] = Sanitize::getInt('assignable', $filterBy);
+                $params['assignable'] = $this->getSanitizer()->getInt('assignable', $filterBy);
             }
 
-            if (Sanitize::getInt('enabled', -1, $filterBy) != -1) {
+            if ($this->getSanitizer()->getInt('enabled', -1, $filterBy) != -1) {
                 $body .= " AND enabled = :enabled ";
-                $params['enabled'] = Sanitize::getInt('enabled', $filterBy);
+                $params['enabled'] = $this->getSanitizer()->getInt('enabled', $filterBy);
             }
 
-            if (Sanitize::getInt('regionSpecific', -1, $filterBy) != -1) {
+            if ($this->getSanitizer()->getInt('regionSpecific', -1, $filterBy) != -1) {
                 $body .= " AND regionSpecific = :regionSpecific ";
-                $params['regionSpecific'] = Sanitize::getInt('regionSpecific', $filterBy);
+                $params['regionSpecific'] = $this->getSanitizer()->getInt('regionSpecific', $filterBy);
             }
 
             // Sorting?
@@ -367,8 +477,8 @@ class ModuleFactory extends BaseFactory
 
             $limit = '';
             // Paging
-            if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-                $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+            if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+                $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
             }
 
             $sql = $select . $body . $order . $limit;
@@ -379,29 +489,29 @@ class ModuleFactory extends BaseFactory
             $sth->execute($params);
 
             foreach ($sth->fetchAll(\PDO::FETCH_ASSOC) as $row) {
-                $module = new Module();
-                $module->moduleId = Sanitize::int($row['ModuleID']);
-                $module->name = Sanitize::string($row['Name']);
-                $module->description = Sanitize::string($row['Description']);
-                $module->validExtensions = Sanitize::string($row['ValidExtensions']);
-                $module->imageUri = Sanitize::string($row['ImageUri']);
-                $module->renderAs = Sanitize::string($row['render_as']);
-                $module->enabled = Sanitize::int($row['Enabled']);
-                $module->regionSpecific = Sanitize::int($row['RegionSpecific']);
-                $module->previewEnabled = Sanitize::int($row['PreviewEnabled']);
-                $module->assignable = Sanitize::int($row['assignable']);
-                $module->schemaVersion = Sanitize::int($row['SchemaVersion']);
+                $module = $this->createEmpty();
+                $module->moduleId = $this->getSanitizer()->int($row['ModuleID']);
+                $module->name = $this->getSanitizer()->string($row['Name']);
+                $module->description = $this->getSanitizer()->string($row['Description']);
+                $module->validExtensions = $this->getSanitizer()->string($row['ValidExtensions']);
+                $module->imageUri = $this->getSanitizer()->string($row['ImageUri']);
+                $module->renderAs = $this->getSanitizer()->string($row['render_as']);
+                $module->enabled = $this->getSanitizer()->int($row['Enabled']);
+                $module->regionSpecific = $this->getSanitizer()->int($row['RegionSpecific']);
+                $module->previewEnabled = $this->getSanitizer()->int($row['PreviewEnabled']);
+                $module->assignable = $this->getSanitizer()->int($row['assignable']);
+                $module->schemaVersion = $this->getSanitizer()->int($row['SchemaVersion']);
 
                 // Identification
-                $module->type = strtolower(Sanitize::string($row['Module']));
+                $module->type = strtolower($this->getSanitizer()->string($row['Module']));
 
                 if (DBVERSION >= 120) {
-                    $module->class = Sanitize::string($row['class']);
-                    $module->viewPath = Sanitize::string($row['viewPath']);
+                    $module->class = $this->getSanitizer()->string($row['class']);
+                    $module->viewPath = $this->getSanitizer()->string($row['viewPath']);
                 }
 
                 if (DBVERSION >= 122) {
-                    $module->defaultDuration = Sanitize::int($row['defaultDuration']);
+                    $module->defaultDuration = $this->getSanitizer()->int($row['defaultDuration']);
                 }
 
                 $settings = $row['settings'];
@@ -412,15 +522,15 @@ class ModuleFactory extends BaseFactory
 
             // Paging
             if ($limit != '' && count($entries) > 0) {
-                $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-                self::$_countLast = intval($results[0]['total']);
+                $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+                $this->_countLast = intval($results[0]['total']);
             }
 
             return $entries;
         }
         catch (\Exception $e) {
 
-            Log::error($e->getMessage());
+            $this->getLog()->error($e->getMessage());
 
             return array();
         }

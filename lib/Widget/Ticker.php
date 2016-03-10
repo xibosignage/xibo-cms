@@ -28,17 +28,8 @@ use Respect\Validation\Validator as v;
 use Xibo\Controller\Library;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\DataSetColumnFactory;
-use Xibo\Factory\DataSetFactory;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Cache;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogService;
+
 
 class Ticker extends ModuleWidget
 {
@@ -47,14 +38,17 @@ class Ticker extends ModuleWidget
      */
     public function installFiles()
     {
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
     }
 
+    /**
+     * @return string
+     */
     public function layoutDesignerJavaScript()
     {
         // We use the same javascript as the data set view designer
@@ -67,7 +61,7 @@ class Ticker extends ModuleWidget
      */
     public function dataSets()
     {
-        return DataSetFactory::query();
+        return $this->dataSetFactory->query();
     }
 
     /**
@@ -79,7 +73,7 @@ class Ticker extends ModuleWidget
         if ($this->getOption('dataSetId') == 0)
             throw new \InvalidArgumentException(__('DataSet not selected'));
 
-       return DataSetColumnFactory::getByDataSetId($this->getOption('dataSetId'));
+       return $this->dataSetColumnFactory->getByDataSetId($this->getOption('dataSetId'));
     }
 
     /**
@@ -125,7 +119,7 @@ class Ticker extends ModuleWidget
             $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
 
-        Log::debug(count($this->module->settings['templates']));
+        $this->getLog()->debug(count($this->module->settings['templates']));
     }
 
     /**
@@ -161,7 +155,7 @@ class Ticker extends ModuleWidget
                 throw new \InvalidArgumentException(__('Please select a DataSet'));
 
             // Check we have permission to use this DataSetId
-            if (!$this->getUser()->checkViewable(DataSetFactory::getById($this->getOption('dataSetId'))))
+            if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId'))))
                 throw new \InvalidArgumentException(__('You do not have permission to use that dataset'));
 
             if ($this->widget->widgetId != 0) {
@@ -201,12 +195,12 @@ class Ticker extends ModuleWidget
      */
     public function add()
     {
-        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('xmds', true);
-        $this->setOption('sourceId', Sanitize::getInt('sourceId'));
-        $this->setOption('uri', urlencode(Sanitize::getString('uri')));
-        $this->setOption('dataSetId', Sanitize::getInt('dataSetId', 0));
+        $this->setOption('sourceId', $this->getSanitizer()->getInt('sourceId'));
+        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
+        $this->setOption('dataSetId', $this->getSanitizer()->getInt('dataSetId', 0));
         $this->setOption('durationIsPerItem', 1);
         $this->setOption('updateInterval', 120);
         $this->setOption('speed', 2);
@@ -227,43 +221,43 @@ class Ticker extends ModuleWidget
     {
         // Source is selected during add() and cannot be edited.
         // Other properties
-        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('xmds', true);
-        $this->setOption('uri', Sanitize::getString('uri'));
-        $this->setOption('updateInterval', urlencode(Sanitize::getInt('updateInterval', 120)));
-        $this->setOption('speed', Sanitize::getInt('speed', 2));
-        $this->setOption('name', Sanitize::getString('name'));
-        $this->setOption('effect', Sanitize::getString('effect'));
-        $this->setOption('copyright', Sanitize::getString('copyright'));
-        $this->setOption('numItems', Sanitize::getInt('numItems'));
-        $this->setOption('takeItemsFrom', Sanitize::getString('takeItemsFrom'));
-        $this->setOption('durationIsPerItem', Sanitize::getCheckbox('durationIsPerItem'));
-        $this->setOption('itemsSideBySide', Sanitize::getCheckbox('itemsSideBySide'));
-        $this->setOption('upperLimit', Sanitize::getInt('upperLimit', 0));
-        $this->setOption('lowerLimit', Sanitize::getInt('lowerLimit', 0));
+        $this->setOption('uri', $this->getSanitizer()->getString('uri'));
+        $this->setOption('updateInterval', urlencode($this->getSanitizer()->getInt('updateInterval', 120)));
+        $this->setOption('speed', $this->getSanitizer()->getInt('speed', 2));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('effect', $this->getSanitizer()->getString('effect'));
+        $this->setOption('copyright', $this->getSanitizer()->getString('copyright'));
+        $this->setOption('numItems', $this->getSanitizer()->getInt('numItems'));
+        $this->setOption('takeItemsFrom', $this->getSanitizer()->getString('takeItemsFrom'));
+        $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
+        $this->setOption('itemsSideBySide', $this->getSanitizer()->getCheckbox('itemsSideBySide'));
+        $this->setOption('upperLimit', $this->getSanitizer()->getInt('upperLimit', 0));
+        $this->setOption('lowerLimit', $this->getSanitizer()->getInt('lowerLimit', 0));
 
-        $this->setOption('itemsPerPage', Sanitize::getInt('itemsPerPage'));
-        $this->setOption('dateFormat', Sanitize::getString('dateFormat'));
-        $this->setOption('allowedAttributes', Sanitize::getString('allowedAttributes'));
-        $this->setOption('stripTags', Sanitize::getString('stripTags'));
-        $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
-        $this->setOption('disableDateSort', Sanitize::getCheckbox('disableDateSort'));
-        $this->setOption('textDirection', Sanitize::getString('textDirection'));
-        $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
-        $this->setOption('templateId', Sanitize::getString('templateId'));
+        $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage'));
+        $this->setOption('dateFormat', $this->getSanitizer()->getString('dateFormat'));
+        $this->setOption('allowedAttributes', $this->getSanitizer()->getString('allowedAttributes'));
+        $this->setOption('stripTags', $this->getSanitizer()->getString('stripTags'));
+        $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
+        $this->setOption('disableDateSort', $this->getSanitizer()->getCheckbox('disableDateSort'));
+        $this->setOption('textDirection', $this->getSanitizer()->getString('textDirection'));
+        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
 
         // DataSet
         if ($this->getOption('sourceId') == 2) {
             // We are a data set, so get the custom filter controls
-            $this->setOption('filter', Sanitize::getParam('filter', null));
-            $this->setOption('ordering', Sanitize::getString('ordering'));
-            $this->setOption('useOrderingClause', Sanitize::getCheckbox('useOrderingClause'));
-            $this->setOption('useFilteringClause', Sanitize::getCheckbox('useFilteringClause'));
+            $this->setOption('filter', $this->getSanitizer()->getParam('filter', null));
+            $this->setOption('ordering', $this->getSanitizer()->getString('ordering'));
+            $this->setOption('useOrderingClause', $this->getSanitizer()->getCheckbox('useOrderingClause'));
+            $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
 
             // Order and Filter criteria
-            $orderClauses = Sanitize::getStringArray('orderClause');
-            $orderClauseDirections = Sanitize::getStringArray('orderClauseDirection');
+            $orderClauses = $this->getSanitizer()->getStringArray('orderClause');
+            $orderClauseDirections = $this->getSanitizer()->getStringArray('orderClauseDirection');
             $orderClauseMapping = [];
 
             $i = -1;
@@ -282,10 +276,10 @@ class Ticker extends ModuleWidget
 
             $this->setOption('orderClauses', json_encode($orderClauseMapping));
 
-            $filterClauses = Sanitize::getStringArray('filterClause');
-            $filterClauseOperator = Sanitize::getStringArray('filterClauseOperator');
-            $filterClauseCriteria = Sanitize::getStringArray('filterClauseCriteria');
-            $filterClauseValue = Sanitize::getStringArray('filterClauseValue');
+            $filterClauses = $this->getSanitizer()->getStringArray('filterClause');
+            $filterClauseOperator = $this->getSanitizer()->getStringArray('filterClauseOperator');
+            $filterClauseCriteria = $this->getSanitizer()->getStringArray('filterClauseCriteria');
+            $filterClauseValue = $this->getSanitizer()->getStringArray('filterClauseValue');
             $filterClauseMapping = [];
 
             $i = -1;
@@ -308,8 +302,8 @@ class Ticker extends ModuleWidget
         }
 
         // Text Template
-        $this->setRawNode('template', Sanitize::getParam('ta_text', Sanitize::getParam('template', null)));
-        $this->setRawNode('css', Sanitize::getParam('ta_css', Sanitize::getParam('css', null)));
+        $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
+        $this->setRawNode('css', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('css', null)));
 
         // Save the widget
         $this->validate();
@@ -323,7 +317,7 @@ class Ticker extends ModuleWidget
         $sourceId = $this->getOption('sourceId', 1);
 
         // Default Hover window contains a thumbnail, media type and duration
-        $output = '<div class="thumbnail"><img alt="' . $this->module->name . ' thumbnail" src="' . Theme::uri('img/forms/' . $this->getModuleType() . '.gif') . '"></div>';
+        $output = '<div class="thumbnail"><img alt="' . $this->module->name . ' thumbnail" src="' . $this->getConfig()->uri('img/forms/' . $this->getModuleType() . '.gif') . '"></div>';
         $output .= '<div class="info">';
         $output .= '    <ul>';
         $output .= '    <li>' . __('Type') . ': ' . $this->module->name . '</li>';
@@ -351,7 +345,7 @@ class Ticker extends ModuleWidget
     {
         // Load in the template
         $data = [];
-        $isPreview = (Sanitize::getCheckbox('preview') == 1);
+        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         // Clear all linked media.
         $this->clearMedia();
@@ -397,9 +391,9 @@ class Ticker extends ModuleWidget
             'speed' => $this->getOption('speed'),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => Sanitize::getDouble('width', 0),
-            'previewHeight' => Sanitize::getDouble('height', 0),
-            'scaleOverride' => Sanitize::getDouble('scale_override', 0)
+            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
+            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
+            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
         );
 
         // Generate a JSON string of substituted items.
@@ -453,7 +447,7 @@ class Ticker extends ModuleWidget
 
         // Add our fonts.css file
         $headContent .= '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
-        $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
+        $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         // Replace the Head Content with our generated javascript
         $data['head'] = $headContent;
@@ -493,7 +487,7 @@ class Ticker extends ModuleWidget
     private function getRssItems($isPreview, $text)
     {
         // Make sure we have the cache location configured
-        Library::ensureLibraryExists();
+        Library::ensureLibraryExists($this->getConfig()->GetSetting('LIBRARY_LOCATION'));
 
         // Create a key to use as a caching key for this item.
         // the rendered feed will be cached, so it is important the key covers all options.
@@ -502,7 +496,7 @@ class Ticker extends ModuleWidget
 
         $items = $cache->get();
 
-        Log::debug('Ticker with RSS source %s. Cache key: %s.', $feedUrl, $cache->getKey());
+        $this->getLog()->debug('Ticker with RSS source %s. Cache key: %s.', $feedUrl, $cache->getKey());
 
         // Check our cache to see if the key exists
         if ($cache->isHit()) {
@@ -515,7 +509,7 @@ class Ticker extends ModuleWidget
         $items = [];
 
         try {
-            $clientConfig = Config::getPicoFeedProxy($feedUrl);
+            $clientConfig = $this->getConfig()->getPicoFeedProxy($feedUrl);
 
             // Allowable attributes
             if ($this->getOption('allowedAttributes') != null) {
@@ -525,7 +519,7 @@ class Ticker extends ModuleWidget
             }
 
             // Enable logging if we need to
-            if (Log::resolveLogLevel(Config::GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
+            if (LogService::resolveLogLevel($this->getConfig()->GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
                 Logger::enable();
             }
 
@@ -557,7 +551,7 @@ class Ticker extends ModuleWidget
             }
 
             // Date format for the feed items
-            $dateFormat = $this->getOption('dateFormat', Config::GetSetting('DATE_FORMAT'));
+            $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
 
             // Set an expiry time for the media
             $expires = time() + ($this->getOption('updateInterval', 3600) * 60);
@@ -588,8 +582,8 @@ class Ticker extends ModuleWidget
                         $namespace = str_replace(']', '', $namespace);
 
                         // What are we looking at
-                        Log::debug('Namespace: %s, Tag: %s, Attribute: %s', $namespace, $tag, $attribute);
-                        Log::debug('Item content: %s', var_export($item, true));
+                        $this->getLog()->debug('Namespace: %s, Tag: %s, Attribute: %s', $namespace, $tag, $attribute);
+                        $this->getLog()->debug('Item content: %s', var_export($item, true));
 
                         // Are we an image place holder? [tag|image]
                         if ($namespace == 'image') {
@@ -613,7 +607,7 @@ class Ticker extends ModuleWidget
                                             $tags = $item->getTag($tag);
                                             $link = $tags[0];
                                         } else {
-                                            Log::info('Looking for image with namespace %s, but that namespace does not exist.', $attribute);
+                                            $this->getLog()->info('Looking for image with namespace %s, but that namespace does not exist.', $attribute);
                                         }
                                     } else {
                                         $tags = $item->getTag($tag);
@@ -625,7 +619,7 @@ class Ticker extends ModuleWidget
                             // image url
                             if ($link != NULL) {
                                 // Grab the profile image
-                                $file = MediaFactory::createModuleFile('ticker_' . md5($this->getOption('url') . $link), $link);
+                                $file = $this->mediaFactory->createModuleFile('ticker_' . md5($this->getOption('url') . $link), $link);
                                 $file->isRemote = true;
                                 $file->expires = $expires;
                                 $file->save();
@@ -644,7 +638,7 @@ class Ticker extends ModuleWidget
                             else
                                 $tags = $item->getTag($tag);
 
-                            Log::debug('Tags:' . var_export($tags, true));
+                            $this->getLog()->debug('Tags:' . var_export($tags, true));
 
                             // If we find some tags then do the business with them
                             if ($tags != NULL) {
@@ -683,7 +677,7 @@ class Ticker extends ModuleWidget
                                 break;
 
                             case '[Date]':
-                                $replace = Date::getLocalDate($item->getDate()->format('U'), $dateFormat);
+                                $replace = $this->getDate()->getLocalDate($item->getDate()->format('U'), $dateFormat);
                                 break;
 
                             case '[PermaLink]':
@@ -721,12 +715,12 @@ class Ticker extends ModuleWidget
             $this->getPool()->saveDeferred($cache);
         }
         catch (PicoFeedException $e) {
-            Log::error('Unable to get feed: %s', $e->getMessage());
-            Log::debug($e->getTraceAsString());
+            $this->getLog()->error('Unable to get feed: %s', $e->getMessage());
+            $this->getLog()->debug($e->getTraceAsString());
         }
 
-        if (Log::resolveLogLevel(Config::GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
-            Log::debug(var_export(Logger::getMessages(), true));
+        if (LogService::resolveLogLevel($this->getConfig()->GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
+            $this->getLog()->debug(var_export(Logger::getMessages(), true));
         }
 
         // Return the formatted items
@@ -819,7 +813,7 @@ class Ticker extends ModuleWidget
             }
         }
 
-        Log::notice('Then template for each row is: ' . $text);
+        $this->getLog()->notice('Then template for each row is: ' . $text);
 
         // Set an expiry time for the media
         $expires = time() + ($this->getOption('updateInterval', 3600) * 60);
@@ -832,7 +826,7 @@ class Ticker extends ModuleWidget
 
         foreach ($matches[1] as $match) {
             // Get the column id's we are interested in
-            Log::notice('Matched column: ' . $match);
+            $this->getLog()->notice('Matched column: ' . $match);
 
             $col = explode('|', $match);
             $columnIds[] = $col[1];
@@ -840,7 +834,7 @@ class Ticker extends ModuleWidget
 
         // Create a data set object, to get the results.
         try {
-            $dataSet = DataSetFactory::getById($dataSetId);
+            $dataSet = $this->dataSetFactory->getById($dataSetId);
 
             // Get an array representing the id->heading mappings
             $mappings = [];
@@ -856,7 +850,7 @@ class Ticker extends ModuleWidget
                 ];
             }
 
-            Log::debug('Resolved column mappings: %s', json_encode($columnIds));
+            $this->getLog()->debug('Resolved column mappings: %s', json_encode($columnIds));
 
             $filter = [
                 'filter' => $filter,
@@ -873,16 +867,16 @@ class Ticker extends ModuleWidget
             }
 
             // Set the timezone for SQL
-            $dateNow = Date::parse();
+            $dateNow = $this->getDate()->parse();
             if ($displayId != 0) {
-                $display = DisplayFactory::getById($displayId);
+                $display = $this->displayFactory->getById($displayId);
                 $timeZone = $display->getSetting('displayTimeZone', '');
-                $timeZone = ($timeZone == '') ? Config::GetSetting('defaultTimezone') : $timeZone;
+                $timeZone = ($timeZone == '') ? $this->getConfig()->GetSetting('defaultTimezone') : $timeZone;
                 $dateNow->timezone($timeZone);
-                Log::debug('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString());
+                $this->getLog()->debug('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString());
             }
 
-            PDOConnect::setTimeZone(Date::getLocalDate($dateNow, 'P'));
+            $this->getStore()->setTimeZone($this->getDate()->getLocalDate($dateNow, 'P'));
 
             // Get the data (complete table, filtered)
             $dataSetResults = $dataSet->getData($filter);
@@ -910,7 +904,7 @@ class Ticker extends ModuleWidget
                         if ($mappings[$header]['dataTypeId'] == 4) {
                             // External Image
                             // Download the image, alter the replace to wrap in an image tag
-                            $file = MediaFactory::createModuleFile('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
+                            $file = $this->mediaFactory->createModuleFile('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
                             $file->isRemote = true;
                             $file->expires = $expires;
                             $file->save();
@@ -926,10 +920,10 @@ class Ticker extends ModuleWidget
                             // Library Image
                             // The content is the ID of the image
                             try {
-                                $file = MediaFactory::getById($replace);
+                                $file = $this->mediaFactory->getById($replace);
                             }
                             catch (NotFoundException $e) {
-                                Log::error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);
+                                $this->getLog()->error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);
                                 continue;
                             }
 
@@ -951,8 +945,8 @@ class Ticker extends ModuleWidget
             return $items;
         }
         catch (NotFoundException $e) {
-            Log::error('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
-            Log::debug($e->getTraceAsString());
+            $this->getLog()->error('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
+            $this->getLog()->debug($e->getTraceAsString());
             return [];
         }
     }

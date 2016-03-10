@@ -9,30 +9,130 @@
 namespace Xibo\Factory;
 
 
-use Slim\Slim;
 use Xibo\Entity\User;
-use Xibo\Helper\Sanitize;
+use Xibo\Service\FactoryServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class BaseFactory
+ * @package Xibo\Factory
+ */
 class BaseFactory
 {
-    protected static $_countLast = 0;
+    /**
+     * Count records last query
+     * @var int
+     */
+    protected $_countLast = 0;
 
     /**
-     * Count of records returned for the last query.
-     * @return int
+     * @var StorageServiceInterface
      */
-    public static function countLast()
+    private $store;
+
+    /**
+     * @var LogServiceInterface
+     */
+    private $log;
+
+    /**
+     * @var SanitizerServiceInterface
+     */
+    private $sanitizerService;
+
+    /**
+     * @var User
+     */
+    private $user;
+
+    /**
+     * @var UserFactory
+     */
+    private $userFactory;
+
+    /**
+     * Set common dependencies.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @return $this
+     */
+    protected function setCommonDependencies($store, $log, $sanitizerService)
     {
-        return self::$_countLast;
+        $this->store = $store;
+        $this->log = $log;
+        $this->sanitizerService = $sanitizerService;
+
+        return $this;
+    }
+
+    /**
+     * Set Acl Dependencies
+     * @param User $user
+     * @param UserFactory $userFactory
+     * @return $this
+     */
+    public function setAclDependencies($user, $userFactory)
+    {
+        $this->user = $user;
+        $this->userFactory = $userFactory;
+        return $this;
+    }
+
+    /**
+     * Get Store
+     * @return StorageServiceInterface
+     */
+    protected function getStore()
+    {
+        return $this->store;
+    }
+
+    /**
+     * Get Log
+     * @return LogServiceInterface
+     */
+    protected function getLog()
+    {
+        return $this->log;
+    }
+
+    /**
+     * Get Sanitizer
+     * @return SanitizerServiceInterface
+     */
+    protected function getSanitizer()
+    {
+        return $this->sanitizerService;
     }
 
     /**
      * Get User
      * @return User
      */
-    public static function getUser()
+    public function getUser()
     {
-        return Slim::getInstance()->user;
+        return $this->user;
+    }
+
+    /**
+     * Get User Factory
+     * @return UserFactory
+     */
+    public function getUserFactory()
+    {
+        return $this->userFactory;
+    }
+
+    /**
+     * Count of records returned for the last query.
+     * @return int
+     */
+    public function countLast()
+    {
+        return $this->_countLast;
     }
 
     /**
@@ -44,13 +144,14 @@ class BaseFactory
      * @param null $ownerColumn
      * @param array $filterBy
      */
-    public static function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [])
+    public function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [])
     {
-        $user = (Sanitize::getInt('userCheckUserId', $filterBy) !== null) ? UserFactory::getById(Sanitize::getInt('userCheckUserId', $filterBy)) : self::getUser();
+        $checkUserId = $this->getSanitizer()->getInt('userCheckUserId', $filterBy);
+        $user = ($checkUserId !== null) ? $this->getUserFactory()->getById($checkUserId) : $this->getUser();
 
         $permissionSql = '';
 
-        if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0 && $user->userTypeId != 1) {
+        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0 && $user->userTypeId != 1) {
             $permissionSql .= '
               AND (' . $idColumn . ' IN (
                 SELECT `permission`.objectId
@@ -99,7 +200,7 @@ class BaseFactory
 
             $permissionSql .= ' )';
 
-            //Log::debug('Permission SQL = %s', $permissionSql);
+            //$this->getLog()->debug('Permission SQL = %s', $permissionSql);
         }
 
         // Set out params

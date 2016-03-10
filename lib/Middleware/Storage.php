@@ -23,32 +23,60 @@
 namespace Xibo\Middleware;
 
 
+use Slim\Helper\Set;
 use Slim\Middleware;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogService;
+use Xibo\Storage\PdoStorageService;
 
+/**
+ * Class Storage
+ * @package Xibo\Middleware
+ */
 class Storage extends Middleware
 {
     public function call()
     {
-        $this->app->commit = true;
+        $app = $this->app;
+
+        $app->commit = true;
+
+        // Configure storage
+        self::setStorage($app->container);
 
         $this->next->call();
 
         // Are we in a transaction coming out of the stack?
-        if (PDOConnect::init()->inTransaction()) {
+        if ($app->store->getConnection()->inTransaction()) {
             // We need to commit or rollback? Default is commit
-            if ($this->app->commit) {
-                PDOConnect::init()->commit();
+            if ($app->commit) {
+                $app->store->commitIfNecessary();
             } else {
 
-                Log::debug('Storage rollback.');
-                PDOConnect::init()->rollBack();
+                $app->logService->debug('Storage rollback.');
+
+                $app->store->getConnection()->rollBack();
             }
         }
 
-        Log::info('PDO stats: %s.', json_encode(PDOConnect::stats()));
+        $app->logService->info('PDO stats: %s.', json_encode(PdoStorageService::stats()));
 
-        PDOConnect::close();
+        $app->store->close();
+    }
+
+    /**
+     * Set Storage
+     * @param Set $container
+     */
+    public static function setStorage($container)
+    {
+        // Register the log service
+        $container->singleton('logService', function($container) {
+            return new LogService($container->log, $container->mode);
+        });
+
+        // Register the database service
+        $container->singleton('store', function($container) {
+            return (new PdoStorageService($container->logService))->setConnection();
+        });
     }
 }

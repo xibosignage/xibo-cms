@@ -21,6 +21,8 @@
 
 
 namespace Xibo\Entity;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class RegionOption
@@ -50,10 +52,20 @@ class RegionOption
      */
     public $value;
 
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
+
     public function save()
     {
         $sql = 'INSERT INTO `regionoption` (`regionId`, `option`, `value`) VALUES (:regionId, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2';
-        \Xibo\Storage\PDOConnect::insert($sql, array(
+        $this->getStore()->insert($sql, array(
             'regionId' => $this->regionId,
             'option' => $this->option,
             'value' => $this->value,
@@ -64,6 +76,6 @@ class RegionOption
     public function delete()
     {
         $sql = 'DELETE FROM `regionoption` WHERE `regionId` = :regionId AND `option` = :option';
-        \Xibo\Storage\PDOConnect::update($sql, array('regionId' => $this->regionId, 'option' => $this->option));
+        $this->getStore()->update($sql, array('regionId' => $this->regionId, 'option' => $this->option));
     }
 }

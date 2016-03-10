@@ -22,13 +22,11 @@ namespace Xibo\Xmds;
 
 use Xibo\Entity\Bandwidth;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\RequiredFileFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
 
+/**
+ * Class Soap3
+ * @package Xibo\Xmds
+ */
 class Soap3 extends Soap
 {
     /**
@@ -45,11 +43,11 @@ class Soap3 extends Soap
         $this->logProcessor->setRoute('RegisterDisplay');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches the one we have
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Check the Length of the hardwareKey
@@ -58,7 +56,7 @@ class Soap3 extends Soap
 
         // Check in the database for this hardwareKey
         try {
-            $display = DisplayFactory::getByLicence($hardwareKey);
+            $display = $this->displayFactory->getByLicence($hardwareKey);
 
             $this->logProcessor->setDisplay($display->displayId);
 
@@ -76,12 +74,12 @@ class Soap3 extends Soap
             // Log Bandwidth
             $this->logBandwidth($display->displayId, Bandwidth::$REGISTER, strlen($active));
 
-            Log::debug($active, $display->displayId);
+            $this->getLog()->debug($active, $display->displayId);
 
             return $active;
 
         } catch (NotFoundException $e) {
-            Log::error('Attempt to register a Version 3 Display with key %s.', $hardwareKey);
+            $this->getLog()->error('Attempt to register a Version 3 Display with key %s.', $hardwareKey);
 
             throw new \SoapFault('Sender', 'You cannot register an old display against this CMS.');
         }
@@ -118,17 +116,17 @@ class Soap3 extends Soap
         $this->logProcessor->setRoute('GetFile');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
-        $filePath = Sanitize::string($filePath);
-        $fileType = Sanitize::string($fileType);
-        $chunkOffset = Sanitize::int($chunkOffset);
-        $chunkSize = Sanitize::int($chunkSize);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $filePath = $this->getSanitizer()->string($filePath);
+        $fileType = $this->getSanitizer()->string($fileType);
+        $chunkOffset = $this->getSanitizer()->int($chunkOffset);
+        $chunkSize = $this->getSanitizer()->int($chunkSize);
 
-        $libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->getConfig()->GetSetting("LIBRARY_LOCATION");
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -140,20 +138,20 @@ class Soap3 extends Soap
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
         if ($this->display->isAuditing == 1)
-            Log::debug("[IN] Params: [$hardwareKey] [$filePath] [$fileType] [$chunkOffset] [$chunkSize]");
+            $this->getLog()->debug("[IN] Params: [$hardwareKey] [$filePath] [$fileType] [$chunkOffset] [$chunkSize]");
 
         $file = null;
 
         try {
             // Handle fetching the file
             if ($fileType == "layout") {
-                $fileId = Sanitize::int($filePath);
+                $fileId = $this->getSanitizer()->int($filePath);
 
                 // Validate the nonce
-                $requiredFile = RequiredFileFactory::getByDisplayAndLayout($this->display->displayId, $fileId);
+                $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($this->display->displayId, $fileId);
 
                 // Load the layout
-                $layout = LayoutFactory::getById($fileId);
+                $layout = $this->layoutFactory->getById($fileId);
                 $path = $layout->xlfToDisk();
 
                 $file = file_get_contents($path);
@@ -170,7 +168,7 @@ class Soap3 extends Soap
                 $fileId = explode('.', $filePath);
 
                 // Validate the nonce
-                $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $fileId[0]);
+                $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $fileId[0]);
 
                 // Return the Chunk size specified
                 $f = fopen($libraryLocation . $filePath, 'r');
@@ -190,7 +188,7 @@ class Soap3 extends Soap
             }
         }
         catch (NotFoundException $e) {
-            Log::error($e->getMessage());
+            $this->getLog()->error($e->getMessage());
             throw new \SoapFault('Receiver', 'Requested an invalid file.');
         }
 

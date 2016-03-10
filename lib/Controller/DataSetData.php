@@ -13,18 +13,50 @@ use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Date;
-use Xibo\Helper\Sanitize;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
+/**
+ * Class DataSetData
+ * @package Xibo\Controller
+ */
 class DataSetData extends Base
 {
+    /** @var  DataSetFactory */
+    private $dataSetFactory;
+
+    /** @var  MediaFactory */
+    private $mediaFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param DataSetFactory $dataSetFactory
+     * @param MediaFactory $mediaFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dataSetFactory, $mediaFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->dataSetFactory = $dataSetFactory;
+        $this->mediaFactory = $mediaFactory;
+    }
+
     /**
      * Display Page
      * @param $dataSetId
      */
     public function displayPage($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -63,7 +95,7 @@ class DataSetData extends Base
      */
     public function grid($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -74,7 +106,7 @@ class DataSetData extends Base
             $sorting = implode(',', $sorting);
 
         // Work out the limits
-        $filter = $this->gridRenderFilter(['filter' => Sanitize::getParam('filter', null)]);
+        $filter = $this->gridRenderFilter(['filter' => $this->getSanitizer()->getParam('filter', null)]);
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($dataSet->getData([
@@ -95,7 +127,7 @@ class DataSetData extends Base
      */
     public function addForm($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -105,7 +137,7 @@ class DataSetData extends Base
         $this->getState()->template = 'dataset-data-form-add';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'images' => MediaFactory::query(null, ['type' => 'image'])
+            'images' => $this->mediaFactory->query(null, ['type' => 'image'])
         ]);
     }
 
@@ -146,7 +178,7 @@ class DataSetData extends Base
      */
     public function add($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -161,19 +193,19 @@ class DataSetData extends Base
                 // Sanitize accordingly
                 if ($column->dataTypeId == 2) {
                     // Number
-                    $value = Sanitize::getDouble('dataSetColumnId_' . $column->dataSetColumnId);
+                    $value = $this->getSanitizer()->getDouble('dataSetColumnId_' . $column->dataSetColumnId);
                 }
                 else if ($column->dataTypeId == 3) {
                     // Date
-                    $value = Date::getLocalDate(Sanitize::getDate('dataSetColumnId_' . $column->dataSetColumnId));
+                    $value = $this->getDate()->getLocalDate($this->getSanitizer()->getDate('dataSetColumnId_' . $column->dataSetColumnId));
                 }
                 else if ($column->dataTypeId == 5) {
                     // Media Id
-                    $value = Sanitize::getInt('dataSetColumnId_' . $column->dataSetColumnId);
+                    $value = $this->getSanitizer()->getInt('dataSetColumnId_' . $column->dataSetColumnId);
                 }
                 else {
                     // String
-                    $value = Sanitize::getString('dataSetColumnId_' . $column->dataSetColumnId);
+                    $value = $this->getSanitizer()->getString('dataSetColumnId_' . $column->dataSetColumnId);
                 }
 
                 $row[$column->heading] = $value;
@@ -202,7 +234,7 @@ class DataSetData extends Base
      */
     public function editForm($dataSetId, $rowId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -213,7 +245,7 @@ class DataSetData extends Base
         $this->getState()->setData([
             'dataSet' => $dataSet,
             'row' => $dataSet->getData(['id' => $rowId])[0],
-            'images' => MediaFactory::query(null, ['type' => 'image'])
+            'images' => $this->mediaFactory->query(null, ['type' => 'image'])
         ]);
     }
 
@@ -257,7 +289,7 @@ class DataSetData extends Base
      */
     public function edit($dataSetId, $rowId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -269,26 +301,26 @@ class DataSetData extends Base
         foreach ($dataSet->getColumn() as $column) {
             /* @var DataSetColumn $column */
 
-            $existingValue = Sanitize::getParam($column->heading, null, $existingRow);
+            $existingValue = $this->getSanitizer()->getParam($column->heading, null, $existingRow);
 
             if ($column->dataSetColumnTypeId == 1) {
 
                 // Sanitize accordingly
                 if ($column->dataTypeId == 2) {
                     // Number
-                    $value = Sanitize::getDouble('dataSetColumnId_' . $column->dataSetColumnId, $existingValue);
+                    $value = $this->getSanitizer()->getDouble('dataSetColumnId_' . $column->dataSetColumnId, $existingValue);
                 }
                 else if ($column->dataTypeId == 3) {
                     // Date
-                    $value = Date::getLocalDate(Sanitize::getDate('dataSetColumnId_' . $column->dataSetColumnId, $existingValue));
+                    $value = $this->getDate()->getLocalDate($this->getSanitizer()->getDate('dataSetColumnId_' . $column->dataSetColumnId, $existingValue));
                 }
                 else if ($column->dataTypeId == 5) {
                     // Media Id
-                    $value = Sanitize::getInt('dataSetColumnId_' . $column->dataSetColumnId);
+                    $value = $this->getSanitizer()->getInt('dataSetColumnId_' . $column->dataSetColumnId);
                 }
                 else {
                     // String
-                    $value = Sanitize::getString('dataSetColumnId_' . $column->dataSetColumnId, $existingValue);
+                    $value = $this->getSanitizer()->getString('dataSetColumnId_' . $column->dataSetColumnId, $existingValue);
                 }
 
                 $row[$column->heading] = $value;
@@ -315,7 +347,7 @@ class DataSetData extends Base
      */
     public function deleteForm($dataSetId, $rowId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -362,7 +394,7 @@ class DataSetData extends Base
      */
     public function delete($dataSetId, $rowId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();

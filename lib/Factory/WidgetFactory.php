@@ -25,19 +25,80 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Widget;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class WidgetFactory
+ * @package Xibo\Factory
+ */
 class WidgetFactory extends BaseFactory
 {
+
+    /** @var  DateServiceInterface */
+    private $dateService;
+
+    /**
+     * @var WidgetOptionFactory
+     */
+    private $widgetOptionFactory;
+
+    /**
+     * @var WidgetMediaFactory
+     */
+    private $widgetMediaFactory;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param DateServiceInterface $date
+     * @param WidgetOptionFactory $widgetOptionFactory
+     * @param WidgetMediaFactory $widgetMediaFactory
+     * @param PermissionFactory $permissionFactory
+     *
+     */
+    public function __construct($store, $log, $sanitizerService, $date, $widgetOptionFactory, $widgetMediaFactory, $permissionFactory)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->dateService = $date;
+        $this->widgetOptionFactory = $widgetOptionFactory;
+        $this->widgetMediaFactory = $widgetMediaFactory;
+        $this->permissionFactory = $permissionFactory;
+    }
+
+    /**
+     * Create Empty
+     * @return Widget
+     */
+    public function createEmpty()
+    {
+        return new Widget(
+            $this->getStore(),
+            $this->getLog(),
+            $this->dateService,
+            $this->widgetOptionFactory,
+            $this->widgetMediaFactory,
+            $this->permissionFactory
+        );
+    }
+
     /**
      * Load widgets by Playlist ID
      * @param int $playlistId
      * @return array[Widget]
      */
-    public static function getByPlaylistId($playlistId)
+    public function getByPlaylistId($playlistId)
     {
-        return WidgetFactory::query(null, array('disableUserCheck' => 1, 'playlistId' => $playlistId));
+        return $this->query(null, array('disableUserCheck' => 1, 'playlistId' => $playlistId));
     }
 
     /**
@@ -45,9 +106,9 @@ class WidgetFactory extends BaseFactory
      * @param int $mediaId
      * @return array[Widget]
      */
-    public static function getByMediaId($mediaId)
+    public function getByMediaId($mediaId)
     {
-        return WidgetFactory::query(null, array('disableUserCheck' => 1, 'mediaId' => $mediaId));
+        return $this->query(null, array('disableUserCheck' => 1, 'mediaId' => $mediaId));
     }
 
     /**
@@ -55,9 +116,9 @@ class WidgetFactory extends BaseFactory
      * @param $widgetId
      * @return Widget
      */
-    public static function getById($widgetId)
+    public function getById($widgetId)
     {
-        $widgets = WidgetFactory::query(null, array('disableUserCheck' => 1, 'widgetId' => $widgetId));
+        $widgets = $this->query(null, array('disableUserCheck' => 1, 'widgetId' => $widgetId));
         return $widgets[0];
     }
 
@@ -67,9 +128,9 @@ class WidgetFactory extends BaseFactory
      * @return Widget
      * @throws NotFoundException
      */
-    public static function loadByWidgetId($widgetId)
+    public function loadByWidgetId($widgetId)
     {
-        $widgets = WidgetFactory::query(null, array('disableUserCheck' => 1, 'widgetId' => $widgetId));
+        $widgets = $this->query(null, array('disableUserCheck' => 1, 'widgetId' => $widgetId));
 
         if (count($widgets) <= 0)
             throw new NotFoundException(__('Widget not found'));
@@ -88,9 +149,9 @@ class WidgetFactory extends BaseFactory
      * @param int $duration
      * @return Widget
      */
-    public static function create($ownerId, $playlistId, $type, $duration)
+    public function create($ownerId, $playlistId, $type, $duration)
     {
-        $widget = new Widget();
+        $widget = $this->createEmpty();
         $widget->ownerId = $ownerId;
         $widget->playlistId = $playlistId;
         $widget->type = $type;
@@ -100,7 +161,7 @@ class WidgetFactory extends BaseFactory
         return $widget;
     }
 
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         if ($sortOrder == null)
             $sortOrder = array('displayOrder');
@@ -123,28 +184,28 @@ class WidgetFactory extends BaseFactory
           FROM `widget`
         ';
 
-        if (Sanitize::getInt('mediaId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('mediaId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN `lkwidgetmedia`
                 ON `lkwidgetmedia`.widgetId = widget.widgetId
                     AND `lkwidgetmedia`.mediaId = :mediaId
             ';
-            $params['mediaId'] = Sanitize::getInt('mediaId', $filterBy);
+            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
         }
 
         $body .= ' WHERE 1 = 1 ';
 
         // Permissions
-        self::viewPermissionSql('Xibo\Entity\Widget', $body, $params, 'widget.widgetId', 'widget.ownerId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Widget', $body, $params, 'widget.widgetId', 'widget.ownerId', $filterBy);
 
-        if (Sanitize::getInt('playlistId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('playlistId', $filterBy) !== null) {
             $body .= ' AND playlistId = :playlistId';
-            $params['playlistId'] = Sanitize::getInt('playlistId', $filterBy);
+            $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', $filterBy);
         }
 
-        if (Sanitize::getInt('widgetId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('widgetId', $filterBy) !== null) {
             $body .= ' AND widgetId = :widgetId';
-            $params['widgetId'] = Sanitize::getInt('widgetId', $filterBy);
+            $params['widgetId'] = $this->getSanitizer()->getInt('widgetId', $filterBy);
         }
 
         // Sorting?
@@ -154,8 +215,8 @@ class WidgetFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
 
         // The final statements
@@ -163,14 +224,14 @@ class WidgetFactory extends BaseFactory
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Widget())->hydrate($row, ['intProperties' => ['duration']]);
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['duration']]);
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

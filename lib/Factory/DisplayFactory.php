@@ -22,22 +22,89 @@
 
 namespace Xibo\Factory;
 
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Display;
+use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Config;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\PlayerActionServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class DisplayFactory
+ * @package Xibo\Factory
+ */
 class DisplayFactory extends BaseFactory
 {
+    /**
+     * @var ConfigServiceInterface
+     */
+    private $config;
+
+    /**
+     * @var PoolInterface
+     */
+    private $pool;
+
+    /**
+     * @var PlayerActionServiceInterface
+     */
+    private $playerAction;
+
+    /**
+     * @var DisplayGroupFactory
+     */
+    private $displayGroupFactory;
+
+    /**
+     * @var DisplayProfileFactory
+     */
+    private $displayProfileFactory;
+
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param User $user
+     * @param UserFactory $userFactory
+     * @param ConfigServiceInterface $config
+     * @param PoolInterface $pool
+     * @param PlayerActionServiceInterface $playerAction
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param DisplayProfileFactory $displayProfileFactory
+     */
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool, $playerAction, $displayGroupFactory, $displayProfileFactory)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->setAclDependencies($user, $userFactory);
+
+        $this->config = $config;
+        $this->pool = $pool;
+        $this->displayGroupFactory = $displayGroupFactory;
+        $this->displayProfileFactory = $displayProfileFactory;
+        $this->playerAction = $playerAction;
+    }
+
+    /**
+     * Create Empty Display Object
+     * @return Display
+     */
+    public function createEmpty()
+    {
+        return new Display($this->getStore(), $this->getLog(), $this->config, $this->pool, $this->playerAction, $this->displayGroupFactory, $this->displayProfileFactory);
+    }
+
     /**
      * @param int $displayId
      * @return Display
      * @throws NotFoundException
      */
-    public static function getById($displayId)
+    public function getById($displayId)
     {
-        $displays = DisplayFactory::query(null, ['disableUserCheck' => 1, 'displayId' => $displayId]);
+        $displays = $this->query(null, ['disableUserCheck' => 1, 'displayId' => $displayId]);
 
         if (count($displays) <= 0)
             throw new NotFoundException();
@@ -50,9 +117,9 @@ class DisplayFactory extends BaseFactory
      * @return Display
      * @throws NotFoundException
      */
-    public static function getByLicence($licence)
+    public function getByLicence($licence)
     {
-        $displays = DisplayFactory::query(null, ['disableUserCheck' => 1, 'license' => $licence]);
+        $displays = $this->query(null, ['disableUserCheck' => 1, 'license' => $licence]);
 
         if (count($displays) <= 0)
             throw new NotFoundException();
@@ -65,9 +132,9 @@ class DisplayFactory extends BaseFactory
      * @return array[Display]
      * @throws NotFoundException
      */
-    public static function getByDisplayGroupId($displayGroupId)
+    public function getByDisplayGroupId($displayGroupId)
     {
-        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
     }
 
     /**
@@ -75,9 +142,9 @@ class DisplayFactory extends BaseFactory
      * @param $campaignId
      * @return array[Display]
      */
-    public static function getByActiveCampaignId($campaignId)
+    public function getByActiveCampaignId($campaignId)
     {
-        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'activeCampaignId' => $campaignId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'activeCampaignId' => $campaignId]);
     }
 
     /**
@@ -85,9 +152,9 @@ class DisplayFactory extends BaseFactory
      * @param $campaignId
      * @return array[Display]
      */
-    public static function getByAssignedCampaignId($campaignId)
+    public function getByAssignedCampaignId($campaignId)
     {
-        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'assignedCampaignId' => $campaignId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'assignedCampaignId' => $campaignId]);
     }
 
     /**
@@ -95,9 +162,9 @@ class DisplayFactory extends BaseFactory
      * @param $dataSetId
      * @return array[Display]
      */
-    public static function getByActiveDataSetId($dataSetId)
+    public function getByActiveDataSetId($dataSetId)
     {
-        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'activeDataSetId' => $dataSetId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'activeDataSetId' => $dataSetId]);
     }
 
     /**
@@ -105,7 +172,7 @@ class DisplayFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Display]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         if ($sortOrder === null)
             $sortOrder = ['display'];
@@ -170,42 +237,42 @@ class DisplayFactory extends BaseFactory
             ';
 
         // Restrict to members of a specific display group
-        if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN `lkdisplaydg` othergroups
                 ON othergroups.displayId = `display`.displayId
                     AND othergroups.displayGroupId = :displayGroupId
             ';
 
-            $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
+            $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
         }
 
         $body .= ' WHERE 1 = 1 ';
 
-        self::viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'display.displayId', null, $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'display.displayId', null, $filterBy);
 
         // Filter by Display ID?
-        if (Sanitize::getInt('displayId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('displayId', $filterBy) !== null) {
             $body .= ' AND display.displayid = :displayId ';
-            $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
+            $params['displayId'] = $this->getSanitizer()->getInt('displayId', $filterBy);
         }
 
         // Filter by Wake On LAN
-        if (Sanitize::getInt('wakeOnLan', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('wakeOnLan', $filterBy) !== null) {
             $body .= ' AND display.wakeOnLan = :wakeOnLan ';
-            $params['wakeOnLan'] = Sanitize::getInt('wakeOnLan', $filterBy);
+            $params['wakeOnLan'] = $this->getSanitizer()->getInt('wakeOnLan', $filterBy);
         }
 
         // Filter by Licence?
-        if (Sanitize::getString('license', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('license', $filterBy) != null) {
             $body .= ' AND display.license = :license ';
-            $params['license'] = Sanitize::getString('license', $filterBy);
+            $params['license'] = $this->getSanitizer()->getString('license', $filterBy);
         }
 
         // Filter by Display Name?
-        if (Sanitize::getString('display', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('display', $filterBy) != null) {
             // Convert into commas
-            foreach (explode(',', Sanitize::getString('display', $filterBy)) as $term) {
+            foreach (explode(',', $this->getSanitizer()->getString('display', $filterBy)) as $term) {
 
                 // convert into a space delimited array
                 $names = explode(' ', $term);
@@ -225,18 +292,18 @@ class DisplayFactory extends BaseFactory
             }
         }
 
-        if (Sanitize::getString('macAddress', $filterBy) != '') {
+        if ($this->getSanitizer()->getString('macAddress', $filterBy) != '') {
             $body .= ' AND display.macaddress LIKE :macAddress ';
-            $params['macAddress'] = '%' . Sanitize::getString('macAddress', $filterBy) . '%';
+            $params['macAddress'] = '%' . $this->getSanitizer()->getString('macAddress', $filterBy) . '%';
         }
 
-        if (Sanitize::getString('clientVersion', $filterBy) != '') {
+        if ($this->getSanitizer()->getString('clientVersion', $filterBy) != '') {
             $body .= ' AND display.client_version LIKE :clientVersion ';
-            $params['clientVersion'] = '%' . Sanitize::getString('clientVersion', $filterBy) . '%';
+            $params['clientVersion'] = '%' . $this->getSanitizer()->getString('clientVersion', $filterBy) . '%';
         }
 
         // Exclude a group?
-        if (Sanitize::getInt('exclude_displaygroupid', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('exclude_displaygroupid', $filterBy) !== null) {
             $body .= " AND display.DisplayID NOT IN ";
             $body .= "       (SELECT display.DisplayID ";
             $body .= "       FROM    display ";
@@ -244,11 +311,11 @@ class DisplayFactory extends BaseFactory
             $body .= "               ON      lkdisplaydg.DisplayID = display.DisplayID ";
             $body .= "   WHERE  lkdisplaydg.DisplayGroupID   = :excludeDisplayGroupId ";
             $body .= "       )";
-            $params['excludeDisplayGroupId'] = Sanitize::getInt('exclude_displaygroupid', $filterBy);
+            $params['excludeDisplayGroupId'] = $this->getSanitizer()->getInt('exclude_displaygroupid', $filterBy);
         }
 
         // Only ones with a particular active campaign
-        if (Sanitize::getInt('activeCampaignId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('activeCampaignId', $filterBy) !== null) {
             // Which displays does a change to this layout effect?
             $body .= '
               AND display.displayId IN (
@@ -275,17 +342,17 @@ class DisplayFactory extends BaseFactory
             ';
 
             $currentDate = time();
-            $rfLookAhead = Config::GetSetting('REQUIRED_FILES_LOOKAHEAD');
+            $rfLookAhead = $this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD');
             $rfLookAhead = intval($currentDate) + intval($rfLookAhead);
 
             $params['fromDt'] = $rfLookAhead;
             $params['toDt'] = $currentDate - 3600;
-            $params['activeCampaignId'] = Sanitize::getInt('activeCampaignId', $filterBy);
-            $params['activeCampaignId2'] = Sanitize::getInt('activeCampaignId', $filterBy);
+            $params['activeCampaignId'] = $this->getSanitizer()->getInt('activeCampaignId', $filterBy);
+            $params['activeCampaignId2'] = $this->getSanitizer()->getInt('activeCampaignId', $filterBy);
         }
 
         // Only Display Groups with a Campaign containing particular Layout assigned to them
-        if (Sanitize::getInt('assignedCampaignId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('assignedCampaignId', $filterBy) !== null) {
             $body .= '
                 AND display.displayId IN (
                     SELECT `lkdisplaydg`.displayId
@@ -298,11 +365,11 @@ class DisplayFactory extends BaseFactory
                 )
             ';
 
-            $params['assignedCampaignId'] = Sanitize::getInt('assignedCampaignId', $filterBy);
+            $params['assignedCampaignId'] = $this->getSanitizer()->getInt('assignedCampaignId', $filterBy);
         }
 
         // Only Display Groups that are running Layouts that have the provided data set on them
-        if (Sanitize::getInt('activeDataSetId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('activeDataSetId', $filterBy) !== null) {
             // Which displays does a change to this layout effect?
             $body .= '
               AND display.displayId IN (
@@ -369,14 +436,14 @@ class DisplayFactory extends BaseFactory
             ';
 
             $currentDate = time();
-            $rfLookAhead = Config::GetSetting('REQUIRED_FILES_LOOKAHEAD');
+            $rfLookAhead = $this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD');
             $rfLookAhead = intval($currentDate) + intval($rfLookAhead);
 
             $params['fromDt'] = $rfLookAhead;
             $params['toDt'] = $currentDate - 3600;
-            $params['activeDataSetId'] = Sanitize::getInt('activeDataSetId', $filterBy);
-            $params['activeDataSetId2'] = Sanitize::getInt('activeDataSetId', $filterBy);
-            $params['activeDataSetId3'] = Sanitize::getInt('activeDataSetId', $filterBy);
+            $params['activeDataSetId'] = $this->getSanitizer()->getInt('activeDataSetId', $filterBy);
+            $params['activeDataSetId2'] = $this->getSanitizer()->getInt('activeDataSetId', $filterBy);
+            $params['activeDataSetId3'] = $this->getSanitizer()->getInt('activeDataSetId', $filterBy);
         }
 
         // Sorting?
@@ -386,22 +453,22 @@ class DisplayFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
 
         $sql = $select . $body . $order . $limit;
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Display())->hydrate($row);
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

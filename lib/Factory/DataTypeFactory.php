@@ -10,21 +10,46 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\DataType;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class DataTypeFactory
+ * @package Xibo\Factory
+ */
 class DataTypeFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * @return DataType
+     */
+    public function createEmpty()
+    {
+        return new DataType($this->getStore(), $this->getLog());
+    }
+
     /**
      * @param null $sortOrder
      * @param null $filterBy
      * @return array[DataType]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = [];
 
-        foreach (PDOConnect::select('SELECT dataTypeId, dataType FROM `datatype` ', []) as $row) {
-            $entries[] = (new DataType())->hydrate($row);
+        foreach ($this->getStore()->select('SELECT dataTypeId, dataType FROM `datatype` ', []) as $row) {
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         return $entries;

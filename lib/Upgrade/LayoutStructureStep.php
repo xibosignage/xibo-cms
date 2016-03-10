@@ -9,18 +9,55 @@
 namespace Xibo\Upgrade;
 
 
-use Xibo\Entity\Permission;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Helper\Config;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Helper\Install;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class LayoutStructureStep
+ * @package Xibo\Upgrade
+ */
 class LayoutStructureStep implements Step
 {
-    public static function doStep()
+    /** @var  StorageServiceInterface */
+    private $store;
+
+    /** @var  LogServiceInterface */
+    private $log;
+
+    /** @var  ConfigServiceInterface */
+    private $config;
+
+    /**
+     * DataSetConvertStep constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param ConfigServiceInterface $config
+     */
+    public function __construct($store, $log, $config)
     {
+        $this->store = $store;
+        $this->log = $log;
+        $this->config = $config;
+    }
+
+    /**
+     * @param \Slim\Helper\Set $container
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function doStep($container)
+    {
+        /** @var PermissionFactory $permissionFactory */
+        $permissionFactory = $container->get('permissionFactory');
+
+        /** @var LayoutFactory $layoutFactory */
+        $layoutFactory = $container->get('layoutFactory');
+
         // Create the new structure
-        $dbh = PDOConnect::init();
+        $dbh = $this->store->getConnection();
 
         // Run the SQL to create the necessary tables
         $statements = Install::remove_remarks(self::$dbStructure);
@@ -32,8 +69,8 @@ class LayoutStructureStep implements Step
 
         // Build a keyed array of existing widget permissions
         $mediaPermissions = [];
-        foreach (PDOConnect::select('SELECT groupId, layoutId, regionId, mediaId, `view`, `edit`, `del` FROM `lklayoutmediagroup`', []) as $row) {
-            $permission = new Permission();
+        foreach ($this->store->select('SELECT groupId, layoutId, regionId, mediaId, `view`, `edit`, `del` FROM `lklayoutmediagroup`', []) as $row) {
+            $permission = $permissionFactory->createEmpty();
             $permission->entityId = 6; // Widget
             $permission->groupId = $row['groupId'];
             $permission->objectId = $row['layoutId'];
@@ -47,8 +84,8 @@ class LayoutStructureStep implements Step
 
         // Build a keyed array of existing region permissions
         $regionPermissions = [];
-        foreach (PDOConnect::select('SELECT groupId, layoutId, regionId, `view`, `edit`, `del` FROM `lklayoutregiongroup`', []) as $row) {
-            $permission = new Permission();
+        foreach ($this->store->select('SELECT groupId, layoutId, regionId, `view`, `edit`, `del` FROM `lklayoutregiongroup`', []) as $row) {
+            $permission = $permissionFactory->createEmpty();
             $permission->entityId = 7; // Widget
             $permission->groupId = $row['groupId'];
             $permission->objectId = $row['layoutId'];
@@ -60,15 +97,15 @@ class LayoutStructureStep implements Step
         }
 
         // Get the library location to store backups of existing XLF
-        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
+        $libraryLocation = $this->config->GetSetting('LIBRARY_LOCATION');
 
         // We need to go through each layout, save the XLF as a backup in the library and then upgrade it.
-        foreach (PDOConnect::select('SELECT layoutId, xml FROM `layout` WHERE IFNULL(xml, \'\') <> \'\'', []) as $oldLayout) {
+        foreach ($this->store->select('SELECT layoutId, xml FROM `layout` WHERE IFNULL(xml, \'\') <> \'\'', []) as $oldLayout) {
             // Save off a copy of the XML in the library
             file_put_contents($libraryLocation . 'archive_' . $oldLayout['layoutId'] . '.xlf', $oldLayout['xml']);
 
             // Create a new layout from the XML
-            $layout = LayoutFactory::loadByXlf($oldLayout['xml'], LayoutFactory::getById($oldLayout['layoutId']));
+            $layout = $layoutFactory->loadByXlf($oldLayout['xml'], $layoutFactory->getById($oldLayout['layoutId']));
 
             // Save the layout
             $layout->save(['notify' => false]);
@@ -105,7 +142,7 @@ class LayoutStructureStep implements Step
             }
 
             // Clear the XML field (we do this in case we are interrupted and we need to process again
-            PDOConnect::update('UPDATE `layout` SET xml = NULL WHERE layoutId = :layoutId', ['layoutId' => $layout->layoutId]);
+            $this->store->update('UPDATE `layout` SET xml = NULL WHERE layoutId = :layoutId', ['layoutId' => $layout->layoutId]);
         }
 
         // Drop the permissions

@@ -24,12 +24,13 @@ namespace Xibo\Entity;
 
 
 use Respect\Validation\Validator as v;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Log;
-use Xibo\Helper\PlayerActionHelper;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\PlayerActionServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 use Xibo\XMR\CollectNowAction;
 
 /**
@@ -305,16 +306,64 @@ class Display
 
     public static $saveOptionsMinimum = ['validate' => false, 'audit' => false, 'triggerDynamicDisplayGroupAssessment' => false];
 
-    public function __construct()
+    /**
+     * @var ConfigServiceInterface
+     */
+    private $config;
+
+    /**
+     * @var PoolInterface
+     */
+    private $pool;
+
+    /**
+     * @var PlayerActionServiceInterface
+     */
+    private $playerAction;
+
+    /**
+     * @var DisplayGroupFactory
+     */
+    private $displayGroupFactory;
+
+    /**
+     * @var DisplayProfileFactory
+     */
+    private $displayProfileFactory;
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param ConfigServiceInterface $config
+     * @param PoolInterface $pool
+     * @param PlayerActionServiceInterface $playerAction
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param DisplayProfileFactory $displayProfileFactory
+     */
+    public function __construct($store, $log, $config, $pool, $playerAction, $displayGroupFactory, $displayProfileFactory)
     {
+        $this->setCommonDependencies($store, $log);
         $this->excludeProperty('mediaInventoryXml');
+
+        $this->config = $config;
+        $this->pool = $pool;
+        $this->displayGroupFactory = $displayGroupFactory;
+        $this->displayProfileFactory = $displayProfileFactory;
+        $this->playerAction = $playerAction;
     }
 
+    /**
+     * @return int
+     */
     public function getId()
     {
         return $this->displayId;
     }
 
+    /**
+     * @return int
+     */
     public function getOwnerId()
     {
         return 1;
@@ -334,13 +383,13 @@ class Display
      */
     public function setMediaIncomplete()
     {
-        Log::info('Setting Media Incomplete on %s', $this->display);
+        $this->getLog()->info('Setting Media Incomplete on %s', $this->display);
 
         $this->mediaInventoryStatus = 3;
         $this->setCollectRequired(true);
 
         // remove from the cache
-        $this->getPool()->deleteItem($this->getCacheKey());
+        $this->pool->deleteItem($this->getCacheKey());
     }
 
     /**
@@ -364,10 +413,10 @@ class Display
             throw new \InvalidArgumentException(__('Wake on Lan is enabled, but you have not specified a time to wake the display'));
 
         // Check the number of licensed displays
-        $maxDisplays = Config::GetSetting('MAX_LICENSED_DISPLAYS');
+        $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
 
         if ($maxDisplays > 0 && $this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
-            $countLicensed = PDOConnect::select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
+            $countLicensed = $this->getStore()->select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
 
             if (intval($countLicensed[0]) + 1 > $maxDisplays)
                 throw new \InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays));
@@ -404,7 +453,7 @@ class Display
     public function load()
     {
         // Load this displays group membership
-        $this->displayGroups = DisplayGroupFactory::getByDisplayId($this->displayId);
+        $this->displayGroups = $this->displayGroupFactory->getByDisplayId($this->displayId);
     }
 
     /**
@@ -428,21 +477,21 @@ class Display
             $this->edit();
 
         if ($options['audit'])
-            Log::audit('Display', $this->displayId, 'Display Saved', $this->jsonSerialize());
+            $this->getLog()->audit('Display', $this->displayId, 'Display Saved', $this->jsonSerialize());
 
         if ($this->collectRequired) {
-            Log::debug('Collect Now Action for Display %s', $this->display);
+            $this->getLog()->debug('Collect Now Action for Display %s', $this->display);
 
             try {
-                PlayerActionHelper::sendAction($this, new CollectNowAction());
+                $this->playerAction->sendAction($this, new CollectNowAction());
             } catch (\Exception $e) {
-                Log::notice('Display Save would have triggered Player Action, but the action failed with message: %s', $e->getMessage());
+                $this->getLog()->notice('Display Save would have triggered Player Action, but the action failed with message: %s', $e->getMessage());
             }
         }
 
         // Trigger an update of all dynamic DisplayGroups
         if ($options['triggerDynamicDisplayGroupAssessment']) {
-            foreach (DisplayGroupFactory::getByIsDynamic(1) as $group) {
+            foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
                 /* @var DisplayGroup $group */
                 $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true]);
             }
@@ -465,19 +514,19 @@ class Display
         }
 
         // Delete our display specific group
-        $displayGroup = DisplayGroupFactory::getById($this->displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
         $displayGroup->delete();
 
         // Delete the display
-        PDOConnect::update('DELETE FROM `blacklist` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
-        PDOConnect::update('DELETE FROM `display` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
+        $this->getStore()->update('DELETE FROM `blacklist` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
+        $this->getStore()->update('DELETE FROM `display` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
 
-        Log::audit('Display', $this->displayId, 'Display Deleted', ['displayId' => $this->displayId]);
+        $this->getLog()->audit('Display', $this->displayId, 'Display Deleted', ['displayId' => $this->displayId]);
     }
 
     private function add()
     {
-        $this->displayId = PDOConnect::insert('
+        $this->displayId = $this->getStore()->insert('
             INSERT INTO display (display, isAuditing, defaultlayoutid, license, licensed, inc_schedule, email_alert, alert_timeout, xmrChannel, xmrPubKey)
               VALUES (:display, :isauditing, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, :alert_timeout, :xmrChannel, :xmrPubKey)
         ', [
@@ -493,7 +542,7 @@ class Display
             'xmrPubKey' => $this->xmrPubKey
         ]);
 
-        $displayGroup = new DisplayGroup();
+        $displayGroup = $this->displayGroupFactory->createEmpty();
         $displayGroup->displayGroup = $this->display;
         $displayGroup->setOwner($this);
         $displayGroup->save();
@@ -501,7 +550,7 @@ class Display
 
     private function edit()
     {
-        PDOConnect::update('
+        $this->getStore()->update('
             UPDATE display
                 SET display = :display,
                     defaultlayoutid = :defaultLayoutId,
@@ -574,7 +623,7 @@ class Display
         ]);
 
         // Maintain the Display Group
-        $displayGroup = DisplayGroupFactory::getById($this->displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
         $displayGroup->displayGroup = $this->display;
         $displayGroup->description = $this->description;
         $displayGroup->save(['validate' => false, 'manageDisplayLinks' => false]);
@@ -589,6 +638,9 @@ class Display
         return $this->setConfig();
     }
 
+    /**
+     * @return array
+     */
     public function getCommands()
     {
         if ($this->commands == null) {
@@ -630,14 +682,14 @@ class Display
 
             if ($this->displayProfileId == 0) {
                 // Load the default profile
-                $displayProfile = DisplayProfileFactory::getDefaultByType($this->clientType);
+                $displayProfile = $this->displayProfileFactory->getDefaultByType($this->clientType);
             }
             else {
                 // Load the specified profile
-                $displayProfile = DisplayProfileFactory::getById($this->displayProfileId);
+                $displayProfile = $this->displayProfileFactory->getById($this->displayProfileId);
             }
 
-            $this->_config = $displayProfile->getConfig();
+            $this->_config = $displayProfile->getProfileConfig();
             $this->commands = $displayProfile->commands;
         }
 

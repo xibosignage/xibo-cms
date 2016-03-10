@@ -26,12 +26,7 @@ namespace Xibo\Middleware;
 use Slim\Middleware;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\PageFactory;
-use Xibo\Factory\UserFactory;
-use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ApplicationState;
-use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 use Xibo\Helper\Random;
 
 /**
@@ -55,11 +50,11 @@ class SAMLAuthentication extends Middleware
 
     public function samlLogout()
     {
-        if (isset(Config::$samlSettings['workflow']) &&
-          isset(Config::$samlSettings['workflow']['slo']) &&
-              Config::$samlSettings['workflow']['slo'] == true) {
+        if (isset($this->app->configService->samlSettings['workflow']) &&
+          isset($this->app->configService->samlSettings['workflow']['slo']) &&
+              $this->app->configService->samlSettings['workflow']['slo'] == true) {
             // Initiate SAML SLO
-            $auth = new \OneLogin_Saml2_Auth(Config::$samlSettings);
+            $auth = new \OneLogin_Saml2_Auth($this->app->configService->samlSettings);
             $auth->logout();
         } else {
             $this->app->redirect($this->app->urlFor('logout'));
@@ -77,13 +72,13 @@ class SAMLAuthentication extends Middleware
         $app = $this->app;
 
         // Create a user
-        $app->user = new \Xibo\Entity\User();
+        $app->user = new $app->userFactory->create();
 
         // Register SAML routes.
         $app->excludedCsrfRoutes = SAMLAuthentication::samlRoutes();
 
         $app->get('/saml/metadata', function () {
-            $settings = new \OneLogin_Saml2_Settings(Config::$samlSettings, true);
+            $settings = new \OneLogin_Saml2_Settings($this->app->configService->samlSettings, true);
             $metadata = $settings->getSPMetadata();
             $errors = $settings->validateMetadata($metadata);
             if (empty($errors)) {
@@ -99,7 +94,7 @@ class SAMLAuthentication extends Middleware
 
         $app->get('/saml/login', function () {
             // Initiate SAML SSO
-            $auth = new \OneLogin_Saml2_Auth(Config::$samlSettings);
+            $auth = new \OneLogin_Saml2_Auth($this->app->configService->samlSettings);
             $auth->login();
         });
 
@@ -109,11 +104,12 @@ class SAMLAuthentication extends Middleware
 
         $app->post('/saml/acs', function () {
             // Assertion Consumer Endpoint
+            $app = $this->getApplication();
 
             // Inject the POST parameters required by the SAML toolkit
             $_POST = $this->app->request->post();
 
-            $auth = new \OneLogin_Saml2_Auth(Config::$samlSettings);
+            $auth = new \OneLogin_Saml2_Auth($this->app->configService->samlSettings);
             $auth->processResponse();
 
             $errors = $auth->getErrors();
@@ -130,8 +126,8 @@ class SAMLAuthentication extends Middleware
                 }
 
                 $userData = array();
-                if (isset(Config::$samlSettings['workflow']) && isset(Config::$samlSettings['workflow']['mapping']) ) {
-                    foreach (Config::$samlSettings['workflow']['mapping'] as $key => $value) {
+                if (isset($this->app->configService->samlSettings['workflow']) && isset($this->app->configService->samlSettings['workflow']['mapping']) ) {
+                    foreach ($this->app->configService->samlSettings['workflow']['mapping'] as $key => $value) {
                         if (!empty($value) && isset($samlAttrs[$value]) ) {
                             $userData[$key] = $samlAttrs[$value];
                         }
@@ -142,10 +138,10 @@ class SAMLAuthentication extends Middleware
                     throw new AccessDeniedException(__('No attributes could be mapped'));
                 }
 
-                if (!isset(Config::$samlSettings['workflow']['field_to_identify'])) {
+                if (!isset($this->app->configService->samlSettings['workflow']['field_to_identify'])) {
                     $identityField = 'UserName';
                 } else {
-                    $identityField = Config::$samlSettings['workflow']['field_to_identify'];
+                    $identityField = $this->app->configService->samlSettings['workflow']['field_to_identify'];
                 }
 
                 if (!isset($userData[$identityField]) || empty($userData[$identityField])) {
@@ -158,22 +154,22 @@ class SAMLAuthentication extends Middleware
 
                 try {
                     if ($identityField == 'UserID') {
-                        $user = UserFactory::getById($userData[$identityField][0]);
+                        $user = $app->userFactory->getById($userData[$identityField][0]);
                     } else if ($identityField == 'UserName') {
-                        $user = UserFactory::getByName($userData[$identityField][0]);
+                        $user = $app->userFactory->getByName($userData[$identityField][0]);
                     } else {
-                        $user = UserFactory::getByEmail($userData[$identityField][0]);
+                        $user = $app->userFactory->getByEmail($userData[$identityField][0]);
                     }
                 } catch (NotFoundException $e) {
                     $user = null;
                 }
 
                 if (!isset($user)) {
-                    if (!isset(Config::$samlSettings['workflow']['jit']) || Config::$samlSettings['workflow']['jit'] == false) {
+                    if (!isset($this->app->configService->samlSettings['workflow']['jit']) || $this->app->configService->samlSettings['workflow']['jit'] == false) {
                         throw new AccessDeniedException(__('User logged at the IdP but the account does not exist in the CMS and Just-In-Time provisioning is disabled'));
                     } else {
                         // Provision the user
-                        $user = new \Xibo\Entity\User();
+                        $user = $app->userFactory->create();
                         if (isset($userData["UserName"])) {
                             $user->userName = $userData["UserName"][0];
                         }
@@ -193,15 +189,15 @@ class SAMLAuthentication extends Middleware
                         $user->setNewPassword($password);
 
                         // Home page
-                        if (isset(Config::$samlSettings['workflow']['homePage'])) {
-                            $user->homePageId = PageFactory::getByName(Config::$samlSettings['workflow']['homePage'])->pageId;
+                        if (isset($this->app->configService->samlSettings['workflow']['homePage'])) {
+                            $user->homePageId = $app->pageFactory->getByName($this->app->configService->samlSettings['workflow']['homePage'])->pageId;
                         } else {
-                            $user->homePageId = PageFactory::getByName('dashboard')->pageId;
+                            $user->homePageId = $app->pageFactory->getByName('dashboard')->pageId;
                         }
 
                         // Library Quota
-                        if (isset(Config::$samlSettings['workflow']['libraryQuota'])) {
-                            $user->libraryQuota = Config::$samlSettings['workflow']['libraryQuota'];
+                        if (isset($this->app->configService->samlSettings['workflow']['libraryQuota'])) {
+                            $user->libraryQuota = $this->app->configService->samlSettings['workflow']['libraryQuota'];
                         } else {
                             $user->libraryQuota = 0;
                         }
@@ -210,10 +206,10 @@ class SAMLAuthentication extends Middleware
                         $user->save();
 
                         // Assign the initial group
-                        if (isset(Config::$samlSettings['workflow']['group'])) {
-                            $group = UserGroupFactory::getByName(Config::$samlSettings['workflow']['group']);
+                        if (isset($this->app->configService->samlSettings['workflow']['group'])) {
+                            $group = $app->userGroupFactory->getByName($this->app->configService->samlSettings['workflow']['group']);
                         } else {
-                            $group = UserGroupFactory::getByName('Users');
+                            $group = $app->userGroupFactory->getByName('Users');
                         }
 
                         $group->assignUser($user);
@@ -231,6 +227,9 @@ class SAMLAuthentication extends Middleware
                     // Overwrite our stored user with this new object.
                     $this->app->user = $user;
 
+                    // Set the user factory ACL dependencies (used for working out intra-user permissions)
+                    $app->userFactory->setAclDependencies($user, $app->userFactory);
+
                     // Switch Session ID's
                     $this->app->session->setIsExpired(0);
                     $this->app->session->regenerateSessionId();
@@ -238,7 +237,7 @@ class SAMLAuthentication extends Middleware
                 }
 
                 // Redirect to User Homepage
-                $page = \Xibo\Factory\PageFactory::getById($user->homePageId);
+                $page = $app->pageFactory->getById($user->homePageId);
                 $this->app->redirectTo($page->getName() . '.view');
             }
         });
@@ -249,7 +248,7 @@ class SAMLAuthentication extends Middleware
             // Inject the GET parameters required by the SAML toolkit
             $_GET = $this->app->request->get();
 
-            $auth = new \OneLogin_Saml2_Auth(Config::$samlSettings);
+            $auth = new \OneLogin_Saml2_Auth($this->app->configService->samlSettings);
             $auth->processSLO();
             $errors = $auth->getErrors();
 
@@ -263,7 +262,7 @@ class SAMLAuthentication extends Middleware
         // Create a function which we will call should the request be for a protected page
         // and the user not yet be logged in.
         $redirectToLogin = function () use ($app) {
-            Log::debug('Request to redirect to login. Ajax = %d', $app->request->isAjax());
+
             if ($app->request->isAjax()) {
                 $state = $app->state;
                 /* @var ApplicationState $state */
@@ -275,7 +274,7 @@ class SAMLAuthentication extends Middleware
             }
             else {
                 // Initiate SAML SSO
-                $auth = new \OneLogin_Saml2_Auth(Config::$samlSettings);
+                $auth = new \OneLogin_Saml2_Auth($this->app->configService->samlSettings);
                 $auth->login();
             }
         };
@@ -294,7 +293,11 @@ class SAMLAuthentication extends Middleware
                 // Need to check
                 if ($user->hasIdentity() && !$app->session->isExpired()) {
                     // Replace our user with a fully loaded one
-                    $user = UserFactory::loadById($user->userId);
+                    $user = $app->userFactory->getById($user->userId);
+                    $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
+                    $user->load();
+
+                    $app->logService->setUserId($user->userId);
 
                     // Do they have permission?
                     $user->routeAuthentication($resource);

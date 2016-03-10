@@ -7,9 +7,9 @@
 
 $app->map('/(:step)', function($step = 1) use($app) {
 
-    \Xibo\Helper\Log::info('Installer Step %s', $step);
+    $app->logService->info('Installer Step %s', $step);
 
-    $install = new \Xibo\Helper\Install();
+    $install = new \Xibo\Helper\Install($app->sanitizerService);
     $settingsExists = $app->settingsExists;
     $template = '';
     $data = [];
@@ -41,19 +41,21 @@ $app->map('/(:step)', function($step = 1) use($app) {
 
             // Check and validate DB details
             if (defined('MAX_EXECUTION') && MAX_EXECUTION) {
-                \Xibo\Helper\Log::info('Setting unlimited max execution time.');
+                $app->logService->info('Setting unlimited max execution time.');
                 set_time_limit(0);
             }
 
             try {
-                $install->Step3();
+                // We won't have a storageservice registered with the app yet,
+                // so we create one for this step.
+                $install->Step3((new \Xibo\Storage\PdoStorageService($app->logService)));
 
                 // Redirect to step 4
                 $app->redirectTo('install', ['step' => 4]);
             }
             catch (\Xibo\Exception\InstallationError $e) {
 
-                \Xibo\Helper\Log::error('Installation Exception on Step %d: %s', $step, $e->getMessage());
+                $app->logService->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
 
                 $app->flashNow('error', $e->getMessage());
 
@@ -78,14 +80,14 @@ $app->map('/(:step)', function($step = 1) use($app) {
         case 5:
             // Create a user account
             try {
-                $install->Step5();
+                $install->Step5($app->store);
 
                 // Redirect to step 6
                 $app->redirectTo('install', ['step' => 6]);
             }
             catch (\Xibo\Exception\InstallationError $e) {
 
-                \Xibo\Helper\Log::error('Installation Exception on Step %d: %s', $step, $e->getMessage());
+                $app->logService->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
 
                 $app->flashNow('error', $e->getMessage());
 
@@ -104,18 +106,18 @@ $app->map('/(:step)', function($step = 1) use($app) {
             // Create a user account
             try {
                 $template = 'install-step7';
-                $install->Step7();
+                $install->Step7($app->store);
 
                 // Redirect to login
                 // This will always be one folder down
                 $login = str_replace('/install', '', $app->urlFor('login'));
 
-                \Xibo\Helper\Log::info('Installation Complete. Redirecting to %s', $login);
+                $app->logService->info('Installation Complete. Redirecting to %s', $login);
 
                 $app->redirect($login);
             }
             catch (\Xibo\Exception\InstallationError $e) {
-                \Xibo\Helper\Log::error('Installation Exception on Step %d: %s', $step, $e->getMessage());
+                $app->logService->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
 
                 $app->flashNow('error', $e->getMessage());
 

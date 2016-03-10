@@ -18,14 +18,90 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
+/**
+ * Class Playlist
+ * @package Xibo\Controller
+ */
 class Playlist extends Base
 {
+    /**
+     * @var PlaylistFactory
+     */
+    private $playlistFactory;
+
+    /**
+     * @var RegionFactory
+     */
+    private $regionFactory;
+
+    /**
+     * @var MediaFactory
+     */
+    private $mediaFactory;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var TransitionFactory
+     */
+    private $transitionFactory;
+
+    /**
+     * @var WidgetFactory
+     */
+    private $widgetFactory;
+
+    /**
+     * @var ModuleFactory
+     */
+    private $moduleFactory;
+
+    /**
+     * @var UserGroupFactory
+     */
+    private $userGroupFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param PlaylistFactory $playlistFactory
+     * @param RegionFactory $regionFactory
+     * @param PermissionFactory $permissionFactory
+     * @param TransitionFactory $transitionFactory
+     * @param WidgetFactory $widgetFactory
+     * @param ModuleFactory $moduleFactory
+     * @param UserGroupFactory $userGroupFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playlistFactory, $regionFactory, $permissionFactory,
+        $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->playlistFactory = $playlistFactory;
+        $this->regionFactory = $regionFactory;
+        $this->permissionFactory = $permissionFactory;
+        $this->transitionFactory = $transitionFactory;
+        $this->widgetFactory = $widgetFactory;
+        $this->moduleFactory = $moduleFactory;
+        $this->userGroupFactory = $userGroupFactory;
+    }
+
     /**
      * Search
      */
@@ -43,26 +119,26 @@ class Playlist extends Base
      */
     public function add()
     {
-        $playlist = new \Xibo\Entity\Playlist();
-        $playlist->name = Sanitize::getString('name');
+        $playlist = $this->playlistFactory->createEmpty();
+        $playlist->name = $this->getSanitizer()->getString('name');
         $playlist->save();
 
         // Assign to a region?
-        if (Sanitize::getInt('regionId') !== null) {
-            $region = RegionFactory::getById(Sanitize::getInt('regionId'));
+        if ($this->getSanitizer()->getInt('regionId') !== null) {
+            $region = $this->regionFactory->getById($this->getSanitizer()->getInt('regionId'));
 
             // Assert the provided display order
-            $playlist->displayOrder = Sanitize::getInt('displayOrder');
+            $playlist->displayOrder = $this->getSanitizer()->getInt('displayOrder');
 
             // Assign to a region
             $region->assignPlaylist($playlist);
             $region->save();
 
-            if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
+            if ($this->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
                 // Apply permissions from the Parent
                 foreach ($region->permissions as $permission) {
                     /* @var Permission $permission */
-                    $permission = PermissionFactory::create($permission->groupId, get_class($region), $region->getId(), $permission->view, $permission->edit, $permission->delete);
+                    $permission = $this->permissionFactory->create($permission->groupId, get_class($region), $region->getId(), $permission->view, $permission->edit, $permission->delete);
                     $permission->save();
                 }
             }
@@ -72,9 +148,9 @@ class Playlist extends Base
         $playlist->notifyLayouts();
 
         // Permissions
-        if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS' == 0)) {
+        if ($this->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS' == 0)) {
             // Default permissions
-            foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
@@ -98,12 +174,12 @@ class Playlist extends Base
      */
     public function edit($playlistId)
     {
-        $playlist = PlaylistFactory::getById($playlistId);
+        $playlist = $this->playlistFactory->getById($playlistId);
 
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
 
-        $playlist->name = Sanitize::getString('name');
+        $playlist->name = $this->getSanitizer()->getString('name');
         $playlist->save();
 
         // Success
@@ -123,7 +199,7 @@ class Playlist extends Base
      */
     public function delete($playlistId)
     {
-        $playlist = PlaylistFactory::getById($playlistId);
+        $playlist = $this->playlistFactory->getById($playlistId);
 
         if (!$this->getUser()->checkDeleteable($playlist))
             throw new AccessDeniedException();
@@ -169,14 +245,14 @@ class Playlist extends Base
         $this->getState()->template = 'grid';
 
         // Transitions
-        $transIn = TransitionFactory::getEnabledByType('in');
-        $transOut = TransitionFactory::getEnabledByType('out');
-        $widgets = WidgetFactory::query($this->gridRenderSort(), $this->gridRenderFilter(['playlistId' => Sanitize::getInt('playlistId')]));
+        $transIn = $this->transitionFactory->getEnabledByType('in');
+        $transOut = $this->transitionFactory->getEnabledByType('out');
+        $widgets = $this->widgetFactory->query($this->gridRenderSort(), $this->gridRenderFilter(['playlistId' => $this->getSanitizer()->getInt('playlistId')]));
 
         foreach ($widgets as $widget) {
 
             /* @var Widget $widget */
-            $widget->module = ModuleFactory::createWithWidget($widget);
+            $widget->module = $this->moduleFactory->createWithWidget($widget);
 
             // Naughty dynamic assignment, but I am not sure how to get
             // the name to be available to DataTables otherwise
@@ -239,7 +315,7 @@ class Playlist extends Base
         }
 
         // Store the table rows
-        $this->getState()->recordsTotal = WidgetFactory::countLast();
+        $this->getState()->recordsTotal = $this->widgetFactory->countLast();
         $this->getState()->setData($widgets);
     }
 
@@ -250,7 +326,7 @@ class Playlist extends Base
      */
     public function libraryAssignForm($playlistId)
     {
-        $playlist = PlaylistFactory::getById($playlistId);
+        $playlist = $this->playlistFactory->getById($playlistId);
 
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
@@ -258,8 +334,8 @@ class Playlist extends Base
         $this->getState()->template = 'playlist-form-library-assign';
         $this->getState()->setData([
             'playlist' => $playlist,
-            'modules' => ModuleFactory::query(null, ['regionSpecific' => 0, 'enabled' => 1, 'assignable' => 1]),
-            'help' => Help::Link('Library', 'Assign')
+            'modules' => $this->moduleFactory->query(null, ['regionSpecific' => 0, 'enabled' => 1, 'assignable' => 1]),
+            'help' => $this->getHelp()->link('Library', 'Assign')
         ]);
     }
 
@@ -297,13 +373,13 @@ class Playlist extends Base
      */
     public function libraryAssign($playlistId)
     {
-        $playlist = PlaylistFactory::getById($playlistId);
+        $playlist = $this->playlistFactory->getById($playlistId);
 
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
 
         // Expect a list of mediaIds
-        $media = Sanitize::getIntArray('media');
+        $media = $this->getSanitizer()->getIntArray('media');
 
         if (count($media) <= 0)
             throw new \InvalidArgumentException(__('Please provide Media to Assign'));
@@ -313,16 +389,16 @@ class Playlist extends Base
         // Loop through all the media
         foreach ($media as $mediaId) {
             /* @var int $mediaId */
-            $item = MediaFactory::getById($mediaId);
+            $item = $this->mediaFactory->getById($mediaId);
 
             if (!$this->getUser()->checkViewable($item))
                 throw new AccessDeniedException(__('You do not have permissions to use this media'));
 
             // Create a module
-            $module = ModuleFactory::create($item->mediaType);
+            $module = $this->moduleFactory->create($item->mediaType);
 
             // Create a widget
-            $widget = WidgetFactory::create($this->getUser()->userId, $playlistId, $item->mediaType, (($item->duration) == 0 ? $module->determineDuration() : $item->duration));
+            $widget = $this->widgetFactory->create($this->getUser()->userId, $playlistId, $item->mediaType, (($item->duration) == 0 ? $module->determineDuration() : $item->duration));
             $widget->assignMedia($item->mediaId);
 
             // Assign the widget to the module
@@ -344,15 +420,15 @@ class Playlist extends Base
         // Handle permissions
         foreach ($newWidgets as $widget) {
             /* @var Widget $widget */
-            if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
+            if ($this->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
                 // Apply permissions from the Parent
                 foreach ($playlist->permissions as $permission) {
                     /* @var Permission $permission */
-                    $permission = PermissionFactory::create($permission->groupId, get_class($widget), $widget->getId(), $permission->view, $permission->edit, $permission->delete);
+                    $permission = $this->permissionFactory->create($permission->groupId, get_class($widget), $widget->getId(), $permission->view, $permission->edit, $permission->delete);
                     $permission->save();
                 }
             } else {
-                foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
                 }
@@ -402,7 +478,7 @@ class Playlist extends Base
      */
     function order($playlistId)
     {
-        $playlist = PlaylistFactory::getById($playlistId);
+        $playlist = $this->playlistFactory->getById($playlistId);
 
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
@@ -411,7 +487,7 @@ class Playlist extends Base
         $playlist->load();
 
         // Get our list of widget orders
-        $widgets = Sanitize::getParam('widgets', null);
+        $widgets = $this->getSanitizer()->getParam('widgets', null);
 
         // Go through each one and move it
         foreach ($widgets as $widgetId => $position) {
@@ -420,7 +496,7 @@ class Playlist extends Base
             foreach ($playlist->widgets as $widget) {
                 /* @var \Xibo\Entity\Widget $widget */
                 if ($widget->getId() == $widgetId) {
-                    Log::debug('Setting Display Order ' . $position . ' on widgetId ' . $widgetId);
+                    $this->getLog()->debug('Setting Display Order ' . $position . ' on widgetId ' . $widgetId);
                     $widget->displayOrder = $position;
                     break;
                 }

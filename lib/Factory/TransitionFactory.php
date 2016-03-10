@@ -11,19 +11,43 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Transition;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class TransitionFactory
+ * @package Xibo\Factory
+ */
 class TransitionFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * @return Transition
+     */
+    public function createEmpty()
+    {
+        return new Transition($this->getStore(), $this->getLog());
+    }
+
     /**
      * @param int $transitionId
      * @return Transition
      * @throws NotFoundException
      */
-    public static function getById($transitionId)
+    public function getById($transitionId)
     {
-        $transitions = TransitionFactory::query(null, ['transitionId' => $transitionId]);
+        $transitions = $this->query(null, ['transitionId' => $transitionId]);
 
         if (count($transitions) <= 0)
             throw new NotFoundException();
@@ -37,9 +61,9 @@ class TransitionFactory extends BaseFactory
      * @return Transition
      * @throws NotFoundException
      */
-    public static function getByCode($code)
+    public function getByCode($code)
     {
-        $transitions = TransitionFactory::query(null, ['code' => $code]);
+        $transitions = $this->query(null, ['code' => $code]);
 
         if (count($transitions) <= 0)
             throw new NotFoundException();
@@ -52,7 +76,7 @@ class TransitionFactory extends BaseFactory
      * @param string $type
      * @return array[Transition]
      */
-    public static function getEnabledByType($type)
+    public function getEnabledByType($type)
     {
         $filter = [];
 
@@ -62,7 +86,7 @@ class TransitionFactory extends BaseFactory
             $filter['availableAsOut'] = 1;
         }
 
-        return TransitionFactory::query(null, $filter);
+        return $this->query(null, $filter);
     }
 
     /**
@@ -70,7 +94,7 @@ class TransitionFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Transition]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
         $params = array();
@@ -87,24 +111,24 @@ class TransitionFactory extends BaseFactory
          WHERE 1 = 1
         ';
 
-        if (Sanitize::getInt('transitionId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('transitionId', $filterBy) !== null) {
             $sql .= ' AND transition.transitionId = :transitionId ';
-            $params['transitionId'] = Sanitize::getInt('transitionId', $filterBy);
+            $params['transitionId'] = $this->getSanitizer()->getInt('transitionId', $filterBy);
         }
 
-        if (Sanitize::getInt('availableAsIn', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('availableAsIn', $filterBy) !== null) {
             $sql .= ' AND transition.availableAsIn = :availableAsIn ';
-            $params['availableAsIn'] = Sanitize::getInt('availableAsIn', $filterBy);
+            $params['availableAsIn'] = $this->getSanitizer()->getInt('availableAsIn', $filterBy);
         }
 
-        if (Sanitize::getInt('availableAsOut', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('availableAsOut', $filterBy) !== null) {
             $sql .= ' AND transition.availableAsOut = :availableAsOut ';
-            $params['availableAsOut'] = Sanitize::getInt('availableAsOut', $filterBy);
+            $params['availableAsOut'] = $this->getSanitizer()->getInt('availableAsOut', $filterBy);
         }
 
-        if (Sanitize::getString('code', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('code', $filterBy) != null) {
             $sql .= ' AND transition.code = :code ';
-            $params['code'] = Sanitize::getString('code', $filterBy);
+            $params['code'] = $this->getSanitizer()->getString('code', $filterBy);
         }
 
         // Sorting?
@@ -113,8 +137,8 @@ class TransitionFactory extends BaseFactory
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Transition())->hydrate($row);
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         return $entries;

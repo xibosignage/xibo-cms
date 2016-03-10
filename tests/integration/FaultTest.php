@@ -5,9 +5,7 @@
  * (AuditLogTest.php)
  */
 
-namespace Xibo\Tests;
-
-use Slim\Log;
+namespace Xibo\Tests\Integration;
 
 class FaultTest extends \Xibo\Tests\LocalWebTestCase
 {
@@ -20,22 +18,22 @@ class FaultTest extends \Xibo\Tests\LocalWebTestCase
     public function testDebugOn()
     {
         // Ensure we are
-        \Xibo\Helper\Config::ChangeSetting('audit', Log::EMERGENCY);
+        $this->getContainer()->configService->ChangeSetting('audit', 'emergency');
 
         $this->client->put('/fault/debug/on');
         $this->assertSame(200, $this->client->response->status());
 
-        $this->assertSame('DEBUG', \Xibo\Helper\Config::GetSetting('audit'));
+        $this->assertSame('DEBUG', $this->getContainer()->configService->GetSetting('audit'));
     }
 
     public function testDebugOff()
     {
         // Ensure we are
-        \Xibo\Helper\Config::ChangeSetting('audit', Log::DEBUG);
+        $this->getContainer()->configService->ChangeSetting('audit', 'debug');
 
         $this->client->put('/fault/debug/off');
         $this->assertSame(200, $this->client->response->status());
 
-        $this->assertSame('EMERGENCY', \Xibo\Helper\Config::GetSetting('audit'));
+        $this->assertSame('EMERGENCY', $this->getContainer()->configService->GetSetting('audit'));
     }
 }

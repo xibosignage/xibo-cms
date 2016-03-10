@@ -22,25 +22,91 @@
 
 namespace Xibo\Factory;
 
-
 use Xibo\Entity\Campaign;
+use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class CampaignFactory
+ * @package Xibo\Factory
+ */
 class CampaignFactory extends BaseFactory
 {
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var ScheduleFactory
+     */
+    private $scheduleFactory;
+
+    /**
+     * @var DisplayFactory
+     */
+    private $displayFactory;
+
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param User $user
+     * @param UserFactory $userFactory
+     * @param PermissionFactory $permissionFactory
+     * @param ScheduleFactory $scheduleFactory
+     * @param DisplayFactory $displayFactory
+     */
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $permissionFactory, $scheduleFactory, $displayFactory)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->setAclDependencies($user, $userFactory);
+        $this->permissionFactory = $permissionFactory;
+        $this->scheduleFactory = $scheduleFactory;
+        $this->displayFactory = $displayFactory;
+    }
+
+    /**
+     * @return Campaign
+     */
+    public function createEmpty()
+    {
+        return new Campaign($this->getStore(), $this->getLog(), $this->permissionFactory, $this->scheduleFactory, $this->displayFactory);
+    }
+
+    /**
+     * Create Campaign
+     * @param string $name
+     * @param int $userId
+     * @return Campaign
+     */
+    public function create($name, $userId)
+    {
+        $campaign = $this->createEmpty();
+        $campaign->ownerId = $userId;
+        $campaign->campaign = $name;
+
+        return $campaign;
+    }
+
     /**
      * Get Campaign by ID
      * @param int $campaignId
      * @return Campaign
      * @throws NotFoundException
      */
-    public static function getById($campaignId)
+    public function getById($campaignId)
     {
-        $campaigns = CampaignFactory::query(null, array('disableUserCheck' => 1, 'campaignId' => $campaignId, 'isLayoutSpecific' => -1));
+        $this->getLog()->debug('CampaignFactory getById(%d)', $campaignId);
+
+        $campaigns = $this->query(null, array('disableUserCheck' => 1, 'campaignId' => $campaignId, 'isLayoutSpecific' => -1));
 
         if (count($campaigns) <= 0) {
+            $this->getLog()->debug('Campaign not found with ID %d', $campaignId);
             throw new NotFoundException(\__('Campaign not found'));
         }
 
@@ -53,9 +119,9 @@ class CampaignFactory extends BaseFactory
      * @param int $ownerId
      * @return array[Campaign]
      */
-    public static function getByOwnerId($ownerId)
+    public function getByOwnerId($ownerId)
     {
-        return CampaignFactory::query(null, array('ownerId' => $ownerId));
+        return $this->query(null, array('ownerId' => $ownerId));
     }
 
     /**
@@ -63,9 +129,9 @@ class CampaignFactory extends BaseFactory
      * @param int $layoutId
      * @return array[Campaign]
      */
-    public static function getByLayoutId($layoutId)
+    public function getByLayoutId($layoutId)
     {
-        return CampaignFactory::query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId));
+        return $this->query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId));
     }
 
     /**
@@ -74,7 +140,7 @@ class CampaignFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Campaign]
      */
-    public static function query($sortOrder = null, $filterBy = array())
+    public function query($sortOrder = null, $filterBy = array())
     {
         if ($sortOrder == null)
             $sortOrder = array('Campaign');
@@ -101,35 +167,35 @@ class CampaignFactory extends BaseFactory
         ';
 
         // View Permissions
-        self::viewPermissionSql('Xibo\Entity\Campaign', $body, $params, '`campaign`.campaignId', '`campaign`.userId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, '`campaign`.campaignId', '`campaign`.userId', $filterBy);
 
-        if (Sanitize::getString('isLayoutSpecific', 0, $filterBy) != -1) {
+        if ($this->getSanitizer()->getString('isLayoutSpecific', 0, $filterBy) != -1) {
             // Exclude layout specific campaigns
             $body .= " AND `campaign`.isLayoutSpecific = :isLayoutSpecific ";
-            $params['isLayoutSpecific'] = Sanitize::getString('isLayoutSpecific', 0, $filterBy);
+            $params['isLayoutSpecific'] = $this->getSanitizer()->getString('isLayoutSpecific', 0, $filterBy);
         }
 
-        if (Sanitize::getString('campaignId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getString('campaignId', 0, $filterBy) != 0) {
             // Join Campaign back onto it again
             $body .= " AND `campaign`.campaignId = :campaignId ";
-            $params['campaignId'] = Sanitize::getString('campaignId', 0, $filterBy);
+            $params['campaignId'] = $this->getSanitizer()->getString('campaignId', 0, $filterBy);
         }
 
-        if (Sanitize::getString('ownerId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getString('ownerId', 0, $filterBy) != 0) {
             // Join Campaign back onto it again
             $body .= " AND `campaign`.userId = :ownerId ";
-            $params['ownerId'] = Sanitize::getString('ownerId', 0, $filterBy);
+            $params['ownerId'] = $this->getSanitizer()->getString('ownerId', 0, $filterBy);
         }
 
-        if (Sanitize::getString('layoutId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getString('layoutId', 0, $filterBy) != 0) {
             // Filter by Layout
             $body .= " AND `lkcampaignlayout`.layoutId = :layoutId ";
-            $params['layoutId'] = Sanitize::getString('layoutId', 0, $filterBy);
+            $params['layoutId'] = $this->getSanitizer()->getString('layoutId', 0, $filterBy);
         }
 
-        if (Sanitize::getString('name', $filterBy) != '') {
+        if ($this->getSanitizer()->getString('name', $filterBy) != '') {
             // convert into a space delimited array
-            $names = explode(' ', Sanitize::getString('name', $filterBy));
+            $names = explode(' ', $this->getSanitizer()->getString('name', $filterBy));
 
             $i = 0;
             foreach($names as $searchName) {
@@ -156,24 +222,22 @@ class CampaignFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
 
         $sql = $select . $body . $group . $order . $limit;
 
-
-
         $intProperties = ['intProperties' => ['numberLayouts']];
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $campaigns[] = (new Campaign())->hydrate($row, $intProperties);
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $campaigns[] = $this->createEmpty()->hydrate($row, $intProperties);
         }
 
         // Paging
         if ($limit != '' && count($campaigns) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(DISTINCT campaign.campaignId) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $results = $this->getStore()->select('SELECT COUNT(DISTINCT campaign.campaignId) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $campaigns;

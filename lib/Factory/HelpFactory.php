@@ -11,19 +11,42 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Help;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 class HelpFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * @return Help
+     */
+    public function createEmpty()
+    {
+        return new Help(
+            $this->getStore(),
+            $this->getLog()
+        );
+    }
+
     /**
      * @param int $helpId
      * @return Help
      * @throws NotFoundException
      */
-    public static function getById($helpId)
+    public function getById($helpId)
     {
-        $help = HelpFactory::query(null, ['helpId' => $helpId]);
+        $help = $this->query(null, ['helpId' => $helpId]);
 
         if (count($help) <= 0)
             throw new NotFoundException();
@@ -37,7 +60,7 @@ class HelpFactory extends BaseFactory
      * @return array[Transition]
      * @throws NotFoundException
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
         $params = array();
@@ -49,9 +72,9 @@ class HelpFactory extends BaseFactory
          WHERE 1 = 1
         ';
 
-        if (Sanitize::getInt('helpId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('helpId', $filterBy) !== null) {
             $body .= ' AND help.helpId = :helpId ';
-            $params['helpId'] = Sanitize::getInt('helpId', $filterBy);
+            $params['helpId'] = $this->getSanitizer()->getInt('helpId', $filterBy);
         }
 
         // Sorting?
@@ -60,22 +83,22 @@ class HelpFactory extends BaseFactory
             $order .= ' ORDER BY ' . implode(',', $sortOrder);
 
         $limit = '';
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit .= ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit .= ' LIMIT ' . intval($this->getSanitizer()->getInt('start')) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         $sql = $select . $body . $order . $limit;
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Help())->hydrate($row);
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

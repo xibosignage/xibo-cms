@@ -22,10 +22,6 @@ namespace Xibo\Widget;
 
 use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
-use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
 
 class Image extends ModuleWidget
 {
@@ -45,12 +41,12 @@ class Image extends ModuleWidget
     public function edit()
     {
         // Set the properties specific to Images
-        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setOption('name', Sanitize::getString('name', $this->getOption('name')));
-        $this->setOption('scaleType', Sanitize::getString('scaleTypeId', 'center'));
-        $this->setOption('align', Sanitize::getString('alignId', 'center'));
-        $this->setOption('valign', Sanitize::getString('valignId', 'middle'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setOption('name', $this->getSanitizer()->getString('name', $this->getOption('name')));
+        $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'center'));
+        $this->setOption('align', $this->getSanitizer()->getString('alignId', 'center'));
+        $this->setOption('valign', $this->getSanitizer()->getString('valignId', 'middle'));
 
         $this->validate();
         $this->saveWidget();
@@ -89,7 +85,7 @@ class Image extends ModuleWidget
     public function hoverPreview()
     {
         // Default Hover window contains a thumbnail, media type and duration
-        $output = parent::HoverPreview();
+        $output = parent::hoverPreview();
         $output .= '<div class="hoverPreview">';
         $output .= '    <img src="' . $this->getApp()->urlFor('library.download', ['id' => $this->getMediaId()]) . '?preview=1&width=200&height=200&proportional=1" alt="Hover Preview">';
         $output .= '</div>';
@@ -104,27 +100,27 @@ class Image extends ModuleWidget
      */
     public function getResource($displayId = 0)
     {
-        Log::debug('GetResource for %d', $this->getMediaId());
+        $this->getLog()->debug('Image Module: GetResource for %d', $this->getMediaId());
 
-        $media = MediaFactory::getById($this->getMediaId());
-        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
+        $media = $this->mediaFactory->getById($this->getMediaId());
+        $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
         $filePath = $libraryLocation . $media->storedAs;
-        $proportional = Sanitize::getInt('proportional', 1) == 1;
-        $preview = Sanitize::getInt('preview', 0) == 1;
-        $width = intval(Sanitize::getDouble('width'));
-        $height = intval(Sanitize::getDouble('height'));
+        $proportional = $this->getSanitizer()->getInt('proportional', 1) == 1;
+        $preview = $this->getSanitizer()->getInt('preview', 0) == 1;
+        $width = intval($this->getSanitizer()->getDouble('width'));
+        $height = intval($this->getSanitizer()->getDouble('height'));
 
         // Work out the eTag first
         $this->getApp()->etag($media->md5 . $width . $height . $proportional . $preview);
         $this->getApp()->expires('+1 week');
 
         // Preview or download?
-        if (Sanitize::getInt('preview', 0) == 1) {
+        if ($this->getSanitizer()->getInt('preview', 0) == 1) {
 
             // Preview (we output the file to the browser with image headers
             Img::configure(array('driver' => 'gd'));
 
-            Log::debug('Preview Requested with Width and Height %d x %d', $width, $height);
+            $this->getLog()->debug('Preview Requested with Width and Height %d x %d', $width, $height);
 
             // Output a thumbnail?
             if ($width != 0 || $height != 0) {
@@ -136,12 +132,12 @@ class Image extends ModuleWidget
             }
             else {
                 // Load the whole image
-                Log::debug('Loading %s', $filePath);
+                $this->getLog()->debug('Loading %s', $filePath);
                 $eTag = $media->md5;
                 $img = Img::make($filePath);
             }
 
-            Log::debug('Outputting Image Response');
+            $this->getLog()->debug('Outputting Image Response');
 
             // Output the file
             echo $img->response();

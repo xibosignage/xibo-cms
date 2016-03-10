@@ -29,17 +29,95 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
-use Xibo\Helper\Help;
-use Xibo\Helper\PlayerActionHelper;
-use Xibo\Helper\Sanitize;
+use Xibo\Factory\ScheduleFactory;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\PlayerActionServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 use Xibo\XMR\ChangeLayoutAction;
 use Xibo\XMR\CollectNowAction;
 use Xibo\XMR\CommandAction;
 use Xibo\XMR\RevertToSchedule;
 
-
+/**
+ * Class DisplayGroup
+ * @package Xibo\Controller
+ */
 class DisplayGroup extends Base
 {
+    /**
+     * @var PlayerActionServiceInterface
+     */
+    private $playerAction;
+
+    /**
+     * @var DisplayGroupFactory
+     */
+    private $displayGroupFactory;
+
+    /**
+     * @var DisplayFactory
+     */
+    private $displayFactory;
+
+    /**
+     * @var ModuleFactory
+     */
+    private $moduleFactory;
+
+    /**
+     * @var MediaFactory
+     */
+    private $mediaFactory;
+
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+
+    /**
+     * @var CommandFactory
+     */
+    private $commandFactory;
+
+    /**
+     * @var ScheduleFactory
+     */
+    private $scheduleFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param PlayerActionServiceInterface $playerAction
+     * @param DisplayFactory $displayFactory
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param LayoutFactory $layoutFactory
+     * @param ModuleFactory $moduleFactory
+     * @param MediaFactory $mediaFactory
+     * @param CommandFactory $commandFactory
+     * @param ScheduleFactory $scheduleFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $moduleFactory, $mediaFactory, $commandFactory, $scheduleFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->playerAction = $playerAction;
+        $this->displayFactory = $displayFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->moduleFactory = $moduleFactory;
+        $this->mediaFactory = $mediaFactory;
+        $this->commandFactory = $commandFactory;
+        $this->scheduleFactory = $scheduleFactory;
+    }
+
     /**
      * Display Group Page Render
      */
@@ -86,11 +164,11 @@ class DisplayGroup extends Base
     public function grid()
     {
         $filter = [
-            'displayGroupId' => Sanitize::getInt('displayGroupId'),
-            'displayGroup' => Sanitize::getString('displayGroup')
+            'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
+            'displayGroup' => $this->getSanitizer()->getString('displayGroup')
         ];
 
-        $displayGroups = DisplayGroupFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($displayGroups as $group) {
             /* @var \Xibo\Entity\DisplayGroup $group */
@@ -177,7 +255,7 @@ class DisplayGroup extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = DisplayGroupFactory::countLast();
+        $this->getState()->recordsTotal = $this->displayGroupFactory->countLast();
         $this->getState()->setData($displayGroups);
     }
 
@@ -188,7 +266,7 @@ class DisplayGroup extends Base
     {
         $this->getState()->template = 'displaygroup-form-add';
         $this->getState()->setData([
-            'help' => Help::Link('DisplayGroup', 'Add')
+            'help' => $this->getHelp()->link('DisplayGroup', 'Add')
         ]);
     }
 
@@ -198,7 +276,7 @@ class DisplayGroup extends Base
      */
     public function editForm($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
@@ -206,7 +284,7 @@ class DisplayGroup extends Base
         $this->getState()->template = 'displaygroup-form-edit';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
-            'help' => Help::Link('DisplayGroup', 'Edit')
+            'help' => $this->getHelp()->link('DisplayGroup', 'Edit')
         ]);
     }
 
@@ -216,7 +294,7 @@ class DisplayGroup extends Base
      */
     function deleteForm($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkDeleteable($displayGroup))
             throw new AccessDeniedException();
@@ -224,7 +302,7 @@ class DisplayGroup extends Base
         $this->getState()->template = 'displaygroup-form-delete';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
-            'help' => Help::Link('DisplayGroup', 'Delete')
+            'help' => $this->getHelp()->link('DisplayGroup', 'Delete')
         ]);
     }
 
@@ -234,16 +312,16 @@ class DisplayGroup extends Base
      */
     public function membersForm($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
         // Displays in Group
-        $displaysAssigned = DisplayFactory::getByDisplayGroupId($displayGroup->displayGroupId);
+        $displaysAssigned = $this->displayFactory->getByDisplayGroupId($displayGroup->displayGroupId);
 
         // All Displays
-        $allDisplays = DisplayFactory::query();
+        $allDisplays = $this->displayFactory->query();
 
         // The available users are all users except users already in assigned users
         $checkboxes = array();
@@ -272,10 +350,10 @@ class DisplayGroup extends Base
         }
 
         // Get all the DisplayGroups assigned to this Group directly
-        $groupsAssigned = DisplayGroupFactory::getByParentId($displayGroup->displayGroupId);
+        $groupsAssigned = $this->displayGroupFactory->getByParentId($displayGroup->displayGroupId);
 
         // Get all groups, aside from this one
-        $groups = DisplayGroupFactory::query();
+        $groups = $this->displayGroupFactory->query();
 
         // Go through each and create a checkbox
         foreach ($groups as $group) {
@@ -310,7 +388,7 @@ class DisplayGroup extends Base
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
             'checkboxes' => $checkboxes,
-            'help' => Help::Link('DisplayGroup', 'Members')
+            'help' => $this->getHelp()->link('DisplayGroup', 'Members')
         ]);
     }
 
@@ -364,11 +442,11 @@ class DisplayGroup extends Base
      */
     public function add()
     {
-        $displayGroup = new \Xibo\Entity\DisplayGroup();
-        $displayGroup->displayGroup = Sanitize::getString('displayGroup');
-        $displayGroup->description = Sanitize::getString('description');
-        $displayGroup->isDynamic = Sanitize::getCheckbox('isDynamic');
-        $displayGroup->dynamicCriteria = Sanitize::getString('dynamicCriteria');
+        $displayGroup = $this->displayGroupFactory->createEmpty();
+        $displayGroup->displayGroup = $this->getSanitizer()->getString('displayGroup');
+        $displayGroup->description = $this->getSanitizer()->getString('description');
+        $displayGroup->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
+        $displayGroup->dynamicCriteria = $this->getSanitizer()->getString('dynamicCriteria');
         $displayGroup->userId = $this->getUser()->userId;
         $displayGroup->save();
 
@@ -435,15 +513,16 @@ class DisplayGroup extends Base
      */
     public function edit($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
-        $displayGroup->displayGroup = Sanitize::getString('displayGroup');
-        $displayGroup->description = Sanitize::getString('description');
-        $displayGroup->isDynamic = Sanitize::getCheckbox('isDynamic');
-        $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? Sanitize::getString('dynamicCriteria') : null;
+        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $displayGroup->displayGroup = $this->getSanitizer()->getString('displayGroup');
+        $displayGroup->description = $this->getSanitizer()->getString('description');
+        $displayGroup->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
+        $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? $this->getSanitizer()->getString('dynamicCriteria') : null;
         $displayGroup->save();
 
         // Return
@@ -479,7 +558,7 @@ class DisplayGroup extends Base
      */
     function delete($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkDeleteable($displayGroup))
             throw new AccessDeniedException();
@@ -536,7 +615,7 @@ class DisplayGroup extends Base
      */
     public function assignDisplay($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
@@ -544,24 +623,24 @@ class DisplayGroup extends Base
         if ($displayGroup->isDynamic == 1)
             throw new \InvalidArgumentException(__('Displays cannot be manually assigned to a Dynamic Group'));
 
-        $displays = Sanitize::getIntArray('displayId');
+        $displays = $this->getSanitizer()->getIntArray('displayId');
 
         foreach ($displays as $displayId) {
-            $display = DisplayFactory::getById($displayId);
+            $display = $this->displayFactory->getById($displayId);
 
-            if (!$this->getUser()->checkViewable(DisplayGroupFactory::getById($display->displayGroupId)))
+            if (!$this->getUser()->checkViewable($this->displayGroupFactory->getById($display->displayGroupId)))
                 throw new AccessDeniedException(__('Access Denied to Display'));
 
             $displayGroup->assignDisplay($display);
         }
 
         // Have we been provided with unassign id's as well?
-        $displays = Sanitize::getIntArray('unassignDisplayId');
+        $displays = $this->getSanitizer()->getIntArray('unassignDisplayId');
 
         foreach ($displays as $displayId) {
-            $display = DisplayFactory::getById($displayId);
+            $display = $this->displayFactory->getById($displayId);
 
-            if (!$this->getUser()->checkViewable(DisplayGroupFactory::getById($display->displayGroupId)))
+            if (!$this->getUser()->checkViewable($this->displayGroupFactory->getById($display->displayGroupId)))
                 throw new AccessDeniedException(__('Access Denied to Display'));
 
             $displayGroup->unassignDisplay($display);
@@ -613,7 +692,7 @@ class DisplayGroup extends Base
      */
     public function unassignDisplay($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
@@ -621,10 +700,10 @@ class DisplayGroup extends Base
         if ($displayGroup->isDynamic == 1)
             throw new \InvalidArgumentException(__('Displays cannot be manually unassigned to a Dynamic Group'));
 
-        $displays = Sanitize::getIntArray('displayId');
+        $displays = $this->getSanitizer()->getIntArray('displayId');
 
         foreach ($displays as $displayId) {
-            $displayGroup->unassignDisplay(DisplayFactory::getById($displayId));
+            $displayGroup->unassignDisplay($this->displayFactory->getById($displayId));
         }
 
         $displayGroup->save(['validate' => false]);
@@ -680,7 +759,7 @@ class DisplayGroup extends Base
      */
     public function assignDisplayGroup($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
@@ -688,10 +767,10 @@ class DisplayGroup extends Base
         if ($displayGroup->isDynamic == 1)
             throw new \InvalidArgumentException(__('DisplayGroups cannot be manually assigned to a Dynamic Group'));
 
-        $displayGroups = Sanitize::getIntArray('displayGroupId');
+        $displayGroups = $this->getSanitizer()->getIntArray('displayGroupId');
 
         foreach ($displayGroups as $assignDisplayGroupId) {
-            $displayGroupAssign = DisplayGroupFactory::getById($assignDisplayGroupId);
+            $displayGroupAssign = $this->displayGroupFactory->getById($assignDisplayGroupId);
 
             if (!$this->getUser()->checkViewable($displayGroupAssign))
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
@@ -700,10 +779,10 @@ class DisplayGroup extends Base
         }
 
         // Have we been provided with unassign id's as well?
-        $displayGroups = Sanitize::getIntArray('unassignDisplayGroupId');
+        $displayGroups = $this->getSanitizer()->getIntArray('unassignDisplayGroupId');
 
         foreach ($displayGroups as $assignDisplayGroupId) {
-            $displayGroupUnassign = DisplayGroupFactory::getById($assignDisplayGroupId);
+            $displayGroupUnassign = $this->displayGroupFactory->getById($assignDisplayGroupId);
 
             if (!$this->getUser()->checkViewable($displayGroupUnassign))
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
@@ -757,7 +836,7 @@ class DisplayGroup extends Base
      */
     public function unassignDisplayGroup($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
@@ -765,10 +844,10 @@ class DisplayGroup extends Base
         if ($displayGroup->isDynamic == 1)
             throw new \InvalidArgumentException(__('DisplayGroups cannot be manually unassigned to a Dynamic Group'));
 
-        $displayGroups = Sanitize::getIntArray('displayGroupId');
+        $displayGroups = $this->getSanitizer()->getIntArray('displayGroupId');
 
         foreach ($displayGroups as $assignDisplayGroupId) {
-            $displayGroup->unassignDisplayGroup(DisplayGroupFactory::getById($assignDisplayGroupId));
+            $displayGroup->unassignDisplayGroup($this->displayGroupFactory->getById($assignDisplayGroupId));
         }
 
         $displayGroup->save(['validate' => false]);
@@ -787,20 +866,21 @@ class DisplayGroup extends Base
      */
     public function mediaForm($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
         // Load the groups details
+        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->load();
 
         $this->getState()->template = 'displaygroup-form-media';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
-            'modules' => ModuleFactory::query(null, ['regionSpecific' => 0]),
-            'media' => MediaFactory::getByDisplayGroupId($displayGroup->displayGroupId),
-            'help' => Help::Link('DisplayGroup', 'FileAssociations')
+            'modules' => $this->moduleFactory->query(null, ['regionSpecific' => 0]),
+            'media' => $this->mediaFactory->getByDisplayGroupId($displayGroup->displayGroupId),
+            'help' => $this->getHelp()->link('DisplayGroup', 'FileAssociations')
         ]);
     }
 
@@ -849,20 +929,21 @@ class DisplayGroup extends Base
      */
     public function assignMedia($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
         // Load the groups details
+        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->load();
 
-        $mediaIds = Sanitize::getIntArray('mediaId');
+        $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
 
         // Loop through all the media
         foreach ($mediaIds as $mediaId) {
 
-            $media = MediaFactory::getById($mediaId);
+            $media = $this->mediaFactory->getById($mediaId);
 
             if (!$this->getUser()->checkViewable($media))
                 throw new AccessDeniedException(__('You have selected media that you no longer have permission to use. Please reload the form.'));
@@ -871,9 +952,9 @@ class DisplayGroup extends Base
         }
 
         // Check for unassign
-        foreach (Sanitize::getIntArray('unassignMediaId') as $mediaId) {
+        foreach ($this->getSanitizer()->getIntArray('unassignMediaId') as $mediaId) {
             // Get the media record
-            $media = MediaFactory::getById($mediaId);
+            $media = $this->mediaFactory->getById($mediaId);
 
             if (!$this->getUser()->checkViewable($media))
                 throw new AccessDeniedException(__('You have selected media that you no longer have permission to use. Please reload the form.'));
@@ -926,20 +1007,21 @@ class DisplayGroup extends Base
      */
     public function unassignMedia($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
         // Load the groups details
+        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->load();
 
-        $mediaIds = Sanitize::getIntArray('mediaIds');
+        $mediaIds = $this->getSanitizer()->getIntArray('mediaIds');
 
         // Loop through all the media
         foreach ($mediaIds as $mediaId) {
 
-            $displayGroup->unassignMedia(MediaFactory::getById($mediaId));
+            $displayGroup->unassignMedia($this->mediaFactory->getById($mediaId));
         }
 
         $displayGroup->save(['validate' => false]);
@@ -958,20 +1040,21 @@ class DisplayGroup extends Base
      */
     public function LayoutsForm($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
         // Load the groups details
+        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->load();
 
         $this->getState()->template = 'displaygroup-form-layouts';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
-            'modules' => ModuleFactory::query(null, ['regionSpecific' => 0]),
-            'layouts' => LayoutFactory::getByDisplayGroupId($displayGroup->displayGroupId),
-            'help' => Help::Link('DisplayGroup', 'FileAssociations')
+            'modules' => $this->moduleFactory->query(null, ['regionSpecific' => 0]),
+            'layouts' => $this->layoutFactory->getByDisplayGroupId($displayGroup->displayGroupId),
+            'help' => $this->getHelp()->link('DisplayGroup', 'FileAssociations')
         ]);
     }
 
@@ -1020,20 +1103,21 @@ class DisplayGroup extends Base
      */
     public function assignLayouts($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
         // Load the groups details
+        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->load();
 
-        $layoutIds = Sanitize::getIntArray('layoutId');
+        $layoutIds = $this->getSanitizer()->getIntArray('layoutId');
 
         // Loop through all the media
         foreach ($layoutIds as $layoutId) {
 
-            $layout = LayoutFactory::getById($layoutId);
+            $layout = $this->layoutFactory->getById($layoutId);
 
             if (!$this->getUser()->checkViewable($layout))
                 throw new AccessDeniedException(__('You have selected a layout that you no longer have permission to use. Please reload the form.'));
@@ -1042,9 +1126,9 @@ class DisplayGroup extends Base
         }
 
         // Check for unassign
-        foreach (Sanitize::getIntArray('unassignLayoutId') as $layoutId) {
+        foreach ($this->getSanitizer()->getIntArray('unassignLayoutId') as $layoutId) {
             // Get the layout record
-            $layout = LayoutFactory::getById($layoutId);
+            $layout = $this->layoutFactory->getById($layoutId);
 
             if (!$this->getUser()->checkViewable($layout))
                 throw new AccessDeniedException(__('You have selected a layout that you no longer have permission to use. Please reload the form.'));
@@ -1097,20 +1181,21 @@ class DisplayGroup extends Base
      */
     public function unassignLayout($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
         // Load the groups details
+        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->load();
 
-        $layoutIds = Sanitize::getIntArray('layoutIds');
+        $layoutIds = $this->getSanitizer()->getIntArray('layoutIds');
 
         // Loop through all the media
         foreach ($layoutIds as $layoutId) {
 
-            $displayGroup->unassignLayout(LayoutFactory::getById($layoutId));
+            $displayGroup->unassignLayout($this->layoutFactory->getById($layoutId));
         }
 
         $displayGroup->save(['validate' => false]);
@@ -1129,23 +1214,23 @@ class DisplayGroup extends Base
      */
     public function versionForm($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
         // List of effected displays
-        $displays = DisplayFactory::getByDisplayGroupId($displayGroupId);
+        $displays = $this->displayFactory->getByDisplayGroupId($displayGroupId);
 
         // Possible media files to assign
-        $media = MediaFactory::query(['name'], ['type' => 'genericfile']);
+        $media = $this->mediaFactory->query(['name'], ['type' => 'genericfile']);
 
         $this->getState()->template = 'displaygroup-form-version';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
             'displays' => $displays,
             'media' => $media,
-            'help' => Help::Link('DisplayGroup', 'Version')
+            'help' => $this->getHelp()->link('DisplayGroup', 'Version')
         ]);
     }
 
@@ -1181,12 +1266,12 @@ class DisplayGroup extends Base
      */
     public function version($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
-        $media = MediaFactory::getById(Sanitize::getInt('mediaId'));
+        $media = $this->mediaFactory->getById($this->getSanitizer()->getInt('mediaId'));
 
         if (!$this->getUser()->checkViewable($media))
             throw new AccessDeniedException();
@@ -1195,7 +1280,7 @@ class DisplayGroup extends Base
         $displayGroup->assignMedia($media);
 
         // Update each display in the group with the new version
-        foreach (DisplayFactory::getByDisplayGroupId($displayGroupId) as $display) {
+        foreach ($this->displayFactory->getByDisplayGroupId($displayGroupId) as $display) {
             /* @var Display $display */
             $display->versionInstructions = json_encode(['id' => $media->mediaId, 'file' => $media->storedAs]);
             $display->save(['validate' => false]);
@@ -1235,12 +1320,12 @@ class DisplayGroup extends Base
      */
     public function collectNow($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
-        PlayerActionHelper::sendAction(DisplayFactory::getByDisplayGroupId($displayGroupId), new CollectNowAction());
+        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($displayGroupId), new CollectNowAction());
 
         // Return
         $this->getState()->hydrate([
@@ -1305,24 +1390,25 @@ class DisplayGroup extends Base
      */
     public function changeLayout($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
         // Get the layoutId
-        $layoutId = Sanitize::getInt('layoutId');
-        $downloadRequired = (Sanitize::getCheckbox('downloadRequired') == 1);
+        $layoutId = $this->getSanitizer()->getInt('layoutId');
+        $downloadRequired = ($this->getSanitizer()->getCheckbox('downloadRequired') == 1);
 
         if ($layoutId == 0)
             throw new \InvalidArgumentException(__('Please provide a Layout'));
 
         // Check that this user has permissions to see this layout
-        $layout = LayoutFactory::getById($layoutId);
+        $layout = $this->layoutFactory->getById($layoutId);
 
         // Check to see if this layout is assigned to this display group.
-        if (count(LayoutFactory::query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'displayGroupId' => $displayGroupId])) <= 0) {
+        if (count($this->layoutFactory->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'displayGroupId' => $displayGroupId])) <= 0) {
             // Assign
+            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $displayGroup->load();
             $displayGroup->assignLayout($layout);
             // Don't notify, this player action will cause a download.
@@ -1333,11 +1419,11 @@ class DisplayGroup extends Base
             $downloadRequired = true;
         }
 
-        PlayerActionHelper::sendAction(DisplayFactory::getByDisplayGroupId($displayGroupId), (new ChangeLayoutAction())->setLayoutDetails(
+        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($displayGroupId), (new ChangeLayoutAction())->setLayoutDetails(
             $layoutId,
-            Sanitize::getInt('duration'),
+            $this->getSanitizer()->getInt('duration'),
             $downloadRequired,
-            Sanitize::getString('changeMode', 'queue')
+            $this->getSanitizer()->getString('changeMode', 'queue')
         ));
 
         // Return
@@ -1374,12 +1460,12 @@ class DisplayGroup extends Base
      */
     public function revertToSchedule($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
-        PlayerActionHelper::sendAction(DisplayFactory::getByDisplayGroupId($displayGroupId), new RevertToSchedule());
+        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($displayGroupId), new RevertToSchedule());
 
         // Return
         $this->getState()->hydrate([
@@ -1396,7 +1482,7 @@ class DisplayGroup extends Base
      */
     public function commandForm($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
@@ -1404,7 +1490,7 @@ class DisplayGroup extends Base
         $this->getState()->template = 'displaygroup-form-command';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
-            'commands' => CommandFactory::query()
+            'commands' => $this->commandFactory->query()
         ]);
     }
 
@@ -1441,15 +1527,15 @@ class DisplayGroup extends Base
      */
     public function command($displayGroupId)
     {
-        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
-        $command = CommandFactory::getById(Sanitize::getInt('commandId'));
-        $displays = DisplayFactory::getByDisplayGroupId($displayGroupId);
+        $command = $this->commandFactory->getById($this->getSanitizer()->getInt('commandId'));
+        $displays = $this->displayFactory->getByDisplayGroupId($displayGroupId);
 
-        PlayerActionHelper::sendAction($displays, (new CommandAction())->setCommandCode($command->code));
+        $this->playerAction->sendAction($displays, (new CommandAction())->setCommandCode($command->code));
 
         // Update the flag
         foreach ($displays as $display) {

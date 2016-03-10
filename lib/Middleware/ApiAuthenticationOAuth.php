@@ -24,13 +24,28 @@ namespace Xibo\Middleware;
 
 use League\OAuth2\Server\ResourceServer;
 use Slim\Middleware;
-use Xibo\Factory\UserFactory;
 
 class ApiAuthenticationOAuth extends Middleware
 {
     public function call()
     {
         $app = $this->app;
+
+        // oAuth Resource
+        $sessionStorage = new \Xibo\Storage\ApiSessionStorage($app->store);
+        $accessTokenStorage = new \Xibo\Storage\ApiAccessTokenStorage($app->store);
+        $clientStorage = new \Xibo\Storage\ApiClientStorage($app->store);
+        $scopeStorage = new \Xibo\Storage\ApiScopeStorage($app->store);
+
+        $server = new \League\OAuth2\Server\ResourceServer(
+            $sessionStorage,
+            $accessTokenStorage,
+            $clientStorage,
+            $scopeStorage
+        );
+
+        // DI in the server
+        $app->server = $server;
 
         $isAuthorised = function() use ($app) {
             // Validate we are a valid auth
@@ -39,11 +54,22 @@ class ApiAuthenticationOAuth extends Middleware
 
             $app->server->isValidRequest(false);
 
+            /* @var \Xibo\Entity\User $user */
+            $user = null;
+
             // What type of access has been requested?
             if ($server->getAccessToken()->getSession()->getOwnerType() == 'user')
-                $this->app->user = UserFactory::loadById($server->getAccessToken()->getSession()->getOwnerId());
+                $user = $app->userFactory->getById($server->getAccessToken()->getSession()->getOwnerId());
             else
-                $this->app->user = UserFactory::loadByClientId($server->getAccessToken()->getSession()->getOwnerId());
+                $user = $app->userFactory->loadByClientId($server->getAccessToken()->getSession()->getOwnerId());
+
+            $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
+            $user->load();
+
+            $this->app->user = $user;
+
+            // Set the user factory ACL dependencies (used for working out intra-user permissions)
+            $app->userFactory->setAclDependencies($this->app->user, $app->userFactory);
 
             // Get the current route pattern
             $resource = $app->router->getCurrentRoute()->getPattern();

@@ -24,14 +24,8 @@ namespace Xibo\Widget;
 use Emojione\Client;
 use Emojione\Ruleset;
 use Respect\Validation\Validator as v;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Cache;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
+use Xibo\Factory\ModuleFactory;
+
 
 class Twitter extends ModuleWidget
 {
@@ -39,12 +33,13 @@ class Twitter extends ModuleWidget
 
     /**
      * Install or Update this module
+     * @param ModuleFactory $moduleFactory
      */
-    public function installOrUpdate()
+    public function installOrUpdate($moduleFactory)
     {
         if ($this->module == null) {
             // Install
-            $module = new \Xibo\Entity\Module();
+            $module = $moduleFactory->createEmpty();
             $module->name = 'Twitter';
             $module->type = 'twitter';
             $module->class = 'Xibo\Widget\Twitter';
@@ -72,10 +67,10 @@ class Twitter extends ModuleWidget
      */
     public function installFiles()
     {
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/emojione/emojione.sprites.svg')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/emojione/emojione.sprites.svg')->save();
     }
 
     /**
@@ -91,7 +86,7 @@ class Twitter extends ModuleWidget
             $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
 
-        Log::debug(count($this->module->settings['templates']));
+        $this->getLog()->debug(count($this->module->settings['templates']));
     }
 
     /**
@@ -120,21 +115,21 @@ class Twitter extends ModuleWidget
     public function settings()
     {
         // Process any module settings you asked for.
-        $apiKey = Sanitize::getString('apiKey');
+        $apiKey = $this->getSanitizer()->getString('apiKey');
 
         if ($apiKey == '')
             throw new \InvalidArgumentException(__('Missing API Key'));
 
         // Process any module settings you asked for.
-        $apiSecret = Sanitize::getString('apiSecret');
+        $apiSecret = $this->getSanitizer()->getString('apiSecret');
 
         if ($apiSecret == '')
             throw new \InvalidArgumentException(__('Missing API Secret'));
 
         $this->module->settings['apiKey'] = $apiKey;
         $this->module->settings['apiSecret'] = $apiSecret;
-        $this->module->settings['cachePeriod'] = Sanitize::getInt('cachePeriod', 300);
-        $this->module->settings['cachePeriodImages'] = Sanitize::getInt('cachePeriodImages', 24);
+        $this->module->settings['cachePeriod'] = $this->getSanitizer()->getInt('cachePeriod', 300);
+        $this->module->settings['cachePeriodImages'] = $this->getSanitizer()->getInt('cachePeriodImages', 24);
 
         // Return an array of the processed settings.
         return $this->module->settings;
@@ -178,27 +173,27 @@ class Twitter extends ModuleWidget
      */
     private function setCommonOptions()
     {
-        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setOption('name', Sanitize::getString('name'));
-        $this->setOption('searchTerm', Sanitize::getString('searchTerm'));
-        $this->setOption('effect', Sanitize::getString('effect'));
-        $this->setOption('speed', Sanitize::getInt('speed'));
-        $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
-        $this->setOption('noTweetsMessage', Sanitize::getString('noTweetsMessage'));
-        $this->setOption('dateFormat', Sanitize::getString('dateFormat'));
-        $this->setOption('resultType', Sanitize::getString('resultType'));
-        $this->setOption('tweetDistance', Sanitize::getInt('tweetDistance'));
-        $this->setOption('tweetCount', Sanitize::getInt('tweetCount'));
-        $this->setOption('removeUrls', Sanitize::getCheckbox('removeUrls'));
-        $this->setOption('removeMentions', Sanitize::getCheckbox('removeMentions'));
-        $this->setOption('removeHashtags', Sanitize::getCheckbox('removeHashtags'));
-        $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
-        $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
-        $this->setOption('templateId', Sanitize::getString('templateId'));
-        $this->setOption('durationIsPerItem', Sanitize::getCheckbox('durationIsPerItem'));
-        $this->setRawNode('template', Sanitize::getParam('ta_text', Sanitize::getParam('template', null)));
-        $this->setRawNode('styleSheet', Sanitize::getParam('ta_css', Sanitize::getParam('styleSheet', null)));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('searchTerm', $this->getSanitizer()->getString('searchTerm'));
+        $this->setOption('effect', $this->getSanitizer()->getString('effect'));
+        $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
+        $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
+        $this->setOption('noTweetsMessage', $this->getSanitizer()->getString('noTweetsMessage'));
+        $this->setOption('dateFormat', $this->getSanitizer()->getString('dateFormat'));
+        $this->setOption('resultType', $this->getSanitizer()->getString('resultType'));
+        $this->setOption('tweetDistance', $this->getSanitizer()->getInt('tweetDistance'));
+        $this->setOption('tweetCount', $this->getSanitizer()->getInt('tweetCount'));
+        $this->setOption('removeUrls', $this->getSanitizer()->getCheckbox('removeUrls'));
+        $this->setOption('removeMentions', $this->getSanitizer()->getCheckbox('removeMentions'));
+        $this->setOption('removeHashtags', $this->getSanitizer()->getCheckbox('removeHashtags'));
+        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
+        $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
+        $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
+        $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
+        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
     }
 
     protected function getToken()
@@ -215,11 +210,11 @@ class Twitter extends ModuleWidget
         $token = $cache->get();
 
         if ($cache->isHit()) {
-            Log::debug('Bearer Token served from cache');
+            $this->getLog()->debug('Bearer Token served from cache');
             return $token;
         }
 
-        Log::debug('Bearer Token served from API');
+        $this->getLog()->debug('Bearer Token served from API');
 
         // Shame - we will need to get it.
         // and store it.
@@ -242,12 +237,12 @@ class Twitter extends ModuleWidget
         );
 
         // Proxy support
-        if (Config::GetSetting('PROXY_HOST') != '' && !Config::isProxyException($url)) {
-            $httpOptions[CURLOPT_PROXY] = Config::GetSetting('PROXY_HOST');
-            $httpOptions[CURLOPT_PROXYPORT] = Config::GetSetting('PROXY_PORT');
+        if ($this->getConfig()->GetSetting('PROXY_HOST') != '' && !$this->getConfig()->isProxyException($url)) {
+            $httpOptions[CURLOPT_PROXY] = $this->getConfig()->GetSetting('PROXY_HOST');
+            $httpOptions[CURLOPT_PROXYPORT] = $this->getConfig()->GetSetting('PROXY_PORT');
 
-            if (Config::GetSetting('PROXY_AUTH') != '')
-                $httpOptions[CURLOPT_PROXYUSERPWD] = Config::GetSetting('PROXY_AUTH');
+            if ($this->getConfig()->GetSetting('PROXY_AUTH') != '')
+                $httpOptions[CURLOPT_PROXYUSERPWD] = $this->getConfig()->GetSetting('PROXY_AUTH');
         }
 
         $curl = curl_init();
@@ -258,7 +253,7 @@ class Twitter extends ModuleWidget
         // Call exec
         if (!$result = curl_exec($curl)) {
             // Log the error
-            Log::error('Error contacting Twitter API: ' . curl_error($curl));
+            $this->getLog()->error('Error contacting Twitter API: ' . curl_error($curl));
             return false;
         }
 
@@ -266,12 +261,12 @@ class Twitter extends ModuleWidget
         $outHeaders = curl_getinfo($curl);
 
         if ($outHeaders['http_code'] != 200) {
-            Log::error('Twitter API returned ' . $result . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
+            $this->getLog()->error('Twitter API returned ' . $result . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
 
             // See if we can parse the error.
             $body = json_decode($result);
 
-            Log::error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
+            $this->getLog()->error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
 
             return false;
         }
@@ -282,7 +277,7 @@ class Twitter extends ModuleWidget
         // We have a 200 - therefore we want to think about caching the bearer token
         // First, lets check its a bearer token
         if ($body->token_type != 'bearer') {
-            Log::error('Twitter API returned OK, but without a bearer token. ' . var_export($body, true));
+            $this->getLog()->error('Twitter API returned OK, but without a bearer token. ' . var_export($body, true));
             return false;
         }
 
@@ -323,15 +318,15 @@ class Twitter extends ModuleWidget
         );
 
         // Proxy support
-        if (Config::GetSetting('PROXY_HOST') != '' && !Config::isProxyException($url)) {
-            $httpOptions[CURLOPT_PROXY] = Config::GetSetting('PROXY_HOST');
-            $httpOptions[CURLOPT_PROXYPORT] = Config::GetSetting('PROXY_PORT');
+        if ($this->getConfig()->GetSetting('PROXY_HOST') != '' && !$this->getConfig()->isProxyException($url)) {
+            $httpOptions[CURLOPT_PROXY] = $this->getConfig()->GetSetting('PROXY_HOST');
+            $httpOptions[CURLOPT_PROXYPORT] = $this->getConfig()->GetSetting('PROXY_PORT');
 
-            if (Config::GetSetting('PROXY_AUTH') != '')
-                $httpOptions[CURLOPT_PROXYUSERPWD] = Config::GetSetting('PROXY_AUTH');
+            if ($this->getConfig()->GetSetting('PROXY_AUTH') != '')
+                $httpOptions[CURLOPT_PROXYUSERPWD] = $this->getConfig()->GetSetting('PROXY_AUTH');
         }
 
-        Log::debug('Calling API with: ' . $url . $queryString);
+        $this->getLog()->debug('Calling API with: ' . $url . $queryString);
 
         $curl = curl_init();
         curl_setopt_array($curl, $httpOptions);
@@ -342,15 +337,15 @@ class Twitter extends ModuleWidget
 
         if ($outHeaders['http_code'] == 0) {
             // Unable to connect
-            Log::error('Unable to reach twitter api.');
+            $this->getLog()->error('Unable to reach twitter api.');
             return false;
         } else if ($outHeaders['http_code'] != 200) {
-            Log::error('Twitter API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
+            $this->getLog()->error('Twitter API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
 
             // See if we can parse the error.
             $body = json_decode($result);
 
-            Log::error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
+            $this->getLog()->error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
 
             return false;
         }
@@ -375,12 +370,12 @@ class Twitter extends ModuleWidget
             // Use the display ID or the default.
             if ($displayId != 0) {
                 // Look up the lat/long
-                $display = DisplayFactory::getById($displayId);
+                $display = $this->displayFactory->getById($displayId);
                 $defaultLat = $display->latitude;
                 $defaultLong = $display->longitude;
             } else {
-                $defaultLat = Config::GetSetting('DEFAULT_LAT');
-                $defaultLong = Config::GetSetting('DEFAULT_LONG');
+                $defaultLat = $this->getConfig()->GetSetting('DEFAULT_LAT');
+                $defaultLong = $this->getConfig()->GetSetting('DEFAULT_LONG');
             }
 
             // Built the geoCode string.
@@ -394,7 +389,7 @@ class Twitter extends ModuleWidget
 
         if ($cache->isMiss()) {
 
-            Log::debug('Querying API for ' . $this->getOption('searchTerm'));
+            $this->getLog()->debug('Querying API for ' . $this->getOption('searchTerm'));
 
             // We need to search for it
             if (!$token = $this->getToken())
@@ -452,7 +447,7 @@ class Twitter extends ModuleWidget
         $emoji->imagePathSVGSprites = $this->getResourceUrl('emojione/emojione.sprites.svg');
 
         // Get the date format to apply
-        $dateFormat = $this->getOption('dateFormat', Config::GetSetting('DATE_FORMAT'));
+        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
 
         // This should return the formatted items.
         foreach ($data->statuses as $tweet) {
@@ -502,14 +497,14 @@ class Twitter extends ModuleWidget
                         break;
 
                     case '[Date]':
-                        $replace = Date::getLocalDate(strtotime($tweet->created_at), $dateFormat);
+                        $replace = $this->getDate()->getLocalDate(strtotime($tweet->created_at), $dateFormat);
                         break;
 
                     case '[ProfileImage]':
                         // Grab the profile image
                         if ($tweet->user->profile_image_url != '') {
                             // Grab the profile image
-                            $file = MediaFactory::createModuleFile('twitter_' . $tweet->user->id, $tweet->user->profile_image_url);
+                            $file = $this->mediaFactory->createModuleFile('twitter_' . $tweet->user->id, $tweet->user->profile_image_url);
                             $file->isRemote = true;
                             $file->expires = $expires;
                             $file->save();
@@ -530,7 +525,7 @@ class Twitter extends ModuleWidget
                             $photoUrl = $tweet->entities->media[0]->media_url;
 
                             if ($photoUrl != '') {
-                                $file = MediaFactory::createModuleFile('twitter_photo_' . $tweet->user->id . '_' . $tweet->entities->media[0]->id_str, $photoUrl);
+                                $file = $this->mediaFactory->createModuleFile('twitter_photo_' . $tweet->user->id . '_' . $tweet->entities->media[0]->id_str, $photoUrl);
                                 $file->isRemote = true;
                                 $file->expires = $expires;
                                 $file->save();
@@ -570,12 +565,12 @@ class Twitter extends ModuleWidget
     {
         // Make sure we are set up correctly
         if ($this->getSetting('apiKey') == '' || $this->getSetting('apiSecret') == '') {
-            Log::error('Twitter Module not configured. Missing API Keys');
+            $this->getLog()->error('Twitter Module not configured. Missing API Keys');
             return '';
         }
 
         $data = [];
-        $isPreview = (Sanitize::getCheckbox('preview') == 1);
+        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
@@ -602,9 +597,9 @@ class Twitter extends ModuleWidget
             'itemsPerPage' => 1,
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => Sanitize::getDouble('width', 0),
-            'previewHeight' => Sanitize::getDouble('height', 0),
-            'scaleOverride' => Sanitize::getDouble('scale_override', 0)
+            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
+            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
+            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
         );
 
         // Replace the control meta with our data from twitter
@@ -626,7 +621,7 @@ class Twitter extends ModuleWidget
 
         // Add our fonts.css file
         $headContent .= '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
-        $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
+        $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         // Replace the Head Content with our generated javascript
         $data['head'] = $headContent;

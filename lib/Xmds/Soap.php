@@ -11,7 +11,7 @@ namespace Xibo\Xmds;
 define('BLACKLIST_ALL', "All");
 define('BLACKLIST_SINGLE', "Single");
 
-use Slim\Slim;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Entity\Playlist;
@@ -27,18 +27,24 @@ use Xibo\Factory\BandwidthFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
-use Xibo\Factory\RegionFactory;
 use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\UserFactory;
-use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 use Xibo\Helper\Random;
-use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\ConfigService;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\FactoryServiceInterface;
+use Xibo\Service\LogService;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class Soap
+ * @package Xibo\Xmds
+ */
 class Soap
 {
     /**
@@ -51,22 +57,83 @@ class Soap
      */
     protected $logProcessor;
 
+    /** @var  PoolInterface */
+    private $pool;
+
+    /** @var  StorageServiceInterface */
+    private $store;
+
+    /** @var  LogServiceInterface */
+    private $logService;
+
+    /** @var  DateServiceInterface */
+    private $dateService;
+
+    /** @var  SanitizerServiceInterface */
+    private $sanitizerService;
+
+    /** @var  ConfigServiceInterface */
+    private $configService;
+
+    /** @var  RequiredFileFactory */
+    protected $requiredFileFactory;
+
+    /** @var  ModuleFactory */
+    protected $moduleFactory;
+
+    /** @var  LayoutFactory */
+    protected $layoutFactory;
+
+    /** @var  DataSetFactory */
+    protected $dataSetFactory;
+
+    /** @var  DisplayFactory */
+    protected $displayFactory;
+
+    /** @var  UserFactory */
+    protected $userFactory;
+
+    /** @var  BandwidthFactory */
+    protected $bandwidthFactory;
+
+    /** @var  MediaFactory */
+    protected $mediaFactory;
+
     /**
-     * @var \Stash\Interfaces\PoolInterface
+     * Soap constructor.
+     * @param LogProcessor $logProcessor
+     * @param PoolInterface $pool
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param DateServiceInterface $date
+     * @param SanitizerServiceInterface $sanitizer
+     * @param ConfigServiceInterface $config
+     * @param RequiredFileFactory $requiredFileFactory
+     * @param ModuleFactory $moduleFactory
+     * @param LayoutFactory $layoutFactory
+     * @param DataSetFactory $dataSetFactory
+     * @param DisplayFactory $displayFactory
+     * @param UserFactory $userFactory
+     * @param BandwidthFactory $bandwidthFactory
+     * @param MediaFactory $mediaFactory
      */
-    protected $pool;
-
-
-    public function __construct()
+    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userFactory, $bandwidthFactory, $mediaFactory)
     {
-        $app = Slim::getInstance();
-
-        // Create a log processor
-        $this->logProcessor = new LogProcessor();
-        $app->logWriter->addProcessor($this->logProcessor);
-
-        // Grab the pool
-        $this->pool = $app->pool;
+        $this->logProcessor = $logProcessor;
+        $this->pool = $pool;
+        $this->store = $store;
+        $this->logService = $log;
+        $this->dateService = $date;
+        $this->sanitizerService = $sanitizer;
+        $this->configService = $config;
+        $this->requiredFileFactory = $requiredFileFactory;
+        $this->moduleFactory = $moduleFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->dataSetFactory = $dataSetFactory;
+        $this->displayFactory = $displayFactory;
+        $this->userFactory = $userFactory;
+        $this->bandwidthFactory = $bandwidthFactory;
+        $this->mediaFactory = $mediaFactory;
     }
 
     /**
@@ -75,7 +142,52 @@ class Soap
      */
     protected function getPool()
     {
-       return $this->pool;
+        return $this->pool;
+    }
+
+    /**
+     * Get Store
+     * @return StorageServiceInterface
+     */
+    protected function getStore()
+    {
+        return $this->store;
+    }
+
+    /**
+     * Get Log
+     * @return LogService
+     */
+    protected function getLog()
+    {
+        return $this->logService;
+    }
+
+    /**
+     * Get Date
+     * @return DateServiceInterface
+     */
+    protected function getDate()
+    {
+        return $this->dateService;
+    }
+
+    /**
+     * Get Sanitizer
+     * @return SanitizerServiceInterface
+     */
+    protected function getSanitizer()
+    {
+        return $this->sanitizerService;
+    }
+
+    /**
+     * Get Config
+     * @return ConfigService
+     */
+    protected function getConfig()
+    {
+        return $this->configService;
     }
 
     /**
@@ -91,19 +203,19 @@ class Soap
         $this->logProcessor->setRoute('RequiredFiles');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
-        $rfLookAhead = Sanitize::int(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'));
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $rfLookAhead = $this->getSanitizer()->int($this->getConfig()->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
-        $libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->getConfig()->GetSetting("LIBRARY_LOCATION");
 
         // auth this request...
         if (!$this->authDisplay($hardwareKey))
@@ -115,10 +227,10 @@ class Soap
         $output = $cache->get();
 
         if ($cache->isHit()) {
-            Log::info('Returning required files from Cache for display %s', $this->display->display);
+            $this->getLog()->info('Returning required files from Cache for display %s', $this->display->display);
 
             // Log Bandwidth
-            $this->LogBandwidth($this->display->displayId, Bandwidth::$RF, strlen($output));
+            $this->logBandwidth($this->display->displayId, Bandwidth::$RF, strlen($output));
 
             return $output;
         }
@@ -141,10 +253,10 @@ class Soap
         $toFilter = $rfLookAhead - ($rfLookAhead % 3600);
 
         if ($this->display->isAuditing == 1)
-            Log::debug(sprintf('Required files date criteria. FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)));
+            $this->getLog()->debug(sprintf('Required files date criteria. FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             // Get a list of all layout ids in the schedule right now
             // including any layouts that have been associated to our Display Group
@@ -193,10 +305,10 @@ class Soap
 
             // Build up the other layouts into an array
             foreach ($sth->fetchAll() as $row)
-                $layouts[] = Sanitize::int($row['layoutID']);
+                $layouts[] = $this->getSanitizer()->int($row['layoutID']);
 
         } catch (\Exception $e) {
-            Log::error('Unable to get a list of layouts. ' . $e->getMessage());
+            $this->getLog()->error('Unable to get a list of layouts. ' . $e->getMessage());
             return new \SoapFault('Sender', 'Unable to get a list of layouts');
         }
 
@@ -204,7 +316,7 @@ class Soap
         $layoutIdList = implode(',', $layouts);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             // Run a query to get all required files for this display.
             // Include the following:
@@ -266,10 +378,10 @@ class Soap
 
             foreach ($sth->fetchAll() as $row) {
                 // Media
-                $path = Sanitize::string($row['path']);
-                $id = Sanitize::string($row['id']);
+                $path = $this->getSanitizer()->string($row['path']);
+                $id = $this->getSanitizer()->string($row['id']);
                 $md5 = $row['MD5'];
-                $fileSize = Sanitize::int($row['FileSize']);
+                $fileSize = $this->getSanitizer()->int($row['FileSize']);
 
                 // Check we haven't added this before
                 if (in_array($path, $pathsAdded))
@@ -287,7 +399,7 @@ class Soap
                 }
 
                 // Add nonce
-                $mediaNonce = RequiredFileFactory::createForMedia($this->display->displayId, $requestKey, $id, $fileSize, $path);
+                $mediaNonce = $this->requiredFileFactory->createForMedia($this->display->displayId, $requestKey, $id, $fileSize, $path);
                 $mediaNonce->save();
 
                 // Add the file node
@@ -314,13 +426,13 @@ class Soap
                 $pathsAdded[] = $path;
             }
         } catch (\Exception $e) {
-            Log::error('Unable to get a list of required files. ' . $e->getMessage());
-            Log::debug($e->getTraceAsString());
+            $this->getLog()->error('Unable to get a list of required files. ' . $e->getMessage());
+            $this->getLog()->debug($e->getTraceAsString());
             return new \SoapFault('Sender', 'Unable to get a list of files');
         }
 
         // Get an array of modules to use
-        $modules = ModuleFactory::get();
+        $modules = $this->moduleFactory->get();
 
         // Reset the paths added array to start again with layouts
         $pathsAdded = [];
@@ -333,7 +445,7 @@ class Soap
                 continue;
 
             // Load this layout
-            $layout = LayoutFactory::loadById($layoutId);
+            $layout = $this->layoutFactory->loadById($layoutId);
             $layout->loadPlaylists();
 
             // Make sure its XLF is up to date
@@ -345,10 +457,10 @@ class Soap
 
             // Log
             if ($this->display->isAuditing == 1)
-                Log::debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
+                $this->getLog()->debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
 
             // Add nonce
-            $layoutNonce = RequiredFileFactory::createForLayout($this->display->displayId, $requestKey, $layoutId, $fileSize, basename($path));
+            $layoutNonce = $this->requiredFileFactory->createForLayout($this->display->displayId, $requestKey, $layoutId, $fileSize, basename($path));
             $layoutNonce->save();
 
             // Add the Layout file element
@@ -389,7 +501,7 @@ class Soap
                             $modules[$widget->type]->renderAs == 'html'
                         ) {
                             // Add nonce
-                            RequiredFileFactory::createForGetResource($this->display->displayId, $requestKey, $layoutId, $region->regionId, $widget->widgetId)->save();
+                            $this->requiredFileFactory->createForGetResource($this->display->displayId, $requestKey, $layoutId, $region->regionId, $widget->widgetId)->save();
 
                             // Does the media provide a modified Date?
                             $widgetModifiedDt = $layoutModifiedDt->getTimestamp();
@@ -397,7 +509,7 @@ class Soap
                             if ($widget->type == 'datasetview' || $widget->type == 'ticker') {
                                 try {
                                     $dataSetId = $widget->getOption('dataSetId');
-                                    $dataSet = DataSetFactory::getById($dataSetId);
+                                    $dataSet = $this->dataSetFactory->getById($dataSetId);
                                     $widgetModifiedDt = $dataSet->lastDataEdit;
                                 }
                                 catch (NotFoundException $e) {
@@ -431,7 +543,7 @@ class Soap
         $fileElements->appendChild($blackList);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             $sth = $dbh->prepare('SELECT MediaID FROM blacklist WHERE DisplayID = :displayid AND isIgnored = 0');
             $sth->execute(array(
@@ -446,7 +558,7 @@ class Soap
                 $blackList->appendChild($file);
             }
         } catch (\Exception $e) {
-            Log::error('Unable to get a list of blacklisted files. ' . $e->getMessage());
+            $this->getLog()->error('Unable to get a list of blacklisted files. ' . $e->getMessage());
             return new \SoapFault('Sender', 'Unable to get a list of blacklisted files');
         }
 
@@ -454,18 +566,18 @@ class Soap
         $this->phoneHome();
 
         if ($this->display->isAuditing == 1)
-            Log::debug($requiredFilesXml->saveXML());
+            $this->getLog()->debug($requiredFilesXml->saveXML());
 
         // Return the results of requiredFiles()
         $requiredFilesXml->formatOutput = true;
         $output = $requiredFilesXml->saveXML();
 
         // Remove unused required files
-        RequiredFile::removeUnusedForDisplay($this->display->displayId, $requestKey);
+        RequiredFile::removeUnusedForDisplay($this->getStore(), $this->display->displayId, $requestKey);
 
         // Cache
         $cache->set($output);
-        $cache->expiresAt(\Jenssegers\Date\Date::createFromFormat('U', $toFilter));
+        $cache->expiresAt($this->getDate()->parse($toFilter, 'U'));
         $this->getPool()->saveDeferred($cache);
 
         // Log Bandwidth
@@ -488,20 +600,20 @@ class Soap
         $options = array_merge(['dependentsAsNodes' => false], $options);
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
-        $rfLookAhead = Sanitize::int(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'));
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $rfLookAhead = $this->getSanitizer()->int($this->getConfig()->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->CheckBandwidth())
+        if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
-        //auth this request...
-        if (!$this->AuthDisplay($hardwareKey))
+        // auth this request...
+        if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Sender', "This display client is not licensed");
 
         // Check the cache
@@ -510,10 +622,10 @@ class Soap
         $output = $cache->get();
 
         if ($cache->isHit()) {
-            Log::info('Returning Schedule from Cache for display %s', $this->display->display);
+            $this->getLog()->info('Returning Schedule from Cache for display %s', $this->display->display);
 
             // Log Bandwidth
-            $this->LogBandwidth($this->display->displayId, Bandwidth::$SCHEDULE, strlen($output));
+            $this->logBandwidth($this->display->displayId, Bandwidth::$SCHEDULE, strlen($output));
 
             return $output;
         }
@@ -532,16 +644,16 @@ class Soap
         // Dial both items back to the top of the hour
         $fromFilter = $fromFilter - ($fromFilter % 3600);
 
-        if (Config::GetSetting('SCHEDULE_LOOKAHEAD') == 'On')
+        if ($this->getConfig()->GetSetting('SCHEDULE_LOOKAHEAD') == 'On')
             $toFilter = $rfLookAhead - ($rfLookAhead % 3600);
         else
             $toFilter = ($fromFilter + 3600) - (($fromFilter + 3600) % 3600);
 
         if ($this->display->isAuditing == 1)
-            Log::debug(sprintf('FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)));
+            $this->getLog()->debug(sprintf('FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             // Get all the module dependants
             $sth = $dbh->prepare("SELECT DISTINCT StoredAs FROM `media` WHERE media.type = 'font' OR (media.type = 'module' AND media.moduleSystemFile = 1) ");
@@ -612,7 +724,7 @@ class Soap
             );
 
             if ($this->display->isAuditing)
-                Log::sql($SQL, $params);
+                $this->getLog()->sql($SQL, $params);
 
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
@@ -647,14 +759,14 @@ class Soap
                       AND media.type <> \'module\'
                 ';
 
-                foreach (PDOConnect::select($SQL, []) as $row) {
+                foreach ($this->getStore()->select($SQL, []) as $row) {
                     if (!array_key_exists($row['layoutId'], $layoutDependents))
                         $layoutDependents[$row['layoutId']] = [];
 
                     $layoutDependents[$row['layoutId']][] = $row['storedAs'];
                 }
 
-                Log::debug('Resolved dependents for Schedule: %s.', json_encode($layoutDependents, JSON_PRETTY_PRINT));
+                $this->getLog()->debug('Resolved dependents for Schedule: %s.', json_encode($layoutDependents, JSON_PRETTY_PRINT));
             }
 
             // We must have some results in here by this point
@@ -665,7 +777,7 @@ class Soap
                 $fromDt = date('Y-m-d H:i:s', $row['fromDt']);
                 $toDt = date('Y-m-d H:i:s', $row['toDt']);
                 $scheduleId = $row['eventId'];
-                $is_priority = Sanitize::int($row['is_priority']);
+                $is_priority = $this->getSanitizer()->int($row['is_priority']);
 
                 if ($eventTypeId == Schedule::$LAYOUT_EVENT) {
                     // Add a layout node to the schedule
@@ -677,7 +789,7 @@ class Soap
                     $layout->setAttribute("priority", $is_priority);
 
                     if (!$options['dependentsAsNodes']) {
-                        $dependents = Sanitize::string($row['Dependents']);
+                        $dependents = $this->getSanitizer()->string($row['Dependents']);
                         $layout->setAttribute("dependents", $dependents);
                     }
                     else if (array_key_exists($layoutId, $layoutDependents)) {
@@ -704,7 +816,7 @@ class Soap
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Error getting a list of layouts for the schedule. ' . $e->getMessage());
+            $this->getLog()->error('Error getting a list of layouts for the schedule. ' . $e->getMessage());
             return new \SoapFault('Sender', 'Unable to get A list of layouts for the schedule');
         }
 
@@ -765,17 +877,17 @@ class Soap
         $scheduleXml->formatOutput = true;
 
         if ($this->display->isAuditing == 1)
-            Log::debug($scheduleXml->saveXML());
+            $this->getLog()->debug($scheduleXml->saveXML());
 
         $output = $scheduleXml->saveXML();
 
         // Cache
         $cache->set($output);
-        $cache->expiresAt(\Jenssegers\Date\Date::createFromFormat('U', $toFilter));
+        $cache->expiresAt($this->getDate()->parse($toFilter, 'U'));
         $this->getPool()->saveDeferred($cache);
 
         // Log Bandwidth
-        $this->LogBandwidth($this->display->displayId, Bandwidth::$SCHEDULE, strlen($output));
+        $this->logBandwidth($this->display->displayId, Bandwidth::$SCHEDULE, strlen($output));
 
         return $output;
     }
@@ -794,29 +906,29 @@ class Soap
         $this->logProcessor->setRoute('BlackList');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
-        $mediaId = Sanitize::string($mediaId);
-        $type = Sanitize::string($type);
-        $reason = Sanitize::string($reason);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $mediaId = $this->getSanitizer()->string($mediaId);
+        $type = $this->getSanitizer()->string($type);
+        $reason = $this->getSanitizer()->string($reason);
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->CheckBandwidth())
+        if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Authenticate this request...
-        if (!$this->AuthDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', "This display client is not licensed", $hardwareKey);
 
         if ($this->display->isAuditing == 1)
-            Log::debug('Blacklisting ' . $mediaId . ' for ' . $reason);
+            $this->getLog()->debug('Blacklisting ' . $mediaId . ' for ' . $reason);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             // Check to see if this media / display is already blacklisted (and not ignored)
             $sth = $dbh->prepare('SELECT BlackListID FROM blacklist WHERE MediaID = :mediaid AND isIgnored = 0 AND DisplayID = :displayid');
@@ -858,46 +970,53 @@ class Soap
                 }
             } else {
                 if ($this->display->isAuditing == 1)
-                    Log::debug($mediaId . ' already black listed');
+                    $this->getLog()->debug($mediaId . ' already black listed');
             }
         } catch (\Exception $e) {
-            Log::error('Unable to query for Blacklist records. ' . $e->getMessage());
+            $this->getLog()->error('Unable to query for Blacklist records. ' . $e->getMessage());
             return new \SoapFault('Sender', "Unable to query for BlackList records.");
         }
 
-        $this->LogBandwidth($this->display->displayId, Bandwidth::$BLACKLIST, strlen($reason));
+        $this->logBandwidth($this->display->displayId, Bandwidth::$BLACKLIST, strlen($reason));
 
         return true;
     }
 
+    /**
+     * @param $serverKey
+     * @param $hardwareKey
+     * @param $logXml
+     * @return bool
+     * @throws \SoapFault
+     */
     protected function doSubmitLog($serverKey, $hardwareKey, $logXml)
     {
         $this->logProcessor->setRoute('SubmitLog');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->CheckBandwidth())
+        if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
-        if (!$this->AuthDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Sender', 'This display client is not licensed.');
 
         if ($this->display->isAuditing == 1)
-            Log::debug('XML log: ' . $logXml);
+            $this->getLog()->debug('XML log: ' . $logXml);
 
         // Load the XML into a DOMDocument
         $document = new \DOMDocument("1.0");
 
         if (!$document->loadXML($logXml)) {
-            Log::error('Malformed XML from Player, this will be discarded. The Raw XML String provided is: ' . $logXml);
+            $this->getLog()->error('Malformed XML from Player, this will be discarded. The Raw XML String provided is: ' . $logXml);
             return true;
         }
 
@@ -923,7 +1042,7 @@ class Soap
             $cat = strtolower($node->getAttribute('category'));
 
             if ($date == '' || $cat == '') {
-                Log::error('Log submitted without a date or category attribute');
+                $this->getLog()->error('Log submitted without a date or category attribute');
                 continue;
             }
 
@@ -955,10 +1074,10 @@ class Soap
             // We should have enough information to log this now.
             $logType = ($cat == 'error') ? 'error' : 'audit';
 
-            Log::notice('%s,%s,%s,%s,%s,%s,%s,%s', $logType, $message, 'Client', $thread . $method . $type, $date, $scheduleId, $layoutId, $mediaId);
+            $this->getLog()->notice('%s,%s,%s,%s,%s,%s,%s,%s', $logType, $message, 'Client', $thread . $method . $type, $date, $scheduleId, $layoutId, $mediaId);
         }
 
-        $this->LogBandwidth($this->display->displayId, Bandwidth::$SUBMITLOG, strlen($logXml));
+        $this->logBandwidth($this->display->displayId, Bandwidth::$SUBMITLOG, strlen($logXml));
 
         return true;
     }
@@ -975,23 +1094,23 @@ class Soap
         $this->logProcessor->setRoute('SubmitStats');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->CheckBandwidth())
+        if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
-        if (!$this->AuthDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
         if ($this->display->isAuditing == 1)
-            Log::debug('Received XML. ' . $statXml);
+            $this->getLog()->debug('Received XML. ' . $statXml);
 
         if ($statXml == "")
             throw new \SoapFault('Receiver', "Stat XML is empty.");
@@ -1012,7 +1131,7 @@ class Soap
             $type = $node->getAttribute('type');
 
             if ($fromdt == '' || $todt == '' || $type == '') {
-                Log::error('Stat submitted without the fromdt, todt or type attributes.');
+                $this->getLog()->error('Stat submitted without the fromdt, todt or type attributes.');
                 continue;
             }
 
@@ -1023,7 +1142,7 @@ class Soap
 
             // Write the stat record with the information we have available to us.
             try {
-                $stat = new Stat();
+                $stat = new Stat($this->getStore(), $this->getLog());
                 $stat->type = $type;
                 $stat->fromDt = $fromdt;
                 $stat->toDt = $todt;
@@ -1035,11 +1154,11 @@ class Soap
                 $stat->save();
             }
             catch (\PDOException $e) {
-                Log::error('Stat Add failed with error: %s', $e->getMessage());
+                $this->getLog()->error('Stat Add failed with error: %s', $e->getMessage());
             }
         }
 
-        $this->LogBandwidth($this->display->displayId, Bandwidth::$SUBMITSTATS, strlen($statXml));
+        $this->logBandwidth($this->display->displayId, Bandwidth::$SUBMITSTATS, strlen($statXml));
 
         return true;
     }
@@ -1056,23 +1175,23 @@ class Soap
         $this->logProcessor->setRoute('MediaInventory');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->CheckBandwidth())
+        if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
-        if (!$this->AuthDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->display->isAuditing == 1)
-            Log::debug($inventory);
+            $this->getLog()->debug($inventory);
 
         // Check that the $inventory contains something
         if ($inventory == '')
@@ -1096,24 +1215,24 @@ class Soap
                 switch ($node->getAttribute('type')) {
 
                     case 'media':
-                        $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
+                        $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
                         break;
 
                     case 'layout':
-                        $requiredFile = RequiredFileFactory::getByDisplayAndLayout($this->display->displayId, $node->getAttribute('id'));
+                        $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($this->display->displayId, $node->getAttribute('id'));
                         break;
 
                     case 'resource':
-                        $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
+                        $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
                         break;
 
                     default:
-                        Log::debug('Skipping unknown node in media inventory: %s - %s.', $node->getAttribute('type'), $node->getAttribute('id'));
+                        $this->getLog()->debug('Skipping unknown node in media inventory: %s - %s.', $node->getAttribute('type'), $node->getAttribute('id'));
                         continue;
                 }
             }
             catch (NotFoundException $e) {
-                Log::info('Unable to find file in media inventory: %s', $node->getAttribute('type'), $node->getAttribute('id'));
+                $this->getLog()->info('Unable to find file in media inventory: %s', $node->getAttribute('type'), $node->getAttribute('id'));
                 continue;
             }
 
@@ -1130,7 +1249,7 @@ class Soap
         $this->display->mediaInventoryStatus = $mediaInventoryComplete;
         $this->display->save(['validate' => false, 'audit' => false]);
 
-        $this->LogBandwidth($this->display->displayId, Bandwidth::$MEDIAINVENTORY, strlen($inventory));
+        $this->logBandwidth($this->display->displayId, Bandwidth::$MEDIAINVENTORY, strlen($inventory));
 
         return true;
     }
@@ -1149,30 +1268,30 @@ class Soap
         $this->logProcessor->setRoute('GetResource');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
-        $layoutId = Sanitize::int($layoutId);
-        $regionId = Sanitize::string($regionId);
-        $mediaId = Sanitize::string($mediaId);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $layoutId = $this->getSanitizer()->int($layoutId);
+        $regionId = $this->getSanitizer()->string($regionId);
+        $mediaId = $this->getSanitizer()->string($mediaId);
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->CheckBandwidth())
+        if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
-        if (!$this->AuthDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
         // The MediaId is actually the widgetId
         try {
-            $requiredFile = RequiredFileFactory::getByDisplayAndResource($this->display->displayId, $layoutId, $regionId, $mediaId);
+            $requiredFile = $this->requiredFileFactory->getByDisplayAndResource($this->display->displayId, $layoutId, $regionId, $mediaId);
 
-            $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($mediaId), RegionFactory::getById($regionId));
-            $resource = $module->GetResource($this->display->displayId);
+            $module = $this->moduleFactory->createWithWidget($this->getFactoryService()->get('WidgetFactory')->loadByWidgetId($mediaId), $this->getFactoryService()->get('RegionFactory')->getById($regionId));
+            $resource = $module->getResource($this->display->displayId);
 
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
             $requiredFile->markUsed();
@@ -1188,7 +1307,7 @@ class Soap
         }
 
         // Log Bandwidth
-        $this->LogBandwidth($this->display->displayId, Bandwidth::$GETRESOURCE, strlen($resource));
+        $this->logBandwidth($this->display->displayId, Bandwidth::$GETRESOURCE, strlen($resource));
 
         return $resource;
     }
@@ -1198,13 +1317,13 @@ class Soap
      */
     protected function phoneHome()
     {
-        if (Config::GetSetting('PHONE_HOME') == 'On') {
+        if ($this->getConfig()->GetSetting('PHONE_HOME') == 'On') {
             // Find out when we last PHONED_HOME :D
             // If it's been > 28 days since last PHONE_HOME then
-            if (Config::GetSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
+            if ($this->getConfig()->GetSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
 
                 try {
-                    $dbh = PDOConnect::init();
+                    $dbh = $this->getStore()->getConnection();
 
                     // Retrieve number of displays
                     $sth = $dbh->prepare('SELECT COUNT(*) AS Cnt FROM `display` WHERE `licensed` = 1');
@@ -1213,12 +1332,12 @@ class Soap
                     $PHONE_HOME_CLIENTS = $sth->fetchColumn();
 
                     // Retrieve version number
-                    $PHONE_HOME_VERSION = Config::Version('app_ver');
+                    $PHONE_HOME_VERSION = $this->getConfig()->Version('app_ver');
 
-                    $PHONE_HOME_URL = Config::GetSetting('PHONE_HOME_URL') . "?id=" . urlencode(Config::GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
+                    $PHONE_HOME_URL = $this->getConfig()->GetSetting('PHONE_HOME_URL') . "?id=" . urlencode($this->getConfig()->GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
 
                     if ($this->display->isAuditing == 1)
-                        Log::notice("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL, "xmds", "RequiredFiles");
+                        $this->getLog()->notice("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL, "xmds", "RequiredFiles");
 
                     // Set PHONE_HOME_TIME to NOW.
                     $sth = $dbh->prepare('UPDATE `setting` SET `value` = :time WHERE `setting`.`setting` = :setting LIMIT 1');
@@ -1230,11 +1349,11 @@ class Soap
                     @file_get_contents($PHONE_HOME_URL);
 
                     if ($this->display->isAuditing == 1)
-                        Log::notice("audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles");
+                        $this->getLog()->notice("audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles");
 
                 } catch (\Exception $e) {
 
-                    Log::error($e->getMessage());
+                    $this->getLog()->error($e->getMessage());
 
                     return false;
                 }
@@ -1250,7 +1369,7 @@ class Soap
     protected function authDisplay($hardwareKey)
     {
         try {
-            $this->display = DisplayFactory::getByLicence($hardwareKey);
+            $this->display = $this->displayFactory->getByLicence($hardwareKey);
 
             if ($this->display->licensed != 1)
                 return false;
@@ -1266,52 +1385,54 @@ class Soap
             $this->display->save(Display::$saveOptionsMinimum);
 
             // Commit if necessary
-            PDOConnect::commitIfNecessary();
+            $this->getStore()->commitIfNecessary();
 
             // Configure our log processor
             $this->logProcessor->setDisplay($this->display->displayId);
 
             if ($this->display->isAuditing == 1)
-                Log::info('IN');
+                $this->getLog()->info('IN');
 
             return true;
 
         } catch (NotFoundException $e) {
-            Log::error($e->getMessage());
+            $this->getLog()->error($e->getMessage());
             return false;
         }
     }
 
     protected function alertDisplayUp()
     {
-        $maintenanceEnabled = Config::GetSetting('MAINTENANCE_ENABLED');
+        $maintenanceEnabled = $this->getConfig()->GetSetting('MAINTENANCE_ENABLED');
 
         if ($this->display->loggedIn == 0) {
 
+            $this->getLog()->info('Display %s was down, now its up.', $this->display->display);
+
             // Log display up
-            Stat::displayUp($this->display->displayId);
+            (new Stat($this->getStore(), $this->getLog()))->displayUp($this->display->displayId);
 
             // Do we need to email?
             if ($this->display->emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected')
-                && Config::GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On'
+                && $this->getConfig()->GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On'
             ) {
 
-                $msgTo = Config::GetSetting("mail_to");
-                $msgFrom = Config::GetSetting("mail_from");
+                $msgTo = $this->getConfig()->GetSetting("mail_to");
+                $msgFrom = $this->getConfig()->GetSetting("mail_from");
 
                 $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
                 $body = sprintf(__("Display %s with ID %d is now back online."), $this->display->display);
 
                 // Get a list of people that have view access to the display?
-                if (Config::GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1) {
+                if ($this->getConfig()->GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1) {
 
-                    foreach (UserFactory::getByDisplayGroupId($this->display->displayGroupId) as $user) {
+                    foreach ($this->userFactory->getByDisplayGroupId($this->display->displayGroupId) as $user) {
                         /* @var User $user */
                         if ($user->email != '') {
                             // Send them an email
                             $mail = new \PHPMailer();
                             $mail->From = $msgFrom;
-                            $mail->FromName = Theme::getConfig('theme_name');
+                            $mail->FromName = $this->getConfig()->getThemeConfig('theme_name');
                             $mail->Subject = $subject;
                             $mail->addAddress($user->email);
 
@@ -1319,7 +1440,7 @@ class Soap
                             $mail->Body = $body;
 
                             if (!$mail->send())
-                                Log::error('Unable to send Display Up mail to %s', $user->email);
+                                $this->getLog()->error('Unable to send Display Up mail to %s', $user->email);
                         }
                     }
                 }
@@ -1327,7 +1448,7 @@ class Soap
                 // Send to the original admin contact
                 $mail = new \PHPMailer();
                 $mail->From = $msgFrom;
-                $mail->FromName = Theme::getConfig('theme_name');
+                $mail->FromName = $this->getConfig()->getThemeConfig('theme_name');
                 $mail->Subject = $subject;
                 $mail->addAddress($msgTo);
 
@@ -1335,7 +1456,7 @@ class Soap
                 $mail->Body = $body;
 
                 if (!$mail->send())
-                    Log::error('Unable to send Display Up mail to %s', $msgTo);
+                    $this->getLog()->error('Unable to send Display Up mail to %s', $msgTo);
             }
         }
     }
@@ -1364,13 +1485,13 @@ class Soap
      */
     protected function checkBandwidth()
     {
-        $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
+        $xmdsLimit = $this->getConfig()->GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 
         if ($xmdsLimit <= 0)
             return true;
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = $this->getStore()->getConnection();
 
             // Test bandwidth for the current month
             $sth = $dbh->prepare('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month = :month');
@@ -1383,7 +1504,7 @@ class Soap
             return ($bandwidthUsage >= ($xmdsLimit * 1024)) ? false : true;
 
         } catch (\Exception $e) {
-            Log::error($e->getMessage());
+            $this->getLog()->error($e->getMessage());
             return false;
         }
     }
@@ -1396,6 +1517,6 @@ class Soap
      */
     protected function logBandwidth($displayId, $type, $sizeInBytes)
     {
-        BandwidthFactory::createAndSave($type, $displayId, $sizeInBytes);
+        $this->bandwidthFactory->createAndSave($type, $displayId, $sizeInBytes);
     }
 }

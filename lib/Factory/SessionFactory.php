@@ -11,20 +11,51 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Session;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Date;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class SessionFactory
+ * @package Xibo\Factory
+ */
 class SessionFactory extends BaseFactory
 {
+    /**
+     * @var DateServiceInterface
+     */
+    private $date;
+
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param DateServiceInterface $dateService
+     */
+    public function __construct($store, $log, $sanitizerService, $dateService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+
+        $this->date = $dateService;
+    }
+
+    /**
+     * @return Session
+     */
+    public function createEmpty()
+    {
+        return new Session($this->getStore(), $this->getLog());
+    }
+
     /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[Session]
      * @throws NotFoundException
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
         $params = array();
@@ -39,20 +70,20 @@ class SessionFactory extends BaseFactory
              WHERE 1 = 1
             ';
 
-            if (Sanitize::getString('fromDt', $filterBy) != '') {
+            if ($this->getSanitizer()->getString('fromDt', $filterBy) != '') {
                 $body .= ' AND session.LastAccessed < :lastAccessed ';
-                $params['lastAccessed'] = Date::getLocalDate(Sanitize::getDate('fromDt', $filterBy)->setTime(0, 0, 0));
+                $params['lastAccessed'] = $this->date->getLocalDate($this->getSanitizer()->getDate('fromDt', $filterBy)->setTime(0, 0, 0));
             }
 
-            if (Sanitize::getString('type', $filterBy) == 'active') {
+            if ($this->getSanitizer()->getString('type', $filterBy) == 'active') {
                 $body .= ' AND IsExpired = 0 ';
             }
 
-            if (Sanitize::getString('type', $filterBy) == 'active') {
+            if ($this->getSanitizer()->getString('type', $filterBy) == 'active') {
                 $body .= ' AND IsExpired = 1 ';
             }
 
-            if (Sanitize::getString('type', $filterBy) == 'active') {
+            if ($this->getSanitizer()->getString('type', $filterBy) == 'active') {
                 $body .= ' AND session.userID IS NULL ';
             }
 
@@ -63,29 +94,29 @@ class SessionFactory extends BaseFactory
 
             $limit = '';
             // Paging
-            if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-                $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+            if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+                $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
             }
 
             $sql = $select . $body . $order . $limit;
 
 
 
-            foreach (PDOConnect::select($sql, $params) as $row) {
-                $entries[] = (new Session())->hydrate($row);
+            foreach ($this->getStore()->select($sql, $params) as $row) {
+                $entries[] = $this->createEmpty()->hydrate($row);
             }
 
             // Paging
             if ($limit != '' && count($entries) > 0) {
-                $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-                self::$_countLast = intval($results[0]['total']);
+                $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+                $this->_countLast = intval($results[0]['total']);
             }
 
             return $entries;
 
         } catch (\Exception $e) {
 
-            Log::error($e);
+            $this->getLog()->error($e);
 
             throw new NotFoundException();
         }

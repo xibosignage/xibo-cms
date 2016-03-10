@@ -25,20 +25,62 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Resolution;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class ResolutionFactory
+ * @package Xibo\Factory
+ */
 class ResolutionFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * Create Empty
+     * @return Resolution
+     */
+    public function createEmpty()
+    {
+        return new Resolution($this->getStore(), $this->getLog());
+    }
+
+    /**
+     * Create Resolution
+     * @param $resolutionName
+     * @param $width
+     * @param $height
+     * @return Resolution
+     */
+    public function create($resolutionName, $width, $height)
+    {
+        $resolution = $this->createEmpty();
+        $resolution->resolution = $resolutionName;
+        $resolution->width = $width;
+        $resolution->height = $height;
+
+        return $resolution;
+    }
+
     /**
      * Load the Resolution by ID
      * @param int $resolutionId
      * @return Resolution
      * @throws NotFoundException
      */
-    public static function getById($resolutionId)
+    public function getById($resolutionId)
     {
-        $resolutions = ResolutionFactory::query(null, array('disableUserCheck' => 1, 'resolutionId' => $resolutionId));
+        $resolutions = $this->query(null, array('disableUserCheck' => 1, 'resolutionId' => $resolutionId));
 
         if (count($resolutions) <= 0)
             throw new NotFoundException;
@@ -53,9 +95,9 @@ class ResolutionFactory extends BaseFactory
      * @return Resolution
      * @throws NotFoundException
      */
-    public static function getByDimensions($width, $height)
+    public function getByDimensions($width, $height)
     {
-        $resolutions = ResolutionFactory::query(null, array('disableUserCheck' => 1, 'width' => $width, 'height' => $height));
+        $resolutions = $this->query(null, array('disableUserCheck' => 1, 'width' => $width, 'height' => $height));
 
         if (count($resolutions) <= 0)
             throw new NotFoundException('Resolution not found');
@@ -70,9 +112,9 @@ class ResolutionFactory extends BaseFactory
      * @return Resolution
      * @throws NotFoundException
      */
-    public static function getByDesignerDimensions($width, $height)
+    public function getByDesignerDimensions($width, $height)
     {
-        $resolutions = ResolutionFactory::query(null, array('disableUserCheck' => 1, 'designerWidth' => $width, 'designerHeight' => $height));
+        $resolutions = $this->query(null, array('disableUserCheck' => 1, 'designerWidth' => $width, 'designerHeight' => $height));
 
         if (count($resolutions) <= 0)
             throw new NotFoundException('Resolution not found');
@@ -80,7 +122,7 @@ class ResolutionFactory extends BaseFactory
         return $resolutions[0];
     }
 
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         if ($sortOrder === null)
             $sortOrder = ['resolution'];
@@ -104,39 +146,39 @@ class ResolutionFactory extends BaseFactory
            WHERE 1 = 1
         ';
 
-        if (Sanitize::getInt('enabled', -1, $filterBy) != -1) {
+        if ($this->getSanitizer()->getInt('enabled', -1, $filterBy) != -1) {
             $body .= ' AND enabled = :enabled ';
-            $params['enabled'] = Sanitize::getInt('enabled', $filterBy);
+            $params['enabled'] = $this->getSanitizer()->getInt('enabled', $filterBy);
         }
 
-        if (Sanitize::getInt('resolutionId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('resolutionId', $filterBy) !== null) {
             $body .= ' AND resolutionId = :resolutionId ';
-            $params['resolutionId'] = Sanitize::getInt('resolutionId', $filterBy);
+            $params['resolutionId'] = $this->getSanitizer()->getInt('resolutionId', $filterBy);
         }
 
-        if (Sanitize::getString('resolution', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('resolution', $filterBy) != null) {
             $body .= ' AND resolution = :resolution ';
-            $params['resolution'] = Sanitize::getString('resolution', $filterBy);
+            $params['resolution'] = $this->getSanitizer()->getString('resolution', $filterBy);
         }
 
-        if (Sanitize::getInt('width', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('width', $filterBy) !== null) {
             $body .= ' AND intended_width = :width ';
-            $params['width'] = Sanitize::getInt('width', $filterBy);
+            $params['width'] = $this->getSanitizer()->getInt('width', $filterBy);
         }
 
-        if (Sanitize::getInt('height', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('height', $filterBy) !== null) {
             $body .= ' AND intended_height = :height ';
-            $params['height'] = Sanitize::getInt('height', $filterBy);
+            $params['height'] = $this->getSanitizer()->getInt('height', $filterBy);
         }
 
-        if (Sanitize::getInt('designerWidth', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('designerWidth', $filterBy) !== null) {
             $body .= ' AND width = :designerWidth ';
-            $params['designerWidth'] = Sanitize::getInt('designerWidth', $filterBy);
+            $params['designerWidth'] = $this->getSanitizer()->getInt('designerWidth', $filterBy);
         }
 
-        if (Sanitize::getInt('designerHeight', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('designerHeight', $filterBy) !== null) {
             $body .= ' AND height = :designerHeight ';
-            $params['designerHeight'] = Sanitize::getInt('designerHeight', $filterBy);
+            $params['designerHeight'] = $this->getSanitizer()->getInt('designerHeight', $filterBy);
         }
 
         // Sorting?
@@ -146,8 +188,8 @@ class ResolutionFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . Sanitize::getInt('start', 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . $this->getSanitizer()->getInt('start', 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
         // The final statements
@@ -155,14 +197,14 @@ class ResolutionFactory extends BaseFactory
 
 
 
-        foreach(PDOConnect::select($sql, $params) as $record) {
-            $entities[] = (new Resolution())->hydrate($record, ['intProperties' => ['width', 'height', 'version', 'enabled']]);
+        foreach($this->getStore()->select($sql, $params) as $record) {
+            $entities[] = $this->createEmpty()->hydrate($record, ['intProperties' => ['width', 'height', 'version', 'enabled']]);
         }
 
         // Paging
         if ($limit != '' && count($entities) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entities;

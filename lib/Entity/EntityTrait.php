@@ -9,10 +9,15 @@
 namespace Xibo\Entity;
 
 
-use Slim\Slim;
 use Xibo\Helper\ObjectVars;
-use Xibo\Helper\Sanitize;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class EntityTrait
+ * used by all entities
+ * @package Xibo\Entity
+ */
 trait EntityTrait
 {
     private $hash = null;
@@ -21,6 +26,47 @@ trait EntityTrait
 
     public $buttons = [];
     private $jsonExclude = ['buttons', 'jsonExclude'];
+
+    /**
+     * @var StorageServiceInterface
+     */
+    private $store;
+
+    /**
+     * @var LogServiceInterface
+     */
+    private $log;
+
+    /**
+     * Set common dependencies.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @return $this
+     */
+    protected function setCommonDependencies($store, $log)
+    {
+        $this->store = $store;
+        $this->log = $log;
+        return $this;
+    }
+
+    /**
+     * Get Store
+     * @return StorageServiceInterface
+     */
+    protected function getStore()
+    {
+        return $this->store;
+    }
+
+    /**
+     * Get Log
+     * @return LogServiceInterface
+     */
+    protected function getLog()
+    {
+        return $this->log;
+    }
 
     /**
      * Hydrate an entity with properties
@@ -42,7 +88,7 @@ trait EntityTrait
                 if (stripos(strrev($prop), 'dI') === 0 || in_array($prop, $intProperties))
                     $val = intval($val);
                 else if (in_array($prop, $stringProperties))
-                    $val = Sanitize::string($val);
+                    $val = filter_var($val, FILTER_SANITIZE_STRING);
                 else if (in_array($prop, $htmlStringProperties))
                     $val = htmlentities($val);
 
@@ -105,14 +151,5 @@ trait EntityTrait
     protected function setPermissionsClass($class)
     {
         $this->permissionsClass = $class;
-    }
-
-    /**
-     * Get Pool
-     * @return \Stash\Interfaces\PoolInterface
-     */
-    protected function getPool()
-    {
-        return Slim::getInstance()->pool;
     }
 }

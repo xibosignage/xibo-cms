@@ -9,23 +9,67 @@
 namespace Xibo\Factory;
 
 
+use Xibo\Entity\User;
 use Xibo\Entity\UserGroup;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class UserGroupFactory
+ * @package Xibo\Factory
+ */
 class UserGroupFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param User $user
+     * @param UserFactory $userFactory
+     */
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+
+        $this->setAclDependencies($user, $userFactory);
+    }
+
+    /**
+     * Create Empty User Group Object
+     * @return UserGroup
+     */
+    public function createEmpty()
+    {
+        return new UserGroup($this->getStore(), $this->getLog(), $this, $this->getUserFactory());
+    }
+
+    /**
+     * Create User Group
+     * @param $userGroup
+     * @param $libraryQuota
+     * @return UserGroup
+     */
+    public function create($userGroup, $libraryQuota)
+    {
+        $group = $this->createEmpty();
+        $group->group = $userGroup;
+        $group->libraryQuota = $libraryQuota;
+
+        return $group;
+    }
+
     /**
      * Get by Group Id
      * @param int $groupId
      * @return UserGroup
      * @throws NotFoundException
      */
-    public static function getById($groupId)
+    public function getById($groupId)
     {
-        $groups = UserGroupFactory::query(null, ['disableUserCheck' => 1, 'groupId' => $groupId, 'isUserSpecific' => -1]);
+        $groups = $this->query(null, ['disableUserCheck' => 1, 'groupId' => $groupId, 'isUserSpecific' => -1]);
 
         if (count($groups) <= 0)
             throw new NotFoundException(__('Group not found'));
@@ -40,9 +84,9 @@ class UserGroupFactory extends BaseFactory
      * @return UserGroup
      * @throws NotFoundException
      */
-    public static function getByName($group, $isUserSpecific = 0)
+    public function getByName($group, $isUserSpecific = 0)
     {
-        $groups = UserGroupFactory::query(null, ['disableUserCheck' => 1, 'group' => $group, 'isUserSpecific' => $isUserSpecific]);
+        $groups = $this->query(null, ['disableUserCheck' => 1, 'group' => $group, 'isUserSpecific' => $isUserSpecific]);
 
         if (count($groups) <= 0)
             throw new NotFoundException(__('Group not found'));
@@ -55,9 +99,9 @@ class UserGroupFactory extends BaseFactory
      * @return UserGroup
      * @throws NotFoundException
      */
-    public static function getEveryone()
+    public function getEveryone()
     {
-        $groups = UserGroupFactory::query(null, ['disableUserCheck' => 1, 'isEveryone' => 1]);
+        $groups = $this->query(null, ['disableUserCheck' => 1, 'isEveryone' => 1]);
 
         if (count($groups) <= 0)
             throw new NotFoundException(__('Group not found'));
@@ -71,9 +115,9 @@ class UserGroupFactory extends BaseFactory
      * @return array[UserGroup]
      * @throws NotFoundException
      */
-    public static function getByUserId($userId)
+    public function getByUserId($userId)
     {
-        return UserGroupFactory::query(null, ['disableUserCheck' => 1, 'userId' => $userId, 'isUserSpecific' => 0]);
+        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $userId, 'isUserSpecific' => 0]);
     }
 
     /**
@@ -82,7 +126,7 @@ class UserGroupFactory extends BaseFactory
      * @return array[UserGroup]
      * @throws \Exception
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
         $params = array();
@@ -107,9 +151,9 @@ class UserGroupFactory extends BaseFactory
             ';
 
             // Permissions
-            if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
+            if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
                 // Normal users can only see their group
-                if (self::getUser()->userTypeId != 1) {
+                if ($this->getUser()->userTypeId != 1) {
                     $body .= '
                     AND `group`.groupId IN (
                         SELECT `group`.groupId
@@ -120,36 +164,36 @@ class UserGroupFactory extends BaseFactory
                          WHERE `lkusergroup`.userId = :currentUserId
                     )
                     ';
-                    $params['currentUserId'] = self::getUser()->userId;
+                    $params['currentUserId'] = $this->getUser()->userId;
                 }
             }
 
             // Filter by Group Id
-            if (Sanitize::getInt('groupId', $filterBy) !== null) {
+            if ($this->getSanitizer()->getInt('groupId', $filterBy) !== null) {
                 $body .= ' AND `group`.groupId = :groupId ';
-                $params['groupId'] = Sanitize::getInt('groupId', $filterBy);
+                $params['groupId'] = $this->getSanitizer()->getInt('groupId', $filterBy);
             }
 
             // Filter by Group Name
-            if (Sanitize::getString('group', $filterBy) != null) {
+            if ($this->getSanitizer()->getString('group', $filterBy) != null) {
                 $body .= ' AND `group`.group = :group ';
-                $params['group'] = Sanitize::getString('group', $filterBy);
+                $params['group'] = $this->getSanitizer()->getString('group', $filterBy);
             }
 
             // Filter by User Id
-            if (Sanitize::getInt('userId', $filterBy) !== null) {
+            if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
                 $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lkusergroup` WHERE userId = :userId) ';
-                $params['userId'] = Sanitize::getInt('userId', $filterBy);
+                $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
             }
 
-            if (Sanitize::getInt('isUserSpecific', $filterBy) != -1) {
+            if ($this->getSanitizer()->getInt('isUserSpecific', $filterBy) != -1) {
                 $body .= ' AND isUserSpecific = :isUserSpecific ';
-                $params['isUserSpecific'] = Sanitize::getInt('isUserSpecific', 0, $filterBy);
+                $params['isUserSpecific'] = $this->getSanitizer()->getInt('isUserSpecific', 0, $filterBy);
             }
 
-            if (Sanitize::getInt('isEveryone', $filterBy) != -1) {
+            if ($this->getSanitizer()->getInt('isEveryone', $filterBy) != -1) {
                 $body .= ' AND isEveryone = :isEveryone ';
-                $params['isEveryone'] = Sanitize::getInt('isEveryone', 0, $filterBy);
+                $params['isEveryone'] = $this->getSanitizer()->getInt('isEveryone', 0, $filterBy);
             }
 
             // Sorting?
@@ -159,29 +203,29 @@ class UserGroupFactory extends BaseFactory
 
             $limit = '';
             // Paging
-            if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-                $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+            if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+                $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
             }
 
             $sql = $select . $body . $order . $limit;
 
 
 
-            foreach (PDOConnect::select($sql, $params) as $row) {
-                $entries[] = (new UserGroup())->hydrate($row);
+            foreach ($this->getStore()->select($sql, $params) as $row) {
+                $entries[] = $this->createEmpty()->hydrate($row);
             }
 
             // Paging
             if ($limit != '' && count($entries) > 0) {
-                $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-                self::$_countLast = intval($results[0]['total']);
+                $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+                $this->_countLast = intval($results[0]['total']);
             }
 
             return $entries;
 
         } catch (\Exception $e) {
 
-            Log::error($e);
+            $this->getLog()->error($e);
 
             throw $e;
         }

@@ -25,17 +25,41 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Tag;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class TagFactory
+ * @package Xibo\Factory
+ */
 class TagFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * @return Tag
+     */
+    public function createEmpty()
+    {
+        return new Tag($this->getStore(), $this->getLog());
+    }
+
     /**
      * Get tags from a string
      * @param string $tagString
      * @return array[Tag]
      */
-    public static function tagsFromString($tagString)
+    public function tagsFromString($tagString)
     {
         $tags = array();
 
@@ -47,7 +71,7 @@ class TagFactory extends BaseFactory
         foreach(explode(',', $tagString) as $tagName) {
             $tagName = trim($tagName);
 
-            $tags[] = TagFactory::tagFromString($tagName);
+            $tags[] = $this->tagFromString($tagName);
         }
 
         return $tags;
@@ -58,18 +82,18 @@ class TagFactory extends BaseFactory
      * @param string $tagString
      * @return Tag
      */
-    public static function tagFromString($tagString)
+    public function tagFromString($tagString)
     {
         // Trim the tag
         $tagString = trim($tagString);
 
         // Add to the list
         try {
-            $tag = TagFactory::getByTag($tagString);
+            $tag = $this->getByTag($tagString);
         }
         catch (NotFoundException $e) {
             // New tag
-            $tag = new Tag();
+            $tag = $this->createEmpty();
             $tag->tag = $tagString;
         }
 
@@ -82,19 +106,19 @@ class TagFactory extends BaseFactory
      * @return Tag
      * @throws NotFoundException
      */
-    public static function getByTag($tagName)
+    public function getByTag($tagName)
     {
         $sql = 'SELECT tag.tagId, tag.tag FROM `tag` WHERE tag.tag = :tag';
 
-        $tags = \Xibo\Storage\PDOConnect::select($sql, array('tag' => $tagName));
+        $tags = $this->getStore()->select($sql, array('tag' => $tagName));
 
         if (count($tags) <= 0)
             throw new NotFoundException(sprintf(__('Unable to find Tag %s'), $tagName));
 
         $row = $tags[0];
-        $tag = new Tag();
-        $tag->tagId = \Xibo\Helper\Sanitize::int($row['tagId']);
-        $tag->tag = \Xibo\Helper\Sanitize::string($row['tag']);
+        $tag = $this->createEmpty();
+        $tag->tagId = $this->getSanitizer()->int($row['tagId']);
+        $tag->tag = $this->getSanitizer()->string($row['tag']);
 
         return $tag;
     }
@@ -104,16 +128,16 @@ class TagFactory extends BaseFactory
      * @param $layoutId
      * @return array[Tag]
      */
-    public static function loadByLayoutId($layoutId)
+    public function loadByLayoutId($layoutId)
     {
         $tags = array();
 
         $sql = 'SELECT tag.tagId, tag.tag FROM `tag` INNER JOIN `lktaglayout` ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = :layoutId';
 
-        foreach (\Xibo\Storage\PDOConnect::select($sql, array('layoutId' => $layoutId)) as $row) {
-            $tag = new Tag();
-            $tag->tagId = \Xibo\Helper\Sanitize::int($row['tagId']);
-            $tag->tag = \Xibo\Helper\Sanitize::string($row['tag']);
+        foreach ($this->getStore()->select($sql, array('layoutId' => $layoutId)) as $row) {
+            $tag = $this->createEmpty();
+            $tag->tagId = $this->getSanitizer()->int($row['tagId']);
+            $tag->tag = $this->getSanitizer()->string($row['tag']);
             $tag->assignLayout($layoutId);
 
             $tags[] = $tag;
@@ -127,16 +151,16 @@ class TagFactory extends BaseFactory
      * @param $mediaId
      * @return array[Tag]
      */
-    public static function loadByMediaId($mediaId)
+    public function loadByMediaId($mediaId)
     {
         $tags = array();
 
         $sql = 'SELECT tag.tagId, tag.tag FROM `tag` INNER JOIN `lktagmedia` ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = :mediaId';
 
-        foreach (PDOConnect::select($sql, array('mediaId' => $mediaId)) as $row) {
-            $tag = new Tag();
-            $tag->tagId = Sanitize::int($row['tagId']);
-            $tag->tag = Sanitize::string($row['tag']);
+        foreach ($this->getStore()->select($sql, array('mediaId' => $mediaId)) as $row) {
+            $tag = $this->createEmpty();
+            $tag->tagId = $this->getSanitizer()->int($row['tagId']);
+            $tag->tag = $this->getSanitizer()->string($row['tag']);
             $tag->assignMedia($mediaId);
 
             $tags[] = $tag;

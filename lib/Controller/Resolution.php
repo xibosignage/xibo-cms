@@ -25,12 +25,40 @@ use Kit;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Helper\Form;
-use Xibo\Helper\Help;
-use Xibo\Helper\Sanitize;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
-
+/**
+ * Class Resolution
+ * @package Xibo\Controller
+ */
 class Resolution extends Base
 {
+    /**
+     * @var ResolutionFactory
+     */
+    private $resolutionFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param ResolutionFactory $resolutionFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $resolutionFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->resolutionFactory = $resolutionFactory;
+    }
+
     /**
      * Display the Resolution Page
      */
@@ -83,12 +111,12 @@ class Resolution extends Base
     {
         // Show enabled
         $filter = [
-            'enabled' => Sanitize::getInt('enabled', -1),
-            'resolutionId' => Sanitize::getInt('resolutionId'),
-            'resolution' => Sanitize::getString('resolution')
+            'enabled' => $this->getSanitizer()->getInt('enabled', -1),
+            'resolutionId' => $this->getSanitizer()->getInt('resolutionId'),
+            'resolution' => $this->getSanitizer()->getString('resolution')
         ];
 
-        $resolutions = ResolutionFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $resolutions = $this->resolutionFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($resolutions as $resolution) {
             /* @var \Xibo\Entity\Resolution $resolution */
@@ -115,7 +143,7 @@ class Resolution extends Base
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($resolutions);
-        $this->getState()->recordsTotal = ResolutionFactory::countLast();
+        $this->getState()->recordsTotal = $this->resolutionFactory->countLast();
     }
 
     /**
@@ -125,7 +153,7 @@ class Resolution extends Base
     {
         $this->getState()->template = 'resolution-form-add';
         $this->getState()->setData([
-            'help' => Help::Link('Resolution', 'Add')
+            'help' => $this->getHelp()->link('Resolution', 'Add')
         ]);
     }
 
@@ -135,7 +163,7 @@ class Resolution extends Base
      */
     function editForm($resolutionId)
     {
-        $resolution = ResolutionFactory::getById($resolutionId);
+        $resolution = $this->resolutionFactory->getById($resolutionId);
 
         if (!$this->getUser()->checkEditable($resolution))
             throw new AccessDeniedException();
@@ -143,7 +171,7 @@ class Resolution extends Base
         $this->getState()->template = 'resolution-form-edit';
         $this->getState()->setData([
             'resolution' => $resolution,
-            'help' => Help::Link('Resolution', 'Edit')
+            'help' => $this->getHelp()->link('Resolution', 'Edit')
         ]);
     }
 
@@ -153,7 +181,7 @@ class Resolution extends Base
      */
     function deleteForm($resolutionId)
     {
-        $resolution = ResolutionFactory::getById($resolutionId);
+        $resolution = $this->resolutionFactory->getById($resolutionId);
 
         if (!$this->getUser()->checkEditable($resolution))
             throw new AccessDeniedException();
@@ -161,7 +189,7 @@ class Resolution extends Base
         $this->getState()->template = 'resolution-form-delete';
         $this->getState()->setData([
             'resolution' => $resolution,
-            'help' => Help::Link('Resolution', 'Delete')
+            'help' => $this->getHelp()->link('Resolution', 'Delete')
         ]);
     }
 
@@ -209,10 +237,11 @@ class Resolution extends Base
      */
     function add()
     {
-        $resolution = new \Xibo\Entity\Resolution();
-        $resolution->resolution = Sanitize::getString('resolution');
-        $resolution->width = Sanitize::getInt('width');
-        $resolution->height = Sanitize::getInt('height');
+        /* @var \Xibo\Entity\Resolution $resolution */
+        $resolution = $this->resolutionFactory->create($this->getSanitizer()->getString('resolution'),
+            $this->getSanitizer()->getInt('width'),
+            $this->getSanitizer()->getInt('height'));
+
         $resolution->save();
 
         // Return
@@ -271,15 +300,15 @@ class Resolution extends Base
      */
     function edit($resolutionId)
     {
-        $resolution = ResolutionFactory::getById($resolutionId);
+        $resolution = $this->resolutionFactory->getById($resolutionId);
 
         if (!$this->getUser()->checkEditable($resolution))
             throw new AccessDeniedException();
 
-        $resolution->resolution = Sanitize::getString('resolution');
-        $resolution->width = Sanitize::getInt('width');
-        $resolution->height = Sanitize::getInt('height');
-        $resolution->enabled = Sanitize::getCheckbox('enabled');
+        $resolution->resolution = $this->getSanitizer()->getString('resolution');
+        $resolution->width = $this->getSanitizer()->getInt('width');
+        $resolution->height = $this->getSanitizer()->getInt('height');
+        $resolution->enabled = $this->getSanitizer()->getCheckbox('enabled');
         $resolution->save();
 
         // Return
@@ -315,7 +344,7 @@ class Resolution extends Base
      */
     function delete($resolutionId)
     {
-        $resolution = ResolutionFactory::getById($resolutionId);
+        $resolution = $this->resolutionFactory->getById($resolutionId);
 
         if (!$this->getUser()->checkDeleteable($resolution))
             throw new AccessDeniedException();

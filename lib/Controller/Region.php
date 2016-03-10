@@ -20,13 +20,85 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
+use Xibo\Factory\UserGroupFactory;
+use Xibo\Helper\Session;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
+/**
+ * Class Region
+ * @package Xibo\Controller
+ */
 class Region extends Base
 {
+    /**
+     * @var Session
+     */
+    private $session;
+
+    /**
+     * @var RegionFactory
+     */
+    private $regionFactory;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var ModuleFactory
+     */
+    private $moduleFactory;
+
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+
+    /**
+     * @var TransitionFactory
+     */
+    private $transitionFactory;
+
+    /**
+     * @var UserGroupFactory
+     */
+    private $userGroupFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param Session $session
+     * @param RegionFactory $regionFactory
+     * @param PermissionFactory $permissionFactory
+     * @param TransitionFactory $transitionFactory
+     * @param ModuleFactory $moduleFactory
+     * @param LayoutFactory $layoutFactory
+     * @param UserGroupFactory $userGroupFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $regionFactory, $permissionFactory,
+                                $transitionFactory, $moduleFactory, $layoutFactory, $userGroupFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->session = $session;
+        $this->regionFactory = $regionFactory;
+        $this->permissionFactory = $permissionFactory;
+        $this->transitionFactory = $transitionFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->moduleFactory = $moduleFactory;
+        $this->userGroupFactory = $userGroupFactory;
+    }
+
     /**
      * Timeline Form
      * @param int $regionId
@@ -34,13 +106,13 @@ class Region extends Base
     public function timelineForm($regionId)
     {
         // Get a complex object of playlists and widgets
-        $region = RegionFactory::getById($regionId);
+        $region = $this->regionFactory->getById($regionId);
 
         if (!$this->getUser()->checkEditable($region))
             throw new AccessDeniedException();
 
         // Set the view we have requested
-        $this->getSession()->set('timeLineView', Sanitize::getString('view', $this->getSession()->get('timeLineView')));
+        $this->session->set('timeLineView', $this->getSanitizer()->getString('view', $this->session->get('timeLineView')));
 
         // Load the region
         $region->load(['playlistIncludeRegionAssignments' => false]);
@@ -51,17 +123,17 @@ class Region extends Base
 
             foreach ($playlist->widgets as $widget) {
                 /* @var Widget $widget */
-                $widget->module = ModuleFactory::createWithWidget($widget, $region);
+                $widget->module = $this->moduleFactory->createWithWidget($widget, $region);
             }
         }
 
         // Pass to view
-        $this->getState()->template = ($this->getSession()->get('timeLineView') == 'grid') ? 'region-form-grid' : 'region-form-timeline';
+        $this->getState()->template = ($this->session->get('timeLineView') == 'grid') ? 'region-form-grid' : 'region-form-timeline';
         $this->getState()->setData([
             'region' => $region,
-            'modules' => ModuleFactory::getAssignableModules(),
+            'modules' => $this->moduleFactory->getAssignableModules(),
             'transitions' => $this->transitionData(),
-            'help' => Help::Link('Layout', 'RegionOptions')
+            'help' => $this->getHelp()->link('Layout', 'RegionOptions')
         ]);
     }
 
@@ -71,7 +143,7 @@ class Region extends Base
      */
     public function editForm($regionId)
     {
-        $region = RegionFactory::getById($regionId);
+        $region = $this->regionFactory->getById($regionId);
 
         if (!$this->getUser()->checkEditable($region))
             throw new AccessDeniedException();
@@ -79,9 +151,9 @@ class Region extends Base
         $this->getState()->template = 'region-form-edit';
         $this->getState()->setData([
             'region' => $region,
-            'layout' => LayoutFactory::getById($region->layoutId),
+            'layout' => $this->layoutFactory->getById($region->layoutId),
             'transitions' => $this->transitionData(),
-            'help' => Help::Link('Region', 'Edit')
+            'help' => $this->getHelp()->link('Region', 'Edit')
         ]);
     }
 
@@ -91,7 +163,7 @@ class Region extends Base
      */
     public function deleteForm($regionId)
     {
-        $region = RegionFactory::getById($regionId);
+        $region = $this->regionFactory->getById($regionId);
 
         if (!$this->getUser()->checkDeleteable($region))
             throw new AccessDeniedException();
@@ -99,8 +171,8 @@ class Region extends Base
         $this->getState()->template = 'region-form-delete';
         $this->getState()->setData([
             'region' => $region,
-            'layout' => LayoutFactory::getById($region->layoutId),
-            'help' => Help::Link('Region', 'Delete')
+            'layout' => $this->layoutFactory->getById($region->layoutId),
+            'help' => $this->getHelp()->link('Region', 'Delete')
         ]);
     }
 
@@ -163,7 +235,7 @@ class Region extends Base
      */
     public function add($layoutId)
     {
-        $layout = LayoutFactory::getById($layoutId);
+        $layout = $this->layoutFactory->getById($layoutId);
 
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
@@ -176,8 +248,8 @@ class Region extends Base
         ]);
 
         // Add a new region
-        $region = RegionFactory::create($this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1),
-            Sanitize::getInt('width', 250), Sanitize::getInt('height', 250), Sanitize::getInt('top', 50), Sanitize::getInt('left', 50));
+        $region = $this->regionFactory->create($this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1),
+            $this->getSanitizer()->getInt('width', 250), $this->getSanitizer()->getInt('height', 250), $this->getSanitizer()->getInt('top', 50), $this->getSanitizer()->getInt('left', 50));
 
         $layout->regions[] = $region;
         $layout->save([
@@ -185,35 +257,35 @@ class Region extends Base
         ]);
 
         // Permissions
-        if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
+        if ($this->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
 
-            Log::debug('Applying permissions from parent, there are %d', count($layout->permissions));
+            $this->getLog()->debug('Applying permissions from parent, there are %d', count($layout->permissions));
 
             // Apply permissions from the Parent
             foreach ($layout->permissions as $permission) {
                 /* @var Permission $permission */
-                $permission = PermissionFactory::create($permission->groupId, get_class($region), $region->getId(), $permission->view, $permission->edit, $permission->delete);
+                $permission = $this->permissionFactory->create($permission->groupId, get_class($region), $region->getId(), $permission->view, $permission->edit, $permission->delete);
                 $permission->save();
 
                 foreach ($region->playlists as $playlist) {
                     /* @var Playlist $playlist */
-                    $permission = PermissionFactory::create($permission->groupId, get_class($playlist), $playlist->getId(), $permission->view, $permission->edit, $permission->delete);
+                    $permission = $this->permissionFactory->create($permission->groupId, get_class($playlist), $playlist->getId(), $permission->view, $permission->edit, $permission->delete);
                     $permission->save();
                 }
             }
         }
         else {
-            Log::debug('Applying default permissions');
+            $this->getLog()->debug('Applying default permissions');
 
             // Apply the default permissions
-            foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($region), $region->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
 
             foreach ($region->playlists as $playlist) {
                 /* @var Playlist $playlist */
-                foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
                 }
@@ -317,7 +389,7 @@ class Region extends Base
      */
     public function edit($regionId)
     {
-        $region = RegionFactory::getById($regionId);
+        $region = $this->regionFactory->getById($regionId);
 
         if (!$this->getUser()->checkEditable($region))
             throw new AccessDeniedException();
@@ -325,26 +397,26 @@ class Region extends Base
         // Load before we save
         $region->load();
 
-        $region->name = Sanitize::getString('name');
-        $region->width = Sanitize::getDouble('width');
-        $region->height = Sanitize::getDouble('height');
-        $region->top = Sanitize::getDouble('top');
-        $region->left = Sanitize::getDouble('left');
-        $region->zIndex = Sanitize::getInt('zIndex');
+        $region->name = $this->getSanitizer()->getString('name');
+        $region->width = $this->getSanitizer()->getDouble('width');
+        $region->height = $this->getSanitizer()->getDouble('height');
+        $region->top = $this->getSanitizer()->getDouble('top');
+        $region->left = $this->getSanitizer()->getDouble('left');
+        $region->zIndex = $this->getSanitizer()->getInt('zIndex');
 
         // Loop
-        $region->setOptionValue('loop', Sanitize::getCheckbox('loop'));
+        $region->setOptionValue('loop', $this->getSanitizer()->getCheckbox('loop'));
 
         // Transitions
-        $region->setOptionValue('transitionType', Sanitize::getString('transitionType'));
-        $region->setOptionValue('transitionDuration', Sanitize::getInt('transitionDuration'));
-        $region->setOptionValue('transitionDirection', Sanitize::getString('transitionDirection'));
+        $region->setOptionValue('transitionType', $this->getSanitizer()->getString('transitionType'));
+        $region->setOptionValue('transitionDuration', $this->getSanitizer()->getInt('transitionDuration'));
+        $region->setOptionValue('transitionDirection', $this->getSanitizer()->getString('transitionDirection'));
 
         // Save
         $region->save();
 
         // Mark the layout as needing rebuild
-        $layout = LayoutFactory::getById($region->layoutId);
+        $layout = $this->layoutFactory->getById($region->layoutId);
         $layout->load(Layout::$loadOptionsMinimum);
         $layout->setBuildRequired();
         $layout->save(Layout::$saveOptionsMinimum);
@@ -382,7 +454,7 @@ class Region extends Base
      */
     public function delete($regionId)
     {
-        $region = RegionFactory::getById($regionId);
+        $region = $this->regionFactory->getById($regionId);
 
         if (!$this->getUser()->checkDeleteable($region))
             throw new AccessDeniedException();
@@ -438,13 +510,13 @@ class Region extends Base
     function positionAll($layoutId)
     {
         // Create the layout
-        $layout = LayoutFactory::loadById($layoutId);
+        $layout = $this->layoutFactory->loadById($layoutId);
 
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
         // Pull in the regions and convert them to stdObjects
-        $regions = Sanitize::getParam('regions', null);
+        $regions = $this->getSanitizer()->getParam('regions', null);
 
         if ($regions == null)
             throw new \InvalidArgumentException(__('No regions present'));
@@ -453,7 +525,7 @@ class Region extends Base
 
         // Go through each region and update the region in the layout we have
         foreach ($regions as $newCoordinates) {
-            $regionId = Sanitize::int($newCoordinates->regionid);
+            $regionId = $this->getSanitizer()->int($newCoordinates->regionid);
 
             // Load the region
             $region = $layout->getRegion($regionId);
@@ -463,11 +535,11 @@ class Region extends Base
                 throw new AccessDeniedException();
 
             // New coordinates
-            $region->top = Sanitize::double($newCoordinates->top);
-            $region->left = Sanitize::double($newCoordinates->left);
-            $region->width = Sanitize::double($newCoordinates->width);
-            $region->height = Sanitize::double($newCoordinates->height);
-            Log::debug('Set ' . $region);
+            $region->top = $this->getSanitizer()->double($newCoordinates->top);
+            $region->left = $this->getSanitizer()->double($newCoordinates->left);
+            $region->width = $this->getSanitizer()->double($newCoordinates->width);
+            $region->height = $this->getSanitizer()->double($newCoordinates->height);
+            $this->getLog()->debug('Set ' . $region);
         }
 
         // Mark the layout as having changed
@@ -488,15 +560,15 @@ class Region extends Base
      */
     public function preview($regionId)
     {
-        $seqGiven = Sanitize::getInt('seq', 1);
-        $seq = Sanitize::getInt('seq', 1);
-        $width = Sanitize::getDouble('width', 0);
-        $height = Sanitize::getDouble('height', 0);
-        $scaleOverride = Sanitize::getDouble('scale_override', 0);
+        $seqGiven = $this->getSanitizer()->getInt('seq', 1);
+        $seq = $this->getSanitizer()->getInt('seq', 1);
+        $width = $this->getSanitizer()->getDouble('width', 0);
+        $height = $this->getSanitizer()->getDouble('height', 0);
+        $scaleOverride = $this->getSanitizer()->getDouble('scale_override', 0);
 
         // Load our region
         try {
-            $region = RegionFactory::getById($regionId);
+            $region = $this->regionFactory->getById($regionId);
             $region->load();
 
             // Get the first playlist we can find
@@ -515,7 +587,7 @@ class Region extends Base
                 throw new NotFoundException(__('No widgets to preview'));
             }
 
-            Log::debug('There are %d widgets.', count($playlist->widgets));
+            $this->getLog()->debug('There are %d widgets.', count($playlist->widgets));
 
             // Select the widget at the required sequence
             $widget = $playlist->getWidgetAt($seq);
@@ -523,7 +595,7 @@ class Region extends Base
             $widget->load();
 
             // Otherwise, output a preview
-            $module = ModuleFactory::createWithWidget($widget, $region);
+            $module = $this->moduleFactory->createWithWidget($widget, $region);
 
             $this->getState()->extra['empty'] = false;
             $this->getState()->html = $module->preview($width, $height, $scaleOverride);
@@ -580,7 +652,7 @@ class Region extends Base
      */
     function order($regionId)
     {
-        $region = RegionFactory::getById($regionId);
+        $region = $this->regionFactory->getById($regionId);
 
         if (!$this->getUser()->checkEditable($region))
             throw new AccessDeniedException();
@@ -589,7 +661,7 @@ class Region extends Base
         $region->load(['loadWidgets' => false]);
 
         // Get our list of widget orders
-        $playlists = Sanitize::getParam('playlists', null);
+        $playlists = $this->getSanitizer()->getParam('playlists', null);
 
         // Go through each one and move it
         foreach ($playlists as $playlistId => $position) {
@@ -598,7 +670,7 @@ class Region extends Base
             foreach ($region->playlists as $playlist) {
                 /* @var \Xibo\Entity\Widget $playlist */
                 if ($playlist->getId() == $playlistId) {
-                    Log::debug('Setting Display Order ' . $position . ' on playlistId ' . $playlistId);
+                    $this->getLog()->debug('Setting Display Order ' . $position . ' on playlistId ' . $playlistId);
                     $playlist->displayOrder = $position;
                     break;
                 }
@@ -614,11 +686,14 @@ class Region extends Base
         ]);
     }
 
+    /**
+     * @return array
+     */
     private function transitionData()
     {
         return [
-            'in' => TransitionFactory::getEnabledByType('in'),
-            'out' => TransitionFactory::getEnabledByType('out'),
+            'in' => $this->transitionFactory->getEnabledByType('in'),
+            'out' => $this->transitionFactory->getEnabledByType('out'),
             'compassPoints' => array(
                 array('id' => 'N', 'name' => __('North')),
                 array('id' => 'NE', 'name' => __('North East')),

@@ -20,12 +20,40 @@
  */
 namespace Xibo\Controller;
 use Xibo\Factory\AuditLogFactory;
-use Xibo\Helper\Date;
-use Xibo\Helper\Help;
-use Xibo\Helper\Sanitize;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
+/**
+ * Class AuditLog
+ * @package Xibo\Controller
+ */
 class AuditLog extends Base
 {
+    /**
+     * @var AuditLogFactory
+     */
+    private $auditLogFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param AuditLogFactory $auditLogFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $auditLogFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->auditLogFactory = $auditLogFactory;
+    }
+
     public function displayPage()
     {
         $this->getState()->template = 'auditlog-page';
@@ -33,19 +61,19 @@ class AuditLog extends Base
 
     function grid()
     {
-        $filterFromDt = Sanitize::getDate('fromDt');
-        $filterToDt = Sanitize::getDate('toDt');
-        $filterUser = Sanitize::getString('user');
-        $filterEntity = Sanitize::getString('entity');
+        $filterFromDt = $this->getSanitizer()->getDate('fromDt');
+        $filterToDt = $this->getSanitizer()->getDate('toDt');
+        $filterUser = $this->getSanitizer()->getString('user');
+        $filterEntity = $this->getSanitizer()->getString('entity');
 
         $search = [];
 
         // Get the dates and times
         if ($filterFromDt == null)
-            $filterFromDt = Date::parse()->sub('1 day');
+            $filterFromDt = $this->getDate()->parse()->sub('1 day');
 
         if ($filterToDt == null)
-            $filterToDt = Date::parse();
+            $filterToDt = $this->getDate()->parse();
 
         $search['fromTimeStamp'] = $filterFromDt->format('U');
         $search['toTimeStamp'] = $filterToDt->format('U');
@@ -56,7 +84,7 @@ class AuditLog extends Base
         if ($filterEntity != '')
             $search['entity'] = $filterEntity;
 
-        $rows = AuditLogFactory::query($this->gridRenderSort(), $this->gridRenderFilter($search));
+        $rows = $this->auditLogFactory->query($this->gridRenderSort(), $this->gridRenderFilter($search));
 
         // Do some post processing
         foreach ($rows as $row) {
@@ -65,7 +93,7 @@ class AuditLog extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = AuditLogFactory::countLast();
+        $this->getState()->recordsTotal = $this->auditLogFactory->countLast();
         $this->getState()->setData($rows);
     }
 
@@ -76,7 +104,7 @@ class AuditLog extends Base
     {
         $this->getState()->template = 'auditlog-form-export';
         $this->getState()->setData([
-            'help' => Help::Link('AuditLog', 'Export')
+            'help' => $this->getHelp()->link('AuditLog', 'Export')
         ]);
     }
 
@@ -86,8 +114,8 @@ class AuditLog extends Base
     public function export()
     {
         // We are expecting some parameters
-        $filterFromDt = Sanitize::getDate('filterFromDt');
-        $filterToDt = Sanitize::getDate('filterToDt');
+        $filterFromDt = $this->getSanitizer()->getDate('filterFromDt');
+        $filterToDt = $this->getSanitizer()->getDate('filterToDt');
 
         if ($filterFromDt == null || $filterToDt == null)
             throw new \InvalidArgumentException(__('Please provide a from/to date.'));
@@ -102,7 +130,7 @@ class AuditLog extends Base
             return implode('|', $element);
         }, $search));
 
-        $rows = AuditLogFactory::query('logId', ['search' => $search]);
+        $rows = $this->auditLogFactory->query('logId', ['search' => $search]);
 
         $out = fopen('php://output', 'w');
         fputcsv($out, ['ID', 'Date', 'User', 'Entity', 'Message', 'Object']);
@@ -110,7 +138,7 @@ class AuditLog extends Base
         // Do some post processing
         foreach ($rows as $row) {
             /* @var \Xibo\Entity\AuditLog $row */
-            fputcsv($out, [$row->logId, Date::getLocalDate($row->logDate), $row->userName, $row->entity, $row->message, $row->objectAfter]);
+            fputcsv($out, [$row->logId, $this->getDate()->getLocalDate($row->logDate), $row->userName, $row->entity, $row->message, $row->objectAfter]);
         }
 
         fclose($out);

@@ -23,45 +23,73 @@
 namespace Xibo\Factory;
 
 use Xibo\Entity\AuditLog;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class AuditLogFactory
+ * @package Xibo\Factory
+ */
 class AuditLogFactory extends BaseFactory
 {
-    public static function query($sortOrder = null, $filterBy = null)
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
     {
-        Log::debug('AuditLog Factory with filter: %s', var_export($filterBy, true));
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
 
-        $entries = array();
+    /**
+     * @return AuditLog
+     */
+    public function create()
+    {
+        return new AuditLog($this->getStore(), $this->getLog());
+    }
+
+    /**
+     * @param array $sortOrder
+     * @param array $filterBy
+     * @return array
+     */
+    public function query($sortOrder = null, $filterBy = null)
+    {
+        $this->getLog()->debug('AuditLog Factory with filter: %s', var_export($filterBy, true));
+
+        $entries = [];
         $params = [];
 
         $select = ' SELECT logId, logDate, user.userName, message, objectAfter, entity, entityId, auditlog.userId ';
         $body = 'FROM `auditlog` LEFT OUTER JOIN user ON user.userId = auditlog.userId WHERE 1 = 1 ';
 
-        if (Sanitize::getInt('fromTimeStamp', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('fromTimeStamp', $filterBy) !== null) {
             $body .= ' AND `auditlog`.logDate >= :fromTimeStamp ';
-            $params['fromTimeStamp'] = Sanitize::getInt('fromTimeStamp', $filterBy);
+            $params['fromTimeStamp'] = $this->getSanitizer()->getInt('fromTimeStamp', $filterBy);
         }
 
-        if (Sanitize::getInt('toTimeStamp', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('toTimeStamp', $filterBy) !== null) {
             $body .= ' AND `auditlog`.logDate < :toTimeStamp ';
-            $params['toTimeStamp'] = Sanitize::getInt('toTimeStamp', $filterBy);
+            $params['toTimeStamp'] = $this->getSanitizer()->getInt('toTimeStamp', $filterBy);
         }
 
-        if (Sanitize::getString('entity', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('entity', $filterBy) != null) {
             $body .= ' AND `auditlog`.entity LIKE :entity ';
-            $params['entity'] = '%' . Sanitize::getString('entity', $filterBy) . '%';
+            $params['entity'] = '%' . $this->getSanitizer()->getString('entity', $filterBy) . '%';
         }
 
-        if (Sanitize::getString('userName', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('userName', $filterBy) != null) {
             $body .= ' AND `auditlog`.userName LIKE :userName ';
-            $params['userName'] = '%' . Sanitize::getString('userName', $filterBy) . '%';
+            $params['userName'] = '%' . $this->getSanitizer()->getString('userName', $filterBy) . '%';
         }
 
-        if (Sanitize::getString('message', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('message', $filterBy) != null) {
             $body .= ' AND `auditlog`.message LIKE :message ';
-            $params['message'] = '%' . Sanitize::getString('message', $filterBy) . '%';
+            $params['message'] = '%' . $this->getSanitizer()->getString('message', $filterBy) . '%';
         }
 
         $order = '';
@@ -71,8 +99,8 @@ class AuditLogFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
 
         // The final statements
@@ -80,19 +108,19 @@ class AuditLogFactory extends BaseFactory
 
 
 
-        $dbh = PDOConnect::init();
+        $dbh = $this->getStore()->getConnection();
 
         $sth = $dbh->prepare($sql);
         $sth->execute($params);
 
         foreach ($sth->fetchAll() as $row) {
-            $entries[] = (new AuditLog())->hydrate($row);
+            $entries[] = $this->create()->hydrate($row);
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

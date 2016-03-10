@@ -21,6 +21,12 @@
 
 namespace Xibo\Widget;
 
+use Xibo\Factory\ModuleFactory;
+
+/**
+ * Interface ModuleInterface
+ * @package Xibo\Widget
+ */
 interface ModuleInterface
 {
     // Some Default Add/Edit/Delete functionality each module should have
@@ -48,8 +54,9 @@ interface ModuleInterface
     /**
      * Install or Upgrade this module
      *    Expects $this->codeSchemaVersion to be set by the module.
+     * @param ModuleFactory $moduleFactory
      */
-    public function installOrUpdate();
+    public function installOrUpdate($moduleFactory);
 
     public function installModule();
 

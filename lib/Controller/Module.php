@@ -28,16 +28,99 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
-
+/**
+ * Class Module
+ * @package Xibo\Controller
+ */
 class Module extends Base
 {
+    /**
+     * @var StorageServiceInterface
+     */
+    private $store;
+
+    /**
+     * @var ModuleFactory
+     */
+    private $moduleFactory;
+
+    /**
+     * @var PlaylistFactory
+     */
+    private $playlistFactory;
+
+    /**
+     * @var MediaFactory
+     */
+    private $mediaFactory;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var UserGroupFactory
+     */
+    private $userGroupFactory;
+
+    /**
+     * @var WidgetFactory
+     */
+    private $widgetFactory;
+
+    /**
+     * @var TransitionFactory
+     */
+    private $transitionFactory;
+
+    /**
+     * @var RegionFactory
+     */
+    private $regionFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @oaram StorageServiceInterface $store
+     * @param ModuleFactory $moduleFactory
+     * @param PlaylistFactory $playlistFactory
+     * @param MediaFactory $mediaFactory
+     * @param PermissionFactory $permissionFactory
+     * @param UserGroupFactory $userGroupFactory
+     * @param WidgetFactory $widgetFactory
+     * @param TransitionFactory $transitionFactory
+     * @param RegionFactory $regionFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->store = $store;
+        $this->moduleFactory = $moduleFactory;
+        $this->playlistFactory = $playlistFactory;
+        $this->mediaFactory = $mediaFactory;
+        $this->permissionFactory = $permissionFactory;
+        $this->userGroupFactory = $userGroupFactory;
+        $this->widgetFactory = $widgetFactory;
+        $this->transitionFactory = $transitionFactory;
+        $this->regionFactory = $regionFactory;
+    }
+
     /**
      * Display the module page
      */
@@ -46,7 +129,7 @@ class Module extends Base
         $data = [];
 
         // Do we have any modules to install?!
-        if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
+        if ($this->getConfig()->GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
             // Get a list of matching files in the modules folder
             $files = array_merge(glob(PROJECT_ROOT . '/modules/*.json'), glob(PROJECT_ROOT . '/custom/*.json'));
 
@@ -54,7 +137,7 @@ class Module extends Base
             $installed = [];
             $data['modulesToInstall'] = [];
 
-            foreach (ModuleFactory::query() as $row) {
+            foreach ($this->moduleFactory->query() as $row) {
                 /* @var \Xibo\Entity\Module $row */
                 $installed[] = $row->type;
             }
@@ -81,7 +164,7 @@ class Module extends Base
      */
     public function grid()
     {
-        $modules = ModuleFactory::query($this->gridRenderSort(), $this->gridRenderFilter());
+        $modules = $this->moduleFactory->query($this->gridRenderSort(), $this->gridRenderFilter());
 
         foreach ($modules as $module) {
             /* @var \Xibo\Entity\Module $module */
@@ -92,7 +175,7 @@ class Module extends Base
             $module->includeProperty('buttons');
 
             // If the module config is not locked, present some buttons
-            if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
+            if ($this->getConfig()->GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
 
                 // Edit button
                 $module->buttons[] = array(
@@ -112,7 +195,7 @@ class Module extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = ModuleFactory::countLast();
+        $this->getState()->recordsTotal = $this->moduleFactory->countLast();
         $this->getState()->setData($modules);
     }
 
@@ -123,13 +206,13 @@ class Module extends Base
     public function settingsForm($moduleId)
     {
         // Can we edit?
-        if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
+        if ($this->getConfig()->GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
             throw new \InvalidArgumentException(__('Module Config Locked'));
 
         if (!$this->getUser()->userTypeId == 1)
             throw new AccessDeniedException();
 
-        $module = ModuleFactory::createById($moduleId);
+        $module = $this->moduleFactory->createById($moduleId);
 
         $moduleFields = $module->settingsForm();
 
@@ -137,7 +220,7 @@ class Module extends Base
         $this->getState()->template = ($moduleFields == null) ? 'module-form-settings' : $moduleFields;
         $this->getState()->setData([
             'module' => $module,
-            'help' => Help::Link('Module', 'Edit')
+            'help' => $this->getHelp()->link('Module', 'Edit')
         ]);
     }
 
@@ -148,18 +231,18 @@ class Module extends Base
     public function settings($moduleId)
     {
         // Can we edit?
-        if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
+        if ($this->getConfig()->GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
             throw new \InvalidArgumentException(__('Module Config Locked'));
 
         if (!$this->getUser()->userTypeId == 1)
             throw new AccessDeniedException();
 
-        $module = ModuleFactory::createById($moduleId);
-        $module->getModule()->defaultDuration = Sanitize::getInt('defaultDuration');
-        $module->getModule()->validExtensions = Sanitize::getString('validExtensions');
-        $module->getModule()->imageUri = Sanitize::getString('imageUri');
-        $module->getModule()->enabled = Sanitize::getCheckbox('enabled');
-        $module->getModule()->previewEnabled = Sanitize::getCheckbox('previewEnabled');
+        $module = $this->moduleFactory->createById($moduleId);
+        $module->getModule()->defaultDuration = $this->getSanitizer()->getInt('defaultDuration');
+        $module->getModule()->validExtensions = $this->getSanitizer()->getString('validExtensions');
+        $module->getModule()->imageUri = $this->getSanitizer()->getString('imageUri');
+        $module->getModule()->enabled = $this->getSanitizer()->getCheckbox('enabled');
+        $module->getModule()->previewEnabled = $this->getSanitizer()->getCheckbox('previewEnabled');
 
         // Install Files for this module
         $module->installFiles();
@@ -186,7 +269,7 @@ class Module extends Base
         // Pass to view
         $this->getState()->template = 'module-form-verify';
         $this->getState()->setData([
-            'help' => Help::Link('Module', 'Edit')
+            'help' => $this->getHelp()->link('Module', 'Edit')
         ]);
     }
 
@@ -196,10 +279,10 @@ class Module extends Base
     public function verify()
     {
         // Set all files to valid = 0
-        PDOConnect::update('UPDATE `media` SET valid = 0 WHERE moduleSystemFile = 1', []);
+        $this->store->update('UPDATE `media` SET valid = 0 WHERE moduleSystemFile = 1', []);
 
         // Install all files
-        Library::installAllModuleFiles();
+        $this->getApp()->container->get('\Xibo\Controller\Library')->installAllModuleFiles();
 
         // Successful
         $this->getState()->hydrate([
@@ -224,7 +307,7 @@ class Module extends Base
         $this->getState()->template = 'module-form-install';
         $this->getState()->setData([
             'module' => $module,
-            'help' => Help::Link('Module', 'Install')
+            'help' => $this->getHelp()->link('Module', 'Install')
         ]);
     }
 
@@ -234,7 +317,7 @@ class Module extends Base
      */
     public function install($name)
     {
-        Log::notice('Request to install Module: ' . $name);
+        $this->getLog()->notice('Request to install Module: ' . $name);
 
         if (file_exists(PROJECT_ROOT . '/modules/' . $name . '.json'))
             $moduleDetails = json_decode(file_get_contents(PROJECT_ROOT . '/modules/' . $name . '.json'));
@@ -244,11 +327,11 @@ class Module extends Base
             throw new \InvalidArgumentException(__('Invalid module'));
 
         // All modules should be capable of autoload
-        $module = ModuleFactory::createForInstall($moduleDetails->class);
+        $module = $this->moduleFactory->createForInstall($moduleDetails->class);
         $module->setUser($this->getUser());
-        $module->installOrUpdate();
+        $module->installOrUpdate($this->moduleFactory);
 
-        Log::notice('Module Installed: ' . $module->getModuleType());
+        $this->getLog()->notice('Module Installed: ' . $module->getModuleType());
 
         // Excellent... capital... success
         $this->getState()->hydrate([
@@ -264,19 +347,19 @@ class Module extends Base
      */
     public function addWidgetForm($type, $playlistId)
     {
-        $playlist = PlaylistFactory::getById($playlistId);
+        $playlist = $this->playlistFactory->getById($playlistId);
 
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
 
         // Create a module to use
-        $module = ModuleFactory::createForWidget($type, null, $this->getUser()->userId, $playlistId);
+        $module = $this->moduleFactory->createForWidget($type, null, $this->getUser()->userId, $playlistId);
 
         // Pass to view
         $this->getState()->template = $module->addForm();
         $this->getState()->setData($module->setTemplateData([
             'playlist' => $playlist,
-            'media' => MediaFactory::query(),
+            'media' => $this->mediaFactory->query(),
             'module' => $module
         ]));
     }
@@ -288,19 +371,20 @@ class Module extends Base
      */
     public function addWidget($type, $playlistId)
     {
-        $playlist = PlaylistFactory::getById($playlistId);
+        $playlist = $this->playlistFactory->getById($playlistId);
 
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
 
         // Load some information about this playlist
+        $playlist->setChildObjectDependencies($this->regionFactory);
         $playlist->load([
             'playlistIncludeRegionAssignments' => false,
             'loadWidgets' => false
         ]);
 
         // Create a module to use
-        $module = ModuleFactory::createForWidget($type, null, $this->getUser()->userId, $playlistId);
+        $module = $this->moduleFactory->createForWidget($type, null, $this->getUser()->userId, $playlistId);
 
         // Inject the Current User
         $module->setUser($this->getUser());
@@ -309,15 +393,15 @@ class Module extends Base
         $module->add();
 
         // Permissions
-        if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
+        if ($this->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
             // Apply permissions from the Parent
             foreach ($playlist->permissions as $permission) {
                 /* @var Permission $permission */
-                $permission = PermissionFactory::create($permission->groupId, get_class($module->widget), $module->widget->getId(), $permission->view, $permission->edit, $permission->delete);
+                $permission = $this->permissionFactory->create($permission->groupId, get_class($module->widget), $module->widget->getId(), $permission->view, $permission->edit, $permission->delete);
                 $permission->save();
             }
         } else {
-            foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($module->widget), $module->widget->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($module->widget), $module->widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
@@ -337,7 +421,7 @@ class Module extends Base
      */
     public function editWidgetForm($widgetId)
     {
-        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId));
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
 
         if (!$this->getUser()->checkEditable($module->widget))
             throw new AccessDeniedException();
@@ -346,7 +430,7 @@ class Module extends Base
         $this->getState()->template = $module->editForm();
         $this->getState()->setData($module->setTemplateData([
             'module' => $module,
-            'media' => MediaFactory::query(),
+            'media' => $this->mediaFactory->query(),
             'validExtensions' => str_replace(',', '|', $module->getModule()->validExtensions)
         ]));
     }
@@ -357,7 +441,7 @@ class Module extends Base
      */
     public function editWidget($widgetId)
     {
-        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId));
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
 
         if (!$this->getUser()->checkEditable($module->widget))
             throw new AccessDeniedException();
@@ -382,7 +466,7 @@ class Module extends Base
      */
     public function deleteWidgetForm($widgetId)
     {
-        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId));
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
 
         if (!$this->getUser()->checkDeleteable($module->widget))
             throw new AccessDeniedException();
@@ -391,7 +475,7 @@ class Module extends Base
         $this->getState()->template = 'module-form-delete';
         $this->getState()->setData([
             'module' => $module,
-            'help' => Help::Link('Media', 'Delete')
+            'help' => $this->getHelp()->link('Media', 'Delete')
         ]);
     }
 
@@ -401,7 +485,7 @@ class Module extends Base
      */
     public function deleteWidget($widgetId)
     {
-        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId));
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
 
         if (!$this->getUser()->checkDeleteable($module->widget))
             throw new AccessDeniedException();
@@ -419,9 +503,9 @@ class Module extends Base
         $module->widget->delete();
 
         // Delete Media?
-        if (Sanitize::getCheckbox('deleteMedia') == 1) {
+        if ($this->getSanitizer()->getCheckbox('deleteMedia') == 1) {
             foreach ($widgetMedia as $mediaId) {
-                $media = MediaFactory::getById($mediaId);
+                $media = $this->mediaFactory->getById($mediaId);
 
                 // Check we have permissions to delete
                 if (!$this->getUser()->checkDeleteable($media))
@@ -444,7 +528,7 @@ class Module extends Base
      */
     public function editWidgetTransitionForm($type, $widgetId)
     {
-        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId));
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
 
         if (!$this->getUser()->checkEditable($module->widget))
             throw new AccessDeniedException();
@@ -455,8 +539,8 @@ class Module extends Base
             'type' => $type,
             'module' => $module,
             'transitions' => [
-                'in' => TransitionFactory::getEnabledByType('in'),
-                'out' => TransitionFactory::getEnabledByType('out'),
+                'in' => $this->transitionFactory->getEnabledByType('in'),
+                'out' => $this->transitionFactory->getEnabledByType('out'),
                 'compassPoints' => array(
                     array('id' => 'N', 'name' => __('North')),
                     array('id' => 'NE', 'name' => __('North East')),
@@ -468,7 +552,7 @@ class Module extends Base
                     array('id' => 'NW', 'name' => __('North West'))
                 )
             ],
-            'help' => Help::Link('Transition', 'Edit')
+            'help' => $this->getHelp()->link('Transition', 'Edit')
         ]);
     }
 
@@ -479,7 +563,7 @@ class Module extends Base
      */
     public function editWidgetTransition($type, $widgetId)
     {
-        $widget = WidgetFactory::getById($widgetId);
+        $widget = $this->widgetFactory->getById($widgetId);
 
         if (!$this->getUser()->checkEditable($widget))
             throw new AccessDeniedException();
@@ -488,16 +572,16 @@ class Module extends Base
 
         switch ($type) {
             case 'in':
-                $widget->setOptionValue('transIn', 'attrib', Sanitize::getString('transitionType'));
-                $widget->setOptionValue('transInDuration', 'attrib', Sanitize::getInt('transitionDuration'));
-                $widget->setOptionValue('transInDirection', 'attrib', Sanitize::getString('transitionDirection'));
+                $widget->setOptionValue('transIn', 'attrib', $this->getSanitizer()->getString('transitionType'));
+                $widget->setOptionValue('transInDuration', 'attrib', $this->getSanitizer()->getInt('transitionDuration'));
+                $widget->setOptionValue('transInDirection', 'attrib', $this->getSanitizer()->getString('transitionDirection'));
 
                 break;
 
             case 'out':
-                $widget->setOptionValue('transOut', 'attrib', Sanitize::getString('transitionType'));
-                $widget->setOptionValue('transOutDuration', 'attrib', Sanitize::getInt('transitionDuration'));
-                $widget->setOptionValue('transOutDirection', 'attrib', Sanitize::getString('transitionDirection'));
+                $widget->setOptionValue('transOut', 'attrib', $this->getSanitizer()->getString('transitionType'));
+                $widget->setOptionValue('transOutDuration', 'attrib', $this->getSanitizer()->getInt('transitionDuration'));
+                $widget->setOptionValue('transOutDirection', 'attrib', $this->getSanitizer()->getString('transitionDirection'));
 
                 break;
 
@@ -523,7 +607,7 @@ class Module extends Base
      */
     public function getTab($tab, $widgetId)
     {
-        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId));
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
 
         if (!$this->getUser()->checkViewable($module->widget))
             throw new AccessDeniedException();
@@ -541,7 +625,7 @@ class Module extends Base
      */
     public function getResource($regionId, $widgetId)
     {
-        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId), RegionFactory::getById($regionId));
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId), $this->regionFactory->getById($regionId));
 
         if (!$this->getUser()->checkViewable($module->widget))
             throw new AccessDeniedException();

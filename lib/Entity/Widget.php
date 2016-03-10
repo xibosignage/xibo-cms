@@ -24,11 +24,11 @@ namespace Xibo\Entity;
 
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\WidgetMediaFactory;
 use Xibo\Factory\WidgetOptionFactory;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 use Xibo\Widget\ModuleWidget;
 
 /**
@@ -137,9 +137,51 @@ class Widget implements \JsonSerializable
      */
     public static $widgetMinDuration = 1;
 
-    public function __construct()
+    /** @var  DateServiceInterface */
+    private $dateService;
+
+    /**
+     * @var WidgetOptionFactory
+     */
+    private $widgetOptionFactory;
+
+    /**
+     * @var WidgetMediaFactory
+     */
+    private $widgetMediaFactory;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param DateServiceInterface $date
+     * @param WidgetOptionFactory $widgetOptionFactory
+     * @param WidgetMediaFactory $widgetMediaFactory
+     * @param PermissionFactory $permissionFactory
+     */
+    public function __construct($store, $log, $date, $widgetOptionFactory, $widgetMediaFactory, $permissionFactory)
     {
+        $this->setCommonDependencies($store, $log);
         $this->excludeProperty('module');
+        $this->dateService = $date;
+        $this->widgetOptionFactory = $widgetOptionFactory;
+        $this->widgetMediaFactory = $widgetMediaFactory;
+        $this->permissionFactory = $permissionFactory;
+    }
+
+    /**
+     * @param $playlistFactory
+     * @return $this
+     */
+    public function setChildObjectDepencencies($playlistFactory)
+    {
+        $this->playlistFactory = $playlistFactory;
+        return $this;
     }
 
     public function __clone()
@@ -247,7 +289,7 @@ class Widget implements \JsonSerializable
             $widgetOption->value = $value;
         }
         catch (NotFoundException $e) {
-            $this->widgetOptions[] = WidgetOptionFactory::create($this->widgetId, $type, $option, $value);
+            $this->widgetOptions[] = $this->widgetOptionFactory->create($this->widgetId, $type, $option, $value);
         }
     }
 
@@ -310,13 +352,13 @@ class Widget implements \JsonSerializable
             return;
 
         // Load permissions
-        $this->permissions = PermissionFactory::getByObjectId(get_class(), $this->widgetId);
+        $this->permissions = $this->permissionFactory->getByObjectId(get_class(), $this->widgetId);
 
         // Load the widget options
-        $this->widgetOptions = WidgetOptionFactory::getByWidgetId($this->widgetId);
+        $this->widgetOptions = $this->widgetOptionFactory->getByWidgetId($this->widgetId);
 
         // Load any media assignments for this widget
-        $this->mediaIds = WidgetMediaFactory::getByWidgetId($this->widgetId);
+        $this->mediaIds = $this->widgetMediaFactory->getByWidgetId($this->widgetId);
 
         $this->hash = $this->hash();
         $this->mediaHash = $this->mediaHash();
@@ -335,7 +377,7 @@ class Widget implements \JsonSerializable
             'notify' => true
         ], $options);
 
-        Log::debug('Saving widgetId %d with options. %s', $this->getId(), json_encode($options, JSON_PRETTY_PRINT));
+        $this->getLog()->debug('Saving widgetId %d with options. %s', $this->getId(), json_encode($options, JSON_PRETTY_PRINT));
 
         // Add/Edit
         if ($this->widgetId == null || $this->widgetId == 0)
@@ -358,14 +400,13 @@ class Widget implements \JsonSerializable
         $this->linkMedia();
         $this->unlinkMedia();
 
-        if ($options['notify']) {
-            Log::debug('Notify playlistId %d', $this->playlistId);
-            // Notify the Layout
-            $playlist = PlaylistFactory::getById($this->playlistId);
-            $playlist->notifyLayouts();
-        }
+        if ($options['notify'])
+            $this->notify();
     }
 
+    /**
+     * @param array $options
+     */
     public function delete($options = [])
     {
         $options = array_merge([
@@ -395,23 +436,39 @@ class Widget implements \JsonSerializable
         $this->unlinkMedia();
 
         // Delete this
-        PDOConnect::update('DELETE FROM `widget` WHERE widgetId = :widgetId', array('widgetId' => $this->widgetId));
+        $this->getStore()->update('DELETE FROM `widget` WHERE widgetId = :widgetId', array('widgetId' => $this->widgetId));
 
-        if ($options['notify']) {
+        if ($options['notify'])
+            $this->notify();
 
-            Log::debug('Notifying upstream playlist');
+        $this->getLog()->debug('Delete Widget Complete');
+    }
 
-            // Notify the Layout
-            $playlist = PlaylistFactory::getById($this->playlistId);
-            $playlist->notifyLayouts();
-        }
+    /**
+     * Notify
+     */
+    private function notify()
+    {
+        $this->getLog()->debug('Notifying upstream playlist');
 
-        Log::debug('Delete Widget Complete');
+        // Notify the Layout
+        $this->getStore()->update('
+            UPDATE `layout` SET `status` = 3, `modifiedDT` = :modifiedDt WHERE layoutId IN (
+              SELECT `region`.layoutId
+                FROM `lkregionplaylist`
+                  INNER JOIN `region`
+                  ON region.regionId = `lkregionplaylist`.regionId
+               WHERE `lkregionplaylist`.playlistId = :playlistId
+            )
+        ', [
+            'playlistId' => $this->playlistId,
+            'modifiedDt' => $this->dateService->getLocalDate()
+        ]);
     }
 
     private function add()
     {
-        Log::debug('Adding Widget ' . $this->type . ' to PlaylistId ' . $this->playlistId);
+        $this->getLog()->debug('Adding Widget ' . $this->type . ' to PlaylistId ' . $this->playlistId);
 
         $this->isNew = true;
 
@@ -420,7 +477,7 @@ class Widget implements \JsonSerializable
             VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder, :useDuration, :calculatedDuration)
         ';
 
-        $this->widgetId = PDOConnect::insert($sql, array(
+        $this->widgetId = $this->getStore()->insert($sql, array(
             'playlistId' => $this->playlistId,
             'ownerId' => $this->ownerId,
             'type' => $this->type,
@@ -433,7 +490,7 @@ class Widget implements \JsonSerializable
 
     private function update()
     {
-        Log::debug('Saving Widget ' . $this->type . ' on PlaylistId ' . $this->playlistId . ' WidgetId: ' . $this->widgetId);
+        $this->getLog()->debug('Saving Widget ' . $this->type . ' on PlaylistId ' . $this->playlistId . ' WidgetId: ' . $this->widgetId);
 
         $sql = '
           UPDATE `widget` SET `playlistId` = :playlistId,
@@ -446,7 +503,7 @@ class Widget implements \JsonSerializable
            WHERE `widgetId` = :widgetId
         ';
 
-        PDOConnect::update($sql, array(
+        $this->getStore()->update($sql, array(
             'playlistId' => $this->playlistId,
             'ownerId' => $this->ownerId,
             'type' => $this->type,
@@ -468,9 +525,9 @@ class Widget implements \JsonSerializable
 
         foreach ($this->mediaIds as $mediaId) {
 
-            Log::debug('Inserting %d', $mediaId);
+            $this->getLog()->debug('Inserting %d', $mediaId);
 
-            PDOConnect::insert($sql, array(
+            $this->getStore()->insert($sql, array(
                 'widgetId' => $this->widgetId,
                 'mediaId' => $mediaId,
                 'mediaId2' => $mediaId
@@ -502,6 +559,6 @@ class Widget implements \JsonSerializable
 
 
 
-        PDOConnect::update($sql, $params);
+        $this->getStore()->update($sql, $params);
     }
 }

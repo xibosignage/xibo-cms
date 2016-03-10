@@ -11,18 +11,42 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\UserType;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class UserTypeFactory
+ * @package Xibo\Factory
+ */
 class UserTypeFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * @return UserType
+     */
+    public function createEmpty()
+    {
+        return new UserType($this->getStore(), $this->getLog());
+    }
+
     /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[Transition]
      * @throws NotFoundException
      */
-    public static function query($sortOrder = ['userType'], $filterBy = null)
+    public function query($sortOrder = ['userType'], $filterBy = null)
     {
         $entries = array();
         $params = array();
@@ -38,15 +62,15 @@ class UserTypeFactory extends BaseFactory
 
 
 
-            foreach (PDOConnect::select($sql, $params) as $row) {
-                $entries[] = (new UserType())->hydrate($row);
+            foreach ($this->getStore()->select($sql, $params) as $row) {
+                $entries[] = $this->createEmpty()->hydrate($row);
             }
 
             return $entries;
 
         } catch (\Exception $e) {
 
-            Log::error($e);
+            $this->getLog()->error($e);
 
             throw new NotFoundException();
         }

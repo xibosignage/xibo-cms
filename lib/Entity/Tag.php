@@ -21,10 +21,9 @@
 
 
 namespace Xibo\Entity;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
-
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class Tag
@@ -62,6 +61,16 @@ class Tag implements \JsonSerializable
 
     private $originalLayoutIds = [];
     private $originalMediaIds = [];
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
 
     public function __clone()
     {
@@ -123,12 +132,12 @@ class Tag implements \JsonSerializable
             return;
 
         $this->layoutIds = [];
-        foreach (PDOConnect::select('SELECT layoutId FROM `lktaglayout` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
+        foreach ($this->getStore()->select('SELECT layoutId FROM `lktaglayout` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
             $this->layoutIds[] = $row['layoutId'];
         }
 
         $this->mediaIds = [];
-        foreach (PDOConnect::select('SELECT mediaId FROM `lktagmedia` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
+        foreach ($this->getStore()->select('SELECT mediaId FROM `lktagmedia` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
             $this->mediaIds[] = $row['mediaId'];
         }
 
@@ -153,7 +162,7 @@ class Tag implements \JsonSerializable
         $this->linkMedia();
         $this->removeAssignments();
 
-        Log::debug('Saving Tag: %s, %d', $this->tag, $this->tagId);
+        $this->getLog()->debug('Saving Tag: %s, %d', $this->tag, $this->tagId);
     }
 
     /**
@@ -171,7 +180,7 @@ class Tag implements \JsonSerializable
      */
     private function add()
     {
-        $this->tagId = PDOConnect::insert('INSERT INTO `tag` (tag) VALUES (:tag) ON DUPLICATE KEY UPDATE tag = tag', array('tag' => $this->tag));
+        $this->tagId = $this->getStore()->insert('INSERT INTO `tag` (tag) VALUES (:tag) ON DUPLICATE KEY UPDATE tag = tag', array('tag' => $this->tag));
     }
 
     /**
@@ -181,11 +190,11 @@ class Tag implements \JsonSerializable
     {
         $layoutsToLink = array_diff($this->layoutIds, $this->originalLayoutIds);
 
-        Log::debug('Linking %d layouts to Tag %s', count($layoutsToLink), $this->tag);
+        $this->getLog()->debug('Linking %d layouts to Tag %s', count($layoutsToLink), $this->tag);
 
         // Layouts that are in layoutIds but not in originalLayoutIds
         foreach ($layoutsToLink as $layoutId) {
-            PDOConnect::update('INSERT INTO `lktaglayout` (tagId, layoutId) VALUES (:tagId, :layoutId) ON DUPLICATE KEY UPDATE layoutId = layoutId', array(
+            $this->getStore()->update('INSERT INTO `lktaglayout` (tagId, layoutId) VALUES (:tagId, :layoutId) ON DUPLICATE KEY UPDATE layoutId = layoutId', array(
                 'tagId' => $this->tagId,
                 'layoutId' => $layoutId
             ));
@@ -200,7 +209,7 @@ class Tag implements \JsonSerializable
         // Layouts that are in the originalLayoutIds but not in the current layoutIds
         $layoutsToUnlink = array_diff($this->originalLayoutIds, $this->layoutIds);
 
-        Log::debug('Unlinking %d layouts from Tag %s', count($layoutsToUnlink), $this->tag);
+        $this->getLog()->debug('Unlinking %d layouts from Tag %s', count($layoutsToUnlink), $this->tag);
 
         if (count($layoutsToUnlink) <= 0)
             return;
@@ -221,7 +230,7 @@ class Tag implements \JsonSerializable
 
 
 
-        PDOConnect::update($sql, $params);
+        $this->getStore()->update($sql, $params);
     }
 
     /**
@@ -231,10 +240,10 @@ class Tag implements \JsonSerializable
     {
         $mediaToLink = array_diff($this->mediaIds, $this->originalMediaIds);
 
-        Log::debug('Linking %d media to Tag %s', count($mediaToLink), $this->tag);
+        $this->getLog()->debug('Linking %d media to Tag %s', count($mediaToLink), $this->tag);
 
         foreach ($mediaToLink as $mediaId) {
-            PDOConnect::update('INSERT INTO `lktagmedia` (tagId, mediaId) VALUES (:tagId, :mediaId) ON DUPLICATE KEY UPDATE mediaId = mediaId', array(
+            $this->getStore()->update('INSERT INTO `lktagmedia` (tagId, mediaId) VALUES (:tagId, :mediaId) ON DUPLICATE KEY UPDATE mediaId = mediaId', array(
                 'tagId' => $this->tagId,
                 'mediaId' => $mediaId
             ));
@@ -248,7 +257,7 @@ class Tag implements \JsonSerializable
     {
         $mediaToUnlink = array_diff($this->originalMediaIds, $this->mediaIds);
 
-        Log::debug('Unlinking %d media from Tag %s', count($mediaToUnlink), $this->tag);
+        $this->getLog()->debug('Unlinking %d media from Tag %s', count($mediaToUnlink), $this->tag);
 
         // Unlink any layouts that are NOT in the collection
         if (count($mediaToUnlink) <= 0)
@@ -269,6 +278,6 @@ class Tag implements \JsonSerializable
 
 
 
-        PDOConnect::update($sql, $params);
+        $this->getStore()->update($sql, $params);
     }
 }

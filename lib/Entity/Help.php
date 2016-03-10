@@ -8,7 +8,8 @@
 
 namespace Xibo\Entity;
 use Respect\Validation\Validator as v;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Help
@@ -43,6 +44,16 @@ class Help
      * @var string
      */
     public $link;
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
 
     public function getId()
     {
@@ -79,14 +90,14 @@ class Help
 
     public function delete()
     {
-        PDOConnect::update('DELETE FROM `help` WHERE HelpID = :helpid', [
+        $this->getStore()->update('DELETE FROM `help` WHERE HelpID = :helpid', [
             'helpId' => $this->helpId
         ]);
     }
 
     private function add()
     {
-        $this->helpId = PDOConnect::insert('INSERT INTO `help` (Topic, Category, Link) VALUES (:topic, :category, :link)', [
+        $this->helpId = $this->getStore()->insert('INSERT INTO `help` (Topic, Category, Link) VALUES (:topic, :category, :link)', [
             'topic' => $this->topic,
             'category' => $this->category,
             'link' => $this->link
@@ -95,7 +106,7 @@ class Help
 
     private function edit()
     {
-        PDOConnect::update('UPDATE `help` SET Topic = :topic, Category = :category, Link = :link WHERE HelpID = :helpid', [
+        $this->getStore()->update('UPDATE `help` SET Topic = :topic, Category = :category, Link = :link WHERE HelpID = :helpid', [
             'helpId' => $this->helpId,
             'topic' => $this->topic,
             'category' => $this->category,

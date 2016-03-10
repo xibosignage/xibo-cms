@@ -7,6 +7,8 @@
 
 
 namespace Xibo\Entity;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class LogEntry
@@ -77,4 +79,14 @@ class LogEntry
      * @var string
      */
     public $display;
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
 }

@@ -24,21 +24,63 @@ use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Grant\AuthCodeGrant;
 use League\OAuth2\Server\Util\RedirectUri;
 use Xibo\Entity\Application;
-use Xibo\Entity\ApplicationRedirectUri;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ApplicationFactory;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
+use Xibo\Factory\ApplicationRedirectUriFactory;
+use Xibo\Helper\Session;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\ApiAccessTokenStorage;
 use Xibo\Storage\ApiAuthCodeStorage;
 use Xibo\Storage\ApiClientStorage;
 use Xibo\Storage\ApiScopeStorage;
 use Xibo\Storage\ApiSessionStorage;
 
-
+/**
+ * Class Applications
+ * @package Xibo\Controller
+ */
 class Applications extends Base
 {
+    /**
+     * @var Session
+     */
+    private $session;
+
+    /**
+     * @var ApplicationFactory
+     */
+    private $applicationFactory;
+
+    /**
+     * @var ApplicationRedirectUriFactory
+     */
+    private $applicationRedirectUriFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param Session $session
+     * @param ApplicationFactory $applicationFactory
+     * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $applicationFactory, $applicationRedirectUriFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->session = $session;
+        $this->applicationFactory = $applicationFactory;
+        $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
+    }
+
     /**
      * Display Page
      */
@@ -54,7 +96,7 @@ class Applications extends Base
     {
         $this->getState()->template = 'grid';
 
-        $applications = ApplicationFactory::query($this->gridRenderSort(), $this->gridRenderFilter());
+        $applications = $this->applicationFactory->query($this->gridRenderSort(), $this->gridRenderFilter());
 
         foreach ($applications as $application) {
             /* @var Application $application */
@@ -70,16 +112,16 @@ class Applications extends Base
             if ($application->userId == $this->getUser()->userId || $this->getUser()->getUserTypeId() == 1) {
 
                 // Edit
-                $application->buttons[] = array(
+                $application->buttons[] = [
                     'id' => 'application_edit_button',
-                    'url' => $this->urlFor('application.edit.form', array('id' => $application->key)),
+                    'url' => $this->urlFor('application.edit.form', ['id' => $application->key]),
                     'text' => __('Edit')
-                );
+                ];
             }
         }
 
         $this->getState()->setData($applications);
-        $this->getState()->recordsTotal = ApplicationFactory::countLast();
+        $this->getState()->recordsTotal = $this->applicationFactory->countLast();
     }
 
     /**
@@ -88,7 +130,7 @@ class Applications extends Base
     public function authorizeRequest()
     {
         // Pull authorize params from our session
-        if (!$authParams = $this->getSession()->get('authParams'))
+        if (!$authParams = $this->session->get('authParams'))
             throw new \InvalidArgumentException(__('Authorisation Parameters missing from session.'));
 
         // Get, show page
@@ -105,20 +147,20 @@ class Applications extends Base
     public function authorize()
     {
         // Pull authorize params from our session
-        if (!$authParams = $this->getSession()->get('authParams'))
+        if (!$authParams = $this->session->get('authParams'))
             throw new \InvalidArgumentException(__('Authorisation Parameters missing from session.'));
 
         // We are authorized
-        if (Sanitize::getString('authorization') === 'Approve') {
+        if ($this->getSanitizer()->getString('authorization') === 'Approve') {
 
             // Create a server
             $server = new AuthorizationServer();
 
-            $server->setSessionStorage(new ApiSessionStorage());
-            $server->setAccessTokenStorage(new ApiAccessTokenStorage());
-            $server->setClientStorage(new ApiClientStorage());
-            $server->setScopeStorage(new ApiScopeStorage());
-            $server->setAuthCodeStorage(new ApiAuthCodeStorage());
+            $server->setSessionStorage(new ApiSessionStorage($this->store));
+            $server->setAccessTokenStorage(new ApiAccessTokenStorage($this->store));
+            $server->setClientStorage(new ApiClientStorage($this->store));
+            $server->setScopeStorage(new ApiScopeStorage($this->store));
+            $server->setAuthCodeStorage(new ApiAuthCodeStorage($this->store));
 
             $authCodeGrant = new AuthCodeGrant();
             $server->addGrantType($authCodeGrant);
@@ -136,7 +178,7 @@ class Applications extends Base
             ]);
         }
 
-        Log::debug('Redirect URL is %s', $redirectUri);
+        $this->getLog()->debug('Redirect URL is %s', $redirectUri);
 
         $this->getApp()->redirect($redirectUri, 302);
     }
@@ -148,14 +190,19 @@ class Applications extends Base
     {
         $this->getState()->template = 'applications-form-add';
         $this->getState()->setData([
-            'help' => Help::Link('Services', 'Register')
+            'help' => $this->getHelp()->link('Services', 'Register')
         ]);
     }
 
+    /**
+     * Edit Application
+     * @param $clientId
+     * @throws \Xibo\Exception\NotFoundException
+     */
     public function editForm($clientId)
     {
         // Get the client
-        $client = ApplicationFactory::getById($clientId);
+        $client = $this->applicationFactory->getById($clientId);
 
         if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
             throw new AccessDeniedException();
@@ -167,7 +214,7 @@ class Applications extends Base
         $this->getState()->template = 'applications-form-edit';
         $this->getState()->setData([
             'client' => $client,
-            'help' => Help::Link('Services', 'Register')
+            'help' => $this->getHelp()->link('Services', 'Register')
         ]);
     }
 
@@ -176,8 +223,8 @@ class Applications extends Base
      */
     public function add()
     {
-        $application = ApplicationFactory::create();
-        $application->name = Sanitize::getString('name');
+        $application = $this->applicationFactory->create();
+        $application->name = $this->getSanitizer()->getString('name');
         $application->save();
 
         // Return
@@ -188,19 +235,24 @@ class Applications extends Base
         ]);
     }
 
+    /**
+     * Edit Application
+     * @param $clientId
+     * @throws \Xibo\Exception\NotFoundException
+     */
     public function edit($clientId)
     {
         // Get the client
-        $client = ApplicationFactory::getById($clientId);
+        $client = $this->applicationFactory->getById($clientId);
 
         if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
             throw new AccessDeniedException();
 
-        $client->name = Sanitize::getString('name');
-        $client->authCode = Sanitize::getCheckbox('authCode');
-        $client->clientCredentials = Sanitize::getCheckbox('clientCredentials');
+        $client->name = $this->getSanitizer()->getString('name');
+        $client->authCode = $this->getSanitizer()->getCheckbox('authCode');
+        $client->clientCredentials = $this->getSanitizer()->getCheckbox('clientCredentials');
 
-        if (Sanitize::getCheckbox('resetKeys') == 1) {
+        if ($this->getSanitizer()->getCheckbox('resetKeys') == 1) {
             $client->resetKeys();
         }
 
@@ -208,19 +260,20 @@ class Applications extends Base
         $client->load();
 
         foreach ($client->redirectUris as $uri) {
+            /* @var \Xibo\Entity\ApplicationRedirectUri $uri */
             $uri->delete();
         }
 
         $client->redirectUris = [];
 
         // Do we have a redirect?
-        $redirectUris = Sanitize::getStringArray('redirectUri');
+        $redirectUris = $this->getSanitizer()->getStringArray('redirectUri');
 
         foreach ($redirectUris as $redirectUri) {
             if ($redirectUri == '')
                 continue;
 
-            $redirect = new ApplicationRedirectUri();
+            $redirect = $this->applicationRedirectUriFactory->create();
             $redirect->redirectUri = $redirectUri;
             $client->assignRedirectUri($redirect);
         }

@@ -25,20 +25,67 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Playlist;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class PlaylistFactory
+ * @package Xibo\Factory
+ */
 class PlaylistFactory extends BaseFactory
 {
+    /**
+     * @var DateServiceInterface
+     */
+    public $dateService;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var WidgetFactory
+     */
+    private $widgetFactory;
+
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param DateServiceInterface $date
+     * @param PermissionFactory $permissionFactory
+     * @param WidgetFactory $widgetFactory
+     */
+    public function __construct($store, $log, $sanitizerService, $date, $permissionFactory, $widgetFactory)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+
+        $this->dateService = $date;
+        $this->permissionFactory = $permissionFactory;
+        $this->widgetFactory = $widgetFactory;
+    }
+
+    /**
+     * @return Playlist
+     */
+    public function createEmpty()
+    {
+        return new Playlist($this->getStore(), $this->getLog(), $this->dateService, $this->permissionFactory, $this->widgetFactory);
+    }
+
     /**
      * Load Playlists by
      * @param $regionId
      * @return array[Playlist]
      * @throws NotFoundException
      */
-    public static function getByRegionId($regionId)
+    public function getByRegionId($regionId)
     {
-        return PlaylistFactory::query(null, array('disableUserCheck' => 1, 'regionId' => $regionId));
+        return $this->query(null, array('disableUserCheck' => 1, 'regionId' => $regionId));
     }
 
     /**
@@ -47,9 +94,9 @@ class PlaylistFactory extends BaseFactory
      * @return Playlist
      * @throws NotFoundException
      */
-    public static function getById($playlistId)
+    public function getById($playlistId)
     {
-        $playlists = PlaylistFactory::query(null, array('disableUserCheck' => 1, 'playlistId' => $playlistId));
+        $playlists = $this->query(null, array('disableUserCheck' => 1, 'playlistId' => $playlistId));
 
         if (count($playlists) <= 0)
             throw new NotFoundException(__('Cannot find playlist'));
@@ -63,42 +110,42 @@ class PlaylistFactory extends BaseFactory
      * @param int $ownerId
      * @return Playlist
      */
-    public static function create($name, $ownerId)
+    public function create($name, $ownerId)
     {
-        $playlist = new Playlist();
+        $playlist = $this->createEmpty();
         $playlist->name = $name;
         $playlist->ownerId = $ownerId;
 
         return $playlist;
     }
 
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
 
         $params = array();
         $select = 'SELECT playlist.* ';
 
-        if (Sanitize::getInt('regionId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('regionId', $filterBy) !== null) {
             $select .= ' , lkregionplaylist.displayOrder ';
         }
 
         $body = '  FROM `playlist` ';
 
-        if (Sanitize::getInt('regionId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('regionId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN `lkregionplaylist`
                 ON lkregionplaylist.playlistId = playlist.playlistId
                     AND lkregionplaylist.regionId = :regionId
             ';
-            $params['regionId'] = Sanitize::getInt('regionId', $filterBy);
+            $params['regionId'] = $this->getSanitizer()->getInt('regionId', $filterBy);
         }
 
         $body .= ' WHERE 1 = 1 ';
 
-        if (Sanitize::getInt('playlistId', $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('playlistId', $filterBy) != 0) {
             $body .= ' AND playlistId = :playlistId ';
-            $params['playlistId'] = Sanitize::getInt('playlistId', $filterBy);
+            $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', $filterBy);
         }
 
         // Sorting?
@@ -108,22 +155,22 @@ class PlaylistFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
 
         $sql = $select . $body . $order . $limit;
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Playlist())->hydrate($row);
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

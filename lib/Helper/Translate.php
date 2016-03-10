@@ -24,7 +24,12 @@ use CachedFileReader;
 use Gettext\Translations;
 use Gettext\Translator;
 use gettext_reader;
+use Xibo\Service\ConfigServiceInterface;
 
+/**
+ * Class Translate
+ * @package Xibo\Helper
+ */
 class Translate
 {
     private static $requestedLanguage;
@@ -33,18 +38,19 @@ class Translate
 
     /**
      * Gets and Sets the Locale
+     * @param ConfigServiceInterface $config
      * @param $language string[optional] The Language to Load
      */
-    public static function InitLocale($language = NULL)
+    public static function InitLocale($config, $language = NULL)
     {
         $localeDir = PROJECT_ROOT . '/locale';
-        $default = ($language == NULL) ? Config::GetSetting('DEFAULT_LANGUAGE') : $language;
+        $default = ($language == NULL) ? $config->GetSetting('DEFAULT_LANGUAGE') : $language;
 
         // Build an array of supported languages
         $supportedLanguages = array_map('basename', glob($localeDir . '/*.mo'));
 
         // Try to get the local firstly from _REQUEST (post then get)
-        $requestedLanguage = Sanitize::getString('lang', $language);
+        $requestedLanguage = $language;
         $foundLanguage = '';
 
         if ($requestedLanguage != '') {
@@ -57,7 +63,7 @@ class Translate
                 $foundLanguage = $requestedLanguage;
             }
         }
-        else if (Config::GetSetting('DETECT_LANGUAGE') == 1) {
+        else if ($config->GetSetting('DETECT_LANGUAGE') == 1) {
             // Detect the language, try from HTTP accept
             // Parse the language header and build a preference array
             $languagePreferenceArray = Translate::parseHttpAcceptLanguageHeader();
@@ -90,8 +96,6 @@ class Translate
         if ($foundLanguage == '') {
             // Check the default
             if (!in_array($default . '.mo', $supportedLanguages)) {
-                Log::Info('Resolved language [%s] not available, checked in %s and found %s.', $default, $localeDir, json_encode($supportedLanguages, JSON_PRETTY_PRINT));
-
                 $default = 'en_GB';
             }
 

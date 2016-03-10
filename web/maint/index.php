@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use Xibo\Helper\Config;
+use Xibo\Service\ConfigService;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/../..'));
@@ -32,7 +32,7 @@ require PROJECT_ROOT . '/vendor/autoload.php';
 if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
     die('Not configured');
 
-Config::Load(PROJECT_ROOT . '/web/settings.php');
+$this->getConfig()->Load(PROJECT_ROOT . '/web/settings.php');
 
 // Create a logger
 $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
@@ -46,12 +46,14 @@ $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     )
 ), false);
 
-$app = new \Slim\Slim(array(
-    'mode' => Config::GetSetting('SERVER_MODE'),
+$app = new \RKA\Slim(array(
     'debug' => false,
     'log.writer' => $logger
 ));
 $app->setName('maint');
+
+// Config
+$app->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
 
 \Xibo\Middleware\State::setState($app);
 
@@ -59,14 +61,12 @@ $app->add(new \Xibo\Middleware\Storage());
 
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
-    $controller = new \Xibo\Controller\Error();
-    $controller->handler($e);
+    $app->container->get('\Xibo\Controller\Error')->handler($e);
 });
 
 // Configure a not found handler
 $app->notFound(function () use ($app) {
-    $controller = new \Xibo\Controller\Error();
-    $controller->notFound();
+    $app->container->get('\Xibo\Controller\Error')->notFound();
 });
 
 // All routes

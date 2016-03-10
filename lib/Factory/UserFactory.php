@@ -25,20 +25,78 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class UserFactory
+ *
+ * @package Xibo\Factory
+ */
 class UserFactory extends BaseFactory
 {
+    /**
+     * @var ConfigServiceInterface
+     */
+    private $configService;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var UserOptionFactory
+     */
+    private $userOptionFactory;
+
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param ConfigServiceInterface $configService
+     * @param PermissionFactory $permissionFactory
+     * @param UserOptionFactory $userOptionFactory
+     */
+    public function __construct($store, $log, $sanitizerService,
+                                $configService,
+                                $permissionFactory,
+                                $userOptionFactory)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+
+        $this->configService = $configService;
+        $this->permissionFactory = $permissionFactory;
+        $this->userOptionFactory = $userOptionFactory;
+    }
+
+    /**
+     * Create a user
+     * @return User
+     */
+    public function create()
+    {
+        return new User($this->getStore(),
+            $this->getLog(),
+            $this->configService,
+            $this,
+            $this->permissionFactory,
+            $this->userOptionFactory
+        );
+    }
+
     /**
      * Get User by ID
      * @param int $userId
      * @return User
      * @throws NotFoundException if the user cannot be found
      */
-    public static function getById($userId)
+    public function getById($userId)
     {
-        $users = UserFactory::query(null, array('disableUserCheck' => 1, 'userId' => $userId));
+        $users = $this->query(null, array('disableUserCheck' => 1, 'userId' => $userId));
 
         if (count($users) <= 0)
             throw new NotFoundException(__('User not found'));
@@ -47,27 +105,13 @@ class UserFactory extends BaseFactory
     }
 
     /**
-     * Load User by ID
-     * @param int $userId
-     * @return User
-     * @throws NotFoundException if the user cannot be found
-     */
-    public static function loadById($userId)
-    {
-        $user = UserFactory::getById($userId);
-        $user->load();
-
-        return $user;
-    }
-
-    /**
      * Load by client Id
      * @param string $clientId
      * @throws NotFoundException
      */
-    public static function loadByClientId($clientId)
+    public function loadByClientId($clientId)
     {
-        $users = UserFactory::query(null, array('disableUserCheck' => 1, 'clientId' => $clientId));
+        $users = $this->query(null, array('disableUserCheck' => 1, 'clientId' => $clientId));
 
         if (count($users) <= 0)
             throw new NotFoundException(sprintf('User not found'));
@@ -81,9 +125,9 @@ class UserFactory extends BaseFactory
      * @return User
      * @throws NotFoundException if the user cannot be found
      */
-    public static function getByName($userName)
+    public function getByName($userName)
     {
-        $users = UserFactory::query(null, array('disableUserCheck' => 1, 'userName' => $userName));
+        $users = $this->query(null, array('disableUserCheck' => 1, 'userName' => $userName));
 
         if (count($users) <= 0)
             throw new NotFoundException(__('User not found'));
@@ -97,8 +141,8 @@ class UserFactory extends BaseFactory
      * @return User
      * @throws NotFoundException if the user cannot be found
      */
-    public static function getByEmail($email) {
-        $users = UserFactory::query(null, array('disableUserCheck' => 1, 'email' => $email));
+    public function getByEmail($email) {
+        $users = $this->query(null, array('disableUserCheck' => 1, 'email' => $email));
 
         if (count($users) <= 0)
             throw new NotFoundException(__('User not found'));
@@ -110,19 +154,19 @@ class UserFactory extends BaseFactory
      * @param int $groupId
      * @return array[User]
      */
-    public static function getByGroupId($groupId)
+    public function getByGroupId($groupId)
     {
-        return UserFactory::query(null, array('disableUserCheck' => 1, 'groupIds' => [$groupId]));
+        return $this->query(null, array('disableUserCheck' => 1, 'groupIds' => [$groupId]));
     }
 
     /**
-     * Get users by Display Group
+     * Get by Display Group
      * @param $displayGroupId
-     * @return array
+     * @return array[User]
      */
-    public static function getByDisplayGroupId($displayGroupId)
+    public function getByDisplayGroupId($displayGroupId)
     {
-        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
+        return $this->query(null, array('disableUserCheck' => 1, 'displayGroupId' => [$displayGroupId]));
     }
 
     /**
@@ -131,7 +175,7 @@ class UserFactory extends BaseFactory
      * @param array[mixed] $filterBy
      * @return array[User]
      */
-    public static function query($sortOrder = array(), $filterBy = array())
+    public function query($sortOrder = array(), $filterBy = array())
     {
         $entries = array();
 
@@ -204,13 +248,13 @@ class UserFactory extends BaseFactory
              WHERE 1 = 1
          ';
 
-        if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
+        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
             // Normal users can only see themselves
-            if (self::getUser()->userTypeId == 3) {
-                $filterBy['userId'] = self::getUser()->userId;
+            if ($this->getUser()->userTypeId == 3) {
+                $filterBy['userId'] = $this->getUser()->userId;
             }
             // Group admins can only see users from their groups.
-            else if (self::getUser()->userTypeId == 2) {
+            else if ($this->getUser()->userTypeId == 2) {
                 $body .= '
                     AND user.userId IN (
                         SELECT `otherUserLinks`.userId
@@ -223,58 +267,58 @@ class UserFactory extends BaseFactory
                          WHERE `lkusergroup`.userId = :currentUserId
                     )
                 ';
-                $params['currentUserId'] = self::getUser()->userId;
+                $params['currentUserId'] = $this->getUser()->userId;
             }
         }
 
-        if (Sanitize::getInt('notUserId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('notUserId', $filterBy) !== null) {
             $body .= ' AND user.userId <> :notUserId ';
-            $params['notUserId'] = Sanitize::getInt('notUserId', $filterBy);
+            $params['notUserId'] = $this->getSanitizer()->getInt('notUserId', $filterBy);
         }
 
         // User Id Provided?
-        if (Sanitize::getInt('userId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
             $body .= " AND user.userId = :userId ";
-            $params['userId'] = Sanitize::getInt('userId', $filterBy);
+            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
         }
 
         // Groups Provided
-        $groups = Sanitize::getParam('groupIds', $filterBy);
+        $groups = $this->getSanitizer()->getParam('groupIds', $filterBy);
 
         if (count($groups) > 0) {
             $body .= ' AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupId IN (' . implode($groups, ',') . ')) ';
         }
 
         // User Type Provided
-        if (Sanitize::getInt('userTypeId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('userTypeId', $filterBy) !== null) {
             $body .= " AND user.userTypeId = :userTypeId ";
-            $params['userTypeId'] = Sanitize::getInt('userTypeId', $filterBy);
+            $params['userTypeId'] = $this->getSanitizer()->getInt('userTypeId', $filterBy);
         }
 
         // User Name Provided
-        if (Sanitize::getString('userName', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('userName', $filterBy) != null) {
             $body .= " AND user.userName = :userName ";
-            $params['userName'] = Sanitize::getString('userName', $filterBy);
+            $params['userName'] = $this->getSanitizer()->getString('userName', $filterBy);
         }
 
         // Email Provided
-        if (Sanitize::getString('email', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('email', $filterBy) != null) {
             $body .= " AND user.email = :email ";
-            $params['email'] = Sanitize::getString('email', $filterBy);
+            $params['email'] = $this->getSanitizer()->getString('email', $filterBy);
         }
 
         // Retired users?
-        if (Sanitize::getInt('retired', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('retired', $filterBy) !== null) {
             $body .= " AND user.retired = :retired ";
-            $params['retired'] = Sanitize::getInt('retired', $filterBy);
+            $params['retired'] = $this->getSanitizer()->getInt('retired', $filterBy);
         }
 
-        if (Sanitize::getString('clientId', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('clientId', $filterBy) != null) {
             $body .= ' AND user.userId = (SELECT userId FROM `oauth_clients` WHERE id = :clientId) ';
-            $params['clientId'] = Sanitize::getString('clientId', $filterBy);
+            $params['clientId'] = $this->getSanitizer()->getString('clientId', $filterBy);
         }
 
-        if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
             $body .= ' AND user.userId IN (
                 SELECT DISTINCT user.userId, user.userName, user.email
                   FROM `user`
@@ -287,7 +331,7 @@ class UserFactory extends BaseFactory
                         AND `permissionentity`.entity = \'Xibo\\Entity\\DisplayGroup\'
                  WHERE `permission`.objectId = :displayGroupId
             ) ';
-            $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
+            $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
         }
 
         // Sorting?
@@ -297,20 +341,20 @@ class UserFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
 
         $sql = $select . $body . $order . $limit;
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new User())->hydrate($row);
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $this->create()->hydrate($row);
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

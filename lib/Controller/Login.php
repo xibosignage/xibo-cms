@@ -19,15 +19,52 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\UserFactory;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
+use Xibo\Helper\Session;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
+/**
+ * Class Login
+ * @package Xibo\Controller
+ */
 class Login extends Base
 {
+    /**
+     * @var Session
+     */
+    private $session;
+
+    /**
+     * @var UserFactory
+     */
+    private $userFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param Session $session
+     * @param UserFactory $userFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->session = $session;
+        $this->userFactory = $userFactory;
+    }
+
     /**
      * Output a login form
      */
@@ -44,16 +81,17 @@ class Login extends Base
     public function login()
     {
         // Get our username and password
-        $username = Sanitize::getUserName('username');
-        $password = Sanitize::getPassword('password');
+        $username = $this->getSanitizer()->getUserName('username');
+        $password = $this->getSanitizer()->getPassword('password');
 
-        Log::debug('Login with username %s', $username);
+        $this->getLog()->debug('Login with username %s', $username);
 
         // Get our user
         try {
-            $user = UserFactory::getByName($username);
+            /* @var User $user */
+            $user = $this->userFactory->getByName($username);
 
-            // Log::debug($user);
+            // $this->getLog()->debug($user);
 
             // Check password
             $user->checkPassword($password);
@@ -67,23 +105,25 @@ class Login extends Base
             // We are logged in!
             $user->loggedIn = 1;
 
+            $this->getLog()->setUserId($user->userId);
+
             // Overwrite our stored user with this new object.
-            $this->app->user = $user;
+            $this->getApp()->user = $user;
 
             // Switch Session ID's
-            $session = $this->getSession();
+            $session = $this->session;
             $session->setIsExpired(0);
             $session->regenerateSessionId();
             $session->setUser($user->userId);
 
             // Audit Log
-            Log::audit('User', $user->userId, 'Login Granted', [
+            $this->getLog()->audit('User', $user->userId, 'Login Granted', [
                 'IPAddress' => $this->getApp()->request()->getIp(),
                 'UserAgent' => $this->getApp()->request()->getUserAgent()
             ]);
         }
         catch (NotFoundException $e) {
-            Log::debug('User not found');
+            $this->getLog()->debug('User not found');
             throw new AccessDeniedException();
         }
     }
@@ -100,7 +140,7 @@ class Login extends Base
         unset($_SESSION['username']);
         unset($_SESSION['password']);
 
-        $session = $this->getSession();
+        $session = $this->session;
         $session->setIsExpired(1);
         $this->getApp()->redirectTo('login');
     }
@@ -113,11 +153,11 @@ class Login extends Base
         $this->getState()->template = 'user-welcome-page';
         $this->getState()->setData([
             'help' => [
-                'dashboard' => Help::Link('Dashboard', 'General'),
-                'display' => Help::Link('Display', 'General'),
-                'layout' => Help::Link('Layout', 'General'),
-                'schedule' => Help::Link('Schedule', 'General'),
-                'windows' => Help::rawLink('install_windows_client')
+                'dashboard' => $this->getHelp()->link('Dashboard', 'General'),
+                'display' => $this->getHelp()->link('Display', 'General'),
+                'layout' => $this->getHelp()->link('Layout', 'General'),
+                'schedule' => $this->getHelp()->link('Schedule', 'General'),
+                'windows' => $this->getHelp()->rawLink('install_windows_client')
             ]
         ]);
     }
@@ -127,7 +167,7 @@ class Login extends Base
      */
     public function PingPong()
     {
-        $this->getApp()->session->refreshExpiry = (Sanitize::getCheckbox('refreshSession') == 1);
+        $this->session->refreshExpiry = ($this->getSanitizer()->getCheckbox('refreshSession') == 1);
         $this->getState()->success = true;
     }
 

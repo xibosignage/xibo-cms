@@ -22,20 +22,85 @@ namespace Xibo\Controller;
 use Exception;
 use PicoFeed\PicoFeedException;
 use PicoFeed\Reader\Reader;
-use Xibo\Factory\BaseFactory;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\ByteFormatter;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class StatusDashboard
+ * @package Xibo\Controller
+ */
 class StatusDashboard extends Base
 {
+    /**
+     * @var StorageServiceInterface
+     */
+    private $store;
+
+    /**
+     * @var PoolInterface
+     */
+    private $pool;
+
+    /**
+     * @var UserFactory
+     */
+    private $userFactory;
+
+    /**
+     * @var DisplayFactory
+     */
+    private $displayFactory;
+
+    /**
+     * @var DisplayGroupFactory
+     */
+    private $displayGroupFactory;
+
+    /**
+     * @var MediaFactory
+     */
+    private $mediaFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param StorageServiceInterface $store
+     * @param PoolInterface $pool
+     * @param UserFactory $userFactory
+     * @param DisplayFactory $displayFactory
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param MediaFactory $mediaFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $displayFactory, $displayGroupFactory, $mediaFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->store = $store;
+        $this->pool = $pool;
+        $this->userFactory = $userFactory;
+        $this->displayFactory = $displayFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
+        $this->mediaFactory = $mediaFactory;
+    }
+
+    /**
+     * View
+     */
     function displayPage()
     {
         $data = [];
@@ -45,14 +110,14 @@ class StatusDashboard extends Base
 
         try {
             // Displays this user has access to
-            $displays = DisplayFactory::query(['display']);
+            $displays = $this->displayFactory->query(['display']);
             $displayIds = array_map(function($element) {
                 return $element->displayId;
             }, $displays);
             $displayIds[] = -1;
 
             // Get some data for a bandwidth chart
-            $dbh = PDOConnect::init();
+            $dbh = $this->store->getConnection();
 
             $sql = '
               SELECT MAX(FROM_UNIXTIME(month)) AS month,
@@ -64,10 +129,10 @@ class StatusDashboard extends Base
             $params = array('month' => time() - (86400 * 365));
 
 
-            $results = PDOConnect::select($sql, $params);
+            $results = $this->store->select($sql, $params);
 
             // Monthly bandwidth - optionally tested against limits
-            $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
+            $xmdsLimit = $this->getConfig()->GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 
             $maxSize = 0;
             foreach ($results as $row) {
@@ -89,7 +154,7 @@ class StatusDashboard extends Base
                 $size = ((double)$row['size']) / (pow(1024, $base));
                 $remaining = $xmdsLimit - $size;
                 $output[] = array(
-                    'label' => Date::getLocalDate(Sanitize::getDate('month', $row), 'F'),
+                    'label' => $this->getDate()->getLocalDate($this->getSanitizer()->getDate('month', $row), 'F'),
                     'value' => round($size, 2),
                     'limit' => round($remaining, 2)
                 );
@@ -98,7 +163,7 @@ class StatusDashboard extends Base
             // What if we are empty?
             if (count($output) == 0) {
                 $output[] = array(
-                    'label' => Date::getLocalDate(null, 'F'),
+                    'label' => $this->getDate()->getLocalDate(null, 'F'),
                     'value' => 0,
                     'limit' => 0
                 );
@@ -114,16 +179,14 @@ class StatusDashboard extends Base
                 $libraryLimit = $this->getUser()->libraryQuota * 1024;
             }
             else {
-                $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+                $libraryLimit = $this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
             }
 
             // Library Size in Bytes
             $params = [];
             $sql = 'SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM `media` WHERE 1 = 1 ';
-            BaseFactory::viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
+            $this->mediaFactory->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
             $sql .= ' GROUP BY type ';
-
-
 
             $sth = $dbh->prepare($sql);
             $sth->execute($params);
@@ -144,7 +207,7 @@ class StatusDashboard extends Base
             // Decide what our units are going to be, based on the size
             $base = ($maxSize == 0) ? 0 : floor(log($maxSize) / log(1024));
 
-            $output = array();
+            $output = [];
             $totalSize = 0;
             foreach ($results as $library) {
                 $output[] = array(
@@ -181,10 +244,10 @@ class StatusDashboard extends Base
             $data['displays'] = $displays;
 
             // Get a count of users
-            $data['countUsers'] = count(UserFactory::query());
+            $data['countUsers'] = count($this->userFactory->query());
 
             // Get a count of active layouts, only for display groups we have permission for
-            $displayGroups = DisplayGroupFactory::query(null, ['isDisplaySpecific' => -1]);
+            $displayGroups = $this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]);
             $displayGroupIds = array_map(function($element) {
                 return $element->displayGroupId;
             }, $displayGroups);
@@ -194,21 +257,19 @@ class StatusDashboard extends Base
             $sql = 'SELECT IFNULL(COUNT(*), 0) AS count_scheduled FROM `schedule_detail` WHERE :now BETWEEN FromDT AND ToDT AND eventId IN (SELECT eventId FROM `lkscheduledisplaygroup` WHERE displayGroupId IN (' . implode(',', $displayGroupIds) . '))';
             $params = array('now' => time());
 
-
-
             $sth = $dbh->prepare($sql);
             $sth->execute($params);
 
             $data['nowShowing'] = $sth->fetchColumn(0);
 
             // Latest news
-            if (Config::GetSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1) {
+            if ($this->getConfig()->GetSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1) {
                 // Make sure we have the cache location configured
-                Library::ensureLibraryExists();
+                Library::ensureLibraryExists($this->getConfig()->GetSetting('LIBRARY_LOCATION'));
 
                 try {
-                    $feedUrl = Theme::getConfig('latest_news_url');
-                    $cache = $this->getPool()->getItem('rss/' . md5($feedUrl));
+                    $feedUrl = $this->getConfig()->getThemeConfig('latest_news_url');
+                    $cache = $this->pool->getItem('rss/' . md5($feedUrl));
 
                     $latestNews = $cache->get();
 
@@ -216,7 +277,7 @@ class StatusDashboard extends Base
                     if ($cache->isMiss()) {
 
                         // Get the feed
-                        $reader = new Reader(Config::getPicoFeedProxy($feedUrl));
+                        $reader = new Reader($this->getConfig()->getPicoFeedProxy($feedUrl));
                         $resource = $reader->download($feedUrl);
 
                         // Get the feed parser
@@ -241,14 +302,14 @@ class StatusDashboard extends Base
                         $cache->set($latestNews);
                         $cache->expiresAfter(86400);
 
-                        $this->getPool()->saveDeferred($cache);
+                        $this->pool->saveDeferred($cache);
                     }
 
                     $data['latestNews'] = $latestNews;
                 }
                 catch (PicoFeedException $e) {
-                    Log::error('Unable to get feed: %s', $e->getMessage());
-                    Log::debug($e->getTraceAsString());
+                    $this->getLog()->error('Unable to get feed: %s', $e->getMessage());
+                    $this->getLog()->debug($e->getTraceAsString());
 
                     $data['latestNews'] = array(array('title' => __('Latest news not available.'), 'description' => '', 'link' => ''));
                 }
@@ -259,14 +320,15 @@ class StatusDashboard extends Base
         }
         catch (Exception $e) {
 
-            Log::error($e->getMessage());
+            $this->getLog()->error($e->getMessage());
+            $this->getLog()->debug($e->getTraceAsString());
 
             // Show the error in place of the bandwidth chart
             $data['widget-error'] = 'Unable to get widget details';
         }
 
         // Do we have an embedded widget?
-        $data['embedded-widget'] = html_entity_decode(Config::GetSetting('EMBEDDED_STATUS_WIDGET'));
+        $data['embedded-widget'] = html_entity_decode($this->getConfig()->GetSetting('EMBEDDED_STATUS_WIDGET'));
 
         // Render the Theme and output
         $this->getState()->template = 'dashboard-status-page';

@@ -20,104 +20,83 @@
  */
 namespace Xibo\Controller;
 
-use Exception;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LogFactory;
-use Xibo\Helper\Date;
-use Xibo\Helper\Help;
-use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
-
+/**
+ * Class Logging
+ * @package Xibo\Controller
+ */
 class Logging extends Base
 {
+    /**
+     * @var LogFactory
+     */
+    private $logFactory;
+
+    /**
+     * @var DisplayFactory
+     */
+    private $displayFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param StorageServiceInterface $store
+     * @param LogFactory $logFactory
+     * @param DisplayFactory $displayFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $logFactory, $displayFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->store = $store;
+        $this->logFactory = $logFactory;
+        $this->displayFactory = $displayFactory;
+    }
+
     public function displayPage()
     {
         $this->getState()->template = 'log-page';
         $this->getState()->setData([
-            'displays' => DisplayFactory::query()
+            'displays' => $this->displayFactory->query()
         ]);
     }
 
     function grid()
     {
         // Date time criteria
-        $seconds = Sanitize::getInt('seconds', 120);
-        $intervalType = Sanitize::getInt('intervalType', 1);
-        $fromDt = Sanitize::getDate('fromDt', Date::getLocalDate());
+        $seconds = $this->getSanitizer()->getInt('seconds', 120);
+        $intervalType = $this->getSanitizer()->getInt('intervalType', 1);
+        $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getDate()->getLocalDate());
 
-        $logs = LogFactory::query($this->gridRenderSort(), $this->gridRenderFilter([
+        $logs = $this->logFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'fromDt' => $fromDt->format('U') - ($seconds * $intervalType),
             'toDt' => $fromDt->format('U'),
-            'type' => Sanitize::getString('level'),
-            'page' => Sanitize::getString('page'),
-            'channel' => Sanitize::getString('channel'),
-            'function' => Sanitize::getString('function'),
-            'displayId' => Sanitize::getInt('displayId'),
+            'type' => $this->getSanitizer()->getString('level'),
+            'page' => $this->getSanitizer()->getString('page'),
+            'channel' => $this->getSanitizer()->getString('channel'),
+            'function' => $this->getSanitizer()->getString('function'),
+            'displayId' => $this->getSanitizer()->getInt('displayId'),
             'excludeLog' => 1,
-            'runNo' => Sanitize::getString('runNo')
+            'runNo' => $this->getSanitizer()->getString('runNo')
         ]));
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = LogFactory::countLast();
+        $this->getState()->recordsTotal = $this->logFactory->countLast();
         $this->getState()->setData($logs);
-    }
-
-    function LastHundredForDisplay()
-    {
-        $response = $this->getState();
-        $displayId = Sanitize::getInt('displayid');
-
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-
-            $sth = $dbh->prepare('SELECT logid, logdate, page, function, message FROM log WHERE displayid = :displayid ORDER BY logid DESC LIMIT 100');
-            $sth->execute(array(
-                'displayid' => $displayId
-            ));
-
-            $log = $sth->fetchAll();
-
-            if (count($log) <= 0)
-                throw new Exception(__('No log messages for this display'));
-
-            $cols = array(
-                array('name' => 'logid', 'title' => __('ID')),
-                array('name' => 'logdate', 'title' => __('Date')),
-                array('name' => 'page', 'title' => __('Page')),
-                array('name' => 'function', 'title' => __('Function')),
-                array('name' => 'message', 'title' => __('Message'))
-            );
-            Theme::Set('table_cols', $cols);
-
-            $rows = array();
-
-            foreach ($log as $row) {
-
-                $row['logid'] = Sanitize::int($row['logid']);
-                $row['logdate'] = Sanitize::string($row['logdate']);
-                $row['page'] = Sanitize::string($row['page']);
-                $row['function'] = Sanitize::string($row['function']);
-                $row['message'] = nl2br(htmlspecialchars($row['message']));
-
-                $rows[] = $row;
-            }
-
-            Theme::Set('table_rows', $rows);
-
-            $output = Theme::RenderReturn('table_render');
-
-            $response->initialSortOrder = 2;
-            $response->dialogClass = 'modal-big';
-            $response->dialogTitle = __('Recent Log Messages');
-            $response->pageSize = 10;
-            $response->SetGridResponse($output);
-
-        } catch (Exception $e) {
-            trigger_error($e->getMessage(), E_USER_ERROR);
-        }
     }
 
     /**
@@ -130,7 +109,7 @@ class Logging extends Base
 
         $this->getState()->template = 'log-form-truncate';
         $this->getState()->setData([
-            'help' => Help::Link('Log', 'Truncate')
+            'help' => $this->getHelp()->link('Log', 'Truncate')
         ]);
     }
 
@@ -142,7 +121,7 @@ class Logging extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException(__('Only Administrator Users can truncate the log'));
 
-        PDOConnect::update('TRUNCATE TABLE log', array());
+        $this->store->update('TRUNCATE TABLE log', array());
 
         // Return
         $this->getState()->hydrate([

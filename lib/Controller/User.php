@@ -28,19 +28,120 @@ use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ApplicationFactory;
+use Xibo\Factory\CampaignFactory;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserTypeFactory;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
+/**
+ * Class User
+ * @package Xibo\Controller
+ */
 class User extends Base
 {
+    /**
+     * @var UserFactory
+     */
+    private $userFactory;
+
+    /**
+     * @var UserTypeFactory
+     */
+    private $userTypeFactory;
+
+    /**
+     * @var UserGroupFactory
+     */
+    private $userGroupFactory;
+
+    /**
+     * @var PageFactory
+     */
+    private $pageFactory;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+
+    /**
+     * @var ApplicationFactory
+     */
+    private $applicationFactory;
+
+    /**
+     * @var CampaignFactory
+     */
+    private $campaignFactory;
+
+    /**
+     * @var MediaFactory
+     */
+    private $mediaFactory;
+
+    /**
+     * @var ScheduleFactory
+     */
+    private $scheduleFactory;
+
+    /** @var  DisplayFactory */
+    private $displayFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param UserFactory $userFactory
+     * @param UserTypeFactory $userTypeFactory
+     * @param UserGroupFactory $userGroupFactory
+     * @param PageFactory $pageFactory
+     * @param PermissionFactory $permissionFactory
+     * @param LayoutFactory $layoutFactory
+     * @param ApplicationFactory $applicationFactory
+     * @param CampaignFactory $campaignFactory
+     * @param MediaFactory $mediaFactory
+     * @param ScheduleFactory $scheduleFactory
+     * @param DisplayFactory $displayFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
+                                $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
+                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->userFactory = $userFactory;
+        $this->userTypeFactory = $userTypeFactory;
+        $this->userGroupFactory = $userGroupFactory;
+        $this->pageFactory = $pageFactory;
+        $this->permissionFactory = $permissionFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->applicationFactory = $applicationFactory;
+        $this->campaignFactory = $campaignFactory;
+        $this->mediaFactory = $mediaFactory;
+        $this->scheduleFactory = $scheduleFactory;
+        $this->displayFactory = $displayFactory;
+    }
+
     /**
      * Controls which pages are to be displayed
      */
@@ -48,7 +149,7 @@ class User extends Base
     {
         $this->getState()->template = 'user-page';
         $this->getState()->setData([
-            'userTypes' => PDOConnect::select("SELECT userTypeId, userType FROM usertype ORDER BY usertype", [])
+            'userTypes' => $this->userTypeFactory->query()
         ]);
     }
 
@@ -128,14 +229,14 @@ class User extends Base
     {
         // Filter our users?
         $filterBy = [
-            'userId' => Sanitize::getInt('userId'),
-            'userTypeId' => Sanitize::getInt('userTypeId'),
-            'userName' => Sanitize::getString('userName'),
-            'retired' => Sanitize::getInt('retired')
+            'userId' => $this->getSanitizer()->getInt('userId'),
+            'userTypeId' => $this->getSanitizer()->getInt('userTypeId'),
+            'userName' => $this->getSanitizer()->getString('userName'),
+            'retired' => $this->getSanitizer()->getInt('retired')
         ];
 
         // Load results into an array
-        $users = UserFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filterBy));
+        $users = $this->userFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filterBy));
 
         foreach ($users as $user) {
             /* @var \Xibo\Entity\User $user */
@@ -150,30 +251,30 @@ class User extends Base
             if ($this->getUser()->userTypeId == 1) {
 
                 // Edit
-                $user->buttons[] = array(
+                $user->buttons[] = [
                     'id' => 'user_button_edit',
                     'url' => $this->getApp()->urlFor('user.edit.form', ['id' => $user->userId]),
                     'text' => __('Edit')
-                );
+                ];
 
                 // Delete
-                $user->buttons[] = array(
+                $user->buttons[] = [
                     'id' => 'user_button_delete',
                     'url' => $this->getApp()->urlFor('user.delete.form', ['id' => $user->userId]),
                     'text' => __('Delete')
-                );
+                ];
 
                 // Page Security
-                $user->buttons[] = array(
+                $user->buttons[] = [
                     'id' => 'user_button_page_security',
                     'url' => $this->urlFor('group.acl.form', ['id' => $user->groupId]),
                     'text' => __('Page Security')
-                );
+                ];
             }
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = UserFactory::countLast();
+        $this->getState()->recordsTotal = $this->userFactory->countLast();
         $this->getState()->setData($users);
     }
 
@@ -306,25 +407,25 @@ class User extends Base
     public function add()
     {
         // Build a user entity and save it
-        $user = new \Xibo\Entity\User();
-        $user->userName = Sanitize::getString('userName');
-        $user->email = Sanitize::getString('email');
-        $user->userTypeId = Sanitize::getInt('userTypeId');
-        $user->homePageId = Sanitize::getInt('homePageId');
-        $user->libraryQuota = Sanitize::getInt('libraryQuota');
-        $user->setNewPassword(Sanitize::getString('password'));
+        $user = $this->userFactory->create();
+        $user->userName = $this->getSanitizer()->getString('userName');
+        $user->email = $this->getSanitizer()->getString('email');
+        $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
+        $user->homePageId = $this->getSanitizer()->getInt('homePageId');
+        $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
+        $user->setNewPassword($this->getSanitizer()->getString('password'));
 
-        $user->firstName = Sanitize::getString('firstName');
-        $user->lastName = Sanitize::getString('lastName');
-        $user->phone = Sanitize::getString('phone');
-        $user->ref1 = Sanitize::getString('ref1');
-        $user->ref2 = Sanitize::getString('ref2');
-        $user->ref3 = Sanitize::getString('ref3');
-        $user->ref4 = Sanitize::getString('ref4');
-        $user->ref5 = Sanitize::getString('ref5');
+        $user->firstName = $this->getSanitizer()->getString('firstName');
+        $user->lastName = $this->getSanitizer()->getString('lastName');
+        $user->phone = $this->getSanitizer()->getString('phone');
+        $user->ref1 = $this->getSanitizer()->getString('ref1');
+        $user->ref2 = $this->getSanitizer()->getString('ref2');
+        $user->ref3 = $this->getSanitizer()->getString('ref3');
+        $user->ref4 = $this->getSanitizer()->getString('ref4');
+        $user->ref5 = $this->getSanitizer()->getString('ref5');
 
         // Initial user group
-        $group = UserGroupFactory::getById(Sanitize::getInt('groupId'));
+        $group = $this->userGroupFactory->getById($this->getSanitizer()->getInt('groupId'));
 
         // Save the user
         $user->save();
@@ -348,37 +449,38 @@ class User extends Base
      */
     public function edit($userId)
     {
-        $user = UserFactory::getById($userId);
+        $user = $this->userFactory->getById($userId);
 
         if (!$this->getUser()->checkEditable($user))
             throw new AccessDeniedException();
 
         // Build a user entity and save it
+        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
         $user->load();
-        $user->userName = Sanitize::getString('userName');
-        $user->email = Sanitize::getString('email');
-        $user->userTypeId = Sanitize::getInt('userTypeId');
-        $user->homePageId = Sanitize::getInt('homePageId');
-        $user->libraryQuota = Sanitize::getInt('libraryQuota');
-        $user->retired = Sanitize::getCheckbox('retired');
+        $user->userName = $this->getSanitizer()->getString('userName');
+        $user->email = $this->getSanitizer()->getString('email');
+        $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
+        $user->homePageId = $this->getSanitizer()->getInt('homePageId');
+        $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
+        $user->retired = $this->getSanitizer()->getCheckbox('retired');
 
-        $user->firstName = Sanitize::getString('firstName');
-        $user->lastName = Sanitize::getString('lastName');
-        $user->phone = Sanitize::getString('phone');
-        $user->ref1 = Sanitize::getString('ref1');
-        $user->ref2 = Sanitize::getString('ref2');
-        $user->ref3 = Sanitize::getString('ref3');
-        $user->ref4 = Sanitize::getString('ref4');
-        $user->ref5 = Sanitize::getString('ref5');
+        $user->firstName = $this->getSanitizer()->getString('firstName');
+        $user->lastName = $this->getSanitizer()->getString('lastName');
+        $user->phone = $this->getSanitizer()->getString('phone');
+        $user->ref1 = $this->getSanitizer()->getString('ref1');
+        $user->ref2 = $this->getSanitizer()->getString('ref2');
+        $user->ref3 = $this->getSanitizer()->getString('ref3');
+        $user->ref4 = $this->getSanitizer()->getString('ref4');
+        $user->ref5 = $this->getSanitizer()->getString('ref5');
 
         // Make sure the user has permission to access this page.
-        if (!$user->checkViewable(PageFactory::getById($user->homePageId)))
+        if (!$user->checkViewable($this->pageFactory->getById($user->homePageId)))
             throw new \InvalidArgumentException(__('User does not have permission for this homepage'));
 
         // If we are a super admin
         if ($this->getUser()->userTypeId == 1) {
-            $newPassword = Sanitize::getString('newPassword');
-            $retypeNewPassword = Sanitize::getString('retypeNewPassword');
+            $newPassword = $this->getSanitizer()->getString('newPassword');
+            $retypeNewPassword = $this->getSanitizer()->getString('retypeNewPassword');
 
             if ($newPassword != null && $newPassword != '') {
                 // Make sure they are the same
@@ -408,19 +510,22 @@ class User extends Base
      */
     public function delete($userId)
     {
-        $user = UserFactory::getById($userId);
+        $user = $this->userFactory->getById($userId);
 
         if (!$this->getUser()->checkDeleteable($user))
             throw new AccessDeniedException();
 
-        if (Sanitize::getCheckbox('deleteAllItems') != 1) {
+        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
+        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory);
+
+        if ($this->getSanitizer()->getCheckbox('deleteAllItems') != 1) {
 
             // Do we have a userId to reassign content to?
-            if (Sanitize::getInt('reassignUserId') != null) {
+            if ($this->getSanitizer()->getInt('reassignUserId') != null) {
                 // Reassign all content owned by this user to the provided user
-                Log::debug('Reassigning content to new userId: %d', Sanitize::getInt('reassignUserId'));
+                $this->getLog()->debug('Reassigning content to new userId: %d', $this->getSanitizer()->getInt('reassignUserId'));
 
-                $user->reassignAllTo(UserFactory::getById(Sanitize::getInt('reassignUserId')));
+                $user->reassignAllTo($this->userFactory->getById($this->getSanitizer()->getInt('reassignUserId')));
             } else {
                 // Check to see if we have any child data that would prevent us from deleting
                 $children = $user->countChildren();
@@ -448,12 +553,12 @@ class User extends Base
         $this->getState()->template = 'user-form-add';
         $this->getState()->setData([
             'options' => [
-                'homepage' => PageFactory::query(null, ['asHome' => 1]),
-                'groups' => UserGroupFactory::query(),
-                'userTypes' => UserTypeFactory::query()
+                'homepage' => $this->pageFactory->query(null, ['asHome' => 1]),
+                'groups' => $this->userGroupFactory->query(),
+                'userTypes' => $this->userTypeFactory->query()
             ],
             'help' => [
-                'add' => Help::Link('User', 'Add')
+                'add' => $this->getHelp()->link('User', 'Add')
             ]
         ]);
     }
@@ -465,7 +570,7 @@ class User extends Base
      */
     public function editForm($userId)
     {
-        $user = UserFactory::getById($userId);
+        $user = $this->userFactory->getById($userId);
 
         if (!$this->getUser()->checkEditable($user))
             throw new AccessDeniedException();
@@ -474,11 +579,11 @@ class User extends Base
         $this->getState()->setData([
             'user' => $user,
             'options' => [
-                'homepage' => PageFactory::query(),
-                'userTypes' => UserTypeFactory::query()
+                'homepage' => $this->pageFactory->query(),
+                'userTypes' => $this->userTypeFactory->query()
             ],
             'help' => [
-                'edit' => Help::Link('User', 'Edit')
+                'edit' => $this->getHelp()->link('User', 'Edit')
             ]
         ]);
     }
@@ -490,7 +595,7 @@ class User extends Base
      */
     public function deleteForm($userId)
     {
-        $user = UserFactory::getById($userId);
+        $user = $this->userFactory->getById($userId);
 
         if (!$this->getUser()->checkDeleteable($user))
             throw new AccessDeniedException();
@@ -498,9 +603,9 @@ class User extends Base
         $this->getState()->template = 'user-form-delete';
         $this->getState()->setData([
             'user' => $user,
-            'users' => UserFactory::query(null, ['notUserId' => $userId]),
+            'users' => $this->userFactory->query(null, ['notUserId' => $userId]),
             'help' => [
-                'delete' => Help::Link('User', 'Delete')
+                'delete' => $this->getHelp()->link('User', 'Delete')
             ]
         ]);
     }
@@ -513,7 +618,7 @@ class User extends Base
         $this->getState()->template = 'user-form-change-password';
         $this->getState()->setData([
             'help' => [
-                'changePassword' => Help::Link('User', 'ChangePassword')
+                'changePassword' => $this->getHelp()->link('User', 'ChangePassword')
             ]
         ]);
     }
@@ -525,9 +630,9 @@ class User extends Base
     {
         // Save the user
         $user = $this->getUser();
-        $oldPassword = Sanitize::getString('password');
-        $newPassword = Sanitize::getString('newPassword');
-        $retypeNewPassword = Sanitize::getString('retypeNewPassword');
+        $oldPassword = $this->getSanitizer()->getString('password');
+        $newPassword = $this->getSanitizer()->getString('newPassword');
+        $retypeNewPassword = $this->getSanitizer()->getString('retypeNewPassword');
 
         if ($newPassword != $retypeNewPassword)
             throw new \InvalidArgumentException(__('Passwords do not match'));
@@ -582,18 +687,18 @@ class User extends Base
         $entity = $this->parsePermissionsEntity($entity, $objectId);
 
         // Load our object
-        $object = $entity::getById($objectId);
+        $object = $entity->getById($objectId);
 
         // Does this user have permission to edit the permissions?!
         if (!$this->getUser()->checkPermissionsModifyable($object))
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         // List of all Groups with a view / edit / delete check box
-        $permissions = PermissionFactory::getAllByObjectId(get_class($object), $objectId, $this->gridRenderSort(), $this->gridRenderFilter(['name' => Sanitize::getString('name')]));
+        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object), $objectId, $this->gridRenderSort(), $this->gridRenderFilter(['name' => $this->getSanitizer()->getString('name')]));
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($permissions);
-        $this->getState()->recordsTotal = PermissionFactory::countLast();
+        $this->getState()->recordsTotal = $this->permissionFactory->countLast();
     }
 
     /**
@@ -609,14 +714,14 @@ class User extends Base
         $entity = $this->parsePermissionsEntity($entity, $objectId);
 
         // Load our object
-        $object = $entity::getById($objectId);
+        $object = $entity->getById($objectId);
 
         // Does this user have permission to edit the permissions?!
         if (!$this->getUser()->checkPermissionsModifyable($object))
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         $currentPermissions = [];
-        foreach (PermissionFactory::getAllByObjectId(get_class($object), $objectId) as $permission) {
+        foreach ($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object), $objectId) as $permission) {
             /* @var Permission $permission */
             $currentPermissions[$permission->groupId] = [
                 'view' => ($permission->view == null) ? 0 : $permission->view,
@@ -630,7 +735,7 @@ class User extends Base
             'objectId' => $objectId,
             'permissions' => $currentPermissions,
             'help' => [
-                'permissions' => Help::Link('Campaign', 'Permissions')
+                'permissions' => $this->getHelp()->link('Campaign', 'Permissions')
             ]
         ];
 
@@ -682,51 +787,51 @@ class User extends Base
         $entity = $this->parsePermissionsEntity($entity, $objectId);
 
         // Load our object
-        $object = $entity::getById($objectId);
+        $object = $entity->getById($objectId);
 
         // Does this user have permission to edit the permissions?!
         if (!$this->getUser()->checkPermissionsModifyable($object))
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         // Get all current permissions
-        $permissions = PermissionFactory::getAllByObjectId(get_class($object), $objectId);
+        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object), $objectId);
 
         // Get the provided permissions
-        $groupIds = Sanitize::getStringArray('groupIds');
+        $groupIds = $this->getSanitizer()->getStringArray('groupIds');
 
         // Run the update
         $this->updatePermissions($permissions, $groupIds);
 
         // Cascade permissions
-        if ($requestEntity == 'Campaign' && Sanitize::getCheckbox('cascade') == 1) {
+        if ($requestEntity == 'Campaign' && $this->getSanitizer()->getCheckbox('cascade') == 1) {
             /* @var Campaign $object */
-            Log::debug('Cascade permissions down');
+            $this->getLog()->debug('Cascade permissions down');
 
             $updatePermissionsOnLayout = function($layout) use ($object, $groupIds) {
 
                 // Regions
                 foreach ($layout->regions as $region) {
                     /* @var Region $region */
-                    $this->updatePermissions(PermissionFactory::getAllByObjectId(get_class($region), $region->getId()), $groupIds);
+                    $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($region), $region->getId()), $groupIds);
 
                     // Playlists
                     foreach ($region->playlists as $playlist) {
                         /* @var Playlist $playlist */
-                        $this->updatePermissions(PermissionFactory::getAllByObjectId(get_class($playlist), $playlist->getId()), $groupIds);
+                        $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($playlist), $playlist->getId()), $groupIds);
 
                         // Widgets
                         foreach ($playlist->widgets as $widget) {
                             /* @var Widget $widget */
-                            $this->updatePermissions(PermissionFactory::getAllByObjectId(get_class($widget), $widget->getId()), $groupIds);
+                            $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($widget), $widget->getId()), $groupIds);
                         }
                     }
                 }
             };
 
-            foreach (LayoutFactory::getByCampaignId($object->campaignId) as $layout) {
+            foreach ($this->layoutFactory->getByCampaignId($object->campaignId) as $layout) {
                 /* @var Layout $layout */
                 // Assign the same permissions to the Layout
-                $this->updatePermissions(PermissionFactory::getAllByObjectId(get_class($object), $layout->campaignId), $groupIds);
+                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object), $layout->campaignId), $groupIds);
 
                 // Load the layout
                 $layout->load();
@@ -744,6 +849,7 @@ class User extends Base
 
     /**
      * Parse the Permissions Entity
+     * //TODO: this does some nasty service location via $app, if anyone has a better idea, please submit a PR
      * @param string $entity
      * @param int $objectId
      * @return string
@@ -753,17 +859,18 @@ class User extends Base
         if ($entity == '')
             throw new \InvalidArgumentException(__('Permissions requested without an entity'));
 
-        // Check to see that we can resolve the entity
-        $entity = 'Xibo\\Factory\\' . $entity . 'Factory';
-
-        if (!class_exists($entity) || !method_exists($entity, 'getById'))
-            throw new \InvalidArgumentException(__('Permissions form requested with an invalid entity'));
-
-        // Get the object
         if ($objectId == 0)
             throw new \InvalidArgumentException(__('Permissions form requested without an object'));
 
-        return $entity;
+        // Check to see that we can resolve the entity
+        $entity = lcfirst($entity) . 'Factory';
+
+        if (!$this->getApp()->container->has($entity) || !method_exists($this->getApp()->container->get($entity), 'getById')) {
+            $this->getLog()->error('Invalid Entity %s', $entity);
+            throw new \InvalidArgumentException(__('Permissions form requested with an invalid entity'));
+        }
+
+        return $this->getApp()->container->get($entity);
     }
 
     /**
@@ -773,7 +880,7 @@ class User extends Base
      */
     private function updatePermissions($permissions, $groupIds)
     {
-        Log::debug('Received Permissions Array to update: %s', var_export($groupIds, true));
+        $this->getLog()->debug('Received Permissions Array to update: %s', var_export($groupIds, true));
 
         // List of groupIds with view, edit and del assignments
         foreach ($permissions as $row) {
@@ -797,8 +904,8 @@ class User extends Base
     {
         $this->getState()->template = 'user-applications-form';
         $this->getState()->setData([
-            'applications' => ApplicationFactory::getByUserId($this->getUser()->userId),
-            'help' => Help::Link('User', 'Applications')
+            'applications' => $this->applicationFactory->getByUserId($this->getUser()->userId),
+            'help' => $this->getHelp()->link('User', 'Applications')
         ]);
     }
 
@@ -828,7 +935,7 @@ class User extends Base
      */
     public function pref()
     {
-        $requestedPreference = Sanitize::getString('preference');
+        $requestedPreference = $this->getSanitizer()->getString('preference');
 
         if ($requestedPreference != '') {
             return [
@@ -866,11 +973,11 @@ class User extends Base
     {
         // Update this user preference with the preference array
         $i = 0;
-        foreach (Sanitize::getStringArray('preference') as $pref) {
+        foreach ($this->getSanitizer()->getStringArray('preference') as $pref) {
             $i++;
 
-            $option = Sanitize::string($pref['option']);
-            $value = Sanitize::string($pref['value']);
+            $option = $this->getSanitizer()->string($pref['option']);
+            $value = $this->getSanitizer()->string($pref['value']);
 
             $this->getUser()->setOptionValue($option, $value);
         }

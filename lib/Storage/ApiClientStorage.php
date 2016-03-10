@@ -30,6 +30,32 @@ use League\OAuth2\Server\Storage\ClientInterface;
 class ApiClientStorage extends AbstractStorage implements ClientInterface
 {
     /**
+     * @var StorageServiceInterface
+     */
+    private $store;
+
+    /**
+     * ApiAccessTokenStorage constructor.
+     * @param StorageServiceInterface $store
+     */
+    public function __construct($store)
+    {
+        if (!$store instanceof StorageServiceInterface)
+            throw new \RuntimeException('Invalid $store');
+
+        $this->store = $store;
+    }
+
+    /**
+     * Get Store
+     * @return StorageServiceInterface
+     */
+    protected function getStore()
+    {
+        return $this->store;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function get($clientId, $clientSecret = null, $redirectUri = null, $grantType = null)
@@ -60,7 +86,7 @@ class ApiClientStorage extends AbstractStorage implements ClientInterface
             $params['clientSecret'] = $clientSecret;
         }
 
-        $result = PDOConnect::select($sql, $params);
+        $result = $this->getStore()->select($sql, $params);
 
         if (count($result) === 1) {
             $client = new ClientEntity($this->server);
@@ -99,7 +125,7 @@ class ApiClientStorage extends AbstractStorage implements ClientInterface
      */
     public function getBySession(SessionEntity $session)
     {
-        $result = PDOConnect::select('
+        $result = $this->getStore()->select('
             SELECT oauth_clients.id, oauth_clients.name
               FROM oauth_clients
                 INNER JOIN oauth_sessions ON oauth_clients.id = oauth_sessions.client_id

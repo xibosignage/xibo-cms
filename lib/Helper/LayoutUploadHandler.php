@@ -3,16 +3,19 @@
 namespace Xibo\Helper;
 
 use Exception;
-use Xibo\Factory\LayoutFactory;
+use Xibo\Entity\Layout;
 
 class LayoutUploadHandler extends BlueImpUploadHandler
 {
     protected function handle_form_data($file, $index)
     {
+        $controller = $this->options['controller'];
+        /* @var \Xibo\Controller\Base $controller */
+
         // Handle form data, e.g. $_REQUEST['description'][$index]
         $fileName = $file->name;
 
-        Log::debug('Upload complete for ' . $fileName . '.');
+        $controller->getLog()->debug('Upload complete for ' . $fileName . '.');
 
         // Upload and Save
         try {
@@ -21,8 +24,9 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             $replaceExisting = isset($_REQUEST['replaceExisting']) ? $_REQUEST['replaceExisting'][$index] : 0;
             $importTags = isset($_REQUEST['importTags']) ? $_REQUEST['importTags'][$index] : 0;
 
-            $layout = LayoutFactory::createFromZip(
-                Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName,
+            /* @var Layout $layout */
+            $layout = $controller->getFactoryService()->get('LayoutFactory')->createFromZip(
+                $controller->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName,
                 $name,
                 $this->options['userId'],
                 $template,
@@ -32,18 +36,18 @@ class LayoutUploadHandler extends BlueImpUploadHandler
 
             $layout->save();
 
-            @unlink(Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName);
+            @unlink($controller->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName);
 
             // Set the name for the return
             $file->name = $layout->layout;
 
         } catch (Exception $e) {
-            Log::error('Error uploading media: %s', $e->getMessage());
-            Log::debug($e->getTraceAsString());
+            $controller->getLog()->error('Error uploading media: %s', $e->getMessage());
+            $controller->getLog()->debug($e->getTraceAsString());
 
             $file->error = $e->getMessage();
 
-            $this->options['controller']->getApp()->commit = false;
+            $controller->getApp()->commit = false;
         }
     }
 }

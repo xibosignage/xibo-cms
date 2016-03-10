@@ -24,18 +24,47 @@ use baseDAO;
 use database;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Helper\Theme;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
-
+/**
+ * Class Preview
+ * @package Xibo\Controller
+ */
 class Preview extends Base
 {
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param LayoutFactory $layoutFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $layoutFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->layoutFactory = $layoutFactory;
+    }
+
     /**
      * Layout Preview
      * @param int $layoutId
      */
     public function show($layoutId)
     {
-        $layout = LayoutFactory::getById($layoutId);
+        $layout = $this->layoutFactory->getById($layoutId);
 
         if (!$this->getUser()->checkViewable($layout))
             throw new AccessDeniedException();
@@ -47,7 +76,7 @@ class Preview extends Base
                 'getXlfUrl' => $this->urlFor('layout.getXlf', ['id' => $layout->layoutId]),
                 'getResourceUrl' => $this->urlFor('module.getResource'),
                 'libraryDownloadUrl' => $this->urlFor('library.download'),
-                'loaderUrl' => Theme::uri('img/loader.gif')
+                'loaderUrl' => $this->getConfig()->uri('img/loader.gif')
             ]
         ]);
     }
@@ -58,7 +87,7 @@ class Preview extends Base
      */
     function getXlf($layoutId)
     {
-        $layout = LayoutFactory::getById($layoutId);
+        $layout = $this->layoutFactory->getById($layoutId);
 
         if (!$this->getUser()->checkViewable($layout))
             throw new AccessDeniedException();

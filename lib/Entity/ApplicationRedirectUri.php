@@ -9,8 +9,13 @@
 namespace Xibo\Entity;
 
 
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class ApplicationRedirectUri
+ * @package Xibo\Entity
+ */
 class ApplicationRedirectUri implements \JsonSerializable
 {
     use EntityTrait;
@@ -29,6 +34,16 @@ class ApplicationRedirectUri implements \JsonSerializable
      * @var string
      */
     public $redirectUri;
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
 
     /**
      * Get Id
@@ -52,12 +67,12 @@ class ApplicationRedirectUri implements \JsonSerializable
 
     public function delete()
     {
-        PDOConnect::update('DELETE FROM `oauth_client_redirect_uris` WHERE `id` = :id', ['id' => $this->id]);
+        $this->getStore()->update('DELETE FROM `oauth_client_redirect_uris` WHERE `id` = :id', ['id' => $this->id]);
     }
 
     private function add()
     {
-        $this->id = PDOConnect::insert('
+        $this->id = $this->getStore()->insert('
             INSERT INTO `oauth_client_redirect_uris` (`client_id`, `redirect_uri`)
               VALUES (:clientId, :redirectUri)
         ', [
@@ -68,7 +83,7 @@ class ApplicationRedirectUri implements \JsonSerializable
 
     private function edit()
     {
-        PDOConnect::update('
+        $this->getStore()->update('
             UPDATE `oauth_client_redirect_uris`
                 SET `redirect_uri` = :redirectUri
               WHERE `id` = :id

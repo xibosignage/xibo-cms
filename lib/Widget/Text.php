@@ -20,9 +20,6 @@
  */
 namespace Xibo\Widget;
 
-use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
 use Xibo\Helper\Translate;
 
 class Text extends ModuleWidget
@@ -32,11 +29,11 @@ class Text extends ModuleWidget
      */
     public function installFiles()
     {
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
     }
 
     public function validate()
@@ -54,15 +51,15 @@ class Text extends ModuleWidget
      */
     public function add()
     {
-        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('xmds', true);
-        $this->setOption('effect', Sanitize::getString('effect'));
-        $this->setOption('speed', Sanitize::getInt('speed'));
-        $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
-        $this->setOption('name', Sanitize::getString('name'));
-        $this->setOption('marqueeInlineSelector', Sanitize::getString('marqueeInlineSelector'));
-        $this->setRawNode('text', Sanitize::getParam('ta_text', Sanitize::getParam('text', null)));
+        $this->setOption('effect', $this->getSanitizer()->getString('effect'));
+        $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
+        $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('marqueeInlineSelector', $this->getSanitizer()->getString('marqueeInlineSelector'));
+        $this->setRawNode('text', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('text', null)));
 
         // Save the widget
         $this->validate();
@@ -74,15 +71,15 @@ class Text extends ModuleWidget
      */
     public function edit()
     {
-        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('xmds', true);
-        $this->setOption('effect', Sanitize::getString('effect'));
-        $this->setOption('speed', Sanitize::getInt('speed'));
-        $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
-        $this->setOption('name', Sanitize::getString('name'));
-        $this->setOption('marqueeInlineSelector', Sanitize::getString('marqueeInlineSelector'));
-        $this->setRawNode('text', Sanitize::getParam('ta_text', Sanitize::getParam('text', null)));
+        $this->setOption('effect', $this->getSanitizer()->getString('effect'));
+        $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
+        $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('marqueeInlineSelector', $this->getSanitizer()->getString('marqueeInlineSelector'));
+        $this->setRawNode('text', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('text', null)));
 
         // Save the widget
         $this->validate();
@@ -97,7 +94,7 @@ class Text extends ModuleWidget
     public function GetResource($displayId = 0)
     {
         $data = [];
-        $isPreview = (Sanitize::getCheckbox('preview') == 1);
+        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         // Clear all linked media.
         $this->clearMedia();
@@ -110,12 +107,12 @@ class Text extends ModuleWidget
         $text = $this->parseLibraryReferences($isPreview, $this->getRawNode('text', null));
 
         // Handle older layouts that have a direction node but no effect node
-        $oldDirection = $this->GetOption('direction', 'none');
+        $oldDirection = $this->getOption('direction', 'none');
 
         if ($oldDirection != 'none')
             $oldDirection = 'marquee' . ucfirst($oldDirection);
 
-        $effect = $this->GetOption('effect', $oldDirection);
+        $effect = $this->getOption('effect', $oldDirection);
 
         // Set some options
         $options = array(
@@ -126,13 +123,13 @@ class Text extends ModuleWidget
             'numItems' => 1,
             'takeItemsFrom' => 'start',
             'itemsPerPage' => 0,
-            'speed' => $this->GetOption('speed', 0),
+            'speed' => $this->getOption('speed', 0),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => Sanitize::getDouble('width', 0),
-            'previewHeight' => Sanitize::getDouble('height', 0),
-            'scaleOverride' => Sanitize::getDouble('scale_override', 0),
-            'marqueeInlineSelector' => $this->GetOption('marqueeInlineSelector', '.item, .item p')
+            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
+            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
+            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
+            'marqueeInlineSelector' => $this->getOption('marqueeInlineSelector', '.item, .item p')
         );
 
         // See if we need to replace out any [clock] or [date] tags
@@ -212,7 +209,7 @@ class Text extends ModuleWidget
 
         // Add our fonts.css file
         $headContent = '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
-        $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
+        $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         $data['head'] = $headContent;
 

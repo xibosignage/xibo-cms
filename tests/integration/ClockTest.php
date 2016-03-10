@@ -5,7 +5,8 @@
  * (ClockTest.php)
  */
 
-namespace Xibo\Tests;
+namespace Xibo\Tests\Integration;
+
 
 class ClockTest extends \Xibo\Tests\LocalWebTestCase
 {

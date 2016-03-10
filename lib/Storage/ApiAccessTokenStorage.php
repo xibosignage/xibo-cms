@@ -31,11 +31,37 @@ use League\OAuth2\Server\Storage\AccessTokenInterface;
 class ApiAccessTokenStorage extends AbstractStorage implements AccessTokenInterface
 {
     /**
+     * @var StorageServiceInterface
+     */
+    private $store;
+
+    /**
+     * ApiAccessTokenStorage constructor.
+     * @param StorageServiceInterface $store
+     */
+    public function __construct($store)
+    {
+        if (!$store instanceof StorageServiceInterface)
+            throw new \RuntimeException('Invalid $store');
+
+        $this->store = $store;
+    }
+
+    /**
+     * Get Store
+     * @return StorageServiceInterface
+     */
+    protected function getStore()
+    {
+        return $this->store;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function get($token)
     {
-        $result = PDOConnect::select('
+        $result = $this->getStore()->select('
             SELECT *
               FROM oauth_access_tokens
              WHERE access_token = :access_token
@@ -59,7 +85,7 @@ class ApiAccessTokenStorage extends AbstractStorage implements AccessTokenInterf
      */
     public function getScopes(AccessTokenEntity $token)
     {
-        $result = PDOConnect::select('
+        $result = $this->getStore()->select('
             SELECT oauth_scopes.id, oauth_scopes.description
               FROM oauth_access_token_scopes
                 INNER JOIN oauth_scopes ON oauth_access_token_scopes.scope = oauth_scopes.id
@@ -88,7 +114,7 @@ class ApiAccessTokenStorage extends AbstractStorage implements AccessTokenInterf
      */
     public function create($token, $expireTime, $sessionId)
     {
-        PDOConnect::insert('
+        $this->getStore()->insert('
             INSERT INTO oauth_access_tokens (access_token, session_id, expire_time)
               VALUES (:access_token, :session_id, :expire_time)
         ', [
@@ -103,7 +129,7 @@ class ApiAccessTokenStorage extends AbstractStorage implements AccessTokenInterf
      */
     public function associateScope(AccessTokenEntity $token, ScopeEntity $scope)
     {
-        PDOConnect::insert('
+        $this->getStore()->insert('
             INSERT INTO oauth_access_token_scopes (access_token, scope)
               VALUES (:access_token, :scope)
         ', [
@@ -117,6 +143,6 @@ class ApiAccessTokenStorage extends AbstractStorage implements AccessTokenInterf
      */
     public function delete(AccessTokenEntity $token)
     {
-        PDOConnect::update('DELETE FROM WHERE access_token = :access_token', [ 'access_token' => $token->getId()]);
+        $this->getStore()->update('DELETE FROM WHERE access_token = :access_token', [ 'access_token' => $token->getId()]);
     }
 }

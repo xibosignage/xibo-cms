@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use Xibo\Helper\Config;
+use Xibo\Service\ConfigService;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/../../..'));
@@ -31,8 +31,6 @@ require PROJECT_ROOT . '/vendor/autoload.php';
 
 if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
     die('Not configured');
-
-Config::Load(PROJECT_ROOT . '/web/settings.php');
 
 // Create a logger
 $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
@@ -46,53 +44,29 @@ $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     )
 ), false);
 
-$app = new \Slim\Slim(array(
-    'mode' => Config::GetSetting('SERVER_MODE'),
+$app = new \RKA\Slim(array(
     'debug' => false,
     'log.writer' => $logger
 ));
 $app->setName('auth');
 
-$app->add(new \Xibo\Middleware\Storage());
+// Config
+$app->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+
+$app->add(new \Xibo\Middleware\ApiAuthorizationOAuth());
 $app->add(new \Xibo\Middleware\State());
+$app->add(new \Xibo\Middleware\Storage());
 $app->view(new \Xibo\Middleware\ApiView());
 
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
-    $controller = new \Xibo\Controller\Error();
-    $controller->handler($e);
+    $app->container->get('\Xibo\Controller\Error')->handler($e);
 });
 
 // Configure a not found handler
 $app->notFound(function () use ($app) {
-    $controller = new \Xibo\Controller\Error();
-    $controller->notFound();
+    $app->container->get('\Xibo\Controller\Error')->notFound();
 });
-
-// oAuth Resource
-$server = new \League\OAuth2\Server\AuthorizationServer;
-
-$server->setSessionStorage(new \Xibo\Storage\ApiSessionStorage());
-$server->setAccessTokenStorage(new \Xibo\Storage\ApiAccessTokenStorage());
-$server->setRefreshTokenStorage(new \Xibo\Storage\ApiRefreshTokenStorage());
-$server->setClientStorage(new \Xibo\Storage\ApiClientStorage());
-$server->setScopeStorage(new \Xibo\Storage\ApiScopeStorage());
-$server->setAuthCodeStorage(new \Xibo\Storage\ApiAuthCodeStorage());
-
-// Allow auth code grant
-$authCodeGrant = new \League\OAuth2\Server\Grant\AuthCodeGrant();
-$server->addGrantType($authCodeGrant);
-
-// Allow client credentials grant
-$clientCredentialsGrant = new \League\OAuth2\Server\Grant\ClientCredentialsGrant();
-$server->addGrantType($clientCredentialsGrant);
-
-// Add refresh tokens
-$refreshTokenGrant = new \League\OAuth2\Server\Grant\RefreshTokenGrant();
-$server->addGrantType($refreshTokenGrant);
-
-// DI in the server
-$app->server = $server;
 
 // Auth Routes
 $app->get('/', function() use ($app) {
@@ -110,11 +84,11 @@ $app->get('/', function() use ($app) {
 // Access Token
 $app->post('/access_token', function() use ($app) {
 
-    \Xibo\Helper\Log::debug('Request for access token using grant_type: %s', $app->request()->post('grant_type'));
+    $app->logService->debug('Request for access token using grant_type: %s', $app->request()->post('grant_type'));
 
     $token = json_encode($app->server->issueAccessToken());
 
-    \Xibo\Helper\Log::debug('Issued token: %s', $token);
+    $app->logService->debug('Issued token: %s', $token);
 
     // Issue an access token
     $app->halt(200, $token);

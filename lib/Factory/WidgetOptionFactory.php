@@ -24,11 +24,32 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\WidgetOption;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 class WidgetOptionFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * Create Empty
+     * @return WidgetOption
+     */
+    public function createEmpty()
+    {
+        return new WidgetOption($this->getStore(), $this->getLog());
+    }
+
     /**
      * Create a Widget Option
      * @param int $widgetId
@@ -37,9 +58,9 @@ class WidgetOptionFactory extends BaseFactory
      * @param mixed $value
      * @return WidgetOption
      */
-    public static function create($widgetId, $type, $option, $value)
+    public function create($widgetId, $type, $option, $value)
     {
-        $widgetOption = new WidgetOption();
+        $widgetOption = $this->createEmpty();
         $widgetOption->widgetId = $widgetId;
         $widgetOption->type = $type;
         $widgetOption->option = $option;
@@ -53,9 +74,9 @@ class WidgetOptionFactory extends BaseFactory
      * @param int $widgetId
      * @return array[WidgetOption]
      */
-    public static function getByWidgetId($widgetId)
+    public function getByWidgetId($widgetId)
     {
-        return WidgetOptionFactory::query(null, array('widgetId' => $widgetId));
+        return $this->query(null, array('widgetId' => $widgetId));
     }
 
     /**
@@ -64,16 +85,16 @@ class WidgetOptionFactory extends BaseFactory
      * @param array $filterBy
      * @return array[WidgetOption]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
 
         $sql = 'SELECT * FROM `widgetoption` WHERE widgetId = :widgetId';
 
-        foreach (PDOConnect::select($sql, [
-            'widgetId' => Sanitize::getInt('widgetId', $filterBy)
+        foreach ($this->getStore()->select($sql, [
+            'widgetId' => $this->getSanitizer()->getInt('widgetId', $filterBy)
         ]) as $row) {
-            $entries[] = (new WidgetOption())->hydrate($row);
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         return $entries;

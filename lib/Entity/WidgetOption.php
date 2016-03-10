@@ -21,10 +21,9 @@
 
 
 namespace Xibo\Entity;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
-
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class WidgetOption
@@ -60,6 +59,16 @@ class WidgetOption implements \JsonSerializable
      */
     public $value;
 
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
+
     public function __toString()
     {
         if ($this->type == 'cdata') {
@@ -72,9 +81,9 @@ class WidgetOption implements \JsonSerializable
 
     public function save()
     {
-        Log::debug('Saving ' . $this);
+        $this->getLog()->debug('Saving ' . $this);
 
-        PDOConnect::insert('
+        $this->getStore()->insert('
             INSERT INTO `widgetoption` (`widgetId`, `type`, `option`, `value`)
               VALUES (:widgetId, :type, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2
         ', array(
@@ -88,7 +97,7 @@ class WidgetOption implements \JsonSerializable
 
     public function delete()
     {
-        PDOConnect::update('DELETE FROM `widgetoption` WHERE `widgetId` = :widgetId AND `option` = :option', array(
+        $this->getStore()->update('DELETE FROM `widgetoption` WHERE `widgetId` = :widgetId AND `option` = :option', array(
             'widgetId' => $this->widgetId, 'option' => $this->option)
         );
     }

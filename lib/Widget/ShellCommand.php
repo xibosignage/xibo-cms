@@ -21,8 +21,6 @@
 namespace Xibo\Widget;
 
 use InvalidArgumentException;
-use Xibo\Factory\CommandFactory;
-use Xibo\Helper\Sanitize;
 
 class ShellCommand extends ModuleWidget
 {
@@ -38,15 +36,15 @@ class ShellCommand extends ModuleWidget
     public function add()
     {
         // Any Options (we need to encode shell commands, as they sit on the options rather than the raw
-        $this->setOption('name', Sanitize::getString('name'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setDuration(1);
         $this->setUseDuration(0);
 
         // Commands
-        $windows = Sanitize::getString('windowsCommand');
-        $linux = Sanitize::getString('linuxCommand');
+        $windows = $this->getSanitizer()->getString('windowsCommand');
+        $linux = $this->getSanitizer()->getString('linuxCommand');
 
-        $this->setOption('commandCode', Sanitize::getString('commandCode'));
+        $this->setOption('commandCode', $this->getSanitizer()->getString('commandCode'));
         $this->setOption('windowsCommand', urlencode($windows));
         $this->setOption('linuxCommand', urlencode($linux));
 
@@ -63,13 +61,13 @@ class ShellCommand extends ModuleWidget
         // Any Options (we need to encode shell commands, as they sit on the options rather than the raw
         $this->setDuration(1);
         $this->setUseDuration(0);
-        $this->setOption('name', Sanitize::getString('name', $this->getOption('name')));
+        $this->setOption('name', $this->getSanitizer()->getString('name', $this->getOption('name')));
 
         // Commands
-        $windows = Sanitize::getString('windowsCommand');
-        $linux = Sanitize::getString('linuxCommand');
+        $windows = $this->getSanitizer()->getString('windowsCommand');
+        $linux = $this->getSanitizer()->getString('linuxCommand');
 
-        $this->setOption('commandCode', Sanitize::getString('commandCode'));
+        $this->setOption('commandCode', $this->getSanitizer()->getString('commandCode'));
         $this->setOption('windowsCommand', urlencode($windows));
         $this->setOption('linuxCommand', urlencode($linux));
 
@@ -109,9 +107,13 @@ class ShellCommand extends ModuleWidget
         return 2;
     }
 
+    /**
+     * @param array $data
+     * @return array
+     */
     public function setTemplateData($data)
     {
-        $data['commands'] = CommandFactory::query();
+        $data['commands'] = $this->commandFactory->query();
         return $data;
     }
 }

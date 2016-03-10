@@ -11,7 +11,8 @@ namespace Xibo\Entity;
 
 use Xibo\Exception\FormExpiredException;
 use Xibo\Helper\Random;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 class RequiredFile implements \JsonSerializable
 {
@@ -29,6 +30,16 @@ class RequiredFile implements \JsonSerializable
     public $mediaId;
     public $bytesRequested;
     public $complete;
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
 
     public function save($options = [])
     {
@@ -66,7 +77,7 @@ class RequiredFile implements \JsonSerializable
 
     private function add()
     {
-        $this->rfId = PDOConnect::insert('
+        $this->rfId = $this->getStore()->insert('
             INSERT INTO `requiredfile` (requestKey, nonce, expiry, lastUsed, displayId, size, storedAs, layoutId, regionId, mediaId)
               VALUES (:requestKey, :nonce, :expiry, :lastUsed, :displayId, :size, :storedAs, :layoutId, :regionId, :mediaId)
         ', [
@@ -85,7 +96,7 @@ class RequiredFile implements \JsonSerializable
 
     private function edit()
     {
-        PDOConnect::update('
+        $this->getStore()->update('
             UPDATE `requiredfile` SET
                 requestKey = :requestKey,
                 nonce = :nonce,
@@ -117,8 +128,8 @@ class RequiredFile implements \JsonSerializable
         ]);
     }
 
-    public static function removeUnusedForDisplay($displayId, $requestKey)
+    public static function removeUnusedForDisplay($store, $displayId, $requestKey)
     {
-        PDOConnect::update('DELETE FROM `requiredfile` WHERE displayId = :displayId AND requestKey <> :requestKey ', ['displayId' => $displayId, 'requestKey' => $requestKey]);
+        $store->update('DELETE FROM `requiredfile` WHERE displayId = :displayId AND requestKey <> :requestKey ', ['displayId' => $displayId, 'requestKey' => $requestKey]);
     }
 }

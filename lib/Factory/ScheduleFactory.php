@@ -11,19 +11,67 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Schedule;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class ScheduleFactory
+ * @package Xibo\Factory
+ */
 class ScheduleFactory extends BaseFactory
 {
+    /**
+     * @var ConfigServiceInterface
+     */
+    private $config;
+
+    /**
+     * @var DisplayGroupFactory
+     */
+    private $displayGroupFactory;
+
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param ConfigServiceInterface $config
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param DisplayFactory $displayFactory
+     * @param LayoutFactory $layoutFactory
+     * @param MediaFactory $mediaFactory
+     */
+    public function __construct($store, $log, $sanitizerService, $config, $displayGroupFactory)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->config = $config;
+        $this->displayGroupFactory = $displayGroupFactory;
+    }
+
+    /**
+     * Create Empty
+     * @return Schedule
+     */
+    public function createEmpty()
+    {
+        return new Schedule(
+            $this->getStore(),
+            $this->getLog(),
+            $this->config,
+            $this->displayGroupFactory
+        );
+    }
+
     /**
      * @param int $eventId
      * @return Schedule
      * @throws NotFoundException
      */
-    public static function getById($eventId)
+    public function getById($eventId)
     {
-        $events = ScheduleFactory::query(null, ['disableUserCheck' => 1, 'eventId' => $eventId]);
+        $events = $this->query(null, ['disableUserCheck' => 1, 'eventId' => $eventId]);
 
         if (count($events) <= 0)
             throw new NotFoundException();
@@ -36,9 +84,9 @@ class ScheduleFactory extends BaseFactory
      * @return array[Schedule]
      * @throws NotFoundException
      */
-    public static function getByDisplayGroupId($displayGroupId)
+    public function getByDisplayGroupId($displayGroupId)
     {
-        return ScheduleFactory::query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
     }
 
     /**
@@ -47,9 +95,9 @@ class ScheduleFactory extends BaseFactory
      * @return array[Schedule]
      * @throws NotFoundException
      */
-    public static function getByCampaignId($campaignId)
+    public function getByCampaignId($campaignId)
     {
-        return ScheduleFactory::query(null, ['disableUserCheck' => 1, 'campaignId' => $campaignId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'campaignId' => $campaignId]);
     }
 
     /**
@@ -58,9 +106,9 @@ class ScheduleFactory extends BaseFactory
      * @return array[Schedule]
      * @throws NotFoundException
      */
-    public static function getByOwnerId($ownerId)
+    public function getByOwnerId($ownerId)
     {
-        return ScheduleFactory::query(null, ['disableUserCheck' => 1, 'ownerId' => $ownerId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'ownerId' => $ownerId]);
     }
 
     /**
@@ -68,12 +116,12 @@ class ScheduleFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Schedule]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = [];
         $params = [];
 
-        $useDetail = Sanitize::getInt('useDetail', $filterBy) == 1;
+        $useDetail = $this->getSanitizer()->getInt('useDetail', $filterBy) == 1;
 
         $sql = '
         SELECT `schedule`.eventId, `schedule`.eventTypeId, ';
@@ -120,69 +168,69 @@ class ScheduleFactory extends BaseFactory
           WHERE 1 = 1
         ';
 
-        if (Sanitize::getInt('eventId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('eventId', $filterBy) !== null) {
             $sql .= ' AND `schedule`.eventId = :eventId ';
-            $params['eventId'] = Sanitize::getInt('eventId', $filterBy);
+            $params['eventId'] = $this->getSanitizer()->getInt('eventId', $filterBy);
         }
 
-        if (Sanitize::getInt('campaignId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('campaignId', $filterBy) !== null) {
             $sql .= ' AND `schedule`.campaignId = :campaignId ';
-            $params['campaignId'] = Sanitize::getInt('campaignId', $filterBy);
+            $params['campaignId'] = $this->getSanitizer()->getInt('campaignId', $filterBy);
         }
 
-        if (Sanitize::getInt('ownerId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('ownerId', $filterBy) !== null) {
             $sql .= ' AND `schedule`.userId = :ownerId ';
-            $params['ownerId'] = Sanitize::getInt('ownerId', $filterBy);
+            $params['ownerId'] = $this->getSanitizer()->getInt('ownerId', $filterBy);
         }
 
         // Only 1 date
-        if (!$useDetail && Sanitize::getInt('fromDt', $filterBy) !== null && Sanitize::getInt('toDt', $filterBy) === null) {
+        if (!$useDetail && $this->getSanitizer()->getInt('fromDt', $filterBy) !== null && $this->getSanitizer()->getInt('toDt', $filterBy) === null) {
             $sql .= ' AND schedule.fromDt > :fromDt ';
-            $params['fromDt'] = Sanitize::getInt('fromDt', $filterBy);
+            $params['fromDt'] = $this->getSanitizer()->getInt('fromDt', $filterBy);
         }
 
-        if (!$useDetail && Sanitize::getInt('toDt', $filterBy) !== null && Sanitize::getInt('fromDt', $filterBy) === null) {
+        if (!$useDetail && $this->getSanitizer()->getInt('toDt', $filterBy) !== null && $this->getSanitizer()->getInt('fromDt', $filterBy) === null) {
             $sql .= ' AND IFNULL(schedule.toDt, schedule.fromDt) <= :toDt ';
-            $params['toDt'] = Sanitize::getInt('toDt', $filterBy);
+            $params['toDt'] = $this->getSanitizer()->getInt('toDt', $filterBy);
         }
 
-        if ($useDetail && Sanitize::getInt('fromDt', $filterBy) !== null && Sanitize::getInt('toDt', $filterBy) === null) {
+        if ($useDetail && $this->getSanitizer()->getInt('fromDt', $filterBy) !== null && $this->getSanitizer()->getInt('toDt', $filterBy) === null) {
             $sql .= ' AND schedule_detail.fromDt > :fromDt ';
-            $params['fromDt'] = Sanitize::getInt('fromDt', $filterBy);
+            $params['fromDt'] = $this->getSanitizer()->getInt('fromDt', $filterBy);
         }
 
-        if ($useDetail && Sanitize::getInt('toDt', $filterBy) !== null && Sanitize::getInt('fromDt', $filterBy) === null) {
+        if ($useDetail && $this->getSanitizer()->getInt('toDt', $filterBy) !== null && $this->getSanitizer()->getInt('fromDt', $filterBy) === null) {
             $sql .= ' AND IFNULL(schedule_detail.toDt, schedule_detail.fromDt) <= :toDt ';
-            $params['toDt'] = Sanitize::getInt('toDt', $filterBy);
+            $params['toDt'] = $this->getSanitizer()->getInt('toDt', $filterBy);
         }
         // End only 1 date
 
         // Both dates
-        if (!$useDetail && Sanitize::getInt('fromDt', $filterBy) !== null && Sanitize::getInt('toDt', $filterBy) !== null) {
+        if (!$useDetail && $this->getSanitizer()->getInt('fromDt', $filterBy) !== null && $this->getSanitizer()->getInt('toDt', $filterBy) !== null) {
             $sql .= ' AND schedule.fromDt > :fromDt ';
             $sql .= ' AND IFNULL(schedule.toDt, schedule.fromDt) <= :toDt ';
-            $params['fromDt'] = Sanitize::getInt('fromDt', $filterBy);
-            $params['toDt'] = Sanitize::getInt('toDt', $filterBy);
+            $params['fromDt'] = $this->getSanitizer()->getInt('fromDt', $filterBy);
+            $params['toDt'] = $this->getSanitizer()->getInt('toDt', $filterBy);
         }
 
-        if ($useDetail && Sanitize::getInt('fromDt', $filterBy) !== null && Sanitize::getInt('toDt', $filterBy) !== null) {
+        if ($useDetail && $this->getSanitizer()->getInt('fromDt', $filterBy) !== null && $this->getSanitizer()->getInt('toDt', $filterBy) !== null) {
             $sql .= ' AND schedule_detail.fromDt < :toDt ';
             $sql .= ' AND IFNULL(schedule_detail.toDt, schedule_detail.fromDt) >= :fromDt ';
-            $params['fromDt'] = Sanitize::getInt('fromDt', $filterBy);
-            $params['toDt'] = Sanitize::getInt('toDt', $filterBy);
+            $params['fromDt'] = $this->getSanitizer()->getInt('fromDt', $filterBy);
+            $params['toDt'] = $this->getSanitizer()->getInt('toDt', $filterBy);
         }
         // End both dates
 
-        if (Sanitize::getIntArray('displayGroupIds', $filterBy) != null) {
-            $sql .= ' AND `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup` WHERE displayGroupId IN (' . implode(',', Sanitize::getIntArray('displayGroupIds', $filterBy)) . ')) ';
+        if ($this->getSanitizer()->getIntArray('displayGroupIds', $filterBy) != null) {
+            $sql .= ' AND `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup` WHERE displayGroupId IN (' . implode(',', $this->getSanitizer()->getIntArray('displayGroupIds', $filterBy)) . ')) ';
         }
 
         // Sorting?
         if (is_array($sortOrder))
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Schedule())->hydrate($row, ['intProperties' => ['isPriority']]);
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isPriority']]);
         }
 
         return $entries;

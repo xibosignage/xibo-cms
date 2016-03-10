@@ -23,25 +23,94 @@ use Xibo\Entity\DisplayGroup;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
+use Xibo\Helper\Session;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
-
+/**
+ * Class Schedule
+ * @package Xibo\Controller
+ */
 class Schedule extends Base
 {
+    /**
+     * @var Session
+     */
+    private $session;
+
+    /**
+     * @var ScheduleFactory
+     */
+    private $scheduleFactory;
+
+    /**
+     * @var DisplayGroupFactory
+     */
+    private $displayGroupFactory;
+
+    /**
+     * @var CampaignFactory
+     */
+    private $campaignFactory;
+
+    /**
+     * @var CommandFactory
+     */
+    private $commandFactory;
+
+    /** @var  DisplayFactory */
+    private $displayFactory;
+
+    /** @var  LayoutFactory */
+    private $layoutFactory;
+
+    /** @var  MediaFactory */
+    private $mediaFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param Session $session
+     * @param ScheduleFactory $scheduleFactory
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param CampaignFactory $campaignFactory
+     * @param CommandFactory $commandFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $mediaFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->session = $session;
+        $this->scheduleFactory = $scheduleFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
+        $this->campaignFactory = $campaignFactory;
+        $this->commandFactory = $commandFactory;
+        $this->displayFactory = $displayFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->mediaFactory = $mediaFactory;
+    }
+
     function displayPage()
     {
         // We need to provide a list of displays
-        $displayGroupIds = $this->getSession()->get('displayGroupIds');
+        $displayGroupIds = $this->session->get('displayGroupIds');
         $groups = array();
         $displays = array();
 
-        foreach (DisplayGroupFactory::query(null, ['isDisplaySpecific' => -1]) as $display) {
+        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $display) {
             /* @var DisplayGroup $display */
             if ($display->isDisplaySpecific == 1) {
                 $displays[] = $display;
@@ -106,12 +175,12 @@ class Schedule extends Base
         $this->getApp()->response()->header('Content-Type', 'application/json');
         $this->setNoOutput();
 
-        $displayGroupIds = Sanitize::getIntArray('displayGroupIds');
-        $start = Sanitize::getString('from', 1000) / 1000;
-        $end = Sanitize::getString('to', 1000) / 1000;
+        $displayGroupIds = $this->getSanitizer()->getIntArray('displayGroupIds');
+        $start = $this->getSanitizer()->getString('from', 1000) / 1000;
+        $end = $this->getSanitizer()->getString('to', 1000) / 1000;
 
         // if we have some displayGroupIds then add them to the session info so we can default everything else.
-        $this->getSession()->set('displayGroupIds', $displayGroupIds);
+        $this->session->set('displayGroupIds', $displayGroupIds);
 
         if (count($displayGroupIds) <= 0) {
             $this->getApp()->response()->body(json_encode(array('success' => 1, 'result' => [])));
@@ -126,7 +195,7 @@ class Schedule extends Base
             'displayGroupIds' => array_diff($displayGroupIds, [-1])
         ];
 
-        foreach (ScheduleFactory::query('schedule_detail.FromDT', $filter) as $row) {
+        foreach ($this->scheduleFactory->query('schedule_detail.FromDT', $filter) as $row) {
             /* @var \Xibo\Entity\Schedule $row */
 
             // Load the display groups
@@ -146,8 +215,8 @@ class Schedule extends Base
 
             // Event Title
             $title = sprintf(__('[%s to %s] %s scheduled on %s (Order: %d)'),
-                Date::getLocalDate($row->fromDt),
-                Date::getLocalDate($row->toDt),
+                $this->getDate()->getLocalDate($row->fromDt),
+                $this->getDate()->getLocalDate($row->toDt),
                 ($row->campaign == '') ? $row->command : $row->campaign,
                 $displayGroupList,
                 $row->displayOrder
@@ -231,9 +300,9 @@ class Schedule extends Base
     {
         $groups = array();
         $displays = array();
-        $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
+        $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
-        foreach (DisplayGroupFactory::query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
+        foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
 
             // Can't schedule with view, but no edit permissions
@@ -251,10 +320,10 @@ class Schedule extends Base
         $this->getState()->setData([
             'displays' => $displays,
             'displayGroups' => $groups,
-            'campaigns' => CampaignFactory::query(null, ['isLayoutSpecific' => -1]),
-            'commands' => CommandFactory::query(),
-            'displayGroupIds' => $this->getSession()->get('displayGroupIds'),
-            'help' => Help::Link('Schedule', 'Add')
+            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1]),
+            'commands' => $this->commandFactory->query(),
+            'displayGroupIds' => $this->session->get('displayGroupIds'),
+            'help' => $this->getHelp()->link('Schedule', 'Add')
         ]);
     }
 
@@ -369,33 +438,33 @@ class Schedule extends Base
      */
     public function add()
     {
-        Log::debug('Add Schedule');
+        $this->getLog()->debug('Add Schedule');
 
-        $schedule = new \Xibo\Entity\Schedule();
+        $schedule = $this->scheduleFactory->createEmpty();
         $schedule->userId = $this->getUser()->userId;
-        $schedule->eventTypeId = Sanitize::getInt('eventTypeId');
-        $schedule->campaignId = Sanitize::getInt('campaignId');
-        $schedule->commandId = Sanitize::getInt('commandId');
-        $schedule->displayOrder = Sanitize::getInt('displayOrder', 0);
-        $schedule->isPriority = Sanitize::getCheckbox('isPriority');
-        $schedule->dayPartId = Sanitize::getCheckbox('dayPartId', 0);
-        $schedule->recurrenceType = Sanitize::getString('recurrenceType');
-        $schedule->recurrenceDetail = Sanitize::getInt('recurrenceDetail');
+        $schedule->eventTypeId = $this->getSanitizer()->getInt('eventTypeId');
+        $schedule->campaignId = $this->getSanitizer()->getInt('campaignId');
+        $schedule->commandId = $this->getSanitizer()->getInt('commandId');
+        $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder', 0);
+        $schedule->isPriority = $this->getSanitizer()->getCheckbox('isPriority');
+        $schedule->dayPartId = $this->getSanitizer()->getCheckbox('dayPartId', 0);
+        $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
+        $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
 
-        foreach (Sanitize::getIntArray('displayGroupIds') as $displayGroupId) {
-            $schedule->assignDisplayGroup(DisplayGroupFactory::getById($displayGroupId));
+        foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
+            $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
         }
 
         if ($schedule->dayPartId == \Xibo\Entity\Schedule::$DAY_PART_CUSTOM) {
             // Handle the dates
-            $fromDt = Sanitize::getDate('fromDt');
-            $toDt = Sanitize::getDate('toDt');
-            $recurrenceRange = Sanitize::getDate('recurrenceRange');
+            $fromDt = $this->getSanitizer()->getDate('fromDt');
+            $toDt = $this->getSanitizer()->getDate('toDt');
+            $recurrenceRange = $this->getSanitizer()->getDate('recurrenceRange');
 
             if ($fromDt === null)
                 throw new \InvalidArgumentException(__('Please enter a from date'));
 
-            Log::debug('Times received are: FromDt=' . Date::getLocalDate($fromDt) . '. ToDt=' . Date::getLocalDate($toDt) . '. recurrenceRange=' . Date::getLocalDate($recurrenceRange));
+            $this->getLog()->debug('Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
 
             // Set on schedule object
             $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
@@ -408,6 +477,7 @@ class Schedule extends Base
         }
 
         // Ready to do the add
+        $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $schedule->save();
 
         // Return
@@ -425,24 +495,24 @@ class Schedule extends Base
      */
     function editForm($eventId)
     {
-        $schedule = ScheduleFactory::getById($eventId);
+        $schedule = $this->scheduleFactory->getById($eventId);
         $schedule->load();
 
         if (!$this->isEventEditable($schedule->displayGroups))
             throw new AccessDeniedException();
 
         // Fix the event dates for display
-        $schedule->fromDt = Date::getLocalDate($schedule->fromDt);
-        $schedule->toDt = Date::getLocalDate($schedule->toDt);
+        $schedule->fromDt = $this->getDate()->getLocalDate($schedule->fromDt);
+        $schedule->toDt = $this->getDate()->getLocalDate($schedule->toDt);
 
         if ($schedule->recurrenceRange != null)
-            $schedule->recurrenceRange = Date::getLocalDate($schedule->recurrenceRange);
+            $schedule->recurrenceRange = $this->getDate()->getLocalDate($schedule->recurrenceRange);
 
         $groups = array();
         $displays = array();
-        $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
+        $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
-        foreach (DisplayGroupFactory::query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
+        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
 
             // Can't schedule with view, but no edit permissions
@@ -461,12 +531,12 @@ class Schedule extends Base
             'event' => $schedule,
             'displays' => $displays,
             'displayGroups' => $groups,
-            'campaigns' => CampaignFactory::query(null, ['isLayoutSpecific' => -1]),
-            'commands' => CommandFactory::query(),
+            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1]),
+            'commands' => $this->commandFactory->query(),
             'displayGroupIds' => array_map(function($element) {
                 return $element->displayGroupId;
             }, $schedule->displayGroups),
-            'help' => Help::Link('Schedule', 'Edit')
+            'help' => $this->getHelp()->link('Schedule', 'Edit')
         ]);
     }
 
@@ -585,36 +655,36 @@ class Schedule extends Base
      */
     public function edit($eventId)
     {
-        $schedule = ScheduleFactory::getById($eventId);
+        $schedule = $this->scheduleFactory->getById($eventId);
         $schedule->load();
 
         if (!$this->isEventEditable($schedule->displayGroups))
             throw new AccessDeniedException();
 
-        $schedule->eventTypeId = Sanitize::getInt('eventTypeId');
-        $schedule->campaignId = Sanitize::getInt('campaignId');
-        $schedule->commandId = Sanitize::getInt('commandId');
-        $schedule->displayOrder = Sanitize::getInt('displayOrder');
-        $schedule->isPriority = Sanitize::getCheckbox('isPriority');
-        $schedule->dayPartId = Sanitize::getCheckbox('dayPartId');
-        $schedule->recurrenceType = Sanitize::getString('recurrenceType');
-        $schedule->recurrenceDetail = Sanitize::getInt('recurrenceDetail');
+        $schedule->eventTypeId = $this->getSanitizer()->getInt('eventTypeId');
+        $schedule->campaignId = $this->getSanitizer()->getInt('campaignId');
+        $schedule->commandId = $this->getSanitizer()->getInt('commandId');
+        $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder');
+        $schedule->isPriority = $this->getSanitizer()->getCheckbox('isPriority');
+        $schedule->dayPartId = $this->getSanitizer()->getCheckbox('dayPartId');
+        $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
+        $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
         $schedule->displayGroups = [];
 
-        foreach (Sanitize::getIntArray('displayGroupIds') as $displayGroupId) {
-            $schedule->assignDisplayGroup(DisplayGroupFactory::getById($displayGroupId));
+        foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
+            $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
         }
 
         if ($schedule->dayPartId == \Xibo\Entity\Schedule::$DAY_PART_CUSTOM) {
             // Handle the dates
-            $fromDt = Sanitize::getDate('fromDt');
-            $toDt = Sanitize::getDate('toDt');
-            $recurrenceRange = Sanitize::getDate('recurrenceRange');
+            $fromDt = $this->getSanitizer()->getDate('fromDt');
+            $toDt = $this->getSanitizer()->getDate('toDt');
+            $recurrenceRange = $this->getSanitizer()->getDate('recurrenceRange');
 
             if ($fromDt === null)
                 throw new \InvalidArgumentException(__('Please enter a from date'));
 
-            Log::debug('Times received are: FromDt=' . Date::getLocalDate($fromDt) . '. ToDt=' . Date::getLocalDate($toDt) . '. recurrenceRange=' . Date::getLocalDate($recurrenceRange));
+            $this->getLog()->debug('Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
 
             // Set on schedule object
             $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
@@ -628,6 +698,7 @@ class Schedule extends Base
         }
 
         // Ready to do the add
+        $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $schedule->save();
 
         // Return
@@ -644,7 +715,7 @@ class Schedule extends Base
      */
     function deleteForm($eventId)
     {
-        $schedule = ScheduleFactory::getById($eventId);
+        $schedule = $this->scheduleFactory->getById($eventId);
         $schedule->load();
 
         if (!$this->isEventEditable($schedule->displayGroups))
@@ -653,7 +724,7 @@ class Schedule extends Base
         $this->getState()->template = 'schedule-form-delete';
         $this->getState()->setData([
             'event' => $schedule,
-            'help' => Help::Link('Schedule', 'Delete')
+            'help' => $this->getHelp()->link('Schedule', 'Delete')
         ]);
     }
 
@@ -682,7 +753,7 @@ class Schedule extends Base
      */
     public function delete($eventId)
     {
-        $schedule = ScheduleFactory::getById($eventId);
+        $schedule = $this->scheduleFactory->getById($eventId);
         $schedule->load();
 
         if (!$this->isEventEditable($schedule->displayGroups))
@@ -704,7 +775,7 @@ class Schedule extends Base
      */
     private function isEventEditable($displayGroups)
     {
-        $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
+        $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
         // Work out if this event is editable or not. To do this we need to compare the permissions
         // of each display group this event is associated with
@@ -732,9 +803,9 @@ class Schedule extends Base
     {
         $groups = array();
         $displays = array();
-        $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
+        $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
-        foreach (DisplayGroupFactory::query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
+        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
 
             // Can't schedule with view, but no edit permissions
@@ -754,8 +825,8 @@ class Schedule extends Base
             'displayGroupId' => (($from == 'DisplayGroup') ? $id : 0),
             'displays' => $displays,
             'displayGroups' => $groups,
-            'campaigns' => CampaignFactory::query(null, ['isLayoutSpecific' => -1]),
-            'help' => Help::Link('Schedule', 'ScheduleNow')
+            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1]),
+            'help' => $this->getHelp()->link('Schedule', 'ScheduleNow')
         ]);
     }
 }

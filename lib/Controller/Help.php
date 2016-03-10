@@ -22,11 +22,40 @@ namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\HelpFactory;
-use Xibo\Helper\Sanitize;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
-
+/**
+ * Class Help
+ * @package Xibo\Controller
+ */
 class Help extends Base
 {
+    /**
+     * @var HelpFactory
+     */
+    private $helpFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param HelpFactory $helpFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $helpFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->helpFactory = $helpFactory;
+    }
+
     /**
      * Help Page
      */
@@ -37,7 +66,7 @@ class Help extends Base
 
     public function grid()
     {
-        $helpLinks = HelpFactory::query($this->gridRenderSort(), $this->gridRenderFilter());
+        $helpLinks = $this->helpFactory->query($this->gridRenderSort(), $this->gridRenderFilter());
 
         foreach ($helpLinks as $row) {
             /* @var \Xibo\Entity\Help $row */
@@ -62,14 +91,14 @@ class Help extends Base
                 // Test
                 $row->buttons[] = array(
                     'id' => 'help_button_test',
-                    'url' => \Xibo\Helper\Help::Link($row->topic, $row->category),
+                    'url' => $this->getHelp()->link($row->topic, $row->category),
                     'text' => __('Test')
                 );
             }
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = HelpFactory::countLast();
+        $this->getState()->recordsTotal = $this->helpFactory->countLast();
         $this->getState()->setData($helpLinks);
     }
 
@@ -93,7 +122,7 @@ class Help extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $help = HelpFactory::getById($helpId);
+        $help = $this->helpFactory->getById($helpId);
 
         $this->getState()->template = 'help-form-edit';
         $this->getState()->setData([
@@ -110,7 +139,7 @@ class Help extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $help = HelpFactory::getById($helpId);
+        $help = $this->helpFactory->getById($helpId);
 
         $this->getState()->template = 'help-form-delete';
         $this->getState()->setData([
@@ -126,10 +155,10 @@ class Help extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $help = new \Xibo\Entity\Help();
-        $help->topic = Sanitize::getString('topic');
-        $help->category = Sanitize::getString('category');
-        $help->link = Sanitize::getString('link');
+        $help = $this->helpFactory->createEmpty();
+        $help->topic = $this->getSanitizer()->getString('topic');
+        $help->category = $this->getSanitizer()->getString('category');
+        $help->link = $this->getSanitizer()->getString('link');
 
         $help->save();
 
@@ -150,10 +179,10 @@ class Help extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $help = HelpFactory::getById($helpId);
-        $help->topic = Sanitize::getString('topic');
-        $help->category = Sanitize::getString('category');
-        $help->link = Sanitize::getString('link');
+        $help = $this->helpFactory->getById($helpId);
+        $help->topic = $this->getSanitizer()->getString('topic');
+        $help->category = $this->getSanitizer()->getString('category');
+        $help->link = $this->getSanitizer()->getString('link');
 
         $help->save();
 
@@ -175,7 +204,7 @@ class Help extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $help = HelpFactory::getById($helpId);
+        $help = $this->helpFactory->getById($helpId);
         $help->delete();
 
         // Return

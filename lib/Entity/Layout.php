@@ -28,10 +28,10 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TagFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Layout
@@ -208,9 +208,78 @@ class Layout implements \JsonSerializable
         'audit' => false
     ];
 
-    public function __construct()
+    /**
+     * @var ConfigServiceInterface
+     */
+    private $config;
+
+    /**
+     * @var DateServiceInterface
+     */
+    private $date;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var RegionFactory
+     */
+    private $regionFactory;
+
+    /**
+     * @var TagFactory
+     */
+    private $tagFactory;
+
+    /**
+     * @var CampaignFactory
+     */
+    private $campaignFactory;
+
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+
+    /**
+     * @var MediaFactory
+     */
+    private $mediaFactory;
+
+    /**
+     * @var ModuleFactory
+     */
+    private $moduleFactory;
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param ConfigServiceInterface $config
+     * @param DateServiceInterface $date
+     * @param PermissionFactory $permissionFactory
+     * @param RegionFactory $regionFactory
+     * @param TagFactory $tagFactory
+     * @param CampaignFactory $campaignFactory
+     * @param LayoutFactory $layoutFactory
+     * @param MediaFactory $mediaFactory
+     * @param ModuleFactory $moduleFactory
+     */
+    public function __construct($store, $log, $config, $date, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory)
     {
+        $this->setCommonDependencies($store, $log);
         $this->setPermissionsClass('Xibo\Entity\Campaign');
+        $this->config = $config;
+        $this->date = $date;
+        $this->permissionFactory = $permissionFactory;
+        $this->regionFactory = $regionFactory;
+        $this->tagFactory = $tagFactory;
+        $this->campaignFactory = $campaignFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->mediaFactory = $mediaFactory;
+        $this->moduleFactory = $moduleFactory;
     }
 
     public function __clone()
@@ -225,11 +294,17 @@ class Layout implements \JsonSerializable
         $this->regions = array_map(function ($object) { return clone $object; }, $this->regions);
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return sprintf('Layout %s - %d x %d. Regions = %d, Tags = %d. layoutId = %d. Status = %d', $this->layout, $this->width, $this->height, count($this->regions), count($this->tags), $this->layoutId, $this->status);
     }
 
+    /**
+     * @return string
+     */
     private function hash()
     {
         return md5($this->layoutId . $this->ownerId . $this->campaignId . $this->backgroundImageId . $this->backgroundColor . $this->width . $this->height . $this->status . $this->description);
@@ -329,31 +404,31 @@ class Layout implements \JsonSerializable
         if ($this->loaded || $this->layoutId == 0)
             return;
 
-        Log::debug('Loading Layout %d with options %s', $this->layoutId, json_encode($options));
+        $this->getLog()->debug('Loading Layout %d with options %s', $this->layoutId, json_encode($options));
 
         // Load permissions
         if ($options['loadPermissions'])
-            $this->permissions = PermissionFactory::getByObjectId('Xibo\\Entity\\Campaign', $this->campaignId);
+            $this->permissions = $this->permissionFactory->getByObjectId('Xibo\\Entity\\Campaign', $this->campaignId);
 
         // Load all regions
-        $this->regions = RegionFactory::getByLayoutId($this->layoutId);
+        $this->regions = $this->regionFactory->getByLayoutId($this->layoutId);
 
         if ($options['loadPlaylists'])
             $this->loadPlaylists($options);
 
         // Load all tags
         if ($options['loadTags'])
-            $this->tags = TagFactory::loadByLayoutId($this->layoutId);
+            $this->tags = $this->tagFactory->loadByLayoutId($this->layoutId);
 
         // Load Campaigns
         if ($options['loadCampaigns'])
-            $this->campaigns = CampaignFactory::getByLayoutId($this->layoutId);
+            $this->campaigns = $this->campaignFactory->getByLayoutId($this->layoutId);
 
         // Set the hash
         $this->hash = $this->hash();
         $this->loaded = true;
 
-        Log::debug('Loaded %s' . $this->layoutId);
+        $this->getLog()->debug('Loaded %s' . $this->layoutId);
     }
 
     /**
@@ -390,7 +465,7 @@ class Layout implements \JsonSerializable
         if ($options['setBuildRequired'])
             $this->setBuildRequired();
 
-        Log::debug('Saving %s with options %s', $this, json_encode($options, JSON_PRETTY_PRINT));
+        $this->getLog()->debug('Saving %s with options %s', $this, json_encode($options, JSON_PRETTY_PRINT));
 
         // New or existing layout
         if ($this->layoutId == null || $this->layoutId == 0) {
@@ -400,7 +475,7 @@ class Layout implements \JsonSerializable
         }
 
         if ($options['saveRegions']) {
-            Log::debug('Saving Regions on %s', $this);
+            $this->getLog()->debug('Saving Regions on %s', $this);
 
             // Update the regions
             foreach ($this->regions as $region) {
@@ -413,14 +488,14 @@ class Layout implements \JsonSerializable
         }
 
         if ($options['saveTags']) {
-            Log::debug('Saving tags on %s', $this);
+            $this->getLog()->debug('Saving tags on %s', $this);
 
             // Save the tags
             if (is_array($this->tags)) {
                 foreach ($this->tags as $tag) {
                     /* @var Tag $tag */
 
-                    Log::debug('Assigning tag %s', $tag->tag);
+                    $this->getLog()->debug('Assigning tag %s', $tag->tag);
 
                     $tag->assignLayout($this->layoutId);
                     $tag->save();
@@ -431,7 +506,7 @@ class Layout implements \JsonSerializable
             if (is_array($this->unassignTags)) {
                 foreach ($this->unassignTags as $tag) {
                     /* @var Tag $tag */
-                    Log::debug('Unassigning tag %s', $tag->tag);
+                    $this->getLog()->debug('Unassigning tag %s', $tag->tag);
 
                     $tag->unassignLayout($this->layoutId);
                     $tag->save();
@@ -439,10 +514,10 @@ class Layout implements \JsonSerializable
             }
         }
 
-        Log::debug('Save finished for %s', $this);
+        $this->getLog()->debug('Save finished for %s', $this);
 
         if ($options['audit'])
-            Log::audit('Layout', $this->layoutId, 'Saved', $this);
+            $this->getLog()->audit('Layout', $this->layoutId, 'Saved', $this);
     }
 
     /**
@@ -460,7 +535,7 @@ class Layout implements \JsonSerializable
         if (!$this->loaded)
             $this->load();
 
-        Log::debug('Deleting %s', $this);
+        $this->getLog()->debug('Deleting %s', $this);
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {
@@ -489,14 +564,14 @@ class Layout implements \JsonSerializable
         }
 
         // Delete our own Campaign
-        $campaign = CampaignFactory::getById($this->campaignId);
+        $campaign = $this->campaignFactory->getById($this->campaignId);
         $campaign->delete();
 
         // Remove the Layout from any display defaults
-        PDOConnect::update('UPDATE `display` SET defaultlayoutid = 4 WHERE defaultlayoutid = :layoutId', array('layoutId' => $this->layoutId));
+        $this->getStore()->update('UPDATE `display` SET defaultlayoutid = 4 WHERE defaultlayoutid = :layoutId', array('layoutId' => $this->layoutId));
 
         // Remove the Layout (now it is orphaned it can be deleted safely)
-        PDOConnect::update('DELETE FROM `layout` WHERE layoutid = :layoutId', array('layoutId' => $this->layoutId));
+        $this->getStore()->update('DELETE FROM `layout` WHERE layoutid = :layoutId', array('layoutId' => $this->layoutId));
 
         // Delete the cached file (if there is one)
         if (file_exists($this->getCachePath()))
@@ -521,7 +596,7 @@ class Layout implements \JsonSerializable
             throw new \InvalidArgumentException(__("Description can not be longer than 254 characters"));
 
         // Check for duplicates
-        $duplicates = LayoutFactory::query(null, array('userId' => $this->ownerId, 'layoutExact' => $this->layout, 'notLayoutId' => $this->layoutId));
+        $duplicates = $this->layoutFactory->query(null, array('userId' => $this->ownerId, 'layoutExact' => $this->layout, 'notLayoutId' => $this->layoutId));
 
         if (count($duplicates) > 0)
             throw new \InvalidArgumentException(sprintf(__("You already own a layout called '%s'. Please choose another name."), $this->layout));
@@ -551,7 +626,7 @@ class Layout implements \JsonSerializable
     public function replaceTags($tags = [])
     {
         if (!is_array($this->tags) || count($this->tags) <= 0)
-            $this->tags = TagFactory::loadByLayoutId($this->layoutId);
+            $this->tags = $this->tagFactory->loadByLayoutId($this->layoutId);
 
         $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
             /* @var Tag $a */
@@ -559,12 +634,12 @@ class Layout implements \JsonSerializable
             return $a->tagId - $b->tagId;
         });
 
-        Log::debug('Tags to be removed: %s', json_encode($this->unassignTags));
+        $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
 
         // Replace the arrays
         $this->tags = $tags;
 
-        Log::debug('Tags remaining: %s', json_encode($this->tags));
+        $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
     }
 
     /**
@@ -585,7 +660,7 @@ class Layout implements \JsonSerializable
 
         if ($this->backgroundImageId != 0) {
             // Get stored as
-            $media = MediaFactory::getById($this->backgroundImageId);
+            $media = $this->mediaFactory->getById($this->backgroundImageId);
 
             $layoutNode->setAttribute('background', $media->storedAs);
         }
@@ -662,7 +737,7 @@ class Layout implements \JsonSerializable
                 /* @var Playlist $playlist */
                 foreach ($playlist->widgets as $widget) {
                     /* @var Widget $widget */
-                    $module = ModuleFactory::createWithWidget($widget, $region);
+                    $module = $this->moduleFactory->createWithWidget($widget, $region);
 
                     // Set the Layout Status
                     $status = ($module->isValid() > $status) ? $module->isValid() : $status;
@@ -715,7 +790,7 @@ class Layout implements \JsonSerializable
                     // Inject the URI
                     $uriInjected = false;
                     if ($module->getModule()->regionSpecific == 0) {
-                        $media = MediaFactory::getById($widget->mediaIds[0]);
+                        $media = $this->mediaFactory->getById($widget->mediaIds[0]);
                         $optionNode = $document->createElement('uri', $media->storedAs);
                         $optionsNode->appendChild($optionNode);
                         $uriInjected = true;
@@ -752,7 +827,7 @@ class Layout implements \JsonSerializable
                 }
             }
 
-            Log::debug('Region duration on layout %d is %d. Comparing to %d.', $this->layoutId, $region->duration, $this->duration);
+            $this->getLog()->debug('Region duration on layout %d is %d. Comparing to %d.', $this->layoutId, $region->duration, $this->duration);
 
             // Track the max duration within the layout
             // Test this duration against the layout duration
@@ -762,7 +837,7 @@ class Layout implements \JsonSerializable
             // End of region loop.
         }
 
-        Log::debug('Setting Layout Duration to %d', $this->duration);
+        $this->getLog()->debug('Setting Layout Duration to %d', $this->duration);
 
         $tagsNode = $document->createElement('tags');
 
@@ -787,7 +862,7 @@ class Layout implements \JsonSerializable
     public function toZip($fileName)
     {
         $zip = new \ZipArchive();
-        $result = $zip->open($fileName, \ZIPARCHIVE::CREATE | \ZIPARCHIVE::OVERWRITE);
+        $result = $zip->open($fileName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
         if ($result !== true)
             throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: ' . $result));
 
@@ -801,10 +876,10 @@ class Layout implements \JsonSerializable
         $zip->addFile($this->xlfToDisk(), 'layout.xml');
 
         // Add all media
-        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
+        $libraryLocation = $this->config->GetSetting('LIBRARY_LOCATION');
         $mappings = [];
 
-        foreach (MediaFactory::getByLayoutId($this->layoutId) as $media) {
+        foreach ($this->mediaFactory->getByLayoutId($this->layoutId) as $media) {
             /* @var Media $media */
             $zip->addFile($libraryLocation . $media->storedAs, $media->fileName);
 
@@ -820,7 +895,7 @@ class Layout implements \JsonSerializable
 
         // Add the background image
         if ($this->backgroundImageId != 0) {
-            $media = MediaFactory::getById($this->backgroundImageId);
+            $media = $this->mediaFactory->getById($this->backgroundImageId);
             $zip->addFile($libraryLocation . $media->storedAs, $media->fileName);
 
             $mappings[] = [
@@ -849,7 +924,7 @@ class Layout implements \JsonSerializable
 
         if ($this->status == 3 || !file_exists($path)) {
 
-            Log::debug('XLF needs building for Layout %d', $this->layoutId);
+            $this->getLog()->debug('XLF needs building for Layout %d', $this->layoutId);
 
             // Assume error
             $this->status = 4;
@@ -877,7 +952,7 @@ class Layout implements \JsonSerializable
      */
     private function getCachePath()
     {
-        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
+        $libraryLocation = $this->config->GetSetting('LIBRARY_LOCATION');
         return $libraryLocation . $this->layoutId . '.xlf';
     }
 
@@ -890,14 +965,14 @@ class Layout implements \JsonSerializable
      */
     private function add()
     {
-        Log::debug('Adding Layout ' . $this->layout);
+        $this->getLog()->debug('Adding Layout ' . $this->layout);
 
         $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex)
                   VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex)';
 
-        $time = Date::getLocalDate();
+        $time = $this->date->getLocalDate();
 
-        $this->layoutId = PDOConnect::insert($sql, array(
+        $this->layoutId = $this->getStore()->insert($sql, array(
             'layout' => $this->layout,
             'description' => $this->description,
             'userid' => $this->ownerId,
@@ -912,7 +987,7 @@ class Layout implements \JsonSerializable
         ));
 
         // Add a Campaign
-        $campaign = new Campaign();
+        $campaign = $this->campaignFactory->createEmpty();
         $campaign->campaign = $this->layout;
         $campaign->isLayoutSpecific = 1;
         $campaign->ownerId = $this->getOwnerId();
@@ -933,7 +1008,7 @@ class Layout implements \JsonSerializable
             'notify' => true
         ], $options);
 
-        Log::debug('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
+        $this->getLog()->debug('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
 
         $sql = '
         UPDATE layout
@@ -953,9 +1028,9 @@ class Layout implements \JsonSerializable
          WHERE layoutID = :layoutid
         ';
 
-        $time = Date::getLocalDate();
+        $time = $this->date->getLocalDate();
 
-        PDOConnect::update($sql, array(
+        $this->getStore()->update($sql, array(
             'layoutid' => $this->layoutId,
             'layout' => $this->layout,
             'description' => $this->description,
@@ -973,7 +1048,7 @@ class Layout implements \JsonSerializable
         ));
 
         // Update the Campaign
-        $campaign = CampaignFactory::getById($this->campaignId);
+        $campaign = $this->campaignFactory->getById($this->campaignId);
         $campaign->campaign = $this->layout;
         $campaign->ownerId = $this->ownerId;
         $campaign->save(['validate' => false, 'notify' => $options['notify']]);

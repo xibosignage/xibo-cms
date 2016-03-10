@@ -21,15 +21,25 @@
 namespace Xibo\Widget;
 
 use Slim\Slim;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\User;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\CommandFactory;
+use Xibo\Factory\DataSetColumnFactory;
+use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\TransitionFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
+use Xibo\Service\ConfigService;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\FactoryServiceInterface;
+use Xibo\Service\LogService;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class ModuleWidget
@@ -42,7 +52,7 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * @var Slim
      */
-    protected $app;
+    private $app;
 
     /**
      * @var \Xibo\Entity\Module $module
@@ -70,12 +80,104 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected $codeSchemaVersion = -1;
 
+    //
+    // Injected Factory Classes and Services Follow
+    //
+
     /**
-     * Create the controller
+     * @var StorageServiceInterface
      */
-    public function __construct()
+    private $store;
+
+    /**
+     * @var PoolInterface
+     */
+    private $pool;
+
+    /**
+     * @var LogServiceInterface
+     */
+    private $logService;
+
+    /**
+     * @var ConfigServiceInterface
+     */
+    private $configService;
+
+    /**
+     * @var DateServiceInterface
+     */
+    private $dateService;
+
+    /**
+     * @var SanitizerServiceInterface
+     */
+    private $sanitizerService;
+
+    /**
+     * @var MediaFactory
+     */
+    protected $mediaFactory;
+
+    /**
+     * @var DataSetFactory
+     */
+    protected $dataSetFactory;
+
+    /**
+     * @var DataSetColumnFactory
+     */
+    protected $dataSetColumnFactory;
+
+    /**
+     * @var TransitionFactory
+     */
+    protected $transitionFactory;
+
+    /**
+     * @var DisplayFactory
+     */
+    protected $displayFactory;
+
+    /**
+     * @var CommandFactory
+     */
+    protected $commandFactory;
+
+    /**
+     * ModuleWidget constructor.
+     * @param Slim $app
+     * @param StorageServiceInterface $store
+     * @param PoolInterface $pool
+     * @param LogServiceInterface $log
+     * @param ConfigServiceInterface $config
+     * @param DateServiceInterface $date
+     * @param SanitizerServiceInterface $sanitizer
+     * @param MediaFactory $mediaFactory
+     * @param DataSetFactory $dataSetFactory
+     * @param DataSetColumnFactory $dataSetColumnFactory
+     * @param TransitionFactory $transitionFactory
+     * @param DisplayFactory $displayFactory
+     * @param CommandFactory $commandFactory
+     */
+    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory)
     {
-        $this->app = Slim::getInstance();
+        $this->app = $app;
+        $this->store = $store;
+        $this->pool = $pool;
+        $this->logService = $log;
+        $this->configService = $config;
+        $this->dateService = $date;
+        $this->sanitizerService = $sanitizer;
+
+        $this->mediaFactory = $mediaFactory;
+        $this->dataSetFactory = $dataSetFactory;
+        $this->dataSetColumnFactory = $dataSetColumnFactory;
+        $this->transitionFactory = $transitionFactory;
+        $this->displayFactory = $displayFactory;
+        $this->commandFactory = $commandFactory;
+
+        $this->init();
     }
 
     /**
@@ -84,6 +186,9 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function getApp()
     {
+        if ($this->app == null)
+            throw new \RuntimeException(__('Module Widget Application not set'));
+
         return $this->app;
     }
 
@@ -93,7 +198,61 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function getPool()
     {
-        return $this->app->pool;
+        return $this->pool;
+    }
+
+    /**
+     * Get Store
+     * @return StorageServiceInterface
+     */
+    protected function getStore()
+    {
+        return $this->store;
+    }
+
+    /**
+     * Get Log
+     * @return LogService
+     */
+    protected function getLog()
+    {
+        return $this->logService;
+    }
+
+    /**
+     * Get Config
+     * @return ConfigService
+     */
+    public function getConfig()
+    {
+        return $this->configService;
+    }
+
+    /**
+     * Get Date
+     * @return DateServiceInterface
+     */
+    protected function getDate()
+    {
+        return $this->dateService;
+    }
+
+    /**
+     * Get Sanitizer
+     * @return SanitizerServiceInterface
+     */
+    protected function getSanitizer()
+    {
+        return $this->sanitizerService;
+    }
+
+    //
+    // End of Injected Factories and Services
+    //
+
+    public function init()
+    {
+
     }
 
     /**
@@ -315,7 +474,7 @@ abstract class ModuleWidget implements ModuleInterface
                 return $this->getMedia()->duration;
             }
             catch (NotFoundException $e) {
-                Log::error('Tried to get real duration from a widget without media. widgetId: %d', $this->getWidgetId());
+                $this->getLog()->error('Tried to get real duration from a widget without media. widgetId: %d', $this->getWidgetId());
                 // Do nothing - drop out
             }
         }
@@ -362,9 +521,9 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function edit()
     {
-        $this->setDuration(Sanitize::getInt('duration'));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setOption('name', Sanitize::getString('name'));
+        $this->setDuration($this->getSanitizer()->getInt('duration'));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
 
         $this->widget->save();
     }
@@ -387,10 +546,10 @@ abstract class ModuleWidget implements ModuleInterface
         if ($this->getOption('name') != '')
             return $this->getOption('name');
 
-        Log::debug('Media assigned: ' . count($this->widget->mediaIds));
+        $this->getLog()->debug('Media assigned: ' . count($this->widget->mediaIds));
 
         if ($this->getModule()->regionSpecific == 0 && count($this->widget->mediaIds) > 0) {
-            $media = MediaFactory::getById($this->widget->mediaIds[0]);
+            $media = $this->mediaFactory->getById($this->widget->mediaIds[0]);
             $name = $media->name;
         } else {
             $name = $this->module->name;
@@ -420,7 +579,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function previewIcon()
     {
-        return '<div style="text-align:center;"><img alt="' . $this->getModuleType() . ' thumbnail" src="' . Theme::uri('img/' . $this->getModule()->imageUri) . '" /></div>';
+        return '<div style="text-align:center;"><img alt="' . $this->getModuleType() . ' thumbnail" src="' . $this->getConfig()->uri('img/' . $this->getModule()->imageUri) . '" /></div>';
     }
 
     /**
@@ -448,7 +607,7 @@ abstract class ModuleWidget implements ModuleInterface
     {
         // Default Hover window contains a thumbnail, media type and duration
         $output = '<div class="well">';
-        $output .= '<div class="preview-module-image"><img alt="' . __($this->module->name) . ' thumbnail" src="' . Theme::uri('img/' . $this->module->imageUri) . '" /></div>';
+        $output .= '<div class="preview-module-image"><img alt="' . __($this->module->name) . ' thumbnail" src="' . $this->getConfig()->uri('img/' . $this->module->imageUri) . '" /></div>';
         $output .= '<div class="info">';
         $output .= '    <ul>';
         $output .= '    <li>' . __('Type') . ': ' . $this->module->name . '</li>';
@@ -475,6 +634,7 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Gets a Tab
+     * @param string $tab
      * @return mixed
      * @throws ControllerNotImplemented
      */
@@ -490,7 +650,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function getResourceUrl($uri)
     {
-        $isPreview = (Sanitize::getCheckbox('preview') == 1);
+        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         if ($isPreview)
             $uri = $this->getApp()->rootUri . 'modules/' . $uri;
@@ -538,11 +698,11 @@ abstract class ModuleWidget implements ModuleInterface
 
         // Look up the real transition name
         try {
-            $transition = TransitionFactory::getByCode($code);
+            $transition = $this->transitionFactory->getByCode($code);
             return __($transition->transition);
         }
         catch (NotFoundException $e) {
-            Log::error('Transition not found with code %s.', $code);
+            $this->getLog()->error('Transition not found with code %s.', $code);
             return 'None';
         }
     }
@@ -550,8 +710,10 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Default behaviour for install / upgrade
      * this should be overridden for new modules
+     * @param ModuleFactory $moduleFactory
+     * @throws ControllerNotImplemented
      */
-    public function installOrUpdate()
+    public function installOrUpdate($moduleFactory)
     {
         if ($this->module->renderAs != 'native')
             throw new ControllerNotImplemented(__('Module must implement InstallOrUpgrade'));
@@ -571,7 +733,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function installModule()
     {
-        Log::notice('Request to install module with name: ' . $this->module->name, 'module', 'InstallModule');
+        $this->getLog()->notice('Request to install module with name: ' . $this->module->name, 'module', 'InstallModule');
 
         // Validate some things.
         if ($this->module->type == '')
@@ -655,7 +817,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function getMediaId()
     {
-        Log::debug('Getting first MediaID for Widget: %d', $this->getWidgetId());
+        $this->getLog()->debug('Getting first MediaID for Widget: %d', $this->getWidgetId());
 
         if (count($this->widget->mediaIds) <= 0)
             throw new NotFoundException(__('No file to return'));
@@ -670,7 +832,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function getMedia()
     {
-        return MediaFactory::getById($this->getMediaId());
+        return $this->mediaFactory->getById($this->getMediaId());
     }
 
     /**
@@ -678,13 +840,13 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function download()
     {
-        $media = MediaFactory::getById($this->getMediaId());
+        $media = $this->mediaFactory->getById($this->getMediaId());
 
         // This widget is expected to output a file - usually this is for file based media
         // Get the name with library
-        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
+        $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
         $libraryPath = $libraryLocation . $media->storedAs;
-        $attachmentName = Sanitize::getString('attachment', $media->storedAs);
+        $attachmentName = $this->getSanitizer()->getString('attachment', $media->storedAs);
 
         $size = filesize($libraryPath);
 
@@ -697,11 +859,11 @@ abstract class ModuleWidget implements ModuleInterface
         header('Content-Length: ' . $size);
 
         // Send via Apache X-Sendfile header?
-        if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
+        if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Apache') {
             header("X-Sendfile: $libraryPath");
         }
         // Send via Nginx X-Accel-Redirect?
-        else if (Config::GetSetting('SENDFILE_MODE') == 'Nginx') {
+        else if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Nginx') {
             header("X-Accel-Redirect: /download/" . $attachmentName);
         }
         else {
@@ -733,7 +895,7 @@ abstract class ModuleWidget implements ModuleInterface
 
             // Check that this mediaId exists and get some information about it
             try {
-                $entry = MediaFactory::getById($mediaId);
+                $entry = $this->mediaFactory->getById($mediaId);
 
                 // Assign it
                 $this->assignMedia($entry->mediaId);
@@ -745,7 +907,7 @@ abstract class ModuleWidget implements ModuleInterface
                 $parsedContent = str_replace($sub, $replace, $parsedContent);
             }
             catch (NotFoundException $e) {
-                Log::info('Reference to Unknown mediaId %d', $mediaId);
+                $this->getLog()->info('Reference to Unknown mediaId %d', $mediaId);
             }
         }
 
@@ -778,7 +940,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function preProcess($fileName = null)
     {
-        Log::debug('No pre-processing rules for this module type');
+        $this->getLog()->debug('No pre-processing rules for this module type');
     }
 
     /**
@@ -786,7 +948,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function setDefaultWidgetOptions()
     {
-        Log::debug('Default Widget Options: Setting use duration to 0');
+        $this->getLog()->debug('Default Widget Options: Setting use duration to 0');
         $this->setUseDuration(0);
     }
 }

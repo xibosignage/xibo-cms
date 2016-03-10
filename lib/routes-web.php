@@ -28,16 +28,17 @@ $app->get('/', function () use ($app) {
     /* @var \Xibo\Entity\User $user */
 
     if ($user->newUserWizard == 0) {
-        $controller = new \Xibo\Controller\Login($app);
+        $controller = $app->container->get('\Xibo\Controller\Login');
+        $controller->setApp($app);
         $controller->userWelcome();
 
         // We've seen it
         $user->newUserWizard = 1;
     }
     else {
-        \Xibo\Helper\Log::debug('Showing the homepage: %s', $user->homePageId);
+        $app->logService->debug('Showing the homepage: %s', $user->homePageId);
 
-        $page = \Xibo\Factory\PageFactory::getById($user->homePageId);
+        $page = $app->container->get('pageFactory')->getById($user->homePageId);
 
         $app->redirectTo($page->getName() . '.view');
     }
@@ -65,11 +66,12 @@ $app->post('/login', function () use ($app) {
     $priorRoute = ($app->request()->post('priorRoute'));
 
     try {
-        $controller = new \Xibo\Controller\Login($app);
+        $controller = $app->container->get('\Xibo\Controller\Login');
+        $controller->setApp($app);
         $controller->setNoOutput();
         $controller->login();
 
-        \Xibo\Helper\Log::info('%s user logged in.', $app->user->userName);
+        $app->logService->info('%s user logged in.', $app->user->userName);
 
         try {
             $redirect = ($priorRoute == '' || stripos($priorRoute, 'login')) ? $app->urlFor('home') : $priorRoute;
@@ -78,11 +80,11 @@ $app->post('/login', function () use ($app) {
             $redirect = $app->urlFor('home');
         }
 
-        \Xibo\Helper\Log::debug('Redirect to %s', $redirect);
+        $app->logService->debug('Redirect to %s', $redirect);
         $app->redirect($redirect);
     }
     catch (\Xibo\Exception\AccessDeniedException $e) {
-        \Xibo\Helper\Log::warning($e->getMessage());
+        $app->logService->warning($e->getMessage());
         $app->flash('login_message', __('Username or Password incorrect'));
         $app->flash('priorRoute', $priorRoute);
     }

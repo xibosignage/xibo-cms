@@ -21,7 +21,8 @@
 
 
 namespace Xibo\Entity;
-use Xibo\Helper\Log;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Permission
@@ -29,8 +30,10 @@ use Xibo\Helper\Log;
  *
  * @SWG\Definition()
  */
-class Permission
+class Permission implements \JsonSerializable
 {
+    use EntityTrait;
+
     /**
      * @SWG\Property(description="The ID of this Permission Record")
      * @var int
@@ -103,6 +106,16 @@ class Permission
      */
     public $modifyPermissions;
 
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
+
     public function __clone()
     {
         $this->permissionId = null;
@@ -113,11 +126,11 @@ class Permission
         if ($this->permissionId == 0) {
             // Check there is something to add
             if ($this->view != 0 || $this->edit != 0 || $this->delete != 0) {
-                Log::debug('Adding Permission for %s, %d. GroupId: %d - View = %d, Edit = %d, Delete = %d', $this->entity, $this->objectId, $this->groupId, $this->view, $this->edit, $this->delete);
+                $this->getLog()->debug('Adding Permission for %s, %d. GroupId: %d - View = %d, Edit = %d, Delete = %d', $this->entity, $this->objectId, $this->groupId, $this->view, $this->edit, $this->delete);
                 $this->add();
             }
         } else {
-            Log::debug('Editing Permission for %s, %d. GroupId: %d - View = %d, Edit = %d, Delete = %d', $this->entity, $this->objectId, $this->groupId, $this->view, $this->edit, $this->delete);
+            $this->getLog()->debug('Editing Permission for %s, %d. GroupId: %d - View = %d, Edit = %d, Delete = %d', $this->entity, $this->objectId, $this->groupId, $this->view, $this->edit, $this->delete);
             // Are we all 0 permissions
             if ($this->view == 0 && $this->edit == 0 && $this->delete == 0)
                 $this->delete();
@@ -128,7 +141,7 @@ class Permission
 
     private function add()
     {
-        $this->permissionId = \Xibo\Storage\PDOConnect::insert('INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`, `edit`, `delete`) VALUES (:entityId, :groupId, :objectId, :view, :edit, :delete)', array(
+        $this->permissionId = $this->getStore()->insert('INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`, `edit`, `delete`) VALUES (:entityId, :groupId, :objectId, :view, :edit, :delete)', array(
             'entityId' => $this->entityId,
             'objectId' => $this->objectId,
             'groupId' => $this->groupId,
@@ -140,7 +153,7 @@ class Permission
 
     private function update()
     {
-        \Xibo\Storage\PDOConnect::update('UPDATE `permission` SET `view` = :view, `edit` = :edit, `delete` = :delete WHERE `entityId` = :entityId AND `groupId` = :groupId AND `objectId` = :objectId', array(
+        $this->getStore()->update('UPDATE `permission` SET `view` = :view, `edit` = :edit, `delete` = :delete WHERE `entityId` = :entityId AND `groupId` = :groupId AND `objectId` = :objectId', array(
             'entityId' => $this->entityId,
             'objectId' => $this->objectId,
             'groupId' => $this->groupId,
@@ -152,8 +165,8 @@ class Permission
 
     public function delete()
     {
-        Log::debug('Deleting Permission for %s, %d', $this->entity, $this->objectId);
-        \Xibo\Storage\PDOConnect::update('DELETE FROM `permission` WHERE entityId = :entityId AND objectId = :objectId AND groupId = :groupId', array(
+        $this->getLog()->debug('Deleting Permission for %s, %d', $this->entity, $this->objectId);
+        $this->getStore()->update('DELETE FROM `permission` WHERE entityId = :entityId AND objectId = :objectId AND groupId = :groupId', array(
             'entityId' => $this->entityId,
             'objectId' => $this->objectId,
             'groupId' => $this->groupId
@@ -162,7 +175,7 @@ class Permission
 
     public function deleteAll()
     {
-        \Xibo\Storage\PDOConnect::update('DELETE FROM `permission` WHERE entityId = :entityId AND objectId = :objectId', array(
+        $this->getStore()->update('DELETE FROM `permission` WHERE entityId = :entityId AND objectId = :objectId', array(
             'entityId' => $this->entityId,
             'objectId' => $this->objectId,
         ));

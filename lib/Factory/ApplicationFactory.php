@@ -11,20 +11,65 @@ namespace Xibo\Factory;
 
 use League\OAuth2\Server\Util\SecureKey;
 use Xibo\Entity\Application;
+use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class ApplicationFactory
+ * @package Xibo\Factory
+ */
 class ApplicationFactory extends BaseFactory
 {
-    public static function create()
+    /**
+     * @var ApplicationRedirectUriFactory
+     */
+    private $applicationRedirectUriFactory;
+
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param User $user
+     * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
+     */
+    public function __construct($store, $log, $sanitizerService, $user, $applicationRedirectUriFactory)
     {
-        $application = new Application();
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->setAclDependencies($user, null);
+
+        $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
+
+        if ($this->applicationRedirectUriFactory == null)
+            throw new \RuntimeException('Missing dependency: ApplicationRedirectUriFactory');
+    }
+
+    /**
+     * @return Application
+     */
+    public function create()
+    {
+        $application = $this->createEmpty();
         // Make and ID/Secret
         $application->secret = SecureKey::generate(254);
         // Assign this user
-        $application->userId = self::getUser()->userId;
+        $application->userId = $this->getUser()->userId;
         return $application;
+    }
+
+    /**
+     * Create an empty application
+     * @return Application
+     */
+    public function createEmpty()
+    {
+        if ($this->applicationRedirectUriFactory == null)
+            throw new \RuntimeException('Missing dependency: ApplicationRedirectUriFactory');
+
+        return new Application($this->getStore(), $this->getLog(), $this->applicationRedirectUriFactory);
     }
 
     /**
@@ -33,9 +78,9 @@ class ApplicationFactory extends BaseFactory
      * @return Application
      * @throws NotFoundException
      */
-    public static function getById($clientId)
+    public function getById($clientId)
     {
-        $client = self::query(null, ['clientId' => $clientId]);
+        $client = $this->query(null, ['clientId' => $clientId]);
 
         if (count($client) <= 0)
             throw new NotFoundException();
@@ -43,12 +88,16 @@ class ApplicationFactory extends BaseFactory
         return $client[0];
     }
 
-    public static function getByUserId($userId)
+    /**
+     * @param int $userId
+     * @return array
+     */
+    public function getByUserId($userId)
     {
-        return ApplicationFactory::query(null, ['userId' => $userId]);
+        return $this->query(null, ['userId' => $userId]);
     }
 
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
         $params = array();
@@ -65,7 +114,7 @@ class ApplicationFactory extends BaseFactory
               FROM `oauth_clients`
         ';
 
-        if (Sanitize::getInt('userId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
 
             $select .= '
                 , `oauth_auth_codes`.expire_time AS expires
@@ -79,15 +128,15 @@ class ApplicationFactory extends BaseFactory
                 ON `oauth_auth_codes`.session_id = `oauth_sessions`.id
             ';
 
-            $params['userId'] = Sanitize::getInt('userId', $filterBy);
+            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
         }
 
         $body .= ' WHERE 1 = 1 ';
 
 
-        if (Sanitize::getString('clientId', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('clientId', $filterBy) != null) {
             $body .= ' AND `oauth_clients`.id = :clientId ';
-            $params['clientId'] = Sanitize::getString('clientId', $filterBy);
+            $params['clientId'] = $this->getSanitizer()->getString('clientId', $filterBy);
         }
 
         // Sorting?
@@ -97,23 +146,21 @@ class ApplicationFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
 
         // The final statements
         $sql = $select . $body . $order . $limit;
 
-
-
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Application())->hydrate($row);
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

@@ -22,8 +22,6 @@ namespace Xibo\Widget;
 
 use InvalidArgumentException;
 use Respect\Validation\Validator as v;
-use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Sanitize;
 
 class WebPage extends ModuleWidget
 {
@@ -32,9 +30,9 @@ class WebPage extends ModuleWidget
      */
     public function installFiles()
     {
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-webpage-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-webpage-render.js')->save();
     }
 
     public function validate()
@@ -52,17 +50,17 @@ class WebPage extends ModuleWidget
     public function add()
     {
         $this->setOption('xmds', true);
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setDuration(Sanitize::getInt('duration'));
-        $this->setOption('name', Sanitize::getString('name'));
-        $this->setOption('transparency', Sanitize::getCheckbox('transparency'));
-        $this->setOption('uri', urlencode(Sanitize::getString('uri')));
-        $this->setOption('scaling', Sanitize::getInt('scaling'));
-        $this->setOption('offsetLeft', Sanitize::getInt('offsetLeft'));
-        $this->setOption('offsetTop', Sanitize::getInt('offsetTop'));
-        $this->setOption('pageWidth', Sanitize::getInt('pageWidth'));
-        $this->setOption('pageHeight', Sanitize::getInt('pageHeight'));
-        $this->setOption('modeid', Sanitize::getInt('modeId'));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
+        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
+        $this->setOption('scaling', $this->getSanitizer()->getInt('scaling'));
+        $this->setOption('offsetLeft', $this->getSanitizer()->getInt('offsetLeft'));
+        $this->setOption('offsetTop', $this->getSanitizer()->getInt('offsetTop'));
+        $this->setOption('pageWidth', $this->getSanitizer()->getInt('pageWidth'));
+        $this->setOption('pageHeight', $this->getSanitizer()->getInt('pageHeight'));
+        $this->setOption('modeid', $this->getSanitizer()->getInt('modeId'));
 
         // Save the widget
         $this->validate();
@@ -75,17 +73,17 @@ class WebPage extends ModuleWidget
     public function edit()
     {
         $this->setOption('xmds', true);
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setDuration(Sanitize::getInt('duration'));
-        $this->setOption('name', Sanitize::getString('name'));
-        $this->setOption('transparency', Sanitize::getCheckbox('transparency'));
-        $this->setOption('uri', urlencode(Sanitize::getString('uri')));
-        $this->setOption('scaling', Sanitize::getInt('scaling'));
-        $this->setOption('offsetLeft', Sanitize::getInt('offsetLeft'));
-        $this->setOption('offsetTop', Sanitize::getInt('offsetTop'));
-        $this->setOption('pageWidth', Sanitize::getInt('pageWidth'));
-        $this->setOption('pageHeight', Sanitize::getInt('pageHeight'));
-        $this->setOption('modeid', Sanitize::getInt('modeId'));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
+        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
+        $this->setOption('scaling', $this->getSanitizer()->getInt('scaling'));
+        $this->setOption('offsetLeft', $this->getSanitizer()->getInt('offsetLeft'));
+        $this->setOption('offsetTop', $this->getSanitizer()->getInt('offsetTop'));
+        $this->setOption('pageWidth', $this->getSanitizer()->getInt('pageWidth'));
+        $this->setOption('pageHeight', $this->getSanitizer()->getInt('pageHeight'));
+        $this->setOption('modeid', $this->getSanitizer()->getInt('modeId'));
 
         // Save the widget
         $this->validate();
@@ -119,14 +117,14 @@ class WebPage extends ModuleWidget
         $data = [];
 
         // Replace the View Port Width?
-        $isPreview = (Sanitize::getCheckbox('preview') == 1);
+        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         // Get some parameters
-        $width = Sanitize::getDouble('width', 0);
-        $height = Sanitize::getDouble('height', 0);
+        $width = $this->getSanitizer()->getDouble('width', 0);
+        $height = $this->getSanitizer()->getDouble('height', 0);
 
         // Work out the url
         $url = urldecode($this->getOption('uri'));
@@ -147,7 +145,7 @@ class WebPage extends ModuleWidget
             'offsetTop' => intval($this->getOption('offsetTop', 0)),
             'offsetLeft' => intval($this->getOption('offsetLeft', 0)),
             'scale' => ($this->getOption('scaling', 100) / 100),
-            'scaleOverride' => Sanitize::getDouble('scale_override', 0)
+            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
         );
 
         // Head Content

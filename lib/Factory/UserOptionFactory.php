@@ -10,19 +10,44 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\UserOption;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
-class UserOptionFactory
+/**
+ * Class UserOptionFactory
+ * @package Xibo\Factory
+ */
+class UserOptionFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
     /**
      * Load by User Id
      * @param int $userId
      * @return array[UserOption]
      */
-    public static function getByUserId($userId)
+    public function getByUserId($userId)
     {
-        return UserOptionFactory::query(null, array('userId' => $userId));
+        return $this->query(null, array('userId' => $userId));
+    }
+
+    /**
+     * Create Empty
+     * @return UserOption
+     */
+    public function createEmpty()
+    {
+        return new UserOption($this->getStore(), $this->getLog());
     }
 
     /**
@@ -32,9 +57,9 @@ class UserOptionFactory
      * @param mixed $value
      * @return UserOption
      */
-    public static function create($userId, $option, $value)
+    public function create($userId, $option, $value)
     {
-        $userOption = new UserOption();
+        $userOption = $this->createEmpty();
         $userOption->userId = $userId;
         $userOption->option = $option;
         $userOption->value = $value;
@@ -48,7 +73,7 @@ class UserOptionFactory
      * @param array $filterBy
      * @return array[UserOption]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         if (DBVERSION < 122)
             return [];
@@ -57,8 +82,8 @@ class UserOptionFactory
 
         $sql = 'SELECT * FROM `useroption` WHERE userId = :userId';
 
-        foreach (PDOConnect::select($sql, array('userId' => Sanitize::getInt('userId', $filterBy))) as $row) {
-            $entries[] = (new UserOption())->hydrate($row);
+        foreach ($this->getStore()->select($sql, array('userId' => $this->getSanitizer()->getInt('userId', $filterBy))) as $row) {
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         return $entries;

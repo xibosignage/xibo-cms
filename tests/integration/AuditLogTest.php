@@ -5,7 +5,7 @@
  * (AuditLogTest.php)
  */
 
-namespace Xibo\Tests;
+namespace Xibo\Tests\Integration;
 
 class AuditLogTest extends \Xibo\Tests\LocalWebTestCase
 {
@@ -37,7 +37,10 @@ class AuditLogTest extends \Xibo\Tests\LocalWebTestCase
 
     public function testExport()
     {
-        $this->client->get('/audit/export');
+        $this->client->get('/audit/export', [
+            'filterFromDt' => date('Y-m-d H:i:s', time() - 86400),
+            'filterToDt' => date('Y-m-d H:i:s', time())
+        ]);
         $this->assertSame(200, $this->client->response->status());
     }
 }

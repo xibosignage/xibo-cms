@@ -24,10 +24,12 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
-use Xibo\Factory\UserFactory;
 use Xibo\Helper\ApplicationState;
-use Xibo\Helper\Log;
 
+/**
+ * Class WebAuthentication
+ * @package Xibo\Middleware
+ */
 class WebAuthentication extends Middleware
 {
     /**
@@ -41,12 +43,12 @@ class WebAuthentication extends Middleware
         $app = $this->app;
 
         // Create a user
-        $app->user = new \Xibo\Entity\User();
+        $app->user = $app->userFactory->create();
 
         // Create a function which we will call should the request be for a protected page
         // and the user not yet be logged in.
         $redirectToLogin = function () use ($app) {
-            Log::debug('Request to redirect to login. Ajax = %d', $app->request->isAjax());
+
             if ($app->request->isAjax()) {
                 $state = $app->state;
                 /* @var ApplicationState $state */
@@ -75,8 +77,16 @@ class WebAuthentication extends Middleware
                 $app->public = false;
                 // Need to check
                 if ($user->hasIdentity() && !$app->session->isExpired()) {
+
                     // Replace our user with a fully loaded one
-                    $user = UserFactory::loadById($user->userId);
+                    $user = $app->userFactory->getById($user->userId);
+                    $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
+                    $user->load();
+
+                    // Set the user factory ACL dependencies (used for working out intra-user permissions)
+                    $app->userFactory->setAclDependencies($user, $app->userFactory);
+
+                    $app->logService->setUserId($user->userId);
 
                     // Do they have permission?
                     $user->routeAuthentication($resource);

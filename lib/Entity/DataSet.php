@@ -15,10 +15,10 @@ use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class DataSet
@@ -89,11 +89,57 @@ class DataSet implements \JsonSerializable
 
     private $countLast = 0;
 
+    /** @var  SanitizerServiceInterface */
+    private $sanitizer;
+
+    /** @var  ConfigServiceInterface */
+    private $config;
+
+    /** @var  DataSetFactory */
+    private $dataSetFactory;
+
+    /** @var  DataSetColumnFactory */
+    private $dataSetColumnFactory;
+
+    /** @var  PermissionFactory */
+    private $permissionFactory;
+
+    /** @var  DisplayFactory */
+    private $displayFactory;
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizer
+     * @param ConfigServiceInterface $config
+     * @param DataSetFactory $dataSetFactory
+     * @param DataSetColumnFactory $dataSetColumnFactory
+     * @param PermissionFactory $permissionFactory
+     * @param DisplayFactory $displayFactory
+     */
+    public function __construct($store, $log, $sanitizer, $config, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory)
+    {
+        $this->setCommonDependencies($store, $log);
+        $this->sanitizer = $sanitizer;
+        $this->config = $config;
+        $this->dataSetFactory = $dataSetFactory;
+        $this->dataSetColumnFactory = $dataSetColumnFactory;
+        $this->permissionFactory = $permissionFactory;
+        $this->displayFactory = $displayFactory;
+    }
+
+    /**
+     * @return int
+     */
     public function getId()
     {
         return $this->dataSetId;
     }
 
+    /**
+     * @return int
+     */
     public function getOwnerId()
     {
         return $this->userId;
@@ -140,11 +186,11 @@ class DataSet implements \JsonSerializable
      */
     public function getData($filterBy = [])
     {
-        $start = Sanitize::getInt('start', 0, $filterBy);
-        $size = Sanitize::getInt('size', 0, $filterBy);
-        $filter = Sanitize::getParam('filter', $filterBy);
-        $ordering = Sanitize::getString('order', $filterBy);
-        $displayId = Sanitize::getInt('displayId', 0, $filterBy);
+        $start = $this->sanitizer->getInt('start', 0, $filterBy);
+        $size = $this->sanitizer->getInt('size', 0, $filterBy);
+        $filter = $this->sanitizer->getParam('filter', $filterBy);
+        $ordering = $this->sanitizer->getString('order', $filterBy);
+        $displayId = $this->sanitizer->getInt('displayId', 0, $filterBy);
 
         // Params
         $params = [];
@@ -154,7 +200,7 @@ class DataSet implements \JsonSerializable
 
         // Get the Latitude and Longitude ( might be used in a formula )
         if ($displayId == 0) {
-            $displayGeoLocation = "GEOMFROMTEXT('POINT(" . Config::GetSetting('DEFAULT_LAT') . " " . Config::GetSetting('DEFAULT_LONG') . ")')";
+            $displayGeoLocation = "GEOMFROMTEXT('POINT(" . $this->config->GetSetting('DEFAULT_LAT') . " " . $this->config->GetSetting('DEFAULT_LONG') . ")')";
         }
         else {
             $displayGeoLocation = '(SELECT GeoLocation FROM `display` WHERE DisplayID = :displayId)';
@@ -197,9 +243,9 @@ class DataSet implements \JsonSerializable
 
         // Filter by ID
         if (
-            Sanitize::getInt('id', $filterBy) !== null) {
+            $this->sanitizer->getInt('id', $filterBy) !== null) {
             $body .= ' AND id = :id ';
-            $params['id'] = Sanitize::getInt('id', $filterBy);
+            $params['id'] = $this->sanitizer->getInt('id', $filterBy);
         }
 
         // Ordering
@@ -215,7 +261,7 @@ class DataSet implements \JsonSerializable
 
                 // Check allowable
                 if (!in_array($sanitized, $allowedOrderCols)) {
-                    Log::Info('Disallowed column: ' . $sanitized);
+                    $this->getLog()->info('Disallowed column: ' . $sanitized);
                     continue;
                 }
 
@@ -248,10 +294,10 @@ class DataSet implements \JsonSerializable
 
 
 
-        $data = PDOConnect::select($sql, $params);
+        $data = $this->getStore()->select($sql, $params);
 
         // If there are limits run some SQL to work out the full payload of rows
-        $results = PDOConnect::select('SELECT COUNT(*) AS total FROM (' . $body, $params);
+        $results = $this->getStore()->select('SELECT COUNT(*) AS total FROM (' . $body, $params);
         $this->countLast = intval($results[0]['total']);
 
         return $data;
@@ -278,7 +324,7 @@ class DataSet implements \JsonSerializable
      */
     public function hasData()
     {
-        return PDOConnect::exists('SELECT id FROM `dataset_' . $this->dataSetId . '` LIMIT 1', []);
+        return $this->getStore()->exists('SELECT id FROM `dataset_' . $this->dataSetId . '` LIMIT 1', []);
     }
 
     /**
@@ -293,7 +339,7 @@ class DataSet implements \JsonSerializable
             throw new \InvalidArgumentException(__('Description can not be longer than 254 characters'));
 
         try {
-            $existing = DataSetFactory::getByName($this->dataSet);
+            $existing = $this->dataSetFactory->getByName($this->dataSet);
 
             if ($this->dataSetId == 0 || $this->dataSetId != $existing->dataSetId)
                 throw new \InvalidArgumentException(sprintf(__('There is already dataSet called %s. Please choose another name.'), $this->dataSet));
@@ -312,10 +358,10 @@ class DataSet implements \JsonSerializable
             return;
 
         // Load Columns
-        $this->columns = DataSetColumnFactory::getByDataSetId($this->dataSetId);
+        $this->columns = $this->dataSetColumnFactory->getByDataSetId($this->dataSetId);
 
         // Load Permissions
-        $this->permissions = PermissionFactory::getByObjectId(get_class($this), $this->getId());
+        $this->permissions = $this->permissionFactory->getByObjectId(get_class($this), $this->getId());
 
         $this->loaded = true;
     }
@@ -374,7 +420,7 @@ class DataSet implements \JsonSerializable
         }
 
         // Delete the data set
-        PDOConnect::update('DELETE FROM `dataset` WHERE dataSetId = :dataSetId', ['dataSetId' => $this->dataSetId]);
+        $this->getStore()->update('DELETE FROM `dataset` WHERE dataSetId = :dataSetId', ['dataSetId' => $this->dataSetId]);
 
         // The last thing we do is drop the dataSet table
         $this->dropTable();
@@ -386,8 +432,8 @@ class DataSet implements \JsonSerializable
     public function deleteData()
     {
         // The last thing we do is drop the dataSet table
-        PDOConnect::update('TRUNCATE TABLE `dataset_' . $this->dataSetId . '`', []);
-        PDOConnect::update('ALTER TABLE `dataset_' . $this->dataSetId . '` AUTO_INCREMENT = 1', []);
+        $this->getStore()->update('TRUNCATE TABLE `dataset_' . $this->dataSetId . '`', []);
+        $this->getStore()->update('ALTER TABLE `dataset_' . $this->dataSetId . '` AUTO_INCREMENT = 1', []);
     }
 
     /**
@@ -395,7 +441,7 @@ class DataSet implements \JsonSerializable
      */
     private function add()
     {
-        $this->dataSetId = PDOConnect::insert('
+        $this->dataSetId = $this->getStore()->insert('
           INSERT INTO `dataset` (DataSet, Description, UserID, `code`, `isLookup`)
             VALUES (:dataSet, :description, :userId, :code, :isLookup)
         ', [
@@ -415,7 +461,7 @@ class DataSet implements \JsonSerializable
      */
     private function edit()
     {
-        PDOConnect::update('
+        $this->getStore()->update('
           UPDATE dataset SET DataSet = :dataSet, Description = :description, lastDataEdit = :lastDataEdit, `code` = :code, `isLookup` = :isLookup WHERE DataSetID = :dataSetId
         ', [
             'dataSetId' => $this->dataSetId,
@@ -430,7 +476,7 @@ class DataSet implements \JsonSerializable
     private function createTable()
     {
         // Create the data table for this dataset
-        PDOConnect::update('
+        $this->getStore()->update('
           CREATE TABLE `dataset_' . $this->dataSetId . '` (
             `id` int(11) NOT NULL AUTO_INCREMENT,
             PRIMARY KEY (`id`)
@@ -440,7 +486,7 @@ class DataSet implements \JsonSerializable
 
     private function dropTable()
     {
-        PDOConnect::update('DROP TABLE IF EXISTS dataset_' . $this->dataSetId, []);
+        $this->getStore()->update('DROP TABLE IF EXISTS dataset_' . $this->dataSetId, []);
     }
 
     /**
@@ -468,9 +514,9 @@ class DataSet implements \JsonSerializable
      */
     public function notify()
     {
-        Log::debug('Checking for Displays to refresh for DataSet %d', $this->dataSetId);
+        $this->getLog()->debug('Checking for Displays to refresh for DataSet %d', $this->dataSetId);
 
-        foreach (DisplayFactory::getByActiveDataSetId($this->dataSetId) as $display) {
+        foreach ($this->displayFactory->getByActiveDataSetId($this->dataSetId) as $display) {
             /* @var \Xibo\Entity\Display $display */
             $display->setMediaIncomplete();
             $display->setCollectRequired(false);
@@ -485,7 +531,7 @@ class DataSet implements \JsonSerializable
      */
     public function addRow($row)
     {
-        Log::debug('Adding row %s', var_export($row, true));
+        $this->getLog()->debug('Adding row %s', var_export($row, true));
 
         // Update the last edit date on this dataSet
         $this->lastDataEdit = time();
@@ -499,9 +545,9 @@ class DataSet implements \JsonSerializable
 
         $sql = 'INSERT INTO `dataset_' . $this->dataSetId . '` (`' . implode('`, `', $keys) . '`) VALUES (' . implode(',', array_fill(0, count($values), '?')) . ')';
 
-        Log::sql($sql, $values);
+        $this->getLog()->sql($sql, $values);
 
-        return PDOConnect::insert($sql, $values);
+        return $this->getStore()->insert($sql, $values);
     }
 
     /**
@@ -511,7 +557,7 @@ class DataSet implements \JsonSerializable
      */
     public function editRow($rowId, $row)
     {
-        Log::debug('Editing row %s', var_export($row, true));
+        $this->getLog()->debug('Editing row %s', var_export($row, true));
 
         // Update the last edit date on this dataSet
         $this->lastDataEdit = time();
@@ -535,7 +581,7 @@ class DataSet implements \JsonSerializable
 
 
 
-        PDOConnect::update($sql, $params);
+        $this->getStore()->update($sql, $params);
     }
 
     /**
@@ -546,7 +592,7 @@ class DataSet implements \JsonSerializable
     {
         $this->lastDataEdit = time();
 
-        PDOConnect::update('DELETE FROM `dataset_' . $this->dataSetId . '` WHERE id = :id', [
+        $this->getStore()->update('DELETE FROM `dataset_' . $this->dataSetId . '` WHERE id = :id', [
             'id' => $rowId
         ]);
     }

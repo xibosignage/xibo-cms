@@ -20,18 +20,63 @@
  */
 namespace Xibo\Controller;
 
-use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
-use Xibo\Helper\Config;
 use Xibo\Helper\DataSetUploadHandler;
-use Xibo\Helper\Help;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
-
+/**
+ * Class DataSet
+ * @package Xibo\Controller
+ */
 class DataSet extends Base
 {
+    /** @var  DataSetFactory */
+    private $dataSetFactory;
+
+    /** @var  DataSetColumnFactory */
+    private $dataSetColumnFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param DataSetFactory $dataSetFactory
+     * @param DataSetColumnFactory $dataSetColumnFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dataSetFactory, $dataSetColumnFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->dataSetFactory = $dataSetFactory;
+        $this->dataSetColumnFactory = $dataSetColumnFactory;
+    }
+
+    /**
+     * @return SanitizerServiceInterface
+     */
+    public function getSanitizer()
+    {
+        return parent::getSanitizer();
+    }
+
+    /**
+     * @return DataSetFactory
+     */
+    public function getDataSetFactory()
+    {
+        return $this->dataSetFactory;
+    }
+
     /**
      * View Route
      */
@@ -79,11 +124,11 @@ class DataSet extends Base
         $user = $this->getUser();
 
         $filter = [
-            'dataSetId' => Sanitize::getInt('dataSetId'),
-            'dataSet' => Sanitize::getString('dataSet')
+            'dataSetId' => $this->getSanitizer()->getInt('dataSetId'),
+            'dataSet' => $this->getSanitizer()->getString('dataSet')
         ];
 
-        $dataSets = DataSetFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $dataSets = $this->dataSetFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($dataSets as $dataSet) {
             /* @var \Xibo\Entity\DataSet $dataSet */
@@ -158,7 +203,7 @@ class DataSet extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = DataSetFactory::countLast();
+        $this->getState()->recordsTotal = $this->dataSetFactory->countLast();
         $this->getState()->setData($dataSets);
     }
 
@@ -169,7 +214,7 @@ class DataSet extends Base
     {
         $this->getState()->template = 'dataset-form-add';
         $this->getState()->setData([
-            'help' => Help::Link('DataSet', 'Add')
+            'help' => $this->getHelp()->link('DataSet', 'Add')
         ]);
     }
 
@@ -210,13 +255,13 @@ class DataSet extends Base
      */
     public function add()
     {
-        $dataSet = new \Xibo\Entity\DataSet();
-        $dataSet->dataSet = Sanitize::getString('dataSet');
-        $dataSet->description = Sanitize::getString('description');
+        $dataSet = $this->dataSetFactory->createEmpty();
+        $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
+        $dataSet->description = $this->getSanitizer()->getString('description');
         $dataSet->userId = $this->getUser()->userId;
 
         // Also add one column
-        $dataSetColumn = new DataSetColumn();
+        $dataSetColumn = $this->dataSetColumnFactory->createEmpty();
         $dataSetColumn->columnOrder = 1;
         $dataSetColumn->heading = 'Col1';
         $dataSetColumn->dataSetColumnTypeId = 1;
@@ -244,7 +289,7 @@ class DataSet extends Base
      */
     public function editForm($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -253,7 +298,7 @@ class DataSet extends Base
         $this->getState()->template = 'dataset-form-edit';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'help' => Help::Link('DataSet', 'Edit')
+            'help' => $this->getHelp()->link('DataSet', 'Edit')
         ]);
     }
 
@@ -297,13 +342,13 @@ class DataSet extends Base
      */
     public function edit($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
 
-        $dataSet->dataSet = Sanitize::getString('dataSet');
-        $dataSet->description = Sanitize::getString('description');
+        $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
+        $dataSet->description = $this->getSanitizer()->getString('description');
         $dataSet->save();
 
         // Return
@@ -320,7 +365,7 @@ class DataSet extends Base
      */
     public function deleteForm($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
 
         if (!$this->getUser()->checkDeleteable($dataSet))
             throw new AccessDeniedException();
@@ -332,7 +377,7 @@ class DataSet extends Base
         $this->getState()->template = 'dataset-form-delete';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'help' => Help::Link('DataSet', 'Delete')
+            'help' => $this->getHelp()->link('DataSet', 'Delete')
         ]);
     }
 
@@ -361,13 +406,13 @@ class DataSet extends Base
      */
     public function delete($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
 
         if (!$this->getUser()->checkDeleteable($dataSet))
             throw new AccessDeniedException();
 
         // Is there existing data?
-        if (Sanitize::getCheckbox('deleteData') == 0 && $dataSet->hasData())
+        if ($this->getSanitizer()->getCheckbox('deleteData') == 0 && $dataSet->hasData())
             throw new \InvalidArgumentException(__('There is data assigned to this data set, cannot delete.'));
 
         // Otherwise delete
@@ -412,12 +457,12 @@ class DataSet extends Base
      */
     public function import($dataSetId)
     {
-        Log::debug('Import DataSet');
+        $this->getLog()->debug('Import DataSet');
 
-        $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
+        $libraryFolder = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists
-        Library::ensureLibraryExists();
+        Library::ensureLibraryExists($this->getConfig()->GetSetting('LIBRARY_LOCATION'));
 
         $options = array(
             'userId' => $this->getUser()->userId,
@@ -437,8 +482,7 @@ class DataSet extends Base
 
         } catch (\Exception $e) {
             // We must not issue an error, the file upload return should have the error object already
-            //TODO: for some reason this commits... it shouldn't
-            $this->app->commit = false;
+            $this->getApp()->commit = false;
         }
 
         $this->setNoOutput(true);

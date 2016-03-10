@@ -9,18 +9,44 @@
 namespace Xibo\Factory;
 
 
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Entity\LogEntry;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class LogFactory
+ * @package Xibo\Factory
+ */
 class LogFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * Create Empty
+     * @return LogEntry
+     */
+    public function createEmpty()
+    {
+        return new LogEntry($this->getStore(), $this->getLog());
+    }
+
     /**
      * Query
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[\Xibo\Entity\Log]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         if ($sortOrder == null)
             $sortOrder = ['logId DESC'];
@@ -38,47 +64,47 @@ class LogFactory extends BaseFactory
              WHERE 1 = 1
         ';
 
-        if (Sanitize::getInt('fromDt', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('fromDt', $filterBy) !== null) {
             $body .= ' AND logdate > :fromDt ';
-            $params['fromDt'] = date("Y-m-d H:i:s", Sanitize::getInt('fromDt', $filterBy));
+            $params['fromDt'] = date("Y-m-d H:i:s", $this->getSanitizer()->getInt('fromDt', $filterBy));
         }
 
-        if (Sanitize::getInt('toDt', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('toDt', $filterBy) !== null) {
             $body .= ' AND logdate <= :toDt ';
-            $params['toDt'] = date("Y-m-d H:i:s", Sanitize::getInt('toDt', $filterBy));
+            $params['toDt'] = date("Y-m-d H:i:s", $this->getSanitizer()->getInt('toDt', $filterBy));
         }
 
-        if (Sanitize::getString('runNo', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('runNo', $filterBy) != null) {
             $body .= ' AND runNo = :runNo ';
-            $params['runNo'] = Sanitize::getString('runNo', $filterBy);
+            $params['runNo'] = $this->getSanitizer()->getString('runNo', $filterBy);
         }
 
-        if (Sanitize::getString('type', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('type', $filterBy) != null) {
             $body .= ' AND type = :type ';
-            $params['type'] = Sanitize::getString('type', $filterBy);
+            $params['type'] = $this->getSanitizer()->getString('type', $filterBy);
         }
 
-        if (Sanitize::getString('channel', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('channel', $filterBy) != null) {
             $body .= ' AND channel LIKE :channel ';
-            $params['channel'] = '%' . Sanitize::getString('channel', $filterBy) . '%';
+            $params['channel'] = '%' . $this->getSanitizer()->getString('channel', $filterBy) . '%';
         }
 
-        if (Sanitize::getString('page', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('page', $filterBy) != null) {
             $body .= ' AND page LIKE :page ';
-            $params['page'] = '%' . Sanitize::getString('page', $filterBy) . '%';
+            $params['page'] = '%' . $this->getSanitizer()->getString('page', $filterBy) . '%';
         }
 
-        if (Sanitize::getString('function', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('function', $filterBy) != null) {
             $body .= ' AND function LIKE :function ';
-            $params['function'] = '%' . Sanitize::getString('function', $filterBy) . '%';
+            $params['function'] = '%' . $this->getSanitizer()->getString('function', $filterBy) . '%';
         }
 
-        if (Sanitize::getInt('displayId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('displayId', $filterBy) !== null) {
             $body .= ' AND log.displayId = :displayId ';
-            $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
+            $params['displayId'] = $this->getSanitizer()->getInt('displayId', $filterBy);
         }
 
-        if (Sanitize::getCheckbox('excludeLog', $filterBy) == 1) {
+        if ($this->getSanitizer()->getCheckbox('excludeLog', $filterBy) == 1) {
             $body .= ' AND log.page NOT LIKE \'/log%\' ';
         }
 
@@ -87,22 +113,22 @@ class LogFactory extends BaseFactory
             $order = ' ORDER BY ' . implode(',', $sortOrder);
 
         // Paging
-        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
 
         $sql = $select . $body . $order . $limit;
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new \Xibo\Entity\LogEntry())->hydrate($row,  ['htmlStringProperties' => ['message']]);
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $this->createEmpty()->hydrate($row,  ['htmlStringProperties' => ['message']]);
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
-            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-            self::$_countLast = intval($results[0]['total']);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

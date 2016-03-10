@@ -6,34 +6,55 @@
  */
 
 
-namespace Xibo\Helper;
+namespace Xibo\Service;
 
 
 use Xibo\Entity\Display;
 use Xibo\Exception\ConfigurationException;
-use Xibo\XMR\PlayerAction;
 use Xibo\XMR\PlayerActionException;
 
-class PlayerActionHelper
+/**
+ * Class PlayerActionService
+ * @package Xibo\Service
+ */
+class PlayerActionService implements PlayerActionServiceInterface
 {
     /**
-     * @param array[Display]|Display $displays
-     * @param PlayerAction $action
-     * @throws ConfigurationException
+     * @var ConfigServiceInterface
      */
-    public static function sendAction($displays, $action)
+    private $config;
+
+    /**
+     * @inheritdoc
+     */
+    public function __construct($config)
+    {
+        $this->config = $config;
+    }
+
+    /**
+     * Get Config
+     * @return ConfigServiceInterface
+     */
+    private function getConfig()
+    {
+        return $this->config;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function sendAction($displays, $action)
     {
         if (!is_array($displays))
             $displays = [$displays];
 
-        Log::info('Sending %s to %d Displays.', get_class($action), count($displays));
-
         // Check ZMQ
-        if (!Config::checkZmq())
+        if (!$this->getConfig()->checkZmq())
             throw new ConfigurationException(__('ZeroMQ is required to send Player Actions. Please check your configuration.'));
 
         // XMR network address
-        $xmrAddress = Config::GetSetting('XMR_ADDRESS');
+        $xmrAddress = $this->getConfig()->GetSetting('XMR_ADDRESS');
 
         if ($xmrAddress == '')
             throw new \InvalidArgumentException(__('XMR address is not set'));
@@ -44,16 +65,12 @@ class PlayerActionHelper
             if ($display->xmrChannel == '' || $display->xmrPubKey == '')
                 throw new \InvalidArgumentException(__('This Player is not configured or ready to receive push commands over XMR. Please contact your administrator.'));
 
-            Log::debug('Sending %s to %s.', get_class($action), $display->display);
-
             try {
                 // Assign the Layout to the Display
                 if (!$action->setIdentity($display->xmrChannel, $display->xmrPubKey)->send($xmrAddress))
                     throw new ConfigurationException(__('This command has been refused'));
 
             } catch (PlayerActionException $sockEx) {
-                Log::emergency('XMR Connection Failure: %s', $sockEx->getMessage());
-                Log::debug('XMR Connection Failure, trace: %s', $sockEx->getTraceAsString());
                 throw new ConfigurationException(__('Connection Failed'));
             }
         }

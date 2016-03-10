@@ -7,9 +7,9 @@
 
 
 namespace Xibo\Entity;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
-
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class Bandwidth
@@ -18,6 +18,8 @@ use Xibo\Storage\PDOConnect;
  */
 class Bandwidth
 {
+    use EntityTrait;
+
     public static $REGISTER = 1;
     public static $RF = 2;
     public static $SCHEDULE = 3;
@@ -34,9 +36,19 @@ class Bandwidth
     public $type;
     public $size;
 
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
+
     public function save()
     {
-        PDOConnect::update('
+        $this->getStore()->update('
             INSERT INTO `bandwidth` (Month, Type, DisplayID, Size)
               VALUES (:month, :type, :displayId, :size)
             ON DUPLICATE KEY UPDATE Size = Size + :size2

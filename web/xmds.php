@@ -18,14 +18,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
-error_reporting(0);
-ini_set('display_errors', 0);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 require PROJECT_ROOT . '/vendor/autoload.php';
 
@@ -33,24 +31,7 @@ if (!file_exists(PROJECT_ROOT . '/web/settings.php')) {
     die('Not configured');
 }
 
-// Load the config
-Config::Load(PROJECT_ROOT . '/web/settings.php');
-
-// Always have a version defined
-$version = \Xibo\Helper\Sanitize::getInt('v', 3, $_REQUEST);
-
-// Version Request?
-if (isset($_GET['what']))
-    die(Config::Version('XmdsVersion'));
-
-// Is the WSDL being requested.
-if (isset($_GET['wsdl']) || isset($_GET['WSDL'])) {
-    $wsdl = new \Xibo\Xmds\Wsdl(PROJECT_ROOT . '/lib/Xmds/service_v' . $version . '.wsdl', $version);
-    $wsdl->output();
-    exit;
-}
-
-// We create a Slim Object ONLY for logging (calls to Slim::getInstance())
+// We create a Slim Object ONLY for logging
 // Create a logger
 $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'XMDS',
@@ -64,14 +45,33 @@ $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
 
 // Slim Application
 $app = new \Slim\Slim(array(
-    'mode' => Config::GetSetting('SERVER_MODE'),
     'debug' => false,
     'log.writer' => $logger
 ));
 $app->setName('api');
 
+// Load the config
+$app->configService = \Xibo\Service\ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+
+// Set storage
+\Xibo\Middleware\Storage::setStorage($app->container);
+
 // Set state
 \Xibo\Middleware\State::setState($app);
+
+// Always have a version defined
+$version = $app->sanitizerService->getInt('v', 3, $_REQUEST);
+
+// Version Request?
+if (isset($_GET['what']))
+    die($app->configService->Version('XmdsVersion'));
+
+// Is the WSDL being requested.
+if (isset($_GET['wsdl']) || isset($_GET['WSDL'])) {
+    $wsdl = new \Xibo\Xmds\Wsdl(PROJECT_ROOT . '/lib/Xmds/service_v' . $version . '.wsdl', $version);
+    $wsdl->output();
+    exit;
+}
 
 // We need a View for rendering GetResource Templates
 // Twig templates
@@ -86,35 +86,36 @@ $twig->parserExtensions = array(
     new \Xibo\Twig\UrlDecodeTwigExtension()
 );
 
-// Configure the template folder
-$twig->twigTemplateDirs = array_merge(\Xibo\Factory\ModuleFactory::getViewPaths(), [PROJECT_ROOT . '/views']);
-$app->view($twig);
-
 // Configure a user
-$app->user = \Xibo\Factory\UserFactory::getById(1);
+$app->user = $app->userFactory->getById(1);
+
+// Configure the template folder
+$twig->twigTemplateDirs = array_merge($app->moduleFactory->getViewPaths(), [PROJECT_ROOT . '/views']);
+$app->view($twig);
 
 // Check to see if we have a file attribute set (for HTTP file downloads)
 if (isset($_GET['file'])) {
     // Check send file mode is enabled
-    $sendFileMode = Config::GetSetting('SENDFILE_MODE');
+    $sendFileMode = $app->configService->GetSetting('SENDFILE_MODE');
 
     if ($sendFileMode == 'Off') {
-        Log::notice('HTTP GetFile request received but SendFile Mode is Off. Issuing 404', 'services');
+        $app->logService->notice('HTTP GetFile request received but SendFile Mode is Off. Issuing 404', 'services');
         header('HTTP/1.0 404 Not Found');
         exit;
     }
 
     // Check nonce, output appropriate headers, log bandwidth and stop.
     try {
-        $file = \Xibo\Factory\RequiredFileFactory::getByNonce($_REQUEST['file']);
+        /** @var \Xibo\Entity\RequiredFile $file */
+        $file = $app->requiredFileFactory->getByNonce($_REQUEST['file']);
         $file->bytesRequested = $file->bytesRequested + $file->size;
         $file->isValid();
 
         // Issue magic packet
         // Send via Apache X-Sendfile header?
         if ($sendFileMode == 'Apache') {
-            Log::notice('HTTP GetFile request redirecting to ' . Config::GetSetting('LIBRARY_LOCATION') . $file->storedAs, 'services');
-            header('X-Sendfile: ' . Config::GetSetting('LIBRARY_LOCATION') . $file->storedAs);
+            $app->logService->notice('HTTP GetFile request redirecting to ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->storedAs, 'services');
+            header('X-Sendfile: ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->storedAs);
         }
         // Send via Nginx X-Accel-Redirect?
         else if ($sendFileMode == 'Nginx') {
@@ -125,11 +126,11 @@ if (isset($_GET['file'])) {
         }
 
         // Log bandwidth
-        \Xibo\Factory\BandwidthFactory::createAndSave(4, $file->displayId, $file->size);
+        $app->bandwidthFactory->createAndSave(4, $file->displayId, $file->size);
     }
     catch (\Exception $e) {
         if ($e instanceof \Xibo\Exception\NotFoundException || $e instanceof \Xibo\Exception\FormExpiredException) {
-            Log::notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404', 'services');
+            $app->logService->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404', 'services');
             // 404
             header('HTTP/1.0 404 Not Found');
         }
@@ -147,25 +148,42 @@ try {
     if (!file_exists($wsdl))
         throw new InvalidArgumentException(__('Your client is not the correct version to communicate with this CMS.'));
 
-    // Initialise a theme
-    new \Xibo\Helper\Theme();
+    // Create a log processor
+    $logProcessor = new \Xibo\Xmds\LogProcessor();
+    $app->logWriter->addProcessor($logProcessor);
 
     // Create a SoapServer
     //$soap = new SoapServer($wsdl);
     $soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
-    $soap->setClass('\Xibo\Xmds\Soap' . $version);
+    $soap->setClass('\Xibo\Xmds\Soap' . $version,
+        $logProcessor,
+        $app->pool,
+        $app->store,
+        $app->logService,
+        $app->dateService,
+        $app->sanitizerService,
+        $app->configService,
+        $app->requiredFileFactory,
+        $app->moduleFactory,
+        $app->layoutFactory,
+        $app->dataSetFactory,
+        $app->displayFactory,
+        $app->userFactory,
+        $app->bandwidthFactory,
+        $app->mediaFactory
+    );
     $soap->handle();
 
-    Log::info('PDO stats: %s.', json_encode(\Xibo\Storage\PDOConnect::stats()));
+    $app->logService->info('PDO stats: %s.', json_encode($app->store->stats()));
 
-    if (\Xibo\Storage\PDOConnect::init()->inTransaction())
-        \Xibo\Storage\PDOConnect::init()->commit();
+    if ($app->store->getConnection()->inTransaction())
+        $app->store->getConnection()->commit();
 }
 catch (Exception $e) {
-    Log::error($e->getMessage());
+    $app->logService->error($e->getMessage());
 
-    if (\Xibo\Storage\PDOConnect::init()->inTransaction())
-        \Xibo\Storage\PDOConnect::init()->rollBack();
+    if ($app->store->getConnection()->inTransaction())
+        $app->store->getConnection()->rollBack();
 
     header('HTTP/1.1 500 Internal Server Error');
     header('Content-Type: text/plain');

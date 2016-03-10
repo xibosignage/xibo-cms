@@ -16,25 +16,51 @@ use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\TokenExpiredException;
 use Xibo\Exception\UpgradePendingException;
-use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 use Xibo\Helper\Translate;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
+/**
+ * Class Error
+ * @package Xibo\Controller
+ */
 class Error extends Base
 {
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+    }
+
+    /**
+     * @throws ConfigurationException
+     * @throws \Slim\Exception\Stop
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
     public function notFound()
     {
         $app = $this->getApp();
 
         // Not found controller happens outside the normal middleware stack for some reason
         // Setup the translations for gettext
-        Translate::InitLocale();
+        Translate::InitLocale($this->getConfig());
 
         // Configure the locale for date/time
         if (Translate::GetLocale(2) != '')
-            \Jenssegers\Date\Date::setLocale(Translate::GetLocale(2));
+            $this->getDate()->setLocale(Translate::GetLocale(2));
 
-        Log::debug('Page Not Found. %s', $app->request()->getResourceUri());
+        $this->getLog()->debug('Page Not Found. %s', $app->request()->getResourceUri());
 
         $message = __('Page not found');
 
@@ -43,7 +69,7 @@ class Error extends Base
 
             case 'web':
 
-                if ($this->getApp()->request()->isAjax()) {
+                if ($app->request()->isAjax()) {
                     $this->getState()->hydrate([
                         'success' => false,
                         'message' => $message,
@@ -84,6 +110,12 @@ class Error extends Base
         }
     }
 
+    /**
+     * @param \Exception $e
+     * @throws ConfigurationException
+     * @throws \Slim\Exception\Stop
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
     public function handler(\Exception $e)
     {
         $app = $this->getApp();
@@ -91,12 +123,12 @@ class Error extends Base
         $app->commit = false;
 
         if ($handled) {
-            Log::debug($e->getMessage());
+            $this->getLog()->debug($e->getMessage());
         }
         else {
             // Log the full error
-            Log::debug($e->getMessage() . $e->getTraceAsString());
-            Log::error($e->getMessage() . ' Exception Type: ' . get_class($e));
+            $this->getLog()->debug($e->getMessage() . $e->getTraceAsString());
+            $this->getLog()->error($e->getMessage() . ' Exception Type: ' . get_class($e));
         }
 
         // Different action depending on the app name
@@ -106,7 +138,7 @@ class Error extends Base
 
                 $message = ($handled) ? $e->getMessage() : __('Unexpected Error, please contact support.');
 
-                if ($this->getApp()->request()->isAjax()) {
+                if ($app->request()->isAjax()) {
                     $this->getState()->hydrate([
                         'success' => false,
                         'message' => $message,
@@ -119,7 +151,7 @@ class Error extends Base
                     $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($e)));
 
                     // An upgrade might be pending
-                    if ($e instanceof AccessDeniedException && Config::isUpgradePending())
+                    if ($e instanceof AccessDeniedException && $this->getConfig()->isUpgradePending())
                         $exceptionClass = 'upgrade-in-progress-page';
 
                     if (file_exists(PROJECT_ROOT . '/views/' . $exceptionClass . '.twig'))

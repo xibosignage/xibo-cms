@@ -7,9 +7,9 @@
 
 
 namespace Xibo\Entity;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
-
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class UserOption
@@ -39,15 +39,21 @@ class UserOption implements \JsonSerializable
      */
     public $value;
 
-    public function __construct()
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
     {
+        $this->setCommonDependencies($store, $log);
         $this->excludeProperty('userId');
     }
 
     public function save()
     {
         $sql = 'INSERT INTO `useroption` (`userId`, `option`, `value`) VALUES (:userId, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2';
-        PDOConnect::insert($sql, array(
+        $this->getStore()->insert($sql, array(
             'userId' => $this->userId,
             'option' => $this->option,
             'value' => $this->value,
@@ -58,6 +64,6 @@ class UserOption implements \JsonSerializable
     public function delete()
     {
         $sql = 'DELETE FROM `useroption` WHERE `userId` = :userId AND `option` = :option';
-        PDOConnect::update($sql, array('userId' => $this->userId, 'option' => $this->option));
+        $this->getStore()->update($sql, array('userId' => $this->userId, 'option' => $this->option));
     }
 }

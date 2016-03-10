@@ -23,14 +23,55 @@ namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Date;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
-
+/**
+ * Class Stats
+ * @package Xibo\Controller
+ */
 class Stats extends Base
 {
+    /**
+     * @var StorageServiceInterface
+     */
+    private $store;
+
+    /**
+     * @var DisplayFactory
+     */
+    private $displayFactory;
+
+    /**
+     * @var MediaFactory
+     */
+    private $mediaFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param StorageServiceInterface $store
+     * @param DisplayFactory $displayFactory
+     * @param MediaFactory $mediaFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $displayFactory, $mediaFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->store = $store;
+        $this->displayFactory = $displayFactory;
+        $this->mediaFactory = $mediaFactory;
+    }
+
     /**
      * Stats page
      */
@@ -38,13 +79,13 @@ class Stats extends Base
     {
         $data = [
             // List of Displays this user has permission for
-            'displays' => DisplayFactory::query(),
+            'displays' => $this->displayFactory->query(),
             // List of Media this user has permission for
-            'media' => MediaFactory::query(),
+            'media' => $this->mediaFactory->query(),
             'defaults' => [
-                'fromDate' => Date::getLocalDate(time() - (86400 * 35)),
-                'fromDateOneDay' => Date::getLocalDate(time() - 86400),
-                'toDate' => Date::getLocalDate()
+                'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
+                'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
+                'toDate' => $this->getDate()->getLocalDate()
             ]
         ];
 
@@ -141,10 +182,10 @@ class Stats extends Base
      */
     public function grid()
     {
-        $fromDt = Sanitize::getDate('fromDt', Sanitize::getDate('statsFromDt', Date::parse()->addDay(-1)));
-        $toDt = Sanitize::getDate('toDt', Sanitize::getDate('statsToDt', Date::parse()));
-        $displayId = Sanitize::getInt('displayId');
-        $mediaIds = Sanitize::getIntArray('mediaId');
+        $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getSanitizer()->getDate('statsFromDt', $this->getDate()->parse()->addDay(-1)));
+        $toDt = $this->getSanitizer()->getDate('toDt', $this->getSanitizer()->getDate('statsToDt', $this->getDate()->parse()));
+        $displayId = $this->getSanitizer()->getInt('displayId');
+        $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
 
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
@@ -152,12 +193,12 @@ class Stats extends Base
             $toDt->addDay(1);
         }
 
-        Log::debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
+        $this->getLog()->debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
 
         // Get an array of display id this user has access to.
         $display_ids = array();
 
-        foreach (DisplayFactory::query() as $display) {
+        foreach ($this->displayFactory->query() as $display) {
             $display_ids[] = $display->displayId;
         }
 
@@ -197,8 +238,8 @@ class Stats extends Base
         ';
 
         $params = [
-            'fromDt' => Date::getLocalDate($fromDt),
-            'toDt' => Date::getLocalDate($toDt)
+            'fromDt' => $this->getDate()->getLocalDate($fromDt),
+            'toDt' => $this->getDate()->getLocalDate($toDt)
         ];
 
         if (count($mediaIds) != 0) {
@@ -228,16 +269,16 @@ class Stats extends Base
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
+        foreach ($this->store->select($sql, $params) as $row) {
             $entry = [];
-            $entry['type'] = Sanitize::string($row['type']);
-            $entry['display'] = Sanitize::string($row['Display']);
-            $entry['layout'] = Sanitize::string($row['Layout']);
-            $entry['media'] = Sanitize::string($row['Name']);
-            $entry['numberPlays'] = Sanitize::int($row['NumberPlays']);
-            $entry['duration'] = Sanitize::int($row['Duration']);
-            $entry['minStart'] = Date::getLocalDate(Date::parse($row['MinStart']));
-            $entry['maxEnd'] = Date::getLocalDate(Date::parse($row['MaxEnd']));
+            $entry['type'] = $this->getSanitizer()->string($row['type']);
+            $entry['display'] = $this->getSanitizer()->string($row['Display']);
+            $entry['layout'] = $this->getSanitizer()->string($row['Layout']);
+            $entry['media'] = $this->getSanitizer()->string($row['Name']);
+            $entry['numberPlays'] = $this->getSanitizer()->int($row['NumberPlays']);
+            $entry['duration'] = $this->getSanitizer()->int($row['Duration']);
+            $entry['minStart'] = $this->getDate()->getLocalDate($this->getDate()->parse($row['MinStart']));
+            $entry['maxEnd'] = $this->getDate()->getLocalDate($this->getDate()->parse($row['MaxEnd']));
 
             $rows[] = $entry;
         }
@@ -248,14 +289,14 @@ class Stats extends Base
 
     public function availabilityData()
     {
-        $fromDt = Sanitize::getDate('fromDt', Sanitize::getDate('availabilityFromDt'));
-        $toDt = Sanitize::getDate('toDt', Sanitize::getDate('availabilityToDt'));
-        $displayId = Sanitize::getInt('displayId');
+        $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getSanitizer()->getDate('availabilityFromDt'));
+        $toDt = $this->getSanitizer()->getDate('toDt', $this->getSanitizer()->getDate('availabilityToDt'));
+        $displayId = $this->getSanitizer()->getInt('displayId');
 
         // Get an array of display id this user has access to.
         $displayIds = array();
 
-        foreach (DisplayFactory::query() as $display) {
+        foreach ($this->displayFactory->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -263,14 +304,14 @@ class Stats extends Base
             trigger_error(__('No displays with View permissions'), E_USER_ERROR);
 
         // Get some data for a bandwidth chart
-        $dbh = PDOConnect::init();
+        $dbh = $this->store->getConnection();
 
         $params = array(
             'type' => 'displaydown',
-            'start' => Date::getLocalDate($fromDt),
-            'boundaryStart' => Date::getLocalDate($fromDt),
-            'end' => Date::getLocalDate($toDt),
-            'boundaryEnd' => Date::getLocalDate($toDt)
+            'start' => $this->getDate()->getLocalDate($fromDt),
+            'boundaryStart' => $this->getDate()->getLocalDate($fromDt),
+            'end' => $this->getDate()->getLocalDate($toDt),
+            'boundaryEnd' => $this->getDate()->getLocalDate($toDt)
         );
 
         $SQL = '
@@ -305,7 +346,7 @@ class Stats extends Base
         $maxDuration = 0;
 
         foreach ($rows as $row) {
-            $maxDuration = $maxDuration + Sanitize::double($row['duration']);
+            $maxDuration = $maxDuration + $this->getSanitizer()->double($row['duration']);
         }
 
         if ($maxDuration > 86400) {
@@ -323,8 +364,8 @@ class Stats extends Base
 
         foreach ($rows as $row) {
             $output[] = array(
-                'label' => Sanitize::string($row['display']),
-                'value' => Sanitize::double($row['duration']) / $divisor
+                'label' => $this->getSanitizer()->string($row['display']),
+                'value' => $this->getSanitizer()->double($row['duration']) / $divisor
             );
         }
 
@@ -339,13 +380,13 @@ class Stats extends Base
      */
     public function bandwidthData()
     {
-        $fromDt = Sanitize::getDate('fromDt');
-        $toDt = Sanitize::getDate('toDt');
+        $fromDt = $this->getSanitizer()->getDate('fromDt');
+        $toDt = $this->getSanitizer()->getDate('toDt');
 
         // Get an array of display id this user has access to.
         $displayIds = array();
 
-        foreach (DisplayFactory::query() as $display) {
+        foreach ($this->displayFactory->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -353,12 +394,12 @@ class Stats extends Base
             trigger_error(__('No displays with View permissions'), E_USER_ERROR);
 
         // Get some data for a bandwidth chart
-        $dbh = PDOConnect::init();
+        $dbh = $this->store->getConnection();
 
-        $displayId = Sanitize::getInt('displayId');
+        $displayId = $this->getSanitizer()->getInt('displayId');
         $params = array(
-            'month' => Date::getLocalDate($fromDt->setDateTime($fromDt->year, $fromDt->month, 1, 0, 0), 'U'),
-            'month2' => Date::getLocalDate($toDt->addMonth(1)->setDateTime($toDt->year, $toDt->month, 1, 0, 0), 'U')
+            'month' => $this->getDate()->getLocalDate($fromDt->setDateTime($fromDt->year, $fromDt->month, 1, 0, 0), 'U'),
+            'month2' => $this->getDate()->getLocalDate($toDt->addMonth(1)->setDateTime($toDt->year, $toDt->month, 1, 0, 0), 'U')
         );
 
         $SQL = 'SELECT display.display, IFNULL(SUM(Size), 0) AS size ';
@@ -449,14 +490,14 @@ class Stats extends Base
     public function export()
     {
         // We are expecting some parameters
-        $fromDt = Sanitize::getDate('fromDt');
-        $toDt = Sanitize::getDate('toDt');
-        $displayId = Sanitize::getInt('displayId');
+        $fromDt = $this->getSanitizer()->getDate('fromDt');
+        $toDt = $this->getSanitizer()->getDate('toDt');
+        $displayId = $this->getSanitizer()->getInt('displayId');
 
         // Get an array of display id this user has access to.
         $displayIds = array();
 
-        foreach (DisplayFactory::query() as $display) {
+        foreach ($this->displayFactory->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -479,8 +520,8 @@ class Stats extends Base
         ';
 
         $params = [
-            'fromDt' => Date::getLocalDate($fromDt),
-            'toDt' => Date::getLocalDate($toDt)
+            'fromDt' => $this->getDate()->getLocalDate($fromDt),
+            'toDt' => $this->getDate()->getLocalDate($toDt)
         ];
 
         if ($displayId != 0) {
@@ -494,15 +535,15 @@ class Stats extends Base
         fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag']);
 
         // Do some post processing
-        foreach (PDOConnect::select($sql, $params) as $row) {
+        foreach ($this->store->select($sql, $params) as $row) {
             // Read the columns
-            $type = Sanitize::string($row['Type']);
-            $fromDt = Sanitize::string($row['start']);
-            $toDt = Sanitize::string($row['end']);
-            $layout = Sanitize::string($row['Layout']);
-            $display = Sanitize::string($row['Display']);
-            $media = Sanitize::string($row['MediaName']);
-            $tag = Sanitize::string($row['Tag']);
+            $type = $this->getSanitizer()->string($row['Type']);
+            $fromDt = $this->getSanitizer()->string($row['start']);
+            $toDt = $this->getSanitizer()->string($row['end']);
+            $layout = $this->getSanitizer()->string($row['Layout']);
+            $display = $this->getSanitizer()->string($row['Display']);
+            $media = $this->getSanitizer()->string($row['MediaName']);
+            $tag = $this->getSanitizer()->string($row['Tag']);
 
             fputcsv($out, [$type, $fromDt, $toDt, $layout, $display, $media, $tag]);
         }

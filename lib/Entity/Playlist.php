@@ -27,9 +27,9 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\Date;
-use Xibo\Helper\Log;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Playlist
@@ -89,10 +89,53 @@ class Playlist implements \JsonSerializable
      */
     public $displayOrder;
 
-    public function __construct()
+    /**
+     * @var DateServiceInterface
+     */
+    public $dateService;
+
+    /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
+     * @var WidgetFactory
+     */
+    private $widgetFactory;
+
+    /**
+     * @var RegionFactory
+     */
+    private $regionFactory;
+
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param DateServiceInterface $date
+     * @param PermissionFactory $permissionFactory
+     * @param WidgetFactory $widgetFactory
+     */
+    public function __construct($store, $log, $date, $permissionFactory, $widgetFactory)
     {
-        // Exclude properties that will cause recursion
+        $this->setCommonDependencies($store, $log);
+
+        $this->dateService = $date;
+        $this->permissionFactory = $permissionFactory;
+        $this->widgetFactory = $widgetFactory;
+
         $this->excludeProperty('regions');
+    }
+
+    /**
+     * @param $regionFactory
+     * @return $this
+     */
+    public function setChildObjectDependencies($regionFactory)
+    {
+        $this->regionFactory = $regionFactory;
+        return $this;
     }
 
     public function __clone()
@@ -192,15 +235,15 @@ class Playlist implements \JsonSerializable
             'loadWidgets' => true
         ], $loadOptions);
 
-        Log::debug('Load Playlist with %s', json_encode($options));
+        $this->getLog()->debug('Load Playlist with %s', json_encode($options));
 
         // Load permissions
         if ($options['loadPermissions'])
-            $this->permissions = PermissionFactory::getByObjectId(get_class(), $this->playlistId);
+            $this->permissions = $this->permissionFactory->getByObjectId(get_class(), $this->playlistId);
 
         // Load the widgets
         if ($options['loadWidgets']) {
-            foreach (WidgetFactory::getByPlaylistId($this->playlistId) as $widget) {
+            foreach ($this->widgetFactory->getByPlaylistId($this->playlistId) as $widget) {
                 /* @var Widget $widget */
                 $widget->load();
                 $this->widgets[] = $widget;
@@ -209,7 +252,7 @@ class Playlist implements \JsonSerializable
 
         if ($options['playlistIncludeRegionAssignments']) {
             // Load the region assignments
-            foreach (RegionFactory::getByPlaylistId($this->playlistId) as $region) {
+            foreach ($this->regionFactory->getByPlaylistId($this->playlistId) as $region) {
                 /* @var Region $region */
                 $this->regions[] = $region;
             }
@@ -262,7 +305,7 @@ class Playlist implements \JsonSerializable
         if (!$this->loaded)
             $this->load();
 
-        Log::debug('Deleting ' . $this);
+        $this->getLog()->debug('Deleting ' . $this);
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {
@@ -287,7 +330,7 @@ class Playlist implements \JsonSerializable
         }
 
         // Delete this playlist
-        PDOConnect::update('DELETE FROM `playlist` WHERE playlistId = :playlistId', array('playlistId' => $this->playlistId));
+        $this->getStore()->update('DELETE FROM `playlist` WHERE playlistId = :playlistId', array('playlistId' => $this->playlistId));
     }
 
     /**
@@ -295,10 +338,10 @@ class Playlist implements \JsonSerializable
      */
     private function add()
     {
-        Log::debug('Adding Playlist ' . $this->name);
+        $this->getLog()->debug('Adding Playlist ' . $this->name);
 
         $sql = 'INSERT INTO `playlist` (`name`, `ownerId`) VALUES (:name, :ownerId)';
-        $this->playlistId = PDOConnect::insert($sql, array(
+        $this->playlistId = $this->getStore()->insert($sql, array(
             'name' => $this->name,
             'ownerId' => $this->ownerId
         ));
@@ -309,10 +352,10 @@ class Playlist implements \JsonSerializable
      */
     private function update()
     {
-        Log::debug('Updating Playlist ' . $this->name . '. Id = ' . $this->playlistId);
+        $this->getLog()->debug('Updating Playlist ' . $this->name . '. Id = ' . $this->playlistId);
 
         $sql = 'UPDATE `playlist` SET `name` = :name WHERE `playlistId` = :playlistId';
-        PDOConnect::update($sql, array(
+        $this->getStore()->update($sql, array(
             'playlistId' => $this->playlistId,
             'name' => $this->name
         ));
@@ -327,7 +370,7 @@ class Playlist implements \JsonSerializable
      */
     public function notifyLayouts()
     {
-        PDOConnect::update('
+        $this->getStore()->update('
             UPDATE `layout` SET `status` = 3, `modifiedDT` = :modifiedDt WHERE layoutId IN (
               SELECT `region`.layoutId
                 FROM `lkregionplaylist`
@@ -337,7 +380,7 @@ class Playlist implements \JsonSerializable
             )
         ', [
             'playlistId' => $this->playlistId,
-            'modifiedDt' => Date::getLocalDate()
+            'modifiedDt' => $this->dateService->getLocalDate()
         ]);
     }
 
@@ -347,7 +390,7 @@ class Playlist implements \JsonSerializable
      */
     public function hasLayouts()
     {
-        $results = PDOConnect::select('SELECT COUNT(*) AS qty FROM `lkregionplaylist` WHERE playlistId = :playlistId', ['playlistId' => $this->playlistId]);
+        $results = $this->getStore()->select('SELECT COUNT(*) AS qty FROM `lkregionplaylist` WHERE playlistId = :playlistId', ['playlistId' => $this->playlistId]);
 
         return ($results[0]['qty'] > 0);
     }

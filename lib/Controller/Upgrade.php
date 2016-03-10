@@ -22,25 +22,56 @@ namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\UpgradeFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
-use Xibo\Helper\Log;
+use Xibo\Service\ConfigService;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
+/**
+ * Class Upgrade
+ * @package Xibo\Controller
+ */
 class Upgrade extends Base
 {
+    /** @var  UpgradeFactory */
+    private $upgradeFactory;
+
+    /** @var  string */
     public $errorMessage;
 
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param UpgradeFactory $upgradeFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $upgradeFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->upgradeFactory = $upgradeFactory;
+    }
+
+    /**
+     *
+     */
     public function displayPage()
     {
         // Assume we will show the upgrade page
         $this->getState()->template = 'upgrade-page';
 
         // Is there a pending upgrade (i.e. are there any pending upgrade steps).
-        $steps = UpgradeFactory::getIncomplete();
+        $steps = $this->upgradeFactory->getIncomplete();
 
         if (count($steps) <= 0) {
             // No pending steps, check to see if we need to insert them
-            if (!Config::isUpgradePending()) {
+            if (!$this->getConfig()->isUpgradePending()) {
                 $this->getState()->template = 'upgrade-not-required-page';
                 return;
             }
@@ -51,7 +82,7 @@ class Upgrade extends Base
             }
 
             // Insert pending upgrade steps.
-            $steps = UpgradeFactory::createSteps(DBVERSION, WEBSITE_VERSION);
+            $steps = $this->upgradeFactory->createSteps(DBVERSION, ConfigService::$WEBSITE_VERSION);
 
             foreach ($steps as $step) {
                 /* @var \Xibo\Entity\Upgrade $step */
@@ -78,7 +109,7 @@ class Upgrade extends Base
             throw new AccessDeniedException();
 
         // Get upgrade step
-        $upgradeStep = UpgradeFactory::getByStepId($stepId);
+        $upgradeStep = $this->upgradeFactory->getByStepId($stepId);
 
         if ($upgradeStep->complete == 1)
             throw new \InvalidArgumentException(__('Upgrade step already complete'));
@@ -86,18 +117,18 @@ class Upgrade extends Base
         try {
             $upgradeStep->doStep();
             $upgradeStep->complete = 1;
-            $upgradeStep->lastTryDate = Date::parse()->format('U');
+            $upgradeStep->lastTryDate = $this->getDate()->parse()->format('U');
             $upgradeStep->save();
 
             // Install all module files if we are on the last step
-            if (count(UpgradeFactory::getIncomplete()) <= 0)
-                Library::installAllModuleFiles();
+            if (count($this->upgradeFactory->getIncomplete()) <= 0)
+                $this->getApp()->container->get('\Xibo\Controller\Library')->installAllModuleFiles();
         }
         catch (\Exception $e) {
-            $upgradeStep->lastTryDate = Date::parse()->format('U');
+            $upgradeStep->lastTryDate = $this->getDate()->parse()->format('U');
             $upgradeStep->save();
-            Log::error('Unable to run upgrade step. Message = %s', $e->getMessage());
-            Log::error($e->getTraceAsString());
+            $this->getLog()->error('Unable to run upgrade step. Message = %s', $e->getMessage());
+            $this->getLog()->error($e->getTraceAsString());
 
             throw new ConfigurationException($e->getMessage());
         }

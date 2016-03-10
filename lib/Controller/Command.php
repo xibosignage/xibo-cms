@@ -11,10 +11,48 @@ namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CommandFactory;
-use Xibo\Helper\Sanitize;
+use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
+/**
+ * Class Command
+ * Command Controller
+ * @package Xibo\Controller
+ */
 class Command extends Base
 {
+    /**
+     * @var CommandFactory
+     */
+    private $commandFactory;
+
+    /**
+     * @var DisplayProfileFactory
+     */
+    private $displayProfileFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param CommandFactory $commandFactory
+     * @param DisplayProfileFactory $displayProfileFactory
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $commandFactory, $displayProfileFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->commandFactory = $commandFactory;
+    }
+
     public function displayPage()
     {
         $this->getState()->template = 'command-page';
@@ -61,12 +99,12 @@ class Command extends Base
     function grid()
     {
         $filter = [
-            'commandId' => Sanitize::getInt('commandId'),
-            'command' => Sanitize::getString('command'),
-            'code' => Sanitize::getString('code')
+            'commandId' => $this->getSanitizer()->getInt('commandId'),
+            'command' => $this->getSanitizer()->getString('command'),
+            'code' => $this->getSanitizer()->getString('code')
         ];
 
-        $commands = CommandFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $commands = $this->commandFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($commands as $command) {
             /* @var \Xibo\Entity\Command $command */
@@ -93,7 +131,7 @@ class Command extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = CommandFactory::countLast();
+        $this->getState()->recordsTotal = $this->commandFactory->countLast();
         $this->getState()->setData($commands);
     }
 
@@ -111,7 +149,7 @@ class Command extends Base
      */
     public function editForm($commandId)
     {
-        $command = CommandFactory::getById($commandId);
+        $command = $this->commandFactory->getById($commandId);
 
         if ($command->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
@@ -128,7 +166,7 @@ class Command extends Base
      */
     public function deleteForm($commandId)
     {
-        $command = CommandFactory::getById($commandId);
+        $command = $this->commandFactory->getById($commandId);
 
         if ($command->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
@@ -183,10 +221,10 @@ class Command extends Base
      */
     public function add()
     {
-        $command = new \Xibo\Entity\Command();
-        $command->command = Sanitize::getString('command');
-        $command->description = Sanitize::getString('description');
-        $command->code = Sanitize::getString('code');
+        $command = $this->commandFactory->create();
+        $command->command = $this->getSanitizer()->getString('command');
+        $command->description = $this->getSanitizer()->getString('description');
+        $command->code = $this->getSanitizer()->getString('code');
         $command->userId = $this->getUser()->userId;
         $command->save();
 
@@ -246,14 +284,14 @@ class Command extends Base
      */
     public function edit($commandId)
     {
-        $command = CommandFactory::getById($commandId);
+        $command = $this->commandFactory->getById($commandId);
 
         if ($command->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $command->command = Sanitize::getString('command');
-        $command->description = Sanitize::getString('description');
-        $command->code = Sanitize::getString('code');
+        $command->command = $this->getSanitizer()->getString('command');
+        $command->description = $this->getSanitizer()->getString('description');
+        $command->code = $this->getSanitizer()->getString('code');
         $command->save();
 
         // Return
@@ -290,11 +328,12 @@ class Command extends Base
      */
     public function delete($commandId)
     {
-        $command = CommandFactory::getById($commandId);
+        $command = $this->commandFactory->getById($commandId);
 
         if ($command->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
+        $command->setChildObjectDependencies($this->displayProfileFactory);
         $command->delete();
 
         // Return

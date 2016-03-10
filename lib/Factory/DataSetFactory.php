@@ -11,21 +11,77 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DataSet;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class DataSetFactory
+ * @package Xibo\Factory
+ */
 class DataSetFactory extends BaseFactory
 {
+    /** @var  ConfigServiceInterface */
+    private $config;
+
+    /** @var  DataSetColumnFactory */
+    private $dataSetColumnFactory;
+
+    /** @var  PermissionFactory */
+    private $permissionFactory;
+
+    /** @var  DisplayFactory */
+    private $displayFactory;
+
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Entity\User $user
+     * @param UserFactory $userFactory
+     * @param ConfigServiceInterface $config
+     * @param DataSetColumnFactory $dataSetColumnFactory
+     * @param PermissionFactory $permissionFactory
+     * @param DisplayFactory $displayFactory
+     */
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $dataSetColumnFactory, $permissionFactory, $displayFactory)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->setAclDependencies($user, $userFactory);
+        $this->config = $config;
+        $this->dataSetColumnFactory = $dataSetColumnFactory;
+        $this->permissionFactory = $permissionFactory;
+        $this->displayFactory = $displayFactory;
+    }
+
+    /**
+     * @return DataSet
+     */
+    public function createEmpty()
+    {
+        return new DataSet(
+            $this->getStore(),
+            $this->getLog(),
+            $this->getSanitizer(),
+            $this->config,
+            $this,
+            $this->dataSetColumnFactory,
+            $this->permissionFactory,
+            $this->displayFactory
+        );
+    }
+
     /**
      * Get DataSets by ID
      * @param $dataSetId
      * @return DataSet
      * @throws NotFoundException
      */
-    public static function getById($dataSetId)
+    public function getById($dataSetId)
     {
-        $dataSets = DataSetFactory::query(null, ['disableUserCheck' => 1, 'dataSetId' => $dataSetId]);
+        $dataSets = $this->query(null, ['disableUserCheck' => 1, 'dataSetId' => $dataSetId]);
 
         if (count($dataSets) <= 0)
             throw new NotFoundException();
@@ -39,9 +95,9 @@ class DataSetFactory extends BaseFactory
      * @return DataSet
      * @throws NotFoundException
      */
-    public static function getByCode($code)
+    public function getByCode($code)
     {
-        $dataSets = DataSetFactory::query(null, ['disableUserCheck' => 1, 'code' => $code]);
+        $dataSets = $this->query(null, ['disableUserCheck' => 1, 'code' => $code]);
 
         if (count($dataSets) <= 0)
             throw new NotFoundException();
@@ -55,9 +111,9 @@ class DataSetFactory extends BaseFactory
      * @return DataSet
      * @throws NotFoundException
      */
-    public static function getByName($dataSet)
+    public function getByName($dataSet)
     {
-        $dataSets = DataSetFactory::query(null, ['disableUserCheck' => 1, 'dataSet' => $dataSet]);
+        $dataSets = $this->query(null, ['disableUserCheck' => 1, 'dataSet' => $dataSet]);
 
         if (count($dataSets) <= 0)
             throw new NotFoundException();
@@ -71,7 +127,7 @@ class DataSetFactory extends BaseFactory
      * @return array[DataSet]
      * @throws NotFoundException
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
         $params = array();
@@ -116,21 +172,21 @@ class DataSetFactory extends BaseFactory
             ';
 
             // View Permissions
-            self::viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy);
+            $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy);
 
-            if (Sanitize::getInt('dataSetId', $filterBy) !== null) {
+            if ($this->getSanitizer()->getInt('dataSetId', $filterBy) !== null) {
                 $body .= ' AND dataset.dataSetId = :dataSetId ';
-                $params['dataSetId'] = Sanitize::getInt('dataSetId', $filterBy);
+                $params['dataSetId'] = $this->getSanitizer()->getInt('dataSetId', $filterBy);
             }
 
-            if (Sanitize::getString('dataSet', $filterBy) != null) {
+            if ($this->getSanitizer()->getString('dataSet', $filterBy) != null) {
                 $body .= ' AND dataset.dataSet = :dataSet ';
-                $params['dataSet'] = Sanitize::getString('dataSet', $filterBy);
+                $params['dataSet'] = $this->getSanitizer()->getString('dataSet', $filterBy);
             }
 
-            if (Sanitize::getString('code', $filterBy) != null) {
+            if ($this->getSanitizer()->getString('code', $filterBy) != null) {
                 $body .= ' AND `dataset`.`code` = :code ';
-                $params['code'] = Sanitize::getString('code', $filterBy);
+                $params['code'] = $this->getSanitizer()->getString('code', $filterBy);
             }
 
             // Sorting?
@@ -140,29 +196,29 @@ class DataSetFactory extends BaseFactory
 
             $limit = '';
             // Paging
-            if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-                $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+            if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+                $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
             }
 
             $sql = $select . $body . $order . $limit;
 
 
 
-            foreach (PDOConnect::select($sql, $params) as $row) {
-                $entries[] = (new DataSet())->hydrate($row);
+            foreach ($this->getStore()->select($sql, $params) as $row) {
+                $entries[] = $this->createEmpty()->hydrate($row);
             }
 
             // Paging
             if ($limit != '' && count($entries) > 0) {
-                $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
-                self::$_countLast = intval($results[0]['total']);
+                $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+                $this->_countLast = intval($results[0]['total']);
             }
 
             return $entries;
 
         } catch (\Exception $e) {
 
-            Log::error($e);
+            $this->getLog()->error($e);
 
             throw new NotFoundException();
         }

@@ -24,19 +24,31 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\RegionOption;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 class RegionOptionFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
     /**
      * Load by Region Id
      * @param int $regionId
      * @return array[RegionOption]
      */
-    public static function getByRegionId($regionId)
+    public function getByRegionId($regionId)
     {
-        return RegionOptionFactory::query(null, array('regionId' => $regionId));
+        return $this->query(null, array('regionId' => $regionId));
     }
 
     /**
@@ -46,7 +58,7 @@ class RegionOptionFactory extends BaseFactory
      * @param mixed $value
      * @return RegionOption
      */
-    public static function create($regionId, $option, $value)
+    public function create($regionId, $option, $value)
     {
         $regionOption = new RegionOption();
         $regionOption->regionId = $regionId;
@@ -62,14 +74,14 @@ class RegionOptionFactory extends BaseFactory
      * @param array $filterBy
      * @return array[RegionOption]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
 
         $sql = 'SELECT * FROM `regionoption` WHERE regionId = :regionId';
 
-        foreach (PDOConnect::select($sql, array('regionId' => Sanitize::getInt('regionId', $filterBy))) as $row) {
-            $entries[] = (new RegionOption())->hydrate($row);
+        foreach ($this->getStore()->select($sql, array('regionId' => $this->getSanitizer()->getInt('regionId', $filterBy))) as $row) {
+            $entries[] = (new RegionOption())->hydrate($row)->setContainer($this->getContainer());
         }
 
         return $entries;

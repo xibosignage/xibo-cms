@@ -23,14 +23,42 @@ namespace Xibo\Controller;
 use baseDAO;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\TransitionFactory;
-use Xibo\Helper\Config;
 use Xibo\Helper\Form;
-use Xibo\Helper\Help;
-use Xibo\Helper\Sanitize;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
 
-
+/**
+ * Class Transition
+ * @package Xibo\Controller
+ */
 class Transition extends Base
 {
+    /**
+     * @var TransitionFactory
+     */
+    private $transitionFactory;
+
+    /**
+     * Set common dependencies.
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\ApplicationState $state
+     * @param \Xibo\Entity\User $user
+     * @param \Xibo\Service\HelpServiceInterface $help
+     * @param DateServiceInterface $date
+     * @param ConfigServiceInterface $config
+     * @param TransitionFactory $transitionFactory
+     *
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $transitionFactory)
+    {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+
+        $this->transitionFactory = $transitionFactory;
+    }
+
     /**
      * No display page functionaility
      */
@@ -41,13 +69,13 @@ class Transition extends Base
 
     public function grid()
     {
-        $transitions = TransitionFactory::query($this->gridRenderSort(), $this->gridRenderFilter());
+        $transitions = $this->transitionFactory->query($this->gridRenderSort(), $this->gridRenderFilter());
 
         foreach ($transitions as $transition) {
             /* @var \Xibo\Entity\Transition $transition */
 
             // If the module config is not locked, present some buttons
-            if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') != 'Checked') {
+            if ($this->getConfig()->GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') != 'Checked') {
 
                 // Edit button
                 $transition->buttons[] = array(
@@ -59,7 +87,7 @@ class Transition extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = TransitionFactory::countLast();
+        $this->getState()->recordsTotal = $this->transitionFactory->countLast();
         $this->getState()->setData($transitions);
     }
 
@@ -70,15 +98,15 @@ class Transition extends Base
      */
     public function editForm($transitionId)
     {
-        if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
+        if ($this->getConfig()->GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
             throw new AccessDeniedException(__('Transition Config Locked'));
 
-        $transition = TransitionFactory::getById($transitionId);
+        $transition = $this->transitionFactory->getById($transitionId);
 
         $this->getState()->template = 'transition-form-edit';
         $this->getState()->setData([
             'transition' => $transition,
-            'help' => Help::Link('Transition', 'Edit')
+            'help' => $this->getHelp()->link('Transition', 'Edit')
         ]);
     }
 
@@ -88,12 +116,12 @@ class Transition extends Base
      */
     public function edit($transitionId)
     {
-        if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
+        if ($this->getConfig()->GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
             throw new AccessDeniedException(__('Transition Config Locked'));
 
-        $transition = TransitionFactory::getById($transitionId);
-        $transition->availableAsIn = Sanitize::getCheckbox('availableAsIn');
-        $transition->availableAsOut = Sanitize::getCheckbox('availableAsOut');
+        $transition = $this->transitionFactory->getById($transitionId);
+        $transition->availableAsIn = $this->getSanitizer()->getCheckbox('availableAsIn');
+        $transition->availableAsOut = $this->getSanitizer()->getCheckbox('availableAsOut');
         $transition->save();
 
         $this->getState()->hydrate([

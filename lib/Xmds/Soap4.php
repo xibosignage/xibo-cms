@@ -21,20 +21,14 @@
 namespace Xibo\Xmds;
 
 use Intervention\Image\ImageManagerStatic as Img;
-use Xibo\Controller\Library;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\RequiredFileFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
 
-
+/**
+ * Class Soap4
+ * @package Xibo\Xmds
+ */
 class Soap4 extends Soap
 {
     /**
@@ -50,25 +44,25 @@ class Soap4 extends Soap
      * @return string
      * @throws \SoapFault
      */
-    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress)
+    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel = null, $xmrPubKey = null)
     {
         $this->logProcessor->setRoute('RegisterDisplay');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
-        $displayName = Sanitize::string($displayName);
-        $clientType = Sanitize::string($clientType);
-        $clientVersion = Sanitize::string($clientVersion);
-        $clientCode = Sanitize::int($clientCode);
-        $macAddress = Sanitize::string($macAddress);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $displayName = $this->getSanitizer()->string($displayName);
+        $clientType = $this->getSanitizer()->string($clientType);
+        $clientVersion = $this->getSanitizer()->string($clientVersion);
+        $clientCode = $this->getSanitizer()->int($clientCode);
+        $macAddress = $this->getSanitizer()->string($macAddress);
         $clientAddress = $this->getIp();
 
         // Audit in
-        Log::debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
+        $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Check the Length of the hardwareKey
@@ -82,16 +76,16 @@ class Soap4 extends Soap
 
         // Check in the database for this hardwareKey
         try {
-            $display = DisplayFactory::getByLicence($hardwareKey);
+            $display = $this->displayFactory->getByLicence($hardwareKey);
 
             $this->logProcessor->setDisplay($display->displayId);
 
             // Now
-            $dateNow = Date::parse();
+            $dateNow = $this->getDate()->parse();
 
             // Append the time
-            $displayElement->setAttribute('date', Date::getLocalDate($dateNow));
-            $displayElement->setAttribute('timezone', Config::GetSetting('defaultTimezone'));
+            $displayElement->setAttribute('date', $this->getDate()->getLocalDate($dateNow));
+            $displayElement->setAttribute('timezone', $this->getConfig()->GetSetting('defaultTimezone'));
 
             // Determine if we are licensed or not
             if ($display->licensed == 0) {
@@ -119,7 +113,7 @@ class Soap4 extends Soap
                         $dateNow->timezone($arrayItem['value']);
 
                         // Append Local Time
-                        $displayElement->setAttribute('localDate', Date::getLocalDate($dateNow));
+                        $displayElement->setAttribute('localDate', $this->getDate()->getLocalDate($dateNow));
                     }
 
                     $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
@@ -139,14 +133,14 @@ class Soap4 extends Soap
                 $displayElement->appendChild($node);
 
                 // Send Notification if required
-                $this->AlertDisplayUp();
+                $this->alertDisplayUp();
             }
 
         } catch (NotFoundException $e) {
 
             // Add a new display
             try {
-                $display = new Display();
+                $display = $this->displayFactory->createEmpty();
                 $display->display = $displayName;
                 $display->isAuditing = 0;
                 $display->defaultLayoutId = 4;
@@ -177,11 +171,11 @@ class Soap4 extends Soap
 
         // Log Bandwidth
         $returnXml = $return->saveXML();
-        $this->LogBandwidth($display->displayId, Bandwidth::$REGISTER, strlen($returnXml));
+        $this->logBandwidth($display->displayId, Bandwidth::$REGISTER, strlen($returnXml));
 
         // Audit our return
         if ($display->isAuditing == 1)
-            Log::debug($returnXml, $display->displayId);
+            $this->getLog()->debug($returnXml, $display->displayId);
 
         return $returnXml;
     }
@@ -195,7 +189,7 @@ class Soap4 extends Soap
      */
     function RequiredFiles($serverKey, $hardwareKey)
     {
-        $httpDownloads = (Config::GetSetting('SENDFILE_MODE') != 'Off');
+        $httpDownloads = ($this->getConfig()->GetSetting('SENDFILE_MODE') != 'Off');
         return $this->doRequiredFiles($serverKey, $hardwareKey, $httpDownloads);
     }
 
@@ -215,39 +209,39 @@ class Soap4 extends Soap
         $this->logProcessor->setRoute('GetFile');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
-        $fileId = Sanitize::int($fileId);
-        $fileType = Sanitize::string($fileType);
-        $chunkOffset = Sanitize::int($chunkOffset);
-        $chunkSize = Sanitize::int($chunkSize);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $fileId = $this->getSanitizer()->int($fileId);
+        $fileType = $this->getSanitizer()->string($fileType);
+        $chunkOffset = $this->getSanitizer()->int($chunkOffset);
+        $chunkSize = $this->getSanitizer()->int($chunkSize);
 
-        $libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->getConfig()->GetSetting("LIBRARY_LOCATION");
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->CheckBandwidth())
+        if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Authenticate this request...
-        if (!$this->AuthDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
         if ($this->display->isAuditing == 1)
-            Log::debug('hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize);
+            $this->getLog()->debug('hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize);
 
         try {
             if ($fileType == "layout") {
-                $fileId = Sanitize::int($fileId);
+                $fileId = $this->getSanitizer()->int($fileId);
 
                 // Validate the nonce
-                $requiredFile = RequiredFileFactory::getByDisplayAndLayout($this->display->displayId, $fileId);
+                $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($this->display->displayId, $fileId);
 
                 // Load the layout
-                $layout = LayoutFactory::getById($fileId);
+                $layout = $this->layoutFactory->getById($fileId);
                 $path = $layout->xlfToDisk();
 
                 $file = file_get_contents($path);
@@ -258,9 +252,9 @@ class Soap4 extends Soap
 
             } else if ($fileType == "media") {
                 // Validate the nonce
-                $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $fileId);
+                $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $fileId);
 
-                $media = MediaFactory::getById($fileId);
+                $media = $this->mediaFactory->getById($fileId);
 
                 // Return the Chunk size specified
                 $f = fopen($libraryLocation . $media->storedAs, 'r');
@@ -280,12 +274,12 @@ class Soap4 extends Soap
             }
         }
         catch (NotFoundException $e) {
-            Log::error($e->getMessage());
+            $this->getLog()->error($e->getMessage());
             throw new \SoapFault('Receiver', 'Requested an invalid file.');
         }
 
         // Log Bandwidth
-        $this->LogBandwidth($this->display->displayId, Bandwidth::$GETFILE, $chunkSize);
+        $this->logBandwidth($this->display->displayId, Bandwidth::$GETFILE, $chunkSize);
 
         return $file;
     }
@@ -384,35 +378,35 @@ class Soap4 extends Soap
         $this->logProcessor->setRoute('NotifyStatus');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->CheckBandwidth())
+        if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
-        if (!$this->AuthDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->display->isAuditing == 1)
-            Log::debug($status);
+            $this->getLog()->debug($status);
 
-        $this->LogBandwidth($this->display->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
+        $this->logBandwidth($this->display->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
 
         $status = json_decode($status, true);
 
-        $this->display->currentLayoutId = Sanitize::getInt('currentLayoutId', $this->display->currentLayoutId, $status);
-        $this->display->storageAvailableSpace = Sanitize::getInt('availableSpace', $this->display->storageAvailableSpace, $status);
-        $this->display->storageTotalSpace = Sanitize::getInt('totalSpace', $this->display->storageTotalSpace, $status);
-        $this->display->lastCommandSuccess = Sanitize::getCheckbox('lastCommandSuccess', $this->display->lastCommandSuccess, $status);
+        $this->display->currentLayoutId = $this->getSanitizer()->getInt('currentLayoutId', $this->display->currentLayoutId, $status);
+        $this->display->storageAvailableSpace = $this->getSanitizer()->getInt('availableSpace', $this->display->storageAvailableSpace, $status);
+        $this->display->storageTotalSpace = $this->getSanitizer()->getInt('totalSpace', $this->display->storageTotalSpace, $status);
+        $this->display->lastCommandSuccess = $this->getSanitizer()->getCheckbox('lastCommandSuccess', $this->display->lastCommandSuccess, $status);
 
         // Touch the display record
-        $this->display->save(['validate' => false, 'audit' => false]);
+        $this->display->save(Display::$saveOptionsMinimum);
 
         return true;
     }
@@ -430,8 +424,8 @@ class Soap4 extends Soap
         $this->logProcessor->setRoute('SubmitScreenShot');
 
         // Sanitize
-        $serverKey = Sanitize::string($serverKey);
-        $hardwareKey = Sanitize::string($hardwareKey);
+        $serverKey = $this->getSanitizer()->string($serverKey);
+        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         $screenShotFmt = "jpg";
         $screenShotMime = "image/jpeg";
@@ -441,23 +435,22 @@ class Soap4 extends Soap
         $needConversion = false;
 
         // Check the serverKey matches
-        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->CheckBandwidth())
+        if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
-        if (!$this->AuthDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->display->isAuditing == 1)
-            Log::debug('Received Screen shot');
+            $this->getLog()->debug('Received Screen shot');
 
         // Open this displays screen shot file and save this.
-        Library::ensureLibraryExists();
-        $location = Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt;
+        $location = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt;
 
         foreach(array('imagick', 'gd') as $imgDriver) {
             Img::configure(array('driver' => $imgDriver));
@@ -465,37 +458,36 @@ class Soap4 extends Soap
                 $screenShotImg = Img::make($screenShot);
             } catch (\Exception $e) {
                 if ($this->display->isAuditing == 1)
-                    Log::debug($imgDriver . " - " . $e->getMessage());
+                    $this->getLog()->debug($imgDriver . " - " . $e->getMessage());
             }
             if($screenShotImg !== false) {
                 if ($this->display->isAuditing == 1)
-                    Log::debug("Use " . $imgDriver);
+                    $this->getLog()->debug("Use " . $imgDriver);
                 break;
             }
         }
 
-        if($screenShotImg !== false) {
+        if ($screenShotImg !== false) {
             $imgMime = $screenShotImg->mime(); 
 
             if($imgMime != $screenShotMime) {
                 $needConversion = true;
                 try {
                     if ($this->display->isAuditing == 1)
-                        Log::debug("converting: '" . $imgMime . "' to '" . $screenShotMime . "'");
+                        $this->getLog()->debug("converting: '" . $imgMime . "' to '" . $screenShotMime . "'");
                     $screenShot = (string) $screenShotImg->encode($screenShotFmt);
                     $converted = true;
                 } catch (\Exception $e) {
                     if ($this->display->isAuditing == 1)
-                        Log::debug($e->getMessage());
+                        $this->getLog()->debug($e->getMessage());
                 }
             }
         }
 
         // return early with false, keep screenShotRequested intact, let the Player retry.
-        if($needConversion && !$converted) {
-            //$this->LogBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
-
-            return false;
+        if ($needConversion && !$converted) {
+            $this->logBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
+            throw new \SoapFault('Receiver', __('Incorrect Screen shot Format'));
         }
 
 
@@ -507,7 +499,7 @@ class Soap4 extends Soap
         $this->display->screenShotRequested = 0;
         $this->display->save(['validate' => false, 'audit' => false]);
 
-        $this->LogBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
+        $this->logBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
 
         return true;
     }

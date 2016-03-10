@@ -7,9 +7,9 @@
 
 
 namespace Xibo\Entity;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
-
-use Xibo\Storage\PDOConnect;
 
 /**
  * Class Transition
@@ -63,6 +63,16 @@ class Transition
      */
     public $availableAsOut;
 
+    /**
+     * Entity constructor.
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     */
+    public function __construct($store, $log)
+    {
+        $this->setCommonDependencies($store, $log);
+    }
+
     public function getId()
     {
         return $this->transitionId;
@@ -78,7 +88,7 @@ class Transition
         if ($this->transitionId == null || $this->transitionId == 0)
             throw new \InvalidArgumentException();
 
-        PDOConnect::update('
+        $this->getStore()->update('
             UPDATE `transition` SET AvailableAsIn = :availableAsIn, AvailableAsOut = :availableAsOut WHERE transitionID = :transitionId
         ', [
             'availableAsIn' => $this->availableAsIn,

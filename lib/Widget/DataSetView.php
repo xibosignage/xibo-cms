@@ -24,17 +24,11 @@ use InvalidArgumentException;
 use Respect\Validation\Validator as v;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\DataSetColumnFactory;
-use Xibo\Factory\DataSetFactory;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Config;
-use Xibo\Helper\Date;
-use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
-use Xibo\Storage\PDOConnect;
 
+/**
+ * Class DataSetView
+ * @package Xibo\Widget
+ */
 class DataSetView extends ModuleWidget
 {
     /**
@@ -42,12 +36,15 @@ class DataSetView extends ModuleWidget
      */
     public function installFiles()
     {
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-dataset-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-dataset-render.js')->save();
     }
 
+    /**
+     * @return string
+     */
     public function layoutDesignerJavaScript()
     {
         return 'datasetview-designer-javascript';
@@ -59,7 +56,7 @@ class DataSetView extends ModuleWidget
      */
     public function dataSets()
     {
-        return DataSetFactory::query();
+        return $this->dataSetFactory->query();
     }
 
     /**
@@ -68,7 +65,7 @@ class DataSetView extends ModuleWidget
      */
     public function dataSetColumns()
     {
-        return DataSetColumnFactory::getByDataSetId($this->getOption('dataSetId'));
+        return $this->dataSetColumnFactory->getByDataSetId($this->getOption('dataSetId'));
     }
 
     /**
@@ -80,7 +77,7 @@ class DataSetView extends ModuleWidget
         if ($this->getOption('dataSetId') == 0)
             throw new \InvalidArgumentException(__('DataSet not selected'));
 
-        $columns = DataSetColumnFactory::getByDataSetId($this->getOption('dataSetId'));
+        $columns = $this->dataSetColumnFactory->getByDataSetId($this->getOption('dataSetId'));
         $columnsSelected = [];
         $colIds = explode(',', $this->getOption('columns'));
 
@@ -102,7 +99,7 @@ class DataSetView extends ModuleWidget
         if ($this->getOption('dataSetId') == 0)
             throw new \InvalidArgumentException(__('DataSet not selected'));
 
-        $columns = DataSetColumnFactory::getByDataSetId($this->getOption('dataSetId'));
+        $columns = $this->dataSetColumnFactory->getByDataSetId($this->getOption('dataSetId'));
 
         $columnsNotSelected = [];
         $colIds = explode(',', $this->getOption('columns'));
@@ -129,7 +126,7 @@ class DataSetView extends ModuleWidget
             $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
 
-        Log::debug(count($this->module->settings['templates']));
+        $this->getLog()->debug(count($this->module->settings['templates']));
     }
 
     /**
@@ -190,7 +187,7 @@ class DataSetView extends ModuleWidget
             throw new \InvalidArgumentException(__('Please select a DataSet'));
 
         // Check we have permission to use this DataSetId
-        if (!$this->getUser()->checkViewable(DataSetFactory::getById($this->getOption('dataSetId'))))
+        if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId'))))
             throw new \InvalidArgumentException(__('You do not have permission to use that dataset'));
 
         if ($this->getWidgetId() != 0) {
@@ -219,10 +216,10 @@ class DataSetView extends ModuleWidget
      */
     public function add()
     {
-        $this->setOption('name', Sanitize::getString('name'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setUseDuration(0);
         $this->setDuration($this->getModule()->defaultDuration);
-        $this->setOption('dataSetId', Sanitize::getInt('dataSetId'));
+        $this->setOption('dataSetId', $this->getSanitizer()->getInt('dataSetId'));
 
         // Save the widget
         $this->validate();
@@ -235,32 +232,32 @@ class DataSetView extends ModuleWidget
     public function edit()
     {
         // Columns
-        $columns = Sanitize::getIntArray('dataSetColumnId');
+        $columns = $this->getSanitizer()->getIntArray('dataSetColumnId');
         if (count($columns) == 0)
-            $this->SetOption('columns', '');
+            $this->setOption('columns', '');
         else
-            $this->SetOption('columns', implode(',', $columns));
+            $this->setOption('columns', implode(',', $columns));
 
         // Other properties
-        $this->setOption('name', Sanitize::getString('name', $this->getOption('name')));
-        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
-        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
-        $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 120));
-        $this->setOption('name', Sanitize::getString('name'));
-        $this->setOption('rowsPerPage', Sanitize::getInt('rowsPerPage'));
-        $this->setOption('showHeadings', Sanitize::getCheckbox('showHeadings'));
-        $this->setOption('upperLimit', Sanitize::getInt('upperLimit', 0));
-        $this->setOption('lowerLimit', Sanitize::getInt('lowerLimit', 0));
-        $this->setOption('filter', Sanitize::getParam('filter', null));
-        $this->setOption('ordering', Sanitize::getString('ordering'));
-        $this->setOption('templateId', Sanitize::getString('templateId'));
-        $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
-        $this->setOption('useOrderingClause', Sanitize::getCheckbox('useOrderingClause'));
-        $this->setOption('useFilteringClause', Sanitize::getCheckbox('useFilteringClause'));
+        $this->setOption('name', $this->getSanitizer()->getString('name', $this->getOption('name')));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('rowsPerPage', $this->getSanitizer()->getInt('rowsPerPage'));
+        $this->setOption('showHeadings', $this->getSanitizer()->getCheckbox('showHeadings'));
+        $this->setOption('upperLimit', $this->getSanitizer()->getInt('upperLimit', 0));
+        $this->setOption('lowerLimit', $this->getSanitizer()->getInt('lowerLimit', 0));
+        $this->setOption('filter', $this->getSanitizer()->getParam('filter', null));
+        $this->setOption('ordering', $this->getSanitizer()->getString('ordering'));
+        $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
+        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        $this->setOption('useOrderingClause', $this->getSanitizer()->getCheckbox('useOrderingClause'));
+        $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
 
         // Order and Filter criteria
-        $orderClauses = Sanitize::getStringArray('orderClause');
-        $orderClauseDirections = Sanitize::getStringArray('orderClauseDirection');
+        $orderClauses = $this->getSanitizer()->getStringArray('orderClause');
+        $orderClauseDirections = $this->getSanitizer()->getStringArray('orderClauseDirection');
         $orderClauseMapping = [];
 
         $i = -1;
@@ -279,10 +276,10 @@ class DataSetView extends ModuleWidget
 
         $this->setOption('orderClauses', json_encode($orderClauseMapping));
 
-        $filterClauses = Sanitize::getStringArray('filterClause');
-        $filterClauseOperator = Sanitize::getStringArray('filterClauseOperator');
-        $filterClauseCriteria = Sanitize::getStringArray('filterClauseCriteria');
-        $filterClauseValue = Sanitize::getStringArray('filterClauseValue');
+        $filterClauses = $this->getSanitizer()->getStringArray('filterClause');
+        $filterClauseOperator = $this->getSanitizer()->getStringArray('filterClauseOperator');
+        $filterClauseCriteria = $this->getSanitizer()->getStringArray('filterClauseCriteria');
+        $filterClauseValue = $this->getSanitizer()->getStringArray('filterClauseValue');
         $filterClauseMapping = [];
 
         $i = -1;
@@ -304,7 +301,7 @@ class DataSetView extends ModuleWidget
         $this->setOption('filterClauses', json_encode($filterClauseMapping));
 
         // Style Sheet
-        $this->setRawNode('styleSheet', Sanitize::getParam('styleSheet', null));
+        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
 
         // Save the widget
         $this->validate();
@@ -322,7 +319,7 @@ class DataSetView extends ModuleWidget
     {
         // Load in the template
         $data = [];
-        $isPreview = (Sanitize::getCheckbox('preview') == 1);
+        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         // Clear all linked media.
         $this->clearMedia();
@@ -331,22 +328,22 @@ class DataSetView extends ModuleWidget
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         // Get the embedded HTML out of RAW
-        $styleSheet = $this->parseLibraryReferences($isPreview, $this->GetRawNode('styleSheet', ''));
+        $styleSheet = $this->parseLibraryReferences($isPreview, $this->getRawNode('styleSheet', ''));
 
         $options = array(
             'type' => $this->getModuleType(),
             'duration' => $this->getCalculatedDurationForGetResource(),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'rowsPerPage' => $this->GetOption('rowsPerPage'),
-            'previewWidth' => Sanitize::getDouble('width', 0),
-            'previewHeight' => Sanitize::getDouble('height', 0),
-            'scaleOverride' => Sanitize::getDouble('scale_override', 0)
+            'rowsPerPage' => $this->getOption('rowsPerPage'),
+            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
+            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
+            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
         );
 
         // Add our fonts.css file
         $headContent = '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
-        $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
+        $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
         $headContent .= '<style type="text/css">' . $styleSheet . '</style>';
 
         $data['head'] = $headContent;
@@ -385,12 +382,12 @@ class DataSetView extends ModuleWidget
     public function dataSetTableHtml($displayId = 0, $isPreview = true)
     {
         // Show a preview of the data set table output.
-        $dataSetId = $this->GetOption('dataSetId');
-        $upperLimit = $this->GetOption('upperLimit');
-        $lowerLimit = $this->GetOption('lowerLimit');
-        $columnIds = $this->GetOption('columns');
-        $showHeadings = $this->GetOption('showHeadings');
-        $rowsPerPage = $this->GetOption('rowsPerPage');
+        $dataSetId = $this->getOption('dataSetId');
+        $upperLimit = $this->getOption('upperLimit');
+        $lowerLimit = $this->getOption('lowerLimit');
+        $columnIds = $this->getOption('columns');
+        $showHeadings = $this->getOption('showHeadings');
+        $rowsPerPage = $this->getOption('rowsPerPage');
 
         if ($columnIds == '')
             return __('No columns');
@@ -399,7 +396,7 @@ class DataSetView extends ModuleWidget
         $ordering = '';
 
         if ($this->getOption('useOrderingClause', 1) == 1) {
-            $ordering = $this->GetOption('ordering');
+            $ordering = $this->getOption('ordering');
         } else {
             // Build an order string
             foreach (json_decode($this->getOption('orderClauses', '[]'), true) as $clause) {
@@ -413,7 +410,7 @@ class DataSetView extends ModuleWidget
         $filter = '';
 
         if ($this->getOption('useFilteringClause', 1) == 1) {
-            $filter = $this->GetOption('filter');
+            $filter = $this->getOption('filter');
         } else {
             // Build
             $i = 0;
@@ -478,11 +475,11 @@ class DataSetView extends ModuleWidget
         $columnIds = explode(',', $columnIds);
 
         // Set an expiry time for the media
-        $expires = time() + ($this->GetOption('updateInterval', 3600) * 60);
+        $expires = time() + ($this->getOption('updateInterval', 3600) * 60);
 
         // Create a data set object, to get the results.
         try {
-            $dataSet = DataSetFactory::getById($dataSetId);
+            $dataSet = $this->dataSetFactory->getById($dataSetId);
 
             // Get an array representing the id->heading mappings
             $mappings = [];
@@ -498,7 +495,7 @@ class DataSetView extends ModuleWidget
                 ];
             }
 
-            Log::debug('Resolved column mappings: %s', json_encode($columnIds));
+            $this->getLog()->debug('Resolved column mappings: %s', json_encode($columnIds));
 
             $filter = [
                 'filter' => $filter,
@@ -515,16 +512,16 @@ class DataSetView extends ModuleWidget
             }
 
             // Set the timezone for SQL
-            $dateNow = Date::parse();
+            $dateNow = $this->getDate()->parse();
             if ($displayId != 0) {
-                $display = DisplayFactory::getById($displayId);
+                $display = $this->displayFactory->getById($displayId);
                 $timeZone = $display->getSetting('displayTimeZone', '');
-                $timeZone = ($timeZone == '') ? Config::GetSetting('defaultTimezone') : $timeZone;
+                $timeZone = ($timeZone == '') ? $this->getConfig()->GetSetting('defaultTimezone') : $timeZone;
                 $dateNow->timezone($timeZone);
-                Log::debug('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString());
+                $this->getLog()->debug('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString());
             }
 
-            PDOConnect::setTimeZone(Date::getLocalDate($dateNow, 'P'));
+            $this->getStore()->setTimeZone($this->getDate()->getLocalDate($dateNow, 'P'));
 
             // Get the data (complete table, filtered)
             $dataSetResults = $dataSet->getData($filter);
@@ -590,7 +587,7 @@ class DataSetView extends ModuleWidget
                     if ($mapping['dataTypeId'] == 4) {
 
                         // Grab the external image
-                        $file = MediaFactory::createModuleFile('datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
+                        $file = $this->mediaFactory->createModuleFile('datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
                         $file->isRemote = true;
                         $file->expires = $expires;
                         $file->save();
@@ -607,10 +604,10 @@ class DataSetView extends ModuleWidget
                         // Library Image
                         // The content is the ID of the image
                         try {
-                            $file = MediaFactory::getById($replace);
+                            $file = $this->mediaFactory->getById($replace);
                         }
                         catch (NotFoundException $e) {
-                            Log::error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);
+                            $this->getLog()->error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);
                             continue;
                         }
 
@@ -638,8 +635,8 @@ class DataSetView extends ModuleWidget
             return $table;
         }
         catch (NotFoundException $e) {
-            Log::error('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
-            Log::debug($e->getTraceAsString());
+            $this->getLog()->error('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
+            $this->getLog()->debug($e->getTraceAsString());
             return '';
         }
     }

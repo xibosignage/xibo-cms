@@ -23,16 +23,31 @@
 namespace Xibo\Factory;
 
 
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
+
 class WidgetMediaFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
     /**
      * Media Linked to Widgets by WidgetId
      * @param int $widgetId
      * @return array[int]
      */
-    public static function getByWidgetId($widgetId)
+    public function getByWidgetId($widgetId)
     {
-        return WidgetMediaFactory::query(null, array('widgetId' => $widgetId));
+        return $this->query(null, array('widgetId' => $widgetId));
     }
 
     /**
@@ -41,10 +56,10 @@ class WidgetMediaFactory extends BaseFactory
      * @param array $filterBy
      * @return array[int]
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $sql = 'SELECT mediaId FROM `lkwidgetmedia` WHERE widgetId = :widgetId';
 
-        return array_map(function($element) { return $element['mediaId']; }, \Xibo\Storage\PDOConnect::select($sql, array('widgetId' => \Xibo\Helper\Sanitize::getInt('widgetId', $filterBy))));
+        return array_map(function($element) { return $element['mediaId']; }, $this->getStore()->select($sql, array('widgetId' => $this->getSanitizer()->getInt('widgetId', $filterBy))));
     }
 }

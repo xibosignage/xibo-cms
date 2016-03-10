@@ -24,21 +24,50 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Page;
+use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class PageFactory
+ * @package Xibo\Factory
+ */
 class PageFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     * @param User $user
+     * @param UserFactory $userFactory
+     */
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->setAclDependencies($user, $userFactory);
+    }
+
+    /**
+     * Create empty
+     * @return Page
+     */
+    public function create()
+    {
+        return new Page($this->getStore(), $this->getLog());
+    }
+
     /**
      * Get by ID
      * @param int $pageId
      * @return Page
      * @throws NotFoundException if the page cannot be resolved from the provided route
      */
-    public static function getById($pageId)
+    public function getById($pageId)
     {
-        $pages = PageFactory::query(null, array('pageId' => $pageId, 'disableUserCheck' => 1));
+        $pages = $this->query(null, array('pageId' => $pageId, 'disableUserCheck' => 1));
 
         if (count($pages) <= 0)
             throw new NotFoundException('Unknown Route');
@@ -52,9 +81,9 @@ class PageFactory extends BaseFactory
      * @return Page
      * @throws NotFoundException if the page cannot be resolved from the provided route
      */
-    public static function getByName($page)
+    public function getByName($page)
     {
-        $pages = PageFactory::query(null, array('name' => $page, 'disableUserCheck' => 1));
+        $pages = $this->query(null, array('name' => $page, 'disableUserCheck' => 1));
 
         if (count($pages) <= 0)
             throw new NotFoundException('Unknown Route');
@@ -62,7 +91,7 @@ class PageFactory extends BaseFactory
         return $pages[0];
     }
 
-    public static function query($sortOrder = null, $filterBy = [])
+    public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder == null)
             $sortOrder = ['name'];
@@ -72,20 +101,20 @@ class PageFactory extends BaseFactory
         $sql = 'SELECT pageId, name, title, asHome FROM `pages` WHERE 1 = 1 ';
 
         // Logged in user view permissions
-        self::viewPermissionSql('Xibo\Entity\Page', $sql, $params, 'pageId', null, $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Page', $sql, $params, 'pageId', null, $filterBy);
 
-        if (Sanitize::getString('name', $filterBy) != null) {
-            $params['name'] = Sanitize::getString('name', $filterBy);
+        if ($this->getSanitizer()->getString('name', $filterBy) != null) {
+            $params['name'] = $this->getSanitizer()->getString('name', $filterBy);
             $sql .= ' AND `name` = :name ';
         }
 
-        if (Sanitize::getInt('pageId', $filterBy) !== null) {
-            $params['pageId'] = Sanitize::getString('pageId', $filterBy);
+        if ($this->getSanitizer()->getInt('pageId', $filterBy) !== null) {
+            $params['pageId'] = $this->getSanitizer()->getString('pageId', $filterBy);
             $sql .= ' AND `pageId` = :pageId ';
         }
 
-        if (Sanitize::getInt('asHome', $filterBy) !== null) {
-            $params['asHome'] = Sanitize::getString('asHome', $filterBy);
+        if ($this->getSanitizer()->getInt('asHome', $filterBy) !== null) {
+            $params['asHome'] = $this->getSanitizer()->getString('asHome', $filterBy);
             $sql .= ' AND `asHome` = :asHome ';
         }
 
@@ -94,8 +123,8 @@ class PageFactory extends BaseFactory
 
 
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Page())->hydrate($row);
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $this->create()->hydrate($row);
         }
 
         return $entries;

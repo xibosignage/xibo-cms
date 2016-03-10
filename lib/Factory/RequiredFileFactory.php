@@ -11,19 +11,43 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\RequiredFile;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class RequiredFileFactory
+ * @package Xibo\Factory
+ */
 class RequiredFileFactory extends BaseFactory
 {
+    /**
+     * Construct a factory
+     * @param StorageServiceInterface $store
+     * @param LogServiceInterface $log
+     * @param SanitizerServiceInterface $sanitizerService
+     */
+    public function __construct($store, $log, $sanitizerService)
+    {
+        $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * @return RequiredFile
+     */
+    public function createEmpty()
+    {
+        return new RequiredFile($this->getStore(), $this->getLog());
+    }
+
     /**
      * @param string $nonce
      * @return RequiredFile
      * @throws NotFoundException
      */
-    public static function getByNonce($nonce)
+    public function getByNonce($nonce)
     {
-        $nonce = RequiredFileFactory::query(null, ['nonce' => $nonce]);
+        $nonce = $this->query(null, ['nonce' => $nonce]);
 
         if (count($nonce) <= 0)
             throw new NotFoundException();
@@ -37,9 +61,9 @@ class RequiredFileFactory extends BaseFactory
      * @return RequiredFile
      * @throws NotFoundException
      */
-    public static function getByDisplayAndLayout($displayId, $layoutId)
+    public function getByDisplayAndLayout($displayId, $layoutId)
     {
-        $files = RequiredFileFactory::query(null, ['displayId' => $displayId, 'layoutId' => $layoutId]);
+        $files = $this->query(null, ['displayId' => $displayId, 'layoutId' => $layoutId]);
 
         if (count($files) <= 0)
             throw new NotFoundException();
@@ -53,9 +77,9 @@ class RequiredFileFactory extends BaseFactory
      * @return RequiredFile
      * @throws NotFoundException
      */
-    public static function getByDisplayAndMedia($displayId, $mediaId)
+    public function getByDisplayAndMedia($displayId, $mediaId)
     {
-        $files = RequiredFileFactory::query(null, ['displayId' => $displayId, 'mediaId' => $mediaId]);
+        $files = $this->query(null, ['displayId' => $displayId, 'mediaId' => $mediaId]);
 
         if (count($files) <= 0)
             throw new NotFoundException();
@@ -71,9 +95,9 @@ class RequiredFileFactory extends BaseFactory
      * @return RequiredFile
      * @throws NotFoundException
      */
-    public static function getByDisplayAndResource($displayId, $layoutId, $regionId, $mediaId)
+    public function getByDisplayAndResource($displayId, $layoutId, $regionId, $mediaId)
     {
-        $files = RequiredFileFactory::query(null, ['displayId' => $displayId, 'layoutId' => $layoutId, 'regionId' => $regionId, 'mediaId' => $mediaId]);
+        $files = $this->query(null, ['displayId' => $displayId, 'layoutId' => $layoutId, 'regionId' => $regionId, 'mediaId' => $mediaId]);
 
         if (count($files) <= 0)
             throw new NotFoundException();
@@ -90,13 +114,13 @@ class RequiredFileFactory extends BaseFactory
      * @param $path
      * @return RequiredFile
      */
-    public static function createForLayout($displayId, $requestKey, $layoutId, $size, $path)
+    public function createForLayout($displayId, $requestKey, $layoutId, $size, $path)
     {
         try {
-            $nonce = RequiredFileFactory::getByDisplayAndLayout($displayId, $layoutId);
+            $nonce = $this->getByDisplayAndLayout($displayId, $layoutId);
         }
         catch (NotFoundException $e) {
-            $nonce = new RequiredFile();
+            $nonce = $this->createEmpty();
         }
 
         $nonce->displayId = $displayId;
@@ -116,13 +140,13 @@ class RequiredFileFactory extends BaseFactory
      * @param $mediaId
      * @return RequiredFile
      */
-    public static function createForGetResource($displayId, $requestKey, $layoutId, $regionId, $mediaId)
+    public function createForGetResource($displayId, $requestKey, $layoutId, $regionId, $mediaId)
     {
         try {
-            $nonce = RequiredFileFactory::getByDisplayAndResource($displayId, $layoutId, $regionId, $mediaId);
+            $nonce = $this->getByDisplayAndResource($displayId, $layoutId, $regionId, $mediaId);
         }
         catch (NotFoundException $e) {
-            $nonce = new RequiredFile();
+            $nonce = $this->createEmpty();
         }
 
         $nonce->displayId = $displayId;
@@ -142,13 +166,13 @@ class RequiredFileFactory extends BaseFactory
      * @param $path
      * @return RequiredFile
      */
-    public static function createForMedia($displayId, $requestKey, $mediaId, $size, $path)
+    public function createForMedia($displayId, $requestKey, $mediaId, $size, $path)
     {
         try {
-            $nonce = RequiredFileFactory::getByDisplayAndMedia($displayId, $mediaId);
+            $nonce = $this->getByDisplayAndMedia($displayId, $mediaId);
         }
         catch (NotFoundException $e) {
-            $nonce = new RequiredFile();
+            $nonce = $this->createEmpty();
         }
 
         $nonce->displayId = $displayId;
@@ -159,7 +183,7 @@ class RequiredFileFactory extends BaseFactory
         return $nonce;
     }
 
-    public static function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = null)
     {
         $entries = [];
         $params = [];
@@ -181,29 +205,29 @@ class RequiredFileFactory extends BaseFactory
             WHERE 1 = 1
         ';
 
-        if (Sanitize::getString('nonce', $filterBy) !== null) {
+        if ($this->getSanitizer()->getString('nonce', $filterBy) !== null) {
             $sql .= ' AND requiredfile.nonce = :nonce';
-            $params['nonce'] = Sanitize::getString('nonce', $filterBy);
+            $params['nonce'] = $this->getSanitizer()->getString('nonce', $filterBy);
         }
 
-        if (Sanitize::getInt('displayId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('displayId', $filterBy) !== null) {
             $sql .= ' AND requiredfile.displayId = :displayId';
-            $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
+            $params['displayId'] = $this->getSanitizer()->getInt('displayId', $filterBy);
         }
 
-        if (Sanitize::getInt('layoutId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('layoutId', $filterBy) !== null) {
             $sql .= ' AND requiredfile.layoutId = :layoutId';
-            $params['layoutId'] = Sanitize::getInt('layoutId', $filterBy);
+            $params['layoutId'] = $this->getSanitizer()->getInt('layoutId', $filterBy);
         }
 
-        if (Sanitize::getInt('regionId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('regionId', $filterBy) !== null) {
             $sql .= ' AND requiredfile.regionId = :regionId';
-            $params['regionId'] = Sanitize::getInt('regionId', $filterBy);
+            $params['regionId'] = $this->getSanitizer()->getInt('regionId', $filterBy);
         }
 
-        if (Sanitize::getInt('mediaId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('mediaId', $filterBy) !== null) {
             $sql .= ' AND requiredfile.mediaId = :mediaId';
-            $params['mediaId'] = Sanitize::getInt('mediaId', $filterBy);
+            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
         }
 
         // Sorting?
@@ -211,9 +235,8 @@ class RequiredFileFactory extends BaseFactory
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
 
-
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new RequiredFile())->hydrate($row, ['intProperties' => ['expires', 'lastUsed', 'size']]);
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['expires', 'lastUsed', 'size']]);
         }
 
         return $entries;

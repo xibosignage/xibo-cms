@@ -30,11 +30,37 @@ use League\OAuth2\Server\Storage\ScopeInterface;
 class ApiScopeStorage extends AbstractStorage implements ScopeInterface
 {
     /**
+     * @var StorageServiceInterface
+     */
+    private $store;
+
+    /**
+     * ApiAccessTokenStorage constructor.
+     * @param StorageServiceInterface $store
+     */
+    public function __construct($store)
+    {
+        if (!$store instanceof StorageServiceInterface)
+            throw new \RuntimeException('Invalid $store');
+
+        $this->store = $store;
+    }
+
+    /**
+     * Get Store
+     * @return StorageServiceInterface
+     */
+    protected function getStore()
+    {
+        return $this->store;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function get($scope, $grantType = null, $clientId = null)
     {
-        $result = PDOConnect::select('SELECT * FROM oauth_scopes WHERE id = :id ', array('id' => $scope));
+        $result = $this->getStore()->select('SELECT * FROM oauth_scopes WHERE id = :id ', array('id' => $scope));
 
         if (count($result) === 0) {
             return;
