@@ -55,12 +55,16 @@ class ConfigService implements ConfigServiceInterface
 
     public static $dbConfig = [];
 
+    //
+    // Extra Settings
+    //
     public $middleware = null;
     public $logHandlers = null;
     public $logProcessors = null;
     public $authentication = null;
     public $samlSettings = null;
     public $cacheDrivers = null;
+    public $cacheNamespace = 'Xibo';
 
     /**
      * Theme Specific Config
@@ -125,6 +129,22 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /**
+     * @inheritdoc
+     */
+    public function getCacheDrivers()
+    {
+        return $this->cacheDrivers;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getCacheNamespace()
+    {
+        return $this->cacheNamespace;
+    }
+
+    /**
      * Loads the settings from file.
      *  DO NOT CALL ANY STORE() METHODS IN HERE
      * @param string $settings
@@ -135,7 +155,7 @@ class ConfigService implements ConfigServiceInterface
         $config = new ConfigService();
 
         // Include the provided settings file.
-        @require ($settings);
+        require ($settings);
 
         // Create a DB config
         self::$dbConfig = [
@@ -170,6 +190,9 @@ class ConfigService implements ConfigServiceInterface
         // Cache drivers
         if (isset($cacheDrivers))
             $config->cacheDrivers = $cacheDrivers;
+
+        if (isset($cacheNamespace))
+            $config->cacheNamespace = $cacheNamespace;
 
         // Set this as the global config
         return $config;
