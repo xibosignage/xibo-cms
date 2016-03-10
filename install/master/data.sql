@@ -215,7 +215,8 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (85, 'INSTANCE_SUSPENDED', '0', 'checkbox', 'Is this instance suspended?', NULL, 'general', 0, 'Instance Suspended', '', 120, '0', 0, 'checkbox'),
 (86, 'INHERIT_PARENT_PERMISSIONS', '1', 'checkbox', 'Inherit permissions from Parent when adding a new item?', NULL, 'permissions', 1, 'Inherit permissions', '', 50, '1', 1, 'checkbox'),
 (87, 'XMR_ADDRESS', 'tcp:://localhost:5555', 'text', 'Please enter the private address for XMR.', NULL, 'displays', 1, 'XMR Private Address', '', 5, 'tcp:://localhost:5555', 1, 'string'),
-(88, 'XMR_PUB_ADDRESS', '', 'text', 'Please enter the public address for XMR.', NULL, 'displays', 1, 'XMR Public Address', '', 6, '', 1, 'string');
+(88, 'XMR_PUB_ADDRESS', '', 'text', 'Please enter the public address for XMR.', NULL, 'displays', 1, 'XMR Public Address', '', 6, '', 1, 'string'),
+(89, 'CDN_URL', '', 'text', 'Content Delivery Network Address for serving file requests to Players', '', 'network', 0, 'CDN Address', '', 33, '', 0, 'string');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),

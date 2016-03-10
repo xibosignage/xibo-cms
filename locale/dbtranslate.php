@@ -141,6 +141,8 @@ echo __('XMR Private Address');
 echo __('XMR Public Address');
 echo __('Please enter the private address for XMR.');
 echo __('Please enter the public address for XMR.');
+echo __('CDN Address');
+echo __('Content Delivery Network Address for serving file requests to Players');
 
 // Transitions
 echo __('Fade In');

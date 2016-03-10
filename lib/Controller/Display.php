@@ -30,6 +30,8 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\LogFactory;
+use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -86,6 +88,16 @@ class Display extends Base
     private $displayProfileFactory;
 
     /**
+     * @var MediaFactory
+     */
+    private $mediaFactory;
+
+    /**
+     * @var ScheduleFactory
+     */
+    private $scheduleFactory;
+
+    /**
      * Set common dependencies.
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
@@ -102,8 +114,10 @@ class Display extends Base
      * @param LogFactory $logFactory
      * @param LayoutFactory $layoutFactory
      * @param DisplayProfileFactory $displayProfileFactory
+     * @param MediaFactory $mediaFactory
+     * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -115,6 +129,8 @@ class Display extends Base
         $this->logFactory = $logFactory;
         $this->layoutFactory = $layoutFactory;
         $this->displayProfileFactory = $displayProfileFactory;
+        $this->mediaFactory = $mediaFactory;
+        $this->scheduleFactory = $scheduleFactory;
     }
 
     /**
@@ -712,6 +728,7 @@ class Display extends Base
         $display->longitude = $this->getSanitizer()->getDouble('longitude');
         $display->displayProfileId = $this->getSanitizer()->getInt('displayProfileId');
 
+        $display->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $display->save();
 
         // Remove the cache if the display licenced state has changed
@@ -1060,7 +1077,7 @@ class Display extends Base
 
                     // Update the display and set it as logged out
                     $display->loggedIn = 0;
-                    $display->save(['validate' => false, 'audit' => false]);
+                    $display->save(\Xibo\Entity\Display::$saveOptionsMinimum);
 
                     // We put it back again (in memory only)
                     // this is then used to indicate whether or not this is the first time this display has gone

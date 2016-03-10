@@ -420,7 +420,9 @@ class State extends Middleware
                 $container->displayGroupFactory,
                 $container->logFactory,
                 $container->layoutFactory,
-                $container->displayProfileFactory
+                $container->displayProfileFactory,
+                $container->mediaFactory,
+                $container->scheduleFactory
             );
         });
 

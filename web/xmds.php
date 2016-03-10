@@ -108,25 +108,48 @@ if (isset($_GET['file'])) {
     try {
         /** @var \Xibo\Entity\RequiredFile $file */
         $file = $app->requiredFileFactory->getByNonce($_REQUEST['file']);
+
+        // Add the size to the bytes we have already requested.
         $file->bytesRequested = $file->bytesRequested + $file->size;
+
+        // Check the file is valid
         $file->isValid();
 
-        // Issue magic packet
-        // Send via Apache X-Sendfile header?
-        if ($sendFileMode == 'Apache') {
-            $app->logService->notice('HTTP GetFile request redirecting to ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->storedAs, 'services');
-            header('X-Sendfile: ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->storedAs);
-        }
-        // Send via Nginx X-Accel-Redirect?
-        else if ($sendFileMode == 'Nginx') {
-            header('X-Accel-Redirect: /download/' . $file->storedAs);
-        }
-        else {
-            header('HTTP/1.0 404 Not Found');
+        // Only log bandwidth under certain conditions
+        // also controls whether the nonce is updated
+        $logBandwidth = true;
+
+        // Are we a DELETE request or otherwise?
+        if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
+            // Supply a header only, pointing to the original file name
+            header('Content-Disposition: attachment; filename="' . $file->storedAs . '"');
+            $logBandwidth = false;
+
+        } else if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
+            // Log bandwidth for the file being requested
+            $app->logService->info('Delete request for ' . $file->storedAs . ' marking nonce as used.', $file->displayId);
+
+        } else {
+            // Most likely a Get Request
+            // Issue magic packet
+            $app->logService->info('HTTP GetFile request redirecting to ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->storedAs, 'services');
+
+            // Send via Apache X-Sendfile header?
+            if ($sendFileMode == 'Apache') {
+                header('X-Sendfile: ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->storedAs);
+            } // Send via Nginx X-Accel-Redirect?
+            else if ($sendFileMode == 'Nginx') {
+                header('X-Accel-Redirect: /download/' . $file->storedAs);
+            } else {
+                header('HTTP/1.0 404 Not Found');
+            }
         }
 
         // Log bandwidth
-        $app->bandwidthFactory->createAndSave(4, $file->displayId, $file->size);
+        if ($logBandwidth) {
+            $file->markUsed();
+            $app->bandwidthFactory->createAndSave(4, $file->displayId, $file->size);
+        }
     }
     catch (\Exception $e) {
         if ($e instanceof \Xibo\Exception\NotFoundException || $e instanceof \Xibo\Exception\FormExpiredException) {
