@@ -500,7 +500,23 @@ class LayoutFactory extends BaseFactory
             // Import the Media File
             $intendedMediaName = $file['name'];
             $temporaryFileName = $libraryLocation . $file['file'];
-            if (file_put_contents($temporaryFileName, $zip->getFromName('library/' . $file['file'])) === false)
+
+            // Get the file from the ZIP
+            $fileContents = $zip->getFromName('library/' . $file['file']);
+
+            if ($fileContents === false) {
+                // Log out the entire ZIP file and all entries.
+                $log = 'Problem getting library/' . $file['file'] . '. Files: ';
+                for ($i = 0; $i < $zip->numFiles; $i++) {
+                    $log .= $zip->getNameIndex($i) . ', ';
+                }
+
+                $this->getLog()->error($log);
+
+                throw new \InvalidArgumentException(__('Empty file in ZIP'));
+            }
+
+            if (file_put_contents($temporaryFileName, $fileContents) === false)
                 throw new \InvalidArgumentException(__('Cannot save media file from ZIP file'));
 
             // Check we don't already have one

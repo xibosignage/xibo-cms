@@ -882,7 +882,7 @@ class Layout implements \JsonSerializable
 
         foreach ($this->mediaFactory->getByLayoutId($this->layoutId) as $media) {
             /* @var Media $media */
-            $zip->addFile($libraryLocation . $media->storedAs, $media->fileName);
+            $zip->addFile($libraryLocation . $media->storedAs, 'library/' . $media->fileName);
 
             $mappings[] = [
                 'file' => $media->fileName,
@@ -897,7 +897,7 @@ class Layout implements \JsonSerializable
         // Add the background image
         if ($this->backgroundImageId != 0) {
             $media = $this->mediaFactory->getById($this->backgroundImageId);
-            $zip->addFile($libraryLocation . $media->storedAs, $media->fileName);
+            $zip->addFile($libraryLocation . $media->storedAs, 'library/' . $media->fileName);
 
             $mappings[] = [
                 'file' => $media->fileName,
