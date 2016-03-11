@@ -1088,7 +1088,7 @@ class Display extends Base
                     $stat = new Stat($this->store, $this->getLog());
                     $stat->type = 'displaydown';
                     $stat->displayId = $display->displayId;
-                    $stat->fromDt = $display->lastAccessed;
+                    $stat->fromDt = $this->getDate()->getLocalDate($display->lastAccessed);
                     $stat->save();
                 }
 
