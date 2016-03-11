@@ -28,6 +28,10 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class RegionOptionFactory
+ * @package Xibo\Factory
+ */
 class RegionOptionFactory extends BaseFactory
 {
     /**
@@ -39,6 +43,14 @@ class RegionOptionFactory extends BaseFactory
     public function __construct($store, $log, $sanitizerService)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+    }
+
+    /**
+     * @return RegionOption
+     */
+    public function createEmpty()
+    {
+        return new RegionOption($this->getStore(), $this->getLog());
     }
 
     /**
@@ -60,7 +72,7 @@ class RegionOptionFactory extends BaseFactory
      */
     public function create($regionId, $option, $value)
     {
-        $regionOption = new RegionOption();
+        $regionOption = $this->createEmpty();
         $regionOption->regionId = $regionId;
         $regionOption->option = $option;
         $regionOption->value = $value;
@@ -81,7 +93,7 @@ class RegionOptionFactory extends BaseFactory
         $sql = 'SELECT * FROM `regionoption` WHERE regionId = :regionId';
 
         foreach ($this->getStore()->select($sql, array('regionId' => $this->getSanitizer()->getInt('regionId', $filterBy))) as $row) {
-            $entries[] = (new RegionOption())->hydrate($row)->setContainer($this->getContainer());
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         return $entries;
