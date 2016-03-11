@@ -140,14 +140,14 @@ class Stats extends Base
      *  @SWG\Parameter(
      *      name="fromDt",
      *      in="formData",
-     *      description="The start date for the filter",
+     *      description="The start date for the filter. Default = 24 hours ago",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="toDt",
      *      in="formData",
-     *      description="The end date for the filter",
+     *      description="The end date for the filter. Default = now.",
      *      type="string",
      *      required=false
      *   ),
