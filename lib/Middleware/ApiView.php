@@ -71,18 +71,18 @@ class ApiView extends View
 
                     // Set some headers indicating our next/previous pages
                     $start = $app->sanitizerService->getInt('start', 0);
-                    $size = $app->sanitizerService->getInt('size', 10);
+                    $size = $app->sanitizerService->getInt('length', 10);
 
                     $linkHeader = '';
                     $url = $app->request()->getUrl() . $app->request()->getPath();
 
                     // Is there a next page?
                     if ($start + $size < $totalRows)
-                        $linkHeader .= '<' . $url . '?start' . ($start + $size * 2) . '&length=' . $size . '>; rel="next", ';
+                        $linkHeader .= '<' . $url . '?start=' . ($start + $size * 2) . '&length=' . $size . '>; rel="next", ';
 
                     // Is there a previous page?
                     if ($start > 0)
-                        $linkHeader .= '<' . $url . '?start' . ($start - $size) . '&length=' . $size . '>; rel="prev", ';
+                        $linkHeader .= '<' . $url . '?start=' . ($start - $size) . '&length=' . $size . '>; rel="prev", ';
 
                     // The first page
                     $linkHeader .= '<' . $url . '?start=0&length=' . $size . '>; rel="first"';
