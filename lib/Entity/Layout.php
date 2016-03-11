@@ -565,6 +565,7 @@ class Layout implements \JsonSerializable
 
         // Delete our own Campaign
         $campaign = $this->campaignFactory->getById($this->campaignId);
+        $campaign->setChildObjectDependencies($this->layoutFactory);
         $campaign->delete();
 
         // Remove the Layout from any display defaults

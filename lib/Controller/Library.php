@@ -25,6 +25,7 @@ use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\LibraryFullException;
+use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -98,6 +99,9 @@ class Library extends Base
      */
     private $userGroupFactory;
 
+    /** @var  DisplayGroupFactory */
+    private $displayGroupFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -117,8 +121,9 @@ class Library extends Base
      * @param LayoutFactory $layoutFactory
      * @param PlaylistFactory $playlistFactory
      * @param UserGroupFactory $userGroupFactory
+     * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -132,6 +137,7 @@ class Library extends Base
         $this->layoutFactory = $layoutFactory;
         $this->playlistFactory = $playlistFactory;
         $this->userGroupFactory = $userGroupFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
     }
 
     /**
@@ -352,6 +358,7 @@ class Library extends Base
         if (!$this->getUser()->checkDeleteable($media))
             throw new AccessDeniedException();
 
+        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
         $media->load(['deleting' => true]);
 
         $this->getState()->template = 'library-form-delete';
@@ -399,6 +406,7 @@ class Library extends Base
             throw new AccessDeniedException();
 
         // Check
+        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
         $media->load(['deleting' => true]);
 
         if ($media->isUsed() && $this->getSanitizer()->getCheckbox('forceDelete') == 0)

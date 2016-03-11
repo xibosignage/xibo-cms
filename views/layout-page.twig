@@ -67,8 +67,9 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+        var table;
         $(document).ready(function() {
-            var table = $("#layouts").DataTable({
+            table = $("#layouts").DataTable({
                 "language": dataTablesLanguage,
                 serverSide: true,
                 stateSave: true,
