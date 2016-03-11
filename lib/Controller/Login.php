@@ -70,6 +70,7 @@ class Login extends Base
      */
     public function loginForm()
     {
+        $this->getLog()->debug($this->getApp()->flashData());
         // Template
         $this->getState()->template = 'login';
         $this->getState()->setData(['version' => VERSION]);
@@ -80,52 +81,73 @@ class Login extends Base
      */
     public function login()
     {
-        // Get our username and password
-        $username = $this->getSanitizer()->getUserName('username');
-        $password = $this->getSanitizer()->getPassword('password');
+        // Capture the prior route (if there is one)
+        $redirect = 'login';
+        $priorRoute = ($this->getSanitizer()->getString('priorRoute'));
 
-        $this->getLog()->debug('Login with username %s', $username);
-
-        // Get our user
         try {
-            /* @var User $user */
-            $user = $this->userFactory->getByName($username);
+            // Get our username and password
+            $username = $this->getSanitizer()->getUserName('username');
+            $password = $this->getSanitizer()->getPassword('password');
 
-            // $this->getLog()->debug($user);
+            $this->getLog()->debug('Login with username %s', $username);
 
-            // Check password
-            $user->checkPassword($password);
+            // Get our user
+            try {
+                /* @var User $user */
+                $user = $this->userFactory->getByName($username);
 
-            // We are authenticated, so upgrade the user to the salted mechanism if necessary
-            if (!$user->isSalted()) {
-                $user->setNewPassword($password);
-                $user->save(['validate' => false, 'passwordUpdate' => true]);
+                // $this->getLog()->debug($user);
+
+                // Check password
+                $user->checkPassword($password);
+
+                // We are authenticated, so upgrade the user to the salted mechanism if necessary
+                if (!$user->isSalted()) {
+                    $user->setNewPassword($password);
+                    $user->save(['validate' => false, 'passwordUpdate' => true]);
+                }
+
+                // We are logged in!
+                $user->loggedIn = 1;
+
+                $this->getLog()->info('%s user logged in.', $user->userName);
+
+                $this->getLog()->setUserId($user->userId);
+
+                // Overwrite our stored user with this new object.
+                $this->getApp()->user = $user;
+
+                // Switch Session ID's
+                $session = $this->session;
+                $session->setIsExpired(0);
+                $session->regenerateSessionId();
+                $session->setUser($user->userId);
+
+                // Audit Log
+                $this->getLog()->audit('User', $user->userId, 'Login Granted', [
+                    'IPAddress' => $this->getApp()->request()->getIp(),
+                    'UserAgent' => $this->getApp()->request()->getUserAgent()
+                ]);
+            }
+            catch (NotFoundException $e) {
+                throw new AccessDeniedException('User not found');
             }
 
-            // We are logged in!
-            $user->loggedIn = 1;
-
-            $this->getLog()->setUserId($user->userId);
-
-            // Overwrite our stored user with this new object.
-            $this->getApp()->user = $user;
-
-            // Switch Session ID's
-            $session = $this->session;
-            $session->setIsExpired(0);
-            $session->regenerateSessionId();
-            $session->setUser($user->userId);
-
-            // Audit Log
-            $this->getLog()->audit('User', $user->userId, 'Login Granted', [
-                'IPAddress' => $this->getApp()->request()->getIp(),
-                'UserAgent' => $this->getApp()->request()->getUserAgent()
-            ]);
+            $redirect = ($priorRoute == '' || $priorRoute == '/' || stripos($priorRoute, 'login')) ? 'home' : $priorRoute;
         }
-        catch (NotFoundException $e) {
-            $this->getLog()->debug('User not found');
-            throw new AccessDeniedException();
+        catch (\Xibo\Exception\AccessDeniedException $e) {
+            $this->getLog()->warning($e->getMessage());
+            $this->getApp()->flash('login_message', __('Username or Password incorrect'));
+            $this->getApp()->flash('priorRoute', $priorRoute);
         }
+        catch (\Xibo\Exception\FormExpiredException $e) {
+            $this->getApp()->flash('priorRoute', $priorRoute);
+        }
+
+        $this->setNoOutput(true);
+        $this->getLog()->debug('Redirect to %s', $redirect);
+        $this->getApp()->redirectTo($redirect);
     }
 
     /**

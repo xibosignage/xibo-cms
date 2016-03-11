@@ -188,6 +188,9 @@ class State extends Middleware
                 return new NullSession();
         });
 
+        // We use Slim::flash() so we must immediately start a session (boo)
+        $app->container->session->set('init', '1');
+
         // App Mode
         $mode = $app->configService->GetSetting('SERVER_MODE');
         $app->logService->setMode($mode);
