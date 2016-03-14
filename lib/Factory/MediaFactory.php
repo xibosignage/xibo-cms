@@ -222,7 +222,7 @@ class MediaFactory extends BaseFactory
      */
     public function getByName($name)
     {
-        $media = $this->query(null, array('disableUserCheck' => 1, 'name' => $name, 'allModules' => 1));
+        $media = $this->query(null, array('disableUserCheck' => 1, 'nameExact' => $name, 'allModules' => 1));
 
         if (count($media) <= 0)
             throw new NotFoundException(__('Cannot find media'));
@@ -354,14 +354,19 @@ class MediaFactory extends BaseFactory
                 $i++;
                 // Not like, or like?
                 if (substr($searchName, 0, 1) == '-') {
-                    $body .= " AND media.name NOT LIKE :notLike ";
-                    $params['notLike'] = '%' . ltrim($searchName, '-') . '%';
+                    $body .= ' AND media.name NOT LIKE :notLike' . $i . ' ';
+                    $params['notLike' . $i] = '%' . ltrim($searchName, '-') . '%';
                 }
                 else {
-                    $body .= " AND media.name LIKE :like ";
-                    $params['like'] = '%' . $searchName . '%';
+                    $body .= ' AND media.name LIKE :like' . $i . ' ';
+                    $params['like' . $i] = '%' . $searchName . '%';
                 }
             }
+        }
+
+        if ($this->getSanitizer()->getString('nameExact', $filterBy) != '') {
+            $body .= ' AND media.name = :exactName ';
+            $params['exactName'] = $this->getSanitizer()->getString('nameExact', $filterBy);
         }
 
         if ($this->getSanitizer()->getInt('mediaId', -1, $filterBy) != -1) {
