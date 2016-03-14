@@ -375,6 +375,11 @@ class LayoutFactory extends BaseFactory
                 $module = $modules[$widget->type];
                 /* @var \Xibo\Entity\Module $module */
 
+                // Skip dataset view widgets
+                // pending: https://github.com/xibosignage/xibo/issues/642
+                if ($module->type == 'datasetview')
+                    continue;
+
                 if ($module->regionSpecific == 0) {
                     $widget->assignMedia($widget->tempId);
                 }
@@ -392,6 +397,10 @@ class LayoutFactory extends BaseFactory
                         $widget->widgetOptions[] = $widgetOption;
                     }
                 }
+
+                // Skip dataset backed ticker widgets
+                if ($module->type == 'ticker' && $widget->getOptionValue('sourceId', 1) != 1)
+                    continue;
 
                 // Get all widget raw content
                 foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media[@id="' . $widget->tempId . '"]/raw') as $rawNode) {

@@ -278,6 +278,9 @@ class PdoStorageService implements StorageServiceInterface
 	 */
 	public function setTimeZone($timeZone, $connection = null)
 	{
+        if ($connection == null)
+            $connection = $this->conn;
+
         $connection->query('SET time_zone = \'' . $timeZone . '\';');
 
         self::$countSelects++;
