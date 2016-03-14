@@ -454,13 +454,14 @@ class Soap
             // For layouts the MD5 column is the layout xml
             $fileSize = filesize($path);
             $md5 = md5_file($path);
+            $fileName = basename($path);
 
             // Log
             if ($this->display->isAuditing == 1)
                 $this->getLog()->debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
 
             // Add nonce
-            $layoutNonce = $this->requiredFileFactory->createForLayout($this->display->displayId, $requestKey, $layoutId, $fileSize, basename($path));
+            $layoutNonce = $this->requiredFileFactory->createForLayout($this->display->displayId, $requestKey, $layoutId, $fileSize, $fileName);
             $layoutNonce->save();
 
             // Add the Layout file element
@@ -473,7 +474,7 @@ class Soap
             if ($httpDownloads) {
                 // Serve a link instead (standard HTTP link)
                 $file->setAttribute("path", $this->generateRequiredFileDownloadPath($layoutNonce->nonce));
-                $file->setAttribute("saveAs", $path);
+                $file->setAttribute("saveAs", $fileName);
                 $file->setAttribute("download", 'http');
             }
             else {
