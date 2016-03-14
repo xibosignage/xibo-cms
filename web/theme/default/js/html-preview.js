@@ -164,6 +164,7 @@ function Layout(id) {
         /* Get Layout Size */
         self.xw = $(self.layoutNode).filter(":first").attr('width');
         self.xh = $(self.layoutNode).filter(":first").attr('height');
+        self.zIndex = $(self.layoutNode).filter(":first").attr('zindex');
         playLog(7, "debug", "Layout is (" + self.xw + "x" + self.xh + ") pixels");
         
         /* Calculate Scale Factor */
@@ -182,6 +183,9 @@ function Layout(id) {
         layout.css("position", "absolute");
         layout.css("left", self.offsetX + "px");
         layout.css("top", self.offsetY + "px");
+
+        if (self.zIndex != null)
+            layout.css("z-index", self.zIndex);
         
         /* Set the layout background */
         self.bgColour = $(self.layoutNode).filter(":first").attr('bgcolor');
@@ -400,7 +404,8 @@ function Region(parent, id, xml) {
     self.sHeight = $(xml).attr("height") * self.layout.scaleFactor;
     self.offsetX = $(xml).attr("left") * self.layout.scaleFactor;
     self.offsetY = $(xml).attr("top") * self.layout.scaleFactor;
-    
+    self.zIndex = $(xml).attr("zindex");
+
     $("#" + self.layout.containerName).append('<div id="' + self.containerName + '"></div>');
     
     /* Scale the Layout Container */
@@ -409,6 +414,9 @@ function Region(parent, id, xml) {
     $("#" + self.containerName).css("position", "absolute");
     $("#" + self.containerName).css("left", self.offsetX + "px");
     $("#" + self.containerName).css("top", self.offsetY + "px");
+
+    if (self.zIndex != null)
+        $("#" + self.containerName).css("z-index", self.zIndex);
 
     playLog(4, "debug", "Created region " + self.id, false);
     playLog(7, "debug", "Render will be (" + self.sWidth + "x" + self.sHeight + ") pixels");
@@ -524,7 +532,7 @@ function media(parent, id, xml) {
     }
     else if (self.mediaType == "video") {
         PRELOAD.addFiles(tmpUrl);
-        media.append('<video id="' + self.containerName + '-vid" preload="auto"><source src="' + tmpUrl + '">Unsupported Video</video>');
+        media.append('<video id="' + self.containerName + '-vid" preload="auto" ' + ((self.options["mute"] == 1) ? 'muted' : '') + '><source src="' + tmpUrl + '">Unsupported Video</video>');
     }
     else if (self.mediaType == "flash") {
         var embedCode = '<OBJECT classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,0,0" WIDTH="100%" HEIGHT="100%" id="Yourfilename" ALIGN="">';

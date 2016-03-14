@@ -339,7 +339,8 @@ class LayoutFactory extends BaseFactory
                 (double)$regionNode->getAttribute('width'),
                 (double)$regionNode->getAttribute('height'),
                 (double)$regionNode->getAttribute('top'),
-                (double)$regionNode->getAttribute('left')
+                (double)$regionNode->getAttribute('left'),
+                (int)$regionNode->getAttribute('zindex')
                 );
 
             // Use the regionId locally to parse the rest of the XLF
