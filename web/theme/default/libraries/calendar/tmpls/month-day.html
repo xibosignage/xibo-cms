@@ -3,24 +3,51 @@
 	<% if (events.length > 0) { %>
 		<div class="events-list" data-cal-start="<%= start %>" data-cal-end="<%= end %>">
 			<% _.each(events, function(event) { %>
-				<% 
-				var icon = "fa-circle";
-				if (event['extra'] == "single-display")
-					icon = "fa-desktop";
-				if (event['extra'] == "multi-display")
-					icon = "fa-desktop";
-				if (event['extra'] == "recurring")
-					icon = "fa-repeat";
-				if (event['extra'] == "priority")
-					icon = "fa-bullseye";
-				if (event['extra'] == "view-only")
-					icon = "fa-lock";
-				if (event['extra'] == "command")
-					icon = "fa-wrench";
-				%>
-				<a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" data-event-class="<%= event['class'] %>"
-					class="pull-left event <%= event['class'] %>" data-toggle="tooltip"
-					title="<%= event.title %>"><span class="fa <%= icon %>"></span></a>
+            <%
+            var title = event.title;
+            var eventIcon = "fa-desktop";
+            var eventClass = "event-warning";
+
+            if (event.event.dayPartId == 0) {
+                if (event.sameDay) {
+                    title = "[" + moment(event.event.fromDt, "X").format("HH:mm") + " - " + moment(event.event.toDt, "X").format("HH:mm") + "] " + event.title;
+                } else {
+                    title = "[" + moment(event.event.fromDt, "X").format(jsDateFormat) + " - " + moment(event.event.toDt, "X").format(jsDateFormat) + "] " + event.title;
+                }
+            }
+
+            if (event.event.displayOrder > 0)
+                title = title + " (" + event.event.displayOrder + ")";
+
+            if (event.event.displayGroups.length <= 1) {
+                eventClass = "event-info";
+            }
+            else {
+                eventClass = "event-success";
+            }
+
+            if (event.event.dayPartId == 1) {
+                eventIcon = "fa-retweet";
+            }
+
+            if (event.event.recurrenceType != null && event.event.recurrenceType != "") {
+                eventClass = "event-special";
+                eventIcon = "fa-repeat";
+            }
+
+            if (event.event.isPriority == 1) {
+                eventClass = "event-important";
+                eventIcon = "fa-bullseye";
+            }
+
+            if (!event.editable) {
+                eventIcon = "fa-wrench";
+                eventClass = "event-inverse";
+            }
+            %>
+				<a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" data-event-class="<%= eventClass %>"
+					class="pull-left event <%= eventClass %>" data-toggle="tooltip"
+					title="<%= event.title %>"><span class="fa <%= eventIcon %>"></span></a>
 			<% }); %>
 		</div>
 	<% } %>
