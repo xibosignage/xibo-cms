@@ -713,8 +713,8 @@ class Display extends Base
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
-        // Track the licenced flag
-        $licensed = $display->licensed;
+        // Track the default layout
+        $defaultLayoutId = $display->defaultLayoutId;
 
         // Update properties
         $display->display = $this->getSanitizer()->getString('display');
@@ -735,13 +735,16 @@ class Display extends Base
         $display->longitude = $this->getSanitizer()->getDouble('longitude');
         $display->displayProfileId = $this->getSanitizer()->getInt('displayProfileId');
 
-        $display->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-        $display->save();
-
-        // Remove the cache if the display licenced state has changed
-        if ($licensed != $display->licensed || $this->getSanitizer()->getCheckbox('clearCachedData') == 1) {
+        // Should we invalidate this display?
+        if ($defaultLayoutId != $display->defaultLayoutId) {
+            $display->setMediaIncomplete();
+        } else if ($this->getSanitizer()->getCheckbox('clearCachedData', 1) == 1) {
+            // Remove the cache if the display licenced state has changed
             $this->pool->deleteItem($display->getCacheKey());
         }
+
+        $display->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $display->save();
 
         // Return
         $this->getState()->hydrate([

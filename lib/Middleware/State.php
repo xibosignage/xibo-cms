@@ -457,6 +457,7 @@ class State extends Middleware
                 $container->helpService,
                 $container->dateService,
                 $container->configService,
+                $container->pool,
                 $container->displayProfileFactory,
                 $container->commandFactory
             );

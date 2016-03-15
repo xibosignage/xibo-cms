@@ -228,8 +228,6 @@ class DisplayProfile
             $params['displayProfileId'] = $this->displayProfileId;
         }
 
-
-
         $count = $this->getStore()->select($sql, $params);
 
         if ($count[0]['cnt'] + $this->isDefault > 1)
