@@ -591,7 +591,10 @@ class Soap
 
         // Cache
         $cache->set($output);
-        $cache->expiresAt($this->getDate()->parse($toFilter, 'U'));
+
+        // Nonces expire after 86400 seconds.
+        //$cache->expiresAt($this->getDate()->parse($toFilter, 'U'));
+        $cache->expiresAfter(86400);
         $this->getPool()->saveDeferred($cache);
 
         // Log Bandwidth
