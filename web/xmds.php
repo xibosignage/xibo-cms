@@ -196,7 +196,9 @@ try {
         $app->displayFactory,
         $app->userFactory,
         $app->bandwidthFactory,
-        $app->mediaFactory
+        $app->mediaFactory,
+        $app->widgetFactory,
+        $app->regionFactory
     );
     $soap->handle();
 

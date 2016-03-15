@@ -29,13 +29,14 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\RegionFactory;
 use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Random;
 use Xibo\Service\ConfigService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
-use Xibo\Service\FactoryServiceInterface;
 use Xibo\Service\LogService;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -99,6 +100,12 @@ class Soap
     /** @var  MediaFactory */
     protected $mediaFactory;
 
+    /** @var  WidgetFactory */
+    protected $widgetFactory;
+
+    /** @var  RegionFactory */
+    protected $regionFactory;
+
     /**
      * Soap constructor.
      * @param LogProcessor $logProcessor
@@ -116,8 +123,10 @@ class Soap
      * @param UserFactory $userFactory
      * @param BandwidthFactory $bandwidthFactory
      * @param MediaFactory $mediaFactory
+     * @param WidgetFactory $widgetFactory
+     * @param RegionFactory $regionFactory
      */
-    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userFactory, $bandwidthFactory, $mediaFactory)
+    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory)
     {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
@@ -134,6 +143,8 @@ class Soap
         $this->userFactory = $userFactory;
         $this->bandwidthFactory = $bandwidthFactory;
         $this->mediaFactory = $mediaFactory;
+        $this->widgetFactory = $widgetFactory;
+        $this->regionFactory = $regionFactory;
     }
 
     /**
@@ -1293,7 +1304,7 @@ class Soap
         try {
             $requiredFile = $this->requiredFileFactory->getByDisplayAndResource($this->display->displayId, $layoutId, $regionId, $mediaId);
 
-            $module = $this->moduleFactory->createWithWidget($this->getFactoryService()->get('WidgetFactory')->loadByWidgetId($mediaId), $this->getFactoryService()->get('RegionFactory')->getById($regionId));
+            $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($mediaId), $this->regionFactory->getById($regionId));
             $resource = $module->getResource($this->display->displayId);
 
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
