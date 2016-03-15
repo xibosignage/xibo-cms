@@ -692,6 +692,13 @@ class Display extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="clearCachedData",
+     *      in="formData",
+     *      description="Clear all Cached data for this display",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -732,7 +739,7 @@ class Display extends Base
         $display->save();
 
         // Remove the cache if the display licenced state has changed
-        if ($licensed != $display->licensed) {
+        if ($licensed != $display->licensed || $this->getSanitizer()->getCheckbox('clearCachedData') == 1) {
             $this->pool->deleteItem($display->getCacheKey());
         }
 

@@ -471,7 +471,9 @@ class Soap
             $file->setAttribute("size", $fileSize);
             $file->setAttribute("md5", $md5);
 
-            if ($httpDownloads) {
+            $supportsHttpLayouts = ($this->display->clientType == 'android' || ($this->display->clientType == 'windows' && $this->display->clientCode > 120));
+
+            if ($httpDownloads && $supportsHttpLayouts) {
                 // Serve a link instead (standard HTTP link)
                 $file->setAttribute("path", $this->generateRequiredFileDownloadPath($layoutNonce->nonce));
                 $file->setAttribute("saveAs", $fileName);

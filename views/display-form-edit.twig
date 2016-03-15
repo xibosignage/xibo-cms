@@ -138,6 +138,10 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                         ] %}
                         {{ forms.dropdown("isAuditing", "single", title, display.isAuditing, options, "id", "value", helpText) }}
 
+                        {% set title %}{% trans "Clear Cached Data" %}{% endset %}
+                        {% set helpText %}{% trans "Remove any cached data for this display." %}{% endset %}
+                        {{ forms.checkbox("clearCachedData", title, 0, helpText) }}
+
                         {% set message %}{% trans "The settings for this display are shown below. They are taken from the active Display Profile for this Display, which can be changed in Display Settings. If you have altered the Settings Profile above, you will need to save and re-show the form." %}{% endset %}
                         {{ forms.message(message) }}
 

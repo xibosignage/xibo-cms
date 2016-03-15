@@ -134,7 +134,7 @@ class Login extends Base
                 throw new AccessDeniedException('User not found');
             }
 
-            $redirect = ($priorRoute == '' || $priorRoute == '/' || stripos($priorRoute, 'login')) ? 'home' : $priorRoute;
+            $redirect = ($priorRoute == '' || $priorRoute == '/' || stripos($priorRoute, $this->getApp()->urlFor('login'))) ? $this->getApp()->urlFor('home') : $priorRoute;
         }
         catch (\Xibo\Exception\AccessDeniedException $e) {
             $this->getLog()->warning($e->getMessage());
@@ -147,7 +147,7 @@ class Login extends Base
 
         $this->setNoOutput(true);
         $this->getLog()->debug('Redirect to %s', $redirect);
-        $this->getApp()->redirectTo($redirect);
+        $this->getApp()->redirect($redirect);
     }
 
     /**
