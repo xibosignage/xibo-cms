@@ -418,7 +418,7 @@ class DisplayProfile
                         'title' => __('Enable stats reporting?'),
                         'type' => 'checkbox',
                         'fieldType' => 'checkbox',
-                        'default' => 1,
+                        'default' => $this->configService->getThemeConfig('client_statsEnabled_default', 1),
                         'helpText' => __('Should the application send proof of play stats to the CMS.'),
                         'enabled' => true,
                         'groupClass' => NULL
@@ -782,7 +782,7 @@ class DisplayProfile
                         'title' => __('Enable stats reporting?'),
                         'type' => 'checkbox',
                         'fieldType' => 'checkbox',
-                        'default' => 1,
+                        'default' => $this->configService->getThemeConfig('client_statsEnabled_default', 1),
                         'helpText' => __('Should the application send proof of play stats to the CMS.'),
                         'enabled' => true,
                         'groupClass' => NULL
@@ -845,6 +845,22 @@ class DisplayProfile
                         'fieldType' => 'checkbox',
                         'default' => 1,
                         'helpText' => __('If the device is having trouble playing video, it may be useful to switch to a Surface View for Video Rendering.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'logLevel',
+                        'tabId' => 'trouble',
+                        'title' => __('Log Level'),
+                        'type' => 'string',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 'audit', 'value' => 'Audit'),
+                            array('id' => 'error', 'value' => 'Error'),
+                            array('id' => 'off', 'value' => 'Off')
+                        ),
+                        'default' => 'error',
+                        'helpText' => __('The logging level that should be recorded by the Player.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
