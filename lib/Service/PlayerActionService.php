@@ -41,9 +41,6 @@ class PlayerActionService implements PlayerActionServiceInterface
     {
         $this->config = $config;
         $this->log = $log;
-
-        // XMR network address
-        $this->xmrAddress = $this->getConfig()->GetSetting('XMR_ADDRESS');
     }
 
     /**
@@ -60,6 +57,10 @@ class PlayerActionService implements PlayerActionServiceInterface
      */
     public function sendAction($displays, $action)
     {
+        // XMR network address
+        if ($this->xmrAddress == null)
+            $this->xmrAddress = $this->getConfig()->GetSetting('XMR_ADDRESS');
+
         if (!is_array($displays))
             $displays = [$displays];
 
@@ -91,6 +92,12 @@ class PlayerActionService implements PlayerActionServiceInterface
     {
         if (count($this->actions) > 0)
             $this->log->debug('Player Action Service is looking to send %d actions', count($this->actions));
+        else
+            return;
+
+        // XMR network address
+        if ($this->xmrAddress == null)
+            $this->xmrAddress = $this->getConfig()->GetSetting('XMR_ADDRESS');
 
         foreach ($this->actions as $action) {
             /** @var PlayerAction $action */

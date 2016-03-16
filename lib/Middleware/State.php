@@ -108,6 +108,8 @@ class State extends Middleware
      */
     public static function setState($app)
     {
+        //$app->logService->debug('Set State');
+
         // Set the root Uri
         State::setRootUri($app);
 

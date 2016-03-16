@@ -22,12 +22,15 @@ class Xmr extends Middleware
     {
         $app = $this->getApplication();
 
-        $app->hook('slim.before.dispatch', function() {
+        $app->hook('slim.before', function() {
 
             $app = $this->app;
 
+            //$app->logService->debug('Registering Player Action Service with DI');
+
             // Player Action Helper
-            $app->container->singleton('playerActionService', function() use($app) {
+            $app->container->singleton('playerActionService', function() use ($app) {
+                $app->logService->debug('New Player Action Service from DI');
                 return new PlayerActionService($app->configService, $app->logService);
             });
         });
