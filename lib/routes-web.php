@@ -28,7 +28,9 @@ $app->get('/', function () use ($app) {
     /* @var \Xibo\Entity\User $user */
 
     if ($user->newUserWizard == 0) {
+        /** @var \Xibo\Controller\Login $controller */
         $controller = $app->container->get('\Xibo\Controller\Login');
+        $controller->setApp($app);
         $controller->userWelcome();
 
         // We've seen it
