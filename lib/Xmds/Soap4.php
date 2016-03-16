@@ -503,7 +503,7 @@ class Soap4 extends Soap
 
         // Touch the display record
         $this->display->screenShotRequested = 0;
-        $this->display->save(['validate' => false, 'audit' => false]);
+        $this->display->save(Display::$saveOptionsMinimum);
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
 

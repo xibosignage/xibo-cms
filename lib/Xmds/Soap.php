@@ -1326,6 +1326,9 @@ class Soap
             throw new \SoapFault('Receiver', 'Unable to get the media resource');
         }
 
+        // Commit the touch
+        $this->display->save(Display::$saveOptionsMinimum);
+
         // Log Bandwidth
         $this->logBandwidth($this->display->displayId, Bandwidth::$GETRESOURCE, strlen($resource));
 
@@ -1414,10 +1417,6 @@ class Soap
         $this->display->lastAccessed = time();
         $this->display->loggedIn = 1;
         $this->display->clientAddress = $this->getIp();
-        $this->display->save(Display::$saveOptionsMinimum);
-
-        // Commit if necessary
-        $this->getStore()->commitIfNecessary();
     }
 
     /**
