@@ -29,6 +29,12 @@ class XMDSSoap3
     private $displayId;
     private $defaultLayoutId;
     private $version_instructions;
+    private $clientType;
+    private $clientVersion;
+    private $clientCode;
+    private $display;
+    private $loggedIn;
+    private $emailAlert;
 
     /**
      * Registers a new display
@@ -987,6 +993,9 @@ class XMDSSoap3
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Receiver', "This display client is not licensed");
 
+        // Update the last accessed date/logged in
+        $this->touchDisplay();
+
         // Validate the nonce
         $nonce = new Nonce();
         if (!$nonce->AllowedFile('resource', $this->displayId, NULL, $layoutId, $regionId, $mediaId))
@@ -1110,10 +1119,6 @@ class XMDSSoap3
             if ($row['licensed'] == 0)
                 return false;
         
-            // See if the client was off-line and if appropriate send an alert
-            // to say that it has come back on-line
-            $this->AlertDisplayUp($row['displayID'], $row['display'], $row['loggedin'], $row['email_alert']);
-
             // It is licensed?
             $this->licensed = true;
             $this->includeSchedule = $row['inc_schedule'];
@@ -1124,6 +1129,10 @@ class XMDSSoap3
             $this->clientType = $row['client_type'];
             $this->clientVersion = $row['client_version'];
             $this->clientCode = $row['client_code'];
+
+            $this->display = $row['display'];
+            $this->loggedIn = $row['loggedin'];
+            $this->emailAlert = $row['email_alert'];
             
             // Last accessed date on the display
             $displayObject = new Display();
@@ -1140,6 +1149,25 @@ class XMDSSoap3
             Debug::LogEntry('error', $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Touch Display
+     */
+    protected function touchDisplay()
+    {
+        // See if the client was off-line and if appropriate send an alert
+        // to say that it has come back on-line
+        $this->AlertDisplayUp($this->displayId, $this->display, $this->loggedIn, $this->emailAlert);
+
+        // Last accessed date on the display
+        $displayObject = new Display();
+        $displayObject->Touch($this->displayId, array('clientAddress' => $this->getIp()));
+
+        // Commit early to prevent deadlocks
+        $pdo = PDOConnect::init();
+        if ($pdo->inTransaction())
+            $pdo->commit();
     }
 
     private function AlertDisplayUp($displayId, $display, $loggedIn, $emailAlert)
