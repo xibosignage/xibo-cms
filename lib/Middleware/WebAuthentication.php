@@ -80,6 +80,10 @@ class WebAuthentication extends Middleware
 
                     // Replace our user with a fully loaded one
                     $user = $app->userFactory->getById($user->userId);
+
+                    // Page Factory requires the user to be configured
+                    $app->user = $user;
+
                     $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
                     $user->load();
 
@@ -90,8 +94,6 @@ class WebAuthentication extends Middleware
 
                     // Do they have permission?
                     $user->routeAuthentication($resource);
-
-                    $app->user = $user;
 
                     // We are authenticated
                 }
