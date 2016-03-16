@@ -1103,7 +1103,7 @@ class XMDSSoap4
 
         // Touch the display record
         $displayObject = new Display();
-        $displayObject->Touch($this->displayId, array('mediaInventoryStatus' => $mediaInventoryComplete, 'mediaInventoryXml' => $inventory));
+        $displayObject->Touch($this->displayId, array('mediaInventoryStatus' => $mediaInventoryComplete, 'mediaInventoryXml' => $inventory, 'clientAddress' => $this->getIp()));
 
         $this->LogBandwidth($this->displayId, Bandwidth::$MEDIAINVENTORY, strlen($inventory));
 
@@ -1269,7 +1269,7 @@ class XMDSSoap4
 
         // Touch the display record
         $displayObject = new Display();
-        $displayObject->Touch($this->displayId, array('screenShotRequested' => 0));
+        $displayObject->Touch($this->displayId, array('screenShotRequested' => 0, 'clientAddress' => $this->getIp()));
 
         $this->LogBandwidth($this->displayId, Bandwidth::$SCREENSHOT, filesize($location));
 
@@ -1387,15 +1387,6 @@ class XMDSSoap4
         // See if the client was off-line and if appropriate send an alert
         // to say that it has come back on-line
         $this->AlertDisplayUp($this->displayId, $this->display, $this->loggedIn, $this->emailAlert);
-
-        // Last accessed date on the display
-        $displayObject = new Display();
-        $displayObject->Touch($this->displayId, array('clientAddress' => $this->getIp()));
-
-        // Commit early to prevent deadlocks
-        $pdo = PDOConnect::init();
-        if ($pdo->inTransaction())
-            $pdo->commit();
     }
 
     /**

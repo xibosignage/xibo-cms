@@ -1159,15 +1159,6 @@ class XMDSSoap3
         // See if the client was off-line and if appropriate send an alert
         // to say that it has come back on-line
         $this->AlertDisplayUp($this->displayId, $this->display, $this->loggedIn, $this->emailAlert);
-
-        // Last accessed date on the display
-        $displayObject = new Display();
-        $displayObject->Touch($this->displayId, array('clientAddress' => $this->getIp()));
-
-        // Commit early to prevent deadlocks
-        $pdo = PDOConnect::init();
-        if ($pdo->inTransaction())
-            $pdo->commit();
     }
 
     private function AlertDisplayUp($displayId, $display, $loggedIn, $emailAlert)
