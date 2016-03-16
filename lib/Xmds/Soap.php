@@ -1303,6 +1303,9 @@ class Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
+        // Update the last accessed date/logged in
+        $this->touchDisplay();
+
         // The MediaId is actually the widgetId
         try {
             $requiredFile = $this->requiredFileFactory->getByDisplayAndResource($this->display->displayId, $layoutId, $regionId, $mediaId);
@@ -1391,24 +1394,8 @@ class Soap
             if ($this->display->licensed != 1)
                 return false;
 
-            // See if the client was off-line and if appropriate send an alert
-            // to say that it has come back on-line
-            $this->alertDisplayUp();
-
-            // Last accessed date on the display
-            $this->display->lastAccessed = time();
-            $this->display->loggedIn = 1;
-            $this->display->clientAddress = $this->getIp();
-            $this->display->save(Display::$saveOptionsMinimum);
-
-            // Commit if necessary
-            $this->getStore()->commitIfNecessary();
-
             // Configure our log processor
             $this->logProcessor->setDisplay($this->display->displayId);
-
-            if ($this->display->isAuditing == 1)
-                $this->getLog()->info('IN');
 
             return true;
 
@@ -1418,6 +1405,25 @@ class Soap
         }
     }
 
+    /**
+     * Touch Display
+     */
+    protected function touchDisplay()
+    {
+        // Last accessed date on the display
+        $this->display->lastAccessed = time();
+        $this->display->loggedIn = 1;
+        $this->display->clientAddress = $this->getIp();
+        $this->display->save(Display::$saveOptionsMinimum);
+
+        // Commit if necessary
+        $this->getStore()->commitIfNecessary();
+    }
+
+    /**
+     * Alert Display Up
+     * @throws \phpmailerException
+     */
     protected function alertDisplayUp()
     {
         $maintenanceEnabled = $this->getConfig()->GetSetting('MAINTENANCE_ENABLED');
