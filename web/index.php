@@ -103,7 +103,6 @@ $app->add(new \Xibo\Middleware\Xmr());
 
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
-    echo "hi";
     $app->container->get('\Xibo\Controller\Error')->handler($e);
 });
 
