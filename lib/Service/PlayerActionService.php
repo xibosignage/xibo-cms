@@ -11,6 +11,7 @@ namespace Xibo\Service;
 
 use Xibo\Entity\Display;
 use Xibo\Exception\ConfigurationException;
+use Xibo\XMR\PlayerAction;
 use Xibo\XMR\PlayerActionException;
 
 /**
@@ -24,12 +25,25 @@ class PlayerActionService implements PlayerActionServiceInterface
      */
     private $config;
 
+    /** @var  LogServiceInterface */
+    private $log;
+
+    /** @var string  */
+    private $xmrAddress;
+
+    /** @var array[PlayerAction] */
+    private $actions = [];
+
     /**
      * @inheritdoc
      */
-    public function __construct($config)
+    public function __construct($config, $log)
     {
         $this->config = $config;
+        $this->log = $log;
+
+        // XMR network address
+        $this->xmrAddress = $this->getConfig()->GetSetting('XMR_ADDRESS');
     }
 
     /**
@@ -53,10 +67,7 @@ class PlayerActionService implements PlayerActionServiceInterface
         if (!$this->getConfig()->checkZmq())
             throw new ConfigurationException(__('ZeroMQ is required to send Player Actions. Please check your configuration.'));
 
-        // XMR network address
-        $xmrAddress = $this->getConfig()->GetSetting('XMR_ADDRESS');
-
-        if ($xmrAddress == '')
+        if ($this->xmrAddress == '')
             throw new \InvalidArgumentException(__('XMR address is not set'));
 
         // Send a message to all displays
@@ -65,13 +76,31 @@ class PlayerActionService implements PlayerActionServiceInterface
             if ($display->xmrChannel == '' || $display->xmrPubKey == '')
                 throw new \InvalidArgumentException(__('This Player is not configured or ready to receive push commands over XMR. Please contact your administrator.'));
 
+            $displayAction = clone $action;
+            $displayAction->setIdentity($display->xmrChannel, $display->xmrPubKey);
+
+            // Add to collection
+            $this->actions[] = $displayAction;
+        }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function processQueue()
+    {
+        if (count($this->actions) > 0)
+            $this->log->debug('Player Action Service is looking to send %d actions', count($this->actions));
+
+        foreach ($this->actions as $action) {
+            /** @var PlayerAction $action */
             try {
                 // Assign the Layout to the Display
-                if (!$action->setIdentity($display->xmrChannel, $display->xmrPubKey)->send($xmrAddress))
-                    throw new ConfigurationException(__('This command has been refused'));
+                if (!$action->send($this->xmrAddress))
+                    $this->log->error('Player action refused.');
 
             } catch (PlayerActionException $sockEx) {
-                throw new ConfigurationException(__('Connection Failed'));
+                $this->log->error('Player action connection failed.');
             }
         }
     }

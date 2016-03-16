@@ -37,7 +37,6 @@ use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\HelpService;
 use Xibo\Service\ModuleService;
-use Xibo\Service\PlayerActionService;
 use Xibo\Service\SanitizeService;
 
 /**
@@ -150,11 +149,6 @@ class State extends Middleware
                 $app->dateService,
                 $app->sanitizerService
             );
-        });
-
-        // Player Action Helper
-        $app->container->singleton('playerActionService', function() use($app) {
-            return new PlayerActionService($app->configService);
         });
 
         // Set some public routes

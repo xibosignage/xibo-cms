@@ -23,8 +23,8 @@ use Xibo\Service\ConfigService;
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
 require PROJECT_ROOT . '/vendor/autoload.php';
 
@@ -96,12 +96,14 @@ else
 $app->add(new \Xibo\Middleware\CsrfGuard());
 $app->add(new \Xibo\Middleware\State());
 $app->add(new \Xibo\Middleware\Storage());
+$app->add(new \Xibo\Middleware\Xmr());
 //
 // End Middleware
 //
 
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
+    echo "hi";
     $app->container->get('\Xibo\Controller\Error')->handler($e);
 });
 
@@ -119,5 +121,6 @@ try {
     $app->run();
 }
 catch (Exception $e) {
+    echo 'Fatal Error - sorry this shouldn\'t happen. ';
     echo $e->getMessage();
 }
