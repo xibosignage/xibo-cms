@@ -635,7 +635,9 @@ class State extends Middleware
                 $container->userGroupFactory,
                 $container->widgetFactory,
                 $container->transitionFactory,
-                $container->regionFactory
+                $container->regionFactory,
+                $container->layoutFactory,
+                $container->displayGroupFactory
             );
         });
 

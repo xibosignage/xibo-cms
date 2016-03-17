@@ -29,9 +29,12 @@ use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\TransitionFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Service\ConfigService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -144,6 +147,15 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected $commandFactory;
 
+    /** @var  LayoutFactory */
+    protected $layoutFactory;
+
+    /** @var  WidgetFactory */
+    protected $widgetFactory;
+
+    /** @var  DisplayGroupFactory */
+    protected $displayGroupFactory;
+
     /**
      * ModuleWidget constructor.
      * @param Slim $app
@@ -178,6 +190,19 @@ abstract class ModuleWidget implements ModuleInterface
         $this->commandFactory = $commandFactory;
 
         $this->init();
+    }
+
+    /**
+     * Set Child Object Dependencies
+     * @param LayoutFactory $layoutFactory
+     * @param WidgetFactory $widgetFactory
+     * @param DisplayGroupFactory $displayGroupFactory
+     */
+    public function setChildObjectDependencies($layoutFactory, $widgetFactory, $displayGroupFactory)
+    {
+        $this->layoutFactory = $layoutFactory;
+        $this->widgetFactory = $widgetFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
     }
 
     /**
@@ -811,6 +836,15 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * Count Library Media
+     * @return int
+     */
+    public function countLibraryMedia()
+    {
+        return 0;
+    }
+
+    /**
      * Get Media Id
      * @return int
      * @throws NotFoundException
@@ -832,7 +866,9 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function getMedia()
     {
-        return $this->mediaFactory->getById($this->getMediaId());
+        $media = $this->mediaFactory->getById($this->getMediaId());
+        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
+        return $media;
     }
 
     /**
