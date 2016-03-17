@@ -193,10 +193,10 @@ class State extends Middleware
 
         // Configure logging
         if (strtolower($mode) == 'test') {
-            $app->config('log.level', \Slim\Log::DEBUG);
+            $app->getLog()->setLevel(\Slim\Log::DEBUG);
         }
         else {
-            $app->config('log.level', \Xibo\Service\LogService::resolveLogLevel($app->configService->GetSetting('audit', 'error')));
+            $app->getLog()->setLevel(\Xibo\Service\LogService::resolveLogLevel($app->configService->GetSetting('audit')));
         }
 
         // Configure any extra log handlers
