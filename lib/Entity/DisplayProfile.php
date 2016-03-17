@@ -968,6 +968,17 @@ class DisplayProfile
                         'groupClass' => NULL
                     ),
                     array(
+                        'name' => 'screenShotSize',
+                        'tabId' => 'advanced',
+                        'title' => __('Screen Shot Size'),
+                        'type' => 'int',
+                        'fieldType' => 'number',
+                        'default' => $this->configService->getThemeConfig('client_screenShotSize_default', 100),
+                        'helpText' => __('The size of the largest dimension. Empty or 0 means the screen size.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
                         'name' => 'updateStartWindow',
                         'tabId' => 'advanced',
                         'title' => __('Update Window Start Time'),
