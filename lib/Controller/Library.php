@@ -722,7 +722,7 @@ class Library extends Base
      *  tags={"library"},
      *  summary="Download Media",
      *  description="Download a Media file from the Library",
-     *  produces=["application/octet-stream"],
+     *  produces={"application/octet-stream"},
      *  @SWG\Parameter(
      *      name="mediaId",
      *      in="path",

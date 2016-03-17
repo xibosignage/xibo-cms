@@ -958,7 +958,7 @@ class User extends Base
      *     description="Save User preferences for non-state information, such as Layout designer zoom levels",
      *     @SWG\Parameter(
      *      name="preference",
-     *      in="formData",
+     *      in="body",
      *      required=true,
      *      @SWG\Schema(
      *          type="array",
