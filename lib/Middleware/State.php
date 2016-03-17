@@ -1231,6 +1231,8 @@ class State extends Middleware
                 $container->store,
                 $container->logService,
                 $container->sanitizerService,
+                $container->user,
+                $container->userFactory,
                 $container->dateService,
                 $container->widgetOptionFactory,
                 $container->widgetMediaFactory,

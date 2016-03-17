@@ -817,7 +817,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function getMediaId()
     {
-        $this->getLog()->debug('Getting first MediaID for Widget: %d', $this->getWidgetId());
+        $this->getLog()->debug('Getting first MediaID for Widget: %d. Media: %s', $this->getWidgetId(), json_encode($this->widget->mediaIds));
 
         if (count($this->widget->mediaIds) <= 0)
             throw new NotFoundException(__('No file to return'));

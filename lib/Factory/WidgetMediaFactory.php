@@ -58,7 +58,7 @@ class WidgetMediaFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = null)
     {
-        $sql = 'SELECT mediaId FROM `lkwidgetmedia` WHERE widgetId = :widgetId';
+        $sql = 'SELECT mediaId FROM `lkwidgetmedia` WHERE widgetId = :widgetId AND mediaId <> 0 ';
 
         return array_map(function($element) { return $element['mediaId']; }, $this->getStore()->select($sql, array('widgetId' => $this->getSanitizer()->getInt('widgetId', $filterBy))));
     }
