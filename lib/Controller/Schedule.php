@@ -213,51 +213,18 @@ class Schedule extends Base
             // Event Permissions
             $editable = $this->isEventEditable($row->displayGroups);
 
+            $fromDt = $this->getDate()->parse($row->fromDt, 'U');
+            $toDt = $this->getDate()->parse($row->toDt, 'U');
+
             // Event Title
-            $title = sprintf(__('[%s to %s] %s scheduled on %s (Order: %d)'),
-                $this->getDate()->getLocalDate($row->fromDt),
-                $this->getDate()->getLocalDate($row->toDt),
+            $title = sprintf(__('%s scheduled on %s'),
                 ($row->campaign == '') ? $row->command : $row->campaign,
-                $displayGroupList,
-                $row->displayOrder
+                $displayGroupList
             );
 
             // Event URL
             $editUrl = ($this->isApi()) ? 'schedule.edit' : 'schedule.edit.form';
             $url = ($editable) ? $this->urlFor($editUrl, ['id' => $row->eventId]) : '#';
-
-            // Classes used to distinguish between events
-            //$class = 'event-warning';
-
-            // Event is on a single display
-            if (count($row->displayGroups) <= 1) {
-                $class = 'event-info';
-                $extra = 'single-display';
-            } else {
-                $class = "event-success";
-                $extra = 'multi-display';
-            }
-
-            if ($row->recurrenceType != '') {
-                $class = 'event-special';
-                $extra = 'recurring';
-            }
-
-            // Priority event
-            if ($row->isPriority == 1) {
-                $class = 'event-important';
-                $extra = 'priority';
-            }
-
-            if ($row->eventTypeId == \Xibo\Entity\Schedule::$COMMAND_EVENT) {
-                $extra = 'command';
-            }
-
-            // Is this event editable?
-            if (!$editable) {
-                $class = 'event-inverse';
-                $extra = 'view-only';
-            }
 
             /**
              * @SWG\Definition(
@@ -273,6 +240,11 @@ class Schedule extends Base
              *      description="Event Title"
              *  ),
              *  @SWG\Property(
+             *      property="sameDay",
+             *      type="integer",
+             *      description="Does this event happen only on 1 day"
+             *  ),
+             *  @SWG\Property(
              *      property="event",
              *      ref="#/definitions/Schedule"
              *  )
@@ -282,10 +254,10 @@ class Schedule extends Base
                 'id' => $row->eventId,
                 'title' => $title,
                 'url' => $url,
-                'class' => 'XiboFormButton ' . $class,
-                'extra' => $extra,
                 'start' => $row->fromDt * 1000,
                 'end' => $row->toDt * 1000,
+                'sameDay' => ($fromDt->day == $toDt->day),
+                'editable' => $editable,
                 'event' => $row
             );
         }

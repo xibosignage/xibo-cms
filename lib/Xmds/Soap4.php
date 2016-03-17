@@ -393,6 +393,9 @@ class Soap4 extends Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', 'This display client is not licensed');
 
+        // Update the last accessed date/logged in
+        $this->touchDisplay();
+
         if ($this->display->isAuditing == 1)
             $this->getLog()->debug($status);
 
@@ -446,6 +449,9 @@ class Soap4 extends Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', 'This display client is not licensed');
 
+        // Update the last accessed date/logged in
+        $this->touchDisplay();
+
         if ($this->display->isAuditing == 1)
             $this->getLog()->debug('Received Screen shot');
 
@@ -497,7 +503,7 @@ class Soap4 extends Soap
 
         // Touch the display record
         $this->display->screenShotRequested = 0;
-        $this->display->save(['validate' => false, 'audit' => false]);
+        $this->display->save(Display::$saveOptionsMinimum);
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
 

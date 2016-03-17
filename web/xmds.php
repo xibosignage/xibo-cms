@@ -161,6 +161,9 @@ if (isset($_GET['file'])) {
             throw $e;
     }
 
+    if ($app->store->getConnection()->inTransaction())
+        $app->store->getConnection()->commit();
+
     exit;
 }
 
@@ -193,7 +196,9 @@ try {
         $app->displayFactory,
         $app->userFactory,
         $app->bandwidthFactory,
-        $app->mediaFactory
+        $app->mediaFactory,
+        $app->widgetFactory,
+        $app->regionFactory
     );
     $soap->handle();
 

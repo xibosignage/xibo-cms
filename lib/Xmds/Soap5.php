@@ -42,7 +42,7 @@ class Soap5 extends Soap4
         $clientVersion = $this->getSanitizer()->string($clientVersion);
         $clientCode = $this->getSanitizer()->int($clientCode);
         $macAddress = $this->getSanitizer()->string($macAddress);
-        $clientAddress = $this->getSanitizer()->getString('REMOTE_ADDR');
+        $clientAddress = $this->getIp();
         $xmrChannel = $this->getSanitizer()->string($xmrChannel);
         $xmrPubKey = trim($this->getSanitizer()->string($xmrPubKey));
 

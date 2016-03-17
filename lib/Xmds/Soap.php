@@ -29,13 +29,14 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\RegionFactory;
 use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Random;
 use Xibo\Service\ConfigService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
-use Xibo\Service\FactoryServiceInterface;
 use Xibo\Service\LogService;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -99,6 +100,12 @@ class Soap
     /** @var  MediaFactory */
     protected $mediaFactory;
 
+    /** @var  WidgetFactory */
+    protected $widgetFactory;
+
+    /** @var  RegionFactory */
+    protected $regionFactory;
+
     /**
      * Soap constructor.
      * @param LogProcessor $logProcessor
@@ -116,8 +123,10 @@ class Soap
      * @param UserFactory $userFactory
      * @param BandwidthFactory $bandwidthFactory
      * @param MediaFactory $mediaFactory
+     * @param WidgetFactory $widgetFactory
+     * @param RegionFactory $regionFactory
      */
-    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userFactory, $bandwidthFactory, $mediaFactory)
+    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory)
     {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
@@ -134,6 +143,8 @@ class Soap
         $this->userFactory = $userFactory;
         $this->bandwidthFactory = $bandwidthFactory;
         $this->mediaFactory = $mediaFactory;
+        $this->widgetFactory = $widgetFactory;
+        $this->regionFactory = $regionFactory;
     }
 
     /**
@@ -454,13 +465,14 @@ class Soap
             // For layouts the MD5 column is the layout xml
             $fileSize = filesize($path);
             $md5 = md5_file($path);
+            $fileName = basename($path);
 
             // Log
             if ($this->display->isAuditing == 1)
                 $this->getLog()->debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
 
             // Add nonce
-            $layoutNonce = $this->requiredFileFactory->createForLayout($this->display->displayId, $requestKey, $layoutId, $fileSize, basename($path));
+            $layoutNonce = $this->requiredFileFactory->createForLayout($this->display->displayId, $requestKey, $layoutId, $fileSize, $fileName);
             $layoutNonce->save();
 
             // Add the Layout file element
@@ -470,10 +482,12 @@ class Soap
             $file->setAttribute("size", $fileSize);
             $file->setAttribute("md5", $md5);
 
-            if ($httpDownloads) {
+            $supportsHttpLayouts = ($this->display->clientType == 'android' || ($this->display->clientType == 'windows' && $this->display->clientCode > 120));
+
+            if ($httpDownloads && $supportsHttpLayouts) {
                 // Serve a link instead (standard HTTP link)
                 $file->setAttribute("path", $this->generateRequiredFileDownloadPath($layoutNonce->nonce));
-                $file->setAttribute("saveAs", $path);
+                $file->setAttribute("saveAs", $fileName);
                 $file->setAttribute("download", 'http');
             }
             else {
@@ -577,7 +591,10 @@ class Soap
 
         // Cache
         $cache->set($output);
-        $cache->expiresAt($this->getDate()->parse($toFilter, 'U'));
+
+        // Nonces expire after 86400 seconds.
+        //$cache->expiresAt($this->getDate()->parse($toFilter, 'U'));
+        $cache->expiresAfter(86400);
         $this->getPool()->saveDeferred($cache);
 
         // Log Bandwidth
@@ -1286,11 +1303,14 @@ class Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
+        // Update the last accessed date/logged in
+        $this->touchDisplay();
+
         // The MediaId is actually the widgetId
         try {
             $requiredFile = $this->requiredFileFactory->getByDisplayAndResource($this->display->displayId, $layoutId, $regionId, $mediaId);
 
-            $module = $this->moduleFactory->createWithWidget($this->getFactoryService()->get('WidgetFactory')->loadByWidgetId($mediaId), $this->getFactoryService()->get('RegionFactory')->getById($regionId));
+            $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($mediaId), $this->regionFactory->getById($regionId));
             $resource = $module->getResource($this->display->displayId);
 
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
@@ -1305,6 +1325,9 @@ class Soap
         catch (ControllerNotImplemented $e) {
             throw new \SoapFault('Receiver', 'Unable to get the media resource');
         }
+
+        // Commit the touch
+        $this->display->save(Display::$saveOptionsMinimum);
 
         // Log Bandwidth
         $this->logBandwidth($this->display->displayId, Bandwidth::$GETRESOURCE, strlen($resource));
@@ -1374,24 +1397,8 @@ class Soap
             if ($this->display->licensed != 1)
                 return false;
 
-            // See if the client was off-line and if appropriate send an alert
-            // to say that it has come back on-line
-            $this->alertDisplayUp();
-
-            // Last accessed date on the display
-            $this->display->lastAccessed = time();
-            $this->display->loggedIn = 1;
-            $this->display->clientAddress = $this->getIp();
-            $this->display->save(Display::$saveOptionsMinimum);
-
-            // Commit if necessary
-            $this->getStore()->commitIfNecessary();
-
             // Configure our log processor
             $this->logProcessor->setDisplay($this->display->displayId);
-
-            if ($this->display->isAuditing == 1)
-                $this->getLog()->info('IN');
 
             return true;
 
@@ -1401,6 +1408,21 @@ class Soap
         }
     }
 
+    /**
+     * Touch Display
+     */
+    protected function touchDisplay()
+    {
+        // Last accessed date on the display
+        $this->display->lastAccessed = time();
+        $this->display->loggedIn = 1;
+        $this->display->clientAddress = $this->getIp();
+    }
+
+    /**
+     * Alert Display Up
+     * @throws \phpmailerException
+     */
     protected function alertDisplayUp()
     {
         $maintenanceEnabled = $this->getConfig()->GetSetting('MAINTENANCE_ENABLED');

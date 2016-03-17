@@ -286,16 +286,21 @@ class ForecastIo extends ModuleWidget
      */
     private function getForecastData($displayId)
     {
-        $defaultLat = $this->getConfig()->getSetting('DEFAULT_LAT');
-        $defaultLong = $this->getConfig()->getSetting('DEFAULT_LONG');
+        $defaultLat = $this->getConfig()->GetSetting('DEFAULT_LAT');
+        $defaultLong = $this->getConfig()->GetSetting('DEFAULT_LONG');
 
         if ($this->getOption('useDisplayLocation') == 1) {
             // Use the display ID or the default.
             if ($displayId != 0) {
 
                 $display = $this->displayFactory->getById($displayId);
-                $defaultLat = $display->latitude;
-                $defaultLong = $display->longitude;
+
+                if ($display->latitude != '' && $display->longitude != '') {
+                    $defaultLat = $display->latitude;
+                    $defaultLong = $display->longitude;
+                } else {
+                    $this->getLog()->error('Warning, display %s does not have a lat/long and yet a forecast widget is set to use display location.', $display->display);
+                }
             }
         } else {
             $defaultLat = $this->getOption('latitude', $defaultLat);

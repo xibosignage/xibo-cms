@@ -72,8 +72,27 @@
             "order": [[ 1, "asc"]],
             ajax: {
                 "url": "{{ urlFor("display.search") }}",
-                "data": function(d) {
-                    $.extend(d, $("#displays").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                "data": function(dataToSend) {
+                    console.log(dataToSend);
+                    //make a new object so as not to destroy the input.
+                    var data = {};
+                    data.draw = dataToSend.draw;
+                    data.length = dataToSend.length;
+                    data.start = dataToSend.start;
+                    data.order = dataToSend.order;
+                    data.columns = [];
+
+                    $.each(dataToSend.columns, function (index, e) {
+                        var col = {};
+                        col.data = e.data;
+                        if (e.name != null && e.name != "")
+                            col.name = e.name;
+                        data.columns.push(col);
+                    });
+
+                    $.extend(data, $("#displays").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+
+                    return data;
                 }
             },
             "columns": [

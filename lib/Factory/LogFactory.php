@@ -105,7 +105,7 @@ class LogFactory extends BaseFactory
         }
 
         if ($this->getSanitizer()->getCheckbox('excludeLog', $filterBy) == 1) {
-            $body .= ' AND log.page NOT LIKE \'/log%\' ';
+            $body .= ' AND (log.page NOT LIKE \'/log%\' OR log.page = \'/login\') ';
         }
 
         // Sorting?

@@ -28,6 +28,7 @@ $app->get('/', function () use ($app) {
     /* @var \Xibo\Entity\User $user */
 
     if ($user->newUserWizard == 0) {
+        /** @var \Xibo\Controller\Login $controller */
         $controller = $app->container->get('\Xibo\Controller\Login');
         $controller->setApp($app);
         $controller->userWelcome();
@@ -38,6 +39,7 @@ $app->get('/', function () use ($app) {
     else {
         $app->logService->debug('Showing the homepage: %s', $user->homePageId);
 
+        /** @var \Xibo\Entity\Page $page */
         $page = $app->container->get('pageFactory')->getById($user->homePageId);
 
         $app->redirectTo($page->getName() . '.view');
@@ -60,39 +62,7 @@ $app->get('/dashboard/media/data', '\Xibo\Controller\MediaManager:grid')->name('
 $app->get('/login', '\Xibo\Controller\Login:loginForm')->name('login');
 
 // Login Request
-$app->post('/login', function () use ($app) {
-
-    // Capture the prior route (if there is one)
-    $priorRoute = ($app->request()->post('priorRoute'));
-
-    try {
-        $controller = $app->container->get('\Xibo\Controller\Login');
-        $controller->setApp($app);
-        $controller->setNoOutput();
-        $controller->login();
-
-        $app->logService->info('%s user logged in.', $app->user->userName);
-
-        try {
-            $redirect = ($priorRoute == '' || stripos($priorRoute, 'login')) ? $app->urlFor('home') : $priorRoute;
-        }
-        catch (RuntimeException $e) {
-            $redirect = $app->urlFor('home');
-        }
-
-        $app->logService->debug('Redirect to %s', $redirect);
-        $app->redirect($redirect);
-    }
-    catch (\Xibo\Exception\AccessDeniedException $e) {
-        $app->logService->warning($e->getMessage());
-        $app->flash('login_message', __('Username or Password incorrect'));
-        $app->flash('priorRoute', $priorRoute);
-    }
-    catch (\Xibo\Exception\FormExpiredException $e) {
-        $app->flash('priorRoute', $priorRoute);
-    }
-    $app->redirectTo('login');
-});
+$app->post('/login', '\Xibo\Controller\Login:login');
 
 // Logout Request
 $app->get('/logout', '\Xibo\Controller\Login:logout')->name('logout');

@@ -8,10 +8,12 @@
 			<div class="span1 col-xs-1"><b><%= cal.locale.all_day %></b></div>
 			<div class="span11 col-xs-11">
 				<% _.each(all_day, function(event){ %>
+                    <%
+                    var eventTitle = (event.event.dayPartId == 1) ? event.title : "[" + moment(event.event.fromDt, "X").format(jsDateFormat) + " - " + moment(event.event.toDt, "X").format(jsDateFormat) + "] " + event.title;
+                    %>
 					<div class="day-highlight dh-<%= event['class'] %>">
-						<a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
-						   data-event-class="<%= event['class'] %>" class="event-item">
-							<%= event.title %></a>
+						<a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" class="event-item">
+							<%= eventTitle %></a>
 					</div>
 				<% }); %>
 			</div>
@@ -24,8 +26,7 @@
 				<% _.each(before_time, function(event){ %>
 					<div class="day-highlight dh-<%= event['class'] %>">
 						<span class="cal-hours pull-right"><%= event.end_hour %></span>
-						<a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
-						   data-event-class="<%= event['class'] %>" class="event-item">
+						<a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" class="event-item">
 							<%= event.title %></a>
 					</div>
 				<% }); %>

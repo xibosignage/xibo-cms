@@ -493,11 +493,11 @@ class Region extends Base
      *      required=true,
      *      @SWG\Schema(
      *          type="object",
-     *          additionalProperties={[{"title":"regionId", "type":"integer"},
+     *          additionalProperties={"title":"regionId", "type":"integer"},
      *          additionalProperties={"title":"top", "type":"number"},
      *          additionalProperties={"title":"left", "type":"number"},
      *          additionalProperties={"title":"width", "type":"number"},
-     *          additionalProperties={"title":"height", "type":"number"}]}
+     *          additionalProperties={"title":"height", "type":"number"}
      *      )
      *   ),
      *  @SWG\Response(

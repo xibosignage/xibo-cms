@@ -692,6 +692,13 @@ class Display extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="clearCachedData",
+     *      in="formData",
+     *      description="Clear all Cached data for this display",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -706,8 +713,8 @@ class Display extends Base
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
-        // Track the licenced flag
-        $licensed = $display->licensed;
+        // Track the default layout
+        $defaultLayoutId = $display->defaultLayoutId;
 
         // Update properties
         $display->display = $this->getSanitizer()->getString('display');
@@ -728,13 +735,16 @@ class Display extends Base
         $display->longitude = $this->getSanitizer()->getDouble('longitude');
         $display->displayProfileId = $this->getSanitizer()->getInt('displayProfileId');
 
-        $display->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-        $display->save();
-
-        // Remove the cache if the display licenced state has changed
-        if ($licensed != $display->licensed) {
+        // Should we invalidate this display?
+        if ($defaultLayoutId != $display->defaultLayoutId) {
+            $display->setMediaIncomplete();
+        } else if ($this->getSanitizer()->getCheckbox('clearCachedData', 1) == 1) {
+            // Remove the cache if the display licenced state has changed
             $this->pool->deleteItem($display->getCacheKey());
         }
+
+        $display->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $display->save();
 
         // Return
         $this->getState()->hydrate([
@@ -1088,7 +1098,7 @@ class Display extends Base
                     $stat = new Stat($this->store, $this->getLog());
                     $stat->type = 'displaydown';
                     $stat->displayId = $display->displayId;
-                    $stat->fromDt = $display->lastAccessed;
+                    $stat->fromDt = $this->getDate()->getLocalDate($display->lastAccessed);
                     $stat->save();
                 }
 

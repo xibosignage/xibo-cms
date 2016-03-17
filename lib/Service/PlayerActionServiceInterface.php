@@ -21,8 +21,9 @@ interface PlayerActionServiceInterface
     /**
      * PlayerActionHelper constructor.
      * @param ConfigServiceInterface
+     * @param LogServiceInterface
      */
-    public function __construct($config);
+    public function __construct($config, $log);
 
     /**
      * @param array[Display]|Display $displays
@@ -30,4 +31,9 @@ interface PlayerActionServiceInterface
      * @throws ConfigurationException
      */
     public function sendAction($displays, $action);
+
+    /**
+     * Process the Queue of Actions
+     */
+    public function processQueue();
 }

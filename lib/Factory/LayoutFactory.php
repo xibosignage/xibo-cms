@@ -339,7 +339,8 @@ class LayoutFactory extends BaseFactory
                 (double)$regionNode->getAttribute('width'),
                 (double)$regionNode->getAttribute('height'),
                 (double)$regionNode->getAttribute('top'),
-                (double)$regionNode->getAttribute('left')
+                (double)$regionNode->getAttribute('left'),
+                (int)$regionNode->getAttribute('zindex')
                 );
 
             // Use the regionId locally to parse the rest of the XLF
@@ -374,6 +375,11 @@ class LayoutFactory extends BaseFactory
                 $module = $modules[$widget->type];
                 /* @var \Xibo\Entity\Module $module */
 
+                // Skip dataset view widgets
+                // pending: https://github.com/xibosignage/xibo/issues/642
+                if ($module->type == 'datasetview')
+                    continue;
+
                 if ($module->regionSpecific == 0) {
                     $widget->assignMedia($widget->tempId);
                 }
@@ -391,6 +397,10 @@ class LayoutFactory extends BaseFactory
                         $widget->widgetOptions[] = $widgetOption;
                     }
                 }
+
+                // Skip dataset backed ticker widgets
+                if ($module->type == 'ticker' && $widget->getOptionValue('sourceId', 1) != 1)
+                    continue;
 
                 // Get all widget raw content
                 foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media[@id="' . $widget->tempId . '"]/raw') as $rawNode) {
@@ -500,7 +510,23 @@ class LayoutFactory extends BaseFactory
             // Import the Media File
             $intendedMediaName = $file['name'];
             $temporaryFileName = $libraryLocation . $file['file'];
-            if (file_put_contents($temporaryFileName, $zip->getFromName('library/' . $file['file'])) === false)
+
+            // Get the file from the ZIP
+            $fileContents = $zip->getFromName('library/' . $file['file']);
+
+            if ($fileContents === false) {
+                // Log out the entire ZIP file and all entries.
+                $log = 'Problem getting library/' . $file['file'] . '. Files: ';
+                for ($i = 0; $i < $zip->numFiles; $i++) {
+                    $log .= $zip->getNameIndex($i) . ', ';
+                }
+
+                $this->getLog()->error($log);
+
+                throw new \InvalidArgumentException(__('Empty file in ZIP'));
+            }
+
+            if (file_put_contents($temporaryFileName, $fileContents) === false)
                 throw new \InvalidArgumentException(__('Cannot save media file from ZIP file'));
 
             // Check we don't already have one

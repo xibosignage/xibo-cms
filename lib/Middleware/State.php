@@ -35,10 +35,8 @@ use Xibo\Helper\NullSession;
 use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\FactoryService;
 use Xibo\Service\HelpService;
 use Xibo\Service\ModuleService;
-use Xibo\Service\PlayerActionService;
 use Xibo\Service\SanitizeService;
 
 /**
@@ -110,6 +108,8 @@ class State extends Middleware
      */
     public static function setState($app)
     {
+        //$app->logService->debug('Set State');
+
         // Set the root Uri
         State::setRootUri($app);
 
@@ -153,11 +153,6 @@ class State extends Middleware
             );
         });
 
-        // Player Action Helper
-        $app->container->singleton('playerActionService', function() use($app) {
-            return new PlayerActionService($app->configService);
-        });
-
         // Set some public routes
         $app->publicRoutes = array('/login', '/logout', '/clock', '/about', '/login/ping');
 
@@ -188,6 +183,9 @@ class State extends Middleware
             else
                 return new NullSession();
         });
+
+        // We use Slim::flash() so we must immediately start a session (boo)
+        $app->container->session->set('init', '1');
 
         // App Mode
         $mode = $app->configService->GetSetting('SERVER_MODE');
@@ -261,8 +259,8 @@ class State extends Middleware
     {
         $drivers = [];
 
-        if ($configService->cacheDrivers != null && is_array($configService->cacheDrivers)) {
-            $drivers = $configService->cacheDrivers;
+        if ($configService->getCacheDrivers() != null && is_array($configService->getCacheDrivers())) {
+            $drivers = $configService->getCacheDrivers();
         } else {
             // File System Driver
             $drivers[] = new FileSystem(['path' => $configService->GetSetting('LIBRARY_LOCATION') . 'cache/']);
@@ -275,10 +273,10 @@ class State extends Middleware
         $composite = new Composite(['drivers' => $drivers]);
 
         // Create a pool using this driver set
-        $container->singleton('pool', function() use ($logWriter, $composite) {
+        $container->singleton('pool', function() use ($logWriter, $composite, $configService) {
             $pool = new Pool($composite);
             $pool->setLogger($logWriter);
-            $pool->setNamespace('Xibo');
+            $pool->setNamespace($configService->getCacheNamespace());
             return $pool;
         });
     }
@@ -455,6 +453,7 @@ class State extends Middleware
                 $container->helpService,
                 $container->dateService,
                 $container->configService,
+                $container->pool,
                 $container->displayProfileFactory,
                 $container->commandFactory
             );
@@ -551,7 +550,8 @@ class State extends Middleware
                 $container->permissionFactory,
                 $container->layoutFactory,
                 $container->playlistFactory,
-                $container->userGroupFactory
+                $container->userGroupFactory,
+                $container->displayGroupFactory
             );
         });
 

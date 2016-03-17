@@ -5,12 +5,21 @@ namespace Xibo\Helper;
 use Exception;
 use Xibo\Entity\Layout;
 
+/**
+ * Class LayoutUploadHandler
+ * @package Xibo\Helper
+ */
 class LayoutUploadHandler extends BlueImpUploadHandler
 {
+    /**
+     * @param $file
+     * @param $index
+     * @throws \Xibo\Exception\ConfigurationException
+     */
     protected function handle_form_data($file, $index)
     {
         $controller = $this->options['controller'];
-        /* @var \Xibo\Controller\Base $controller */
+        /* @var \Xibo\Controller\Layout $controller */
 
         // Handle form data, e.g. $_REQUEST['description'][$index]
         $fileName = $file->name;
@@ -25,7 +34,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             $importTags = isset($_REQUEST['importTags']) ? $_REQUEST['importTags'][$index] : 0;
 
             /* @var Layout $layout */
-            $layout = $controller->getFactoryService()->get('LayoutFactory')->createFromZip(
+            $layout = $controller->getLayoutFactory()->createFromZip(
                 $controller->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName,
                 $name,
                 $this->options['userId'],
@@ -42,7 +51,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             $file->name = $layout->layout;
 
         } catch (Exception $e) {
-            $controller->getLog()->error('Error uploading media: %s', $e->getMessage());
+            $controller->getLog()->error('Error importing Layout: %s', $e->getMessage());
             $controller->getLog()->debug($e->getTraceAsString());
 
             $file->error = $e->getMessage();

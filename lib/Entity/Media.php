@@ -362,8 +362,6 @@ class Media implements \JsonSerializable
         $params['name'] = $this->name;
         $params['userId'] = $this->ownerId;
 
-        $this->getLog()->sql($checkSQL, $params);
-
         $result = $this->getStore()->select($checkSQL, $params);
 
         if (count($result) > 0)

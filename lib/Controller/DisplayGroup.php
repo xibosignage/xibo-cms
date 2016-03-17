@@ -418,7 +418,7 @@ class DisplayGroup extends Base
      *      name="isDynamic",
      *      in="formData",
      *      description="Flag indicating whether this DisplayGroup is Dynamic",
-     *      type="int",
+     *      type="integer",
      *      required=true
      *   ),
      *  @SWG\Parameter(
@@ -494,7 +494,7 @@ class DisplayGroup extends Base
      *      name="isDynamic",
      *      in="formData",
      *      description="Flag indicating whether this DisplayGroup is Dynamic",
-     *      type="int",
+     *      type="integer",
      *      required=true
      *   ),
      *  @SWG\Parameter(

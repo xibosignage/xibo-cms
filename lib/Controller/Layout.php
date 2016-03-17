@@ -129,6 +129,14 @@ class Layout extends Base
     }
 
     /**
+     * @return LayoutFactory
+     */
+    public function getLayoutFactory()
+    {
+        return $this->layoutFactory;
+    }
+
+    /**
      * Displays the Layout Page
      */
     function displayPage()

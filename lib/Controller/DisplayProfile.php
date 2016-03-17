@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use Xibo\Entity\Command;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
@@ -34,6 +34,9 @@ use Xibo\Service\SanitizerServiceInterface;
  */
 class DisplayProfile extends Base
 {
+    /** @var  PoolInterface */
+    private $pool;
+
     /**
      * @var DisplayProfileFactory
      */
@@ -53,13 +56,15 @@ class DisplayProfile extends Base
      * @param \Xibo\Service\HelpServiceInterface $help
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
+     * @param PoolInterface $pool
      * @param DisplayProfileFactory $displayProfileFactory
      * @param CommandFactory $commandFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $displayProfileFactory, $commandFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $displayProfileFactory, $commandFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
+        $this->pool = $pool;
         $this->displayProfileFactory = $displayProfileFactory;
         $this->commandFactory = $commandFactory;
     }
@@ -233,6 +238,8 @@ class DisplayProfile extends Base
 
         // Get a list of unassigned Commands
         $unassignedCommands = array_udiff($this->commandFactory->query(), $displayProfile->commands, function($a, $b) {
+            /** @var \Xibo\Entity\Command $a */
+            /** @var \Xibo\Entity\Command $b */
             return $a->getId() - $b->getId();
         });
 
@@ -354,7 +361,7 @@ class DisplayProfile extends Base
 
         // Capture and update commands
         foreach ($this->commandFactory->query() as $command) {
-            /* @var Command $command */
+            /* @var \Xibo\Entity\Command $command */
             if ($this->getSanitizer()->getString('commandString_' . $command->commandId) != null) {
                 // Set and assign the command
                 $command->commandString = $this->getSanitizer()->getString('commandString_' . $command->commandId);
@@ -367,6 +374,9 @@ class DisplayProfile extends Base
 
         // Save the changes
         $displayProfile->save();
+
+        // Clear the display cached
+        $this->pool->deleteItem('display/');
 
         // Return
         $this->getState()->hydrate([

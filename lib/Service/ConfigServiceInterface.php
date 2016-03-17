@@ -123,4 +123,16 @@ interface ConfigServiceInterface
      * @return bool
      */
     public static function checkZmq();
+
+    /**
+     * Get cache drivers
+     * @return array
+     */
+    public function getCacheDrivers();
+
+    /**
+     * Get the cache namespace
+     * @return string
+     */
+    public function getCacheNamespace();
 }

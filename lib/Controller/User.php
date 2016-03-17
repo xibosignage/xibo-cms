@@ -408,6 +408,8 @@ class User extends Base
     {
         // Build a user entity and save it
         $user = $this->userFactory->create();
+        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
+
         $user->userName = $this->getSanitizer()->getString('userName');
         $user->email = $this->getSanitizer()->getString('email');
         $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
@@ -956,7 +958,7 @@ class User extends Base
      *     description="Save User preferences for non-state information, such as Layout designer zoom levels",
      *     @SWG\Parameter(
      *      name="preference",
-     *      in="formData",
+     *      in="body",
      *      required=true,
      *      @SWG\Schema(
      *          type="array",
