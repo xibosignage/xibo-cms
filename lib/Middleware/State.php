@@ -193,6 +193,8 @@ class State extends Middleware
 
         // Configure logging
         if (strtolower($mode) == 'test') {
+            error_reporting(E_ALL);
+            ini_set('display_errors', 1);
             $app->getLog()->setLevel(\Slim\Log::DEBUG);
         }
         else {
