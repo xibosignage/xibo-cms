@@ -460,7 +460,7 @@ class Soap
             $layout->loadPlaylists();
 
             // Make sure its XLF is up to date
-            $path = $layout->xlfToDisk();
+            $path = $layout->xlfToDisk(['notify' => false]);
 
             // For layouts the MD5 column is the layout xml
             $fileSize = filesize($path);

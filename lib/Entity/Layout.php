@@ -917,10 +917,15 @@ class Layout implements \JsonSerializable
 
     /**
      * Save the XLF to disk
+     * @param array $options
      * @return string the path
      */
-    public function xlfToDisk()
+    public function xlfToDisk($options = [])
     {
+        $options = array_merge([
+            'notify' => true
+        ], $options);
+
         $path = $this->getCachePath();
 
         if ($this->status == 3 || !file_exists($path)) {
@@ -941,7 +946,8 @@ class Layout implements \JsonSerializable
                 'saveRegionOptions' => false,
                 'manageRegionAssignments' => false,
                 'saveTags' => false,
-                'setBuildRequired' => false
+                'setBuildRequired' => false,
+                'notify' => $options['notify']
             ]);
         }
 
