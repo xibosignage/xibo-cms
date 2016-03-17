@@ -529,6 +529,8 @@ class Module extends Base
                 if (!$this->getUser()->checkDeleteable($media))
                     throw new AccessDeniedException();
 
+                $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
+
                 $media->delete();
             }
         }
