@@ -30,7 +30,7 @@
                 {% set message %}{% trans "This action cannot be undone." %}{% endset %}
                 {{ forms.message(message) }}
 
-                {% if module.widget.mediaIds|length > 0 %}
+                {% if module.getModule().regionSpecific == 0 and module.widget.mediaIds|length > 0 %}
                     {% if module.getMedia().isUsed(1) %}
                         {% set message %}{% trans "This widget is linked to Media in the Library which is also in use elsewhere. If this should be deleted then please do so from the Library page." %}{% endset %}
                         {{ forms.message(message) }}

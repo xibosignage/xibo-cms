@@ -399,6 +399,9 @@ class Schedule implements \JsonSerializable
      */
     public function delete()
     {
+        // Notify display groups
+        $notify = $this->displayGroups;
+
         // Delete display group assignments
         $this->displayGroups = [];
         $this->unlinkDisplayGroups();
@@ -408,6 +411,21 @@ class Schedule implements \JsonSerializable
 
         // Delete the event itself
         $this->getStore()->update('DELETE FROM `schedule` WHERE eventId = :eventId', ['eventId' => $this->eventId]);
+
+        // Check the main event dates to see if we are in the schedule look ahead
+        $this->isInScheduleLookAhead = $this->datesInScheduleLookAhead($this->fromDt, $this->toDt);
+
+        // Notify
+        // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
+        if ($this->isInScheduleLookAhead) {
+            $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify %d display groups', $this->displayGroups);
+            foreach ($notify as $displayGroup) {
+                /* @var DisplayGroup $displayGroup */
+                $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+                $displayGroup->setCollectRequired();
+                $displayGroup->setMediaIncomplete();
+            }
+        }
     }
 
     /**
