@@ -24,6 +24,7 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
+use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\ApplicationState;
@@ -169,7 +170,10 @@ class SAMLAuthentication extends Middleware
                         throw new AccessDeniedException(__('User logged at the IdP but the account does not exist in the CMS and Just-In-Time provisioning is disabled'));
                     } else {
                         // Provision the user
+                        /** @var User $user */
                         $user = $app->userFactory->create();
+                        $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
+
                         if (isset($userData["UserName"])) {
                             $user->userName = $userData["UserName"][0];
                         }
