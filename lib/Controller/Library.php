@@ -31,6 +31,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
+use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
@@ -102,6 +103,9 @@ class Library extends Base
     /** @var  DisplayGroupFactory */
     private $displayGroupFactory;
 
+    /** @var  RegionFactory */
+    private $regionFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -122,8 +126,9 @@ class Library extends Base
      * @param PlaylistFactory $playlistFactory
      * @param UserGroupFactory $userGroupFactory
      * @param DisplayGroupFactory $displayGroupFactory
+     * @param RegionFactory $regionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -138,6 +143,7 @@ class Library extends Base
         $this->playlistFactory = $playlistFactory;
         $this->userGroupFactory = $userGroupFactory;
         $this->displayGroupFactory = $displayGroupFactory;
+        $this->regionFactory = $regionFactory;
     }
 
     /**
@@ -201,6 +207,15 @@ class Library extends Base
     public function getUserGroupFactory()
     {
         return $this->userGroupFactory;
+    }
+
+    /**
+     * Get RegionFactory
+     * @return RegionFactory
+     */
+    public function getRegionFactory()
+    {
+        return $this->regionFactory;
     }
 
     /**

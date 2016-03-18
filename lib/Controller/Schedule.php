@@ -731,6 +731,7 @@ class Schedule extends Base
         if (!$this->isEventEditable($schedule->displayGroups))
             throw new AccessDeniedException();
 
+        $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $schedule->delete();
 
         // Return

@@ -192,9 +192,9 @@
 
                         {% for item in campaigns %}
                             {% if item.isLayoutSpecific == 1 %}
-                                {% set layoutOptions = [{id: item.campaignId, value: item.campaign}]|merge(layoutOptions) %}
+                                {% set layoutOptions = layoutOptions|merge([{id: item.campaignId, value: item.campaign}]) %}
                             {% else %}
-                                {% set campaignOptions = [{id: item.campaignId, value: item.campaign}]|merge(campaignOptions) %}
+                                {% set campaignOptions = campaignOptions|merge([{id: item.campaignId, value: item.campaign}]) %}
                             {% endif %}
                         {% endfor %}
 

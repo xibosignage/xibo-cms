@@ -143,7 +143,7 @@ class CampaignFactory extends BaseFactory
     public function query($sortOrder = null, $filterBy = array())
     {
         if ($sortOrder == null)
-            $sortOrder = array('Campaign');
+            $sortOrder = array('campaign');
 
         $campaigns = array();
         $params = array();
@@ -210,6 +210,15 @@ class CampaignFactory extends BaseFactory
                     $body .= " AND campaign.Campaign LIKE :search$i ";
                     $params['search' . $i] = '%' . ltrim($searchName) . '%';
                 }
+            }
+        }
+
+        // Exclude templates by default
+        if ($this->getSanitizer()->getInt('excludeTemplates', 1, $filterBy) != -1) {
+            if ($this->getSanitizer()->getInt('excludeTemplates', 1, $filterBy) == 1) {
+                $body .= " AND `campaign`.campaignId NOT IN (SELECT `campaignId` FROM `lkcampaignlayout` WHERE layoutId IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1)) ";
+            } else {
+                $body .= " AND `campaign`.campaignId IN (SELECT `campaignId` FROM `lkcampaignlayout` WHERE layoutId IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1)) ";
             }
         }
 

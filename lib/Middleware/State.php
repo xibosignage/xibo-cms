@@ -193,10 +193,12 @@ class State extends Middleware
 
         // Configure logging
         if (strtolower($mode) == 'test') {
-            $app->config('log.level', \Slim\Log::DEBUG);
+            error_reporting(E_ALL);
+            ini_set('display_errors', 1);
+            $app->getLog()->setLevel(\Slim\Log::DEBUG);
         }
         else {
-            $app->config('log.level', \Xibo\Service\LogService::resolveLogLevel($app->configService->GetSetting('audit', 'error')));
+            $app->getLog()->setLevel(\Xibo\Service\LogService::resolveLogLevel($app->configService->GetSetting('audit')));
         }
 
         // Configure any extra log handlers
@@ -551,7 +553,8 @@ class State extends Middleware
                 $container->layoutFactory,
                 $container->playlistFactory,
                 $container->userGroupFactory,
-                $container->displayGroupFactory
+                $container->displayGroupFactory,
+                $container->regionFactory
             );
         });
 
@@ -633,7 +636,9 @@ class State extends Middleware
                 $container->userGroupFactory,
                 $container->widgetFactory,
                 $container->transitionFactory,
-                $container->regionFactory
+                $container->regionFactory,
+                $container->layoutFactory,
+                $container->displayGroupFactory
             );
         });
 
@@ -648,6 +653,7 @@ class State extends Middleware
                 $container->configService,
                 $container->playlistFactory,
                 $container->regionFactory,
+                $container->mediaFactory,
                 $container->permissionsFactory,
                 $container->transitionFactory,
                 $container->widgetFactory,
@@ -1229,6 +1235,8 @@ class State extends Middleware
                 $container->store,
                 $container->logService,
                 $container->sanitizerService,
+                $container->user,
+                $container->userFactory,
                 $container->dateService,
                 $container->widgetOptionFactory,
                 $container->widgetMediaFactory,

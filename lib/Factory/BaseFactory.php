@@ -155,7 +155,7 @@ class BaseFactory
         else {
             $user = $this->getUser();
 
-            $this->getLog()->debug('Checking permissions against a the logged in user: %d, %s, %d', $user->userId, $user->userName, $user->userTypeId);
+            $this->getLog()->debug('Checking permissions against the logged in user: ID: %d, Name: %s, UserType: %d', $user->userId, $user->userName, $user->userTypeId);
         }
 
         $permissionSql = '';

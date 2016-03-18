@@ -443,6 +443,8 @@ class DisplayGroup extends Base
     public function add()
     {
         $displayGroup = $this->displayGroupFactory->createEmpty();
+        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+
         $displayGroup->displayGroup = $this->getSanitizer()->getString('displayGroup');
         $displayGroup->description = $this->getSanitizer()->getString('description');
         $displayGroup->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');

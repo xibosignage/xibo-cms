@@ -22,6 +22,8 @@ namespace Xibo\Controller;
 
 use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
@@ -87,6 +89,12 @@ class Module extends Base
      */
     private $regionFactory;
 
+    /** @var  LayoutFactory */
+    protected $layoutFactory;
+
+    /** @var  DisplayGroupFactory */
+    protected $displayGroupFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -96,7 +104,7 @@ class Module extends Base
      * @param \Xibo\Service\HelpServiceInterface $help
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
-     * @oaram StorageServiceInterface $store
+     * @param StorageServiceInterface $store
      * @param ModuleFactory $moduleFactory
      * @param PlaylistFactory $playlistFactory
      * @param MediaFactory $mediaFactory
@@ -105,8 +113,10 @@ class Module extends Base
      * @param WidgetFactory $widgetFactory
      * @param TransitionFactory $transitionFactory
      * @param RegionFactory $regionFactory
+     * @param LayoutFactory $layoutFactory
+     * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory, $layoutFactory, $displayGroupFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -119,6 +129,8 @@ class Module extends Base
         $this->widgetFactory = $widgetFactory;
         $this->transitionFactory = $transitionFactory;
         $this->regionFactory = $regionFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
     }
 
     /**
@@ -471,6 +483,9 @@ class Module extends Base
         if (!$this->getUser()->checkDeleteable($module->widget))
             throw new AccessDeniedException();
 
+        // Set some dependencies that are used in the delete
+        $module->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
+
         // Pass to view
         $this->getState()->template = 'module-form-delete';
         $this->getState()->setData([
@@ -489,6 +504,9 @@ class Module extends Base
 
         if (!$this->getUser()->checkDeleteable($module->widget))
             throw new AccessDeniedException();
+
+        // Set some dependencies that are used in the delete
+        $module->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
 
         $moduleName = $module->getName();
         $widgetMedia = $module->widget->mediaIds;
@@ -510,6 +528,8 @@ class Module extends Base
                 // Check we have permissions to delete
                 if (!$this->getUser()->checkDeleteable($media))
                     throw new AccessDeniedException();
+
+                $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
 
                 $media->delete();
             }
