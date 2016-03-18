@@ -416,7 +416,7 @@ class DisplayProfile
                         'title' => __('Enable stats reporting?'),
                         'type' => 'checkbox',
                         'fieldType' => 'checkbox',
-                        'default' => $this->configService->getThemeConfig('client_statsEnabled_default', 1),
+                        'default' => $this->configService->getThemeConfig('client_statsEnabled_default', 0),
                         'helpText' => __('Should the application send proof of play stats to the CMS.'),
                         'enabled' => true,
                         'groupClass' => NULL
@@ -780,7 +780,7 @@ class DisplayProfile
                         'title' => __('Enable stats reporting?'),
                         'type' => 'checkbox',
                         'fieldType' => 'checkbox',
-                        'default' => $this->configService->getThemeConfig('client_statsEnabled_default', 1),
+                        'default' => $this->configService->getThemeConfig('client_statsEnabled_default', 0),
                         'helpText' => __('Should the application send proof of play stats to the CMS.'),
                         'enabled' => true,
                         'groupClass' => NULL
@@ -973,7 +973,7 @@ class DisplayProfile
                         'title' => __('Screen Shot Size'),
                         'type' => 'int',
                         'fieldType' => 'number',
-                        'default' => $this->configService->getThemeConfig('client_screenShotSize_default', 100),
+                        'default' => $this->configService->getThemeConfig('client_screenShotSize_default', 200),
                         'helpText' => __('The size of the largest dimension. Empty or 0 means the screen size.'),
                         'enabled' => true,
                         'groupClass' => NULL

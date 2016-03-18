@@ -649,6 +649,8 @@ class Layout implements \JsonSerializable
      */
     public function toXlf()
     {
+        $this->getLog()->debug('Layout toXLF for Layout %s, %d', $this->layout, $this->layoutId);
+
         $this->load(['loadPlaylists' => true]);
 
         $document = new \DOMDocument();
@@ -711,9 +713,11 @@ class Layout implements \JsonSerializable
             // Any with duration specified?
             if ($countWidgets > 1 || $hasDuration) {
                 $layoutHasRegionControllingDuration = true;
-                break;
             }
         }
+
+        if ($layoutHasEmptyRegion)
+            $this->getLog()->alert('Layout has empty region');
 
         foreach ($this->regions as $region) {
             /* @var Region $region */
