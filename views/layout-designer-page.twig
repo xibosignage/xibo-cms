@@ -31,7 +31,7 @@
 
     <div class="row">
         <div class="col-sm-12 text-center">
-            <h4>{% trans "Layout Design" %} - {{ layout.layout }} {{ isTemplate }}</h4>
+            <h4>{% trans "Layout Design" %} - {{ layout.layout }}</h4>
         </div>
     </div>
     <div class="row">
@@ -39,7 +39,7 @@
             <div class="row">
                 <div class="col-sm-12">
                     {% if isTemplate %}
-                    <div class="alert alert-info">{% trans "Editing a Template will only effect future Layouts." %}</div>
+                    <div class="alert alert-info">{% trans "Editing a Template will only affect future Layouts." %}</div>
                     {% else %}
                     <div id="layout-status" class="alert"></div>
                     {% endif %}
