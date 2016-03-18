@@ -110,7 +110,7 @@ class Session {
 
             if ($this->gcCalled) {
                 // Delete sessions older than 10 times the max lifetime
-                PDOConnect::update('DELETE FROM `session` WHERE IsExpired = 1 AND session_expiration < :expiration', array('expiration' => (time() - ($this->maxLifetime * 10))), $this->getDb());
+                PDOConnect::update('DELETE FROM `session` WHERE IsExpired = 1 AND session_expiration < :expiration', array('expiration' => (time() - ($this->max_lifetime * 10))), $this->getDb());
 
                 // Update expired sessions as expired
                 PDOConnect::update('UPDATE `session` SET IsExpired = 1 WHERE session_expiration < :expiration', array('expiration' => time()), $this->getDb());

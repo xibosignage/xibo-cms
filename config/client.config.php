@@ -83,7 +83,7 @@ $CLIENT_CONFIG = array(
                         'title' => __('Enable stats reporting?'),
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
-                        'default' => 1,
+                        'default' => Theme::GetConfig('client_statsEnabled_default', 0),
                         'helpText' => __('Should the application send proof of play stats to the CMS.'),
                         'enabled' => true,
                         'groupClass' => NULL
@@ -517,6 +517,22 @@ $CLIENT_CONFIG = array(
                         'groupClass' => NULL
                     ),
                     array(
+                        'name' => 'logLevel',
+                        'tabId' => 'trouble',
+                        'title' => __('Log Level'),
+                        'type' => _WORD,
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 'audit', 'value' => 'Audit'),
+                            array('id' => 'error', 'value' => 'Error'),
+                            array('id' => 'off', 'value' => 'Off')
+                        ),
+                        'default' => 'error',
+                        'helpText' => __('The logging level that should be recorded by the Player.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
                         'name' => 'sendCurrentLayoutAsStatusUpdate',
                         'tabId' => 'advanced',
                         'title' => __('Notify current layout'),
@@ -561,6 +577,17 @@ $CLIENT_CONFIG = array(
                         'groupClass' => NULL
                     ),
                     array(
+                        'name' => 'screenShotSize',
+                        'tabId' => 'advanced',
+                        'title' => __('Screen Shot Size'),
+                        'type' => _INT,
+                        'fieldType' => 'number',
+                        'default' => Theme::GetConfig('client_screenShotSize_default', 200),
+                        'helpText' => __('The size of the largest dimension. Empty or 0 means the screen size.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
                         'name' => 'updateStartWindow',
                         'tabId' => 'advanced',
                         'title' => __('Update Window Start Time'),
@@ -601,6 +628,17 @@ $CLIENT_CONFIG = array(
                         'fieldType' => 'timePicker',
                         'default' => 0,
                         'helpText' => __('The end of the time window to connect to the CMS and download updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'statsEnabled',
+                        'tabId' => 'general',
+                        'title' => __('Enable stats reporting?'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => $this->configService->getThemeConfig('client_statsEnabled_default', 0),
+                        'helpText' => __('Should the application send proof of play stats to the CMS.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
