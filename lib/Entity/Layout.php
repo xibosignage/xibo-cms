@@ -684,6 +684,7 @@ class Layout implements \JsonSerializable
         //  5. In either case, add the duration from #4 to the region duration
 
         $layoutHasRegionControllingDuration = false;
+        $layoutHasEmptyRegion = false;
 
         foreach ($this->regions as $region) {
             /* @var Region $region */
@@ -701,6 +702,10 @@ class Layout implements \JsonSerializable
                     }
                 }
             }
+
+            // Record whether there is an empty region
+            if ($countWidgets <= 0)
+                $layoutHasEmptyRegion = true;
 
             // Any with more than one widget
             // Any with duration specified?
@@ -851,6 +856,9 @@ class Layout implements \JsonSerializable
         $layoutNode->appendChild($tagsNode);
 
         // Update the layout status / duration accordingly
+        if ($layoutHasEmptyRegion)
+            $status = 4;
+
         $this->status = ($status < $this->status) ? $status : $this->status;
 
         return $document->saveXML();

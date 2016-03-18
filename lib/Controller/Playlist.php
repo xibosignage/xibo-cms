@@ -82,19 +82,21 @@ class Playlist extends Base
      * @param ConfigServiceInterface $config
      * @param PlaylistFactory $playlistFactory
      * @param RegionFactory $regionFactory
+     * @param MediaFactory $mediaFactory
      * @param PermissionFactory $permissionFactory
      * @param TransitionFactory $transitionFactory
      * @param WidgetFactory $widgetFactory
      * @param ModuleFactory $moduleFactory
      * @param UserGroupFactory $userGroupFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playlistFactory, $regionFactory, $permissionFactory,
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playlistFactory, $regionFactory, $mediaFactory, $permissionFactory,
         $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->playlistFactory = $playlistFactory;
         $this->regionFactory = $regionFactory;
+        $this->mediaFactory = $mediaFactory;
         $this->permissionFactory = $permissionFactory;
         $this->transitionFactory = $transitionFactory;
         $this->widgetFactory = $widgetFactory;
@@ -180,6 +182,7 @@ class Playlist extends Base
             throw new AccessDeniedException();
 
         $playlist->name = $this->getSanitizer()->getString('name');
+        $playlist->setChildObjectDependencies($this->regionFactory);
         $playlist->save();
 
         // Success
@@ -203,6 +206,8 @@ class Playlist extends Base
 
         if (!$this->getUser()->checkDeleteable($playlist))
             throw new AccessDeniedException();
+
+        $playlist->setChildObjectDependencies($this->regionFactory);
 
         // Issue the delete
         $playlist->delete();
@@ -378,6 +383,8 @@ class Playlist extends Base
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
 
+        $playlist->setChildObjectDependencies($this->regionFactory);
+
         // Expect a list of mediaIds
         $media = $this->getSanitizer()->getIntArray('media');
 
@@ -484,6 +491,7 @@ class Playlist extends Base
             throw new AccessDeniedException();
 
         // Load the widgets
+        $playlist->setChildObjectDependencies($this->regionFactory);
         $playlist->load();
 
         // Get our list of widget orders
