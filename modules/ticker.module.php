@@ -244,7 +244,7 @@ class ticker extends Module
             $this->GetOption('itemsSideBySide'), __('Should items be shown side by side?'), 
             's');
 
-       $fieldNoDataMessage = FormManager::AddMultiText('noDataMessage', __('No Data Message'), $this->GetOption('noDataMessage'),
+       $fieldNoDataMessage = FormManager::AddMultiText('noDataMessage', __('No Data Message'), $this->GetRawNode('noDataMessage'),
             __('A message to display when no data is returned from the source'), 'n', 5);
 
         // Data Set Source
@@ -641,10 +641,9 @@ class ticker extends Module
         $this->SetOption('textDirection', Kit::GetParam('textDirection', _POST, _WORD));
         $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _WORD));
-        $this->SetOption('noDataMessage', Kit::GetParam('noDataMessage', _POST, _HTMLSTRING));
 
         // Text Template
-        $this->SetRaw('<template><![CDATA[' . $text . ']]></template><css><![CDATA[' . $css . ']]></css>');
+        $this->SetRaw('<template><![CDATA[' . $text . ']]></template><css><![CDATA[' . $css . ']]></css><noDataMessage><![CDATA[' . Kit::GetParam('noDataMessage', _POST, _HTMLSTRING) . ']]></noDataMessage>');
         
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -795,8 +794,10 @@ class ticker extends Module
         // Return empty string if there are no items to show.
         if (count($items) == 0) {
             // Do we have a no-data message to display?
-            if ($this->GetOption('noDataMessage') != '') {
-                $items[] = $this->GetOption('noDataMessage');
+            $noDataMessage = $this->GetRawNode('noDataMessage');
+
+            if ($noDataMessage != '') {
+                $items[] = $noDataMessage;
             } else {
                 return '';
             }
