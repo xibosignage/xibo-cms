@@ -217,6 +217,9 @@ class datasetview extends Module
         $formFields[] = FormManager::AddMultiText('styleSheet', NULL, (($rawNodes->length == 0) ? $this->DefaultStyleSheet() : $rawNode->nodeValue), 
             __('Enter a style sheet for the table'), 's', 10);
 
+        $formFields[] = FormManager::AddMultiText('noDataMessage', __('No Data Message'), $this->GetOption('noDataMessage'),
+            __('A message to display when no data is returned from the source'), 'n', 5);
+
         Theme::Set('form_fields_advanced', $formFields);
 
         $this->response->SetFormRequestResponse(NULL, 'Edit DataSet View for DataSet', '650px', '575px');
@@ -373,6 +376,7 @@ class datasetview extends Module
         $this->SetOption('updateInterval', $updateInterval);
         $this->SetOption('rowsPerPage', $rowsPerPage);
         $this->SetRaw('<styleSheet><![CDATA[' . $styleSheet . ']]></styleSheet>');
+        $this->SetOption('noDataMessage', Kit::GetParam('noDataMessage', _POST, _HTMLSTRING));
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -607,8 +611,12 @@ END;
             $rowCountThisPage++;
         }
 
-        $table .= '</tbody>';
-        $table .= '</table>';
+        if (count($dataSetResults['Rows']) <= 0) {
+            $table .= $this->GetOption('noDataMessage');
+        } else {
+            $table .= '</tbody>';
+            $table .= '</table>';
+        }
         $table .= '</div>';
 
         return $table;

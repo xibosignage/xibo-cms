@@ -244,6 +244,9 @@ class ticker extends Module
             $this->GetOption('itemsSideBySide'), __('Should items be shown side by side?'), 
             's');
 
+       $fieldNoDataMessage = FormManager::AddMultiText('noDataMessage', __('No Data Message'), $this->GetOption('noDataMessage'),
+            __('A message to display when no data is returned from the source'), 'n', 5);
+
         // Data Set Source
         if ($sourceId == 2) {
 
@@ -274,6 +277,8 @@ class ticker extends Module
             Theme::Set('columns', $db->GetArray(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $dataSetId)));
 
             $formFields['template'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_ticker_dataset_edit'));
+
+            $formFields['advanced'][] = $fieldNoDataMessage;
         }
         else {
             // Extra Fields for the Ticker
@@ -353,6 +358,8 @@ class ticker extends Module
 
             $formFields['advanced'][] = FormManager::AddCheckbox('disableDateSort', __('Disable Date Sort'), $this->GetOption('disableDateSort'),
                 __('Should the date sort applied to the feed be disabled?'), '');
+
+            $formFields['advanced'][] = $fieldNoDataMessage;
 
             // Encode up the template
             //$formFields['advanced'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'media-rss-with-title', 'value' => 'Image overlaid with the Title', 'template' => '<div class="image">[Link|image]<div class="cycle-overlay"><p style="font-family: Arial, Verdana, sans-serif; font-size:48px;">[Title]</p></div></div>', 'css' => '.image img { width:100%;}.cycle-overlay {color: white;background: black;opacity: .6;filter: alpha(opacity=60);position: absolute;bottom: 0;width: 100%;padding: 15px;text-align:center;}'))) . '</pre>');
@@ -545,7 +552,7 @@ class ticker extends Module
         $takeItemsFrom = Kit::GetParam('takeItemsFrom', _POST, _STRING);
         $durationIsPerItem = Kit::GetParam('durationIsPerItem', _POST, _CHECKBOX);
         $itemsSideBySide = Kit::GetParam('itemsSideBySide', _POST, _CHECKBOX);
-        
+
         // DataSet Specific Options
         $itemsPerPage = Kit::GetParam('itemsPerPage', _POST, _INT);
         $upperLimit = Kit::GetParam('upperLimit', _POST, _INT);
@@ -634,7 +641,8 @@ class ticker extends Module
         $this->SetOption('textDirection', Kit::GetParam('textDirection', _POST, _WORD));
         $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _WORD));
-        
+        $this->SetOption('noDataMessage', Kit::GetParam('noDataMessage', _POST, _HTMLSTRING));
+
         // Text Template
         $this->SetRaw('<template><![CDATA[' . $text . ']]></template><css><![CDATA[' . $css . ']]></css>');
         
@@ -785,8 +793,14 @@ class ticker extends Module
         }
 
         // Return empty string if there are no items to show.
-        if (count($items) == 0)
-            return '';
+        if (count($items) == 0) {
+            // Do we have a no-data message to display?
+            if ($this->GetOption('noDataMessage') != '') {
+                $items[] = $this->GetOption('noDataMessage');
+            } else {
+                return '';
+            }
+        }
 
         // Work out how many pages we will be showing.
         $pages = $numItems;
