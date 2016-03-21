@@ -246,6 +246,7 @@ class Ticker extends ModuleWidget
         $this->setOption('textDirection', $this->getSanitizer()->getString('textDirection'));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
+        $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
 
         // DataSet
         if ($this->getOption('sourceId') == 2) {
@@ -404,8 +405,16 @@ class Ticker extends ModuleWidget
         }
 
         // Return empty string if there are no items to show.
-        if (count($items) == 0)
-            return '';
+        if (count($items) == 0) {
+            // Do we have a no-data message to display?
+            $noDataMessage = $this->getRawNode('noDataMessage');
+
+            if ($noDataMessage != '') {
+                $items[] = $noDataMessage;
+            } else {
+                return '';
+            }
+        }
 
         // Work out how many pages we will be showing.
         $pages = $numItems;

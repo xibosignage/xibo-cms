@@ -266,6 +266,9 @@
                 {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
                 {% set fieldStyleSheet %}{{ forms.textarea("ta_css", "", module.getRawNode("css"), title, "template-override-controls", "", 10) }}{% endset %}
 
+                {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
+                {% set fieldNoDataMessage %}{{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}{% endset %}
+
                 {# Different fields for each type of Ticker #}
                 {% if module.getOption("sourceId") == 1 %}
                     {# Source = Feed #}
@@ -364,6 +367,8 @@
                         {% set title %}{% trans "Disable Date Sort" %}{% endset %}
                         {% set helpText %}{% trans "Should the date sort applied to the feed be disabled?" %}{% endset %}
                         {{ forms.checkbox("disableDateSort", title, module.getOption("disableDateSort"), helpText) }}
+
+                        {{ fieldNoDataMessage }}
                     </div>
                 {% else %}
                     {# Source = Dataset #}
@@ -397,7 +402,7 @@
 
                         {% set title %}{% trans "Use advanced order clause?" %}{% endset %}
                         {% set helpText %}{% trans "Provide a custom clause instead of using the clause builder above." %}{% endset %}
-                        {{ forms.checkbox("useOrderingClause", title, module.getOption("useOrderingClause", 1), helpText) }}
+                        {{ forms.checkbox("useOrderingClause", title, module.getOption("useOrderingClause", 0), helpText) }}
 
                         {% set title %}{% trans "Order" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a SQL clause for how this dataset should be ordered" %}{% endset %}
@@ -414,7 +419,7 @@
 
                         {% set title %}{% trans "Use advanced filter clause?" %}{% endset %}
                         {% set helpText %}{% trans "Provide a custom clause instead of using the clause builder above." %}{% endset %}
-                        {{ forms.checkbox("useFilteringClause", title, module.getOption("useFilteringClause", 1), helpText) }}
+                        {{ forms.checkbox("useFilteringClause", title, module.getOption("useFilteringClause", 0), helpText) }}
 
                         {% set title %}{% trans "Filter" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a SQL clause to filter this DataSet." %}{% endset %}
@@ -436,6 +441,8 @@
                         {% set title %}{% trans "Upper Row Limit" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)" %}{% endset %}
                         {{ forms.number("upperLimit", title, module.getOption("upperLimit"), helpText) }}
+
+                        {{ fieldNoDataMessage }}
                     </div>
                 {% endif %}
                 </div>
