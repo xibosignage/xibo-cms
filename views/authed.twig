@@ -66,6 +66,7 @@
 
                     {% if currentUser.routeViewable("/user") or currentUser.routeViewable("/usergroup") or currentUser.routeViewable("/admin") or currentUser.routeViewable("/application") or currentUser.routeViewable("/module") or currentUser.routeViewable("/transition") %}
                         <li class="sidebar-title"><a>{% trans "Administration" %}</a></li>
+
                         {% if currentUser.routeViewable("/user") %}
                         <li class="sidebar-list"><a href="{{ urlFor("user.view") }}">{% trans "Users" %}</a></li>
                         {% endif %}
@@ -157,20 +158,26 @@
                                 </ul>
                             </div>
                         </div>
-                        {% if notifications|length > 0 %}
+                        {% if currentUser.routeViewable("/notification") %}
                         <div class="user pull-right">
                             <div class="item dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                    <i class="fa fa-exclamation-circle"></i>
+                                    <i class="fa fa-bell"></i> {% if notifications|length > 0 %}<span class="badge red">{{ notifications|length }}</span>{% endif %}
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-right">
                                     <li class="dropdown-header">{% trans "Notifications" %}<br/>
 
                                     </li>
+                                    {% if notifications|length > 0 %}
                                     <li class="divider"></li>
+                                    {% endif %}
                                     {% for notification in notifications %}
                                     <li><div>{{ notification }}</div></li>
                                     {% endfor %}
+
+                                    <li class="divider"></li>
+
+                                    <li><a href="{{ urlFor("notification.view") }}">{% trans "Notification Centre" %}</a></li>
                                 </ul>
                             </div>
                         </div>

@@ -84,6 +84,18 @@ $app->put('/schedule/:id', '\Xibo\Controller\Schedule:edit')->name('schedule.edi
 $app->delete('/schedule/:id', '\Xibo\Controller\Schedule:delete')->name('schedule.delete');
 
 /**
+ * Notification
+ * @SWG\Tag(
+ *  name="notification",
+ *  description="Notifications"
+ * )
+ */
+$app->get('/notification', '\Xibo\Controller\Notification:grid')->name('notification.search');
+$app->post('/notification', '\Xibo\Controller\Notification:add')->name('notification.add');
+$app->put('/notification/:id', '\Xibo\Controller\Notification:edit')->name('notification.edit');
+$app->delete('/notification/:id', '\Xibo\Controller\Notification:delete')->name('notification.delete');
+
+/**
  * Layouts
  * @SWG\Tag(
  *  name="layout",

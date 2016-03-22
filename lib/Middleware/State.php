@@ -642,6 +642,21 @@ class State extends Middleware
             );
         });
 
+        $app->container->singleton('\Xibo\Controller\Notification', function($container) {
+            return new \Xibo\Controller\Notification(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->notificationFactory,
+                $container->displayGroupFactory,
+                $container->userGroupFactory
+            );
+        });
+
         $app->container->singleton('\Xibo\Controller\Playlist', function($container) {
             return new \Xibo\Controller\Playlist(
                 $container->logService,
@@ -1076,6 +1091,18 @@ class State extends Middleware
             );
         });
 
+        $container->singleton('notificationFactory', function($container) {
+            return new \Xibo\Factory\NotificationFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService,
+                $container->user,
+                $container->userFactory,
+                $container->userGroupNotificationFactory,
+                $container->displayGroupFactory
+            );
+        });
+
         $container->singleton('pageFactory', function($container) {
             return new \Xibo\Factory\PageFactory(
                 $container->store,
@@ -1206,6 +1233,16 @@ class State extends Middleware
 
         $container->singleton('userGroupFactory', function($container) {
             return new \Xibo\Factory\UserGroupFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService,
+                $container->user,
+                $container->userFactory
+            );
+        });
+
+        $container->singleton('userGroupNotificationFactory', function($container) {
+            return new \Xibo\Factory\UserGroupNotificationFactory(
                 $container->store,
                 $container->logService,
                 $container->sanitizerService,
