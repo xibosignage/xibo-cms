@@ -261,7 +261,7 @@
 
                         {% set title %}{% trans "Use advanced order clause?" %}{% endset %}
                         {% set helpText %}{% trans "Provide a custom clause instead of using the clause builder above." %}{% endset %}
-                        {{ forms.checkbox("useOrderingClause", title, module.getOption("useOrderingClause", 1), helpText) }}
+                        {{ forms.checkbox("useOrderingClause", title, module.getOption("useOrderingClause", 0), helpText) }}
 
                         {% set title %}{% trans "Order" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a SQL clause for how this dataset should be ordered" %}{% endset %}
@@ -279,7 +279,7 @@
 
                         {% set title %}{% trans "Use advanced filter clause?" %}{% endset %}
                         {% set helpText %}{% trans "Provide a custom clause instead of using the clause builder above." %}{% endset %}
-                        {{ forms.checkbox("useFilteringClause", title, module.getOption("useFilteringClause", 1), helpText) }}
+                        {{ forms.checkbox("useFilteringClause", title, module.getOption("useFilteringClause", 0), helpText) }}
 
                         {% set title %}{% trans "Filter" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a SQL clause to filter this DataSet." %}{% endset %}
@@ -302,6 +302,9 @@
                         {% set title %}{% trans "Rows per page" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the number of rows per page. 0 for no pages." %}{% endset %}
                         {{ forms.number("rowsPerPage", title, module.getOption("rowsPerPage"), helpText) }}
+
+                        {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
+                        {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}
                     </div>
                 </div>
             </form>
