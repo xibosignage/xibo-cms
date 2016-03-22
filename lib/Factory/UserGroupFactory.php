@@ -121,6 +121,16 @@ class UserGroupFactory extends BaseFactory
     }
 
     /**
+     * Get User Groups assigned to Notifications
+     * @param int $notificationId
+     * @return array[UserGroup]
+     */
+    public function getByNotificationId($notificationId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'notificationId' => $notificationId, 'isUserSpecific' => -1]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[UserGroup]
@@ -194,6 +204,11 @@ class UserGroupFactory extends BaseFactory
             if ($this->getSanitizer()->getInt('isEveryone', $filterBy) != -1) {
                 $body .= ' AND isEveryone = :isEveryone ';
                 $params['isEveryone'] = $this->getSanitizer()->getInt('isEveryone', 0, $filterBy);
+            }
+
+            if ($this->getSanitizer()->getInt('notificationId', $filterBy) !== null) {
+                $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lknotificationgroup` WHERE notificationId = :notificationId) ';
+                $params['notificationId'] = $this->getSanitizer()->getInt('notificationId', $filterBy);
             }
 
             // Sorting?

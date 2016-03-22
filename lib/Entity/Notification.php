@@ -8,7 +8,7 @@
 
 namespace Xibo\Entity;
 use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\UserGroupNotificationFactory;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -88,9 +88,9 @@ class Notification implements \JsonSerializable
      * @SWG\Property(
      *  description="User Group Notifications associated with this notification"
      * )
-     * @var array[UserGroupNotification]
+     * @var UserGroup[]
      */
-    public $userGroupNotifications = [];
+    public $userGroups = [];
 
     /**
      * @SWG\Property(
@@ -100,8 +100,8 @@ class Notification implements \JsonSerializable
      */
     public $displayGroups = [];
 
-    /** @var  UserGroupNotificationFactory */
-    private $userGroupNotificationFactory;
+    /** @var  UserGroupFactory */
+    private $userGroupFactory;
 
     /** @var  DisplayGroupFactory */
     private $displayGroupFactory;
@@ -110,14 +110,14 @@ class Notification implements \JsonSerializable
      * Command constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param UserGroupNotificationFactory $userGroupNotificationFactory
+     * @param UserGroupFactory $userGroupFactory
      * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($store, $log, $userGroupNotificationFactory, $displayGroupFactory)
+    public function __construct($store, $log, $userGroupFactory, $displayGroupFactory)
     {
         $this->setCommonDependencies($store, $log);
 
-        $this->userGroupNotificationFactory = $userGroupNotificationFactory;
+        $this->userGroupFactory = $userGroupFactory;
         $this->displayGroupFactory = $displayGroupFactory;
     }
 
@@ -140,24 +140,26 @@ class Notification implements \JsonSerializable
 
     /**
      * Add User Group Notification
-     * @param UserGroupNotification $userGroupNotification
+     * @param UserGroup $userGroup
      */
-    public function addUserGroupNotification($userGroupNotification)
+    public function assignUserGroup($userGroup)
     {
         $this->load();
 
-        $this->userGroupNotifications = $userGroupNotification;
+        if (!in_array($userGroup, $this->userGroups))
+            $this->userGroups[] = $userGroup;
     }
 
     /**
      * Add Display Group
      * @param DisplayGroup $displayGroup
      */
-    public function addDisplayGroup($displayGroup)
+    public function assignDisplayGroup($displayGroup)
     {
         $this->load();
 
-        $this->displayGroups[] = $displayGroup;
+        if (!in_array($displayGroup, $this->displayGroups))
+            $this->displayGroups[] = $displayGroup;
     }
 
     /**
@@ -181,7 +183,8 @@ class Notification implements \JsonSerializable
             return;
 
         // Load the Display Groups and User Group Notifications
-
+        $this->userGroups = $this->userGroupFactory->getByNotificationId($this->notificationId);
+        $this->displayGroups = $this->displayGroupFactory->getByNotificationId($this->notificationId);
 
 
         $this->loaded = true;
@@ -276,11 +279,11 @@ class Notification implements \JsonSerializable
 
     private function linkUserGroups()
     {
-        foreach ($this->userGroupNotifications as $userGroup) {
-            /* @var UserGroupNotification $userGroup */
+        foreach ($this->userGroups as $userGroup) {
+            /* @var UserGroup $userGroup */
             $this->getStore()->update('INSERT INTO `lknotificationgroup` (notificationId, groupId) VALUES (:notificationId, :userGroupId) ON DUPLICATE KEY UPDATE groupId = groupId', [
                 'notificationId' => $this->notificationId,
-                'userGroupId' => $userGroup->userGroupId
+                'userGroupId' => $userGroup->groupId
             ]);
         }
     }
@@ -293,11 +296,11 @@ class Notification implements \JsonSerializable
         $sql = 'DELETE FROM `lknotificationgroup` WHERE notificationId = :notificationId AND groupId NOT IN (0';
 
         $i = 0;
-        foreach ($this->userGroupNotifications as $userGroup) {
-            /* @var UserGroupNotification $userGroup */
+        foreach ($this->userGroups as $userGroup) {
+            /* @var UserGroup $userGroup */
             $i++;
             $sql .= ',:userGroupId' . $i;
-            $params['userGroupId' . $i] = $userGroup->userGroupId;
+            $params['userGroupId' . $i] = $userGroup->groupId;
         }
 
         $sql .= ')';

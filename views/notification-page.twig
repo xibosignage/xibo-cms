@@ -34,6 +34,8 @@
                             <tr>
                                 <th>{% trans "Subject" %}</th>
                                 <th>{% trans "Date" %}</th>
+                                <th>{% trans "Email?" %}</th>
+                                <th>{% trans "Interrupt?" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -62,7 +64,18 @@
             },
             "columns": [
                 { "data": "subject" },
-                { "data": "releaseDt" },
+                {
+                    "data": "releaseDt",
+                    "render": dataTableDateFromUnix
+                },
+                {
+                    "data": "isEmail",
+                    "render": dataTableTickCrossColumn
+                },
+                {
+                    "data": "isInterrupt",
+                    "render": dataTableTickCrossColumn
+                },
                 {
                     "orderable": false,
                     "data": dataTableButtonsColumn

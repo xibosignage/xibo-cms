@@ -1098,7 +1098,7 @@ class State extends Middleware
                 $container->sanitizerService,
                 $container->user,
                 $container->userFactory,
-                $container->userGroupNotificationFactory,
+                $container->userGroupFactory,
                 $container->displayGroupFactory
             );
         });
@@ -1242,7 +1242,7 @@ class State extends Middleware
         });
 
         $container->singleton('userGroupNotificationFactory', function($container) {
-            return new \Xibo\Factory\UserGroupNotificationFactory(
+            return new \Xibo\Factory\UserNotificationFactory(
                 $container->store,
                 $container->logService,
                 $container->sanitizerService,

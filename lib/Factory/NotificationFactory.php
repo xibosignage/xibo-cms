@@ -21,8 +21,8 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class NotificationFactory extends BaseFactory
 {
-    /** @var  UserGroupNotificationFactory */
-    private $userGroupNotificationFactory;
+    /** @var  UserGroupFactory */
+    private $userGroupFactory;
 
     /** @var  DisplayGroupFactory */
     private $displayGroupFactory;
@@ -34,15 +34,15 @@ class NotificationFactory extends BaseFactory
      * @param SanitizerServiceInterface $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
-     * @param UserGroupNotificationFactory $userGroupNotificationFactory
+     * @param UserGroupFactory $userGroupFactory
      * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $userGroupNotificationFactory, $displayGroupFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $userGroupFactory, $displayGroupFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
-        $this->userGroupNotificationFactory = $userGroupNotificationFactory;
+        $this->userGroupFactory = $userGroupFactory;
         $this->displayGroupFactory = $displayGroupFactory;
     }
 
@@ -51,7 +51,7 @@ class NotificationFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Notification($this->getStore(), $this->getLog(), $this->userGroupNotificationFactory, $this->displayGroupFactory);
+        return new Notification($this->getStore(), $this->getLog(), $this->userGroupFactory, $this->displayGroupFactory);
     }
 
     /**

@@ -10,7 +10,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Notification;
 use Xibo\Entity\User;
-use Xibo\Entity\UserGroupNotification;
+use Xibo\Entity\UserNotification;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -20,7 +20,7 @@ use Xibo\Storage\StorageServiceInterface;
  * Class UserGroupNotificationFactory
  * @package Xibo\Factory
  */
-class UserGroupNotificationFactory extends BaseFactory
+class UserNotificationFactory extends BaseFactory
 {
     /**
      * Construct a factory
@@ -37,11 +37,24 @@ class UserGroupNotificationFactory extends BaseFactory
     }
 
     /**
-     * @return Notification
+     * @return UserNotification
      */
     public function createEmpty()
     {
-        return new UserGroupNotification($this->getStore(), $this->getLog());
+        return new UserNotification($this->getStore(), $this->getLog());
+    }
+
+    /**
+     * Create
+     * @param $userGroupId
+     * @return UserNotification
+     */
+    public function create($userGroupId)
+    {
+        $group = $this->createEmpty();
+        $group->userGroupId = $userGroupId;
+
+        return $group;
     }
 
     /**
@@ -76,7 +89,7 @@ class UserGroupNotificationFactory extends BaseFactory
         $entries = array();
 
         if ($sortOrder == null)
-            $sortOrder = ['subject'];
+            $sortOrder = ['readDt DESC'];
 
         $params = array();
         $select = 'SELECT `lknotificationgroup`.lknotificationgroupId,
@@ -113,7 +126,7 @@ class UserGroupNotificationFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new UserGroupNotification($this->getStore(), $this->getLog()))->hydrate($row);
+            $entries[] = (new UserNotification($this->getStore(), $this->getLog()))->hydrate($row);
         }
 
         // Paging

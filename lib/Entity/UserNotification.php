@@ -12,7 +12,7 @@ namespace Xibo\Entity;
  * Class UserGroupNotification
  * @package Xibo\Entity
  */
-class UserGroupNotification implements \JsonSerializable
+class UserNotification implements \JsonSerializable
 {
     use EntityTrait;
 
@@ -47,4 +47,12 @@ class UserGroupNotification implements \JsonSerializable
      * @var int
      */
     public $readDt;
+
+    /**
+     * @SWG\Property(
+     *  description="A flag indicating whether to show as read or not"
+     * )
+     * @var int
+     */
+    public $read;
 }

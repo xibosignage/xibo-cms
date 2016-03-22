@@ -143,7 +143,7 @@ class Notification extends Base
         foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
 
-            if ($displayGroup->isDisplaySpecific == 1) {
+            if ($displayGroup->isDisplaySpecific == 0) {
                 $displays[] = $displayGroup;
             } else {
                 $groups[] = $displayGroup;
@@ -176,13 +176,53 @@ class Notification extends Base
     public function editForm($notificationId)
     {
         $notification = $this->notificationFactory->getById($notificationId);
+        $notification->load();
+
+        // Adjust the dates
+        $notification->createdDt = $this->getDate()->getLocalDate($notification->createdDt);
+        $notification->releaseDt = $this->getDate()->getLocalDate($notification->releaseDt);
 
         if ($notification->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
+        $groups = array();
+        $displays = array();
+        $userGroups = [];
+        $users = [];
+
+        foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
+            /* @var DisplayGroup $displayGroup */
+
+            if ($displayGroup->isDisplaySpecific == 1) {
+                $displays[] = $displayGroup;
+            } else {
+                $groups[] = $displayGroup;
+            }
+        }
+
+        foreach ($this->userGroupFactory->query(['`group`'], ['isUserSpecific' => -1]) as $userGroup) {
+            /* @var UserGroup $userGroup */
+
+            if ($userGroup->isUserSpecific == 0) {
+                $userGroups[] = $userGroup;
+            } else {
+                $users[] = $userGroup;
+            }
+        }
+
         $this->getState()->template = 'notification-form-edit';
         $this->getState()->setData([
-            'notification' => $notification
+            'notification' => $notification,
+            'displays' => $displays,
+            'displayGroups' => $groups,
+            'users' => $users,
+            'userGroups' => $userGroups,
+            'displayGroupIds' => array_map(function($element) {
+                return $element->displayGroupId;
+            }, $notification->displayGroups),
+            'userGroupIds' => array_map(function($element) {
+                return $element->groupId;
+            }, $notification->userGroups)
         ]);
     }
 
@@ -226,6 +266,43 @@ class Notification extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="releaseDt",
+     *      in="formData",
+     *      description="ISO date representing the release date for this notification",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isEmail",
+     *      in="formData",
+     *      description="Flag indicating whether this notification should be emailed.",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isInterrupt",
+     *      in="formData",
+     *      description="Flag indication whether this notification should interrupt the web portal nativation/login",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayGroupIds",
+     *      in="formData",
+     *      description="The display group ids to assign this notification to",
+     *      type="",
+     *      required=true,
+     *      @SWG\Items(type="integer")
+     *   ),
+     *  @SWG\Parameter(
+     *      name="userGroupId",
+     *      in="formData",
+     *      description="The user group ids to assign to this notification",
+     *      type="array",
+     *      required=true,
+     *      @SWG\Items(type="integer")
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -243,11 +320,21 @@ class Notification extends Base
         $notification = $this->notificationFactory->createEmpty();
         $notification->subject = $this->getSanitizer()->getString('subject');
         $notification->body = $this->getSanitizer()->getString('body');
-        $notification->createdDt = $this->getDate()->getLocalDate('U');
+        $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
         $notification->releaseDt = $this->getSanitizer()->getDate('releaseDt')->format('U');
         $notification->isEmail = $this->getSanitizer()->getCheckbox('isEmail');
-        $notification->isInterrupt = $this->getSanitizer()->getCheckbox('$this->isInterrupt');
+        $notification->isInterrupt = $this->getSanitizer()->getCheckbox('isInterrupt');
         $notification->userId = $this->getUser()->userId;
+
+        // Displays and Users to link
+        foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
+            $notification->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
+        }
+
+        foreach ($this->getSanitizer()->getIntArray('userGroupIds') as $userGroupId) {
+            $notification->assignUserGroup($this->userGroupFactory->getById($userGroupId));
+        }
+
         $notification->save();
 
         // Return
@@ -256,6 +343,160 @@ class Notification extends Base
             'message' => sprintf(__('Added %s'), $notification->subject),
             'id' => $notification->notificationId,
             'data' => $notification
+        ]);
+    }
+
+    /**
+     * Edit Notification
+     * @param int $notificationId
+     *
+     * @SWG\Post(
+     *  path="/notification/{notificationId}",
+     *  operationId="notificationEdit",
+     *  tags={"notification"},
+     *  summary="Notification Edit",
+     *  description="Edit a Notification",
+     *  @SWG\Parameter(
+     *      name="notificationId",
+     *      in="path",
+     *      description="The NotificationId",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="subject",
+     *      in="formData",
+     *      description="The Subject",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="body",
+     *      in="formData",
+     *      description="The Body",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="releaseDt",
+     *      in="formData",
+     *      description="ISO date representing the release date for this notification",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isEmail",
+     *      in="formData",
+     *      description="Flag indicating whether this notification should be emailed.",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isInterrupt",
+     *      in="formData",
+     *      description="Flag indication whether this notification should interrupt the web portal nativation/login",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayGroupIds",
+     *      in="formData",
+     *      description="The display group ids to assign this notification to",
+     *      type="",
+     *      required=true,
+     *      @SWG\Items(type="integer")
+     *   ),
+     *  @SWG\Parameter(
+     *      name="userGroupId",
+     *      in="formData",
+     *      description="The user group ids to assign to this notification",
+     *      type="array",
+     *      required=true,
+     *      @SWG\Items(type="integer")
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",,
+     *      @SWG\Schema(ref="#/definitions/Notification")
+     *  )
+     * )
+     */
+    public function edit($notificationId)
+    {
+        $notification = $this->notificationFactory->getById($notificationId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($notification))
+            throw new AccessDeniedException();
+
+        $notification->subject = $this->getSanitizer()->getString('subject');
+        $notification->body = $this->getSanitizer()->getString('body');
+        $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
+        $notification->releaseDt = $this->getSanitizer()->getDate('releaseDt')->format('U');
+        $notification->isEmail = $this->getSanitizer()->getCheckbox('isEmail');
+        $notification->isInterrupt = $this->getSanitizer()->getCheckbox('isInterrupt');
+        $notification->userId = $this->getUser()->userId;
+
+        // Clear existing assignments
+        $notification->displayGroups = [];
+        $notification->userGroups = [];
+
+        // Displays and Users to link
+        foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
+            $notification->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
+        }
+
+        foreach ($this->getSanitizer()->getIntArray('userGroupIds') as $userGroupId) {
+            $notification->assignUserGroup($this->userGroupFactory->getById($userGroupId));
+        }
+
+        $notification->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Added %s'), $notification->subject),
+            'id' => $notification->notificationId,
+            'data' => $notification
+        ]);
+    }
+
+    /**
+     * Delete Notification
+     * @param int $notificationId
+     *
+     * @SWG\Delete(
+     *  path="/notification/{notificationId}",
+     *  operationId="notificationDelete",
+     *  tags={"notification"},
+     *  summary="Delete Notification",
+     *  description="Delete the provided notification",
+     *  @SWG\Parameter(
+     *      name="notificationId",
+     *      in="path",
+     *      description="The Notification Id to Delete",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function delete($notificationId)
+    {
+        $notification = $this->notificationFactory->getById($notificationId);
+
+        if ($notification->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
+            throw new AccessDeniedException();
+
+        $notification->delete();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Deleted %s'), $notification->subject)
         ]);
     }
 }
