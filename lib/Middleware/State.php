@@ -597,11 +597,13 @@ class State extends Middleware
                 $container->dateService,
                 $container->configService,
                 $container->store,
-                $container->userFactory,
+                $container->userGroupFactory,
                 $container->layoutFactory,
                 $container->displayFactory,
                 $container->upgradeFactory,
-                $container->mediaFactory
+                $container->mediaFactory,
+                $container->notificationFactory,
+                $container->userNotificationFactory
             );
         });
 

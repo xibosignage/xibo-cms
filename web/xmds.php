@@ -194,11 +194,12 @@ try {
         $app->layoutFactory,
         $app->dataSetFactory,
         $app->displayFactory,
-        $app->userFactory,
+        $app->userGroupFactory,
         $app->bandwidthFactory,
         $app->mediaFactory,
         $app->widgetFactory,
-        $app->regionFactory
+        $app->regionFactory,
+        $app->notificationFactory
     );
     $soap->handle();
 

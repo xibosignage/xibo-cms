@@ -19,7 +19,7 @@ use Xibo\Entity\Region;
 use Xibo\Entity\RequiredFile;
 use Xibo\Entity\Schedule;
 use Xibo\Entity\Stat;
-use Xibo\Entity\User;
+use Xibo\Entity\UserGroup;
 use Xibo\Entity\Widget;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\NotFoundException;
@@ -29,9 +29,11 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Random;
 use Xibo\Service\ConfigService;
@@ -91,8 +93,8 @@ class Soap
     /** @var  DisplayFactory */
     protected $displayFactory;
 
-    /** @var  UserFactory */
-    protected $userFactory;
+    /** @var  UserGroupFactory */
+    protected $userGroupFactory;
 
     /** @var  BandwidthFactory */
     protected $bandwidthFactory;
@@ -105,6 +107,9 @@ class Soap
 
     /** @var  RegionFactory */
     protected $regionFactory;
+
+    /** @var  NotificationFactory */
+    protected $notificationFactory;
 
     /**
      * Soap constructor.
@@ -120,13 +125,14 @@ class Soap
      * @param LayoutFactory $layoutFactory
      * @param DataSetFactory $dataSetFactory
      * @param DisplayFactory $displayFactory
-     * @param UserFactory $userFactory
+     * @param UserFactory $userGroupFactory
      * @param BandwidthFactory $bandwidthFactory
      * @param MediaFactory $mediaFactory
      * @param WidgetFactory $widgetFactory
      * @param RegionFactory $regionFactory
+     * @param NotificationFactory $notificationFactory
      */
-    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory)
+    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory)
     {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
@@ -140,11 +146,12 @@ class Soap
         $this->layoutFactory = $layoutFactory;
         $this->dataSetFactory = $dataSetFactory;
         $this->displayFactory = $displayFactory;
-        $this->userFactory = $userFactory;
+        $this->userGroupFactory = $userGroupFactory;
         $this->bandwidthFactory = $bandwidthFactory;
         $this->mediaFactory = $mediaFactory;
         $this->widgetFactory = $widgetFactory;
         $this->regionFactory = $regionFactory;
+        $this->notificationFactory = $notificationFactory;
     }
 
     /**
@@ -1439,46 +1446,29 @@ class Soap
                 && $this->getConfig()->GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On'
             ) {
 
-                $msgTo = $this->getConfig()->GetSetting("mail_to");
-                $msgFrom = $this->getConfig()->GetSetting("mail_from");
-
                 $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
                 $body = sprintf(__("Display %s with ID %d is now back online."), $this->display->display);
+
+                $notification = $this->notificationFactory->createEmpty();
+                $notification->subject = $subject;
+                $notification->body = $body;
+                $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
+                $notification->releaseDt = $this->getDate()->getLocalDate(null, 'U');
+                $notification->isEmail = 1;
+                $notification->isInterrupt = 0;
+                $notification->userId = 0;
+                $notification->isSystem = 1;
 
                 // Get a list of people that have view access to the display?
                 if ($this->getConfig()->GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1) {
 
-                    foreach ($this->userFactory->getByDisplayGroupId($this->display->displayGroupId) as $user) {
-                        /* @var User $user */
-                        if ($user->email != '') {
-                            // Send them an email
-                            $mail = new \PHPMailer();
-                            $mail->From = $msgFrom;
-                            $mail->FromName = $this->getConfig()->getThemeConfig('theme_name');
-                            $mail->Subject = $subject;
-                            $mail->addAddress($user->email);
-
-                            // Body
-                            $mail->Body = $body;
-
-                            if (!$mail->send())
-                                $this->getLog()->error('Unable to send Display Up mail to %s', $user->email);
-                        }
+                    foreach ($this->userGroupFactory->getByDisplayGroupId($this->display->displayGroupId) as $group) {
+                        /* @var UserGroup $group */
+                        $notification->assignUserGroup($group);
                     }
                 }
 
-                // Send to the original admin contact
-                $mail = new \PHPMailer();
-                $mail->From = $msgFrom;
-                $mail->FromName = $this->getConfig()->getThemeConfig('theme_name');
-                $mail->Subject = $subject;
-                $mail->addAddress($msgTo);
-
-                // Body
-                $mail->Body = $body;
-
-                if (!$mail->send())
-                    $this->getLog()->error('Unable to send Display Up mail to %s', $msgTo);
+                $notification->save();
             }
         }
     }

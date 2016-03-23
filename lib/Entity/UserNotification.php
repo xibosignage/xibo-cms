@@ -52,6 +52,14 @@ class UserNotification implements \JsonSerializable
 
     /**
      * @SWG\Property(
+     *  description="Email Date expressed as Unix Timestamp"
+     * )
+     * @var int
+     */
+    public $emailDt;
+
+    /**
+     * @SWG\Property(
      *  description="A flag indicating whether to show as read or not"
      * )
      * @var int
@@ -81,6 +89,19 @@ class UserNotification implements \JsonSerializable
      * @var int
      */
     public $isInterrupt;
+
+    /**
+     * @SWG\Property(
+     *  description="Flag for system notification"
+     * )
+     * @var int
+     */
+    public $isSystem;
+
+    /**
+     * @var string
+     */
+    public $email;
 
     /**
      * Command constructor.
@@ -113,13 +134,24 @@ class UserNotification implements \JsonSerializable
     }
 
     /**
+     * Set Emailed
+     * @param int $emailDt
+     */
+    public function setEmailed($emailDt)
+    {
+        if ($this->emailDt == 0)
+            $this->emailDt = $emailDt;
+    }
+
+    /**
      * Save
      */
     public function save()
     {
-        $this->getStore()->update('UPDATE `lknotificationuser` SET `read` = :read, readDt = :readDt WHERE notificationId = :notificationId AND userId = :userId', [
+        $this->getStore()->update('UPDATE `lknotificationuser` SET `read` = :read, readDt = :readDt, emailDt = :emailDt WHERE notificationId = :notificationId AND userId = :userId', [
             'read' => $this->read,
             'readDt' => $this->readDt,
+            'emailDt' => $this->emailDt,
             'notificationId' => $this->notificationId,
             'userId' => $this->userId
         ]);

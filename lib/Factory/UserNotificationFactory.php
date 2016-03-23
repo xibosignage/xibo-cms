@@ -87,6 +87,15 @@ class UserNotificationFactory extends BaseFactory
     }
 
     /**
+     * Get email notification queue
+     * @return UserNotification[]
+     */
+    public function getEmailQueue()
+    {
+        return $this->query(null, ['isEmail' => 1, 'isEmailed' => 0]);
+    }
+
+    /**
      * Count My Unread
      * @return int
      */
@@ -123,15 +132,20 @@ class UserNotificationFactory extends BaseFactory
             `lknotificationuser`.userId,
             `lknotificationuser`.read,
             `lknotificationuser`.readDt,
+            `lknotificationuser`.emailDt,
              `notification`.subject,
              `notification`.body,
              `notification`.releaseDt,
-             `notification`.isInterrupt
+             `notification`.isInterrupt,
+             `notification`.isSystem,
+             `user`.email
         ';
 
         $body = ' FROM `lknotificationuser`
                     INNER JOIN `notification`
                     ON `notification`.notificationId = `lknotificationuser`.notificationId
+                    LEFT OUTER JOIN `user`
+                    ON `user`.userId = `lknotificationuser`.userId
          ';
 
         $body .= ' WHERE `notification`.releaseDt < :now ';
@@ -149,6 +163,18 @@ class UserNotificationFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('read', $filterBy) !== null) {
             $body .= ' AND `lknotificationuser`.read = :read ';
             $params['read'] = $this->getSanitizer()->getInt('read', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('isEmail', $filterBy) !== null) {
+            $body .= ' AND `notification`.isEmail = :isEmail  ';
+            $params['isEmail'] = $this->getSanitizer()->getInt('isEmail', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('isEmailed', $filterBy) !== null) {
+            if ($this->getSanitizer()->getInt('isEmailed', $filterBy) == 0)
+                $body .= ' AND `lknotificationuser`.emailDt = 0 ';
+            else
+                $body .= ' AND `lknotificationuser`.emailDt <> 0 ';
         }
 
         // Sorting?

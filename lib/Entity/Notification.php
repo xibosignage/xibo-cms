@@ -78,6 +78,14 @@ class Notification implements \JsonSerializable
 
     /**
      * @SWG\Property(
+     *  description="Flag for system notification"
+     * )
+     * @var int
+     */
+    public $isSystem;
+
+    /**
+     * @SWG\Property(
      *  description="The Owner User Id"
      * )
      * @var int
@@ -228,8 +236,8 @@ class Notification implements \JsonSerializable
     {
         $this->notificationId = $this->getStore()->insert('
             INSERT INTO `notification`
-              (`subject`, `body`, `createDt`, `releaseDt`, `isEmail`, `isInterrupt`, `userId`)
-              VALUES (:subject, :body, :createDt, :releaseDt, :isEmail, :isInterrupt, :userId)
+              (`subject`, `body`, `createDt`, `releaseDt`, `isEmail`, `isInterrupt`, `isSystem`, `userId`)
+              VALUES (:subject, :body, :createDt, :releaseDt, :isEmail, :isInterrupt, :isSystem, :userId)
         ', [
             'subject' => $this->subject,
             'body' => $this->body,
@@ -237,6 +245,7 @@ class Notification implements \JsonSerializable
             'releaseDt' => $this->releaseDt,
             'isEmail' => $this->isEmail,
             'isInterrupt' => $this->isInterrupt,
+            'isSystem' => $this->isSystem,
             'userId' => $this->userId
         ]);
     }
@@ -253,6 +262,7 @@ class Notification implements \JsonSerializable
                 `releaseDt` = :releaseDt,
                 `isEmail` = :isEmail,
                 `isInterrupt` = :isInterrupt,
+                `isSystem` = :isSystem,
                 `userId` = :userId
               WHERE `notificationId` = :notificationId
         ', [
@@ -262,6 +272,7 @@ class Notification implements \JsonSerializable
             'releaseDt' => $this->releaseDt,
             'isEmail' => $this->isEmail,
             'isInterrupt' => $this->isInterrupt,
+            'isSystem' => $this->isSystem,
             'userId' => $this->userId,
             'notificationId' => $this->notificationId
         ]);
@@ -295,7 +306,7 @@ class Notification implements \JsonSerializable
                     INNER JOIN `lknotificationgroup`
                     ON `lknotificationgroup`.groupId = `lkusergroup`.groupId
                  WHERE `lknotificationgroup`.notificationId = :notificationId2
-              )
+              ) AND userId <> 0
         ', [
             'notificationId' => $this->notificationId,
             'notificationId2' => $this->notificationId
@@ -303,8 +314,8 @@ class Notification implements \JsonSerializable
 
         // Pop in new links following from this adjustment
         $this->getStore()->update('
-            INSERT INTO `lknotificationuser` (`notificationId`, `userId`, `read`, `readDt`)
-            SELECT DISTINCT :notificationId, `userId`, 0, 0
+            INSERT INTO `lknotificationuser` (`notificationId`, `userId`, `read`, `readDt`, `emailDt`)
+            SELECT DISTINCT :notificationId, `userId`, 0, 0, 0
               FROM `lkusergroup`
                 INNER JOIN `lknotificationgroup`
                 ON `lknotificationgroup`.groupId = `lkusergroup`.groupId
@@ -314,6 +325,16 @@ class Notification implements \JsonSerializable
             'notificationId' => $this->notificationId,
             'notificationId2' => $this->notificationId
         ]);
+
+        if ($this->isSystem) {
+            $this->getStore()->insert('
+            INSERT INTO `lknotificationuser` (`notificationId`, `userId`, `read`, `readDt`, `emailDt`)
+              VALUES (:notificationId, 0, 0, 0, 0)
+              ON DUPLICATE KEY UPDATE userId = `lknotificationuser`.userId
+            ', [
+                'notificationId' => $this->notificationId
+            ]);
+        }
     }
 
     /**

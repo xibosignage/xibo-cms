@@ -131,6 +131,16 @@ class UserGroupFactory extends BaseFactory
     }
 
     /**
+     * Get by Display Group
+     * @param $displayGroupId
+     * @return array[User]
+     */
+    public function getByDisplayGroupId($displayGroupId)
+    {
+        return $this->query(null, array('disableUserCheck' => 1, 'displayGroupId' => [$displayGroupId]));
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[UserGroup]
@@ -209,6 +219,18 @@ class UserGroupFactory extends BaseFactory
             if ($this->getSanitizer()->getInt('notificationId', $filterBy) !== null) {
                 $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lknotificationgroup` WHERE notificationId = :notificationId) ';
                 $params['notificationId'] = $this->getSanitizer()->getInt('notificationId', $filterBy);
+            }
+
+            if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
+                $body .= ' AND `group`.groupId IN (
+                SELECT DISTINCT `permission`.groupId
+                  FROM `permission`
+                    INNER JOIN `permissionentity`
+                    ON `permissionentity`.entityId = permission.entityId
+                        AND `permissionentity`.entity = \'Xibo\\Entity\\DisplayGroup\'
+                 WHERE `permission`.objectId = :displayGroupId
+            ) ';
+                $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
             }
 
             // Sorting?

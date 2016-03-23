@@ -160,13 +160,18 @@ class UserFactory extends BaseFactory
     }
 
     /**
-     * Get by Display Group
-     * @param $displayGroupId
-     * @return array[User]
+     * Get system user
+     * @return User
      */
-    public function getByDisplayGroupId($displayGroupId)
+    public function getSystemUser()
     {
-        return $this->query(null, array('disableUserCheck' => 1, 'displayGroupId' => [$displayGroupId]));
+        $user = $this->create();
+        $user->userId = 0;
+        $user->userName = 'system';
+        $user->userTypeId = 1;
+        $user->email = $this->configService->GetSetting('mail_to');
+
+        return $user;
     }
 
     /**
@@ -316,22 +321,6 @@ class UserFactory extends BaseFactory
         if ($this->getSanitizer()->getString('clientId', $filterBy) != null) {
             $body .= ' AND user.userId = (SELECT userId FROM `oauth_clients` WHERE id = :clientId) ';
             $params['clientId'] = $this->getSanitizer()->getString('clientId', $filterBy);
-        }
-
-        if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
-            $body .= ' AND user.userId IN (
-                SELECT DISTINCT user.userId, user.userName, user.email
-                  FROM `user`
-                    INNER JOIN `lkusergroup`
-                    ON lkusergroup.userId = user.userId
-                    INNER JOIN `permission`
-                    ON `permission`.groupId = `lkusergroup`.groupId
-                    INNER JOIN `permissionentity`
-                    ON `permissionentity`.entityId = permission.entityId
-                        AND `permissionentity`.entity = \'Xibo\\Entity\\DisplayGroup\'
-                 WHERE `permission`.objectId = :displayGroupId
-            ) ';
-            $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
         }
 
         // Sorting?
