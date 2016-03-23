@@ -56,6 +56,12 @@ class UserGroup
      */
     public $libraryQuota;
 
+    /**
+     * @SWG\Property(description="Does this Group receive system notifications.")
+     * @var int
+     */
+    public $isSystemNotification;
+
     // Users
     private $users = [];
 
@@ -278,10 +284,12 @@ class UserGroup
      */
     private function add()
     {
-        $this->groupId = $this->getStore()->insert('INSERT INTO `group` (`group`, IsUserSpecific, libraryQuota) VALUES (:group, :isUserSpecific, :libraryQuota)', [
+        $this->groupId = $this->getStore()->insert('INSERT INTO `group` (`group`, IsUserSpecific, libraryQuota, `isSystemNotification`)
+              VALUES (:group, :isUserSpecific, :libraryQuota, :isSystemNotification)', [
             'group' => $this->group,
             'isUserSpecific' => $this->isUserSpecific,
-            'libraryQuota' => $this->libraryQuota
+            'libraryQuota' => $this->libraryQuota,
+            'isSystemNotification' => $this->isSystemNotification
         ]);
     }
 
@@ -290,10 +298,11 @@ class UserGroup
      */
     private function edit()
     {
-        $this->getStore()->update('UPDATE `group` SET `group` = :group, libraryQuota = :libraryQuota WHERE groupId = :groupId', [
+        $this->getStore()->update('UPDATE `group` SET `group` = :group, libraryQuota = :libraryQuota, `isSystemNotification` = :isSystemNotification WHERE groupId = :groupId', [
             'groupId' => $this->groupId,
             'group' => $this->group,
-            'libraryQuota' => $this->libraryQuota
+            'libraryQuota' => $this->libraryQuota,
+            'isSystemNotification' => $this->isSystemNotification
         ]);
     }
 

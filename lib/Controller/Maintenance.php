@@ -208,6 +208,12 @@ class Maintenance extends Base
                                 $notification->userId = $this->getUser()->userId;
                                 $notification->isSystem = 1;
 
+                                // Add the system notifications group - if there is one.
+                                foreach ($this->userGroupFactory->getSystemNotificationGroups() as $group) {
+                                    /* @var UserGroup $group */
+                                    $notification->assignUserGroup($group);
+                                }
+
                                 // Get a list of people that have view access to the display?
                                 if ($alertForViewUsers) {
 

@@ -110,6 +110,15 @@ class UserGroupFactory extends BaseFactory
     }
 
     /**
+     * Get isSystemNotification Group
+     * @return UserGroup
+     */
+    public function getSystemNotificationGroups()
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'isSystemNotification' => 1]);
+    }
+
+    /**
      * Get by User Id
      * @param int $userId
      * @return array[UserGroup]
@@ -165,6 +174,13 @@ class UserGroupFactory extends BaseFactory
 				';
             }
 
+            if (DBVERSION >= 124) {
+				$select .= '
+				    ,
+				    `group`.isSystemNotification
+				';
+            }
+
             $body = '
               FROM `group`
              WHERE 1 = 1
@@ -216,6 +232,11 @@ class UserGroupFactory extends BaseFactory
                 $params['isEveryone'] = $this->getSanitizer()->getInt('isEveryone', 0, $filterBy);
             }
 
+            if ($this->getSanitizer()->getInt('isSystemNotification', $filterBy) !== null) {
+                $body .= ' AND isSystemNotification = :isSystemNotification ';
+                $params['isSystemNotification'] = $this->getSanitizer()->getInt('isSystemNotification', $filterBy);
+            }
+
             if ($this->getSanitizer()->getInt('notificationId', $filterBy) !== null) {
                 $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lknotificationgroup` WHERE notificationId = :notificationId) ';
                 $params['notificationId'] = $this->getSanitizer()->getInt('notificationId', $filterBy);
@@ -245,8 +266,6 @@ class UserGroupFactory extends BaseFactory
             }
 
             $sql = $select . $body . $order . $limit;
-
-
 
             foreach ($this->getStore()->select($sql, $params) as $row) {
                 $entries[] = $this->createEmpty()->hydrate($row);

@@ -1447,7 +1447,7 @@ class Soap
             ) {
 
                 $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
-                $body = sprintf(__("Display %s with ID %d is now back online."), $this->display->display);
+                $body = sprintf(__("Display %s with ID %d is now back online."), $this->display->display, $this->display->displayId);
 
                 $notification = $this->notificationFactory->createEmpty();
                 $notification->subject = $subject;
@@ -1459,6 +1459,12 @@ class Soap
                 $notification->userId = 0;
                 $notification->isSystem = 1;
 
+                // Add the system notifications group - if there is one.
+                foreach ($this->userGroupFactory->getSystemNotificationGroups() as $group) {
+                    /* @var UserGroup $group */
+                    $notification->assignUserGroup($group);
+                }
+
                 // Get a list of people that have view access to the display?
                 if ($this->getConfig()->GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1) {
 
@@ -1468,7 +1474,13 @@ class Soap
                     }
                 }
 
-                $notification->save();
+                try {
+                    $notification->save();
+                } catch (\Exception $e) {
+                    $this->getLog()->error('Unable to send email alert for display %s with subject %s and body %s', $this->display->display, $subject, $body);
+                }
+            } else {
+                $this->getLog()->debug('No email required. Email Alert: %d, Enabled: %s, Email Enabled: %s.', $this->display->emailAlert, $maintenanceEnabled, $this->getConfig()->GetSetting('MAINTENANCE_EMAIL_ALERTS'));
             }
         }
     }

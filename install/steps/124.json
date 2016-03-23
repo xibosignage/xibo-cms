@@ -2,6 +2,13 @@
   "dbVersion": 124,
   "appVersion": "1.8.0-alpha3",
   "steps": [
-
+    {
+      "step": "Add flag to user groups for receving system notifications",
+      "action": "ALTER TABLE  `group` ADD  `isSystemNotification` TINYINT NOT NULL DEFAULT  '0';"
+    },
+    {
+      "step": "Add notification group",
+      "action": "INSERT INTO `group` (`group`, `isUserSpecific`, `isSystemNotification`) VALUES ('System Notifications', 0, 1);"
+    }
   ]
 }
