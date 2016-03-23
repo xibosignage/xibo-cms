@@ -8,10 +8,9 @@
 
 namespace Xibo\Factory;
 
-use Xibo\Entity\Notification;
 use Xibo\Entity\User;
 use Xibo\Entity\UserNotification;
-use Xibo\Exception\NotFoundException;
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -45,71 +44,111 @@ class UserNotificationFactory extends BaseFactory
     }
 
     /**
-     * Create
-     * @param $userGroupId
+     * Create User Notification
+     * @param $subject
+     * @param $body
      * @return UserNotification
      */
-    public function create($userGroupId)
+    public function create($subject, $body = '')
     {
-        $group = $this->createEmpty();
-        $group->userGroupId = $userGroupId;
+        $notification = $this->createEmpty();
+        $notification->subject = $subject;
+        $notification->body = $body;
+        $notification->userId = $this->getUser()->userId;
+        $notification->releaseDt = time();
 
-        return $group;
+        return $notification;
     }
 
     /**
      * Get by NotificationId
      * @param int $notificationId
-     * @return Notification
-     * @throws NotFoundException
+     * @return UserNotification
+     * @throws AccessDeniedException
      */
     public function getByNotificationId($notificationId)
     {
-        return $this->query(null, ['notificationId' => $notificationId]);
+        $notifications = $this->query(null, ['userId' => $this->getUser()->userId, 'notificationId' => $notificationId]);
+
+        if (count($notifications) <= 0)
+            throw new AccessDeniedException();
+
+        return $notifications[0];
     }
 
     /**
-     * Get by GroupId
-     * @param int $groupId
-     * @return Notification
-     * @throws NotFoundException
+     * Get my notifications
+     * @param int $length
+     * @return UserNotification[]
      */
-    public function getByGroupId($groupId)
+    public function getMine($length = 5)
     {
-        return $this->query(null, ['groupId' => $groupId]);
+        return $this->query(null, ['userId' => $this->getUser()->userId, 'start' => 0, 'length' => $length]);
+    }
+
+    /**
+     * Count My Unread
+     * @return int
+     */
+    public function countMyUnread()
+    {
+        return $this->getStore()->select('
+            SELECT COUNT(*) AS Cnt
+              FROM `lknotificationuser`
+                INNER JOIN `notification`
+                ON `notification`.notificationId = `lknotificationuser`.notificationId
+             WHERE `lknotificationuser`.`userId` = :userId
+              AND `lknotificationuser`.`read` = 0
+              AND `notification`.releaseDt < :now
+          ', [
+            'now' => time(), 'userId' => $this->getUser()->userId
+        ])[0]['Cnt'];
     }
 
     /**
      * @param array[Optional] $sortOrder
      * @param array[Optional] $filterBy
-     * @return array[Notification]
+     * @return array[UserNotification]
      */
     public function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
 
         if ($sortOrder == null)
-            $sortOrder = ['readDt DESC'];
+            $sortOrder = ['releaseDt DESC'];
 
-        $params = array();
-        $select = 'SELECT `lknotificationgroup`.lknotificationgroupId,
-            `lknotificationgroup`.notificationId,
-            `lknotificationgroup`.groupId,
-            `lknotificationgroup`.read,
-            `lknotificationgroup`.readDt ';
+        $params = ['now' => time()];
+        $select = 'SELECT `lknotificationuser`.lknotificationuserId,
+            `lknotificationuser`.notificationId,
+            `lknotificationuser`.userId,
+            `lknotificationuser`.read,
+            `lknotificationuser`.readDt,
+             `notification`.subject,
+             `notification`.body,
+             `notification`.releaseDt,
+             `notification`.isInterrupt
+        ';
 
-        $body = ' FROM `lknotificationgroup` ';
+        $body = ' FROM `lknotificationuser`
+                    INNER JOIN `notification`
+                    ON `notification`.notificationId = `lknotificationuser`.notificationId
+         ';
 
-        $body .= ' WHERE 1 = 1 ';
+        $body .= ' WHERE `notification`.releaseDt < :now ';
 
         if ($this->getSanitizer()->getInt('notificationId', $filterBy) !== null) {
-            $body .= ' AND `lknotificationgroup`.notificationId = :notificationId ';
+            $body .= ' AND `lknotificationuser`.notificationId = :notificationId ';
             $params['notificationId'] = $this->getSanitizer()->getInt('notificationId', $filterBy);
         }
 
-        if ($this->getSanitizer()->getInt('groupId', $filterBy) != null) {
-            $body .= ' AND `lknotificationgroup`.groupId = :groupId ';
-            $params['groupId'] = $this->getSanitizer()->getInt('subject', $filterBy);
+        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+            $body .= ' AND `lknotificationuser`.userId = :userId ';
+            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('read', $filterBy) !== null) {
+            $body .= ' AND `lknotificationuser`.read = :read ';
+            $params['read'] = $this->getSanitizer()->getInt('read', $filterBy);
         }
 
         // Sorting?
@@ -126,7 +165,7 @@ class UserNotificationFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new UserNotification($this->getStore(), $this->getLog()))->hydrate($row);
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
         // Paging

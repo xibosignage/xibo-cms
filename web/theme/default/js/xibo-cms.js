@@ -281,6 +281,11 @@ function XiboInitialise(scope) {
     });
 
     $(scope + " .selectPicker select.form-control").selectpicker();
+
+    // Notification dates
+    $(scope + " span.notification-date").each(function() {
+        $(this).html(moment($(this).html(), "X").fromNow());
+    });
 }
 
 /**

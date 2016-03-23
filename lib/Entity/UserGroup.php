@@ -261,14 +261,16 @@ class UserGroup
      */
     private function removeAssignments()
     {
-        $this->users = [];
-        $this->unlinkUsers();
-
         // Delete Notifications
         // NB: notifications aren't modelled as child objects because there could be many thousands of notifications on each
         // usergroup. We consider the notification to be the parent here and it manages the assignments.
         // This does mean that we might end up with an empty notification (not assigned to anything)
+        $this->getStore()->update('DELETE FROM `lknotificationuser` WHERE `userId` IN (SELECT `userId` FROM `lkusergroup` WHERE `groupId` = :groupId) ', ['groupId' => $this->groupId]);
         $this->getStore()->update('DELETE FROM `lknotificationgroup` WHERE `groupId` = :groupId', ['groupId' => $this->groupId]);
+
+        // Remove user assignments
+        $this->users = [];
+        $this->unlinkUsers();
     }
 
     /**

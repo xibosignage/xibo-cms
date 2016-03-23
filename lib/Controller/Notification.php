@@ -13,6 +13,7 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Factory\UserNotificationFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -26,6 +27,9 @@ class Notification extends Base
 {
     /** @var  NotificationFactory */
     private $notificationFactory;
+
+    /** @var  UserNotificationFactory */
+    private $userNotificationFactory;
 
     /** @var  DisplayGroupFactory */
     private $displayGroupFactory;
@@ -43,14 +47,16 @@ class Notification extends Base
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param NotificationFactory $notificationFactory
+     * @param UserNotificationFactory $userNotificationFactory
      * @param DisplayGroupFactory $displayGroupFactory
      * @param UserGroupFactory $userGroupFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $notificationFactory, $displayGroupFactory, $userGroupFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $notificationFactory, $userNotificationFactory, $displayGroupFactory, $userGroupFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->notificationFactory = $notificationFactory;
+        $this->userNotificationFactory = $userNotificationFactory;
         $this->displayGroupFactory = $displayGroupFactory;
         $this->userGroupFactory = $userGroupFactory;
     }
@@ -59,6 +65,38 @@ class Notification extends Base
     {
         // Call to render the template
         $this->getState()->template = 'notification-page';
+    }
+
+    /**
+     * Show a notification
+     * @param int $notificationId
+     */
+    public function interrupt($notificationId)
+    {
+        $notification = $this->userNotificationFactory->getByNotificationId($notificationId);
+
+        // Mark it as read
+        $notification->setRead($this->getDate()->getLocalDate(null, 'U'));
+        $notification->save();
+
+        $this->getState()->template = 'notification-interrupt';
+        $this->getState()->setData(['notification' => $notification]);
+    }
+
+    /**
+     * Show a notification
+     * @param int $notificationId
+     */
+    public function show($notificationId)
+    {
+        $notification = $this->userNotificationFactory->getByNotificationId($notificationId);
+
+        // Mark it as read
+        $notification->setRead($this->getDate()->getLocalDate(null, 'U'));
+        $notification->save();
+
+        $this->getState()->template = 'notification-form-show';
+        $this->getState()->setData(['notification' => $notification]);
     }
 
     /**
@@ -143,7 +181,7 @@ class Notification extends Base
         foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
 
-            if ($displayGroup->isDisplaySpecific == 0) {
+            if ($displayGroup->isDisplaySpecific == 1) {
                 $displays[] = $displayGroup;
             } else {
                 $groups[] = $displayGroup;
@@ -153,7 +191,7 @@ class Notification extends Base
         foreach ($this->userGroupFactory->query(['`group`'], ['isUserSpecific' => -1]) as $userGroup) {
             /* @var UserGroup $userGroup */
 
-            if ($userGroup->isUserSpecific == 1) {
+            if ($userGroup->isUserSpecific == 0) {
                 $userGroups[] = $userGroup;
             } else {
                 $users[] = $userGroup;
@@ -319,7 +357,7 @@ class Notification extends Base
     {
         $notification = $this->notificationFactory->createEmpty();
         $notification->subject = $this->getSanitizer()->getString('subject');
-        $notification->body = $this->getSanitizer()->getString('body');
+        $notification->body = $this->getSanitizer()->getParam('body', '');
         $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
         $notification->releaseDt = $this->getSanitizer()->getDate('releaseDt')->format('U');
         $notification->isEmail = $this->getSanitizer()->getCheckbox('isEmail');
@@ -430,7 +468,7 @@ class Notification extends Base
             throw new AccessDeniedException();
 
         $notification->subject = $this->getSanitizer()->getString('subject');
-        $notification->body = $this->getSanitizer()->getString('body');
+        $notification->body = $this->getSanitizer()->getParam('body', '');
         $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
         $notification->releaseDt = $this->getSanitizer()->getDate('releaseDt')->format('U');
         $notification->isEmail = $this->getSanitizer()->getCheckbox('isEmail');
@@ -455,7 +493,7 @@ class Notification extends Base
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 201,
-            'message' => sprintf(__('Added %s'), $notification->subject),
+            'message' => sprintf(__('Edited %s'), $notification->subject),
             'id' => $notification->notificationId,
             'data' => $notification
         ]);

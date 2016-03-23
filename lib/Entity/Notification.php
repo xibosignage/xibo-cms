@@ -211,6 +211,8 @@ class Notification implements \JsonSerializable
     public function delete()
     {
         // Remove all links
+        $this->getStore()->update('DELETE FROM `lknotificationuser` WHERE `notificationId` = :notificationId', ['notificationId' => $this->notificationId]);
+
         $this->getStore()->update('DELETE FROM `lknotificationgroup` WHERE `notificationId` = :notificationId', ['notificationId' => $this->notificationId]);
 
         $this->getStore()->update('DELETE FROM `lknotificationdg` WHERE `notificationId` = :notificationId', ['notificationId' => $this->notificationId]);
@@ -275,8 +277,48 @@ class Notification implements \JsonSerializable
 
         $this->linkDisplayGroups();
         $this->unlinkDisplayGroups();
+
+        $this->manageRealisedUserLinks();
     }
 
+    /**
+     * Manage the links in the User notification table
+     */
+    private function manageRealisedUserLinks()
+    {
+        // Delete links that no longer exist
+        $this->getStore()->update('
+            DELETE FROM `lknotificationuser`
+             WHERE `notificationId` = :notificationId AND `userId` NOT IN (
+                SELECT `userId`
+                  FROM `lkusergroup`
+                    INNER JOIN `lknotificationgroup`
+                    ON `lknotificationgroup`.groupId = `lkusergroup`.groupId
+                 WHERE `lknotificationgroup`.notificationId = :notificationId2
+              )
+        ', [
+            'notificationId' => $this->notificationId,
+            'notificationId2' => $this->notificationId
+        ]);
+
+        // Pop in new links following from this adjustment
+        $this->getStore()->update('
+            INSERT INTO `lknotificationuser` (`notificationId`, `userId`, `read`, `readDt`)
+            SELECT DISTINCT :notificationId, `userId`, 0, 0
+              FROM `lkusergroup`
+                INNER JOIN `lknotificationgroup`
+                ON `lknotificationgroup`.groupId = `lkusergroup`.groupId
+             WHERE `lknotificationgroup`.notificationId = :notificationId2
+            ON DUPLICATE KEY UPDATE userId = `lknotificationuser`.userId
+        ', [
+            'notificationId' => $this->notificationId,
+            'notificationId2' => $this->notificationId
+        ]);
+    }
+
+    /**
+     * Link User Groups
+     */
     private function linkUserGroups()
     {
         foreach ($this->userGroups as $userGroup) {
@@ -288,6 +330,9 @@ class Notification implements \JsonSerializable
         }
     }
 
+    /**
+     * Unlink User Groups
+     */
     private function unlinkUserGroups()
     {
         // Unlink any userGroup that is NOT in the collection
@@ -308,6 +353,9 @@ class Notification implements \JsonSerializable
         $this->getStore()->update($sql, $params);
     }
 
+    /**
+     * Link Display Groups
+     */
     private function linkDisplayGroups()
     {
         foreach ($this->displayGroups as $displayGroup) {
@@ -319,6 +367,9 @@ class Notification implements \JsonSerializable
         }
     }
 
+    /**
+     * Unlink Display Groups
+     */
     private function unlinkDisplayGroups()
     {
         // Unlink any displayGroup that is NOT in the collection
