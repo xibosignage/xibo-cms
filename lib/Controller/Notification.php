@@ -220,7 +220,7 @@ class Notification extends Base
         $notification->createdDt = $this->getDate()->getLocalDate($notification->createdDt);
         $notification->releaseDt = $this->getDate()->getLocalDate($notification->releaseDt);
 
-        if ($notification->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
+        if (!$this->getUser()->checkEditable($notification))
             throw new AccessDeniedException();
 
         $groups = array();
@@ -272,7 +272,7 @@ class Notification extends Base
     {
         $notification = $this->notificationFactory->getById($notificationId);
 
-        if ($notification->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
+        if (!$this->getUser()->checkDeleteable($notification))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'notification-form-delete';
@@ -526,7 +526,7 @@ class Notification extends Base
     {
         $notification = $this->notificationFactory->getById($notificationId);
 
-        if ($notification->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
+        if (!$this->getUser()->checkDeleteable($notification))
             throw new AccessDeniedException();
 
         $notification->delete();

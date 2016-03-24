@@ -97,6 +97,8 @@ class NotificationFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
+        self::viewPermissionSql('Xibo\Entity\Notification', $body, $params, '`notification`.notificationId', '`notification`.userId');
+
         if ($this->getSanitizer()->getInt('notificationId', $filterBy) !== null) {
             $body .= ' AND `notification`.notificationId = :notificationId ';
             $params['notificationId'] = $this->getSanitizer()->getInt('notificationId', $filterBy);

@@ -28,7 +28,7 @@
     },
     {
       "step": "Add Notification Page",
-      "action": "INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES (NULL, 'notification', 'Notifications', '0');"
+      "action": "INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES (NULL, 'notification', 'Notifications', '0'), (NULL, 'drawer', 'Notification Drawer', '0');"
     },
     {
       "step": "Add Notification Permission Entity",
