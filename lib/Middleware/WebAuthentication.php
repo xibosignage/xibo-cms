@@ -72,10 +72,6 @@ class WebAuthentication extends Middleware
             // Get the current route pattern
             $resource = $app->router->getCurrentRoute()->getPattern();
 
-            // Initialise the page factory with its ACL dependencies
-            // the user is empty
-            $app->pageFactory->setAclDependencies($user, $app->userFactory);
-
             // Pass the page factory into the user object, so that it can check its page permissions
             $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
 
@@ -91,12 +87,6 @@ class WebAuthentication extends Middleware
 
                     // Pass the page factory into the user object, so that it can check its page permissions
                     $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
-
-                    // Initialise the page factory with its ACL dependencies
-                    $app->pageFactory->setAclDependencies($user, $app->userFactory);
-
-                    // Set the user factory ACL dependencies (used for working out intra-user permissions)
-                    $app->userFactory->setAclDependencies($user, $app->userFactory);
 
                     // Load the user
                     $user->load();

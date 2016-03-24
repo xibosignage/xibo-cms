@@ -317,12 +317,17 @@ class User implements \JsonSerializable
 
     /**
      * Set the user group factory
-     * @param $userGroupFactory
+     * @param UserGroupFactory $userGroupFactory
      * @param PageFactory $pageFactory
      * @return $this
      */
     public function setChildAclDependencies($userGroupFactory, $pageFactory)
     {
+        // Assert myself on these factories
+        $userGroupFactory->setAclDependencies($this, $this->userFactory);
+        $pageFactory->setAclDependencies($this, $this->userFactory);
+        $this->userFactory->setAclDependencies($this, $this->userFactory);
+
         $this->userGroupFactory = $userGroupFactory;
         $this->pageFactory = $pageFactory;
         return $this;

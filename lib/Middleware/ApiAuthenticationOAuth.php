@@ -65,12 +65,6 @@ class ApiAuthenticationOAuth extends Middleware
 
             $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
 
-            // Initialise the page factory with its ACL dependencies
-            $app->pageFactory->setAclDependencies($user, $app->userFactory);
-
-            // Set the user factory ACL dependencies (used for working out intra-user permissions)
-            $app->userFactory->setAclDependencies($user, $app->userFactory);
-
             $user->load();
 
             $this->app->user = $user;
