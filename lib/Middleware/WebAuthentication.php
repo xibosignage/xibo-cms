@@ -66,36 +66,49 @@ class WebAuthentication extends Middleware
 
         // Define a callable to check the route requested in before.dispatch
         $isAuthorised = function () use ($app, $redirectToLogin) {
+            /** @var \Xibo\Entity\User $user */
             $user = $app->user;
-            /* @var \Xibo\Entity\User $user */
 
             // Get the current route pattern
             $resource = $app->router->getCurrentRoute()->getPattern();
 
+            // Initialise the page factory with its ACL dependencies
+            // the user is empty
+            $app->pageFactory->setAclDependencies($user, $app->userFactory);
+
+            // Pass the page factory into the user object, so that it can check its page permissions
+            $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
+
             // Check to see if this is a public resource (there are only a few, so we have them in an array)
             if (!in_array($resource, $app->publicRoutes)) {
                 $app->public = false;
+
                 // Need to check
                 if ($user->hasIdentity() && !$app->session->isExpired()) {
 
                     // Replace our user with a fully loaded one
                     $user = $app->userFactory->getById($user->userId);
 
-                    // Page Factory requires the user to be configured
-                    $app->user = $user;
-
+                    // Pass the page factory into the user object, so that it can check its page permissions
                     $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
-                    $user->load();
+
+                    // Initialise the page factory with its ACL dependencies
+                    $app->pageFactory->setAclDependencies($user, $app->userFactory);
 
                     // Set the user factory ACL dependencies (used for working out intra-user permissions)
                     $app->userFactory->setAclDependencies($user, $app->userFactory);
 
+                    // Load the user
+                    $user->load();
+
+                    // Configure the log service with the logged in user id
                     $app->logService->setUserId($user->userId);
 
                     // Do they have permission?
                     $user->routeAuthentication($resource);
 
-                    // We are authenticated
+                    // We are authenticated, override with the populated user object
+                    $app->user = $user;
                 }
                 else {
                     // Store the current route so we can come back to it after login

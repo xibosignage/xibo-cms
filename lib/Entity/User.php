@@ -22,6 +22,7 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\LibraryFullException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
@@ -872,9 +873,13 @@ class User implements \JsonSerializable
      * Authenticates the route given against the user credentials held
      * @param $route string
      * @return bool
+     * @throws ConfigurationException
      */
     public function routeViewable($route)
     {
+        if ($this->pageFactory == null)
+            throw new ConfigurationException('routeViewable called before user object has been initialised');
+
         if ($this->userTypeId == 1)
             return true;
 

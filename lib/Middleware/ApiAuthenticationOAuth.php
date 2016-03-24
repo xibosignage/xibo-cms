@@ -64,12 +64,16 @@ class ApiAuthenticationOAuth extends Middleware
                 $user = $app->userFactory->loadByClientId($server->getAccessToken()->getSession()->getOwnerId());
 
             $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
+
+            // Initialise the page factory with its ACL dependencies
+            $app->pageFactory->setAclDependencies($user, $app->userFactory);
+
+            // Set the user factory ACL dependencies (used for working out intra-user permissions)
+            $app->userFactory->setAclDependencies($user, $app->userFactory);
+
             $user->load();
 
             $this->app->user = $user;
-
-            // Set the user factory ACL dependencies (used for working out intra-user permissions)
-            $app->userFactory->setAclDependencies($this->app->user, $app->userFactory);
 
             // Get the current route pattern
             $resource = $app->router->getCurrentRoute()->getPattern();

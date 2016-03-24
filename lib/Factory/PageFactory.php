@@ -24,7 +24,6 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Page;
-use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -41,13 +40,10 @@ class PageFactory extends BaseFactory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
-     * @param User $user
-     * @param UserFactory $userFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory)
+    public function __construct($store, $log, $sanitizerService)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
-        $this->setAclDependencies($user, $userFactory);
     }
 
     /**

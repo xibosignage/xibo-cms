@@ -1110,9 +1110,7 @@ class State extends Middleware
             return new \Xibo\Factory\PageFactory(
                 $container->store,
                 $container->logService,
-                $container->sanitizerService,
-                $container->user,
-                $container->userFactory
+                $container->sanitizerService
             );
         });
 
