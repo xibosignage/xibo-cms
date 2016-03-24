@@ -81,8 +81,8 @@ class Actions extends Middleware
                 return;
             }
 
-            // Check we are logged in
-            if (!$app->user->hasIdentity())
+            // Do not proceed unless we have completed an upgrade
+            if ($app->configService->isUpgradePending())
                 return;
 
             try {
