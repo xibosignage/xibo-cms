@@ -32,9 +32,11 @@
                 {% set helpText %}{% trans "The quota in Kb that should be applied. Enter 0 for no quota." %}{% endset %}
                 {{ forms.number("libraryQuota", title, group.libraryQuota, helpText) }}
 
+                {% if currentUser.userTypeId == 1 %}
                 {% set title %}{% trans "Receive System Notifications?" %}{% endset %}
                 {% set helpText %}{% trans "Should members of this Group receive system notifications?" %}{% endset %}
                 {{ forms.checkbox("isSystemNotification", title, group.isSystemNotification, helpText) }}
+                {% endif %}
             </form>
         </div>
     </div>

@@ -115,7 +115,7 @@ class UserGroupFactory extends BaseFactory
      */
     public function getSystemNotificationGroups()
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'isSystemNotification' => 1]);
+        return $this->query(null, ['disableUserCheck' => 1, 'isSystemNotification' => 1, 'isUserSpecific' => -1]);
     }
 
     /**

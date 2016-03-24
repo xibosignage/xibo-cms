@@ -417,6 +417,9 @@ class User extends Base
         $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
         $user->setNewPassword($this->getSanitizer()->getString('password'));
 
+        if ($this->getUser()->userTypeId == 1)
+            $user->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
+
         $user->firstName = $this->getSanitizer()->getString('firstName');
         $user->lastName = $this->getSanitizer()->getString('lastName');
         $user->phone = $this->getSanitizer()->getString('phone');
@@ -465,6 +468,9 @@ class User extends Base
         $user->homePageId = $this->getSanitizer()->getInt('homePageId');
         $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
         $user->retired = $this->getSanitizer()->getCheckbox('retired');
+
+        if ($this->getUser()->userTypeId == 1)
+            $user->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
 
         $user->firstName = $this->getSanitizer()->getString('firstName');
         $user->lastName = $this->getSanitizer()->getString('lastName');

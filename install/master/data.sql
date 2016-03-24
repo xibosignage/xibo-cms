@@ -1,10 +1,11 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
 ('1.8.0-alpha3', 5, 2, 124);
 
-INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`) VALUES
-(1, 'Users', 0, 0),
-(2, 'Everyone', 0, 1),
-(3, 'xibo_admin', 1, 0);
+INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`, `isSystemNotification`) VALUES
+(1, 'Users', 0, 0, 0),
+(2, 'Everyone', 0, 1, 0),
+(3, 'xibo_admin', 1, 0, 1),
+(4, 'System Notifications', 0, 0, 1);
 
 INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (1, 'Layout', 'General', 'layouts.html'),
