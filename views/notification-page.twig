@@ -94,8 +94,8 @@
             CKEDITOR.replace("body");
 
             // Make sure when we close the dialog we also destroy the editor
-            dialog.on("hide", function() {
-                if (CKEDITOR.instances["body"] != undefined) {
+            dialog.on("hide.bs.modal", function(event) {
+                if (event.target.className == "bootbox modal in" && CKEDITOR.instances["body"] != undefined) {
                     CKEDITOR.instances["body"].destroy();
                 }
             });
