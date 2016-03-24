@@ -113,7 +113,7 @@ class Actions extends Middleware
                 $notifications = array_merge($notifications, $factory->getMine());
 
                 // If we aren't already in a notification interrupt, then check to see if we should be
-                if ($resource != '/notification/interrupt/:id' && !$app->request()->isAjax()) {
+                if ($resource != '/drawer/notification/interrupt/:id' && !$app->request()->isAjax()) {
                     foreach ($notifications as $notification) {
                         /** @var UserNotification $notification */
                         if ($notification->isInterrupt == 1 && $notification->read == 0) {
