@@ -66,7 +66,7 @@ class Notification implements \JsonSerializable
      * )
      * @var int
      */
-    public $isEmail;
+    public $isEmail = 0;
 
     /**
      * @SWG\Property(
@@ -74,7 +74,7 @@ class Notification implements \JsonSerializable
      * )
      * @var int
      */
-    public $isInterrupt;
+    public $isInterrupt = 0;
 
     /**
      * @SWG\Property(
@@ -82,7 +82,7 @@ class Notification implements \JsonSerializable
      * )
      * @var int
      */
-    public $isSystem;
+    public $isSystem = 0;
 
     /**
      * @SWG\Property(
