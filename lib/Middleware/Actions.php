@@ -77,7 +77,6 @@ class Actions extends Middleware
             if ($app->configService->isUpgradePending() && !in_array($resource, $excludedRoutes)) {
                 $app->logService->debug('%s not in excluded routes, redirecting. ', $resource);
                 $app->redirectTo('upgrade.view');
-                return;
             }
 
             // Notifications
@@ -108,7 +107,7 @@ class Actions extends Middleware
                 foreach ($notifications as $notification) {
                     /** @var UserNotification $notification */
                     if ($notification->isInterrupt == 1 && $notification->read == 0) {
-                        $app->flash('interruptedUrl', $app->request()->getResourceUri());
+                        $app->flash('interrxuptedUrl', $app->request()->getResourceUri());
                         $app->redirectTo('notification.interrupt', ['id' => $notification->notificationId]);
                     }
                 }
