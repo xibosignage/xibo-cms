@@ -181,13 +181,13 @@ class Region extends Base
      * @param int $layoutId
      *
      * @SWG\Post(
-     *  path="/region/{layoutId}",
+     *  path="/region/{id}",
      *  operationId="regionAdd",
      *  tags={"layout"},
      *  summary="Add Region",
      *  description="Add a Region to a Layout",
      *  @SWG\Parameter(
-     *      name="layoutId",
+     *      name="id",
      *      in="path",
      *      description="The Layout ID to add the Region to",
      *      type="integer",
@@ -305,13 +305,13 @@ class Region extends Base
      * @param int $regionId
      *
      * @SWG\Put(
-     *  path="/region/{regionId}",
+     *  path="/region/{id}",
      *  operationId="regionEdit",
      *  tags={"layout"},
      *  summary="Edit Region",
      *  description="Edit Region",
      *  @SWG\Parameter(
-     *      name="regionId",
+     *      name="id",
      *      in="path",
      *      description="The Region ID to Edit",
      *      type="integer",
@@ -488,16 +488,11 @@ class Region extends Base
      *  @SWG\Parameter(
      *      name="regions",
      *      in="formData",
-     *      description="Array of regions and their new positions",
+     *      description="Array of regions and their new positions. Each array element should ne json encoded and have regionId, top, left, width and height.",
      *      type="array",
      *      required=true,
-     *      @SWG\Schema(
-     *          type="object",
-     *          additionalProperties={"title":"regionId", "type":"integer"},
-     *          additionalProperties={"title":"top", "type":"number"},
-     *          additionalProperties={"title":"left", "type":"number"},
-     *          additionalProperties={"title":"width", "type":"number"},
-     *          additionalProperties={"title":"height", "type":"number"}
+     *      @SWG\Items(
+     *          type="string"
      *      )
      *   ),
      *  @SWG\Response(

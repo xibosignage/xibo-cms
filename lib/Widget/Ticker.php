@@ -246,6 +246,7 @@ class Ticker extends ModuleWidget
         $this->setOption('textDirection', $this->getSanitizer()->getString('textDirection'));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
+        $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
 
         // DataSet
         if ($this->getOption('sourceId') == 2) {
@@ -404,8 +405,17 @@ class Ticker extends ModuleWidget
         }
 
         // Return empty string if there are no items to show.
-        if (count($items) == 0)
-            return '';
+        if (count($items) == 0) {
+            // Do we have a no-data message to display?
+            $noDataMessage = $this->getRawNode('noDataMessage');
+
+            if ($noDataMessage != '') {
+                $items[] = $noDataMessage;
+            } else {
+                $this->getLog()->error('Request failed for dataSet id=%d. Widget=%d. Due to No Records Found', $this->getOption('dataSetId'), $this->getWidgetId());
+                return '';
+            }
+        }
 
         // Work out how many pages we will be showing.
         $pages = $numItems;
@@ -945,7 +955,7 @@ class Ticker extends ModuleWidget
             return $items;
         }
         catch (NotFoundException $e) {
-            $this->getLog()->error('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
+            $this->getLog()->debug('getDataSetItems failed for id=%d. Widget=%d. Due to %s - this might be OK if we have a no-data message', $dataSetId, $this->getWidgetId(), $e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
             return [];
         }

@@ -254,6 +254,7 @@ class DataSetView extends ModuleWidget
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
         $this->setOption('useOrderingClause', $this->getSanitizer()->getCheckbox('useOrderingClause'));
         $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
+        $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
 
         // Order and Filter criteria
         $orderClauses = $this->getSanitizer()->getStringArray('orderClause');
@@ -526,8 +527,13 @@ class DataSetView extends ModuleWidget
             // Get the data (complete table, filtered)
             $dataSetResults = $dataSet->getData($filter);
 
-            if (count($dataSetResults) <= 0)
-                throw new NotFoundException(__('Empty Result Set with filter criteria.'));
+            if (count($dataSetResults) <= 0) {
+
+                if ($this->getRawNode('noDataMessage') == '')
+                    throw new NotFoundException(__('Empty Result Set with filter criteria.'));
+                else
+                    return $this->getRawNode('noDataMessage');
+            }
 
             $rowCount = 1;
             $rowCountThisPage = 1;

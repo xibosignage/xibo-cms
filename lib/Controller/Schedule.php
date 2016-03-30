@@ -523,7 +523,7 @@ class Schedule extends Base
      *  summary="Edit Schedule Event",
      *  description="Edit a scheduled event for a Campaign/Layout to be shown on a Display Group/Display.",
      *  @SWG\Parameter(
-     *      name="eventID",
+     *      name="eventId",
      *      in="path",
      *      description="The Scheduled Event ID",
      *      type="integer",

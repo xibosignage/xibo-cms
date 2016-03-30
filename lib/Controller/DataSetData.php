@@ -82,7 +82,7 @@ class DataSetData extends Base
      *  description="Get Data for DataSet",
      *  @SWG\Parameter(
      *      name="dataSetId",
-     *      in="formData",
+     *      in="path",
      *      description="The DataSet ID",
      *      type="integer",
      *      required=true

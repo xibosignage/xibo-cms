@@ -720,7 +720,7 @@
                 "parameters": [
                     {
                         "name": "dataSetId",
-                        "in": "formData",
+                        "in": "path",
                         "description": "The DataSet ID",
                         "required": true,
                         "type": "integer"
@@ -1864,7 +1864,7 @@
                 "parameters": [
                     {
                         "name": "displayProfileId",
-                        "in": "formData",
+                        "in": "path",
                         "description": "The Display Profile ID",
                         "required": true,
                         "type": "integer"
@@ -2550,68 +2550,7 @@
                 }
             }
         },
-        "/region/{layoutId}": {
-            "post": {
-                "tags": [
-                    "layout"
-                ],
-                "summary": "Add Region",
-                "description": "Add a Region to a Layout",
-                "operationId": "regionAdd",
-                "parameters": [
-                    {
-                        "name": "layoutId",
-                        "in": "path",
-                        "description": "The Layout ID to add the Region to",
-                        "required": true,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "width",
-                        "in": "formData",
-                        "description": "The Width, default 250",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "height",
-                        "in": "formData",
-                        "description": "The Height",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "top",
-                        "in": "formData",
-                        "description": "The Top Coordinate",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "left",
-                        "in": "formData",
-                        "description": "The Left Coordinate",
-                        "required": false,
-                        "type": "integer"
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "successful operation",
-                        "schema": {
-                            "$ref": "#/definitions/Region"
-                        },
-                        "headers": {
-                            "Location": {
-                                "description": "Location of the new record",
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/region/{regionId}": {
+        "/region/{id}": {
             "put": {
                 "tags": [
                     "layout"
@@ -2621,7 +2560,7 @@
                 "operationId": "regionEdit",
                 "parameters": [
                     {
-                        "name": "regionId",
+                        "name": "id",
                         "in": "path",
                         "description": "The Region ID to Edit",
                         "required": true,
@@ -2700,6 +2639,67 @@
                     }
                 }
             },
+            "post": {
+                "tags": [
+                    "layout"
+                ],
+                "summary": "Add Region",
+                "description": "Add a Region to a Layout",
+                "operationId": "regionAdd",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The Layout ID to add the Region to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "width",
+                        "in": "formData",
+                        "description": "The Width, default 250",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "height",
+                        "in": "formData",
+                        "description": "The Height",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "top",
+                        "in": "formData",
+                        "description": "The Top Coordinate",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "left",
+                        "in": "formData",
+                        "description": "The Left Coordinate",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Region"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/region/{regionId}": {
             "delete": {
                 "tags": [
                     "layout"
@@ -2742,16 +2742,12 @@
                     {
                         "name": "regions",
                         "in": "formData",
-                        "description": "Array of regions and their new positions",
+                        "description": "Array of regions and their new positions. Each array element should ne json encoded and have regionId, top, left, width and height.",
                         "required": true,
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "title": "height",
-                                "type": "number"
-                            }
-                        },
-                        "type": "array"
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -3102,7 +3098,7 @@
                 "operationId": "scheduleEdit",
                 "parameters": [
                     {
-                        "name": "eventID",
+                        "name": "eventId",
                         "in": "path",
                         "description": "The Scheduled Event ID",
                         "required": true,
@@ -3655,7 +3651,7 @@
                 ],
                 "summary": "Retrieve User Preferences",
                 "description": "User preferences for non-state information, such as Layout designer zoom levels",
-                "operationId": "userPref",
+                "operationId": "userPrefGet",
                 "parameters": [
                     {
                         "name": "preference",
@@ -3671,7 +3667,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/UserGroupOption"
+                                "$ref": "#/definitions/UserOption"
                             }
                         }
                     }
@@ -3683,7 +3679,7 @@
                 ],
                 "summary": "Save User Preferences",
                 "description": "Save User preferences for non-state information, such as Layout designer zoom levels",
-                "operationId": "userPref",
+                "operationId": "userPrefEdit",
                 "parameters": [
                     {
                         "name": "preference",
@@ -3692,7 +3688,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/UserGroupOption"
+                                "$ref": "#/definitions/UserOption"
                             }
                         }
                     }
@@ -5265,7 +5261,7 @@
         "auth": {
             "type": "oauth2",
             "flow": "accessCode",
-            "authorizationUrl": "/application/authorize",
+            "authorizationUrl": "/api/authorize",
             "tokenUrl": "/api/authorize/access_token",
             "scopes": {
                 "read:all": "read access",
