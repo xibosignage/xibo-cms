@@ -412,6 +412,7 @@ class Ticker extends ModuleWidget
             if ($noDataMessage != '') {
                 $items[] = $noDataMessage;
             } else {
+                $this->getLog()->error('Request failed for dataSet id=%d. Widget=%d. Due to No Records Found', $this->getOption('dataSetId'), $this->getWidgetId());
                 return '';
             }
         }
@@ -954,7 +955,7 @@ class Ticker extends ModuleWidget
             return $items;
         }
         catch (NotFoundException $e) {
-            $this->getLog()->error('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
+            $this->getLog()->debug('getDataSetItems failed for id=%d. Widget=%d. Due to %s - this might be OK if we have a no-data message', $dataSetId, $this->getWidgetId(), $e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
             return [];
         }

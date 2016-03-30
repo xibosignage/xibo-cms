@@ -299,6 +299,7 @@ class State extends Middleware
                 $container->dateService,
                 $container->configService,
                 $container->session,
+                $container->store,
                 $container->applicationFactory,
                 $container->applicationRedirectUriFactory
             );

@@ -348,7 +348,7 @@ class ConfigService implements ConfigServiceInterface
      */
     public function isUpgradePending()
     {
-        return DBVERSION != ConfigService::$WEBSITE_VERSION;
+        return DBVERSION < ConfigService::$WEBSITE_VERSION;
     }
 
     /**

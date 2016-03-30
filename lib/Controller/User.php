@@ -914,7 +914,7 @@ class User extends Base
     /**
      * @SWG\Get(
      *     path="/user/pref",
-     *     operationId="userPref",
+     *     operationId="userPrefGet",
      *     tags={"user"},
      *     summary="Retrieve User Preferences",
      *     description="User preferences for non-state information, such as Layout designer zoom levels",
@@ -930,7 +930,7 @@ class User extends Base
      *      description="successful response",
      *      @SWG\Schema(
      *          type="array",
-     *          @SWG\Items(ref="#/definitions/UserGroupOption")
+     *          @SWG\Items(ref="#/definitions/UserOption")
      *      )
      *  )
      * )
@@ -952,7 +952,7 @@ class User extends Base
     /**
      * @SWG\Post(
      *     path="/user/pref",
-     *     operationId="userPref",
+     *     operationId="userPrefEdit",
      *     tags={"user"},
      *     summary="Save User Preferences",
      *     description="Save User preferences for non-state information, such as Layout designer zoom levels",
@@ -962,7 +962,7 @@ class User extends Base
      *      required=true,
      *      @SWG\Schema(
      *          type="array",
-     *          @SWG\Items(ref="#/definitions/UserGroupOption")
+     *          @SWG\Items(ref="#/definitions/UserOption")
      *      )
      *   ),
      *   @SWG\Response(

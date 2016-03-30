@@ -37,7 +37,7 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  * @SWG\Info(
  *  title="Xibo API",
  *  description="Xibo CMS API",
- *  version="1.8.0-alpha",
+ *  version="1.8.0-alpha3",
  *  termsOfService="http://xibo.org.uk/legal",
  *  @SWG\License(
  *      name="AGPLv3 or later",
@@ -52,7 +52,7 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  *   securityDefinition="auth",
  *   type="oauth2",
  *   flow="accessCode",
- *   authorizationUrl="/application/authorize",
+ *   authorizationUrl="/api/authorize",
  *   tokenUrl="/api/authorize/access_token",
  *   scopes={
  *      "read:all": "read access",
