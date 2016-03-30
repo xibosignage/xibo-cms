@@ -388,7 +388,7 @@ class Maintenance extends Base
                 foreach ($this->layoutFactory->query(null, ['status' => 3]) as $layout) {
                     /* @var Layout $layout */
                     try {
-                        $layout->xlfToDisk();
+                        $layout->xlfToDisk(['notify' => false]);
                     } catch (\Exception $e) {
                         $this->getLog()->error('Maintenance cannot build Layout %d, %s.', $layout->layoutId, $e->getMessage());
                     }
@@ -397,6 +397,7 @@ class Maintenance extends Base
 
                 print '<h1>' . __('Tidy Library') . '</h1>';
                 // Keep tidy
+                /** @var Library $libraryController */
                 $libraryController = $this->getApp()->container->get('\Xibo\Controller\Library');
                 $libraryController->removeExpiredFiles();
                 $libraryController->removeTempFiles();
