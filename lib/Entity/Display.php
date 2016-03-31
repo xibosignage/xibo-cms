@@ -456,11 +456,17 @@ class Display
         // Check the number of licensed displays
         $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
 
-        if ($maxDisplays > 0 && $this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
-            $countLicensed = $this->getStore()->select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
+        if ($maxDisplays > 0) {
+            $this->getLog()->debug('Testing licensed displays against %d maximum. Currently Licenced = %d, Licenced = %d.', $maxDisplays, $this->currentlyLicensed, $this->licensed);
 
-            if (intval($countLicensed[0]) + 1 > $maxDisplays)
-                throw new \InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays));
+            if ($this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
+                $countLicensed = $this->getStore()->select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
+
+                $this->getLog()->debug('There are %d licenced displays and we the maximum is %d', $countLicensed[0]['CountLicensed'], $maxDisplays);
+
+                if (intval($countLicensed[0]['CountLicensed']) + 1 > $maxDisplays)
+                    throw new \InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays));
+            }
         }
 
         // Broadcast Address
