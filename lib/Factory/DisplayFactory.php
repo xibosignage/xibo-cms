@@ -186,7 +186,7 @@ class DisplayFactory extends BaseFactory
                   layout.layout AS defaultLayout,
                   display.license,
                   display.licensed,
-                  display.licensed AS currentlyLicenced,
+                  display.licensed AS currentlyLicensed,
                   display.loggedIn,
                   display.lastAccessed,
                   display.isAuditing,
