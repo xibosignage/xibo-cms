@@ -261,7 +261,8 @@ class XMDSSoap4
         $output = $cache->get();
 
         if ($cache->isHit()) {
-            Debug::Audit('Returning required files from Cache for display ' . $this->display . ' key ' . 'display/' . $this->displayId . '/requiredFiles', $this->displayId);
+            if ($this->isAuditing == 1)
+                Debug::Audit('Returning required files from Cache for display ' . $this->display . ' key ' . 'display/' . $this->displayId . '/requiredFiles', $this->displayId);
 
             // Log Bandwidth
             $this->logBandwidth($this->displayId, Bandwidth::$RF, strlen($output));
