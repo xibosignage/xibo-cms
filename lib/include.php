@@ -92,6 +92,9 @@ if (!file_exists("settings.php"))
 	die();
 }
 
+// Stash autoloader
+require ('3rdparty/stash/autoload.php');
+
 // parse and init the settings.php
 Config::Load();
 
@@ -125,9 +128,6 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 spl_autoload_register(function ($class) {
     Kit::ClassLoader($class);
 });
-
-// Stash autoloader
-require ('3rdparty/stash/autoload.php');
 
 // Configure Stash
 PDOConnect::configureCache((isset($cacheDrivers) ? $cacheDrivers : null), (isset($cacheNamespace) ? $cacheNamespace : null));

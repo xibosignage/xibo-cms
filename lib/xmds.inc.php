@@ -87,6 +87,9 @@ if (file_exists("upgrade.php")) {
   die("An upgrade is pending. Visit " . Kit::GetURL() . ".");
 }
 
+// Stash autoloader
+require ('3rdparty/stash/autoload.php');
+
 //parse and init the settings.xml
 Config::Load();
 
@@ -94,9 +97,6 @@ Config::Load();
 spl_autoload_register(function ($class) {
     Kit::ClassLoader($class);
 });
-
-// Stash autoloader
-require ('3rdparty/stash/autoload.php');
 
 // Configure Stash
 PDOConnect::configureCache((isset($cacheDrivers) ? $cacheDrivers : null), (isset($cacheNamespace) ? $cacheNamespace : null));
