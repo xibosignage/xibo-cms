@@ -29,6 +29,9 @@ class User {
     public $homePage;
 
     private $_myGroups = null;
+
+    /** @var array Cached User Name lookup */
+    private $_cacheUsername = [];
     
     public function __construct(database $db = NULL)
     {
@@ -284,14 +287,23 @@ class User {
             }
         }
     }
-    
-    function getNameFromID($id) 
+
+    /**
+     * Get user name from User Id
+     * @param int $id
+     * @return string
+     */
+    public function getNameFromID($id)
     {
-        $db         =& $this->db;
+        $db =& $this->db;
+
+        if (array_key_exists($id, $this->_cacheUsername))
+            return $this->_cacheUsername[$id];
         
-        $SQL = sprintf("SELECT username FROM user WHERE userid = %d", $id);
+        $SQL = sprintf("SELECT username FROM `user` WHERE userid = %d", $id);
         
-        if(!$results = $db->query($SQL)) trigger_error("Unknown user id in the system", E_USER_NOTICE);
+        if(!$results = $db->query($SQL))
+            trigger_error("Unknown user id in the system", E_USER_NOTICE);
         
         // if no user is returned
         if ($db->num_rows($results) == 0) 
@@ -301,7 +313,9 @@ class User {
         }
 
         $row = $db->get_row($results);
-        
+
+        $this->_cacheUsername[$id] = $row[0];
+
         return $row[0];
     }
 
@@ -943,6 +957,7 @@ class User {
                 $mediaItem['filename'] = $row->fileName;
                 $mediaItem['tags'] = $row->tags;
                 $mediaItem['storedas'] = $row->storedAs;
+                $mediaItem['groups'] = $row->groups;
 
                 $auth = $this->MediaAuth($row->mediaId, true, $row->ownerId);
 
@@ -1042,6 +1057,8 @@ class User {
             // Details for media assignment
             $layoutItem['regionid'] = $row->regionId;
             $layoutItem['lklayoutmediaid'] = $row->lkLayoutMediaId;
+
+            $layoutItem['groups'] = $row->groups;
 
             // Authenticate the assignment (if not null already)
             if ($layoutItem['lklayoutmediaid'] != 0) {

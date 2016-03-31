@@ -41,6 +41,7 @@ class Layout extends Data
     private $DomXml;
 
     public $delayFinalise = false;
+    public $groups;
 
     public static function Entries($sort_order = array(), $filter_by = array())
     {
@@ -65,6 +66,13 @@ class Layout extends Data
                 $SQL .= " tag.tag AS tags, ";
             else
                 $SQL .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
+
+            // Groups
+            $SQL .= ' (SELECT GROUP_CONCAT(DISTINCT `group`.Group) ';
+            $SQL .= '  FROM `group` ';
+            $SQL .= '   INNER JOIN lkcampaigngroup ';
+            $SQL .= '   ON `group`.GroupID = lkcampaigngroup.GroupID ';
+            $SQL .= ' WHERE lkcampaigngroup.CampaignID = `campaign`.campaignID GROUP BY lkcampaigngroup.CampaignID ) AS groups, ';
 
             // MediaID
             if (Kit::GetParam('mediaId', $filter_by, _INT, 0) != 0) {
@@ -222,6 +230,8 @@ class Layout extends Data
                 // Details for media assignment
                 $layout->regionId = Kit::ValidateParam($row['regionid'], _STRING);
                 $layout->lkLayoutMediaId = Kit::ValidateParam($row['lklayoutmediaid'], _INT);
+
+                $layout->groups = Kit::ValidateParam($row['groups'], _STRING);
 
                 $entries[] = $layout;
             }

@@ -44,6 +44,8 @@ class Media extends Data
     public $moduleSystemFile;
     public $expires;
 
+    public $groups;
+
     public static function Entries($sort_order = array('name'), $filter_by = array())
     {
         $entries = array();
@@ -69,7 +71,14 @@ class Media extends Data
                 $SQL .= " tag.tag AS tags, ";
             else
                 $SQL .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
-            
+
+            // Groups
+            $SQL .= '(SELECT GROUP_CONCAT(DISTINCT `group`.Group) ';
+            $SQL .= '  FROM `group` ';
+            $SQL .= '   INNER JOIN lkmediagroup ';
+            $SQL .= '   ON `group`.GroupID = lkmediagroup.GroupID ';
+            $SQL .= ' WHERE lkmediagroup.MediaID = media.mediaID GROUP BY lkmediagroup.mediaId ) AS groups, ';
+
             $SQL .= "   media.originalFileName ";
             $SQL .= " FROM media ";
             $SQL .= "   LEFT OUTER JOIN media parentmedia ";
@@ -160,6 +169,7 @@ class Media extends Data
                 $media->valid = Kit::ValidateParam($row['valid'], _INT);
                 $media->moduleSystemFile = Kit::ValidateParam($row['moduleSystemFile'], _INT);
                 $media->expires = Kit::ValidateParam($row['expires'], _INT);
+                $media->groups = Kit::ValidateParam($row['groups'], _STRING);
 
                 $entries[] = $media;
             }
