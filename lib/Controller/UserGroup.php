@@ -253,6 +253,9 @@ class UserGroup extends Base
         $group->group = $this->getSanitizer()->getString('group');
         $group->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
 
+        if ($this->getUser()->userTypeId == 1)
+            $group->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
+
         // Save
         $group->save();
 
@@ -275,8 +278,13 @@ class UserGroup extends Base
         if (!$this->getUser()->checkEditable($group))
             throw new AccessDeniedException();
 
+        $group->load();
+
         $group->group = $this->getSanitizer()->getString('group');
         $group->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
+
+        if ($this->getUser()->userTypeId == 1)
+            $group->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
 
         // Save
         $group->save();

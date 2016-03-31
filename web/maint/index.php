@@ -32,8 +32,6 @@ require PROJECT_ROOT . '/vendor/autoload.php';
 if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
     die('Not configured');
 
-$this->getConfig()->Load(PROJECT_ROOT . '/web/settings.php');
-
 // Create a logger
 $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'MAINT',
@@ -52,12 +50,35 @@ $app = new \RKA\Slim(array(
 ));
 $app->setName('maint');
 
+// Twig templates
+$twig = new \Slim\Views\Twig();
+$twig->parserOptions = array(
+    'debug' => true,
+    'cache' => PROJECT_ROOT . '/cache'
+);
+$twig->parserExtensions = array(
+    new \Slim\Views\TwigExtension(),
+    new \Xibo\Twig\TransExtension(),
+    new \Xibo\Twig\ByteFormatterTwigExtension(),
+    new \Xibo\Twig\UrlDecodeTwigExtension()
+);
+
+// Configure the template folder
+$twig->twigTemplateDirs = [PROJECT_ROOT . '/views'];
+
+$app->view($twig);
+
 // Config
 $app->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
 
+\Xibo\Middleware\Storage::setStorage($app->container);
 \Xibo\Middleware\State::setState($app);
 
 $app->add(new \Xibo\Middleware\Storage());
+$app->add(new \Xibo\Middleware\Xmr());
+
+// Configure a user
+$app->user = $app->userFactory->getSystemUser();
 
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {

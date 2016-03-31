@@ -299,6 +299,7 @@ class State extends Middleware
                 $container->dateService,
                 $container->configService,
                 $container->session,
+                $container->store,
                 $container->applicationFactory,
                 $container->applicationRedirectUriFactory
             );
@@ -597,11 +598,13 @@ class State extends Middleware
                 $container->dateService,
                 $container->configService,
                 $container->store,
-                $container->userFactory,
+                $container->userGroupFactory,
                 $container->layoutFactory,
                 $container->displayFactory,
                 $container->upgradeFactory,
-                $container->mediaFactory
+                $container->mediaFactory,
+                $container->notificationFactory,
+                $container->userNotificationFactory
             );
         });
 
@@ -639,6 +642,22 @@ class State extends Middleware
                 $container->regionFactory,
                 $container->layoutFactory,
                 $container->displayGroupFactory
+            );
+        });
+
+        $app->container->singleton('\Xibo\Controller\Notification', function($container) {
+            return new \Xibo\Controller\Notification(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->notificationFactory,
+                $container->userNotificationFactory,
+                $container->displayGroupFactory,
+                $container->userGroupFactory
             );
         });
 
@@ -1076,13 +1095,23 @@ class State extends Middleware
             );
         });
 
-        $container->singleton('pageFactory', function($container) {
-            return new \Xibo\Factory\PageFactory(
+        $container->singleton('notificationFactory', function($container) {
+            return new \Xibo\Factory\NotificationFactory(
                 $container->store,
                 $container->logService,
                 $container->sanitizerService,
                 $container->user,
-                $container->userFactory
+                $container->userFactory,
+                $container->userGroupFactory,
+                $container->displayGroupFactory
+            );
+        });
+
+        $container->singleton('pageFactory', function($container) {
+            return new \Xibo\Factory\PageFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
             );
         });
 
@@ -1206,6 +1235,16 @@ class State extends Middleware
 
         $container->singleton('userGroupFactory', function($container) {
             return new \Xibo\Factory\UserGroupFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService,
+                $container->user,
+                $container->userFactory
+            );
+        });
+
+        $container->singleton('userNotificationFactory', function($container) {
+            return new \Xibo\Factory\UserNotificationFactory(
                 $container->store,
                 $container->logService,
                 $container->sanitizerService,

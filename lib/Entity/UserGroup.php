@@ -56,6 +56,12 @@ class UserGroup
      */
     public $libraryQuota;
 
+    /**
+     * @SWG\Property(description="Does this Group receive system notifications.")
+     * @var int
+     */
+    public $isSystemNotification;
+
     // Users
     private $users = [];
 
@@ -261,6 +267,14 @@ class UserGroup
      */
     private function removeAssignments()
     {
+        // Delete Notifications
+        // NB: notifications aren't modelled as child objects because there could be many thousands of notifications on each
+        // usergroup. We consider the notification to be the parent here and it manages the assignments.
+        // This does mean that we might end up with an empty notification (not assigned to anything)
+        $this->getStore()->update('DELETE FROM `lknotificationuser` WHERE `userId` IN (SELECT `userId` FROM `lkusergroup` WHERE `groupId` = :groupId) ', ['groupId' => $this->groupId]);
+        $this->getStore()->update('DELETE FROM `lknotificationgroup` WHERE `groupId` = :groupId', ['groupId' => $this->groupId]);
+
+        // Remove user assignments
         $this->users = [];
         $this->unlinkUsers();
     }
@@ -270,10 +284,12 @@ class UserGroup
      */
     private function add()
     {
-        $this->groupId = $this->getStore()->insert('INSERT INTO `group` (`group`, IsUserSpecific, libraryQuota) VALUES (:group, :isUserSpecific, :libraryQuota)', [
+        $this->groupId = $this->getStore()->insert('INSERT INTO `group` (`group`, IsUserSpecific, libraryQuota, `isSystemNotification`)
+              VALUES (:group, :isUserSpecific, :libraryQuota, :isSystemNotification)', [
             'group' => $this->group,
             'isUserSpecific' => $this->isUserSpecific,
-            'libraryQuota' => $this->libraryQuota
+            'libraryQuota' => $this->libraryQuota,
+            'isSystemNotification' => $this->isSystemNotification
         ]);
     }
 
@@ -282,10 +298,11 @@ class UserGroup
      */
     private function edit()
     {
-        $this->getStore()->update('UPDATE `group` SET `group` = :group, libraryQuota = :libraryQuota WHERE groupId = :groupId', [
+        $this->getStore()->update('UPDATE `group` SET `group` = :group, libraryQuota = :libraryQuota, `isSystemNotification` = :isSystemNotification WHERE groupId = :groupId', [
             'groupId' => $this->groupId,
             'group' => $this->group,
-            'libraryQuota' => $this->libraryQuota
+            'libraryQuota' => $this->libraryQuota,
+            'isSystemNotification' => $this->isSystemNotification
         ]);
     }
 

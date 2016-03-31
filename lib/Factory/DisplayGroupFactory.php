@@ -123,6 +123,16 @@ class DisplayGroupFactory extends BaseFactory
     }
 
     /**
+     * Get Display Groups assigned to Notifications
+     * @param int $notificationId
+     * @return array[DisplayGroup]
+     */
+    public function getByNotificationId($notificationId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'notificationId' => $notificationId, 'isDisplaySpecific' => -1]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[DisplayGroup]
@@ -195,6 +205,11 @@ class DisplayGroupFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('displayId', $filterBy) !== null) {
             $body .= ' AND displaygroup.displayGroupId IN (SELECT displayGroupId FROM lkdisplaydg WHERE displayId = :displayId) ';
             $params['displayId'] = $this->getSanitizer()->getInt('displayId', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('notificationId', $filterBy) !== null) {
+            $body .= ' AND displaygroup.displayGroupId IN (SELECT displayGroupId FROM `lknotificationdg` WHERE notificationId = :notificationId) ';
+            $params['notificationId'] = $this->getSanitizer()->getInt('notificationId', $filterBy);
         }
 
         // Filter by DisplayGroup Name?

@@ -31,7 +31,7 @@ use Xibo\Storage\StorageServiceInterface;
 class ConfigService implements ConfigServiceInterface
 {
     public static $WEBSITE_VERSION_NAME = '1.8.0-alpha3';
-    public static $WEBSITE_VERSION = 123;
+    public static $WEBSITE_VERSION = 124;
     public static $VERSION_REQUIRED = '5.5';
 
     /**
@@ -348,7 +348,7 @@ class ConfigService implements ConfigServiceInterface
      */
     public function isUpgradePending()
     {
-        return DBVERSION != ConfigService::$WEBSITE_VERSION;
+        return DBVERSION < ConfigService::$WEBSITE_VERSION;
     }
 
     /**

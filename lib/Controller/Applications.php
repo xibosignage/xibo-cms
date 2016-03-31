@@ -37,6 +37,7 @@ use Xibo\Storage\ApiAuthCodeStorage;
 use Xibo\Storage\ApiClientStorage;
 use Xibo\Storage\ApiScopeStorage;
 use Xibo\Storage\ApiSessionStorage;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Applications
@@ -48,6 +49,9 @@ class Applications extends Base
      * @var Session
      */
     private $session;
+
+    /** @var  StorageServiceInterface */
+    private $store;
 
     /**
      * @var ApplicationFactory
@@ -72,11 +76,12 @@ class Applications extends Base
      * @param ApplicationFactory $applicationFactory
      * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $applicationFactory, $applicationRedirectUriFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $store, $applicationFactory, $applicationRedirectUriFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->session = $session;
+        $this->store = $store;
         $this->applicationFactory = $applicationFactory;
         $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
     }

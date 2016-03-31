@@ -417,6 +417,9 @@ class User extends Base
         $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
         $user->setNewPassword($this->getSanitizer()->getString('password'));
 
+        if ($this->getUser()->userTypeId == 1)
+            $user->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
+
         $user->firstName = $this->getSanitizer()->getString('firstName');
         $user->lastName = $this->getSanitizer()->getString('lastName');
         $user->phone = $this->getSanitizer()->getString('phone');
@@ -465,6 +468,9 @@ class User extends Base
         $user->homePageId = $this->getSanitizer()->getInt('homePageId');
         $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
         $user->retired = $this->getSanitizer()->getCheckbox('retired');
+
+        if ($this->getUser()->userTypeId == 1)
+            $user->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
 
         $user->firstName = $this->getSanitizer()->getString('firstName');
         $user->lastName = $this->getSanitizer()->getString('lastName');
@@ -914,7 +920,7 @@ class User extends Base
     /**
      * @SWG\Get(
      *     path="/user/pref",
-     *     operationId="userPref",
+     *     operationId="userPrefGet",
      *     tags={"user"},
      *     summary="Retrieve User Preferences",
      *     description="User preferences for non-state information, such as Layout designer zoom levels",
@@ -930,7 +936,7 @@ class User extends Base
      *      description="successful response",
      *      @SWG\Schema(
      *          type="array",
-     *          @SWG\Items(ref="#/definitions/UserGroupOption")
+     *          @SWG\Items(ref="#/definitions/UserOption")
      *      )
      *  )
      * )
@@ -952,7 +958,7 @@ class User extends Base
     /**
      * @SWG\Post(
      *     path="/user/pref",
-     *     operationId="userPref",
+     *     operationId="userPrefEdit",
      *     tags={"user"},
      *     summary="Save User Preferences",
      *     description="Save User preferences for non-state information, such as Layout designer zoom levels",
@@ -962,7 +968,7 @@ class User extends Base
      *      required=true,
      *      @SWG\Schema(
      *          type="array",
-     *          @SWG\Items(ref="#/definitions/UserGroupOption")
+     *          @SWG\Items(ref="#/definitions/UserOption")
      *      )
      *   ),
      *   @SWG\Response(

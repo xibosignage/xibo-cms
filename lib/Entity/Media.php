@@ -570,7 +570,7 @@ class Media implements \JsonSerializable
         // Do we need to pull a new update?
         // Is the file either expired or is force set
         if ($this->force || ($this->expires > 0 && $this->expires < time())) {
-            $this->getLog()->debug('Media %s has expired: %s. Force = %d', $this->name, $this->getDate()->getLocalDate($this->expires), $this->force);
+            $this->getLog()->debug('Media %s has expired: %s. Force = %d', $this->name, date('Y-m-d H:i', $this->expires), $this->force);
             $this->saveFile();
         }
 

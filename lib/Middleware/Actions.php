@@ -24,6 +24,9 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
+use Xibo\Entity\UserNotification;
+use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\Translate;
 
 /**
@@ -75,22 +78,56 @@ class Actions extends Middleware
             if ($app->configService->isUpgradePending() && !in_array($resource, $excludedRoutes)) {
                 $app->logService->debug('%s not in excluded routes, redirecting. ', $resource);
                 $app->redirectTo('upgrade.view');
+                return;
             }
 
-            $notifications = [];
+            // Do not proceed unless we have completed an upgrade
+            if ($app->configService->isUpgradePending())
+                return;
 
-            if ($app->user->userTypeId == 1 && file_exists(PROJECT_ROOT . '/web/install/index.php')) {
-                $app->logService->notice('Install.php exists and shouldn\'t');
+            try {
 
-                $notifications[] = __('There is a problem with this installation. "install.php" should be deleted.');
+                $app->user->routeAuthentication('/drawer');
+
+                // Notifications
+                $notifications = [];
+                $extraNotifications = 0;
+
+                /** @var UserNotificationFactory $factory */
+                $factory = $app->userNotificationFactory;
+
+                if ($app->user->userTypeId == 1 && file_exists(PROJECT_ROOT . '/web/install/index.php')) {
+                    $app->logService->notice('Install.php exists and shouldn\'t');
+
+                    $notifications[] = $factory->create(__('There is a problem with this installation. "install.php" should be deleted.'));
+                    $extraNotifications++;
+                }
+
+                // Language match?
+                if (Translate::getRequestedLanguage() != Translate::GetLocale()) {
+                    $notifications[] = $factory->create(__('Your requested language %s could not be loaded.', Translate::getRequestedLanguage()));
+                    $extraNotifications++;
+                }
+
+                // User notifications
+                $notifications = array_merge($notifications, $factory->getMine());
+
+                // If we aren't already in a notification interrupt, then check to see if we should be
+                if ($resource != '/drawer/notification/interrupt/:id' && !$app->request()->isAjax()) {
+                    foreach ($notifications as $notification) {
+                        /** @var UserNotification $notification */
+                        if ($notification->isInterrupt == 1 && $notification->read == 0) {
+                            $app->flash('interrxuptedUrl', $app->request()->getResourceUri());
+                            $app->redirectTo('notification.interrupt', ['id' => $notification->notificationId]);
+                        }
+                    }
+                }
+
+                $app->view()->appendData(['notifications' => $notifications, 'notificationCount' => $factory->countMyUnread() + $extraNotifications]);
             }
-
-            // Language match?
-            if (Translate::getRequestedLanguage() != Translate::GetLocale()) {
-                $notifications[] = __('Your requested language %s could not be loaded.', Translate::getRequestedLanguage());
+            catch (AccessDeniedException $e) {
+                // Drawer not available
             }
-
-            $app->view()->appendData(['notifications' => $notifications]);
         });
 
         $this->next->call();

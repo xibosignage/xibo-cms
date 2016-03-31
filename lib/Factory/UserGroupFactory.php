@@ -110,6 +110,15 @@ class UserGroupFactory extends BaseFactory
     }
 
     /**
+     * Get isSystemNotification Group
+     * @return UserGroup
+     */
+    public function getSystemNotificationGroups()
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'isSystemNotification' => 1, 'isUserSpecific' => -1]);
+    }
+
+    /**
      * Get by User Id
      * @param int $userId
      * @return array[UserGroup]
@@ -118,6 +127,26 @@ class UserGroupFactory extends BaseFactory
     public function getByUserId($userId)
     {
         return $this->query(null, ['disableUserCheck' => 1, 'userId' => $userId, 'isUserSpecific' => 0]);
+    }
+
+    /**
+     * Get User Groups assigned to Notifications
+     * @param int $notificationId
+     * @return array[UserGroup]
+     */
+    public function getByNotificationId($notificationId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'notificationId' => $notificationId, 'isUserSpecific' => -1]);
+    }
+
+    /**
+     * Get by Display Group
+     * @param $displayGroupId
+     * @return array[User]
+     */
+    public function getByDisplayGroupId($displayGroupId)
+    {
+        return $this->query(null, array('disableUserCheck' => 1, 'displayGroupId' => [$displayGroupId]));
     }
 
     /**
@@ -142,6 +171,13 @@ class UserGroupFactory extends BaseFactory
 				$select .= '
 				    ,
 				    `group`.libraryQuota
+				';
+            }
+
+            if (DBVERSION >= 124) {
+				$select .= '
+				    ,
+				    `group`.isSystemNotification
 				';
             }
 
@@ -196,6 +232,28 @@ class UserGroupFactory extends BaseFactory
                 $params['isEveryone'] = $this->getSanitizer()->getInt('isEveryone', 0, $filterBy);
             }
 
+            if ($this->getSanitizer()->getInt('isSystemNotification', $filterBy) !== null) {
+                $body .= ' AND isSystemNotification = :isSystemNotification ';
+                $params['isSystemNotification'] = $this->getSanitizer()->getInt('isSystemNotification', $filterBy);
+            }
+
+            if ($this->getSanitizer()->getInt('notificationId', $filterBy) !== null) {
+                $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lknotificationgroup` WHERE notificationId = :notificationId) ';
+                $params['notificationId'] = $this->getSanitizer()->getInt('notificationId', $filterBy);
+            }
+
+            if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
+                $body .= ' AND `group`.groupId IN (
+                SELECT DISTINCT `permission`.groupId
+                  FROM `permission`
+                    INNER JOIN `permissionentity`
+                    ON `permissionentity`.entityId = permission.entityId
+                        AND `permissionentity`.entity = \'Xibo\\Entity\\DisplayGroup\'
+                 WHERE `permission`.objectId = :displayGroupId
+            ) ';
+                $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
+            }
+
             // Sorting?
             $order = '';
             if (is_array($sortOrder))
@@ -208,8 +266,6 @@ class UserGroupFactory extends BaseFactory
             }
 
             $sql = $select . $body . $order . $limit;
-
-
 
             foreach ($this->getStore()->select($sql, $params) as $row) {
                 $entries[] = $this->createEmpty()->hydrate($row);

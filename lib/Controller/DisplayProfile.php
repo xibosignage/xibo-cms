@@ -271,7 +271,7 @@ class DisplayProfile extends Base
      *  description="Edit a Display Profile",
      *  @SWG\Parameter(
      *      name="displayProfileId",
-     *      in="formData",
+     *      in="path",
      *      description="The Display Profile ID",
      *      type="integer",
      *      required=true

@@ -57,6 +57,12 @@
                         {% set title %}{% trans "Initial User Group" %}{% endset %}
                         {% set helpText %}{% trans "What is the initial user group for this user?" %}{% endset %}
                         {{ forms.dropdown("groupId", "single", title, "", options.groups, "groupId", "group", helpText) }}
+
+                        {% if currentUser.userTypeId == 1 %}
+                            {% set title %}{% trans "Receive System Notifications?" %}{% endset %}
+                            {% set helpText %}{% trans "Should this User receive system notifications?" %}{% endset %}
+                            {{ forms.checkbox("isSystemNotification", title, 0, helpText) }}
+                        {% endif %}
                     </div>
                     <div class="tab-pane" id="reference">
                         {% set title %}{% trans "First Name" %}{% endset %}

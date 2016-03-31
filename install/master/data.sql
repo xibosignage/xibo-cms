@@ -1,10 +1,11 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.8.0-alpha3', 5, 2, 123);
+('1.8.0-alpha3', 5, 2, 124);
 
-INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`) VALUES
-(1, 'Users', 0, 0),
-(2, 'Everyone', 0, 1),
-(3, 'xibo_admin', 1, 0);
+INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`, `isSystemNotification`) VALUES
+(1, 'Users', 0, 0, 0),
+(2, 'Everyone', 0, 1, 0),
+(3, 'xibo_admin', 1, 0, 1),
+(4, 'System Notifications', 0, 0, 1);
 
 INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (1, 'Layout', 'General', 'layouts.html'),
@@ -140,7 +141,9 @@ INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (32, 'region', 'Regions', 0),
   (33, 'playlist', 'Playlist', 0),
   (34, 'maintenance', 'Maintenance', 0),
-  (35, 'command', 'Commands', 1);
+  (35, 'command', 'Commands', 1),
+  (36, 'notification', 'Notifications', 0),
+  (37, 'drawer', 'Notification Drawer', 0);
 
 
 INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES
@@ -275,4 +278,5 @@ INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES
 (6, 'Xibo\\Entity\\Widget'),
 (7, 'Xibo\\Entity\\Region'),
 (8, 'Xibo\\Entity\\Playlist'),
-(9, 'Xibo\\Entity\\DataSet');
+(9, 'Xibo\\Entity\\DataSet'),
+(10, 'Xibo\\Entity\\Notification')

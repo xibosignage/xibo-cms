@@ -37,7 +37,7 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  * @SWG\Info(
  *  title="Xibo API",
  *  description="Xibo CMS API",
- *  version="1.8.0-alpha",
+ *  version="1.8.0-alpha3",
  *  termsOfService="http://xibo.org.uk/legal",
  *  @SWG\License(
  *      name="AGPLv3 or later",
@@ -52,7 +52,7 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  *   securityDefinition="auth",
  *   type="oauth2",
  *   flow="accessCode",
- *   authorizationUrl="/application/authorize",
+ *   authorizationUrl="/api/authorize",
  *   tokenUrl="/api/authorize/access_token",
  *   scopes={
  *      "read:all": "read access",
@@ -82,6 +82,18 @@ $app->get('/schedule/data/events', '\Xibo\Controller\Schedule:eventData')->name(
 $app->post('/schedule', '\Xibo\Controller\Schedule:add')->name('schedule.add');
 $app->put('/schedule/:id', '\Xibo\Controller\Schedule:edit')->name('schedule.edit');
 $app->delete('/schedule/:id', '\Xibo\Controller\Schedule:delete')->name('schedule.delete');
+
+/**
+ * Notification
+ * @SWG\Tag(
+ *  name="notification",
+ *  description="Notifications"
+ * )
+ */
+$app->get('/notification', '\Xibo\Controller\Notification:grid')->name('notification.search');
+$app->post('/notification', '\Xibo\Controller\Notification:add')->name('notification.add');
+$app->put('/notification/:id', '\Xibo\Controller\Notification:edit')->name('notification.edit');
+$app->delete('/notification/:id', '\Xibo\Controller\Notification:delete')->name('notification.delete');
 
 /**
  * Layouts

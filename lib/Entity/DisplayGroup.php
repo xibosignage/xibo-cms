@@ -489,6 +489,12 @@ class DisplayGroup implements \JsonSerializable
         $this->unlinkAllDisplayGroups();
         $this->unlinkLayouts();
         $this->unlinkMedia();
+
+        // Delete Notifications
+        // NB: notifications aren't modelled as child objects because there could be many thousands of notifications on each
+        // displaygroup. We consider the notification to be the parent here and it manages the assignments.
+        // This does mean that we might end up with an empty notification (not assigned to anything)
+        $this->getStore()->update('DELETE FROM `lknotificationdg` WHERE `displayGroupId` = :displayGroupId', ['displayGroupId' => $this->displayGroupId]);
     }
 
     private function add()
