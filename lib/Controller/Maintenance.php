@@ -9,6 +9,7 @@
 namespace Xibo\Controller;
 
 
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Layout;
 use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
@@ -37,6 +38,9 @@ class Maintenance extends Base
      * @var StorageServiceInterface
      */
     private $store;
+
+    /** @var  PoolInterface */
+    private $pool;
 
     /** @var  UserFactory */
     private $userFactory;
@@ -67,17 +71,19 @@ class Maintenance extends Base
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
+     * @param PoolInterface $pool
      * @param UserFactory $userFactory
      * @param LayoutFactory $layoutFactory
      * @param DisplayFactory $displayFactory
      * @param UpgradeFactory $upgradeFactory
      * @param MediaFactory $mediaFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $userFactory, $layoutFactory, $displayFactory, $upgradeFactory, $mediaFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $layoutFactory, $displayFactory, $upgradeFactory, $mediaFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->store = $store;
+        $this->pool = $pool;
         $this->userFactory = $userFactory;
         $this->layoutFactory = $layoutFactory;
         $this->displayFactory = $displayFactory;
@@ -265,7 +271,10 @@ class Maintenance extends Base
                 else {
                     print "-&gt;" . __("Disabled") . "<br/>\n";
                 }
+
+                //
                 // Stats Tidy
+                //
                 print "<h1>" . __("Tidy Stats") . "</h1>";
                 if (!$quick &&  $this->getConfig()->GetSetting("MAINTENANCE_STAT_MAXAGE") != 0) {
 
@@ -289,7 +298,19 @@ class Maintenance extends Base
                     print "-&gt;" . __("Disabled") . "<br/>\n";
                 }
 
+                //
+                // Tidy the Cache
+                //
+                echo '<h1>' . __('Tidy Cache') . '</h1>';
+                if (!$quick) {
+                    $this->pool->purge();
+                } else {
+                    echo '-&gt;' . __('Disabled') . '<br/>\n';
+                }
+
+                //
                 // Validate Display Licence Slots
+                //
                 $maxDisplays = $this->getConfig()->GetSetting('MAX_LICENSED_DISPLAYS');
 
                 if ($maxDisplays > 0) {
