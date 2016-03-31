@@ -52,7 +52,7 @@ class Nonce extends Data {
 
             $params = array(
                     'nonce' => $nonce,
-                    'expiry' => time() + 86400,
+                    'expiry' => time() + 10800,
                     'displayId' => $displayId
                 );
 
@@ -216,8 +216,8 @@ class Nonce extends Data {
             $row = $results[0];
 
             // Check whether its valid or not
-            if ($row['lastUsed'] != 0 || $row['expiry'] < time())
-            //if ($row['expiry'] < time())
+            //if ($row['lastUsed'] != 0 || $row['expiry'] < time())
+            if ($row['expiry'] < time())
                 return false;
 
             return $row;

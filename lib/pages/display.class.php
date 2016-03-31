@@ -169,6 +169,11 @@ class displayDAO extends baseDAO
         if (!$displayObject->Edit())
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
 
+        // Clear Cache
+        Debug::Audit('Delete Cache for display: display/' . $displayObject->displayId);
+
+        PDOConnect::getPool()->deleteItem('display/' . $displayObject->displayId);
+
         $response->SetFormSubmitResponse(__('Display Saved.'));
         $response->Respond();
     }

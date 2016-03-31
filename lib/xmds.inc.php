@@ -51,6 +51,10 @@ require_once("lib/Helper/ObjectVars.php");
 require_once('lib/modules/module.interface.php');
 require_once('lib/modules/module.class.php');
 require_once("lib/modules/modulefactory.class.php");
+require_once("3rdparty/psr-cache/src/CacheException.php");
+require_once("3rdparty/psr-cache/src/CacheItemInterface.php");
+require_once("3rdparty/psr-cache/src/CacheItemPoolInterface.php");
+require_once("3rdparty/psr-cache/src/InvalidArgumentException.php");
 
 // Sort out magic quotes
 if (get_magic_quotes_gpc()) 
@@ -90,6 +94,12 @@ Config::Load();
 spl_autoload_register(function ($class) {
     Kit::ClassLoader($class);
 });
+
+// Stash autoloader
+require ('3rdparty/stash/autoload.php');
+
+// Configure Stash
+PDOConnect::configureCache((isset($cacheDrivers) ? $cacheDrivers : null), (isset($cacheNamespace) ? $cacheNamespace : null));
 
 // Error Handling (our error handler requires a DB connection
 set_error_handler(array(new Debug(), "ErrorHandler"));

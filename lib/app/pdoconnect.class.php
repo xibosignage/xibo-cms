@@ -24,6 +24,9 @@ Class PDOConnect {
 
 	private static $conn = NULL;
 
+    /** @var  \Stash\Interfaces\PoolInterface */
+    private static $pool;
+
 	private function __construct() {}
 
 	public static function init() {
@@ -123,4 +126,40 @@ Class PDOConnect {
 	{
 		$connection->query('SET time_zone = \'' . $timeZone . '\';');
 	}
+
+	/**
+	 * Configure the Cache
+	 * @param $cacheDrivers
+	 * @param $cacheNamespace
+	 */
+	public static function configureCache($cacheDrivers, $cacheNamespace)
+	{
+		$drivers = [];
+
+		if ($cacheDrivers != null && is_array($cacheDrivers)) {
+			$drivers = $cacheDrivers;
+		} else {
+			// File System Driver
+			$drivers[] = new \Stash\Driver\FileSystem(['path' => Config::GetSetting('LIBRARY_LOCATION') . 'cache/']);
+		}
+
+		// Always add the Ephemeral driver
+		$drivers[] = new \Stash\Driver\Ephemeral();
+
+		// Create a composite driver
+		$composite = new \Stash\Driver\Composite(['drivers' => $drivers]);
+
+		// Create a pool using this driver set
+		self::$pool = new \Stash\Pool($composite);
+		self::$pool->setNamespace(($cacheNamespace != null) ? $cacheNamespace : 'Xibo');
+	}
+
+    /**
+     * Get Pool
+     * @return \Stash\Interfaces\PoolInterface
+     */
+    public static function getPool()
+    {
+        return self::$pool;
+    }
 }

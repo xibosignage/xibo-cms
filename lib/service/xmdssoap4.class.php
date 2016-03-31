@@ -255,6 +255,20 @@ class XMDSSoap4
         if ($this->isAuditing == 1)
             Debug::Audit('hardwareKey = ' . $hardwareKey, $this->displayId);
 
+        // Check the cache
+        $cache = PDOConnect::getPool()->getItem('display/' . $this->displayId . '/requiredFiles');
+
+        $output = $cache->get();
+
+        if ($cache->isHit()) {
+            Debug::Audit('Returning required files from Cache for display ' . $this->display . ' key ' . 'display/' . $this->displayId . '/requiredFiles', $this->displayId);
+
+            // Log Bandwidth
+            $this->logBandwidth($this->displayId, Bandwidth::$RF, strlen($output));
+
+            return $output;
+        }
+
         // Remove all Nonces for this display
         $nonce = new Nonce();
         $nonce->RemoveAllXmdsNonce($this->displayId);
@@ -512,6 +526,13 @@ class XMDSSoap4
         $requiredFilesXml->formatOutput = true;
         $output = $requiredFilesXml->saveXML();
 
+        // Cache
+        $cache->set($output);
+
+        // Nonces expire after 10800 seconds (3 hours). This is the same as the nonce expiry.
+        $cache->expiresAfter(10800);
+        PDOConnect::getPool()->saveDeferred($cache);
+
         // Log Bandwidth
         $this->LogBandwidth($this->displayId, Bandwidth::$RF, strlen($output));
 
@@ -650,6 +671,21 @@ class XMDSSoap4
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Sender', "This display client is not licensed");
 
+        // Check the cache
+        $cache = PDOConnect::getPool()->getItem('display/' . $this->displayId . '/schedule');
+
+        $output = $cache->get();
+
+        if ($cache->isHit()) {
+            if ($this->isAuditing == 1)
+                Debug::Audit('Returning schedule from Cache for display ' . $this->displayId, $this->displayId);
+
+            // Log Bandwidth
+            $this->logBandwidth($this->displayId, Bandwidth::$SCHEDULE, strlen($output));
+
+            return $output;
+        }
+
         $scheduleXml = new DOMDocument("1.0");
         $layoutElements = $scheduleXml->createElement("schedule");
 
@@ -767,6 +803,14 @@ class XMDSSoap4
             Debug::Audit($scheduleXml->saveXML(), $this->displayId);
 
         $output = $scheduleXml->saveXML();
+
+        // Cache
+        if ($this->isAuditing == 1)
+            Debug::Audit('Schedule not in Cache ' . $this->displayId . '. Will cache and expire after ' . ($toFilter - time()), $this->displayId);
+
+        $cache->set($output);
+        $cache->expiresAfter($toFilter - time());
+        PDOConnect::getPool()->saveDeferred($cache);
 
         // Log Bandwidth
         $this->LogBandwidth($this->displayId, Bandwidth::$SCHEDULE, strlen($output));

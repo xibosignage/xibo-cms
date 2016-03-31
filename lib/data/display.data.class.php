@@ -540,6 +540,8 @@ class Display extends Data {
                     'displayid' => $displayId
                 ));
 
+            PDOConnect::getPool()->deleteItem('display/' . $displayId);
+
             return true;
         }
         catch (Exception $e) {
