@@ -323,6 +323,10 @@ class campaignDAO extends baseDAO
         if ($campaignId == 0 || $campaignId == '')
             trigger_error(__('Campaign ID is missing'), E_USER_ERROR);
 
+        // Notify (don't error)
+        $displayObject = new Display();
+        $displayObject->NotifyDisplays($campaignId);
+
         Kit::ClassLoader('campaign');
         $campaignObject = new Campaign($db);
 
@@ -643,6 +647,10 @@ class campaignDAO extends baseDAO
             $campaignObject->Link($campaignId, $layoutId, $displayOrder);
             $displayOrder++;
         }
+
+        // Notify (don't error)
+        $displayObject = new Display();
+        $displayObject->NotifyDisplays($campaignId);
 
         $response->SetFormSubmitResponse(__('Layouts Added to Campaign'), false);
         $response->Respond();
