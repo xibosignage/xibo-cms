@@ -262,7 +262,7 @@ class ticker extends Module
             $formFields['general'][] = FormManager::AddText('ordering', __('Order'), $this->GetOption('ordering'),
                 __('Please enter a SQL clause for how this dataset should be ordered'), 'o');
 
-            $formFields['general'][] = FormManager::AddText('filter', __('Filter'), $this->GetOption('filter'), 
+            $formFields['general'][] = FormManager::AddText('filter', __('Filter'), htmlentities($this->GetOption('filter')),
                 __('Please enter a SQL clause to filter this DataSet.'), 'f');
 
             $formFields['advanced'][] = FormManager::AddNumber('lowerLimit', __('Lower Row Limit'), $this->GetOption('lowerLimit'), 

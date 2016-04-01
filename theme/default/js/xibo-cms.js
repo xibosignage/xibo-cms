@@ -988,7 +988,7 @@ function XiboSubmitResponse(response, form) {
 
         // Do we need to fire a callback function?
         if (response.callBack != null && response.callBack != "") {
-            eval(response.callBack)(response);
+            eval(response.callBack);
         }
 
         // Do we need to load a new form?

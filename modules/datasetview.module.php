@@ -136,7 +136,7 @@ class datasetview extends Module
         $formFields[] = FormManager::AddText('ordering', __('Order'), $this->GetOption('ordering'),
             __('Please enter a SQL clause for how this dataset should be ordered'), 'o');
 
-        $formFields[] = FormManager::AddText('filter', __('Filter'), $this->GetOption('filter'), 
+        $formFields[] = FormManager::AddText('filter', __('Filter'), htmlentities($this->GetOption('filter')),
             __('Please enter a SQL clause to filter this DataSet.'), 'f');
 
         $formFields[] = FormManager::AddCheckbox('showHeadings', __('Show the table headings?'), 
