@@ -188,7 +188,7 @@ class Text extends ModuleWidget
         $javaScriptContent .= '       $("#content").xiboTextRender(options, items); $("body").xiboLayoutScaler(options);';
 
         if ($clock)
-            $javaScriptContent .= ' updateClock(); setInterval(updateClock, 1000); moment.locale("' . Translate::GetJsLocale() . '"); ';
+            $javaScriptContent .= ' moment.locale("' . Translate::GetJsLocale() . '"); updateClock(); setInterval(updateClock, 1000); ';
 
         $javaScriptContent .= '   }); ';
 
