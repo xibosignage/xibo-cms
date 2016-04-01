@@ -146,8 +146,8 @@ class scheduleDAO extends baseDAO {
 
                 // Event Title
                 $title = sprintf(__('[%s to %s] %s scheduled on %s (Order: %d)'),
-                    DateManager::getLocalDate(Kit::ValidateParam('FromDT', _INT)),
-                    DateManager::getLocalDate(Kit::ValidateParam('ToDT', _INT)),
+                    DateManager::getLocalDate(Kit::ValidateParam($row['FromDT'], _INT)),
+                    DateManager::getLocalDate(Kit::ValidateParam($row['ToDT'], _INT)),
                     Kit::ValidateParam($row['Campaign'], _STRING),
                     Kit::ValidateParam($row['DisplayGroups'], _STRING),
                     Kit::ValidateParam($row['DisplayOrder'], _INT)
