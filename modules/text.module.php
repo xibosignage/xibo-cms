@@ -536,6 +536,12 @@ class text extends Module
         $headContent  = '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
 
+        if ($this->GetOption('backgroundColor') != '') {
+            $headContent .= '<style type="text/css">';
+            $headContent .= ' body { background-color: ' . $this->GetOption('backgroundColor') . '; }';
+            $headContent .= '</style>';
+        }
+
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
         // Replace the Body Content with our generated text
