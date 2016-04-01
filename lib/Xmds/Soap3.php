@@ -58,7 +58,7 @@ class Soap3 extends Soap
         try {
             $display = $this->displayFactory->getByLicence($hardwareKey);
 
-            $this->logProcessor->setDisplay($display->displayId);
+            $this->logProcessor->setDisplay($display->displayId, ($display->isAuditing == 1));
 
             if ($display->licensed == 0) {
                 $active = 'Display is awaiting licensing approval from an Administrator.';

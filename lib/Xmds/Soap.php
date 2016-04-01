@@ -1398,7 +1398,7 @@ class Soap
                 return false;
 
             // Configure our log processor
-            $this->logProcessor->setDisplay($this->display->displayId);
+            $this->logProcessor->setDisplay($this->display->displayId, ($this->display->isAuditing == 1));
 
             return true;
 
