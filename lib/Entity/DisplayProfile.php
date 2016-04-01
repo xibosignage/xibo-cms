@@ -357,11 +357,21 @@ class DisplayProfile
                     array(
                         'name' => 'CollectInterval',
                         'tabId' => 'general',
-                        'title' => __('Collection Interval (seconds)'),
+                        'title' => __('Collect interval'),
                         'type' => 'int',
-                        'fieldType' => 'number',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 60, 'value' => __('1 minute')),
+                            array('id' => 300, 'value' => __('5 minutes')),
+                            array('id' => 600, 'value' => __('10 minutes')),
+                            array('id' => 900, 'value' => __('15 minutes')),
+                            array('id' => 1800, 'value' => __('30 minutes')),
+                            array('id' => 3600, 'value' => __('1 hour')),
+                            array('id' => 14400, 'value' => __('4 hours')),
+                            array('id' => 43200, 'value' => __('12 hours'))
+                        ),
                         'default' => 900,
-                        'helpText' => __('The number of seconds between connections to the CMS.'),
+                        'helpText' => __('How often should the Player check for new content.'),
                         'validation' => 'numeric',
                         'enabled' => true,
                         'groupClass' => NULL
