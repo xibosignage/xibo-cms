@@ -831,7 +831,8 @@ CREATE TABLE IF NOT EXISTS `stat` (
   `end` datetime DEFAULT NULL,
   `Tag` varchar(254) DEFAULT NULL,
   PRIMARY KEY (`statID`),
-  KEY `statDate` (`statDate`)
+  KEY `statDate` (`statDate`),
+  KEY `Type` (`displayID`,`end`,`Type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------

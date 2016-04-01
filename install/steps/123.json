@@ -19,6 +19,11 @@
       "step": "Increase the size of the list content field",
       "action": "ALTER TABLE  `datasetcolumn` CHANGE  `ListContent`  `ListContent` VARCHAR( 1000 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL;",
       "fixedIn": 92
+    },
+    {
+      "step": "Indexing on the Stat Table",
+      "action": "ALTER TABLE `stat` ADD INDEX Type (`displayID`, `end`, `Type`);",
+      "fixedIn": 92
     }
   ]
 }
