@@ -617,6 +617,8 @@ class Region extends Data
             $xpath = new DOMXPath($xml);
             
             $regionNodeList = $xpath->query("//region[@id='$regionid']");
+
+            /** @var DOMElement $regionNode */
             $regionNode = $regionNodeList->item(0);
             
             if ($name != '') 
@@ -626,6 +628,10 @@ class Region extends Data
             $regionNode->setAttribute('height', $height);
             $regionNode->setAttribute('top', $top);
             $regionNode->setAttribute('left', $left);
+
+            // Look up zIndex if it hasn't been passed in
+            if ($zindex === null)
+                $zindex = $regionNode->getAttribute('zindex');
 
             if ($zindex != NULL && $zindex != 0)
                 $regionNode->setAttribute('zindex', $zindex);
