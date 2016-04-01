@@ -211,6 +211,12 @@ class Text extends ModuleWidget
         $headContent = '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
+        if ($this->getOption('backgroundColor') != '') {
+            $headContent .= '<style type="text/css">';
+            $headContent .= ' body { background-color: ' . $this->getOption('backgroundColor') . '; }';
+            $headContent .= '</style>';
+        }
+
         $data['head'] = $headContent;
 
         // Update and save widget if we've changed our assignments.
