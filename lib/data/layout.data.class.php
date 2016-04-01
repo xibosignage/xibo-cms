@@ -1452,6 +1452,9 @@ class Layout extends Data
     
             if (count($regions) <= 0)
                 return 3;
+
+            // Assume OK
+            $status = 1;
     
             // Loop through each and build an array
             foreach ($regions as $region) {
@@ -1476,10 +1479,13 @@ class Layout extends Data
                     
                     // Create a media module to handle all the complex stuff
                     $tmpModule = ModuleFactory::load($mediaType, $layoutId, $region['regionid'], $mediaId, $lkId, $this->db, $user);
-                    $status = $tmpModule->IsValid();
+                    $mediaStatus = $tmpModule->IsValid();
     
-                    if ($status != 1)
-                        return $status;
+                    if ($mediaStatus == 3)
+                        return 3;
+                    else if ($mediaStatus > $status)
+                        $status = $mediaStatus;
+
                 }
 
                 Debug::LogEntry('audit', 'Finished with Region', 'layout', 'IsValid');
@@ -1488,7 +1494,7 @@ class Layout extends Data
             Debug::LogEntry('audit', 'Layout looks in good shape', 'layout', 'IsValid');
     
             // If we get to the end, we are OK!
-            return 1;  
+            return $status;
         }
         catch (Exception $e) {
             
