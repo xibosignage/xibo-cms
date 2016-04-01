@@ -236,7 +236,19 @@ class Schedule extends Data
         
         try {
             $dbh = PDOConnect::init();
-        
+
+            // Get campaign Id
+            $sth = $dbh->prepare('SELECT campaignId FROM `schedule` WHERE eventId = :eventId');
+            $sth->execute(['eventId' => $eventID]);
+
+            $campaignId = $sth->fetchAll(PDO::FETCH_ASSOC);
+            $campaignId = $campaignId[0]['campaignId'];
+
+            // Notify (don't error)
+            $displayObject = new Display();
+            $displayObject->NotifyDisplays($campaignId);
+
+            // Delete
             if (!$this->DeleteScheduleForEvent($eventID))
                 throw new Exception("Error Processing Request", 1);
             
