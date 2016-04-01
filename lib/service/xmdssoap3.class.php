@@ -80,7 +80,7 @@ class XMDSSoap3
 
         // If it doesn't already exist, then deny access.
         if (count($result) == 0) {
-            Debug::Audit('Attempt to register a Version 3 Display.');
+            Debug::Error('Attempt to register a Version 3 Display.');
             throw new SoapFault('Sender', 'You cannot register an old display against this CMS.');
         }
 
@@ -100,8 +100,6 @@ class XMDSSoap3
 
         // Log Bandwidth
         $this->LogBandwidth($row['displayid'], Bandwidth::$REGISTER, strlen($active));
-
-        Debug::Audit($active, $row['displayid']);
 
         return $active;
     }
@@ -1133,6 +1131,9 @@ class XMDSSoap3
             $this->display = $row['display'];
             $this->loggedIn = $row['loggedin'];
             $this->emailAlert = $row['email_alert'];
+
+            if ($this->isAuditing)
+                Debug::setLevel('audit');
             
             // Last accessed date on the display
             $displayObject = new Display();

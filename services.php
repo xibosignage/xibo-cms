@@ -115,6 +115,10 @@ if (defined('XMDS') || $method != '')
 
             try
             {
+                // Force auditing to be OFF
+                Debug::setLevel('error');
+
+                // Select the WSDL
                 $wsdl = 'lib/service/service_v' . $version . '.wsdl';
 
                 if (!file_exists($wsdl)) {

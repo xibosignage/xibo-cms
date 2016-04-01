@@ -60,9 +60,6 @@ class XMDSSoap4
         $macAddress = Kit::ValidateParam($macAddress, _STRING);
         $clientAddress = $this->getIp();
 
-        // Audit in
-        Debug::Audit('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName);
-
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
             throw new SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
@@ -130,6 +127,12 @@ class XMDSSoap4
             $emailAlert = Kit::ValidateParam($row['email_alert'], _INT);
             $loggedIn = Kit::ValidateParam($row['loggedin'], _INT);
             $isAuditing = Kit::ValidateParam($row['isAuditing'], _INT);
+
+            if ($isAuditing)
+                Debug::setLevel('audit');
+
+            // Audit in
+            Debug::Audit('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName);
 
             // Determine if we are licensed or not
             if ($row['licensed'] == 0) {
@@ -218,8 +221,7 @@ class XMDSSoap4
         $this->LogBandwidth($displayId, Bandwidth::$REGISTER, strlen($returnXml));
 
         // Audit our return
-        if ($isAuditing == 1)
-            Debug::Audit($returnXml, $displayId);
+        Debug::Audit($returnXml, $displayId);
 
         return $returnXml;
     }
@@ -1415,6 +1417,9 @@ class XMDSSoap4
             $this->display = $row['display'];
             $this->loggedIn = $row['loggedin'];
             $this->emailAlert = $row['email_alert'];
+
+            if ($this->isAuditing)
+                Debug::setLevel('audit');
 
             return true;
         }
