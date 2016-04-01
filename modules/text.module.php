@@ -513,7 +513,7 @@ class text extends Module
         $javaScriptContent .= '       $("#content").xiboTextRender(options, items); $("body").xiboLayoutScaler(options);';
         
         if ($clock)
-            $javaScriptContent .= ' updateClock(); setInterval(updateClock, 1000); moment.locale("' . TranslationEngine::GetJsLocale() . '"); ';
+            $javaScriptContent .= ' moment.locale("' . TranslationEngine::GetJsLocale() . '"); updateClock(); setInterval(updateClock, 1000); ';
 
         $javaScriptContent .= '   }); ';
 
