@@ -86,6 +86,16 @@ $app->get('/schedule/form/delete/:id', '\Xibo\Controller\Schedule:deleteForm')->
 $app->get('/schedule/form/now/:from/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('schedule.now.form');
 
 //
+// notification
+//
+$app->get('/notification/view', '\Xibo\Controller\Notification:displayPage')->name('notification.view');
+$app->get('/drawer/notification/show/:id', '\Xibo\Controller\Notification:show')->name('notification.show');
+$app->get('/drawer/notification/interrupt/:id', '\Xibo\Controller\Notification:interrupt')->name('notification.interrupt');
+$app->get('/notification/form/add', '\Xibo\Controller\Notification:addForm')->name('notification.add.form');
+$app->get('/notification/form/edit/:id', '\Xibo\Controller\Notification:editForm')->name('notification.edit.form');
+$app->get('/notification/form/delete/:id', '\Xibo\Controller\Notification:deleteForm')->name('notification.delete.form');
+
+//
 // layouts
 //
 $app->get('/layout/view', '\Xibo\Controller\Layout:displayPage')->name('layout.view');

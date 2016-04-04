@@ -66,6 +66,7 @@ class Soap5 extends Soap4
         // Check in the database for this hardwareKey
         try {
             $display = $this->displayFactory->getByLicence($hardwareKey);
+            $this->display = $display;
 
             $this->logProcessor->setDisplay($display->displayId, ($display->isAuditing == 1));
 
@@ -166,6 +167,7 @@ class Soap5 extends Soap4
             // Add a new display
             try {
                 $display = $this->displayFactory->createEmpty();
+                $this->display = $display;
                 $display->display = $displayName;
                 $display->isAuditing = 0;
                 $display->defaultLayoutId = 4;

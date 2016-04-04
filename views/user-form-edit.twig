@@ -64,6 +64,12 @@
                         {% set title %}{% trans "Retired?" %}{% endset %}
                         {% set helpText %}{% trans "Is this user retired?" %}{% endset %}
                         {{ forms.checkbox("retired", title, user.retired, helpText) }}
+
+                        {% if currentUser.userTypeId == 1 %}
+                            {% set title %}{% trans "Receive System Notifications?" %}{% endset %}
+                            {% set helpText %}{% trans "Should this User receive system notifications?" %}{% endset %}
+                            {{ forms.checkbox("isSystemNotification", title, user.isSystemNotification, helpText) }}
+                        {% endif %}
                     </div>
                     <div class="tab-pane" id="reference">
                         {% set title %}{% trans "First Name" %}{% endset %}

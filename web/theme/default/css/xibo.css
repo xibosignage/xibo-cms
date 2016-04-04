@@ -362,3 +362,16 @@ div.dt-buttons {
 .ui-state-disabled {
     opacity: 1;
 }
+
+.notification-drawer {
+    min-width: 400px;
+}
+
+.notification-read {
+    color: black;
+    font-weight: 200;
+}
+
+.notification-unread, .notification-date {
+    color: lightgrey;
+}

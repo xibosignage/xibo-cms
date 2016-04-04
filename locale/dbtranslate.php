@@ -61,6 +61,8 @@ echo __('Help Links');
 echo __('Audit Trail');
 echo __('Update');
 echo __('Commands');
+echo __('Notification Drawer');
+echo __('Notifications');
 
 // Settings translations
 echo __('Media Permissions');

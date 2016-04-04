@@ -1006,3 +1006,65 @@ CREATE TABLE IF NOT EXISTS `lkdgdg` (
   UNIQUE KEY `parentId` (`parentId`,`childId`,`depth`),
   UNIQUE KEY `childId` (`childId`,`parentId`,`depth`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Table structure for table `lknotificationdg`
+--
+
+CREATE TABLE IF NOT EXISTS `lknotificationdg` (
+  `lkNotificationDgId` int(11) NOT NULL AUTO_INCREMENT,
+  `notificationId` int(11) NOT NULL,
+  `displayGroupId` int(11) NOT NULL,
+  PRIMARY KEY (`lkNotificationDgId`),
+  UNIQUE KEY `notificationId` (`notificationId`,`displayGroupId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lknotificationgroup`
+--
+
+CREATE TABLE IF NOT EXISTS `lknotificationgroup` (
+  `lkNotificationGroupId` int(11) NOT NULL AUTO_INCREMENT,
+  `notificationId` int(11) NOT NULL,
+  `groupId` int(11) NOT NULL,
+  PRIMARY KEY (`lkNotificationGroupId`),
+  UNIQUE KEY `notificationId` (`notificationId`,`groupId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lknotificationuser`
+--
+
+CREATE TABLE IF NOT EXISTS `lknotificationuser` (
+  `lkNotificationUserId` int(11) NOT NULL AUTO_INCREMENT,
+  `notificationId` int(11) NOT NULL,
+  `userId` int(11) NOT NULL,
+  `read` tinyint(4) NOT NULL,
+  `readDt` int(11) NOT NULL,
+  `emailDt` int(11) NOT NULL,
+  PRIMARY KEY (`lkNotificationUserId`),
+  UNIQUE KEY `notificationId` (`notificationId`,`userId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `notification`
+--
+
+CREATE TABLE IF NOT EXISTS `notification` (
+  `notificationId` int(11) NOT NULL AUTO_INCREMENT,
+  `subject` varchar(255) NOT NULL,
+  `body` longtext NOT NULL,
+  `createDt` int(11) NOT NULL,
+  `releaseDt` int(11) NOT NULL,
+  `isEmail` tinyint(4) NOT NULL,
+  `isInterrupt` tinyint(4) NOT NULL,
+  `isSystem` tinyint(4) NOT NULL,
+  `userId` int(11) NOT NULL,
+  PRIMARY KEY (`notificationId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;

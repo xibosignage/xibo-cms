@@ -34,6 +34,7 @@
                             <tr>
                                 <th>{% trans "User Group" %}</th>
                                 <th>{% trans "Library Quota" %}</th>
+                                <th>{% trans "Receive System Notifications?" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -63,6 +64,10 @@
             "columns": [
                 { "data": "group" },
                 { "data": "libraryQuota" },
+                {
+                    "data": "isSystemNotification",
+                    "render": dataTableTickCrossColumn
+                },
                 {
                     "orderable": false,
                     "data": dataTableButtonsColumn

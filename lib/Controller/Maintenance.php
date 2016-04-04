@@ -11,15 +11,19 @@ namespace Xibo\Controller;
 
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Layout;
-use Xibo\Entity\User;
+use Xibo\Entity\UserGroup;
+use Xibo\Entity\UserNotification;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\UpgradeFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Factory\UserGroupFactory;
+use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Service\ConfigService;
 use Xibo\Service\ConfigServiceInterface;
@@ -34,9 +38,7 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class Maintenance extends Base
 {
-    /**
-     * @var StorageServiceInterface
-     */
+    /** @var  StorageServiceInterface */
     private $store;
 
     /** @var  PoolInterface */
@@ -45,14 +47,13 @@ class Maintenance extends Base
     /** @var  UserFactory */
     private $userFactory;
 
-    /**
-     * @var LayoutFactory
-     */
+    /** @var  UserGroupFactory */
+    private $userGroupFactory;
+
+    /** @var  LayoutFactory */
     private $layoutFactory;
 
-    /**
-     * @var DisplayFactory
-     */
+    /** @var  DisplayFactory */
     private $displayFactory;
 
     /** @var  UpgradeFactory */
@@ -60,6 +61,12 @@ class Maintenance extends Base
 
     /** @var  MediaFactory */
     private $mediaFactory;
+
+    /** @var  NotificationFactory */
+    private $notificationFactory;
+
+    /** @var  UserNotificationFactory */
+    private $userNotificationFactory;
 
     /**
      * Set common dependencies.
@@ -73,22 +80,28 @@ class Maintenance extends Base
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
      * @param UserFactory $userFactory
+     * @param UserGroupFactory $userGroupFactory
      * @param LayoutFactory $layoutFactory
      * @param DisplayFactory $displayFactory
      * @param UpgradeFactory $upgradeFactory
      * @param MediaFactory $mediaFactory
+     * @param NotificationFactory $notificationFactory
+     * @param UserNotificationFactory $userNotificationFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $layoutFactory, $displayFactory, $upgradeFactory, $mediaFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $upgradeFactory, $mediaFactory, $notificationFactory, $userNotificationFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->store = $store;
+        $this->userGroupFactory = $userGroupFactory;
         $this->pool = $pool;
         $this->userFactory = $userFactory;
         $this->layoutFactory = $layoutFactory;
         $this->displayFactory = $displayFactory;
         $this->upgradeFactory = $upgradeFactory;
         $this->mediaFactory = $mediaFactory;
+        $this->notificationFactory = $notificationFactory;
+        $this->userNotificationFactory = $userNotificationFactory;
     }
 
 
@@ -180,10 +193,7 @@ class Maintenance extends Base
                 $alwaysAlert = ($this->getConfig()->GetSetting("MAINTENANCE_ALWAYS_ALERT") == 'On');
                 $alertForViewUsers = ($this->getConfig()->GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1);
 
-                $msgTo = $this->getConfig()->GetSetting("mail_to");
-                $msgFrom = $this->getConfig()->GetSetting("mail_from");
-
-                foreach ((new Display())->setApp($this->getApp())->validateDisplays($this->displayFactory->query()) as $display) {
+                foreach ($this->getApp()->container->get('\Xibo\Controller\Display')->setApp($this->getApp())->validateDisplays($this->displayFactory->query()) as $display) {
                     /* @var \Xibo\Entity\Display $display */
                     // Is this the first time this display has gone "off-line"
                     $displayGoneOffline = ($display->loggedIn == 1);
@@ -198,43 +208,37 @@ class Maintenance extends Base
                                 $subject = sprintf(__("Email Alert for Display %s"), $display->display);
                                 $body = sprintf(__("Display %s with ID %d was last seen at %s."), $display->display, $display->displayId, $this->getDate()->getLocalDate($display->lastAccessed));
 
+                                // Add to system
+                                $notification = $this->notificationFactory->createEmpty();
+                                $notification->subject = $subject;
+                                $notification->body = $body;
+                                $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
+                                $notification->releaseDt = $this->getDate()->getLocalDate(null, 'U');
+                                $notification->isEmail = 1;
+                                $notification->isInterrupt = 0;
+                                $notification->userId = $this->getUser()->userId;
+                                $notification->isSystem = 1;
+
+                                // Add the system notifications group - if there is one.
+                                foreach ($this->userGroupFactory->getSystemNotificationGroups() as $group) {
+                                    /* @var UserGroup $group */
+                                    $notification->assignUserGroup($group);
+                                }
+
                                 // Get a list of people that have view access to the display?
                                 if ($alertForViewUsers) {
-                                    foreach ($this->userFactory->getByDisplayGroupId($display->displayGroupId) as $user) {
-                                        /* @var User $user */
-                                        if ($user->email != '') {
-                                            // Send them an email
-                                            $mail = new \PHPMailer();
-                                            $mail->From = $msgFrom;
-                                            $mail->FromName = $this->getConfig()->getThemeConfig('theme_name');
-                                            $mail->Subject = $subject;
-                                            $mail->addAddress($user->email);
 
-                                            // Body
-                                            $mail->Body = $body;
-
-                                            if (!$mail->send())
-                                                $this->getLog()->error('Unable to send Display Up mail to %s', $user->email);
-                                        }
+                                    foreach ($this->userGroupFactory->getByDisplayGroupId($display->displayGroupId) as $group) {
+                                        /* @var UserGroup $group */
+                                        $notification->assignUserGroup($group);
                                     }
                                 }
 
-                                // Send to the original admin contact
-                                $mail = new \PHPMailer();
-                                $mail->From = $msgFrom;
-                                $mail->FromName = $this->getConfig()->getThemeConfig('theme_name');
-                                $mail->Subject = $subject;
-                                $mail->addAddress($msgTo);
+                                $notification->save();
 
-                                // Body
-                                $mail->Body = $body;
-
-                                if (!$mail->send()) {
-                                    echo 'A';
-                                } else {
-                                    echo 'E';
-                                }
-
+                                echo 'A';
+                            } else {
+                                echo 'U';
                             }
                         }
                         else {
@@ -403,13 +407,22 @@ class Maintenance extends Base
                     $this->getLog()->error($e->getMessage());
                 }
 
+                print '<h1>' . __('Build Layouts') . '</h1>';
+
                 // Build Layouts
                 foreach ($this->layoutFactory->query(null, ['status' => 3]) as $layout) {
                     /* @var Layout $layout */
-                    $layout->xlfToDisk();
+                    try {
+                        $layout->xlfToDisk(['notify' => false]);
+                    } catch (\Exception $e) {
+                        $this->getLog()->error('Maintenance cannot build Layout %d, %s.', $layout->layoutId, $e->getMessage());
+                    }
                 }
+                print __('Done.');
 
+                print '<h1>' . __('Tidy Library') . '</h1>';
                 // Keep tidy
+                /** @var Library $libraryController */
                 $libraryController = $this->getApp()->container->get('\Xibo\Controller\Library');
                 $libraryController->removeExpiredFiles();
                 $libraryController->removeTempFiles();
@@ -419,6 +432,56 @@ class Maintenance extends Base
                     $this->getLog()->debug('Installing Module Files');
                     $libraryController->installAllModuleFiles();
                 }
+                print __('Done.');
+
+                // Handle queue of notifications to email.
+                print '<h1>' . __('Email Notifications') . '</h1>';
+
+                $msgFrom = $this->getConfig()->GetSetting("mail_from");
+
+                $this->getLog()->debug('Notification Queue sending from %s', $msgFrom);
+
+                foreach ($this->userNotificationFactory->getEmailQueue() as $notification) {
+                    /** @var UserNotification $notification */
+
+                    $this->getLog()->debug('Notification found: %d', $notification->notificationId);
+
+                    if ($notification->isSystem == 1)
+                        $notification->email = $this->getUser()->email;
+
+                    if ($notification->email != '') {
+
+                        $this->getLog()->debug('Sending Notification email to %s.', $notification->email);
+
+                        // Send them an email
+                        $mail = new \PHPMailer();
+                        $mail->From = $msgFrom;
+                        $mail->FromName = $this->getConfig()->getThemeConfig('theme_name');
+                        $mail->Subject = $notification->subject;
+                        $mail->addAddress($notification->email);
+
+                        // Body
+                        $mail->isHTML(true);
+                        $mail->AltBody = $notification->body;
+                        $mail->Body = $this->generateEmailBody($notification->subject, $notification->body);
+
+                        if (!$mail->send()) {
+                            $this->getLog()->error('Unable to send email notification mail to %s', $notification->email);
+                            echo 'E';
+                        } else {
+                            echo 'A';
+                        }
+
+                        $this->getLog()->debug('Marking notification as sent');
+                    } else {
+                        $this->getLog()->error('Discarding NotificationId %d as no email address could be resolved.', $notification->notificationId);
+                    }
+
+                    // Mark as sent
+                    $notification->setEmailed($this->getDate()->getLocalDate(null, 'U'));
+                    $notification->save();
+                }
+                print __('Done.');
             }
             else {
                 print __("Maintenance key invalid.");
@@ -433,6 +496,29 @@ class Maintenance extends Base
 
         // No output
         $this->setNoOutput(true);
+    }
+
+    /**
+     * Generate an email body
+     * @param $subject
+     * @param $body
+     * @return string
+     * @throws ConfigurationException
+     */
+    private function generateEmailBody($subject, $body)
+    {
+        // Generate Body
+        // Start an object buffer
+        ob_start();
+
+        // Render the template
+        $this->getApp()->render('email-template.twig', ['config' => $this->getConfig(), 'subject' => $subject, 'body' => $body]);
+
+        $body = ob_get_contents();
+
+        ob_end_clean();
+
+        return $body;
     }
 
     /**

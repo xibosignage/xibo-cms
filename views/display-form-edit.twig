@@ -81,7 +81,7 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                         { id: 0, value: no },
                         { id: 1, value: yes }
                         ] %}
-                        {{ forms.dropdown("emailAlert", "single", title, "", options, "id", "value", helpText) }}
+                        {{ forms.dropdown("emailAlert", "single", title, display.emailAlert, options, "id", "value", helpText) }}
 
 
                         {% set title %}{% trans "Use the Global Timeout?" %}{% endset %}

@@ -22,6 +22,7 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\LibraryFullException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
@@ -226,6 +227,12 @@ class User implements \JsonSerializable
     public $userOptions = [];
 
     /**
+     * @SWG\Property(description="Does this Group receive system notifications.")
+     * @var int
+     */
+    public $isSystemNotification;
+
+    /**
      * Cached Permissions
      * @var array[Permission]
      */
@@ -316,12 +323,17 @@ class User implements \JsonSerializable
 
     /**
      * Set the user group factory
-     * @param $userGroupFactory
+     * @param UserGroupFactory $userGroupFactory
      * @param PageFactory $pageFactory
      * @return $this
      */
     public function setChildAclDependencies($userGroupFactory, $pageFactory)
     {
+        // Assert myself on these factories
+        $userGroupFactory->setAclDependencies($this, $this->userFactory);
+        $pageFactory->setAclDependencies($this, $this->userFactory);
+        $this->userFactory->setAclDependencies($this, $this->userFactory);
+
         $this->userGroupFactory = $userGroupFactory;
         $this->pageFactory = $pageFactory;
         return $this;
@@ -760,6 +772,7 @@ class User implements \JsonSerializable
         /* @var UserGroup $group */
         $group = $this->userGroupFactory->create($this->userName, $this->libraryQuota);
         $group->setOwner($this);
+        $group->isSystemNotification = $this->isSystemNotification;
         $group->save();
     }
 
@@ -819,6 +832,7 @@ class User implements \JsonSerializable
         $group = $this->userGroupFactory->getById($this->groupId);
         $group->group = $this->userName;
         $group->libraryQuota = $this->libraryQuota;
+        $group->isSystemNotification = $this->isSystemNotification;
         $group->save(['linkUsers' => false]);
     }
 
@@ -872,9 +886,13 @@ class User implements \JsonSerializable
      * Authenticates the route given against the user credentials held
      * @param $route string
      * @return bool
+     * @throws ConfigurationException
      */
     public function routeViewable($route)
     {
+        if ($this->pageFactory == null)
+            throw new ConfigurationException('routeViewable called before user object has been initialised');
+
         if ($this->userTypeId == 1)
             return true;
 
