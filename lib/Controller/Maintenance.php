@@ -311,6 +311,7 @@ class Maintenance extends Base
                 } else {
                     echo '-&gt;' . __('Disabled') . '<br/>\n';
                 }
+                echo __('Done.');
 
                 //
                 // Validate Display Licence Slots
