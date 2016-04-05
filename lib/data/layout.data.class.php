@@ -1119,15 +1119,51 @@ class Layout extends Data
     {
         try {
             $dbh = PDOConnect::init();
+
+            $params = array(
+                'layoutId' => $layoutid,
+                'regionId' => $region,
+                'mediaId' => $mediaid
+            );
+
+            // Check to see if this link already exists
+            $sth = $dbh->prepare('SELECT `lklayoutmedia`.lkLayoutMediaId FROM `lklayoutmedia` WHERE layoutId = :layoutId AND regionId = :regionId AND mediaId = :mediaId');
+            $sth->execute($params);
+
+            $count = $sth->fetchAll(PDO::FETCH_ASSOC);
+
+            if (count($count) > 0) {
+                Debug::Audit('Returning existing lkLayoutMediaId ' . $count[0]['lkLayoutMediaId']);
+                return $count[0]['lkLayoutMediaId'];
+            }
         
-            $sth = $dbh->prepare('INSERT INTO lklayoutmedia (layoutID, regionID, mediaID) VALUES (:layoutid, :regionid, :mediaid)');
-            $sth->execute(array(
-                    'layoutid' => $layoutid,
-                    'regionid' => $region,
-                    'mediaid' => $mediaid
-                ));
+            $sth = $dbh->prepare('INSERT INTO lklayoutmedia (layoutID, regionID, mediaID) VALUES (:layoutId, :regionId, :mediaId)');
+            $sth->execute($params);
         
-            return $dbh->lastInsertId();  
+            $lkId = $dbh->lastInsertId();
+
+            // Do we need to invalidate the display cache of any associated layouts?
+            if ($region == 'module') {
+
+                // Get all associated campaigns
+                $sth = $dbh->prepare('
+                  SELECT DISTINCT campaignId
+                    FROM `lkcampaignlayout`
+                   WHERE `lkcampaignlayout`.layoutId = :layoutId
+                ');
+
+                $sth->execute(array('layoutId' => $layoutid));
+
+                foreach ($sth->fetchAll(PDO::FETCH_ASSOC) as $campaign) {
+                    Debug::Audit('Add Module Link caused notify displays for campaign ' .  $campaign['campaignId']);
+
+                    // Invalidate the cache on each
+                    $displayObject = new Display();
+                    $displayObject->NotifyDisplays($campaign['campaignId']);
+                }
+            }
+
+            return $lkId;
         }
         catch (Exception $e) {
             

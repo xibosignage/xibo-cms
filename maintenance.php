@@ -258,6 +258,7 @@ else
         echo '<h1>' . __('Tidy Cache') . '</h1>';
         if (Kit::GetParam('quick', _REQUEST, _INT) != 1) {
             PDOConnect::getPool()->purge();
+            print __('Done.');
         } else {
             echo '-&gt;' . __('Disabled') . '<br/>\n';
         }

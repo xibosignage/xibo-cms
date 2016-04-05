@@ -1016,6 +1016,25 @@ class Media extends Data
         try {
             $dbh = PDOConnect::init();
 
+            // Do we need to invalidate the display cache of any associated layouts?
+            // Get all associated campaigns
+            $sth = $dbh->prepare('
+              SELECT DISTINCT campaignId
+                FROM `lkcampaignlayout`
+                  INNER JOIN `lklayoutmedia`
+                  ON `lklayoutmedia`.layoutId = `lkcampaignlayout`.layoutId
+               WHERE `lklayoutmedia`.mediaId = :mediaId
+            ');
+            $sth->execute(array('mediaId' => $mediaId));
+
+            foreach ($sth->fetchAll(PDO::FETCH_ASSOC) as $campaign) {
+                Debug::Audit('Remove module file caused notify displays for campaign ' .  $campaign['campaignId']);
+
+                // Invalidate the cache on each
+                $displayObject = new Display();
+                $displayObject->NotifyDisplays($campaign['campaignId']);
+            }
+
             Debug::Audit('Removing: ' . $storedAs . ' ID:' . $mediaId);
         
             // Delete the links
@@ -1032,7 +1051,9 @@ class Media extends Data
                 ));
     
             // Delete the file itself (and any thumbs, etc)
-            return $this->DeleteMediaFile($storedAs);
+            $this->DeleteMediaFile($storedAs);
+
+            return true;
         }
         catch (Exception $e) {
             
