@@ -701,7 +701,7 @@ $CLIENT_CONFIG = array(
                             array('id' => '2', 'value' => __('Off when transparent')),
                             array('id' => '1', 'value' => __('On'))
                         ),
-                        'default' => 'DEMAND',
+                        'default' => '1',
                         'helpText' => __('Mode for hardware acceleration of web based content.'),
                         'enabled' => true,
                         'groupClass' => NULL
