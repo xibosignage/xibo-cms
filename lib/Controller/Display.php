@@ -784,6 +784,7 @@ class Display extends Base
         if (!$this->getUser()->checkDeleteable($display))
             throw new AccessDeniedException();
 
+        $display->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $display->delete();
 
         // Return

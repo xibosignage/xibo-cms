@@ -598,6 +598,8 @@ class State extends Middleware
                 $container->dateService,
                 $container->configService,
                 $container->store,
+                $container->pool,
+                $container->userFactory,
                 $container->userGroupFactory,
                 $container->layoutFactory,
                 $container->displayFactory,
@@ -1217,6 +1219,7 @@ class State extends Middleware
                 $container->store,
                 $container->logService,
                 $container->sanitizerService,
+                $container,
                 $container->dateService,
                 $container->configService
             );

@@ -9,6 +9,7 @@
 namespace Xibo\Entity;
 
 
+use Slim\Helper\Set;
 use Xibo\Helper\Install;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -35,6 +36,9 @@ class Upgrade implements \JsonSerializable
     public $action;
     public $type;
 
+    /** @var  Set */
+    private $container;
+
     /** @var  ConfigServiceInterface */
     private $config;
 
@@ -42,11 +46,13 @@ class Upgrade implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param Set $container
      * @param ConfigServiceInterface $config
      */
-    public function __construct($store, $log, $config)
+    public function __construct($store, $log, $container, $config)
     {
         $this->setCommonDependencies($store, $log);
+        $this->container = $container;
         $this->config = $config;
     }
 
@@ -84,7 +90,7 @@ class Upgrade implements \JsonSerializable
 
                 $object = new $class();
                 /* @var Step $object */
-                $object->doStep();
+                $object->doStep($this->container);
 
                 break;
 

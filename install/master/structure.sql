@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS `datasetcolumn` (
   `Heading` varchar(50) NOT NULL,
   `DataTypeID` smallint(6) NOT NULL,
   `DataSetColumnTypeID` smallint(6) NOT NULL,
-  `ListContent` varchar(255) DEFAULT NULL,
+  `ListContent` varchar(1000) DEFAULT NULL,
   `ColumnOrder` smallint(6) NOT NULL,
   `Formula` varchar(1000) DEFAULT NULL,
   PRIMARY KEY (`DataSetColumnID`),
@@ -831,7 +831,8 @@ CREATE TABLE IF NOT EXISTS `stat` (
   `end` datetime DEFAULT NULL,
   `Tag` varchar(254) DEFAULT NULL,
   PRIMARY KEY (`statID`),
-  KEY `statDate` (`statDate`)
+  KEY `statDate` (`statDate`),
+  KEY `Type` (`displayID`,`end`,`Type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------

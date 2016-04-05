@@ -59,6 +59,9 @@ $app->configService = \Xibo\Service\ConfigService::Load(PROJECT_ROOT . '/web/set
 // Set state
 \Xibo\Middleware\State::setState($app);
 
+// Town down all logging
+$app->getLog()->setLevel(\Xibo\Service\LogService::resolveLogLevel('error'));
+
 // Always have a version defined
 $version = $app->sanitizerService->getInt('v', 3, $_REQUEST);
 
@@ -175,12 +178,12 @@ try {
         throw new InvalidArgumentException(__('Your client is not the correct version to communicate with this CMS.'));
 
     // Create a log processor
-    $logProcessor = new \Xibo\Xmds\LogProcessor();
+    $logProcessor = new \Xibo\Xmds\LogProcessor($app->getLog());
     $app->logWriter->addProcessor($logProcessor);
 
     // Create a SoapServer
-    //$soap = new SoapServer($wsdl);
-    $soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
+    $soap = new SoapServer($wsdl);
+    //$soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
     $soap->setClass('\Xibo\Xmds\Soap' . $version,
         $logProcessor,
         $app->pool,

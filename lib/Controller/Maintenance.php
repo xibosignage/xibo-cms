@@ -9,6 +9,7 @@
 namespace Xibo\Controller;
 
 
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Layout;
 use Xibo\Entity\UserGroup;
 use Xibo\Entity\UserNotification;
@@ -39,6 +40,12 @@ class Maintenance extends Base
 {
     /** @var  StorageServiceInterface */
     private $store;
+
+    /** @var  PoolInterface */
+    private $pool;
+
+    /** @var  UserFactory */
+    private $userFactory;
 
     /** @var  UserGroupFactory */
     private $userGroupFactory;
@@ -71,7 +78,9 @@ class Maintenance extends Base
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
-     * @param UserFactory $userGroupFactory
+     * @param PoolInterface $pool
+     * @param UserFactory $userFactory
+     * @param UserGroupFactory $userGroupFactory
      * @param LayoutFactory $layoutFactory
      * @param DisplayFactory $displayFactory
      * @param UpgradeFactory $upgradeFactory
@@ -79,12 +88,14 @@ class Maintenance extends Base
      * @param NotificationFactory $notificationFactory
      * @param UserNotificationFactory $userNotificationFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $userGroupFactory, $layoutFactory, $displayFactory, $upgradeFactory, $mediaFactory, $notificationFactory, $userNotificationFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $upgradeFactory, $mediaFactory, $notificationFactory, $userNotificationFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->store = $store;
         $this->userGroupFactory = $userGroupFactory;
+        $this->pool = $pool;
+        $this->userFactory = $userFactory;
         $this->layoutFactory = $layoutFactory;
         $this->displayFactory = $displayFactory;
         $this->upgradeFactory = $upgradeFactory;
@@ -265,7 +276,9 @@ class Maintenance extends Base
                     print "-&gt;" . __("Disabled") . "<br/>\n";
                 }
 
+                //
                 // Stats Tidy
+                //
                 print "<h1>" . __("Tidy Stats") . "</h1>";
                 if (!$quick &&  $this->getConfig()->GetSetting("MAINTENANCE_STAT_MAXAGE") != 0) {
 
@@ -289,7 +302,20 @@ class Maintenance extends Base
                     print "-&gt;" . __("Disabled") . "<br/>\n";
                 }
 
+                //
+                // Tidy the Cache
+                //
+                echo '<h1>' . __('Tidy Cache') . '</h1>';
+                if (!$quick) {
+                    $this->pool->purge();
+                } else {
+                    echo '-&gt;' . __('Disabled') . '<br/>\n';
+                }
+                echo __('Done.');
+
+                //
                 // Validate Display Licence Slots
+                //
                 $maxDisplays = $this->getConfig()->GetSetting('MAX_LICENSED_DISPLAYS');
 
                 if ($maxDisplays > 0) {

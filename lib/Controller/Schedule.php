@@ -213,8 +213,15 @@ class Schedule extends Base
             // Event Permissions
             $editable = $this->isEventEditable($row->displayGroups);
 
+            $this->getLog()->debug('Parsing event dates from %s and %s', $row->fromDt, $row->toDt);
+
+            // Parse our dates into a Date object, so that we convert to local time correctly.
             $fromDt = $this->getDate()->parse($row->fromDt, 'U');
             $toDt = $this->getDate()->parse($row->toDt, 'U');
+
+            // Set the row from/to date to be an ISO date for display
+            $row->fromDt = $this->getDate()->getLocalDate($row->fromDt);
+            $row->toDt = $this->getDate()->getLocalDate($row->toDt);
 
             // Event Title
             $title = sprintf(__('%s scheduled on %s'),
@@ -254,8 +261,8 @@ class Schedule extends Base
                 'id' => $row->eventId,
                 'title' => $title,
                 'url' => $url,
-                'start' => $row->fromDt * 1000,
-                'end' => $row->toDt * 1000,
+                'start' => $fromDt->format('U') * 1000,
+                'end' => $toDt->format('U') * 1000,
                 'sameDay' => ($fromDt->day == $toDt->day),
                 'editable' => $editable,
                 'event' => $row

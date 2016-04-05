@@ -188,7 +188,7 @@ class Text extends ModuleWidget
         $javaScriptContent .= '       $("#content").xiboTextRender(options, items); $("body").xiboLayoutScaler(options);';
 
         if ($clock)
-            $javaScriptContent .= ' updateClock(); setInterval(updateClock, 1000); moment.locale("' . Translate::GetJsLocale() . '"); ';
+            $javaScriptContent .= ' moment.locale("' . Translate::GetJsLocale() . '"); updateClock(); setInterval(updateClock, 1000); ';
 
         $javaScriptContent .= '   }); ';
 
@@ -210,6 +210,12 @@ class Text extends ModuleWidget
         // Add our fonts.css file
         $headContent = '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
+
+        if ($this->getOption('backgroundColor') != '') {
+            $headContent .= '<style type="text/css">';
+            $headContent .= ' body { background-color: ' . $this->getOption('backgroundColor') . '; }';
+            $headContent .= '</style>';
+        }
 
         $data['head'] = $headContent;
 

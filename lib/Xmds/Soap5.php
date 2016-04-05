@@ -50,9 +50,6 @@ class Soap5 extends Soap4
             $xmrPubKey = "-----BEGIN PUBLIC KEY-----\n" . $xmrPubKey . "\n-----END PUBLIC KEY-----\n";
         }
 
-        // Audit in
-        $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
-
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
@@ -71,7 +68,10 @@ class Soap5 extends Soap4
             $display = $this->displayFactory->getByLicence($hardwareKey);
             $this->display = $display;
 
-            $this->logProcessor->setDisplay($display->displayId);
+            $this->logProcessor->setDisplay($display->displayId, ($display->isAuditing == 1));
+
+            // Audit in
+            $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
 
             // Now
             $dateNow = $this->getDate()->parse();
@@ -203,8 +203,7 @@ class Soap5 extends Soap4
         $this->logBandwidth($display->displayId, Bandwidth::$REGISTER, strlen($returnXml));
 
         // Audit our return
-        if ($display->isAuditing == 1)
-            $this->getLog()->debug($returnXml, $display->displayId);
+        $this->getLog()->debug($returnXml, $display->displayId);
 
         return $returnXml;
     }

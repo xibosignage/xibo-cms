@@ -764,7 +764,7 @@ class Soap
                 $layoutIds = [$this->display->defaultLayoutId];
 
                 foreach ($events as $event) {
-                    if (!in_array($event['layoutId'], $layoutIds))
+                    if ($event['layoutId'] != null && !in_array($event['layoutId'], $layoutIds))
                         $layoutIds[] = $event['layoutId'];
                 }
 
@@ -1405,7 +1405,7 @@ class Soap
                 return false;
 
             // Configure our log processor
-            $this->logProcessor->setDisplay($this->display->displayId);
+            $this->logProcessor->setDisplay($this->display->displayId, ($this->display->isAuditing == 1));
 
             return true;
 

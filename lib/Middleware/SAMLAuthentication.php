@@ -73,7 +73,7 @@ class SAMLAuthentication extends Middleware
         $app = $this->app;
 
         // Create a user
-        $app->user = new $app->userFactory->create();
+        $app->user = $app->userFactory->create();
 
         // Register SAML routes.
         $app->excludedCsrfRoutes = SAMLAuthentication::samlRoutes();
@@ -223,6 +223,7 @@ class SAMLAuthentication extends Middleware
 
                 if (isset($user) && $user->userId > 0) {
                     // Load User
+                    $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
                     $user->load();
 
                     // We are logged in!
