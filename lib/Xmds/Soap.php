@@ -764,7 +764,7 @@ class Soap
                 $layoutIds = [$this->display->defaultLayoutId];
 
                 foreach ($events as $event) {
-                    if (!in_array($event['layoutId'], $layoutIds))
+                    if ($event['layoutId'] != null && !in_array($event['layoutId'], $layoutIds))
                         $layoutIds[] = $event['layoutId'];
                 }
 

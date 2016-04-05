@@ -557,12 +557,14 @@ class Display
         // Remove our display from any groups it is assigned to
         foreach ($this->displayGroups as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
+            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $displayGroup->unassignDisplay($this);
             $displayGroup->save(['validate' => false]);
         }
 
         // Delete our display specific group
         $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
+        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->delete();
 
         // Delete the display

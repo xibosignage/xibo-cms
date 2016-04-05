@@ -8,11 +8,13 @@
         var eventClass = "event-warning";
 
         if (event.event.dayPartId == 0) {
-        if (event.sameDay) {
-        title = "[" + moment(event.event.fromDt, "X").format("HH:mm") + " - " + moment(event.event.toDt, "X").format("HH:mm") + "] " + event.title;
-        } else {
-        title = "[" + moment(event.event.fromDt, "X").format(jsDateFormat) + " - " + moment(event.event.toDt, "X").format(jsDateFormat) + "] " + event.title;
-        }
+                if (event.event.eventTypeId == 2) {
+                title = "[" + moment(event.event.fromDt).format("HH:mm") + "] " + event.title;
+                } else if (event.sameDay) {
+                title = "[" + moment(event.event.fromDt).format("HH:mm") + " - " + moment(event.event.toDt).format("HH:mm") + "] " + event.title;
+                } else {
+                title = "[" + moment(event.event.fromDt).format(jsDateFormat) + " - " + moment(event.event.toDt).format(jsDateFormat) + "] " + event.title;
+                }
         }
 
         if (event.event.displayOrder > 0)
@@ -39,10 +41,13 @@
         eventIcon = "fa-bullseye";
         }
 
-        if (!event.editable) {
-        eventIcon = "fa-wrench";
-        eventClass = "event-inverse";
-        }
+            if (event.event.eventTypeId == 2)
+            eventIcon = "fa-wrench";
+
+            if (!event.editable) {
+            eventIcon = "fa-lock";
+            eventClass = "event-inverse";
+            }
         %>
 			<li>
 				<span class="pull-left event <%= event['class'] %>"></span>&nbsp;

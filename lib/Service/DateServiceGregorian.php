@@ -66,8 +66,10 @@ class DateServiceGregorian implements DateServiceInterface
      */
     public function parse($string = null, $format = null)
     {
-        if ($string == null)
+        if ($string == null) {
             $string = $this->getLocalDate();
+            $format = null;
+        }
 
         if ($format == null)
             $format = $this->getSystemFormat();
