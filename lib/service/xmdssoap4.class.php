@@ -128,7 +128,7 @@ class XMDSSoap4
             $loggedIn = Kit::ValidateParam($row['loggedin'], _INT);
             $isAuditing = Kit::ValidateParam($row['isAuditing'], _INT);
 
-            if ($isAuditing)
+            if ($isAuditing == 1)
                 Debug::setLevel('audit');
 
             // Audit in
@@ -1413,7 +1413,7 @@ class XMDSSoap4
             $this->loggedIn = $row['loggedin'];
             $this->emailAlert = $row['email_alert'];
 
-            if ($this->isAuditing)
+            if ($this->isAuditing == 1)
                 Debug::setLevel('audit');
 
             return true;

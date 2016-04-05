@@ -1132,7 +1132,7 @@ class XMDSSoap3
             $this->loggedIn = $row['loggedin'];
             $this->emailAlert = $row['email_alert'];
 
-            if ($this->isAuditing)
+            if ($this->isAuditing == 1)
                 Debug::setLevel('audit');
             
             // Last accessed date on the display
