@@ -9,6 +9,7 @@
 namespace Xibo\Factory;
 
 
+use Slim\Helper\Set;
 use Xibo\Entity\Upgrade;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\ConfigService;
@@ -26,6 +27,9 @@ class UpgradeFactory extends BaseFactory
 {
     private $provisioned = false;
 
+    /** @var  Set */
+    private $container;
+
     /** @var  DateServiceInterface */
     private $date;
 
@@ -37,12 +41,14 @@ class UpgradeFactory extends BaseFactory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param Set $container
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      */
-    public function __construct($store, $log, $sanitizerService, $date, $config)
+    public function __construct($store, $log, $sanitizerService, $container, $date, $config)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->container = $container;
         $this->date = $date;
         $this->config = $config;
     }
@@ -52,7 +58,7 @@ class UpgradeFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Upgrade($this->getStore(), $this->getLog(), $this->config);
+        return new Upgrade($this->getStore(), $this->getLog(), $this->container, $this->config);
     }
 
     /**

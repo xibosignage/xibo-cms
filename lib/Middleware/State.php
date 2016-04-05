@@ -1219,6 +1219,7 @@ class State extends Middleware
                 $container->store,
                 $container->logService,
                 $container->sanitizerService,
+                $container,
                 $container->dateService,
                 $container->configService
             );
