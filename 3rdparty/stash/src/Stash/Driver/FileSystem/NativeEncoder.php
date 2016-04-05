@@ -21,11 +21,14 @@ class NativeEncoder implements EncoderInterface
             return false;
         }
 
-        $expiration = null;
         include($path);
 
         if (!isset($loaded)) {
             return false;
+        }
+
+        if (!isset($expiration)) {
+            $expiration = null;
         }
 
         if (!isset($data)) {
@@ -89,18 +92,22 @@ class NativeEncoder implements EncoderInterface
                 $dataString = (bool) $data ? 'true' : 'false';
                 break;
 
+            case 'serialize':
+                $dataString = 'unserialize(base64_decode(\'' . base64_encode(serialize($data)) . '\'))';
+                break;
+
             case 'string':
                 $dataString = sprintf('"%s"', addcslashes($data, "\t\"\$\\"));
                 break;
 
-            case 'numeric':
-                $dataString = (string) $data;
-                break;
-
+            case 'none':
             default :
-                case 'serialize':
-                    $dataString = 'unserialize(base64_decode(\'' . base64_encode(serialize($data)) . '\'))';
-                    break;
+                if (is_numeric($data)) {
+                    $dataString = (string) $data;
+                } else {
+                    $dataString = 'base64_decode(\'' . base64_encode($data) . '\')';
+                }
+                break;
         }
 
         return $dataString;

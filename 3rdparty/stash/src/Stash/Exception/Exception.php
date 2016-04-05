@@ -11,14 +11,12 @@
 
 namespace Stash\Exception;
 
-use Psr\Cache\CacheException;
-
 /**
  * Interface for the Stash exceptions.
  *
  * @package Stash
  * @author  Robert Hafner <tedivm@tedivm.com>
  */
-interface Exception extends CacheException
+interface Exception
 {
 }

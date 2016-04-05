@@ -22,7 +22,7 @@ use Stash\Session\SessionHandlerInterface as SessionHandlerInterface;
  * @package Stash
  * @author  Robert Hafner <tedivm@tedivm.com>
  */
-class Session implements \SessionHandlerInterface
+class Session implements SessionHandlerInterface
 {
     /**
      * The Stash\Pool generates the individual cache items corresponding to each
@@ -184,7 +184,7 @@ class Session implements \SessionHandlerInterface
     {
         $cache = $this->getCache($session_id);
 
-        return $cache->set($session_data)->expiresAfter($this->options['ttl'])->save();
+        return $cache->set($session_data, $this->options['ttl']);
     }
 
     /**

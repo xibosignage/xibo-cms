@@ -12,6 +12,8 @@
 namespace Stash\Driver;
 
 use Stash;
+use Stash\Exception\RuntimeException;
+use Stash\Interfaces\DriverInterface;
 
 /**
  * The Redis driver is used for storing data on a Redis system. This class uses
@@ -20,8 +22,15 @@ use Stash;
  * @package Stash
  * @author  Robert Hafner <tedivm@tedivm.com>
  */
-class Redis extends AbstractDriver
+class Redis implements DriverInterface
 {
+    /**
+     * An array of default options.
+     *
+     * @var array
+     */
+    protected $defaultOptions = array();
+
     /**
      * The Redis drivers.
      *
@@ -49,6 +58,18 @@ class Redis extends AbstractDriver
     );
 
     /**
+     * Initializes the driver.
+     *
+     * @throws RuntimeException 'Extension is not installed.'
+     */
+    public function __construct()
+    {
+        if (!static::isAvailable()) {
+            throw new RuntimeException('Extension is not installed.');
+        }
+    }
+
+    /**
      * The options array should contain an array of servers,
      *
      * The "server" option expects an array of servers, with each server being represented by an associative array. Each
@@ -59,11 +80,14 @@ class Redis extends AbstractDriver
      *
      * The "password" option is used for clusters which required authentication.
      *
-     * @param array $options
+     * @param  array             $options
+     * @throws \RuntimeException
      */
-    protected function setOptions(array $options = array())
+    public function setOptions(array $options = array())
     {
-        $options += $this->getDefaultOptions();
+        if (!self::isAvailable()) {
+            throw new \RuntimeException('Unable to load Redis driver without PhpRedis extension.');
+        }
 
         // Normalize Server Options
         if (isset($options['servers'])) {
@@ -104,6 +128,9 @@ class Redis extends AbstractDriver
         } else {
             $servers = array(array('server' => '127.0.0.1', 'port' => '6379', 'ttl' => 0.1));
         }
+
+        // Merge in default values.
+        $options = array_merge($this->defaultOptions, $options);
 
         // this will have to be revisited to support multiple servers, using
         // the RedisArray object. That object acts as a proxy object, meaning
@@ -158,6 +185,8 @@ class Redis extends AbstractDriver
 
     /**
      * Properly close the connection.
+     *
+     * {@inheritdoc}
      */
     public function __destruct()
     {
@@ -277,13 +306,5 @@ class Redis extends AbstractDriver
         }
 
         return $path ? $pathKey : md5($keyString);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function isPersistent()
-    {
-        return true;
     }
 }

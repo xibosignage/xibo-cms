@@ -11,9 +11,7 @@
 
 namespace Stash\Interfaces;
 
-use Psr\Cache\CacheItemInterface;
-
-interface ItemInterface extends CacheItemInterface
+interface ItemInterface
 {
     /**
      * Sets the Parent Pool for the Item class to use.
@@ -32,7 +30,7 @@ interface ItemInterface extends CacheItemInterface
      * @param array       $key
      * @param string|null $namespace
      */
-    public function setKey(array $key, $namespace = null);
+    public function setKey($key, $namespace = null);
 
     /**
      * This disables any IO operations by this object, effectively preventing
@@ -46,7 +44,7 @@ interface ItemInterface extends CacheItemInterface
      * Returns the key as a string. This is particularly useful when the Item is
      * returned as a group of Items in an Iterator.
      *
-     * @return string
+     * @return string|bool Returns false if no key is set.
      */
     public function getKey();
 
@@ -65,17 +63,12 @@ interface ItemInterface extends CacheItemInterface
      * function after call this one. If no value is stored at all then this
      * function will return null.
      *
-     * @return mixed
+     * @param  int        $invalidation
+     * @param  null       $arg
+     * @param  null       $arg2
+     * @return mixed|null
      */
-    public function get();
-
-    /**
-     * Returns true if the cached item is valid and usable.
-     *
-     * @return bool
-     */
-    public function isHit();
-
+    public function get($invalidation = 0, $arg = null, $arg2 = null);
 
     /**
      * Returns true if the cached item needs to be refreshed.
@@ -98,10 +91,11 @@ interface ItemInterface extends CacheItemInterface
      * including arrays and object, except resources and objects which are
      * unable to be serialized.
      *
-     * @param  mixed              $value bool
-     * @return static             The invoked object
+     * @param  mixed              $data bool
+     * @param  int|\DateTime|null $ttl  Int is time (seconds), DateTime a future expiration date
+     * @return bool               Returns whether the object was successfully stored or not.
      */
-    public function set($value);
+    public function set($data, $ttl = null);
 
     /**
      * Extends the expiration on the current cached item. For some engines this
@@ -120,7 +114,7 @@ interface ItemInterface extends CacheItemInterface
     public function isDisabled();
 
     /**
-     * Sets a PSR\Logger style logging client to enable the tracking of errors.
+     * Return true if caching is disabled
      *
      * @param  \PSR\Log\LoggerInterface $logger
      * @return bool
@@ -140,30 +134,4 @@ interface ItemInterface extends CacheItemInterface
      * @return \DateTime
      */
     public function getExpiration();
-
-
-    /**
-    * Sets the expiration based off of an integer or DateInterval
-    *
-    * @param int|\DateInterval $time
-    * @return static The invoked object.
-    */
-    public function expiresAfter($time);
-
-
-    /**
-    * Sets the expiration to a specific time.
-    *
-    * @param \DateTimeInterface $expiration
-    * @return static The invoked object.
-    */
-    public function expiresAt($expiration);
-
-
-    /**
-    * Persists the Item's value to the backend storage.
-    *
-    * @return bool
-    */
-    public function save();
 }

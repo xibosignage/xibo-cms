@@ -13,6 +13,7 @@ namespace Stash\Driver;
 
 use Stash;
 use Stash\Exception\RuntimeException;
+use Stash\Interfaces\DriverInterface;
 use Stash\Utilities;
 
 /**
@@ -23,10 +24,17 @@ use Stash\Utilities;
  * @package Stash
  * @author  Robert Hafner <tedivm@tedivm.com>
  */
-class Sqlite extends AbstractDriver
+class Sqlite implements DriverInterface
 {
-    protected $filePermissions;
-    protected $dirPermissions;
+    protected $defaultOptions = array('filePermissions' => 0660,
+                                      'dirPermissions' => 0770,
+                                      'busyTimeout' => 500,
+                                      'nesting' => 0,
+                                      'subdriver' => 'PDO'
+    );
+
+    protected $filePerms;
+    protected $dirPerms;
     protected $busyTimeout;
     protected $cachePath;
     protected $driverClass;
@@ -36,47 +44,64 @@ class Sqlite extends AbstractDriver
     protected $disabled = false;
 
     /**
-     * {@inheritdoc}
+     * Initializes the driver.
+     *
+     * @throws RuntimeException 'Extension is not installed.'
      */
-    public function getDefaultOptions()
+    public function __construct()
     {
-        return array(
-            'path' => Utilities::getBaseDirectory($this),
-            'filePermissions' => 0660,
-            'dirPermissions' => 0770,
-            'busyTimeout' => 500,
-            'nesting' => 0,
-            'subdriver' => 'PDO',
-        );
+        if (!static::isAvailable()) {
+            throw new RuntimeException('Extension is not installed.');
+        }
     }
 
     /**
-     * {@inheritdoc}
      *
+     * @param  array                             $options
      * @throws \Stash\Exception\RuntimeException
      */
-    protected function setOptions(array $options = array())
+    public function setOptions(array $options = array())
     {
-        $options += $this->getDefaultOptions();
+        $options = array_merge($this->defaultOptions, $options);
 
-        $this->cachePath = rtrim($options['path'], '\\/') . DIRECTORY_SEPARATOR;
-        $this->filePermissions = $options['filePermissions'];
-        $this->dirPermissions = $options['dirPermissions'];
-        $this->busyTimeout = $options['busyTimeout'];
-        $this->nesting = max((int) $options['nesting'], 0);
+        $cachePath = isset($options['path']) ? $options['path'] : Utilities::getBaseDirectory($this);
+        $this->cachePath = rtrim($cachePath, '\\/') . '/';
 
-        Utilities::checkFileSystemPermissions($this->cachePath, $this->dirPermissions);
+        Utilities::checkFileSystemPermissions($this->cachePath, $this->dirPerms);
 
-        if (static::isAvailable() && Sub\SqlitePdo::isAvailable()) {
-            $this->driverClass = '\Stash\Driver\Sub\SqlitePdo';
+        $extension = isset($options['extension']) ? strtolower($options['extension']) : 'any';
+        $version = isset($options['version']) ? $options['version'] : 'any';
+
+        $subdrivers = array();
+        if (Sub\SqlitePdo::isAvailable()) {
+            $subdrivers['pdo'] = '\Stash\Driver\Sub\SqlitePdo';
+        }
+        if (Sub\Sqlite::isAvailable()) {
+            $subdrivers['sqlite'] = '\Stash\Driver\Sub\Sqlite';
+        }
+        if (Sub\SqlitePdo2::isAvailable()) {
+            $subdrivers['pdo2'] = '\Stash\Driver\Sub\SqlitePdo2';
+        }
+
+        if ($extension == 'pdo' && $version != '2' && isset($subdrivers['pdo'])) {
+            $driver = $subdrivers['pdo'];
+        } elseif ($extension == 'sqlite' && isset($subdrivers['sqlite'])) {
+            $driver = $subdrivers['sqlite'];
+        } elseif ($extension == 'pdo' && $version != '3' && isset($subdrivers['pdo2'])) {
+            $driver = $subdrivers['pdo2'];
+        } elseif (count($subdrivers) > 0 && $extension == 'any') {
+            $driver = reset($subdrivers);
         } else {
             throw new RuntimeException('No sqlite extension available.');
         }
 
-        $driver = $this->getSqliteDriver(array('_none'));
-        if (!$driver) {
-            throw new RuntimeException('No Sqlite driver could be loaded.');
-        }
+        $this->driverClass = $driver;
+        $this->filePerms = $options['filePermissions'];
+        $this->dirPerms = $options['dirPermissions'];
+        $this->busyTimeout = $options['busyTimeout'];
+        $this->nesting = $options['nesting'];
+
+        $this->checkStatus();
     }
 
     /**
@@ -201,7 +226,7 @@ class Sqlite extends AbstractDriver
             return false;
         }
 
-        $driver = new $driverClass($file, $this->dirPermissions, $this->filePermissions, $this->busyTimeout);
+        $driver = new $driverClass($file, $this->dirPerms, $this->filePerms, $this->busyTimeout);
 
         $this->subDrivers[$file] = $driver;
 
@@ -210,6 +235,8 @@ class Sqlite extends AbstractDriver
 
     /**
      * Destroys the sub-drivers when this driver is unset -- required for Windows compatibility.
+     *
+     * {@inheritdoc}
      */
     public function __destruct()
     {
@@ -238,11 +265,32 @@ class Sqlite extends AbstractDriver
     }
 
     /**
+     * Checks availability of the specified subdriver.
+     *
+     * @throws \Stash\Exception\RuntimeException
+     * @return bool
+     */
+    protected function checkStatus()
+    {
+        if (!static::isAvailable()) {
+            throw new RuntimeException('No Sqlite extension is available.');
+        }
+
+        $driver = $this->getSqliteDriver(array('_none'));
+
+        if (!$driver) {
+            throw new RuntimeException('No Sqlite driver could be loaded.');
+        }
+
+        $driver->checkFileSystemPermissions();
+    }
+
+    /**
      * {@inheritdoc}
      */
     public static function isAvailable()
     {
-        return Sub\SqlitePdo::isAvailable();
+        return (Sub\SqlitePdo::isAvailable()) || (Sub\Sqlite::isAvailable()) || (Sub\SqlitePdo2::isAvailable());
     }
 
     /**
@@ -262,13 +310,5 @@ class Sqlite extends AbstractDriver
         }
 
         return $path;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function isPersistent()
-    {
-        return true;
     }
 }

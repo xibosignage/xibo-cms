@@ -15,6 +15,7 @@ use Stash;
 use Stash\Driver\FileSystem\EncoderInterface;
 use Stash\Exception\LogicException;
 use Stash\Exception\RuntimeException;
+use Stash\Interfaces\DriverInterface;
 use Stash\Utilities;
 
 /**
@@ -25,7 +26,7 @@ use Stash\Utilities;
  * @package Stash
  * @author  Robert Hafner <tedivm@tedivm.com>
  */
-class FileSystem extends AbstractDriver
+class FileSystem implements DriverInterface
 {
     /**
      * This is the path to the file which will be used to store the cached item. It is based off of the key.
@@ -103,49 +104,55 @@ class FileSystem extends AbstractDriver
     protected $disabled = false;
 
     /**
+     * Default values for selections the user does not make.
+     *
+     * @var array
+     */
+    protected $defaultOptions = array('filePermissions' => 0660,
+                                      'dirPermissions' => 0770,
+                                      'dirSplit' => 2,
+                                      'memKeyLimit' => 20,
+                                      'keyHashFunction' => 'md5'
+    );
+
+    /**
      * @var \Stash\Driver\FileSystem\EncoderInterface
      */
     protected $encoder;
 
     /**
-     * {@inheritdoc}
-     */
-    public function getDefaultOptions()
-    {
-        return array(
-            'filePermissions' => 0660,
-            'dirPermissions' => 0770,
-            'dirSplit' => 2,
-            'memKeyLimit' => 20,
-            'keyHashFunction' => 'md5',
-        );
-    }
-
-    /**
      * Requests a list of options.
      *
-     * @param array $options
-     *
+     * @param  array                             $options
      * @throws \Stash\Exception\RuntimeException
      */
-    protected function setOptions(array $options = array())
+    public function setOptions(array $options = array())
     {
-        $options += $this->getDefaultOptions();
-        if (!isset($options['path'])) {
-            $options['path'] = Utilities::getBaseDirectory($this);
-        }
+        $options = array_merge($this->defaultOptions, $options);
 
-        $this->cachePath = rtrim($options['path'], '\\/') . DIRECTORY_SEPARATOR;
+        $this->cachePath = isset($options['path']) ? $options['path'] : Utilities::getBaseDirectory($this);
+        $this->cachePath = rtrim($this->cachePath, '\\/') . DIRECTORY_SEPARATOR;
+
         $this->filePermissions = $options['filePermissions'];
         $this->dirPermissions = $options['dirPermissions'];
-        $this->directorySplit = max((int) $options['dirSplit'], 1);
-        $this->memStoreLimit = max((int) $options['memKeyLimit'], 0);
+
+        if (!is_numeric($options['dirSplit']) || $options['dirSplit'] < 1) {
+            $options['dirSplit'] = 1;
+        }
+
+        $this->directorySplit = (int) $options['dirSplit'];
+
+        if (!is_numeric($options['memKeyLimit']) || $options['memKeyLimit'] < 1) {
+            $options['memKeyLimit'] = 0;
+        }
 
         if (is_callable($options['keyHashFunction'])) {
             $this->keyHashFunction = $options['keyHashFunction'];
         } else {
             throw new RuntimeException('Key Hash Function is not callable');
         }
+
+        $this->memStoreLimit = (int) $options['memKeyLimit'];
 
         if (isset($options['encoder'])) {
             $encoder = $options['encoder'];
@@ -155,11 +162,10 @@ class FileSystem extends AbstractDriver
                 }
                 $this->encoder = new $encoder;
             } else {
-                $encoderInterface = 'Stash\Driver\FileSystem\EncoderInterface';
                 $encoderClass = 'Stash\Driver\FileSystem\\' . $encoder . 'Encoder';
-                if (class_exists($encoder) && in_array($encoderInterface, class_implements($encoder))) {
+                if (class_exists($encoder)) {
                     $this->encoder = new $encoder();
-                } elseif (class_exists($encoderClass) && in_array($encoderInterface, class_implements($encoderClass))) {
+                } elseif (class_exists($encoderClass)) {
                     $this->encoder = new $encoderClass();
                 } else {
                     throw new RuntimeException('Invalid Encoder: ' . $encoder);
@@ -168,6 +174,13 @@ class FileSystem extends AbstractDriver
         }
 
         Utilities::checkFileSystemPermissions($this->cachePath, $this->dirPermissions);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function __destruct()
+    {
     }
 
     /**
@@ -217,7 +230,7 @@ class FileSystem extends AbstractDriver
 
         if (!file_exists($path)) {
             if (!is_dir(dirname($path))) {
-                if (!@mkdir(dirname($path), $this->dirPermissions, true)) {
+                if (!mkdir(dirname($path), $this->dirPermissions, true)) {
                     return false;
                 }
             }
@@ -355,10 +368,7 @@ class FileSystem extends AbstractDriver
                 $dirFiles = scandir($file->getPathname());
                 if ($dirFiles && count($dirFiles) == 2) {
                     $filename = rtrim($filename, '/.');
-
-                    if (file_exists(($filename))) {
-                        rmdir($filename);
-                    }
+                    rmdir($filename);
                 }
                 unset($dirFiles);
                 continue;
@@ -389,9 +399,13 @@ class FileSystem extends AbstractDriver
     }
 
     /**
+     * This function checks to see if it is possible to enable this driver. This returns true no matter what, since
+     * there is typically a filesystem available somewhere.
+     *
      * {@inheritdoc}
+     * @return bool true
      */
-    public function isPersistent()
+    public static function isAvailable()
     {
         return true;
     }

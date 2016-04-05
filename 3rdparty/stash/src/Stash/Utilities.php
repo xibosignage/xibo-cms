@@ -34,12 +34,8 @@ class Utilities
                 return 'bool';
             }
 
-            if (is_numeric($data)) {
-                if (is_numeric($data) && ($data >= 2147483648 || $data < -2147483648)) {
-                    return 'serialize';
-                } else {
-                    return 'numeric';
-                }
+            if (is_numeric($data) && ($data >= 2147483648 || $data < -2147483648)) {
+                return 'serialize';
             }
 
             if (is_string($data)) {
@@ -153,16 +149,18 @@ class Utilities
                     $dirFiles = scandir($file->getPathname());
                     if ($dirFiles && count($dirFiles) == 2) {
                         $filename = rtrim($filename, '/.');
-                        if (file_exists($filename)) {
-                            rmdir($filename);
-                        }
+                        rmdir($filename);
                     }
                     unset($dirFiles);
                     continue;
                 }
 
                 if (file_exists($filename)) {
-                    unlink($filename);
+                    if ($file->isDir()) {
+                        rmdir($filename);
+                    } else {
+                        unlink($filename);
+                    }
                 }
             }
 

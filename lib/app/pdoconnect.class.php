@@ -134,20 +134,23 @@ Class PDOConnect {
 	 */
 	public static function configureCache($cacheDrivers, $cacheNamespace)
 	{
-		$drivers = [];
+		$drivers = array();
 
 		if ($cacheDrivers != null && is_array($cacheDrivers)) {
 			$drivers = $cacheDrivers;
 		} else {
 			// File System Driver
-			$drivers[] = new \Stash\Driver\FileSystem(['path' => Config::GetSetting('LIBRARY_LOCATION') . 'cache/']);
+			$fileSystem = new \Stash\Driver\FileSystem();
+			$fileSystem->setOptions(array('path' => Config::GetSetting('LIBRARY_LOCATION') . 'cache/'));
+			$drivers[] = $fileSystem;
 		}
 
 		// Always add the Ephemeral driver
 		$drivers[] = new \Stash\Driver\Ephemeral();
 
 		// Create a composite driver
-		$composite = new \Stash\Driver\Composite(['drivers' => $drivers]);
+		$composite = new \Stash\Driver\Composite();
+		$composite->setOptions(array('drivers' => $drivers));
 
 		// Create a pool using this driver set
 		self::$pool = new \Stash\Pool($composite);

@@ -302,7 +302,8 @@ class displayprofileDAO extends baseDAO {
         if (!$displayProfile->Save())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
 
-        PDOConnect::getPool()->deleteItem('display/');
+        $cache = PDOConnect::getPool()->getItem('display/');
+        $cache->clear();
 
         $response->SetFormSubmitResponse(__('Display Configuration Saved.'));
         $response->Respond();

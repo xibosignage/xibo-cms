@@ -15,6 +15,7 @@ use Stash;
 use Stash\Driver\Sub\Memcache as SubMemcache;
 use Stash\Driver\Sub\Memcached as SubMemcached;
 use Stash\Exception\RuntimeException;
+use Stash\Interfaces\DriverInterface;
 
 /**
  * Memcache is a wrapper around the popular memcache server. Memcache supports both memcache php
@@ -23,7 +24,7 @@ use Stash\Exception\RuntimeException;
  * @package Stash
  * @author  Robert Hafner <tedivm@tedivm.com>
  */
-class Memcache extends AbstractDriver
+class Memcache implements DriverInterface
 {
     /**
      * Memcache subdriver used by this class.
@@ -54,13 +55,15 @@ class Memcache extends AbstractDriver
     protected $keyCacheTimeLimit = 1;
 
     /**
-     * {@inheritdoc}
+     * Initializes the driver.
+     *
+     * @throws RuntimeException 'Extension is not installed.'
      */
-    public function getDefaultOptions()
+    public function __construct()
     {
-        return array(
-            'keycache_limit' => 1,
-        );
+        if (!static::isAvailable()) {
+            throw new RuntimeException('Extension is not installed.');
+        }
     }
 
     /**
@@ -81,10 +84,8 @@ class Memcache extends AbstractDriver
      *
      * @throws RuntimeException
      */
-    protected function setOptions(array $options = array())
+    public function setOptions(array $options = array())
     {
-        $options += $this->getDefaultOptions();
-
         if (!isset($options['servers'])) {
             $options['servers'] = array('127.0.0.1', 11211);
         }
@@ -94,7 +95,9 @@ class Memcache extends AbstractDriver
             $options['extension'] = 'any';
         }
 
-        $this->keyCacheTimeLimit = (int) $options['keycache_limit'];
+        if (isset($options['keycache_limit']) && is_numeric($options['keycache_limit'])) {
+            $this->keyCacheTimeLimit = $options['keycache_limit'];
+        }
 
         $extension = strtolower($options['extension']);
 
@@ -139,6 +142,13 @@ class Memcache extends AbstractDriver
         }
 
         return $normalizedServers;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function __destruct()
+    {
     }
 
     /**
@@ -237,13 +247,5 @@ class Memcache extends AbstractDriver
     public static function isAvailable()
     {
         return (SubMemcache::isAvailable() || SubMemcached::isAvailable());
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function isPersistent()
-    {
-        return true;
     }
 }

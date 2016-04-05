@@ -11,9 +11,7 @@
 
 namespace Stash;
 
-use PSR\Cache\CacheItemInterface;
 use Stash\Driver\Ephemeral;
-use Stash\Exception\InvalidArgumentException;
 use Stash\Interfaces\DriverInterface;
 use Stash\Interfaces\ItemInterface;
 use Stash\Interfaces\PoolInterface;
@@ -85,7 +83,7 @@ class Pool implements PoolInterface
     public function setItemClass($class)
     {
         if (!class_exists($class)) {
-            throw new InvalidArgumentException('Item class ' . $class . ' does not exist');
+            throw new \InvalidArgumentException('Item class ' . $class . ' does not exist');
         }
 
         $interfaces = class_implements($class, true);
@@ -102,17 +100,37 @@ class Pool implements PoolInterface
     /**
      * {@inheritdoc}
      */
-    public function getItem($key)
+    public function getItem()
     {
-        $keyString = trim($key, '/');
-        $key = explode('/', $keyString);
-        $namespace = empty($this->namespace) ? 'stash_default' : $this->namespace;
+        $args = func_get_args();
+        $argCount = count($args);
+
+        if ($argCount < 1) {
+            throw new \InvalidArgumentException('Item constructor requires a key.');
+        }
+
+        // check to see if a single array was used instead of multiple arguments
+        if ($argCount == 1 && is_array($args[0])) {
+            $args = $args[0];
+            $argCount = count($args);
+        }
+
+        if ($argCount == 1) {
+            $keyString = trim($args[0], '/');
+            $key = explode('/', $keyString);
+        } else {
+            $key = $args;
+        }
+
+        if (!($namespace = $this->getNamespace())) {
+            $namespace = 'stash_default';
+        }
 
         array_unshift($key, $namespace);
 
         foreach ($key as $node) {
-            if (!isset($node[1]) && strlen($node) < 1) {
-                throw new InvalidArgumentException('Invalid or Empty Node passed to getItem constructor.');
+            if (strlen($node) < 1) {
+                throw new \InvalidArgumentException('Invalid or Empty Node passed to getItem constructor.');
             }
         }
 
@@ -135,14 +153,13 @@ class Pool implements PoolInterface
     /**
      * {@inheritdoc}
      */
-    public function getItems(array $keys = array())
+    public function getItemIterator($keys)
     {
         // temporarily cheating here by wrapping around single calls.
 
         $items = array();
         foreach ($keys as $key) {
-            $item = $this->getItem($key);
-            $items[$item->getKey()] = $item;
+            $items[] = $this->getItem($key);
         }
 
         return new \ArrayIterator($items);
@@ -151,65 +168,7 @@ class Pool implements PoolInterface
     /**
      * {@inheritdoc}
      */
-    public function hasItem($key)
-    {
-        return $this->getItem($key)->isHit();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function save(CacheItemInterface $item)
-    {
-        return $item->save();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function saveDeferred(CacheItemInterface $item)
-    {
-        return $this->save($item);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function commit()
-    {
-        return true;
-    }
-
-
-    /**
-     * {@inheritdoc}
-     */
-    public function deleteItems(array $keys)
-    {
-        // temporarily cheating here by wrapping around single calls.
-        $items = array();
-        $results = true;
-        foreach ($keys as $key) {
-            $results = $this->deleteItem($key) && $results;
-        }
-
-        return $results;
-    }
-
-
-    /**
-     * {@inheritdoc}
-     */
-    public function deleteItem($key)
-    {
-        return $this->getItem($key)->clear();
-    }
-
-
-    /**
-     * {@inheritdoc}
-     */
-    public function clear()
+    public function flush()
     {
         if ($this->isDisabled) {
             return false;
@@ -268,6 +227,10 @@ class Pool implements PoolInterface
      */
     public function getDriver()
     {
+        if (!isset($this->driver)) {
+            $this->driver = new Ephemeral();
+        }
+
         return $this->driver;
     }
 

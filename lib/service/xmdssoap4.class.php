@@ -262,7 +262,7 @@ class XMDSSoap4
 
         $output = $cache->get();
 
-        if ($cache->isHit()) {
+        if (!$cache->isMiss()) {
             if ($this->isAuditing == 1)
                 Debug::Audit('Returning required files from Cache for display ' . $this->display . ' key ' . 'display/' . $this->displayId . '/requiredFiles', $this->displayId);
 
@@ -530,11 +530,8 @@ class XMDSSoap4
         $output = $requiredFilesXml->saveXML();
 
         // Cache
-        $cache->set($output);
-
         // Nonces expire after 10800 seconds (3 hours). This is the same as the nonce expiry.
-        $cache->expiresAfter(10800);
-        PDOConnect::getPool()->saveDeferred($cache);
+        $cache->set($output, 10800);
 
         // Log Bandwidth
         $this->LogBandwidth($this->displayId, Bandwidth::$RF, strlen($output));
@@ -679,7 +676,7 @@ class XMDSSoap4
 
         $output = $cache->get();
 
-        if ($cache->isHit()) {
+        if (!$cache->isMiss()) {
             if ($this->isAuditing == 1)
                 Debug::Audit('Returning schedule from Cache for display ' . $this->displayId, $this->displayId);
 
@@ -811,9 +808,7 @@ class XMDSSoap4
         if ($this->isAuditing == 1)
             Debug::Audit('Schedule not in Cache ' . $this->displayId . '. Will cache and expire after ' . ($toFilter - time()), $this->displayId);
 
-        $cache->set($output);
-        $cache->expiresAfter($toFilter - time());
-        PDOConnect::getPool()->saveDeferred($cache);
+        $cache->set($output, $toFilter - time());
 
         // Log Bandwidth
         $this->LogBandwidth($this->displayId, Bandwidth::$SCHEDULE, strlen($output));
