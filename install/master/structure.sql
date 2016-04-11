@@ -226,6 +226,7 @@ CREATE TABLE IF NOT EXISTS `group` (
   `IsUserSpecific` tinyint(4) NOT NULL DEFAULT '0',
   `IsEveryone` tinyint(4) NOT NULL DEFAULT '0',
   `libraryQuota` int(11) DEFAULT NULL,
+  `isSystemNotification` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`groupID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Groups' AUTO_INCREMENT=2 ;
 
