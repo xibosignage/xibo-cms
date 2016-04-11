@@ -4,13 +4,11 @@ Copyright (C) 2006-2016 Daniel Garner and Contributors.
 
 This is the **development branch** and represents the next generation of the Xibo CMS.
 
-At present you cannot upgrade an earlier version to this release.
-
 ## Licence
 Xibo is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
-any later version. 
+any later version.
 
 Xibo is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,11 +16,11 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
-along with Xibo.  If not, see <http://www.gnu.org/licenses/>. 
+along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 
 # Installation
 
-Installing an official release is [described in the manual](http://xibo.org.uk/manual/en/install_cms.html) and in the 
+Installing an official release is [described in the manual](http://xibo.org.uk/manual/en/install_cms.html) and in the
 official release notes of each release.
 
 # Developing
@@ -30,12 +28,12 @@ official release notes of each release.
 Xibo uses Vagrant and Docker to ensure all contributers have a repeatable development environment which is easy to get
 up and running.
 
-The very same Docker containers are used in our recommended end user installation to promote consistency from developement
+The very same Docker containers are used in our recommended end user installation to promote consistency from development
 to deployment.
 
 To these ends this repository includes a `Vagrantfile` to spin up an environment.
 
-## Prerequisits
+## Prerequisites
 
  - Git
  - [Composer](http://getcomposer.org)
@@ -73,9 +71,9 @@ vagrant up
 
 ## Installation Wizard
 
-Visit Xibo in the browser and follow the installation instructions. The CMS will be accessible at `localhost`. When 
+Visit Xibo in the browser and follow the installation instructions. The CMS will be accessible at `localhost`. When
 asked for a database you should select to create a new database and enter these details:
- 
+
  - Host: `mysql`
  - Admin User: `root`
  - Admin Password: `root`
@@ -83,13 +81,13 @@ asked for a database you should select to create a new database and enter these 
 When asked for a library location you should enter
 
  - /var/www/xibo/library
- 
+
 ## Under the hood
 
 Vagrant has created a virtual machine, installed Docker on it and then provisioned 3 Docker containers for Xibo to use.
 There is a container for the CMS web server, a container for the mysql database and a container for XMR.
 
-Your cloned repository is mapped into the Vagrant VM under `/data/web` and the Docker container mounts this as 
+Your cloned repository is mapped into the Vagrant VM under `/data/web` and the Docker container mounts this as
 `/var/www/xibo`. Changes you make to the source code on your host machine are immediately reflected in the nested VM
 and Docker container.
 
@@ -103,7 +101,7 @@ over SSH using `127.0.0.1` and the port/key file shown by `vagrant ssh-config`.
 The Xibo CMS now follows MVC and is PSR-4 compliant.
 
 The folder structure is as follows:
- 
+
  - /bin - CLI entry point
  - /install - Files related to install/upgrade
  - /lib/Controller - Controllers
@@ -138,5 +136,5 @@ This folder contains the Xibo CMS application.
 # Reporting Problems
 
 Support requests can be reported on the [Xibo Community
-Forum](https://community.xibo.org.uk/c/dev). Verified, re-producable bugs with this repository can be reported in 
+Forum](https://community.xibo.org.uk/c/dev). Verified, re-producable bugs with this repository can be reported in
 the [Xibo parent repository](https://github.com/xibosignage/xibo/issues).
