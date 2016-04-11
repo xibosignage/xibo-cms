@@ -138,24 +138,28 @@ class Install
 
                 // Create the user and grant privileges
                 if ($this->new_db_host == 'localhost') {
-                    $dbh->exec(sprintf('GRANT ALL PRIVILEGES ON `%s`.* to %s@%s IDENTIFIED BY %s',
-                            $this->new_db_name,
-                            $dbh->quote($this->new_db_user),
-                            $dbh->quote($this->new_db_host),
-                            $dbh->quote($this->new_db_pass))
+                    $sql = sprintf('GRANT ALL PRIVILEGES ON `%s`.* to %s@%s IDENTIFIED BY %s',
+                        $this->new_db_name,
+                        $dbh->quote($this->new_db_user),
+                        $dbh->quote($this->new_db_host),
+                        $dbh->quote($this->new_db_pass)
                     );
+
+                    $dbh->exec($sql);
                 } else {
-                    $dbh->exec(sprintf("GRANT ALL PRIVILEGES ON `%s`.* to %s@%% IDENTIFIED BY %s",
-                            $this->new_db_name,
-                            $dbh->quote($this->new_db_user),
-                            $dbh->quote($this->new_db_pass))
+                    $sql = sprintf('GRANT ALL PRIVILEGES ON `%s`.* to %s@\'%%\' IDENTIFIED BY %s',
+                        $this->new_db_name,
+                        $dbh->quote($this->new_db_user),
+                        $dbh->quote($this->new_db_pass)
                     );
+
+                    $dbh->exec($sql);
                 }
 
                 // Flush
                 $dbh->exec('FLUSH PRIVILEGES');
             } catch (\PDOException $e) {
-                throw new InstallationError(sprintf(__('Could not create a new user with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
+                throw new InstallationError(sprintf(__('Could not create a new user with the administrator details. Please check and try again. Error Message = [%s]. SQL = [%s].'), $e->getMessage(), $sql));
             }
 
             // Set our DB details
