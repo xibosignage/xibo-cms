@@ -20,9 +20,8 @@ class LibraryTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
 
         $object = json_decode($this->client->response->body());
-        fwrite(STDOUT, $this->client->response->body());
+      //  fwrite(STDOUT, $this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
-
 }
