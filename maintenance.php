@@ -43,6 +43,10 @@ require_once("lib/modules/module.interface.php");
 require_once("lib/modules/module.class.php");
 require_once("lib/modules/modulefactory.class.php");
 require_once('modules/module_user_general.php');
+require_once("3rdparty/psr-cache/src/CacheException.php");
+require_once("3rdparty/psr-cache/src/CacheItemInterface.php");
+require_once("3rdparty/psr-cache/src/CacheItemPoolInterface.php");
+require_once("3rdparty/psr-cache/src/InvalidArgumentException.php");
 
 // Required Config Files
 require_once("config/config.class.php");
@@ -63,6 +67,9 @@ spl_autoload_register(function ($class) {
     Kit::ClassLoader($class);
 });
 
+// Stash autoloader
+require ('3rdparty/stash/autoload.php');
+
 // parse and init the settings.php
 Config::Load();
 
@@ -73,6 +80,9 @@ try {
 catch (PDOException $e) {
     die('Database connection problem. ' . $e->getMessage());
 }
+
+// Configure Stash
+PDOConnect::configureCache((isset($cacheDrivers) ? $cacheDrivers : null), (isset($cacheNamespace) ? $cacheNamespace : null));
 
 date_default_timezone_set(Config::GetSetting("defaultTimezone"));
 
@@ -244,6 +254,14 @@ else
         }
 
         flush();
+
+        echo '<h1>' . __('Tidy Cache') . '</h1>';
+        if (Kit::GetParam('quick', _REQUEST, _INT) != 1) {
+            PDOConnect::getPool()->purge();
+            print __('Done.');
+        } else {
+            echo '-&gt;' . __('Disabled') . '<br/>\n';
+        }
 
         // Validate Display Licence Slots
         $maxDisplays = Config::GetSetting('MAX_LICENSED_DISPLAYS');

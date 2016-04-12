@@ -576,7 +576,7 @@ class layoutDAO extends baseDAO
             $row['description'] = $layout['description'];
             $row['tags'] = $layout['tags'];
             $row['owner'] = $user->getNameFromID($layout['ownerid']);
-            $row['permissions'] = $this->GroupsForLayout($layout['layoutid']);
+            $row['permissions'] = $layout['groups'];
 
             $row['thumbnail'] = '';
 
@@ -1196,47 +1196,6 @@ HTML;
 
         $response->SetFormSubmitResponse(__('Layout Copied'));
         $response->Respond();
-    }
-
-    /**
-     * Get a list of group names for a layout
-     * @param <type> $layoutId
-     * @return <type>
-     */
-    private function GroupsForLayout($layoutId)
-    {
-        $db =& $this->db;
-
-        Kit::ClassLoader('campaign');
-        $campaign = new Campaign($db);
-        $campaignId = $campaign->GetCampaignId($layoutId);
-
-        $SQL = '';
-        $SQL .= 'SELECT `group`.Group ';
-        $SQL .= '  FROM `group` ';
-        $SQL .= '   INNER JOIN lkcampaigngroup ';
-        $SQL .= '   ON `group`.GroupID = lkcampaigngroup.GroupID ';
-        $SQL .= ' WHERE lkcampaigngroup.CampaignID = %d ';
-
-        $SQL = sprintf($SQL, $campaignId);
-
-        if (!$results = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get group information for layout'), E_USER_ERROR);
-        }
-
-        $groups = '';
-
-        while ($row = $db->get_assoc_row($results))
-        {
-            $groups .= $row['Group'] . ', ';
-        }
-
-        $groups = trim($groups);
-        $groups = trim($groups, ',');
-
-        return $groups;
     }
 
     public function LayoutStatus() {

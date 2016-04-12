@@ -136,7 +136,7 @@ class datasetview extends Module
         $formFields[] = FormManager::AddText('ordering', __('Order'), $this->GetOption('ordering'),
             __('Please enter a SQL clause for how this dataset should be ordered'), 'o');
 
-        $formFields[] = FormManager::AddText('filter', __('Filter'), $this->GetOption('filter'), 
+        $formFields[] = FormManager::AddText('filter', __('Filter'), htmlentities($this->GetOption('filter')),
             __('Please enter a SQL clause to filter this DataSet.'), 'f');
 
         $formFields[] = FormManager::AddCheckbox('showHeadings', __('Show the table headings?'), 
@@ -216,6 +216,9 @@ class datasetview extends Module
         
         $formFields[] = FormManager::AddMultiText('styleSheet', NULL, (($rawNodes->length == 0) ? $this->DefaultStyleSheet() : $rawNode->nodeValue), 
             __('Enter a style sheet for the table'), 's', 10);
+
+        $formFields[] = FormManager::AddMultiText('noDataMessage', __('No Data Message'), $this->GetRawNode('noDataMessage'),
+            __('A message to display when no data is returned from the source'), 'n', 5);
 
         Theme::Set('form_fields_advanced', $formFields);
 
@@ -372,7 +375,7 @@ class datasetview extends Module
         $this->SetOption('duration', $this->duration);
         $this->SetOption('updateInterval', $updateInterval);
         $this->SetOption('rowsPerPage', $rowsPerPage);
-        $this->SetRaw('<styleSheet><![CDATA[' . $styleSheet . ']]></styleSheet>');
+        $this->SetRaw('<styleSheet><![CDATA[' . $styleSheet . ']]></styleSheet><noDataMessage><![CDATA[' . Kit::GetParam('noDataMessage', _POST, _HTMLSTRING) . ']]></noDataMessage>');
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -607,8 +610,13 @@ END;
             $rowCountThisPage++;
         }
 
-        $table .= '</tbody>';
-        $table .= '</table>';
+        if (count($dataSetResults['Rows']) <= 0) {
+            // Do we have a no-data message to display?
+            $table .= $this->GetRawNode('noDataMessage');
+        } else {
+            $table .= '</tbody>';
+            $table .= '</table>';
+        }
         $table .= '</div>';
 
         return $table;

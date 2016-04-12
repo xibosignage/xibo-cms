@@ -57,7 +57,7 @@ var text_callback = function(dialog)
 
     // Conjure up a text editor
     CKEDITOR.replace("ta_text");
-    
+
     CKEDITOR.instances["ta_text"].on('instanceReady', function() {
         var scale = $('#layout').attr('designer_scale');
 
@@ -84,10 +84,39 @@ var text_callback = function(dialog)
         
     });
 
+    if ($("#noDataMessage").length > 0) {
+        CKEDITOR.replace("noDataMessage");
+        CKEDITOR.instances["noDataMessage"].on('instanceReady', function () {
+
+            $("#cke_noDataMessage .cke_contents").css({
+                background: $('#layout').css('background-color')
+            });
+
+            $("#cke_noDataMessage iframe").css({
+                "background": "transparent"
+            });
+
+            // Reapply the background style after switching to source view and back to the normal editing view
+            CKEDITOR.instances["noDataMessage"].on('contentDom', function () {
+
+                $("#cke_noDataMessage .cke_contents").css({
+                    background: $('#layout').css('background-color')
+                });
+
+                $("#cke_noDataMessage iframe").css({
+                    "background": "transparent"
+                });
+            });
+        });
+    }
+
     // Make sure when we close the dialog we also destroy the editor
     dialog.on("hide", function() {
         if (CKEDITOR.instances["ta_text"] != undefined) {
             CKEDITOR.instances["ta_text"].destroy();
+        }
+        if (CKEDITOR.instances["noDataMessage"] != undefined) {
+            CKEDITOR.instances["noDataMessage"].destroy();
         }
     });
 
@@ -122,8 +151,41 @@ var datasetview_callback = function(dialog)
         dropOnEmpty: true
     }).disableSelection();
 
+    if ($("#noDataMessage").length > 0) {
+        CKEDITOR.replace("noDataMessage");
+        CKEDITOR.instances["noDataMessage"].on('instanceReady', function () {
+
+            $("#cke_noDataMessage .cke_contents").css({
+                background: $('#layout').css('background-color')
+            });
+
+            $("#cke_noDataMessage iframe").css({
+                "background": "transparent"
+            });
+
+            // Reapply the background style after switching to source view and back to the normal editing view
+            CKEDITOR.instances["noDataMessage"].on('contentDom', function () {
+
+                $("#cke_noDataMessage .cke_contents").css({
+                    background: $('#layout').css('background-color')
+                });
+
+                $("#cke_noDataMessage iframe").css({
+                    "background": "transparent"
+                });
+            });
+        });
+    }
+
+    // Make sure when we close the dialog we also destroy the editor
+    dialog.on("hide", function() {
+        if (CKEDITOR.instances["noDataMessage"] != undefined) {
+            CKEDITOR.instances["noDataMessage"].destroy();
+        }
+    });
+
     return false; //prevent submit
-}
+};
 
 var DataSetViewSubmit = function() {
     var form = $("#ModuleForm");

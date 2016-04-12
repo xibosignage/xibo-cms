@@ -38,6 +38,15 @@ class Debug
         }
     }
 
+    /**
+     * Forces a particular auditing level
+     * @param string $level either audit|info|error
+     */
+    public static function setLevel($level)
+    {
+        self::$_level = Debug::getLevel($level);
+    }
+
     public static function getLevel($type)
     {
         switch ($type) {
@@ -127,20 +136,6 @@ class Debug
      */
     function MailError($errmsg, $err) 
     {
-        return true;
-
-        $to = 'info@xibo.org.uk';
-        
-        $from = Config::GetSetting("mail_from");
-        if ($from == "") return true;
-        
-        $subject = "Error message from Digital Signage System";
-        $message = wordwrap("$errmsg\n$err");
-
-        $headers = "From: $from" . "\r\n" . "Reply-To: $from" . "\r\n" .
-                "X-Mailer: PHP/" . phpversion();
-
-        if (!mail($to, $subject, $message, $headers)) trigger_error("Mail not accepted", E_USER_NOTICE);
         return true;
     }
 

@@ -72,32 +72,53 @@ if (defined('XMDS') || $method != '')
                     header('HTTP/1.0 404 Not Found');
                 }
                 else {
-                    // Issue magic packet
-                    // Send via Apache X-Sendfile header?
-                    if ($sendFileMode == 'Apache') {
-                        Debug::LogEntry('audit', 'HTTP GetFile request redirecting to ' . Config::GetSetting('LIBRARY_LOCATION') . $file['storedAs'], 'services');
-                        header('X-Sendfile: ' . Config::GetSetting('LIBRARY_LOCATION') . $file['storedAs']);
-                    }
-                    // Send via Nginx X-Accel-Redirect?
-                    else if ($sendFileMode == 'Nginx') {
-                        header('X-Accel-Redirect: /download/' . $file['storedAs']);
-                    }
-                    else {
-                        header('HTTP/1.0 404 Not Found');
-                    }
+                    $logBandwidth = true;
 
-                    // Debug
-                    Debug::Audit('File request via magic packet. ' . $file['storedAs'], $file['displayId']);
+                    // Are we a DELETE request or otherwise?
+                    if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
+                        // Supply a header only, pointing to the original file name
+                        header('Content-Disposition: attachment; filename="' . $file['storedAs'] . '"');
+                        $logBandwidth = false;
+
+                    } else if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
+                        // Log bandwidth for the file being requested
+                        Debug::Audit('Delete request for ' . $file['storedAs'] . ' marking nonce as used.', $file['displayId']);
+
+                        $nonce->MarkUsed($file['nonceId']);
+                    } else {
+                        // Issue magic packet
+                        // Send via Apache X-Sendfile header?
+                        if ($sendFileMode == 'Apache') {
+                            Debug::LogEntry('audit', 'HTTP GetFile request redirecting to ' . Config::GetSetting('LIBRARY_LOCATION') . $file['storedAs'], 'services');
+                            header('X-Sendfile: ' . Config::GetSetting('LIBRARY_LOCATION') . $file['storedAs']);
+                        } // Send via Nginx X-Accel-Redirect?
+                        else if ($sendFileMode == 'Nginx') {
+                            header('X-Accel-Redirect: /download/' . $file['storedAs']);
+                        } else {
+                            header('HTTP/1.0 404 Not Found');
+                        }
+
+                        // Debug
+                        Debug::Audit('File request via magic packet. ' . $file['storedAs'], $file['displayId']);
+
+                        $nonce->MarkUsed($file['nonceId']);
+                    }
 
                     // Log bandwidth
-                    $bandwidth = new Bandwidth();
-                    $bandwidth->Log($file['displayId'], 4, $file['size']);
+                    if ($logBandwidth) {
+                        $bandwidth = new Bandwidth();
+                        $bandwidth->Log($file['displayId'], 4, $file['size']);
+                    }
                 }
                 exit;
             }
 
             try
             {
+                // Force auditing to be OFF
+                Debug::setLevel('error');
+
+                // Select the WSDL
                 $wsdl = 'lib/service/service_v' . $version . '.wsdl';
 
                 if (!file_exists($wsdl)) {

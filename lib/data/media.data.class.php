@@ -44,6 +44,8 @@ class Media extends Data
     public $moduleSystemFile;
     public $expires;
 
+    public $groups;
+
     public static function Entries($sort_order = array('name'), $filter_by = array())
     {
         $entries = array();
@@ -69,7 +71,14 @@ class Media extends Data
                 $SQL .= " tag.tag AS tags, ";
             else
                 $SQL .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
-            
+
+            // Groups
+            $SQL .= '(SELECT GROUP_CONCAT(DISTINCT `group`.Group) ';
+            $SQL .= '  FROM `group` ';
+            $SQL .= '   INNER JOIN lkmediagroup ';
+            $SQL .= '   ON `group`.GroupID = lkmediagroup.GroupID ';
+            $SQL .= ' WHERE lkmediagroup.MediaID = media.mediaID GROUP BY lkmediagroup.mediaId ) AS groups, ';
+
             $SQL .= "   media.originalFileName ";
             $SQL .= " FROM media ";
             $SQL .= "   LEFT OUTER JOIN media parentmedia ";
@@ -160,6 +169,7 @@ class Media extends Data
                 $media->valid = Kit::ValidateParam($row['valid'], _INT);
                 $media->moduleSystemFile = Kit::ValidateParam($row['moduleSystemFile'], _INT);
                 $media->expires = Kit::ValidateParam($row['expires'], _INT);
+                $media->groups = Kit::ValidateParam($row['groups'], _STRING);
 
                 $entries[] = $media;
             }
@@ -1006,6 +1016,25 @@ class Media extends Data
         try {
             $dbh = PDOConnect::init();
 
+            // Do we need to invalidate the display cache of any associated layouts?
+            // Get all associated campaigns
+            $sth = $dbh->prepare('
+              SELECT DISTINCT campaignId
+                FROM `lkcampaignlayout`
+                  INNER JOIN `lklayoutmedia`
+                  ON `lklayoutmedia`.layoutId = `lkcampaignlayout`.layoutId
+               WHERE `lklayoutmedia`.mediaId = :mediaId
+            ');
+            $sth->execute(array('mediaId' => $mediaId));
+
+            foreach ($sth->fetchAll(PDO::FETCH_ASSOC) as $campaign) {
+                Debug::Audit('Remove module file caused notify displays for campaign ' .  $campaign['campaignId']);
+
+                // Invalidate the cache on each
+                $displayObject = new Display();
+                $displayObject->NotifyDisplays($campaign['campaignId']);
+            }
+
             Debug::Audit('Removing: ' . $storedAs . ' ID:' . $mediaId);
         
             // Delete the links
@@ -1022,7 +1051,9 @@ class Media extends Data
                 ));
     
             // Delete the file itself (and any thumbs, etc)
-            return $this->DeleteMediaFile($storedAs);
+            $this->DeleteMediaFile($storedAs);
+
+            return true;
         }
         catch (Exception $e) {
             

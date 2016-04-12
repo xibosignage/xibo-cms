@@ -540,6 +540,9 @@ class Display extends Data {
                     'displayid' => $displayId
                 ));
 
+            $cache = PDOConnect::getPool()->getItem('display/' . $displayId);
+            $cache->clear();
+
             return true;
         }
         catch (Exception $e) {

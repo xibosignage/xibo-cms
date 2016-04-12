@@ -72,20 +72,6 @@ class database
 
         return $result;
     }
-    
-    function insert_query($SQL) 
-    {
-    	//executes a SQL query and returns the ID of the insert
-    	if(!$result = mysql_query($SQL, $this->connection))
-	{
-            $this->error_text="The query [".$SQL."] failed to execute";
-            return false;
-        }
-        else 
-	{
-            return mysql_insert_id();
-        }
-    }
 
     // gets the current row from the result object
     function get_row($result) 
@@ -103,14 +89,8 @@ class database
     {
         return mysql_num_rows($result);
     }
-
-    // Gets the number of fields
-    function num_fields($result) 
-    {
-        return mysql_num_fields($result);
-    }
     
-    function escape_string($string) 
+    function escape_string($string)
     {
     	return mysql_real_escape_string($string);
     }

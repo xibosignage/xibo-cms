@@ -513,7 +513,7 @@ class text extends Module
         $javaScriptContent .= '       $("#content").xiboTextRender(options, items); $("body").xiboLayoutScaler(options);';
         
         if ($clock)
-            $javaScriptContent .= ' updateClock(); setInterval(updateClock, 1000); moment.locale("' . TranslationEngine::GetJsLocale() . '"); ';
+            $javaScriptContent .= ' moment.locale("' . TranslationEngine::GetJsLocale() . '"); updateClock(); setInterval(updateClock, 1000); ';
 
         $javaScriptContent .= '   }); ';
 
@@ -535,6 +535,12 @@ class text extends Module
         // Add our fonts.css file
         $headContent  = '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
+
+        if ($this->GetOption('backgroundColor') != '') {
+            $headContent .= '<style type="text/css">';
+            $headContent .= ' body { background-color: ' . $this->GetOption('backgroundColor') . '; }';
+            $headContent .= '</style>';
+        }
 
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 

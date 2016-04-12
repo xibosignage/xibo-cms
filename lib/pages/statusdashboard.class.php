@@ -30,8 +30,10 @@ class statusdashboardDAO extends baseDAO {
         // Get some data for a bandwidth chart
         try {
             $dbh = PDOConnect::init();
-        
-            $sth = $dbh->prepare('SELECT FROM_UNIXTIME(month) AS month, IFNULL(SUM(Size), 0) AS size FROM `bandwidth` WHERE month > :month GROUP BY FROM_UNIXTIME(month) ORDER BY MIN(month);');
+
+            // Group by the the mysql MONTH function. Select the max month to output
+            // https://github.com/xibosignage/xibo/issues/762
+            $sth = $dbh->prepare('SELECT MAX(FROM_UNIXTIME(month)) AS month, IFNULL(SUM(Size), 0) AS size FROM `bandwidth` WHERE month > :month GROUP BY MONTH(FROM_UNIXTIME(month)) ORDER BY MIN(month);');
             $sth->execute(array('month' => time() - (86400 * 365)));
 
             $results = $sth->fetchAll();

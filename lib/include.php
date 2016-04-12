@@ -53,6 +53,10 @@ require_once("lib/Helper/Log.php");
 require_once("lib/Helper/ObjectVars.php");
 require_once("3rdparty/parsedown/parsedown.php");
 require_once("3rdparty/jdatetime/jdatetime.class.php");
+require_once("3rdparty/psr-cache/src/CacheException.php");
+require_once("3rdparty/psr-cache/src/CacheItemInterface.php");
+require_once("3rdparty/psr-cache/src/CacheItemPoolInterface.php");
+require_once("3rdparty/psr-cache/src/InvalidArgumentException.php");
 
 // Required Config Files
 require_once("config/config.class.php");
@@ -88,6 +92,9 @@ if (!file_exists("settings.php"))
 	die();
 }
 
+// Stash autoloader
+require ('3rdparty/stash/autoload.php');
+
 // parse and init the settings.php
 Config::Load();
 
@@ -121,6 +128,9 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 spl_autoload_register(function ($class) {
     Kit::ClassLoader($class);
 });
+
+// Configure Stash
+PDOConnect::configureCache((isset($cacheDrivers) ? $cacheDrivers : null), (isset($cacheNamespace) ? $cacheNamespace : null));
 
 // Define the VERSION
 Config::Version();

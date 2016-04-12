@@ -212,7 +212,7 @@ class contentDAO extends baseDAO {
 
 			$row['duration_text'] = ($filter_duration_in_seconds == 1) ? $row['duration'] : sec2hms($row['duration']);
 			$row['owner'] = $user->getNameFromID($row['ownerid']);
-			$row['permissions'] = $group = $this->GroupsForMedia($row['mediaid']);
+			$row['permissions'] = $row['groups'];
 			$row['revised'] = ($row['parentid'] != 0) ? 1 : 0;
 
 			// Display a friendly file size
@@ -482,43 +482,6 @@ HTML;
         Debug::LogEntry("audit", $complete_page, "FileUpload");
         Debug::LogEntry("audit", "[OUT]", "FileUpload");
         exit;
-    }
-
-    /**
-     * Get a list of group names for a layout
-     * @param <type> $layoutId
-     * @return <type>
-     */
-    private function GroupsForMedia($mediaId)
-    {
-        $db =& $this->db;
-
-        $SQL = '';
-        $SQL .= 'SELECT `group`.Group ';
-        $SQL .= '  FROM `group` ';
-        $SQL .= '   INNER JOIN lkmediagroup ';
-        $SQL .= '   ON `group`.GroupID = lkmediagroup.GroupID ';
-        $SQL .= ' WHERE lkmediagroup.MediaID = %d ';
-
-        $SQL = sprintf($SQL, $mediaId);
-
-        if (!$results = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get group information for media'), E_USER_ERROR);
-        }
-
-        $groups = '';
-
-        while ($row = $db->get_assoc_row($results))
-        {
-            $groups .= $row['Group'] . ', ';
-        }
-
-        $groups = trim($groups);
-        $groups = trim($groups, ',');
-
-        return $groups;
     }
 
     /**

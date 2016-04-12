@@ -52,7 +52,7 @@ class Nonce extends Data {
 
             $params = array(
                     'nonce' => $nonce,
-                    'expiry' => time() + 86400,
+                    'expiry' => time() + 10800,
                     'displayId' => $displayId
                 );
 
@@ -215,11 +215,9 @@ class Nonce extends Data {
             // Mark it as used
             $row = $results[0];
 
-            $this->MarkUsed($row['nonceId']);
-
             // Check whether its valid or not
-            if ($row['lastUsed'] != 0 || $row['expiry'] < time())
-            //if ($row['expiry'] < time())
+            //if ($row['lastUsed'] != 0 || $row['expiry'] < time())
+            if ($row['expiry'] < time())
                 return false;
 
             return $row;
@@ -235,7 +233,7 @@ class Nonce extends Data {
         }
     }
 
-    private function MarkUsed($id) {
+    public function MarkUsed($id) {
         try {
             $dbh = PDOConnect::init();
         

@@ -161,7 +161,12 @@ class Schedule extends Data
                         }
                         
                         // after we have added the appropriate amount, are we still valid
-                        if ($t_start_temp > $recToDT) break;
+                        if ($t_start_temp > $recToDT)
+                            break;
+
+                        // Check to make sure that our from/to date isn't longer than the first repeat
+                        if ($t_start_temp < $toDT)
+                            throw new \InvalidArgumentException(__('The first event repeat is inside the event from/to dates.'));
                         
                         if (!$this->AddDetail($displayGroupID, $t_start_temp, $t_end_temp, $userID, $eventID))
                             throw new Exception("Error Processing Request", 1);     
@@ -236,7 +241,19 @@ class Schedule extends Data
         
         try {
             $dbh = PDOConnect::init();
-        
+
+            // Get campaign Id
+            $sth = $dbh->prepare('SELECT campaignId FROM `schedule` WHERE eventId = :eventId');
+            $sth->execute(['eventId' => $eventID]);
+
+            $campaignId = $sth->fetchAll(PDO::FETCH_ASSOC);
+            $campaignId = $campaignId[0]['campaignId'];
+
+            // Notify (don't error)
+            $displayObject = new Display();
+            $displayObject->NotifyDisplays($campaignId);
+
+            // Delete
             if (!$this->DeleteScheduleForEvent($eventID))
                 throw new Exception("Error Processing Request", 1);
             

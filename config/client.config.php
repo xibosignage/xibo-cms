@@ -35,11 +35,21 @@ $CLIENT_CONFIG = array(
                     array(
                         'name' => 'CollectInterval',
                         'tabId' => 'general',
-                        'title' => __('Collection Interval (seconds)'),
+                        'title' => __('Collect interval'),
                         'type' => _INT,
-                        'fieldType' => 'number',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 60, 'value' => __('1 minute')),
+                            array('id' => 300, 'value' => __('5 minutes')),
+                            array('id' => 600, 'value' => __('10 minutes')),
+                            array('id' => 900, 'value' => __('15 minutes')),
+                            array('id' => 1800, 'value' => __('30 minutes')),
+                            array('id' => 3600, 'value' => __('1 hour')),
+                            array('id' => 14400, 'value' => __('4 hours')),
+                            array('id' => 43200, 'value' => __('12 hours'))
+                        ),
                         'default' => 900,
-                        'helpText' => __('The number of seconds between connections to the CMS.'),
+                        'helpText' => __('How often should the Player check for new content.'),
                         'validation' => 'numeric',
                         'enabled' => true,
                         'groupClass' => NULL
@@ -83,7 +93,7 @@ $CLIENT_CONFIG = array(
                         'title' => __('Enable stats reporting?'),
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
-                        'default' => 1,
+                        'default' => Theme::GetConfig('client_statsEnabled_default', 0),
                         'helpText' => __('Should the application send proof of play stats to the CMS.'),
                         'enabled' => true,
                         'groupClass' => NULL
@@ -517,6 +527,22 @@ $CLIENT_CONFIG = array(
                         'groupClass' => NULL
                     ),
                     array(
+                        'name' => 'logLevel',
+                        'tabId' => 'trouble',
+                        'title' => __('Log Level'),
+                        'type' => _WORD,
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 'audit', 'value' => 'Audit'),
+                            array('id' => 'error', 'value' => 'Error'),
+                            array('id' => 'off', 'value' => 'Off')
+                        ),
+                        'default' => 'error',
+                        'helpText' => __('The logging level that should be recorded by the Player.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
                         'name' => 'sendCurrentLayoutAsStatusUpdate',
                         'tabId' => 'advanced',
                         'title' => __('Notify current layout'),
@@ -557,6 +583,17 @@ $CLIENT_CONFIG = array(
                         'fieldType' => 'text',
                         'default' => '',
                         'helpText' => __('The Intent Action to use for requesting a screen shot. Leave empty to natively create an image from the player screen content.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'screenShotSize',
+                        'tabId' => 'advanced',
+                        'title' => __('Screen Shot Size'),
+                        'type' => _INT,
+                        'fieldType' => 'number',
+                        'default' => Theme::GetConfig('client_screenShotSize_default', 200),
+                        'helpText' => __('The size of the largest dimension. Empty or 0 means the screen size.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
@@ -605,6 +642,17 @@ $CLIENT_CONFIG = array(
                         'groupClass' => NULL
                     ),
                     array(
+                        'name' => 'statsEnabled',
+                        'tabId' => 'general',
+                        'title' => __('Enable stats reporting?'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => Theme::GetConfig('client_statsEnabled_default', 0),
+                        'helpText' => __('Should the application send proof of play stats to the CMS.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
                         'name' => 'webViewPluginState',
                         'tabId' => 'advanced',
                         'title' => __('WebView Plugin State'),
@@ -639,6 +687,22 @@ $CLIENT_CONFIG = array(
                         'fieldType' => 'checkbox',
                         'default' => 0,
                         'helpText' => __('The standard browser cache will be used - we recommend this is switched off unless specifically required. Effects Web Page and Embedded.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'hardwareAccelerateWebViewMode',
+                        'tabId' => 'advanced',
+                        'title' => __('Hardware Accelerate Web Content?'),
+                        'type' => _STRING,
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => '0', 'value' => __('Off')),
+                            array('id' => '2', 'value' => __('Off when transparent')),
+                            array('id' => '1', 'value' => __('On'))
+                        ),
+                        'default' => '1',
+                        'helpText' => __('Mode for hardware acceleration of web based content.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     )

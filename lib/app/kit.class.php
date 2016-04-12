@@ -472,7 +472,7 @@ class Kit
             $fullUrl .=  $_SERVER['SERVER_NAME'];
         }
 
-        return $fullUrl . $request[0];
+        return $fullUrl . '/' . ltrim($request[0], '/');
     }
 
     /**

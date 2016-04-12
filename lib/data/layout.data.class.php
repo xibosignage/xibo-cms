@@ -41,6 +41,7 @@ class Layout extends Data
     private $DomXml;
 
     public $delayFinalise = false;
+    public $groups;
 
     public static function Entries($sort_order = array(), $filter_by = array())
     {
@@ -65,6 +66,13 @@ class Layout extends Data
                 $SQL .= " tag.tag AS tags, ";
             else
                 $SQL .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
+
+            // Groups
+            $SQL .= ' (SELECT GROUP_CONCAT(DISTINCT `group`.Group) ';
+            $SQL .= '  FROM `group` ';
+            $SQL .= '   INNER JOIN lkcampaigngroup ';
+            $SQL .= '   ON `group`.GroupID = lkcampaigngroup.GroupID ';
+            $SQL .= ' WHERE lkcampaigngroup.CampaignID = `campaign`.campaignID GROUP BY lkcampaigngroup.CampaignID ) AS groups, ';
 
             // MediaID
             if (Kit::GetParam('mediaId', $filter_by, _INT, 0) != 0) {
@@ -222,6 +230,8 @@ class Layout extends Data
                 // Details for media assignment
                 $layout->regionId = Kit::ValidateParam($row['regionid'], _STRING);
                 $layout->lkLayoutMediaId = Kit::ValidateParam($row['lklayoutmediaid'], _INT);
+
+                $layout->groups = Kit::ValidateParam($row['groups'], _STRING);
 
                 $entries[] = $layout;
             }
@@ -1109,15 +1119,51 @@ class Layout extends Data
     {
         try {
             $dbh = PDOConnect::init();
+
+            $params = array(
+                'layoutId' => $layoutid,
+                'regionId' => $region,
+                'mediaId' => $mediaid
+            );
+
+            // Check to see if this link already exists
+            $sth = $dbh->prepare('SELECT `lklayoutmedia`.lkLayoutMediaId FROM `lklayoutmedia` WHERE layoutId = :layoutId AND regionId = :regionId AND mediaId = :mediaId');
+            $sth->execute($params);
+
+            $count = $sth->fetchAll(PDO::FETCH_ASSOC);
+
+            if (count($count) > 0) {
+                Debug::Audit('Returning existing lkLayoutMediaId ' . $count[0]['lkLayoutMediaId']);
+                return $count[0]['lkLayoutMediaId'];
+            }
         
-            $sth = $dbh->prepare('INSERT INTO lklayoutmedia (layoutID, regionID, mediaID) VALUES (:layoutid, :regionid, :mediaid)');
-            $sth->execute(array(
-                    'layoutid' => $layoutid,
-                    'regionid' => $region,
-                    'mediaid' => $mediaid
-                ));
+            $sth = $dbh->prepare('INSERT INTO lklayoutmedia (layoutID, regionID, mediaID) VALUES (:layoutId, :regionId, :mediaId)');
+            $sth->execute($params);
         
-            return $dbh->lastInsertId();  
+            $lkId = $dbh->lastInsertId();
+
+            // Do we need to invalidate the display cache of any associated layouts?
+            if ($region == 'module') {
+
+                // Get all associated campaigns
+                $sth = $dbh->prepare('
+                  SELECT DISTINCT campaignId
+                    FROM `lkcampaignlayout`
+                   WHERE `lkcampaignlayout`.layoutId = :layoutId
+                ');
+
+                $sth->execute(array('layoutId' => $layoutid));
+
+                foreach ($sth->fetchAll(PDO::FETCH_ASSOC) as $campaign) {
+                    Debug::Audit('Add Module Link caused notify displays for campaign ' .  $campaign['campaignId']);
+
+                    // Invalidate the cache on each
+                    $displayObject = new Display();
+                    $displayObject->NotifyDisplays($campaign['campaignId']);
+                }
+            }
+
+            return $lkId;
         }
         catch (Exception $e) {
             
@@ -1442,6 +1488,9 @@ class Layout extends Data
     
             if (count($regions) <= 0)
                 return 3;
+
+            // Assume OK
+            $status = 1;
     
             // Loop through each and build an array
             foreach ($regions as $region) {
@@ -1466,10 +1515,13 @@ class Layout extends Data
                     
                     // Create a media module to handle all the complex stuff
                     $tmpModule = ModuleFactory::load($mediaType, $layoutId, $region['regionid'], $mediaId, $lkId, $this->db, $user);
-                    $status = $tmpModule->IsValid();
+                    $mediaStatus = $tmpModule->IsValid();
     
-                    if ($status != 1)
-                        return $status;
+                    if ($mediaStatus == 3)
+                        return 3;
+                    else if ($mediaStatus > $status)
+                        $status = $mediaStatus;
+
                 }
 
                 Debug::LogEntry('audit', 'Finished with Region', 'layout', 'IsValid');
@@ -1478,7 +1530,7 @@ class Layout extends Data
             Debug::LogEntry('audit', 'Layout looks in good shape', 'layout', 'IsValid');
     
             // If we get to the end, we are OK!
-            return 1;  
+            return $status;
         }
         catch (Exception $e) {
             

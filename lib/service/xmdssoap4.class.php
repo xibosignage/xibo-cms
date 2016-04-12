@@ -31,6 +31,9 @@ class XMDSSoap4
     private $clientType;
     private $clientVersion;
     private $clientCode;
+    private $display;
+    private $loggedIn;
+    private $emailAlert;
 
     /**
      * Registers a new display
@@ -56,9 +59,6 @@ class XMDSSoap4
         $clientCode = Kit::ValidateParam($clientCode, _INT);
         $macAddress = Kit::ValidateParam($macAddress, _STRING);
         $clientAddress = $this->getIp();
-
-        // Audit in
-        Debug::Audit('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName);
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -127,6 +127,12 @@ class XMDSSoap4
             $emailAlert = Kit::ValidateParam($row['email_alert'], _INT);
             $loggedIn = Kit::ValidateParam($row['loggedin'], _INT);
             $isAuditing = Kit::ValidateParam($row['isAuditing'], _INT);
+
+            if ($isAuditing == 1)
+                Debug::setLevel('audit');
+
+            // Audit in
+            Debug::Audit('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName);
 
             // Determine if we are licensed or not
             if ($row['licensed'] == 0) {
@@ -215,8 +221,7 @@ class XMDSSoap4
         $this->LogBandwidth($displayId, Bandwidth::$REGISTER, strlen($returnXml));
 
         // Audit our return
-        if ($isAuditing == 1)
-            Debug::Audit($returnXml, $displayId);
+        Debug::Audit($returnXml, $displayId);
 
         return $returnXml;
     }
@@ -251,6 +256,21 @@ class XMDSSoap4
 
         if ($this->isAuditing == 1)
             Debug::Audit('hardwareKey = ' . $hardwareKey, $this->displayId);
+
+        // Check the cache
+        $cache = PDOConnect::getPool()->getItem('display/' . $this->displayId . '/requiredFiles');
+
+        $output = $cache->get();
+
+        if (!$cache->isMiss()) {
+            if ($this->isAuditing == 1)
+                Debug::Audit('Returning required files from Cache for display ' . $this->display . ' key ' . 'display/' . $this->displayId . '/requiredFiles', $this->displayId);
+
+            // Log Bandwidth
+            $this->logBandwidth($this->displayId, Bandwidth::$RF, strlen($output));
+
+            return $output;
+        }
 
         // Remove all Nonces for this display
         $nonce = new Nonce();
@@ -418,8 +438,17 @@ class XMDSSoap4
                 $file->setAttribute("md5", $md5);
 
                 if ($recordType == 'media' && $sendFileMode != 'Off') {
-                    // Serve a link instead (standard HTTP link)
-                    $file->setAttribute("path", Kit::GetXiboRoot() . '?file=' . $mediaNonce);
+                    $saveAsPath = Kit::GetXiboRoot() . '?file=' . $mediaNonce;
+                    // CDN?
+                    $cdnUrl = Config::GetSetting('CDN_URL');
+                    if ($cdnUrl != '') {
+                        // Serve a link instead (standard HTTP link)
+                        $file->setAttribute("path", 'http' . ((isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ? 's' : '') . '://' . $cdnUrl . urlencode($saveAsPath));
+                    } else {
+                        // Serve a link instead (standard HTTP link)
+                        $file->setAttribute("path", $saveAsPath);
+                    }
+
                     $file->setAttribute("saveAs", $path);
                     $file->setAttribute("download", 'http');
                 }
@@ -499,6 +528,10 @@ class XMDSSoap4
         // Return the results of requiredFiles()
         $requiredFilesXml->formatOutput = true;
         $output = $requiredFilesXml->saveXML();
+
+        // Cache
+        // Nonces expire after 10800 seconds (3 hours). This is the same as the nonce expiry.
+        $cache->set($output, 10800);
 
         // Log Bandwidth
         $this->LogBandwidth($this->displayId, Bandwidth::$RF, strlen($output));
@@ -638,6 +671,21 @@ class XMDSSoap4
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Sender', "This display client is not licensed");
 
+        // Check the cache
+        $cache = PDOConnect::getPool()->getItem('display/' . $this->displayId . '/schedule');
+
+        $output = $cache->get();
+
+        if (!$cache->isMiss()) {
+            if ($this->isAuditing == 1)
+                Debug::Audit('Returning schedule from Cache for display ' . $this->displayId, $this->displayId);
+
+            // Log Bandwidth
+            $this->logBandwidth($this->displayId, Bandwidth::$SCHEDULE, strlen($output));
+
+            return $output;
+        }
+
         $scheduleXml = new DOMDocument("1.0");
         $layoutElements = $scheduleXml->createElement("schedule");
 
@@ -755,6 +803,12 @@ class XMDSSoap4
             Debug::Audit($scheduleXml->saveXML(), $this->displayId);
 
         $output = $scheduleXml->saveXML();
+
+        // Cache
+        if ($this->isAuditing == 1)
+            Debug::Audit('Schedule not in Cache ' . $this->displayId . '. Will cache and expire after ' . ($toFilter - time()), $this->displayId);
+
+        $cache->set($output, $toFilter - time());
 
         // Log Bandwidth
         $this->LogBandwidth($this->displayId, Bandwidth::$SCHEDULE, strlen($output));
@@ -1091,7 +1145,7 @@ class XMDSSoap4
 
         // Touch the display record
         $displayObject = new Display();
-        $displayObject->Touch($this->displayId, array('mediaInventoryStatus' => $mediaInventoryComplete, 'mediaInventoryXml' => $inventory));
+        $displayObject->Touch($this->displayId, array('mediaInventoryStatus' => $mediaInventoryComplete, 'mediaInventoryXml' => $inventory, 'clientAddress' => $this->getIp()));
 
         $this->LogBandwidth($this->displayId, Bandwidth::$MEDIAINVENTORY, strlen($inventory));
 
@@ -1128,6 +1182,9 @@ class XMDSSoap4
         // Auth this request...
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Receiver', "This display client is not licensed");
+
+        // Update the last accessed date/logged in
+        $this->touchDisplay();
 
         // Validate the nonce
         $nonce = new Nonce();
@@ -1197,6 +1254,9 @@ class XMDSSoap4
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Receiver', 'This display client is not licensed');
 
+        // Update the last accessed date/logged in
+        $this->touchDisplay();
+
         if ($this->isAuditing == 1)
             Debug::Audit($status, $this->displayId);
 
@@ -1236,6 +1296,9 @@ class XMDSSoap4
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Receiver', 'This display client is not licensed');
 
+        // Update the last accessed date/logged in
+        $this->touchDisplay();
+
         if ($this->isAuditing == 1)
             Debug::Audit('Received Screen shot', $this->displayId);
 
@@ -1248,7 +1311,7 @@ class XMDSSoap4
 
         // Touch the display record
         $displayObject = new Display();
-        $displayObject->Touch($this->displayId, array('screenShotRequested' => 0));
+        $displayObject->Touch($this->displayId, array('screenShotRequested' => 0, 'clientAddress' => $this->getIp()));
 
         $this->LogBandwidth($this->displayId, Bandwidth::$SCREENSHOT, filesize($location));
 
@@ -1336,10 +1399,6 @@ class XMDSSoap4
             if ($row['licensed'] == 0)
                 return false;
 
-            // See if the client was off-line and if appropriate send an alert
-            // to say that it has come back on-line
-            $this->AlertDisplayUp($row['displayID'], $row['display'], $row['loggedin'], $row['email_alert']);
-
             // It is licensed?
             $this->licensed = true;
             $this->includeSchedule = $row['inc_schedule'];
@@ -1350,9 +1409,12 @@ class XMDSSoap4
             $this->clientVersion = $row['client_version'];
             $this->clientCode = $row['client_code'];
 
-            // Last accessed date on the display
-            $displayObject = new Display();
-            $displayObject->Touch($this->displayId, array('clientAddress' => $this->getIp()));
+            $this->display = $row['display'];
+            $this->loggedIn = $row['loggedin'];
+            $this->emailAlert = $row['email_alert'];
+
+            if ($this->isAuditing == 1)
+                Debug::setLevel('audit');
 
             return true;
         }
@@ -1360,6 +1422,16 @@ class XMDSSoap4
             Debug::Error('hardwareKey: ' . $hardwareKey . '. ' . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Touch Display
+     */
+    protected function touchDisplay()
+    {
+        // See if the client was off-line and if appropriate send an alert
+        // to say that it has come back on-line
+        $this->AlertDisplayUp($this->displayId, $this->display, $this->loggedIn, $this->emailAlert);
     }
 
     /**

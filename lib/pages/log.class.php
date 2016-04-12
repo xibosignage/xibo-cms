@@ -220,7 +220,7 @@ class logDAO extends baseDAO {
 		foreach ($log as $row) { 
 
             $row['logid'] = Kit::ValidateParam($row['logid'], _INT);
-			$row['logdate'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['logdate'], _STRING)), 'y-m-d h:i:s');
+			$row['logdate'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['logdate'], _STRING)), 'y-m-d h:i:s', false);
             $row['display'] = (Kit::ValidateParam($row['display'], _STRING) == '') ? __('CMS') : Kit::ValidateParam($row['display'], _STRING);
 			$row['page'] = Kit::ValidateParam($row['page'], _STRING);
 			$row['function'] = Kit::ValidateParam($row['function'], _STRING);
