@@ -4,7 +4,7 @@
   "steps": [
     {
       "step": "Allow integer priorities",
-      "action": "ALTER TABLE schedule MODIFY userID INT NOT NULL"
+      "action": "ALTER TABLE schedule MODIFY is_priority INT NOT NULL"
     }
   ]
 }
