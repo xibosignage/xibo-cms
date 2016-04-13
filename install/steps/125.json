@@ -1,0 +1,10 @@
+{
+  "dbVersion": 125,
+  "appVersion": "1.8.0-beta",
+  "steps": [
+    {
+      "step": "Allow integer priorities",
+      "action": "ALTER TABLE schedule MODIFY userID INT NOT NULL"
+    }
+  ]
+}
