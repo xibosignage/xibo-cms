@@ -223,7 +223,7 @@ class Session {
 
             $refreshExpiry = !($autoRefresh || ($page == 'clock' && $query == 'GetClock') || ($page == 'index' && $query == 'PingPong') || ($page == 'layout' && $query == 'LayoutStatus'));
 
-            $params = [
+            $params = array(
                 'session_id' => $key,
                 'session_data' => $val,
                 'session_data2' => $val,
@@ -241,7 +241,7 @@ class Session {
                 'expired2' => $this->isExpired,
                 'useragent' => substr(Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent'), 0, 253),
                 'remoteaddr' => Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING)
-            ];
+			);
 			
 			$sth = $dbh->prepare($sql);
 			$sth->execute($params);
