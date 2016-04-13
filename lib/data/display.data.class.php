@@ -567,22 +567,40 @@ class Display extends Data {
             $rfLookahead = $currentdate + $rfLookahead;
 
             // Which displays does a change to this layout effect?
-            $SQL  = " SELECT DISTINCT display.DisplayID ";
-            $SQL .= "   FROM schedule ";
-            $SQL .= "   INNER JOIN schedule_detail ";
-            $SQL .= "   ON schedule_detail.eventid = schedule.eventid ";
-            $SQL .= "   INNER JOIN lkdisplaydg ";
-            $SQL .= "   ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
-            $SQL .= "   INNER JOIN display ";
-            $SQL .= "   ON lkdisplaydg.DisplayID = display.displayID ";
-            $SQL .= " WHERE schedule.CampaignID = :campaignid ";
-            $SQL .= " AND schedule_detail.FromDT < :fromdt AND schedule_detail.ToDT > :todt ";
-            $SQL .= " UNION ";
-            $SQL .= " SELECT DISTINCT display.DisplayID ";
-            $SQL .= "   FROM display ";
-            $SQL .= "       INNER JOIN lkcampaignlayout ";
-            $SQL .= "       ON lkcampaignlayout.LayoutID = display.DefaultLayoutID ";
-            $SQL .= " WHERE lkcampaignlayout.CampaignID = :campaignid";
+            $SQL  = '
+                SELECT DISTINCT display.DisplayID
+                  FROM schedule
+                   INNER JOIN schedule_detail
+                   ON schedule_detail.eventid = schedule.eventid
+                   INNER JOIN lkdisplaydg
+                   ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID
+                   INNER JOIN display
+                   ON lkdisplaydg.DisplayID = display.displayID
+                 WHERE schedule.CampaignID = :campaignid
+                  AND schedule_detail.FromDT < :fromdt AND schedule_detail.ToDT > :todt
+                UNION
+                SELECT DISTINCT display.DisplayID
+                  FROM display
+                       INNER JOIN lkcampaignlayout
+                       ON lkcampaignlayout.LayoutID = display.DefaultLayoutID
+                 WHERE lkcampaignlayout.CampaignID = :campaignid
+                UNION
+                SELECT display.DisplayID
+                  FROM schedule
+                    INNER JOIN `lkcampaignlayout`
+                    ON `schedule`.campaignId = `lkcampaignlayout`.campaignId
+                    INNER JOIN schedule_detail
+                    ON schedule_detail.eventid = schedule.eventid
+                    INNER JOIN lkdisplaydg
+                    ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID
+                    INNER JOIN display
+                    ON lkdisplaydg.DisplayID = display.displayID
+                 WHERE `lkcampaignlayout`.layoutId IN (
+                  SELECT layoutId
+                    FROM `lkcampaignlayout`
+                   WHERE campaignId = 3
+                  )
+             ';
 
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(

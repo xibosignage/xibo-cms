@@ -365,7 +365,7 @@ class Session {
 	 */
 	private function beginTransaction()
 	{
-		if (!$this->getDb()->inTransaction()) {
+		if (!$this->getDb()->inTransaction() && DBVERSION > 91) {
 			$this->pdo->exec('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
 			$this->pdo->beginTransaction();
 		}
