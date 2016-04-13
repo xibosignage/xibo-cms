@@ -395,7 +395,7 @@ class Session implements \SessionHandlerInterface
      */
     private function beginTransaction()
     {
-        if (!$this->getDb()->getConnection()->inTransaction()) {
+        if (!$this->getDb()->getConnection()->inTransaction() && DBVERSION > 91) {
             $this->getDb()->getConnection()->exec('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
             $this->getDb()->getConnection()->beginTransaction();
         }
