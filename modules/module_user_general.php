@@ -31,7 +31,7 @@ class User {
     private $_myGroups = null;
 
     /** @var array Cached User Name lookup */
-    private $_cacheUsername = [];
+    private $_cacheUsername = array();
     
     public function __construct(database $db = NULL)
     {
