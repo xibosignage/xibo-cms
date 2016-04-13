@@ -345,7 +345,7 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="isPriority",
      *      in="formData",
-     *      description="A 0|1 flag indicating whether this event should be considered priority",
+     *      description="An integer indicating the priority of this event. Normal events have a priority of 0.",
      *      type="integer",
      *      required=true
      *   ),
@@ -425,7 +425,7 @@ class Schedule extends Base
         $schedule->campaignId = $this->getSanitizer()->getInt('campaignId');
         $schedule->commandId = $this->getSanitizer()->getInt('commandId');
         $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder', 0);
-        $schedule->isPriority = $this->getSanitizer()->getCheckbox('isPriority');
+        $schedule->isPriority = $this->getSanitizer()->getInt('isPriority');
         $schedule->dayPartId = $this->getSanitizer()->getCheckbox('dayPartId', 0);
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
@@ -567,7 +567,7 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="isPriority",
      *      in="formData",
-     *      description="A 0|1 flag indicating whether this event should be considered priority",
+     *      description="An integer indicating the priority of this event. Normal events have a priority of 0.",
      *      type="integer",
      *      required=true
      *   ),
@@ -644,7 +644,7 @@ class Schedule extends Base
         $schedule->campaignId = $this->getSanitizer()->getInt('campaignId');
         $schedule->commandId = $this->getSanitizer()->getInt('commandId');
         $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder');
-        $schedule->isPriority = $this->getSanitizer()->getCheckbox('isPriority');
+        $schedule->isPriority = $this->getSanitizer()->getInt('isPriority');
         $schedule->dayPartId = $this->getSanitizer()->getCheckbox('dayPartId');
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');

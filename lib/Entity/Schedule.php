@@ -103,7 +103,7 @@ class Schedule implements \JsonSerializable
 
     /**
      * @SWG\Property(
-     *  description="Flag indicating whether the event should be considered priority or not."
+     *  description="Integer indicating the event priority."
      * )
      * @var int
      */
