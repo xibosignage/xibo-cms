@@ -88,7 +88,7 @@ class Upgrade implements \JsonSerializable
                 if (!class_exists($class))
                     throw new \InvalidArgumentException(__('PHP step class does not exist'));
 
-                $object = new $class();
+                $object = new $class($this->store, $this->log, $this->config);
                 /* @var Step $object */
                 $object->doStep($this->container);
 
