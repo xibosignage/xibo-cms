@@ -88,7 +88,7 @@
     },
     {
       "step": "Add New Pages",
-      "action": "INSERT INTO `pages` (`pageID`, `name`) VALUES (NULL, 'region'), (NULL, 'playlist'), (NULL, 'maintenance');"
+      "action": "INSERT INTO `pages` (`pageID`, `name`, `title`) VALUES (NULL, 'region', ''), (NULL, 'playlist', ''), (NULL, 'maintenance', '');"
     },
     {
       "step": "Link Region Page",
@@ -163,7 +163,11 @@
       "action": "DELETE FROM module WHERE module = 'counter';"
     },
     {
-      "step": "Upgrade Layouts",
+      "step": "Upgrade Layouts - Ensure Layout XML field is nullable",
+      "action": "ALTER TABLE test.layout MODIFY xml longtext;"
+    },
+    {
+      "step": "Upgrade Layouts - Convert existing Layouts",
       "type": "php",
       "action": "Xibo\\Upgrade\\LayoutStructureStep"
     },
@@ -187,6 +191,10 @@
     {
       "step": "Upgrade API - Drop the File Table",
       "action": "DROP TABLE  `file`;"
+    },
+    {
+      "step": "Removal all old XMDS nonces",
+      "action": "TRUNCATE TABLE `xmdsnonce`;"
     },
     {
       "step": "Upgrade XMDS - Part 1",

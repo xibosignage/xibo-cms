@@ -278,6 +278,7 @@ class Session implements \SessionHandlerInterface
      */
     public function gc($maxLifetime)
     {
+        $this->log->error('GC Called');
         $this->gcCalled = true;
         return true;
     }
@@ -395,7 +396,7 @@ class Session implements \SessionHandlerInterface
      */
     private function beginTransaction()
     {
-        if (!$this->getDb()->getConnection()->inTransaction() && DBVERSION > 91) {
+        if (!$this->getDb()->getConnection()->inTransaction() && DBVERSION > 122) {
             $this->getDb()->getConnection()->exec('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
             $this->getDb()->getConnection()->beginTransaction();
         }
