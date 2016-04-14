@@ -541,7 +541,7 @@ class DataSet implements \JsonSerializable
         $keys[] = 'id';
 
         $values = array_values($row);
-        $values[] = 'NULL';
+        $values[] = NULL;
 
         $sql = 'INSERT INTO `dataset_' . $this->dataSetId . '` (`' . implode('`, `', $keys) . '`) VALUES (' . implode(',', array_fill(0, count($values), '?')) . ')';
 

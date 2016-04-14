@@ -163,9 +163,9 @@ class UpgradeFactory extends BaseFactory
                 $config = json_decode(file_get_contents($currentStep), true);
 
                 foreach ($config['steps'] as $step) {
-                    // If the step defines a from version (i.e. 85) and we are going from a version
-                    // greater than that, we skip as we have corrected the original statement
-                    if (isset($step['fixedIn']) && $step['fixedIn'] <= $from)
+                    // If the step defines a fixedIn version (i.e. 85)
+                    // only run if we are going from a version which is after that
+                    if (isset($step['fixedIn']) && $step['fixedIn'] > $from)
                         continue;
 
                     if (!isset($step['type']))

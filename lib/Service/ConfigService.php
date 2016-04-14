@@ -53,6 +53,10 @@ class ConfigService implements ConfigServiceInterface
     public $envFault = false;
     public $envWarning = false;
 
+    /**
+     * Database Config
+     * @var array
+     */
     public static $dbConfig = [];
 
     //
@@ -114,6 +118,14 @@ class ConfigService implements ConfigServiceInterface
             throw new \RuntimeException('Config Service called before setDependencies');
 
         return $this->store;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getDatabaseConfig()
+    {
+        return self::$dbConfig;
     }
 
     /**
