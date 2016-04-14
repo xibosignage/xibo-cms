@@ -244,7 +244,7 @@ class Schedule extends Data
 
             // Get campaign Id
             $sth = $dbh->prepare('SELECT campaignId FROM `schedule` WHERE eventId = :eventId');
-            $sth->execute(['eventId' => $eventID]);
+            $sth->execute(array('eventId' => $eventID));
 
             $campaignId = $sth->fetchAll(PDO::FETCH_ASSOC);
             $campaignId = $campaignId[0]['campaignId'];
