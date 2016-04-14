@@ -34,6 +34,12 @@ interface ConfigServiceInterface
     public function setPool($pool);
 
     /**
+     * Get Database Config
+     * @return array
+     */
+    public function getDatabaseConfig();
+
+    /**
      * Gets the requested setting from the DB object given
      * @param $setting string
      * @param string[optional] $default

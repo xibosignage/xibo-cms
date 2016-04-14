@@ -50,7 +50,7 @@ class MyIsamToInnoDbStep implements Step
         $sql = '
           SELECT TABLE_NAME
             FROM INFORMATION_SCHEMA.TABLES
-           WHERE TABLE_SCHEMA = \'' . $this->config->dbConfig['name']  . '\'
+           WHERE TABLE_SCHEMA = \'' . $this->config->getDatabaseConfig()['name']  . '\'
             AND ENGINE = \'MyISAM\'
         ';
 
