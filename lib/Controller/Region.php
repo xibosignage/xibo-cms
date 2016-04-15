@@ -9,7 +9,7 @@
 namespace Xibo\Controller;
 
 
-use Xibo\Entity\Layout;
+//use Xibo\Entity\Layout;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Widget;
@@ -417,9 +417,9 @@ class Region extends Base
 
         // Mark the layout as needing rebuild
         $layout = $this->layoutFactory->getById($region->layoutId);
-        $layout->load(Layout::$loadOptionsMinimum);
+        $layout->load(\Xibo\Entity\Layout::$loadOptionsMinimum);
         $layout->setBuildRequired();
-        $layout->save(Layout::$saveOptionsMinimum);
+        $layout->save(\Xibo\Entity\Layout::$saveOptionsMinimum);
 
         // Return
         $this->getState()->hydrate([

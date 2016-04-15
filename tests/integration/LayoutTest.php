@@ -10,6 +10,7 @@ namespace Xibo\Tests\Integration;
 
 use Xibo\Helper\Random;
 use Xibo\Entity\Layout;
+use Xibo\Entity\Region;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
@@ -59,6 +60,8 @@ class LayoutTest extends LocalWebTestCase
         $this->assertSame(0, $layout->retired, 'Retired flag not updated. ' . $this->client->response->body());
     }
 
+    // List all Layouts test
+
     public function testListAll()
     {
         $this->client->get('/layout');
@@ -72,7 +75,9 @@ class LayoutTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
 
-        public function testAdd()
+    // Add new layout Test
+
+    public function testAdd()
     {
         $name = Random::generateString(8, 'phpunit');
 
@@ -84,7 +89,7 @@ class LayoutTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
 
         $object = json_decode($this->client->response->body());
-       // fwrite(STDOUT, $this->client->response->body());
+    //    fwrite(STDOUT, $this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
@@ -100,7 +105,7 @@ class LayoutTest extends LocalWebTestCase
      * @depends testAdd
      */
 
-        public function testEdit($layoutId)
+    public function testEdit($layoutId)
     {
         $layout = $this->container->layoutFactory->getById($layoutId);
 
@@ -108,8 +113,12 @@ class LayoutTest extends LocalWebTestCase
 
         $this->client->put('/layout/' . $layoutId, [
             'name' => $name,
-            'description' => 'edited',
-            'bckgroundColor' => $layout->backgroundColor,
+            'description' => $layout->description,
+            'tags' => $layout->tags,
+            'retire' => 0,
+            'backgroundColor' => $layout->backgroundColor,
+            'backgroundImageId' => $layout->backgroundImageId,
+            'backgroundzIndex' => $layout->backgroundzIndex,
             'resolutionId' => 9
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
@@ -132,7 +141,7 @@ class LayoutTest extends LocalWebTestCase
      * Test delete
      * @param int $layoutId
      * @depends testAdd
-     */
+     */ 
         public function testDelete($layoutId)
     {
         $this->client->delete('/layout/' . $layoutId);
@@ -153,4 +162,89 @@ Delete specific layout
     }
 
     */
+
+    // Copy Layout Test
+
+    public function testCopy()
+    {
+    
+        // Get any layout
+        $layout = $this->container->layoutFactory->query(null, ['start' => 1, 'length' => 1])[0];
+
+        // Generate new random name
+        $name = Random::generateString(8, 'phpunit');
+        // Call copy
+        $this->client->post('/layout/copy/' . $layout->layoutId, [
+            'name' => $name,
+            'description' => 'Copy',
+            'copyMediaFiles' => 0
+            ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+
+        $this->assertSame(200, $this->client->response->status());
+
+        $object = json_decode($this->client->response->body());
+  //      fwrite(STDERR, $this->client->response->body());
+        $this->assertObjectHasAttribute('data', $object);
+        $this->assertObjectHasAttribute('id', $object);
+        $this->assertSame($name, $object->data->layout);
+
+        return $object->id;
+    }
+
+// add new region to specific layout
+        public function testAddRegion()
+    {
+        $this->client->post('/region/' . 3);
+
+        $this->assertSame(200, $this->client->response->status());
+
+        $object = json_decode($this->client->response->body());
+  //      fwrite(STDERR, $this->client->response->body());
+
+        return $object->id;
+    }
+
+// Add new region to a copied layout
+
+    public function testAddRegion2($layoutId)
+    {
+       $layout = $this->container->layoutFactory->getById($layoutId);
+
+        $this->client->post('/region/' . $layout->$layoutId);
+
+        $this->assertSame(200, $this->client->response->status());
+
+        $object = json_decode($this->client->response->body());
+  //      fwrite(STDERR, $this->client->response->body());
+
+        return $object->id;
+    }
+
+
+ // Edit region added earlier
+
+    public function testEditRegion($regionId)
+    {
+
+        $this->client->put('/region/' . $regionId, [
+            'width' => 500,
+            'height' => 500,
+            'loop' => 0
+            ]);
+        
+        $this->assertSame(200, $this->client->response->status());
+
+        $object = json_decode($this->client->response->body());
+   //     fwrite(STDERR, $this->client->response->body());
+    }
+
+
+    public function testDeleteRegion($regionId)
+    {
+        $this->client->delete('/region/' . $regionId);
+
+        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+    }
+
   }
+  
