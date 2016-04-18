@@ -988,6 +988,9 @@ function XiboSubmitResponse(response, form) {
 
         // Do we need to fire a callback function?
         if (response.callBack != null && response.callBack != "") {
+            if (response.callBack.indexOf("()") == -1)
+                response.callBack = response.callBack + "()";
+
             eval(response.callBack);
         }
 
