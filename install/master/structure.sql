@@ -1069,3 +1069,10 @@ CREATE TABLE IF NOT EXISTS `notification` (
   `userId` int(11) NOT NULL,
   PRIMARY KEY (`notificationId`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `lkwidgetaudio` (
+  widgetId int NOT NULL,
+  mediaId int NOT NULL,
+  volume tinyint DEFAULT 100,
+  `loop` tinyint DEFAULT 0
+);

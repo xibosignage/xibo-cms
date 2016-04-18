@@ -24,6 +24,7 @@ namespace Xibo\Entity;
 
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\WidgetAudioFactory;
 use Xibo\Factory\WidgetMediaFactory;
 use Xibo\Factory\WidgetOptionFactory;
 use Xibo\Service\DateServiceInterface;
@@ -102,6 +103,12 @@ class Widget implements \JsonSerializable
     public $mediaIds = [];
 
     /**
+     * @SWG\Property(description="An array of Audio MediaIds this widget is linked to")
+     * @var WidgetAudio[]
+     */
+    public $audio = [];
+
+    /**
      * @SWG\Property(description="An array of permissions for this widget")
      * @var Permission[]
      */
@@ -150,6 +157,9 @@ class Widget implements \JsonSerializable
      */
     private $widgetMediaFactory;
 
+    /** @var  WidgetAudioFactory */
+    private $widgetAudioFactory;
+
     /**
      * @var PermissionFactory
      */
@@ -162,15 +172,17 @@ class Widget implements \JsonSerializable
      * @param DateServiceInterface $date
      * @param WidgetOptionFactory $widgetOptionFactory
      * @param WidgetMediaFactory $widgetMediaFactory
+     * @param WidgetAudioFactory $widgetAudioFactory
      * @param PermissionFactory $permissionFactory
      */
-    public function __construct($store, $log, $date, $widgetOptionFactory, $widgetMediaFactory, $permissionFactory)
+    public function __construct($store, $log, $date, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->excludeProperty('module');
         $this->dateService = $date;
         $this->widgetOptionFactory = $widgetOptionFactory;
         $this->widgetMediaFactory = $widgetMediaFactory;
+        $this->widgetAudioFactory = $widgetAudioFactory;
         $this->permissionFactory = $permissionFactory;
     }
 
@@ -336,6 +348,59 @@ class Widget implements \JsonSerializable
     }
 
     /**
+     * Assign Audio Media
+     * @param WidgetAudio $audio
+     */
+    public function assignAudio($audio)
+    {
+        $this->load();
+
+        if (!in_array($audio, $this->audio))
+            $this->audio[] = $audio;
+
+        // Assign the media
+        $this->assignMedia($audio->mediaId);
+    }
+
+    /**
+     * Unassign Audio Media
+     * @param WidgetAudio $audio
+     */
+    public function unassignAudio($audio)
+    {
+        $this->load();
+
+        $this->audio = array_diff($this->audio, [$audio]);
+
+        // Unassign the media
+        $this->unassignMedia($audio->mediaId);
+    }
+
+    /**
+     * Unassign Audio Media
+     * @param int $mediaId
+     */
+    public function unassignAudioById($mediaId)
+    {
+        $this->load();
+
+        foreach ($this->audio as $audio) {
+
+            if ($audio->mediaId == $mediaId)
+                $this->unassignAudio($audio);
+        }
+    }
+
+    /**
+     * Count Audio
+     * @return int
+     */
+    public function countAudio()
+    {
+        return count($this->audio);
+    }
+
+    /**
      * Have the media assignments changed.
      */
     public function hasMediaChanged()
@@ -360,6 +425,9 @@ class Widget implements \JsonSerializable
         // Load any media assignments for this widget
         $this->mediaIds = $this->widgetMediaFactory->getByWidgetId($this->widgetId);
 
+        // Load any widget audio assignments
+        $this->audio = $this->widgetAudioFactory->getByWidgetId($this->widgetId);
+
         $this->hash = $this->hash();
         $this->mediaHash = $this->mediaHash();
         $this->loaded = true;
@@ -374,6 +442,7 @@ class Widget implements \JsonSerializable
         // Default options
         $options = array_merge([
             'saveWidgetOptions' => true,
+            'saveWidgetAudio' => true,
             'notify' => true
         ], $options);
 
@@ -393,6 +462,17 @@ class Widget implements \JsonSerializable
                 // Assert the widgetId
                 $widgetOption->widgetId = $this->widgetId;
                 $widgetOption->save();
+            }
+        }
+
+        // Save the widget audio
+        if ($options['saveWidgetAudio']) {
+            foreach ($this->audio as $audio) {
+                /* @var \Xibo\Entity\WidgetAudio $audio */
+
+                // Assert the widgetId
+                $audio->widgetId = $this->widgetId;
+                $audio->save();
             }
         }
 
@@ -429,6 +509,15 @@ class Widget implements \JsonSerializable
             // Assert the widgetId
             $widgetOption->widgetId = $this->widgetId;
             $widgetOption->delete();
+        }
+
+        // Delete the widget audio
+        foreach ($this->audio as $audio) {
+            /* @var \Xibo\Entity\WidgetAudio $audio */
+
+            // Assert the widgetId
+            $audio->widgetId = $this->widgetId;
+            $audio->delete();
         }
 
         // Unlink Media

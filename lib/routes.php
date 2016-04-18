@@ -141,6 +141,8 @@ $app->post('/playlist/widget/:type/:id', '\Xibo\Controller\Module:addWidget')->n
 $app->put('/playlist/widget/:id', '\Xibo\Controller\Module:editWidget')->name('module.widget.edit');
 $app->delete('/playlist/widget/:id', '\Xibo\Controller\Module:deleteWidget')->name('module.widget.delete');
 $app->put('/playlist/widget/transition/:type/:id', '\Xibo\Controller\Module:editWidgetTransition')->name('module.widget.transition.edit');
+$app->put('/playlist/widget/:id/audio', '\Xibo\Controller\Module:widgetAudio')->name('module.widget.audio');
+$app->delete('/playlist/widget/:id/audio', '\Xibo\Controller\Module:widgetAudio');
 
 /**
  * Campaign
