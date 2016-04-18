@@ -60,7 +60,9 @@ class LayoutTest extends LocalWebTestCase
         $this->assertSame(0, $layout->retired, 'Retired flag not updated. ' . $this->client->response->body());
     }
 
-    // List all Layouts test
+    /**
+    *  List all layouts Test
+    */ 
 
     public function testListAll()
     {
@@ -75,7 +77,9 @@ class LayoutTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
 
-    // Add new layout Test
+    /**
+    *  Add new layout test
+    */ 
 
     public function testAdd()
     {
@@ -163,7 +167,9 @@ Delete specific layout
 
     */
 
-    // Copy Layout Test
+    /**
+    *  Copy Layout Test
+    */ 
 
     public function testCopy()
     {
@@ -191,7 +197,9 @@ Delete specific layout
         return $object->id;
     }
 
-// add new region to specific layout
+    /**
+    *  Add new region to a specific layout
+    */ 
         public function testAddRegion()
     {
         $this->client->post('/region/' . 3);
@@ -204,7 +212,10 @@ Delete specific layout
         return $object->id;
     }
 
-// Add new region to a copied layout
+    /**
+    *  Add new region to Copied Layout
+    *  @depends testCopy
+    */ 
 
     public function testAddRegion2($layoutId)
     {
@@ -221,7 +232,10 @@ Delete specific layout
     }
 
 
- // Edit region added earlier
+    /**
+    *  Edit region test
+    *  @depends testAddRegion2
+    */ 
 
     public function testEditRegion($regionId)
     {
@@ -238,6 +252,10 @@ Delete specific layout
    //     fwrite(STDERR, $this->client->response->body());
     }
 
+   /**
+    *  delete region test
+    *  @depends testAddRegion2
+    */ 
 
     public function testDeleteRegion($regionId)
     {
@@ -247,4 +265,3 @@ Delete specific layout
     }
 
   }
-  

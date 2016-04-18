@@ -90,6 +90,26 @@ class DataSetTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
 
+   
+    /**
+     * Search columns for DataSet
+     */
+
+   public function testListAllColumns($dataSetId)
+    {
+
+        $dataSet = $this->container->dataSetFactory->getById($dataSetId);
+
+        $this->client->get('/dataset' . $dataSetId . '/column');
+
+        $this->assertSame(200, $this->client->response->status());
+        $this->assertNotEmpty($this->client->response->body());
+
+        $object = json_decode($this->client->response->body());
+
+        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+    }
+
     /**
      * Test adding a column
      */
@@ -124,4 +144,16 @@ class DataSetTest extends LocalWebTestCase
         $this->assertSame($name, $object->data->heading);
         return $object->id;
     }
+
+    /**
+     * @param $dataSetId
+     * @depends testColumnAdd
+     */
+    public function testDeleteColumn($dataSetId, $dataSetColumnId)
+    {
+        $this->client->delete('/dataset/' . $dataSetId . '/column/' . $dataSetColumnId);
+
+        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+    }
+
 }
