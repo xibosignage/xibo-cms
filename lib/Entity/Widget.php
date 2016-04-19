@@ -141,6 +141,9 @@ class Widget implements \JsonSerializable
     /** @var array[int] Original Media IDs */
     private $originalMediaIds = [];
 
+    /** @var array[WidgetAudio] Original Widget Audio */
+    private $originalAudio = [];
+
     /**
      * Minimum duration for widgets
      * @var int
@@ -462,6 +465,7 @@ class Widget implements \JsonSerializable
 
         // Load any widget audio assignments
         $this->audio = $this->widgetAudioFactory->getByWidgetId($this->widgetId);
+        $this->originalAudio = $this->audio;
 
         $this->hash = $this->hash();
         $this->mediaHash = $this->mediaHash();
@@ -508,6 +512,22 @@ class Widget implements \JsonSerializable
                 // Assert the widgetId
                 $audio->widgetId = $this->widgetId;
                 $audio->save();
+            }
+
+            $removedAudio = array_udiff($this->originalAudio, $this->audio, function($a, $b) {
+                /**
+                 * @var WidgetAudio $a
+                 * @var WidgetAudio $b
+                 */
+                return $a->getId() - $b->getId();
+            });
+
+            foreach ($removedAudio as $audio) {
+                /* @var \Xibo\Entity\WidgetAudio $audio */
+
+                // Assert the widgetId
+                $audio->widgetId = $this->widgetId;
+                $audio->delete();
             }
         }
 

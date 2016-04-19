@@ -662,18 +662,52 @@ class Module extends Base
         $volume = $this->getSanitizer()->getInt('volume');
         $loop = $this->getSanitizer()->getCheckbox('loop');
 
-        $widgetAudio = $this->widgetAudioFactory->createEmpty();
-        $widgetAudio->mediaId = $mediaId;
-        $widgetAudio->volume = $volume;
-        $widgetAudio->loop = $loop;
+        if ($mediaId != 0) {
+            $widgetAudio = $this->widgetAudioFactory->createEmpty();
+            $widgetAudio->mediaId = $mediaId;
+            $widgetAudio->volume = $volume;
+            $widgetAudio->loop = $loop;
 
-        $widget->assignAudio($widgetAudio);
+            $widget->assignAudio($widgetAudio);
+        } else {
+            // Remove existing audio records.
+            foreach ($widget->audio as $audio) {
+                $widget->unassignAudio($audio);
+            }
+        }
 
         $widget->save();
 
         // Successful
         $this->getState()->hydrate([
-            'message' => sprintf(__('Edited Transition')),
+            'message' => sprintf(__('Edited Audio')),
+            'id' => $widget->widgetId,
+            'data' => $widget
+        ]);
+    }
+
+    /**
+     * Widget Audio
+     * @param int $widgetId
+     */
+    public function widgetAudioDelete($widgetId)
+    {
+        $widget = $this->widgetFactory->getById($widgetId);
+
+        if (!$this->getUser()->checkEditable($widget))
+            throw new AccessDeniedException();
+
+        $widget->load();
+
+        foreach ($widget->audio as $audio) {
+            $widget->unassignAudio($audio);
+        }
+
+        $widget->save();
+
+        // Successful
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Removed Audio')),
             'id' => $widget->widgetId,
             'data' => $widget
         ]);
