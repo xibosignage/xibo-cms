@@ -621,7 +621,7 @@ class Soap
     {
         $this->logProcessor->setRoute('Schedule');
 
-        $options = array_merge(['dependentsAsNodes' => false], $options);
+        $options = array_merge(['dependentsAsNodes' => false, 'includeOverlays' => false], $options);
 
         // Sanitize
         $serverKey = $this->getSanitizer()->string($serverKey);
@@ -839,7 +839,7 @@ class Soap
                     $command->setAttribute("scheduleid", $scheduleId);
                     $command->setAttribute('code', $commandCode);
                     $layoutElements->appendChild($command);
-                } else if ($eventTypeId == Schedule::$OVERLAY_EVENT) {
+                } else if ($eventTypeId == Schedule::$OVERLAY_EVENT && $options['includeOverlays']) {
                     if ($overlayNodes == null) {
                         $overlayNodes = $scheduleXml->createElement('overlays');
                     }
