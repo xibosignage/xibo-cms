@@ -138,6 +138,9 @@ class Widget implements \JsonSerializable
      */
     public $isNew = false;
 
+    /** @var array[int] Original Media IDs */
+    private $originalMediaIds = [];
+
     /**
      * Minimum duration for widgets
      * @var int
@@ -206,16 +209,28 @@ class Widget implements \JsonSerializable
         // No need to clone the media
     }
 
+    /**
+     * String
+     * @return string
+     */
     public function __toString()
     {
         return sprintf('Widget. %s on playlist %d in position %d. WidgetId = %d', $this->type, $this->playlistId, $this->displayOrder, $this->widgetId);
     }
 
+    /**
+     * Unique Hash
+     * @return string
+     */
     private function hash()
     {
         return md5($this->widgetId . $this->playlistId . $this->ownerId . $this->type . $this->duration . $this->displayOrder . $this->useDuration . $this->calculatedDuration);
     }
 
+    /**
+     * Hash of all media id's
+     * @return string
+     */
     private function mediaHash()
     {
         return md5(implode(',', $this->mediaIds));
@@ -341,10 +356,15 @@ class Widget implements \JsonSerializable
     /**
      * Clear Media
      */
-    public function clearMedia()
+    public function clearCachedMedia()
     {
         $this->load();
         $this->mediaIds = [];
+
+        // Add back in the audio media id's
+        foreach ($this->audio as $audio) {
+            $this->mediaIds[] = $audio->mediaId;
+        }
     }
 
     /**
@@ -355,7 +375,15 @@ class Widget implements \JsonSerializable
     {
         $this->load();
 
-        if (!in_array($audio, $this->audio))
+        $found = false;
+        foreach ($this->audio as $existingAudio) {
+            if ($existingAudio->mediaId == $audio->mediaId) {
+                $found = true;
+                break;
+            }
+        }
+
+        if (!$found)
             $this->audio[] = $audio;
 
         // Assign the media
@@ -370,7 +398,13 @@ class Widget implements \JsonSerializable
     {
         $this->load();
 
-        $this->audio = array_diff($this->audio, [$audio]);
+        $this->audio = array_udiff($this->audio, [$audio], function($a, $b) {
+            /**
+             * @var WidgetAudio $a
+             * @var WidgetAudio $b
+             */
+            return $a->getId() - $b->getId();
+        });
 
         // Unassign the media
         $this->unassignMedia($audio->mediaId);
@@ -424,6 +458,7 @@ class Widget implements \JsonSerializable
 
         // Load any media assignments for this widget
         $this->mediaIds = $this->widgetMediaFactory->getByWidgetId($this->widgetId);
+        $this->originalMediaIds = $this->mediaIds;
 
         // Load any widget audio assignments
         $this->audio = $this->widgetAudioFactory->getByWidgetId($this->widgetId);
@@ -609,12 +644,15 @@ class Widget implements \JsonSerializable
      */
     private function linkMedia()
     {
+        // Calculate the difference between the current assignments and the original.
+        $mediaToLink = array_diff($this->mediaIds, $this->originalMediaIds);
+
+        $this->getLog()->debug('Linking %d new media to Widget %d', count($mediaToLink), $this->widgetId);
+
         // TODO: Make this more efficient by storing the prepared SQL statement
         $sql = 'INSERT INTO `lkwidgetmedia` (widgetId, mediaId) VALUES (:widgetId, :mediaId) ON DUPLICATE KEY UPDATE mediaId = :mediaId2';
 
-        foreach ($this->mediaIds as $mediaId) {
-
-            $this->getLog()->debug('Inserting %d', $mediaId);
+        foreach ($mediaToLink as $mediaId) {
 
             $this->getStore()->insert($sql, array(
                 'widgetId' => $this->widgetId,
@@ -629,24 +667,27 @@ class Widget implements \JsonSerializable
      */
     private function unlinkMedia()
     {
-        // Unlink any media that isn't in the collection
-        if (count($this->mediaIds) <= 0)
-            $this->mediaIds = [0];
+        // Calculate the difference between the current assignments and the original.
+        $mediaToUnlink = array_diff($this->originalMediaIds, $this->mediaIds);
 
+        $this->getLog()->debug('Unlinking %d old media from Widget %d', count($mediaToUnlink), $this->widgetId);
+
+        if (count($mediaToUnlink) <= 0)
+            return;
+
+        // Unlink any media in the collection
         $params = ['widgetId' => $this->widgetId];
 
-        $sql = 'DELETE FROM `lkwidgetmedia` WHERE widgetId = :widgetId AND mediaId NOT IN (0';
+        $sql = 'DELETE FROM `lkwidgetmedia` WHERE widgetId = :widgetId AND mediaId IN (0';
 
         $i = 0;
-        foreach ($this->mediaIds as $mediaId) {
+        foreach ($mediaToUnlink as $mediaId) {
             $i++;
             $sql .= ',:mediaId' . $i;
             $params['mediaId' . $i] = $mediaId;
         }
 
         $sql .= ')';
-
-
 
         $this->getStore()->update($sql, $params);
     }

@@ -56,6 +56,15 @@ class WidgetAudio implements \JsonSerializable
     }
 
     /**
+     * Get Id
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->mediaId;
+    }
+
+    /**
      * Save this widget audio
      */
     public function save()
