@@ -381,6 +381,8 @@ class Widget implements \JsonSerializable
         $found = false;
         foreach ($this->audio as $existingAudio) {
             if ($existingAudio->mediaId == $audio->mediaId) {
+                $existingAudio->loop = $audio->loop;
+                $existingAudio->volume = $audio->volume;
                 $found = true;
                 break;
             }
