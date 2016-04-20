@@ -561,6 +561,7 @@ class DisplayGroup extends Base
     function delete($displayGroupId)
     {
         $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
         if (!$this->getUser()->checkDeleteable($displayGroup))
             throw new AccessDeniedException();
@@ -618,6 +619,7 @@ class DisplayGroup extends Base
     public function assignDisplay($displayGroupId)
     {
         $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
@@ -695,6 +697,7 @@ class DisplayGroup extends Base
     public function unassignDisplay($displayGroupId)
     {
         $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
@@ -762,6 +765,7 @@ class DisplayGroup extends Base
     public function assignDisplayGroup($displayGroupId)
     {
         $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
@@ -839,7 +843,7 @@ class DisplayGroup extends Base
     public function unassignDisplayGroup($displayGroupId)
     {
         $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-
+        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
