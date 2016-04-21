@@ -38,6 +38,7 @@ use Xibo\Service\SanitizerServiceInterface;
 use Xibo\XMR\ChangeLayoutAction;
 use Xibo\XMR\CollectNowAction;
 use Xibo\XMR\CommandAction;
+use Xibo\XMR\OverlayLayoutAction;
 use Xibo\XMR\RevertToSchedule;
 
 /**
@@ -1468,6 +1469,97 @@ class DisplayGroup extends Base
             throw new AccessDeniedException();
 
         $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($displayGroupId), new RevertToSchedule());
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
+     * Add an Overlay Layout
+     * @param $displayGroupId
+     * @throws ConfigurationException
+     * @throws \Xibo\Exception\NotFoundException
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/action/overlayLayout",
+     *  operationId="displayGroupActionOverlayLayout",
+     *  tags={"displayGroup"},
+     *  summary="Action: Overlay Layout",
+     *  description="Send the overlay layout action to this DisplayGroup",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      in="path",
+     *      description="The Display Group Id",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="formData",
+     *      description="The Layout Id",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="The duration in seconds for this Overlay to remain in effect",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="downloadRequired",
+     *      in="formData",
+     *      description="Flag indicating whether the player should perform a collect before adding the Overlay",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function overlayLayout($displayGroupId)
+    {
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        // Get the layoutId
+        $layoutId = $this->getSanitizer()->getInt('layoutId');
+        $downloadRequired = ($this->getSanitizer()->getCheckbox('downloadRequired') == 1);
+
+        if ($layoutId == 0)
+            throw new \InvalidArgumentException(__('Please provide a Layout'));
+
+        // Check that this user has permissions to see this layout
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        // Check to see if this layout is assigned to this display group.
+        if (count($this->layoutFactory->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'displayGroupId' => $displayGroupId])) <= 0) {
+            // Assign
+            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+            $displayGroup->load();
+            $displayGroup->assignLayout($layout);
+            // Don't notify, this player action will cause a download.
+            $displayGroup->setCollectRequired(false);
+            $displayGroup->save(['validate' => false]);
+
+            // Convert into a download required
+            $downloadRequired = true;
+        }
+
+        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($displayGroupId), (new OverlayLayoutAction())->setLayoutDetails(
+            $layoutId,
+            $this->getSanitizer()->getInt('duration'),
+            $downloadRequired
+        ));
 
         // Return
         $this->getState()->hydrate([
