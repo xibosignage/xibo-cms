@@ -8,7 +8,10 @@
 
 namespace Xibo\XMR;
 
-
+/**
+ * Class OverlayLayoutAction
+ * @package Xibo\XMR
+ */
 class OverlayLayoutAction extends PlayerAction
 {
     public $layoutId;
@@ -19,15 +22,12 @@ class OverlayLayoutAction extends PlayerAction
     /**
      * Set details for this layout
      * @param int $layoutId the layoutId to change to
-     * @param int $duration the duration this layout should be shown
+     * @param int $duration the duration this layout should be overlaid
      * @param bool|false $downloadRequired flag indicating whether a download is required before changing to the layout
      * @return $this
      */
-    public function setLayoutDetails($layoutId, $duration = 0, $downloadRequired = false)
+    public function setLayoutDetails($layoutId, $duration, $downloadRequired = false)
     {
-        if ($duration === null)
-            $duration = 0;
-
         $this->layoutId = $layoutId;
         $this->duration = $duration;
         $this->downloadRequired = $downloadRequired;
@@ -35,12 +35,18 @@ class OverlayLayoutAction extends PlayerAction
         return $this;
     }
 
+    /**
+     * @inheritdoc
+     */
     public function getMessage()
     {
-        $this->action = 'overlayNow';
+        $this->action = 'overlayLayout';
 
         if ($this->layoutId == 0)
-            throw new PlayerActionException('Layout Details not provided');
+            throw new PlayerActionException(__('Layout Details not provided'));
+
+        if ($this->duration == 0)
+            throw new PlayerActionException(__('Duration not provided'));
 
         return $this->serializeToJson(['layoutId', 'duration', 'downloadRequired']);
     }
