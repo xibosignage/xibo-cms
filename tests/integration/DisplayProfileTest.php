@@ -73,7 +73,7 @@ class CommandTest extends \Xibo\Tests\LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
 
         $object = json_decode($this->client->response->body());
-        fwrite(STDERR, $this->client->response->body());
+//        fwrite(STDERR, $this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
@@ -90,67 +90,70 @@ class CommandTest extends \Xibo\Tests\LocalWebTestCase
         public function testEdit($displayProfileId)
     {
 
+        $displayProfile = $this->container->displayProfileFactory->getById($displayProfileId);
 		$name = Random::generateString(8, 'phpunit');
 
         $this->client->put('/displayprofile/' . $displayProfileId, [
             'name' => $name,
-            'type' => 'android',
-            'isDefault' => 0
-        ]);
+            'type' => $displayProfile->type,
+            'isDefault' => $displayProfile->isDefault
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $response);
+        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
 
         $object = json_decode($this->client->response->body());
-     //   fwrite(STDERR, $this->client->response->body());
+//	    fwrite(STDERR, $this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
-        $this->assertObjectHasAttribute('id', $object);
-        $this->assertSame($name, $object->data->name);
+
+// 		we need to go deeper
+
+        $object = $this->container->displayProfileFactory->getById($displayProfileId);
+
+        $this->assertSame($name, $object->name);
 
 
         return $displayProfileId;
     }
 
     /**
-	* Edit profile Test
-	* @depends testAdd
+	* Edit specific profile Test
 	*/
-
+/*
         public function testEdit2()
     {
+    	$displayProfileId = 23;
+        $displayProfile = $this->container->displayProfileFactory->getById($displayProfileId);
 
-		$name = Random::generateString(8, 'phpunit');
+		
+//		$name = Random::generateString(8, 'phpunit');
 
-        $this->client->put('/displayprofile/' . 27, [
-            'name' => $name,
-            'type' => 'android',
-            'isDefault' => 0
-        ]);
+        $this->client->put('/displayprofile/' . $displayProfileId, [
+            'name' => 'API EDITED',
+            'type' => $displayProfile->type,
+            'isDefault' => $displayProfile->isDefault
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $response);
+        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
 
         $object = json_decode($this->client->response->body());
-     //   fwrite(STDERR, $this->client->response->body());
+//	    fwrite(STDERR, $this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
-        $this->assertObjectHasAttribute('id', $object);
-        $this->assertSame($name, $object->data->name);
-
-
-        return $displayProfileId;
     }
-
+*/
     /**
      * 	delete added profile test
+     * @depends testAdd
      */
-/*
+
         public function testDelete($displayProfileId)
     {
         $this->client->delete('/displayprofile/' . $displayProfileId);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
-*/
+
 
     /**
      * 	Delete specific profile
@@ -159,7 +162,7 @@ class CommandTest extends \Xibo\Tests\LocalWebTestCase
 /*
         public function testDelete2()
     {
-        $this->client->delete('/displayprofile/' . 27);
+        $this->client->delete('/displayprofile/' . 4);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }

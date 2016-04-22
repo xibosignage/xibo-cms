@@ -151,7 +151,7 @@ class DisplayGroupTest extends LocalWebTestCase
         'displayId' => [7]
         ]);
 
-        $this->assertSame(200, $this->client->response->status())
+        $this->assertSame(200, $this->client->response->status());
 
         $object = json_decode($this->client->response->body());
 //        fwrite(STDERR, $this->client->response->body());
@@ -171,7 +171,7 @@ class DisplayGroupTest extends LocalWebTestCase
         'displayGroupId' => [29]
         ]);
 
-        $this->assertSame(200, $this->client->response->status())
+        $this->assertSame(200, $this->client->response->status());
 
         $object = json_decode($this->client->response->body());
 //        fwrite(STDERR, $this->client->response->body());
@@ -188,7 +188,7 @@ class DisplayGroupTest extends LocalWebTestCase
         	'displayGroupId' => [29]
         	]);
 
-        $this->assertSame(200, $this->client->response->status())
+        $this->assertSame(200, $this->client->response->status());
 
         $object = json_decode($this->client->response->body());
 //        fwrite(STDERR, $this->client->response->body());
@@ -206,7 +206,7 @@ class DisplayGroupTest extends LocalWebTestCase
         	'unassignMediaId' => [13]
         	]);
 
-        $this->assertSame(200, $this->client->response->status())
+        $this->assertSame(200, $this->client->response->status());
 
         $object = json_decode($this->client->response->body());
 //        fwrite(STDERR, $this->client->response->body());
@@ -223,7 +223,7 @@ class DisplayGroupTest extends LocalWebTestCase
         	'mediaId' => [17]
         	]);
 
-        $this->assertSame(200, $this->client->response->status())
+        $this->assertSame(200, $this->client->response->status());
 
         $object = json_decode($this->client->response->body());
 //        fwrite(STDERR, $this->client->response->body());
@@ -241,7 +241,7 @@ class DisplayGroupTest extends LocalWebTestCase
         	'unassignLayoutsId' => [51]
         	]);
 
-        $this->assertSame(200, $this->client->response->status())
+        $this->assertSame(200, $this->client->response->status());
 
         $object = json_decode($this->client->response->body());
 //        fwrite(STDERR, $this->client->response->body());
@@ -259,7 +259,7 @@ class DisplayGroupTest extends LocalWebTestCase
         	'layoutId' => [63]
         	]);
 
-        $this->assertSame(200, $this->client->response->status())
+        $this->assertSame(200, $this->client->response->status());
 
         $object = json_decode($this->client->response->body());
 //        fwrite(STDERR, $this->client->response->body());
@@ -276,7 +276,7 @@ class DisplayGroupTest extends LocalWebTestCase
         	'mediaId' => 18
         	]);
 
-        $this->assertSame(200, $this->client->response->status())
+        $this->assertSame(200, $this->client->response->status());
 
         $object = json_decode($this->client->response->body());
 //        fwrite(STDERR, $this->client->response->body());
