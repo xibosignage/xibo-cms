@@ -51,6 +51,7 @@ class Command extends Base
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->commandFactory = $commandFactory;
+        $this->displayProfileFactory = $displayProfileFactory;
     }
 
     public function displayPage()
