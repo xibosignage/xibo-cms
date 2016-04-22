@@ -77,48 +77,51 @@
     {% endraw %}
     <script type="text/javascript">
 
-        var arrayViewer = Handlebars.compile($("#table-array-viewer").html());
+        $(document).ready(function() {
+            var arrayViewer = Handlebars.compile($("#table-array-viewer").html());
 
-        var table = $("#logs").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true,
-            filter: false,
-            searchDelay: 3000,
-            "order": [[ 0, "desc"]],
-            ajax: {
-                url: "{{ urlFor("auditLog.search") }}",
-                "data": function(d) {
-                    $.extend(d, $("#logs").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-                }
-            },
-            "columns": [
-                { "data": "logId" },
-                { "data": "logDate", "render": dataTableDateFromUnix },
-                { "data": "userName" },
-                { "data": "entity" },
-                { "data": "message" },
-                {
-                    "data": function(data, type, row, meta) {
-                        if (type != "display")
-                            return "";
+            var table = $("#logs").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[0, "desc"]],
+                ajax: {
+                    url: "{{ urlFor("auditLog.search") }}",
+                    "data": function (d) {
+                        $.extend(d, $("#logs").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {"data": "logId"},
+                    {"data": "logDate", "render": dataTableDateFromUnix},
+                    {"data": "userName"},
+                    {"data": "entity"},
+                    {"data": "message"},
+                    {
+                        "data": function (data, type, row, meta) {
+                            if (type != "display")
+                                return "";
 
-                        return arrayViewer({"items": data.objectAfter});
-                    },
-                    "sortable": false
-                }
-            ]
-        });
-
-        table.on('draw', function(e, settings) {
-            dataTableDraw(e, settings);
-
-            $(".arrayViewerToggle").click(function() {
-                $(this).parent().find(".arrayViewer").toggle();
+                            return arrayViewer({"items": data.objectAfter});
+                        },
+                        "sortable": false
+                    }
+                ]
             });
-        });
-        table.on('processing.dt', dataTableProcessing);
 
-        $("#refreshLog").click(function() {
-            table.ajax.reload();
+            table.on('draw', function (e, settings) {
+                dataTableDraw(e, settings);
+
+                $(".arrayViewerToggle").click(function () {
+                    $(this).parent().find(".arrayViewer").toggle();
+                });
+            });
+            table.on('processing.dt', dataTableProcessing);
+
+            $("#refreshLog").click(function () {
+                table.ajax.reload();
+            });
         });
     </script>
 {% endblock %}

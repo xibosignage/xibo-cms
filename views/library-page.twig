@@ -71,48 +71,60 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#libraryItems").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true,
-            filter: false,
-            searchDelay: 3000,
-            "order": [[ 1, "asc"]],
-            ajax: {
-                "url": "{{ urlFor("library.search") }}",
-                "data": function(d) {
-                    $.extend(d, $("#libraryItems").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-                }
-            },
-            "columns": [
-                { "data": "mediaId"},
-                { "data": "name"},
-                { "data": "mediaType"},
-                { "data": "tags", "visible": false},
-                { "name": "mediaId", "data": null, "render": {"_": "thumbnail", "display": "thumbnail", "sort": "mediaId" }},
-                {   "name": "duration",
-                    "data": function(data, type) {
-                        if (type != "display")
-                            return data.duration;
-
-                        return moment().startOf("day").seconds(data.duration).format("H:mm:ss");
+        $(document).ready(function() {
+            var table = $("#libraryItems").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("library.search") }}",
+                    "data": function (d) {
+                        $.extend(d, $("#libraryItems").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }
                 },
-                { "data": "duration", "visible": false},
-                { "name": "fileSize", "data": null, "render": {"_": "fileSize", "display": "fileSizeFormatted", "sort": "fileSize" }},
-                { "data": "fileSize", "visible": false},
-                { "data": "owner"},
-                { "data": "groupsWithPermissions"},
-                { "data": "revised", "render": dataTableTickCrossColumn, "visible": false },
-                { "data": "fileName"},
-                {
-                    "orderable": false,
-                    "data": dataTableButtonsColumn
-                }
-            ]
-        });
+                "columns": [
+                    {"data": "mediaId"},
+                    {"data": "name"},
+                    {"data": "mediaType"},
+                    {"data": "tags", "visible": false},
+                    {
+                        "name": "mediaId",
+                        "data": null,
+                        "render": {"_": "thumbnail", "display": "thumbnail", "sort": "mediaId"}
+                    },
+                    {
+                        "name": "duration",
+                        "data": function (data, type) {
+                            if (type != "display")
+                                return data.duration;
 
-        table.on('draw', dataTableDraw);
-        table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#libraryItems_wrapper').find('.col-sm-6').eq(1));
+                            return moment().startOf("day").seconds(data.duration).format("H:mm:ss");
+                        }
+                    },
+                    {"data": "duration", "visible": false},
+                    {
+                        "name": "fileSize",
+                        "data": null,
+                        "render": {"_": "fileSize", "display": "fileSizeFormatted", "sort": "fileSize"}
+                    },
+                    {"data": "fileSize", "visible": false},
+                    {"data": "owner"},
+                    {"data": "groupsWithPermissions"},
+                    {"data": "revised", "render": dataTableTickCrossColumn, "visible": false},
+                    {"data": "fileName"},
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#libraryItems_wrapper').find('.col-sm-6').eq(1));
+        });
 
         $("#libraryUploadForm").click(function(e) {
             e.preventDefault();
