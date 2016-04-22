@@ -75,37 +75,43 @@ function XiboInitialise(scope) {
         var form = $(this).find(".XiboFilter form");
 
         // Check to see if this grid is already in the local storage
-        if (localStorage.getItem(gridName) != undefined) {
+        if (gridName != undefined) {
             // Populate the filter according to the values we already have.
             var formValues;
             try {
                 formValues = JSON.parse(localStorage.getItem(gridName));
+
+                if (formValues == null)
+                    formValues = [];
             } catch (e) {
                 formValues = [];
             }
 
             $.each(formValues, function(key, element) {
                 // Does this field exist in the form
-                var field = form.find("input[name=" + element.name + "], select[name=" + element.name + "]");
+                var fieldName = element.name.replace(/\[\]/, '\\\\[\\\\]');
+                try {
+                    var field = form.find("input[name=" + fieldName + "], select[name=" + fieldName + "]");
 
-                if (field.length > 0) {
-                    field.val(element.value);
+                    if (field.length > 0) {
+                        field.val(element.value);
+                    }
+                } catch (e) {
+                    console.log("Error populating form saved value with selector input[name=" + element.name + "], select[name=" + element.name + "]");
                 }
             });
-
-        } else {
-            // Populate the localStorage with the default values (set in the HTML)
-            localStorage.setItem(gridName, JSON.stringify(form.serializeArray()));
         }
 
         var filterRefresh = $.debounce(500, function () {
-            localStorage.setItem(gridName, JSON.stringify(form.serializeArray()));
+            if (gridName != undefined)
+                localStorage.setItem(gridName, JSON.stringify(form.serializeArray()));
+
             $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
         });
         
         // Bind the filter form
         $(this).find(".XiboFilter form input").on("keyup",  filterRefresh);
-        $(this).find(".XiboFilter form select").on("change", filterRefresh);
+        $(this).find(".XiboFilter form input, .XiboFilter form select").on("change", filterRefresh);
     });
 
     // Search for any Buttons / Links on the page that are used to load forms

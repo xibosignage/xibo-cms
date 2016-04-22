@@ -50,32 +50,35 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#userGroups").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true,
-            searchDelay: 3000,
-            filter: false,
-            "order": [[ 0, "asc"]],
-            ajax: {
-                url: "{{ urlFor("group.search") }}",
-                "data": function(d) {
-                    $.extend(d, $("#userGroups").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-                }
-            },
-            "columns": [
-                { "data": "group" },
-                { "data": "libraryQuota" },
-                {
-                    "data": "isSystemNotification",
-                    "render": dataTableTickCrossColumn
+        $(document).ready(function() {
+            var table = $("#userGroups").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true,
+                searchDelay: 3000,
+                filter: false,
+                "order": [[0, "asc"]],
+                ajax: {
+                    url: "{{ urlFor("group.search") }}",
+                    "data": function (d) {
+                        $.extend(d, $("#userGroups").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
                 },
-                {
-                    "orderable": false,
-                    "data": dataTableButtonsColumn
-                }
-            ]
-        });
+                "columns": [
+                    {"data": "group"},
+                    {"data": "libraryQuota"},
+                    {
+                        "data": "isSystemNotification",
+                        "render": dataTableTickCrossColumn
+                    },
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
 
-        table.on('draw', dataTableDraw);
-        table.on('processing.dt', dataTableProcessing);
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+        });
     </script>
 {% endblock %}

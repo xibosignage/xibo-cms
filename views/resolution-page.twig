@@ -53,31 +53,34 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#resolutions").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true,
-            filter: false,
-            searchDelay: 3000,
-            "order": [[ 1, "asc"]],
-            ajax: {
-                url: "{{ urlFor("resolution.search") }}",
-                data: function(d) {
-                    $.extend(d, $("#resolutions").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-                }
-            },
-            "columns": [
-                { "data": "resolutionId" },
-                { "data": "resolution" },
-                { "data": "width" },
-                { "data": "height" },
-                { "data": "enabled" },
-                {
-                    "orderable": false,
-                    "data": dataTableButtonsColumn
-                }
-            ]
-        });
+        $(document).ready(function() {
+            var table = $("#resolutions").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    url: "{{ urlFor("resolution.search") }}",
+                    data: function (d) {
+                        $.extend(d, $("#resolutions").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {"data": "resolutionId"},
+                    {"data": "resolution"},
+                    {"data": "width"},
+                    {"data": "height"},
+                    {"data": "enabled"},
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
 
-        table.on('draw', dataTableDraw);
-        table.on('processing.dt', dataTableProcessing);
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+        });
     </script>
 {% endblock %}

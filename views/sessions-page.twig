@@ -59,31 +59,34 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#sessions").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true,
-            filter: false,
-            searchDelay: 3000,
-            "order": [[ 1, "asc"]],
-            ajax: {
-                "url": "{{ urlFor("sessions.search") }}",
-                "data": function(d) {
-                    $.extend(d, $("#sessions").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-                }
-            },
-            "columns": [
-                { "data": "lastAccessed", "render": dataTableDateFromIso },
-                { "data": "isExpired", "render": dataTableTickCrossInverseColumn },
-                { "data": "userName" },
-                { "data": "remoteAddress" },
-                { "data": "userAgent" },
-                {
-                    "orderable": false,
-                    "data": dataTableButtonsColumn
-                }
-            ]
-        });
+        $(document).ready(function() {
+            var table = $("#sessions").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("sessions.search") }}",
+                    "data": function (d) {
+                        $.extend(d, $("#sessions").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {"data": "lastAccessed", "render": dataTableDateFromIso},
+                    {"data": "isExpired", "render": dataTableTickCrossInverseColumn},
+                    {"data": "userName"},
+                    {"data": "remoteAddress"},
+                    {"data": "userAgent"},
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
 
-        table.on('draw', dataTableDraw);
-        table.on('processing.dt', dataTableProcessing);
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+        });
     </script>
 {% endblock %}
