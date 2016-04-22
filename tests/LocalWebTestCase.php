@@ -91,6 +91,7 @@ class LocalWebTestCase extends WebTestCase
         $app->add(new TestAuthMiddleware());
         $app->add(new \Xibo\Middleware\State());
         $app->add(new \Xibo\Middleware\Storage());
+        $app->add(new \Xibo\Middleware\Xmr());
 
         $app->view(new ApiView());
 
