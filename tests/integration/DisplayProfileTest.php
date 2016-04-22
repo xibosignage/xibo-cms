@@ -12,7 +12,7 @@ use Xibo\Tests\LocalWebTestCase;
 use Xibo\Helper\Random;
 
 
-class CommandTest extends \Xibo\Tests\LocalWebTestCase
+class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
 {
 
 	 /**
