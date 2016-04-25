@@ -8,7 +8,7 @@
 namespace Xibo\Tests\Integration;
 
 use Xibo\Tests\LocalWebTestCase;
-//use Xibo\Entity\DisplayGroup;
+use Xibo\Entity\DisplayGroup;
 use Xibo\Helper\Random;
 
 class DisplayGroupTest extends LocalWebTestCase
