@@ -621,7 +621,7 @@ class Soap
     {
         $this->logProcessor->setRoute('Schedule');
 
-        $options = array_merge(['dependentsAsNodes' => false], $options);
+        $options = array_merge(['dependentsAsNodes' => false, 'includeOverlays' => false], $options);
 
         // Sanitize
         $serverKey = $this->getSanitizer()->string($serverKey);
@@ -793,6 +793,8 @@ class Soap
                 $this->getLog()->debug('Resolved dependents for Schedule: %s.', json_encode($layoutDependents, JSON_PRETTY_PRINT));
             }
 
+            $overlayNodes = null;
+
             // We must have some results in here by this point
             foreach ($events as $row) {
                 $eventTypeId = $row['eventTypeId'];
@@ -837,8 +839,27 @@ class Soap
                     $command->setAttribute("scheduleid", $scheduleId);
                     $command->setAttribute('code', $commandCode);
                     $layoutElements->appendChild($command);
+                } else if ($eventTypeId == Schedule::$OVERLAY_EVENT && $options['includeOverlays']) {
+                    if ($overlayNodes == null) {
+                        $overlayNodes = $scheduleXml->createElement('overlays');
+                    }
+
+                    $overlay = $scheduleXml->createElement('overlay');
+                    $overlay->setAttribute("file", $layoutId);
+                    $overlay->setAttribute("fromdt", $fromDt);
+                    $overlay->setAttribute("todt", $toDt);
+                    $overlay->setAttribute("scheduleid", $scheduleId);
+                    $overlay->setAttribute("priority", $is_priority);
+
+                    // Add to the overlays node list
+                    $overlayNodes->appendChild($overlay);
                 }
             }
+
+            // Add the overlay nodes if we had any
+            if ($overlayNodes != null)
+                $layoutElements->appendChild($overlayNodes);
+
         } catch (\Exception $e) {
             $this->getLog()->error('Error getting a list of layouts for the schedule. ' . $e->getMessage());
             return new \SoapFault('Sender', 'Unable to get A list of layouts for the schedule');

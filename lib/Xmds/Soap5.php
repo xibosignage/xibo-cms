@@ -217,6 +217,6 @@ class Soap5 extends Soap4
      */
     function Schedule($serverKey, $hardwareKey)
     {
-        return $this->doSchedule($serverKey, $hardwareKey, ['dependentsAsNodes' => true]);
+        return $this->doSchedule($serverKey, $hardwareKey, ['dependentsAsNodes' => true, 'includeOverlays' => true]);
     }
 }

@@ -80,8 +80,8 @@
                 {{ forms.number("displayOrder", title, displayOrder, helpText) }}
                 
                 {% set title %}{% trans "Priority" %}{% endset %}
-                {% set helpText %}{% trans "Sets whether or not this event has priority. If set the event will be show in preference to other events." %}{% endset %}
-                {{ forms.checkbox("isPriority", title, isPriority, helpText) }}
+                {% set helpText %}{% trans "Sets the event priority - events with the highest priority play in preference to lower priority events." %}{% endset %}
+                {{ forms.number("isPriority", title, isPriority, helpText) }}
 
             </form>
         </div>

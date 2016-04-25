@@ -102,3 +102,6 @@ ADD CONSTRAINT `schedule_detail_ibfk_7` FOREIGN KEY (`eventID`) REFERENCES `sche
 --
 ALTER TABLE `user`
 ADD CONSTRAINT `user_ibfk_2` FOREIGN KEY (`usertypeid`) REFERENCES `usertype` (`usertypeid`);
+
+
+CREATE UNIQUE INDEX lkwidgetaudio_widgetId_mediaId_uindex ON lkwidgetaudio (widgetId, mediaId);
