@@ -65,12 +65,22 @@
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.date("statsFromDt", "From Date", defaults.fromDateOneDay, "", "", "", "") }}
-                            {{ inline.date("statsToDt", "To Date", defaults.toDate, "", "", "", "") }}
-                            {{ inline.dropdown("displayId", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.date("statsFromDt", title, defaults.fromDateOneDay, "", "", "", "") }}
 
+                            {% set title %}{% trans "To Date" %}{% endset %}
+                            {{ inline.date("statsToDt", title, defaults.toDate, "", "", "", "") }}
+
+                            {% set title %}{% trans "Display" %}{% endset %}
+                            {{ inline.dropdown("displayId", "single", title, "", displayFilterOptions, "displayId", "display") }}
+
+                            {% set title %}{% trans "Layout" %}{% endset %}
+                            {% set layoutFilterOptions = [{layoutId: null, layout: ""}]|merge(layouts) %}
+                            {{ inline.dropdown("layoutId[]", "dropdownmulti", title, "", layoutFilterOptions, "layoutId", "layout", "", "selectPicker", "", "m", "", [{name: "data-live-search", value:"true"}, {name: "data-selected-text-format", value: "count > 3"}]) }}
+
+                            {% set title %}{% trans "Media" %}{% endset %}
                             {% set mediaFilterOptions = [{mediaId: null, name: ""}]|merge(media) %}
-                            {{ inline.dropdown("mediaId[]", "dropdownmulti", "Media", "", mediaFilterOptions, "mediaId", "name", "", "selectPicker", "", "m", "", [{name: "data-live-search", value:"true"}, {name: "data-selected-text-format", value: "count > 3"}]) }}
+                            {{ inline.dropdown("mediaId[]", "dropdownmulti", title, "", mediaFilterOptions, "mediaId", "name", "", "selectPicker", "", "m", "", [{name: "data-live-search", value:"true"}, {name: "data-selected-text-format", value: "count > 3"}]) }}
                         </form>
                     </div>
                 </div>
@@ -80,7 +90,9 @@
                             <tr>
                                 <th>{% trans "Type" %}</th>
                                 <th>{% trans "Display" %}</th>
+                                <th>{% trans "Layout ID" %}</th>
                                 <th>{% trans "Layout" %}</th>
+                                <th>{% trans "Widget ID" %}</th>
                                 <th>{% trans "Media" %}</th>
                                 <th>{% trans "Number of Plays" %}</th>
                                 <th>{% trans "Total Duration (s)" %}</th>
@@ -117,7 +129,9 @@
                 "columns": [
                     {"data": "type"},
                     {"data": "display"},
+                    {"data": "layoutId"},
                     {"data": "layout"},
+                    {"data": "widgetId"},
                     {"data": "media"},
                     {"data": "numberPlays"},
                     {

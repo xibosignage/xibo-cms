@@ -83,7 +83,7 @@ class HelpFactory extends BaseFactory
             $order .= ' ORDER BY ' . implode(',', $sortOrder);
 
         $limit = '';
-        if ($this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
             $limit .= ' LIMIT ' . intval($this->getSanitizer()->getInt('start')) . ', ' . $this->getSanitizer()->getInt('length', 10);
         }
 
