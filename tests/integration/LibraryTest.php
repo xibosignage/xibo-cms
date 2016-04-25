@@ -86,6 +86,7 @@ class LibraryTest extends LocalWebTestCase
      * Edit soecific media file
      */
 
+/*
         public function testEdit2()
     {
         $name = Random::generateString(8, 'phpunit');
@@ -105,7 +106,7 @@ class LibraryTest extends LocalWebTestCase
 
         $this->assertObjectHasAttribute('data', $object);
     }
-
+*/
     /**
      * Test delete specific media file
      */ 

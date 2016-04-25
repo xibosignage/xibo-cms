@@ -80,7 +80,7 @@ class LayoutTest extends LocalWebTestCase
     /**
     *  List specific layouts Test
     */ 
-
+/*
     public function testListAll2()
     {
         $this->client->get('/layout', [
@@ -100,7 +100,7 @@ class LayoutTest extends LocalWebTestCase
 
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
-
+*/
     /**
     *  Add new layout test
     */ 
@@ -200,7 +200,9 @@ class LayoutTest extends LocalWebTestCase
 
         public function testAddRegion()
     {
-        $this->client->post('/region/' . 3);
+
+        $layout = $this->container->layoutFactory->query(null, ['start' => 1, 'length' => 1])[0];
+        $this->client->post('/region/' . $layout->layoutId);
 
         $this->assertSame(200, $this->client->response->status());
 
@@ -255,7 +257,7 @@ class LayoutTest extends LocalWebTestCase
     {
     
         // Get any layout
-        $layout = $this->container->layoutFactory->query(null, ['start' => 3, 'length' => 3])[0];
+        $layout = $this->container->layoutFactory->query(null, ['start' => 1, 'length' => 1])[0];
 
         // Generate new random name
         $name = Random::generateString(8, 'phpunit');

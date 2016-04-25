@@ -35,7 +35,7 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
      /**
      * Shows specific display pofiles
      */
-
+/*
     public function testListAll2()
     {
         $this->client->get('/displayprofile' , [
@@ -52,7 +52,7 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
 
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
-
+*/
 
     /**
      * 	Add new profile test
