@@ -878,16 +878,19 @@ class Library extends Base
      */
     public function removeTempFiles()
     {
-        $library = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
+        $libraryTemp = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp';
+
+        if (!is_dir($libraryTemp))
+            return;
 
         // Dump the files in the temp folder
-        foreach (scandir($library . 'temp') as $item) {
+        foreach (scandir($libraryTemp) as $item) {
             if ($item == '.' || $item == '..')
                 continue;
 
             $this->getLog()->debug('Deleting temp file: ' . $item);
 
-            unlink($library . 'temp' . DIRECTORY_SEPARATOR . $item);
+            unlink($libraryTemp . DIRECTORY_SEPARATOR . $item);
         }
     }
 

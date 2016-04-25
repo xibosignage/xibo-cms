@@ -265,7 +265,10 @@ class State extends Middleware
             $drivers = $configService->getCacheDrivers();
         } else {
             // File System Driver
-            $drivers[] = new FileSystem(['path' => $configService->GetSetting('LIBRARY_LOCATION') . 'cache/']);
+            $realPath = realpath($configService->GetSetting('LIBRARY_LOCATION'));
+            $cachePath = ($realPath) ? $realPath . '/cache/' : $configService->GetSetting('LIBRARY_LOCATION') . 'cache/';
+
+            $drivers[] = new FileSystem(['path' => $cachePath]);
         }
 
         // Always add the Ephemeral driver
@@ -788,6 +791,7 @@ class State extends Middleware
                 $container->configService,
                 $container->store,
                 $container->displayFactory,
+                $container->layoutFactory,
                 $container->mediaFactory
             );
         });
