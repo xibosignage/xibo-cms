@@ -332,7 +332,7 @@ class LayoutTest extends LocalWebTestCase
     * @depends testCopy
     * @depends testEditRegion2
     */
-
+/*
     public function testPosition($layoutId, $regionId)
     {
 
@@ -350,6 +350,8 @@ class LayoutTest extends LocalWebTestCase
    //     fwrite(STDERR, $this->client->response->body());
 
     }
+
+    */
     /**
      * Test delete
      * @param int $layoutId

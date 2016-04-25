@@ -33,7 +33,7 @@ class StatisticsTest extends LocalWebTestCase
 /**
 *  Test the method call with custom values
 */ 
-
+/*
         public function testListAll2()
     {
         $this->client->get('/stats' , [
@@ -51,4 +51,6 @@ class StatisticsTest extends LocalWebTestCase
 
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
+
+    */
 }

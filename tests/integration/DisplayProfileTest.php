@@ -6,7 +6,7 @@
  */
 
 namespace Xibo\Tests\Integration;
-use Xibo\Entity\DisplayProfile;
+//use Xibo\Entity\DisplayProfile;
 use Xibo\Entity\Display;
 use Xibo\Tests\LocalWebTestCase;
 use Xibo\Helper\Random;
