@@ -1,0 +1,126 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Ticker" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#tickerAddForm").submit()
+{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "sourceId",
+    "trigger": "init",
+    "value": 1,
+    "operation": "equals",
+    "actions": {
+    ".feed-fields": { "display": "block" },
+    ".dataset-fields": { "display": "none" }
+    }
+    },{
+    "field": "sourceId",
+    "trigger": "change",
+    "value": 1,
+    "operation": "equals",
+    "actions": {
+    ".feed-fields": { "display": "block" },
+    ".dataset-fields": { "display": "none" }
+    }
+    },{
+    "field": "sourceId",
+    "trigger": "init",
+    "value": 2,
+    "operation": "equals",
+    "actions": {
+    ".feed-fields": { "display": "none" },
+    ".dataset-fields": { "display": "block" }
+    }
+    },{
+    "field": "sourceId",
+    "trigger": "change",
+    "value": 2,
+    "operation": "equals",
+    "actions": {
+    ".feed-fields": { "display": "none" },
+    ".dataset-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="tickerAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}"
+                  data-next-form-url="{{ urlFor("module.widget.edit.form", {type: module.widget.type}) }}">
+                {% set title %}{% trans "Source Type" %}{% endset %}
+                {% set helpText %}{% trans "The source for this Ticker" %}{% endset %}
+                {% set feed %}{% trans "Feed" %}{% endset %}
+                {% set dataSet %}{% trans "DataSet" %}{% endset %}
+                {% set options = [
+                { sourceid: 1, source: feed },
+                { sourceid: 2, source: dataSet }
+                ] %}
+                {{ forms.dropdown("sourceId", "single", title, "", options, "sourceid", "source", helpText) }}
+
+                {% set title %}{% trans "Feed URL" %}{% endset %}
+                {% set helpText %}{% trans "The Link for the RSS feed" %}{% endset %}
+                {{ forms.input("uri", title, "", helpText, "feed-fields")}}
+
+                {% set title %}{% trans "DataSet" %}{% endset %}
+                {% set helpText %}{% trans "Please select the DataSet to use as a source of data for this ticker." %}{% endset %}
+                {{ forms.dropdown("dataSetId", "single", title, "", module.dataSets(), "dataSetId", "dataSet", helpText, "dataset-fields") }}
+
+                {% set title %}{% trans "Set a duration?" %}{% endset %}
+                {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                {{ forms.checkbox("useDuration", title, 0, helpText) }}
+
+                {% set title %}{% trans "Duration" %}{% endset %}
+                {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                {{ forms.number("duration", title, module.getModule().defaultDuration, helpText, "duration-fields", "required") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="btn-group pull-right xibo-calendar-controls">
+                <button type="button" class="btn btn-warning" data-calendar-view="year">{% trans "Year" %}</button>
+                <button type="button" class="btn btn-warning active" data-calendar-view="month">{% trans "Month" %}</button>
+                <button type="button" class="btn btn-warning" data-calendar-view="week">{% trans "Week" %}</button>
+                <button type="button" class="btn btn-warning" data-calendar-view="day">{% trans "Day" %}</button>
+            </div>
+            <div class="btn-group pull-right xibo-calendar-controls">
+                <button type="button" class="btn btn-primary" data-calendar-nav="prev"><span class="glyphicon glyphicon-backward"></span> {% trans "Prev" %}</button>
+                <button type="button" class="btn btn-default" data-calendar-nav="today">{% trans "Today" %}</button>
+                <button type="button" class="btn btn-primary" data-calendar-nav="next">{% trans "Next" %} <span class="glyphicon glyphicon-forward"></span></button>
+            </div>
+            <div class="btn-group pull-right xibo-calendar-controls">
+                <button class="btn btn-success XiboFormButton" href="{{ urlFor("schedule.add.form") }}">
+                    {% trans "Add Event" %}
+                </button>
+            </div>
+            <div class="xibo-calendar-controls dropdown pull-right">
+                {% if -1 in selectedDisplayGroupIds %}
+                    {% set allSelected = "selected" %}
+                {% else %}
+                    {% set allSelected = "" %}
+                {% endif %}
+                <select id="DisplayList" class="form-control" name="displayGroupIds[]" data-live-search="true" data-selected-text-format="count > 4" multiple>
+                    <option value="-1" {{ allSelected }}>{% trans "All" %}</option>
+                    <optgroup label="{% trans "Groups" %}">
+                        {% for group in groups %}
+                        <option value="{{ group.displayGroupId }}" {% if group.displayGroupId in selectedDisplayGroupIds %}selected{% endif %}>{{ group.displayGroup }}</option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup label="{% trans "Displays" %}">
+                        {% for display in displays %}
+                        <option value="{{ display.displayGroupId }}" {% if display.displayGroupId in selectedDisplayGroupIds %}selected="" {% endif %}>{{ display.displayGroup }}</option>
+                        {% endfor %}
+                    </optgroup>
+                </select>
+            </div>
+            <h1 class="page-header"></h1>
+        </div>
+    </div>
+    <div class="row">
+        <div id="CalendarContainer" data-event-source="{{ urlFor("schedule.calendar.data") }}" data-calendar-type="{{ settings.CALENDAR_TYPE }}" data-template-path="{{ theme.uri("libraries/calendar/tmpls/") }}" class="col-sm-12">
+            <div id="Calendar"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="cal-legend">
+                <ul>
+                    <li class="event-always"><span class="fa fa-retweet"></span> {% trans "Always showing" %}</li>
+                    <li class="event-info"><span class="fa fa-desktop"></span> {% trans "Single Display" %}</li>
+                    <li class="event-success"><span class="fa fa-desktop"></span> {% trans "Multi Display" %}</li>
+                    <li class="event-important"><span class="fa fa-bullseye"></span> {% trans "Priority" %}</li>
+                    <li class="event-special"><span class="fa fa-repeat"></span> {% trans "Recurring" %}</li>
+                    <li class="event-inverse"><span class="fa fa-lock"></span> {% trans "View Permission Only" %}</li>
+                    <li class="event-command"><span class="fa fa-wrench"></span> {% trans "Command" %}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}

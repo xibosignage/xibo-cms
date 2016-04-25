@@ -1,0 +1,223 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li><a class="XiboFormButton" title="{% trans "Export raw data to CSV" %}" href="{{ urlFor("stats.export.form") }}">{% trans "Export" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+
+    {% set displayFilterOptions = [{displayId: null, display: ""}]|merge(displays) %}
+
+    <div class="widget">
+        <div class="widget-title">{% trans "Bandwidth" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="bandwidthFilter">
+                        <form class="form-inline">
+                            {{ inline.date("fromDt", "From Date", defaults.fromDate, "", "", "", "") }}
+                            {{ inline.date("toDt", "To Date", defaults.toDate, "", "", "", "") }}
+                            {{ inline.dropdown("displayId", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <div id="bandwidthChart" style="clear:both; height: 230px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="widget">
+        <div class="widget-title">{% trans "Time Disconnected" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="availabilityFilter">
+                        <form class="form-inline">
+                            {{ inline.date("availabilityFromDt", "From Date", defaults.fromDate, "", "", "", "") }}
+                            {{ inline.date("availabilityToDt", "To Date", defaults.toDate, "", "", "", "") }}
+                            {{ inline.dropdown("displayId", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <div id="availabilityChart" style="clear:both; height: 230px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="widget">
+        <div class="widget-title">{% trans "Proof of Play" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="statsView">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {{ inline.date("statsFromDt", "From Date", defaults.fromDateOneDay, "", "", "", "") }}
+                            {{ inline.date("statsToDt", "To Date", defaults.toDate, "", "", "", "") }}
+                            {{ inline.dropdown("displayId", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
+
+                            {% set mediaFilterOptions = [{mediaId: null, name: ""}]|merge(media) %}
+                            {{ inline.dropdown("mediaId[]", "dropdownmulti", "Media", "", mediaFilterOptions, "mediaId", "name", "", "selectPicker", "", "m", "", [{name: "data-live-search", value:"true"}, {name: "data-selected-text-format", value: "count > 3"}]) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="stats" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Type" %}</th>
+                                <th>{% trans "Display" %}</th>
+                                <th>{% trans "Layout" %}</th>
+                                <th>{% trans "Media" %}</th>
+                                <th>{% trans "Number of Plays" %}</th>
+                                <th>{% trans "Total Duration (s)" %}</th>
+                                <th>{% trans "Total Duration" %}</th>
+                                <th>{% trans "First Shown" %}</th>
+                                <th>{% trans "Last Shown" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var table = $("#stats").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("stats.search") }}",
+                    "data": function (d) {
+                        $.extend(d, $("#stats").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {"data": "type"},
+                    {"data": "display"},
+                    {"data": "layout"},
+                    {"data": "media"},
+                    {"data": "numberPlays"},
+                    {
+                        "data": "duration",
+                        "render": function (data, type, row, meta) {
+                            if (type != "display")
+                                return "";
+
+                            return moment().startOf("day").seconds(data).format("H:mm:ss")
+                        }
+                    },
+                    {"data": "duration"},
+                    {"data": "minStart"},
+                    {"data": "maxEnd"}
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+
+            var bandwidthChart;
+            var bandwidthChartOptions = {
+                element: 'bandwidthChart',
+                data: [],
+                xkey: 'label',
+                ykeys: ['value'],
+                labels: ['{% trans "Bandwidth" %}'],
+                stacked: false,
+                postUnits: ''
+            };
+        });
+
+        function setBandwidthChart() {
+            $.ajax({
+                type: "get",
+                url: "{{ urlFor("stats.bandwidth.data") }}",
+                cache: false,
+                dataType: "json",
+                data: $("#bandwidthFilter").find("form").serialize(),
+                success: function(response) {
+                    if (bandwidthChart == undefined) {
+                        // Create our chart
+                        bandwidthChartOptions.data = response.extra.data;
+                        bandwidthChartOptions.postUnits = response.extra.postUnits;
+                        bandwidthChart = Morris.Bar(bandwidthChartOptions);
+                    } else {
+                        bandwidthChart.setData(response.extra.data);
+                    }
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            setBandwidthChart();
+
+            // Bind to form change
+            $("#bandwidthFilter input, #bandwidthFilter select").change(function() {
+                setBandwidthChart();
+            });
+        });
+
+        var availabilityChart;
+        var availabilityChartOptions = {
+            element: 'availabilityChart',
+            data: [],
+            xkey: 'label',
+            ykeys: ['value'],
+            labels: ['{% trans "Downtime" %}'],
+            stacked: false,
+            postUnits: ''
+        };
+
+        function setAvailabilityChart() {
+
+            $.ajax({
+                type: "get",
+                url: "{{ urlFor("stats.availability.data") }}",
+                cache: false,
+                dataType: "json",
+                data: $("#availabilityFilter").find("form").serialize(),
+                success: function(response) {
+                    if (availabilityChart == undefined) {
+                        // Create our chart
+                        availabilityChartOptions.data = response.extra.data;
+                        availabilityChartOptions.postUnits = ' ' + response.extra.postUnits;
+                        availabilityChart = Morris.Bar(availabilityChartOptions);
+                    } else {
+                        availabilityChart.setData(response.extra.data);
+                    }
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            setAvailabilityChart();
+
+            // Bind to form change
+            $("#availabilityFilter input, #availabilityFilter select").change(function() {
+                setAvailabilityChart();
+            });
+        });
+    </script>
+{% endblock %}

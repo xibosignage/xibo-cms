@@ -1,0 +1,171 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Webpage" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#webpageEditForm").submit()
+{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "modeId",
+    "trigger": "init",
+    "value": 1,
+    "operation": "equals",
+    "actions": {
+    ".webpage-widths": { "display": "none" },
+    ".webpage-offsets": { "display": "none" }
+    }
+    },{
+    "field": "modeId",
+    "trigger": "change",
+    "value": 1,
+    "operation": "equals",
+    "actions": {
+    ".webpage-widths": { "display": "none" },
+    ".webpage-offsets": { "display": "none" }
+    }
+    },{
+    "field": "modeId",
+    "trigger": "init",
+    "value": 2,
+    "operation": "equals",
+    "actions": {
+    ".webpage-widths": { "display": "block" },
+    ".webpage-offsets": { "display": "block" }
+    }
+    },{
+    "field": "modeId",
+    "trigger": "change",
+    "value": 2,
+    "operation": "equals",
+    "actions": {
+    ".webpage-widths": { "display": "block" },
+    ".webpage-offsets": { "display": "block" }
+    }
+    },{
+    "field": "modeId",
+    "trigger": "init",
+    "value": 3,
+    "operation": "equals",
+    "actions": {
+    ".webpage-widths": { "display": "block" },
+    ".webpage-offsets": { "display": "none" }
+    }
+    },{
+    "field": "modeId",
+    "trigger": "change",
+    "value": 3,
+    "operation": "equals",
+    "actions": {
+    ".webpage-widths": { "display": "block" },
+    ".webpage-offsets": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="webpageEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+                {% set title %}{% trans "Link" %}{% endset %}
+                {% set helpText %}{% trans "The Location (URL) of the webpage" %}{% endset %}
+                {{ forms.input("uri", title, module.getOption("uri")|url_decode, helpText, "required") }}
+
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                {{ forms.input("name", title, module.getOption("name"), helpText) }}
+
+                {% set title %}{% trans "Set a duration?" %}{% endset %}
+                {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+
+                {% set title %}{% trans "Duration" %}{% endset %}
+                {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
+                {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required")}}
+
+                {% set title %}{% trans "Options" %}{% endset %}
+                {% set helpText %}{% trans "How should this web page be embedded?" %}{% endset %}
+                {% set openNatively %}{% trans "Open Natively" %}{% endset %}
+                {% set manualPosition %}{% trans "Manual Position" %}{% endset %}
+                {% set bestFit %}{% trans "Best Fit" %}{% endset %}
+                {% set options = [
+                { modeid: 1, mode: openNatively },
+                { modeid: 2, mode: manualPosition },
+                { modeid: 3, mode: bestFit }
+                ] %}
+                {{ forms.dropdown("modeId", "single", title, module.getOption("modeid"), options, "modeid", "mode", helpText) }}
+
+                {% set title %}{% trans "Page Width" %}{% endset %}
+                {% set helpText %}{% trans "The width of the page. Leave empty to use the region width." %}{% endset %}
+                {{ forms.number("pageWidth", title, module.getOption("pageWidth"), helpText, "webpage-widths") }}
+
+                {% set title %}{% trans "Page Height" %}{% endset %}
+                {% set helpText %}{% trans "The height of the page. Leave empty to use the region height." %}{% endset %}
+                {{ forms.number("pageHeight", title, module.getOption("pageHeight"), helpText, "webpage-widths") }}
+
+                {% set title %}{% trans "Offset Top" %}{% endset %}
+                {% set helpText %}{% trans "The starting point from the top in pixels" %}{% endset %}
+                {{ forms.number("offsetTop", title, module.getOption("offsetTop"), helpText, "webpage-offsets") }}
+
+                {% set title %}{% trans "Offset Left" %}{% endset %}
+                {% set helpText %}{% trans "The starting point from the left in pixels" %}{% endset %}
+                {{ forms.number("offsetLeft", title, module.getOption("offsetLeft"), helpText, "webpage-offsets") }}
+
+                {% set title %}{% trans "Scale Percentage" %}{% endset %}
+                {% set helpText %}{% trans "The Percentage to Scale this Webpage (0 - 100)" %}{% endset %}
+                {{ forms.number("scaling", title, module.getOption("scaling"), helpText, "webpage-offsets") }}
+
+                {% set title %}{% trans "Background transparent?" %}{% endset %}
+                {% set helpText %}{% trans "Should the HTML be shown with a transparent background. Not currently available on the Windows Display Client." %}{% endset %}
+                {{ forms.checkbox("transparency", title, module.GetOption("transparency"), helpText) }}
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

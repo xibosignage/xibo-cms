@@ -1,0 +1,44 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {{ title }}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#AclForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="AclForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("group.acl", {id: groupId}) }}">
+                {% set helpText %}{% trans %}Check or un-check the options against each item to control whether access is allowed or not.{% endtrans %}{% endset %}
+                {{ forms.message(helpText) }}
+                <table class="table table-bordered">
+                    <tr>
+                        <th>{{ entity }}</th>
+                        <th>{% trans "View" %}</th>
+                    </tr>
+                    {% for item in permissions %}
+                        <tr>
+                            <td>{{ item.name }}</td>
+                            <td><input type="checkbox" name="objectId[]" value="{{ item.value_view }}" {{ item.value_view_checked }}></td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </form>
+        </div>
+    </div>
+{% endblock %}

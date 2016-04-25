@@ -1,0 +1,36 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Copy User Group" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#userGroupCopyForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="userGroupCopyForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("group.copy", {id: group.groupId}) }}">
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name for this User Group" %}{% endset %}
+                {{ forms.input("group", title, "", helpText, "", "required maxlength='50'") }}
+
+                {% set title %}{% trans "Copy Members?" %}{% endset %}
+                {% set helpText %}{% trans "Assign the members to the new group" %}{% endset %}
+                {{ forms.checkbox("copyMembers", title, "0", helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add DataSet" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#dataSetAddForm").submit()    
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="dataSetAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("dataSet.add") }}">
+                    {% set title %}{% trans "Name" %}{% endset %}
+                    {% set helpText %}{% trans "A name for this DataSet" %}{% endset %}
+                    {{ forms.input("dataSet", title, "", helpText, "", "required") }}
+
+                    {% set title %}{% trans "Description" %}{% endset %}
+                    {% set helpText %}{% trans "An optional description" %}{% endset %}
+                    {{ forms.input("description", title, "", helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2016 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {{ notification.subject }}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Close" %}, XiboDialogClose()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            {% set readDt %}<span class="notification-date">{{ notification.readDt }}</span>{% endset %}
+            <p>{% trans "Published" %} <span class="notification-date">{{ notification.releaseDt }}</span>, {% trans %}you read this {{ readDt }}.{% endtrans %}</p>
+            {{ notification.body|raw }}
+        </div>
+    </div>
+{% endblock %}

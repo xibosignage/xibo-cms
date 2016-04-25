@@ -1,0 +1,95 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Region Options" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Set Full Screen" %}, setFullScreenLayout({{ layout.width }}| {{ layout.height }})
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, regionEditFormSubmit()
+{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "transitionType",
+    "trigger": "init",
+    "value": "",
+    "operation": "equals",
+    "actions": {
+    ".transition-group": { "display": "none" }
+    }
+    },{
+    "field": "transitionType",
+    "trigger": "change",
+    "value": "",
+    "operation": "equals",
+    "actions": {
+    ".transition-group": { "display": "none" }
+    }
+    },{
+    "field": "transitionType",
+    "trigger": "init",
+    "value": "",
+    "operation": "not",
+    "actions": {
+    ".transition-group": { "display": "block" }
+    }
+    },{
+    "field": "transitionType",
+    "trigger": "change",
+    "value": "",
+    "operation": "not",
+    "actions": {
+    ".transition-group": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="regionEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("region.edit", {id: region.regionId}) }}">
+
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "Name of the Region" %}{% endset %}
+                {{ forms.input("name", title, region.name, helpText) }}
+
+                {{ forms.number("top", "Top", region.top, "Offset from the Top Corner") }}
+
+                {{ forms.number("left", "Left", region.left, "Offset from the Left Corner") }}
+
+                {{ forms.number("width", "Width", region.width, "Width of the Region") }}
+
+                {{ forms.number("height", "Height", region.height, "Height of the Region") }}
+
+                {# Transitions #}
+                {% set title %}{% trans "Exit Transition" %}{% endset %}
+                {% set helpText %}{% trans "What transition should be applied when this region is finished?" %}{% endset %}
+                {{ forms.dropdown("transitionType", "single", title, region.transitionType, transitions.out|merge({code: null, transition: ""}), "code", "transition", helpText) }}
+
+                {{ forms.number("transitionDuration", "Duration", region.transitionDuration, "The duration for this transition, in milliseconds.", "transition-group") }}
+
+                {% set title %}{% trans "Direction" %}{% endset %}
+                {% set helpText %}{% trans "The direction for this transition. Only appropriate for transitions that move, such as Fly." %}{% endset %}
+                {{ forms.dropdown("transitionDirection", "single", title, region.transitionsDirection, compassPoints, "id", "name", helpText, "transition-group transition-direction") }}
+
+                {% set title %}{% trans "Loop?" %}{% endset %}
+                {% set helpText %}{% trans "If there is only one item in this region should it loop? Not currently available for Windows Players" %}{% endset %}
+                {{ forms.checkbox("loop", title, region.getOptionValue("loop", 0), helpText) }}
+
+                {{ forms.number("zIndex", "Layer", region.zIndex, "The layering order of this region (z-index). Advanced use only.") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Delete this DataSet?" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Yes" %}, $("#dataSetDeleteForm").submit()    
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="dataSetDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("dataSet.delete", {id: dataSet.dataSetId}) }}">
+                {% set message %}{% trans "Are you sure you want to delete?" %}{% endset %}
+                {{ forms.message(message) }}
+
+                {% set title %}{% trans "Delete any associated data?" %}{% endset %}
+                {% set helpText %}{% trans "Please tick the box if you would like to delete all the Data contained in this DataSet" %}{% endset %}
+                {{ forms.checkbox("deleteData", title, "", helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

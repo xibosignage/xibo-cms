@@ -1,0 +1,32 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Application" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Save" %}, $("#applicationFormSubmit").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="applicationFormSubmit" class="XiboForm form-horizontal" method="post" action="{{ urlFor("application.add") }}">
+                {% set title %}{% trans "Application Name" %}{% endset %}
+                {{ forms.input("name", title) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

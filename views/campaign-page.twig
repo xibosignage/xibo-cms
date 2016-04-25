@@ -1,0 +1,262 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (campaign-page.twig)
+ */
+This is the template for the campaign page
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li><a class="XiboFormButton" title="{% trans "Add a new Campaign" %}" href="{{ urlFor("campaign.add.form") }}">{% trans "Add Campaign" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Campaigns" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="campaigns" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "# Layouts" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        // Configure the DataTable
+        var table = $("#campaigns").DataTable({ "language": dataTablesLanguage,
+            serverSide: true, stateSave: true,
+            "filter": false,
+            searchDelay: 3000,
+            "order": [[ 0, "asc"]],
+            ajax: {
+                url: "{{ urlFor("campaign.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#campaigns").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
+            "columns": [
+                { "data": "campaign" },
+                { "data": "numberLayouts" },
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        // Data Table events
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+
+        // Callback for the media form
+        // Fired when the media form opens
+        function layoutFormCallBack() {
+
+            // Hold a container for the layouts we have assigned already
+            var container = $("#LayoutAssign");
+            if (container.data().layouts == undefined)
+                container.data().layouts = {};
+
+            // Layout DataTable
+            var layoutTable = $("#layoutAssignments").DataTable({ "language": dataTablesLanguage,
+                serverSide: true, stateSave: true,
+                searchDelay: 3000,
+                "order": [[ 0, "asc"]],
+                "filter": false,
+                ajax: {
+                    url: "{{ urlFor("layout.search") }}",
+                    "data": function(d) {
+                        $.extend(d, $("#layoutAssignments").closest(".XiboGrid").find(".layoutAssignFilterOptions form").serializeObject());
+                    }
+                },
+                "columns": [
+                    { "data": "layoutId" },
+                    { "data": "layout" },
+                    {
+                        "sortable": false,
+                        "data": function(data, type, row, meta) {
+                            if (type != "display")
+                                return "";
+
+                            // Create a click-able span
+                            return "<a href=\"#\" class=\"assignItem\"><span class=\"glyphicon glyphicon-plus-sign\"></a>";
+                        }
+                    }
+                ]
+            });
+
+            layoutTable.on('draw', function(e, settings) {
+                dataTableDraw(e, settings);
+
+                // Clicky on the +spans
+                $(".assignItem", "#layoutAssignments").click(function() {
+                    // Get the row that this is in.
+                    var data = layoutTable.row($(this).closest("tr")).data();
+
+                    // Append to our layouts list
+                    // We are adding a new layout, so the display order should be the highest display order
+                    var order = nextDisplayOrder();
+                    container.data().layouts[data.layoutId + "_" + order] = 1;
+
+                    // Construct a new item for the assigned box
+                    var newItem = $("<li/>", {
+                        "text": data.layout,
+                        "data-layout-id": data.layoutId,
+                        "data-display-order": order,
+                        "class": "btn btn-sm btn-default"
+                    });
+
+                    newItem.appendTo("#LayoutAssignSortable");
+
+                    // Add a span to that new item
+                    $("<span/>", {
+                        "class": "glyphicon glyphicon-minus-sign",
+                        click: function(){
+                            container.data().layouts[$(this).parent().data().layoutId + "_" + order] = 0;
+                            $(this).parent().remove();
+                        }
+                    }).appendTo(newItem);
+                });
+            });
+            layoutTable.on('processing.dt', dataTableProcessing);
+
+            // Make our little list sortable
+            var startPosition = 0;
+            $("#LayoutAssignSortable").sortable({
+                start: function (event, ui) {
+                    startPosition = ui.item.index();
+                },
+                update: function (event, ui) {
+                    // Update the layouts container according to this change
+                    var position = ui.item.index();
+
+                    // Unassign from current position
+                    container.data().layouts[ui.item.data().layoutId + "_" + ui.item.data().displayOrder] = 0;
+
+                    // Shuffle others
+                    var shuffle = (startPosition < position) ? -1 : 1;
+
+                    // All items
+                    var allItems = $("#LayoutAssignSortable").find("li");
+
+                    // Set the display order on ours
+                    if (position == 0) {
+                        // One to the right
+                        var rightOne = allItems.eq(1).data().displayOrder;
+                        if (rightOne > 1)
+                            rightOne--;
+
+                        ui.item.data().displayOrder = rightOne;
+                    }
+                    else {
+                        // One to the left
+                        ui.item.data().displayOrder = allItems.eq(position - 1).data().displayOrder + 1;
+                    }
+
+                    // Assign to the new position
+                    container.data().layouts[ui.item.data().layoutId + "_" + ui.item.data().displayOrder] = 1;
+
+                    // Shuffle
+                    $.each(allItems, function (index) {
+                        if ((shuffle == 1 && index > position) || (shuffle == -1 && index < position)) {
+                            // Add shuffle to each item, remove and assign
+                            container.data().layouts[$(this).data().layoutId + "_" + $(this).data().displayOrder] = 0;
+
+                            // Shuffle
+                            $(this).data().displayOrder = $(this).data().displayOrder + shuffle;
+
+                            // Assign
+                            container.data().layouts[$(this).data().layoutId + "_" + $(this).data().displayOrder] = 1;
+                        }
+                    });
+                }
+            });
+
+            // Bind to the existing items in the list
+            $("#LayoutAssignSortable").find('li span').click(function () {
+                container.data().layouts[$(this).parent().data().layoutId + "_" + $(this).parent().data().displayOrder] = 0;
+                $(this).parent().remove();
+            });
+
+            // Bind the filter form
+            $(".layoutAssignFilterOptions").find("input, select").change(function() {
+                layoutTable.ajax.reload();
+            });
+        }
+
+        function layoutAssignSubmit() {
+            // Collect our media
+            var container = $("#LayoutAssign");
+
+            // Build an array of id's to assign and an array to unassign
+            var assign = [];
+            var unassign = [];
+
+            $.each(container.data().layouts, function(name, value) {
+                var item = name.split("_");
+                var layout = {
+                    layoutId: item[0],
+                    displayOrder: item[1]
+                };
+
+                if (value == 1)
+                    assign.push(layout);
+                else
+                    unassign.push(layout);
+            });
+
+            assignLayoutsToCampaign(container.data().url, assign, unassign);
+        }
+
+        function assignLayoutsToCampaign(url, layout, unassign) {
+            toastr.info(layout, "Assign Layouts to Campaign");
+
+            $.ajax({
+                type: "post",
+                url: url,
+                cache: false,
+                dataType: "json",
+                data: {layoutId: layout, unassignLayoutId: unassign},
+                success: XiboSubmitResponse
+            });
+        }
+
+        function nextDisplayOrder() {
+            // Look through the assignment list and get the next display order
+            var high = 0;
+            $("#LayoutAssign li").each(function() {
+                var itemOrder = $(this).data().displayOrder;
+                if (itemOrder > high)
+                    high = itemOrder;
+            });
+
+            return high + 1;
+        }
+    </script>
+{% endblock %}

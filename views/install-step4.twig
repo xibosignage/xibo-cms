@@ -1,0 +1,27 @@
+{% extends "base-install.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block stepContent %}
+    <div class="row">
+        <div class="col-md-12">
+            {% set themeName = theme.getThemeConfig("app_name") %}
+
+            <form action="{{ urlFor("install", {step: 5}) }}" class="form-horizontal" method="post">
+
+                {% set message %}{% trans %}{{ themeName }} needs an administrator user account to be the first user account that has access to the CMS. Please enter your chosen details below.{% endtrans %}{% endset %}
+                {{ forms.message(message) }}
+
+                {% set title %}{% trans "Admin Username" %}{% endset %}
+                {% set helpText %}{% trans "Please enter a user name for the first administrator account." %}{% endset %}
+                {{ forms.input("admin_username",  title, "", helpText) }}
+
+                {% set title %}{% trans "Admin Password" %}{% endset %}
+                {% set helpText %}{% trans "Please enter a password for this user. This user will have full access to the system" %}{% endset %}
+                {{ forms.password("admin_password",  title, flash.db_admin_pass, helpText) }}
+
+                {% set title %}{% trans "Next" %}{% endset %}
+                {{ forms.button(title, "submit") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

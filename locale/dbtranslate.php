@@ -18,10 +18,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+
 
 /* Translations from the Database that need to be registered with Gettext */
 
+echo __('Dashboard');
+echo __('Media Dashboard');
 echo __('Schedule');
 echo __('Layout');
 echo __('Library');
@@ -44,7 +46,6 @@ echo __('Edit your Display');
 echo __('Report Fault');
 echo __('Statistics');
 echo __('Display Groups');
-echo __('Content');
 echo __('Default');
 echo __('Error');
 echo __('General');
@@ -57,6 +58,11 @@ echo __('Resolutions');
 echo __('User Groups');
 echo __('Display Settings');
 echo __('Help Links');
+echo __('Audit Trail');
+echo __('Update');
+echo __('Commands');
+echo __('Notification Drawer');
+echo __('Notifications');
 
 // Settings translations
 echo __('Media Permissions');
@@ -124,7 +130,21 @@ echo __('Maintenance Alerts for Users');
 echo __('Email maintenance alerts for users with view permissions to effected Displays.');
 echo __('Set the level of logging the CMS should record. In production systems "error" is recommended.');
 echo __('Which Calendar Type should the CMS use?');
-
+echo __('Enable Latest News?');
+echo __('Default for "Delete old version of Media" checkbox. Shown when Editing Library Media.');
+echo __('Should the Dashboard show latest news? The address is provided by the theme.');
+echo __('Proxy Exceptions');
+echo __('Hosts and Keywords that should not be loaded via the Proxy Specified. These should be comma separated.');
+echo __('Instance Suspended');
+echo __('Is this instance suspended?');
+echo __('Inherit permissions');
+echo __('Inherit permissions from Parent when adding a new item?');
+echo __('XMR Private Address');
+echo __('XMR Public Address');
+echo __('Please enter the private address for XMR.');
+echo __('Please enter the public address for XMR.');
+echo __('CDN Address');
+echo __('Content Delivery Network Address for serving file requests to Players');
 
 // Transitions
 echo __('Fade In');
@@ -135,6 +155,8 @@ echo __('Fly');
 echo __('String');
 echo __('Number');
 echo __('Date');
+echo __('External Image');
+echo __('Library Image');
 
 echo __('Value');
 echo __('Formula');

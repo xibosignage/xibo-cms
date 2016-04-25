@@ -1,0 +1,113 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li><a class="XiboFormButton" title="{% trans "Add a new User" %}" href="{{ urlFor("user.add.form") }}">{% trans "Add User" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "View my authenticated applications" %}" href="{{ urlFor("user.applications") }}">{% trans "My Applications" %}</a></li>
+    </ul>
+{% endblock %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Users" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="usersView">
+                <div class="XiboFilter well">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input("userName", title) }}
+
+                            {% set title %}{% trans "User Type" %}{% endset %}
+                            {{ inline.dropdown("userTypeId", "single", title, "", [{userTypeId:null, userType:""}]|merge(userTypes), "userTypeId", "userType") }}
+
+                            {% set title %}{% trans "Retired" %}{% endset %}
+                            {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
+                            {{ inline.dropdown("retired", "single", title, 0, values, "id", "value") }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="users" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "Homepage" %}</th>
+                                <th>{% trans "Email" %}</th>
+                                <th>{% trans "Library Quota" %}</th>
+                                <th>{% trans "Retired?" %}</th>
+                                <th>{% trans "First Name" %}</th>
+                                <th>{% trans "Last Name" %}</th>
+                                <th>{% trans "Phone" %}</th>
+                                <th>{% trans "Ref 1" %}</th>
+                                <th>{% trans "Ref 2" %}</th>
+                                <th>{% trans "Ref 3" %}</th>
+                                <th>{% trans "Ref 4" %}</th>
+                                <th>{% trans "Ref 5" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var table = $("#users").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true,
+                searchDelay: 3000,
+                "order": [[0, "asc"]],
+                "filter": false,
+                ajax: {
+                    url: "{{ urlFor("user.search") }}",
+                    "data": function (d) {
+                        $.extend(d, $("#users").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {"data": "userName"},
+                    {"data": "homePage"},
+                    {"data": "email"},
+                    {"data": "libraryQuota"},
+                    {
+                        "data": "retired",
+                        "render": dataTableTickCrossColumn
+                    },
+                    {"data": "firstName", "visible": false},
+                    {"data": "lastName", "visible": false},
+                    {"data": "phone", "visible": false},
+                    {"data": "ref1", "visible": false},
+                    {"data": "ref2", "visible": false},
+                    {"data": "ref3", "visible": false},
+                    {"data": "ref4", "visible": false},
+                    {"data": "ref5", "visible": false},
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing)
+            dataTableAddButtons(table, $('#users_wrapper').find('.col-sm-6').eq(1));
+        });
+    </script>
+{% endblock %}

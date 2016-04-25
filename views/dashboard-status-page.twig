@@ -1,0 +1,205 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+    <div class="row">
+        <div class="col-lg-3 col-md-6 col-xs-12">
+            <div class="widget">
+                <div class="widget-body">
+                    <div class="widget-icon orange pull-left">
+                        <i class="fa fa-desktop"></i>
+                    </div>
+                    <div class="widget-content pull-left">
+                        <div class="title">{{ displays|length }}</div>
+                        <div class="comment">{% if displays|length == 1 %}{% trans "Display" %}{% else %}{% trans "Displays" %}{% endif %}</div>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-xs-12">
+            <div class="widget">
+                <div class="widget-body">
+                    <div class="widget-icon red pull-left">
+                        <i class="fa fa-tasks"></i>
+                    </div>
+                    <div class="widget-content pull-left">
+                        <div class="title">{{ librarySize }}</div>
+                        <div class="comment">{% trans "Library Size" %}</div>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-xs-12">
+            <div class="widget">
+                <div class="widget-body">
+                    <div class="widget-icon green pull-left">
+                        <i class="fa fa-users"></i>
+                    </div>
+                    <div class="widget-content pull-left">
+                        <div class="title">{{ countUsers }}</div>
+                        <div class="comment">{% if countUsers == 1 %}{% trans "User" %}{% else %}{% trans "Users" %}{% endif %}</div>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-xs-12">
+            <div class="widget">
+                <div class="widget-body">
+                    <div class="widget-icon blue pull-left">
+                        <i class="fa fa-cogs"></i>
+                    </div>
+                    <div class="widget-content pull-left">
+                        {% if embedded-widget != "" %}
+                            {{ embedded-widget|raw }}
+                        {% else %}
+                            <div class="title">{{ nowShowing }}</div>
+                            <div class="comment">{% trans "Now Showing" %}</div>
+                        {% endif %}
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="widget">
+                <div class="widget-title">
+                    <i class="fa fa-cloud-download"></i>
+                    {% if xmdsLimit != "" %}
+                        {% trans %}Bandwidth Usage. Limit {{ xmdsLimit }}{% endtrans %}
+                    {% else %}
+                        {% trans %}Bandwidth Usage ({{ bandwidthSuffix }}){% endtrans %}
+                    {% endif %}
+                    {% if currentUser.routeViewable("/stats") %}
+                    <a class="pull-right" href="{{ urlFor("stats.view") }}">{% trans "More Statistics" %}</a>
+                    {% endif %}
+                    <div class="clearfix"></div>
+                </div>
+                <div class="widget-body medium no-padding">
+                    <div id="bandwidthChart" class="morrisChart" style="width:99%; height: 230px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="widget">
+                <div class="widget-title">
+                    <i class="fa fa-tasks"></i>
+                    {% if libraryLimitSet != "" %}
+                        {% trans %}Library Usage. Limit {{ libraryLimit }}{% endtrans %}
+                    {% else %}
+                        {% trans "Library Usage" %}
+                    {% endif %}
+                    <div class="clearfix"></div>
+                </div>
+                <div class="widget-body medium no-padding">
+                    <div id="libraryChart" class="morrisChart" style="width:99%; height: 230px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="widget">
+                <div class="widget-title">
+                    <i class="fa fa-desktop"></i>
+                    {% trans "Display Activity" %}
+                    <div class="clearfix"></div>
+                </div>
+                <div class="widget-body medium no-padding">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Display" %}</th>
+                                <th>{% trans "Logged In" %}</th>
+                                <th>{% trans "Authorized" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for row in displays %}
+                                {% if row.mediaInventoryStatus == 1 %}
+                                    {% set class = "success" %}
+                                {% elseif row.mediaInventoryStatus == 2 %}
+                                    {% set class = "danger" %}
+                                {% else %}
+                                    {% set class = "warning" %}
+                                {% endif %}
+                                <tr class="{{ class }}">
+                                    <td>{{ row.display }}</td>
+                                    <td><span class="glyphicon {% if row.loggedin == 1 %}glyphicon-ok{% else %}glyphicon-remove{% endif %}"></span></td>
+                                    <td><span class="glyphicon {% if row.licensed == 1 %}glyphicon-ok{% else %}glyphicon-remove{% endif %}"></span></td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="widget news-widget">
+                <div class="widget-title">
+                    <i class="fa fa-book"></i>
+                    {% trans "Latest News" %}
+                    <div class="clearfix"></div>
+                </div>
+                <div class="widget-body medium">
+                    {% if latestNews|length > 0 %}
+                        {% for news in latestNews %}
+                            <div class="article">
+                                <h4 class="article_title">{{ news.title }}</h4>
+                                <p>{{ news.description|raw }} {% if news.link %}<a href="{{ news.link }}" title="Read" target="_blank">{% trans "Full Article" %}</a>.{% endif %}</p>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+
+        {% if xmdsLimitSet %}
+            var yKeys = ['value','limit'];
+            var labels = ['{% trans "Value" %}','{% trans "Remaining" %}'];
+        {% else %}
+            var yKeys = ['value'];
+            var labels = ['{% trans "Value" %}'];
+        {% endif %}
+
+        var bandwidthChart = {
+            type: 'bar',
+            data: {
+                element: 'bandwidthChart',
+                data: {{ bandwidthWidget|raw }},
+                xkey: 'label',
+                ykeys: yKeys,
+                labels: labels,
+                stacked: {% if xmdsLimitSet %}true{% else %}false{% endif %}
+        }
+        };
+
+        var libraryChart = {
+            type: 'donut',
+            data: {
+                element: 'libraryChart',
+                data: {{ libraryWidget|raw }},
+                formatter: function (y, data) { return y + "{{ librarySuffix }}"; }
+            }
+        };
+    </script>
+{% endblock %}

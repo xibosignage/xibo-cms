@@ -1,0 +1,84 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li><a class="XiboFormButton" title="{% trans "Add a new User Group" %}" href="{{ urlFor("group.add.form") }}">{% trans "Add User Group" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "User Groups" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="userGroupView">
+                <div class="XiboFilter well">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {{ inline.input("userGroup", "Name") }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="userGroups" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "User Group" %}</th>
+                                <th>{% trans "Library Quota" %}</th>
+                                <th>{% trans "Receive System Notifications?" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var table = $("#userGroups").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true,
+                searchDelay: 3000,
+                filter: false,
+                "order": [[0, "asc"]],
+                ajax: {
+                    url: "{{ urlFor("group.search") }}",
+                    "data": function (d) {
+                        $.extend(d, $("#userGroups").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {"data": "group"},
+                    {"data": "libraryQuota"},
+                    {
+                        "data": "isSystemNotification",
+                        "render": dataTableTickCrossColumn
+                    },
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+        });
+    </script>
+{% endblock %}

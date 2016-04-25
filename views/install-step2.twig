@@ -1,0 +1,77 @@
+{% extends "base-install.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block stepContent %}
+    <div class="row">
+        <div class="col-md-12">
+            {% set themeName = theme.getThemeConfig("app_name") %}
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#new" role="tab" data-toggle="tab"><span>{% trans "New" %}</span></a></li>
+                <li><a href="#existing" role="tab" data-toggle="tab"><span>{% trans "Existing" %}</span></a></li>
+            </ul>
+            <form action="{{ urlFor("install", {step: 3}) }}" class="form-horizontal" method="post">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="new">
+                        {% set message %}{% trans %}{{ themeName }} needs to set-up a connection to your MySQL database.{% endtrans %}{% endset %}
+                        {{ forms.message(message) }}
+
+                        {% set message %}{% trans "If you have not yet created an empty database and database user for Xibo to use, and know the user name / password of a MySQL administrator stay on this tab, otherwise click \"Use Existing\"." %}{% endset %}
+                        {{ forms.message(message) }}
+
+                        {% set title %}{% trans "Create a new database" %}{% endset %}
+                        {% set helpText %}{% trans "Select to create a new database" %}{% endset %}
+                        {{ forms.radio("db_create", "db_create1", title, flash.db_create, helpText, "", "", 1) }}
+
+                        {% set title %}{% trans "Host" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the hostname for the MySQL server. This is usually localhost." %}{% endset %}
+                        {{ forms.input("host",  title, flash.new_db_host, helpText) }}
+
+                        {% set title %}{% trans "Admin Username" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the user name of an account that has administrator privileges on the MySQL server." %}{% endset %}
+                        {{ forms.input("admin_username",  title, flash.db_admin_user, helpText) }}
+
+                        {% set title %}{% trans "Admin Password" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter password for the Admin account." %}{% endset %}
+                        {{ forms.password("admin_password",  title, flash.db_admin_pass, helpText) }}
+
+                        {% set title %}{% trans "Database Name" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the name of the database that should be created." %}{% endset %}
+                        {{ forms.input("db_name",  title, flash.new_db_name, helpText) }}
+
+                        {% set title %}{% trans "Database Username" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the name of the database user that should be created." %}{% endset %}
+                        {{ forms.input("db_username",  title, flash.new_db_user, helpText) }}
+
+                        {% set title %}{% trans "Database Password" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter a password for this user." %}{% endset %}
+                        {{ forms.password("db_password",  title, flash.new_db_pass, helpText) }}
+                    </div>
+                    <div class="tab-pane" id="existing">
+                        {% set title %}{% trans "Use an existing database" %}{% endset %}
+                        {% set helpText %}{% trans "Select to use an existing database. Please note that when you use an existing database it must be empty of all other contents." %}{% endset %}
+                        {{ forms.radio("db_create", "db_create2", title, flash.db_create, helpText, "", "", 2) }}
+
+                        {% set title %}{% trans "Host" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the hostname for the MySQL server. This is usually localhost." %}{% endset %}
+                        {{ forms.input("existing_host",  title, flash.existing_db_host, helpText) }}
+
+                        {% set title %}{% trans "Database Name" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the name of the database that should be used." %}{% endset %}
+                        {{ forms.input("existing_db_name",  title, flash.existing_db_name, helpText) }}
+
+                        {% set title %}{% trans "Database Username" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the name of the database user that should be used." %}{% endset %}
+                        {{ forms.input("existing_db_username",  title, flash.existing_db_user, helpText) }}
+
+                        {% set title %}{% trans "Database Password" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter a password for this user." %}{% endset %}
+                        {{ forms.password("existing_db_password",  title, flash.existing_db_pass, helpText) }}
+                    </div>
+                </div>
+
+                {% set title %}{% trans "Next" %}{% endset %}
+                {{ forms.button(title, "submit") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

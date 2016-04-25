@@ -1,0 +1,45 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+Theme::Set('form_id', 'OutputCsvForm');
+Theme::Set('form_action', 'index.php?p=auditlog&q=OutputCSV');
+
+$formFields = array();
+$formFields[] = Form::AddText('filterFromDt', __('From Date'), Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
+$formFields[] = Form::AddText('filterToDt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
+
+Theme::Set('header_text', __('Audit Trail'));
+Theme::Set('form_fields', $formFields);
+Theme::Set('form_class', 'XiboManualSubmit');
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Output Audit Trail as CSV" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Export" %}, $("#exportForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="exportForm" class="XiboManualSubmit form-horizontal" method="get" action="{{ urlFor("auditLog.export") }}">
+                        {# it is missing some stuff for sure, also audit trial is not working at the moment #}
+                        {% set title %}{% trans "FromDate" %}{% endset %}
+                        {{ forms.input("filterFromDt", title, filterFromDt, helpText) }}
+
+                        {% set title %}{% trans "To Date" %}{% endset %}
+                        {{ forms.input("filterToDt", title, filterToDt, helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

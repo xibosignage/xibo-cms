@@ -1,0 +1,107 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li><a class="XiboFormButton" title="{% trans "Add a row to the end of this DataSet" %}" href="{{ urlFor("dataSet.data.add.form", {"id": dataSet.dataSetId}) }}">{% trans "Add Row" %}</a></li>
+        <li><a href="{{ urlFor("dataSet.column.view", {"id": dataSet.dataSetId}) }}">{% trans "View Columns" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    {% set dataSetName = dataSet.dataSet %}
+    {% set widgetTitle %}{% trans %}Data Entry for {{ dataSetName }}{% endtrans %}{% endset %}
+    <div class="widget">
+        <div class="widget-title">{{ widgetTitle }}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="datasets" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "ID" %}</th>
+                            {% for col in dataSet.getColumn() %}
+                                <th>{{ col.heading }}</th>
+                            {% endfor %}
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var cols = [];
+        cols.push({ "name": "id", "data": "id" });
+        {% for col in dataSet.getColumn() %}
+            {% if col.dataTypeId == 3 %}
+                cols.push({ "data": "{{ col.heading }}", "render": dataTableDateFromIso });
+            {% else %}
+                cols.push({ "data": "{{ col.heading }}" });
+            {% endif %}
+        {% endfor %}
+
+        cols.push({
+            "orderable": false,
+            "data": function(data, type, row, meta) {
+                if (type != "display")
+                    return "";
+
+                var url = "{{ urlFor("dataSet.data.delete.form", {"id": dataSet.dataSetId}) }}".replace(":rowId", data.id);
+
+                return "<a href=\"" + url + "\" class=\"XiboFormButton\"><span class=\"fa fa-times\"></span></a>";
+            }
+        });
+
+        var table = $("#datasets").DataTable({ "language": dataTablesLanguage,
+            serverSide: true, stateSave: true,
+            filter: false,
+            searchDelay: 3000,
+            "order": [[ 0, "asc"]],
+            ajax: {
+                "url": "{{ urlFor("dataSet.data.search", {id: dataSet.dataSetId}) }}",
+                "data": function(d) {
+                    $.extend(d, $("#datasets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
+            "columns": cols
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+
+        $("#datasets tbody").on('click', 'tr', function() {
+            var data = table.row($(this)).data();
+            // Load the edit form.
+            var editUrl = "{{ urlFor("dataSet.data.edit.form", {"id": dataSet.dataSetId}) }}".replace(":rowId", data.id);
+            XiboFormRender(editUrl);
+        });
+
+        function dataSetDataEntryOpen(dialog) {
+            $(dialog).find("select").selectpicker();
+        }
+    </script>
+{% endblock %}

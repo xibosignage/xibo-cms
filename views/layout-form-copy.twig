@@ -1,0 +1,57 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% set name = layout.layout %}
+    {% trans %}Copy {{ name }}{% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Copy" %}, $("#layoutCopyForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#description" role="tab" data-toggle="tab"><span>{% trans "Description" %}</span></a></li>
+            </ul>
+            <form id="layoutCopyForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("layout.copy", {id: layout.layoutId}) }}")>
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "The Name of the Layout - (1 - 50 characters)" %}{% endset %}
+                        {% set layoutName %}{{ layout.layout }} 2{% endset %}
+                        {{ forms.input("name", title, layoutName, helpText) }}
+
+                        {% set title %}{% trans "Make new copies of all media on this layout?" %}{% endset %}
+                        {% set helpText %}{% trans "This will duplicate all media that is currently assigned to the Layout being copied." %}{% endset %}
+                        {% if config.LAYOUT_COPY_MEDIA_CHECKB == "Checked" %}
+                            {% set checked = 1 %}
+                        {% else %}
+                            {% set checked = 0 %}
+                        {% endif %}
+                        {{ forms.checkbox("copyMediaFiles", title, checked, helpText) }}
+                    </div>
+                    <div class="tab-pane" id="description">
+                        {% set title %}{% trans "Description" %}{% endset %}
+                        {% set helpText %}{% trans "An optional description of the Layout. (1 - 250 characters)" %}{% endset %}
+                        {{ forms.textarea("description", title, layout.description, helpText) }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

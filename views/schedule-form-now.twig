@@ -1,0 +1,89 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Schedule Now" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#scheduleNowForm").submit()
+{% endblock %}
+
+{% block callBack %}setupScheduleNowForm{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="scheduleNowForm" class="form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
+                {{ forms.hidden("eventTypeId", "1") }}
+
+                {# Campaign / Layout list. We want to build two arrays for us to use. #}
+                {% set layoutOptions = [] %}
+                {% set campaignOptions = [] %}
+
+                {% for item in campaigns %}
+                    {% if item.isLayoutSpecific == 1 %}
+                        {% set layoutOptions = [{id: item.campaignId, value: item.campaign}]|merge(layoutOptions) %}
+                    {% else %}
+                        {% set campaignOptions = [{id: item.campaignId, value: item.campaign}]|merge(campaignOptions) %}
+                    {% endif %}
+                {% endfor %}
+
+                {% set campaigns %}{% trans "Campaigns" %}{% endset %}
+                {% set layouts %}{% trans "Layouts" %}{% endset %}
+                {% set optionGroups = [
+                {id: "campaign", label: campaigns},
+                {id: "layout", label: layouts}
+                ] %}
+                {% set title %}{% trans "Layout / Campaign" %}{% endset %}
+                {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
+                {{ forms.dropdown("campaignId", "single", title, campaignId, {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "", "", "", "", "", optionGroups) }}
+
+                {% set title %}{% trans "Hours" %}{% endset %}
+                {% set helpText %}{% trans "Hours this event should be scheduled for" %}{% endset %}
+                {{ forms.input("hours", title, "", helpText) }}
+                
+                {% set title %}{% trans "Minutes" %}{% endset %}
+                {% set helpText %}{% trans "Minutes this event should be scheduled for" %}{% endset %}
+                {{ forms.input("minutes", title, "", helpText) }}
+                
+                {% set title %}{% trans "Seconds" %}{% endset %}
+                {% set helpText %}{% trans "Seconds this event should be scheduled for" %}{% endset %}
+                {{ forms.input("seconds", title, "", helpText) }}
+
+                {% set title %}{% trans "Display" %}{% endset %}
+                {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
+                {% set attributes = [
+                { name: "data-live-search", value: "true" },
+                { name: "data-selected-text-format", value: "count > 4" }
+                ] %}
+                {% set transGroups %}{% trans "Groups" %}{% endset %}
+                {% set transDisplays %}{% trans "Display" %}{% endset %}
+                {% set optionGroups = [
+                {id: "group", label: transGroups},
+                {id: "display", label: transDisplays}
+                ] %}
+                {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, [displayGroupId], {group: displayGroups, display: displays}, "displayGroupId", "displayGroup", helpText, "", "", "", "", attributes, optionGroups) }}
+
+                {% set title %}{% trans "Display Order" %}{% endset %}
+                {% set helpText %}{% trans "Should this event have an order?" %}{% endset %}
+                {{ forms.number("displayOrder", title, displayOrder, helpText) }}
+                
+                {% set title %}{% trans "Priority" %}{% endset %}
+                {% set helpText %}{% trans "Sets whether or not this event has priority. If set the event will be show in preference to other events." %}{% endset %}
+                {{ forms.checkbox("isPriority", title, isPriority, helpText) }}
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

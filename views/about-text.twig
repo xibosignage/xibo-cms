@@ -1,0 +1,11 @@
+{% extends "form-base.twig" %}
+
+{% block formTitle %}{% trans "About" %}{% endblock %}
+
+{% block formButtons %}
+    {% trans "Close" %}, XiboDialogClose()
+{% endblock %}
+
+{% block formHtml %}
+    {% include "licence.twig" %}
+{% endblock %}

@@ -1,0 +1,98 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+{% extends "authed.twig" %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Report Fault" %}</div>
+        <div class="widget-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <h2>{% trans "Report an application fault" %}</h2>
+
+                    {% if environmentFault %}
+                        <p class="alert alert-danger">{% trans "There is a critical error listed below that you should resolve first." %}</p>
+                    {% elseif environmentWarning %}
+                        <p class="alert alert-warning">{% trans "There is a warning listed below that you should resolve first." %}</p>
+                    {% endif %}
+
+                    <p>{% trans "Before reporting a fault it would be appreciated if you follow the below steps." %}</p>
+
+                    <div class="ReportFault">
+                        <ol>
+                            <li>
+                                <p>{% trans "Check that the Environment passes all the CMS Environment checks." %}</p>
+                                <table id="sessions" class="table table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "Item" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                        <th>{% trans "Advice" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for check in environmentCheck %}
+                                            <tr>
+                                                <td>{{ check.item }}</td>
+                                                <td>
+                                                    {% if check.status == 0 %}
+                                                        <span class="fa fa-times"></span>
+                                                    {% elseif check.status == 1 %}
+                                                        <span class="fa fa-check"></span>
+                                                    {% else %}
+                                                        <span class="fa fa-exclamation"></span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ check.advice }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </li>
+
+                            <li>
+                                <p>{% trans "Turn ON full auditing and debugging." %}</p>
+                                <form id="1" class="XiboAutoForm" action="{{ urlFor("fault.debug.on") }}" method="put">
+                                    <input class="btn btn-default" type="submit" value="{% trans "Turn ON Debugging" %}" />
+                                </form>
+                            </li>
+
+                            <li>
+                                <p>{% trans "Recreate the Problem in a new window." %}</p>
+                            </li>
+
+                            <li>
+                                <p>
+                                    {% trans "Automatically collect and export relevant information into a text file." %}
+                                    {% trans "Please save this file to your PC." %}
+                                </p>
+                                <a class="btn btn-default" href="{{ urlFor("fault.collect") }}">{% trans "Collect and Save Data" %}</a>
+                            </li>
+
+                            <li>
+                                <p>{% trans "Turn full auditing and debugging OFF." %}</p>
+                                <form id="2" class="XiboAutoForm" action="{{ urlFor("fault.debug.off") }}" method="put">
+                                    <input class="btn btn-default" type="submit" value="{% trans "Turn OFF Debugging" %}" />
+                                </form>
+                            </li>
+
+                            <li>
+                                <p>
+                                    {% trans "Click on the below link to open the bug report page for this release." %}
+                                    {% trans "Describe the problem and upload the file you obtained earlier." %}
+                                </p>
+                                <a class="btn btn-default" href="https://community.xibo.org.uk/c/support" target="_blank">{% trans "Ask a question" %}</a>
+                            </li>
+
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

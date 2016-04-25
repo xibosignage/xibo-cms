@@ -1,0 +1,261 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Event" %}
+{% endblock %}
+
+{% block callBack %}setupScheduleForm{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Delete" %}, XiboSwapDialog("{{ urlFor("schedule.delete.form", {id: event.eventId}) }}")
+    {% trans "Save" %}, $("#scheduleEditForm").submit()
+{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "recurrenceType",
+    "trigger": "init",
+    "value": "",
+    "operation": "equals",
+    "actions": {
+    ".repeat-control-group": { "display": "none" }
+    }
+    },{
+    "field": "recurrenceType",
+    "trigger": "change",
+    "value": "",
+    "operation": "equals",
+    "actions": {
+    ".repeat-control-group": { "display": "none" }
+    }
+    },{
+    "field": "recurrenceType",
+    "trigger": "init",
+    "value": "",
+    "operation": "not",
+    "actions": {
+    ".repeat-control-group": { "display": "block" }
+    }
+    },{
+    "field": "recurrenceType",
+    "trigger": "change",
+    "value": "",
+    "operation": "not",
+    "actions": {
+    ".repeat-control-group": { "display": "block" }
+    }
+    },{
+    "field": "eventTypeId",
+    "trigger": "init",
+    "value": "1",
+    "operation": "equals",
+    "actions": {
+    ".layout-control": { "display": "block" },
+    ".endtime-control": { "display": "block" },
+    ".command-control": { "display": "none" },
+    ".day-part-control": { "display": "block" }
+    }
+    },{
+    "field": "eventTypeId",
+    "trigger": "change",
+    "value": "1",
+    "operation": "equals",
+    "actions": {
+    ".layout-control": { "display": "block" },
+    ".endtime-control": { "display": "block" },
+    ".command-control": { "display": "none" },
+    ".day-part-control": { "display": "block" }
+    }
+    },{
+    "field": "eventTypeId",
+    "trigger": "init",
+    "value": "1",
+    "operation": "not",
+    "actions": {
+    ".layout-control": { "display": "none" },
+    ".endtime-control": { "display": "none" },
+    ".command-control": { "display": "block" },
+    ".day-part-control": { "display": "none" },
+    ".starttime-control": { "display": "block" }
+    }
+    },{
+    "field": "eventTypeId",
+    "trigger": "change",
+    "value": "1",
+    "operation": "not",
+    "actions": {
+    ".layout-control": { "display": "none" },
+    ".endtime-control": { "display": "none" },
+    ".command-control": { "display": "block" },
+    ".day-part-control": { "display": "none" },
+    ".starttime-control": { "display": "block" }
+    }
+    },{
+    "field": "dayPartId",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".starttime-control": { "display": "block" },
+    ".endtime-control": { "display": "block" }
+    }
+    },{
+    "field": "dayPartId",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".starttime-control": { "display": "block" },
+    ".endtime-control": { "display": "block" }
+    }
+    },{
+    "field": "dayPartId",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".starttime-control": { "display": "none" },
+    ".endtime-control": { "display": "none" }
+    }
+    },{
+    "field": "dayPartId",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".starttime-control": { "display": "none" },
+    ".endtime-control": { "display": "none" }
+    }
+    }]
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#repeats" role="tab" data-toggle="tab"><span>{% trans "Repeats" %}</span></a></li>
+            </ul>
+            <form id="scheduleEditForm" class="form-horizontal" method="put" action="{{ urlFor("schedule.edit", {id: event.eventId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Event Type" %}{% endset %}
+                        {% set helpText %}{% trans "Select the type of event to schedule" %}{% endset %}
+                        {% set layoutEventType %}{% trans "Campaign/Layout" %}{% endset %}
+                        {% set commandEventType %}{% trans "Command" %}{% endset %}
+                        {% set eventTypes = [
+                        {id: 1, label: layoutEventType},
+                        {id: 2, label: commandEventType}
+                        ] %}
+                        {{ forms.dropdown("eventTypeId", "single", title, event.eventTypeId, eventTypes, "id", "label", helpText) }}
+
+                        {% set title %}{% trans "Display" %}{% endset %}
+                        {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-live-search", value: "true" },
+                            { name: "data-selected-text-format", value: "count > 4" }
+                        ] %}
+                        {% set transGroups %}{% trans "Groups" %}{% endset %}
+                        {% set transDisplays %}{% trans "Display" %}{% endset %}
+                        {% set optionGroups = [
+                            {id: "group", label: transGroups},
+                            {id: "display", label: transDisplays}
+                        ] %}
+                        {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, {group: displayGroups, display: displays}, "displayGroupId", "displayGroup", helpText, "", "", "", "", attributes, optionGroups) }}
+
+                        {% set title %}{% trans "Always" %}{% endset %}
+                        {% set helpText %}{% trans "Put into the schedule rotation and never remove. Layouts will be cycled if there is more than one scheduled." %}{% endset %}
+                        {{ forms.checkbox("dayPartId", title, event.dayPartId, helpText, "day-part-control") }}
+
+                        {% set title %}{% trans "Start Time" %}{% endset %}
+                        {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}
+                        {{ forms.dateTime("fromDt", title, event.fromDt, helpText, "starttime-control", "required", "") }}
+
+                        {% set title %}{% trans "End Time" %}{% endset %}
+                        {% set helpText %}{% trans "Select the end time for this event" %}{% endset %}
+                        {{ forms.dateTime("toDt", title, event.toDt, helpText, "endtime-control", "required", "") }}
+
+                        {# Campaign / Layout list. We want to build two arrays for us to use. #}
+                        {% set layoutOptions = [] %}
+                        {% set campaignOptions = [] %}
+
+                        {% for item in campaigns %}
+                            {% if item.isLayoutSpecific == 1 %}
+                                {% set layoutOptions = layoutOptions|merge([{id: item.campaignId, value: item.campaign}]) %}
+                            {% else %}
+                                {% set campaignOptions = campaignOptions|merge([{id: item.campaignId, value: item.campaign}]) %}
+                            {% endif %}
+                        {% endfor %}
+
+                        {# Add a blank layout record #}
+                        {% set layoutOptions = [{id: "", value: ""}]|merge(layoutOptions) %}
+
+                        {% set campaigns %}{% trans "Campaigns" %}{% endset %}
+                        {% set layouts %}{% trans "Layouts" %}{% endset %}
+                        {% set optionGroups = [
+                        {id: "campaign", label: campaigns},
+                        {id: "layout", label: layouts}
+                        ] %}
+                        {% set title %}{% trans "Layout / Campaign" %}{% endset %}
+                        {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
+                        {{ forms.dropdown("campaignId", "single", title, event.campaignId, {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "layout-control", "", "", "", "", optionGroups) }}
+
+                        {% set title %}{% trans "Command" %}{% endset %}
+                        {% set helpText %}{% trans "Please select a command for this Event." %}{% endset %}
+                        {{ forms.dropdown("commandId", "single", title, event.commandId, [{commandId: "", command: ""}]|merge(commands), "commandId", "command", helpText, "command-control") }}
+
+                        {% set title %}{% trans "Display Order" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}
+                        {{ forms.number("displayOrder", title, event.displayOrder, helpText) }}
+
+                        {% set title %}{% trans "Priority" %}{% endset %}
+                        {% set helpText %}{% trans "Sets whether or not this event has priority. If set the event will be show in preference to other events." %}{% endset %}
+                        {{ forms.checkbox("isPriority", title, event.isPriority, helpText) }}
+
+                    </div>
+                    
+                    <div class="tab-pane" id="repeats">
+                        {% set title %}{% trans "Repeats" %}{% endset %}
+                        {% set helpText %}{% trans "What type of repeat is required?" %}{% endset %}
+                        {% set noneOption %}{% trans "None" %}{% endset %}
+                        {% set minute %}{% trans "Per Minute" %}{% endset %}
+                        {% set hourly %}{% trans "Hourly" %}{% endset %}
+                        {% set daily %}{% trans "Daily" %}{% endset %}
+                        {% set weekly %}{% trans "Weekly" %}{% endset %}
+                        {% set monthly %}{% trans "Monthly" %}{% endset %}
+                        {% set yearly %}{% trans "Yearly" %}{% endset %}
+                        {% set options = [
+                        { id: "", name: noneOption },
+                        { id: "Minute", name: minute },
+                        { id: "Hour", name: hourly},
+                        { id: "Day", name: daily},
+                        { id: "Week", name: weekly},
+                        { id: "Month", name: monthly},
+                        { id: "Year", name: yearly}
+                        ] %}
+                        {{ forms.dropdown("recurrenceType", "single", title, event.recurrenceType, options, "id", "name", helpText) }}
+                    
+                        {% set title %}{% trans "Repeat every" %}{% endset %}
+                        {% set helpText %}{% trans "How often does this event repeat?" %}{% endset %}
+                        {{ forms.number("recurrenceDetail", title, event.recurrenceDetail, helpText, "repeat-control-group") }}
+
+                        {% set title %}{% trans "Until" %}{% endset %}
+                        {% set helpText %}{% trans "When should this event stop repeating?" %}{% endset %}
+                        {{ forms.dateTime("recurrenceRange", title, event.recurrenceRange, helpText, "repeat-control-group", "", "") }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

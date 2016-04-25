@@ -1,0 +1,71 @@
+{% extends "base-install.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block jumboTron %}
+    <div class="jumbotron">
+        <div class="container">
+            {% set themeName = theme.getThemeConfig("app_name") %}
+            {% set header %}{% trans %}Welcome to the {{ themeName }} Installation{% endtrans %}{% endset %}
+            <h1>{{ header }}</h1>
+            <p>{% trans %}Thank you for choosing {{ themeName }}. This installation wizard will take you through
+                setting up {{ themeName }} one step at a time. There are 6 steps in total, the first one is below.{% endtrans %}
+            </p>
+            <p><a class="btn btn-primary btn-lg" role="button" href="{{ theme.getThemeConfig("cms_install_url") }}" target="_blank">{% trans "Installation guide" %} &raquo;</a></p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block stepContent %}
+    <div class="row">
+        <div class="col-md-12">
+            {% set themeName = theme.getThemeConfig("app_name") %}
+            <p>{% trans %}First we need to check if your server meets {{ themeName }}'s requirements.{% endtrans %}</p>
+            <table id="sessions" class="table table-striped">
+                <thead>
+                <tr>
+                    <th>{% trans "Item" %}</th>
+                    <th>{% trans "Status" %}</th>
+                    <th>{% trans "Advice" %}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for check in config.CheckEnvironment() %}
+                    <tr>
+                        <td>{{ check.item }}</td>
+                        <td>
+                            {% if check.status == 0 %}
+                                <span class="fa fa-times"></span>
+                            {% elseif check.status == 1 %}
+                                <span class="fa fa-check"></span>
+                            {% else %}
+                                <span class="fa fa-exclamation"></span>
+                            {% endif %}
+                        </td>
+                        <td>{{ check.advice }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% if config.EnvironmentFault() %}
+                <form action="{{ urlFor("install", {step: 1}) }}" class="form-inline">
+                    {% set title %}{% trans "Retest" %}{% endset %}
+                    {{ forms.button(title, "submit") }}
+                </form>
+            {% elseif config.EnvironmentWarning() %}
+                <form action="{{ urlFor("install", {step: 2}) }}" class="form-inline">
+                    {% set title %}{% trans "Retest" %}{% endset %}
+                    {% set link = urlFor("install", {step: 1}) %}
+                    {{ forms.button(title, "link", link) }}
+
+                    {% set title %}{% trans "Next" %}{% endset %}
+                    {{ forms.button(title, "submit", link) }}
+                </form>
+            {% else %}
+                <form action="{{ urlFor("install", {step: 2}) }}" class="form-inline">
+                    {% set title %}{% trans "Next" %}{% endset %}
+                    {{ forms.button(title, "submit") }}
+                </form>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base-install.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block stepContent %}
+    <div class="row">
+        <div class="col-md-12">
+            {% set themeName = theme.getThemeConfig("app_name") %}
+
+            <form action="{{ urlFor("install", {step: 7}) }}" class="form-horizontal" method="post">
+
+                {% set message %}{% trans %}{{ themeName }} needs an administrator user account to be the first user account that has access to the CMS. Please enter your chosen details below.{% endtrans %}{% endset %}
+                {{ forms.message(message) }}
+
+                {% set title %}{% trans "Library Location" %}{% endset %}
+                {% set helpText %}{% trans %}{{ themeName }} needs somewhere to store the things you upload to be shown. Ideally, this should be somewhere outside the root of your web server - that is such that is not accessible by a web browser. Please input the full path to this folder. If the folder does not already exist, we will attempt to create it for you.{% endtrans %}{% endset %}
+                {{ forms.input("library_location",  title, "", helpText) }}
+
+                {% set title %}{% trans "Server Key" %}{% endset %}
+                {% set helpText %}{% trans %}{{ themeName }} needs you to choose a "key". This will be required each time you set-up a new client. It should be complicated, and hard to remember. It is visible in the CMS interface, so it need not be written down separately.{% endtrans %}{% endset %}
+                {{ forms.input("server_key",  title, serverKey, helpText) }}
+
+                {% set title %}{% trans "Statistics" %}{% endset %}
+                {% set helpText %}{% trans %}We'd love to know you're running {{ theme_name }}. If you're happy for us to collect anonymous statistics (version number, number of displays) then please leave the box ticked. Please un tick the box if your server does not have direct access to the internet.{% endtrans %}{% endset %}
+                {{ forms.checkbox("stats",  title, 1, helpText) }}
+
+                {% set title %}{% trans "Next" %}{% endset %}
+                {{ forms.button(title, "submit") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

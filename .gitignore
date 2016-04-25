@@ -1,4 +1,10 @@
+library/
+vendor/
 settings.php
 .project/
 .vagrant/
 .idea/
+cache/
+web/modules/fonts.css
+web/swagger-ui/
+custom/

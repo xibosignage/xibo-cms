@@ -1,0 +1,40 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Install Module" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Install" %}, $("#moduleInstallForm").submit()
+{% endblock %}
+
+{% block callBack %}installModuleComplete{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <h3>{{ module.title }} <small>{{ module.author }}</small></h3>
+            <p>{{ module.description }}</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <form id="moduleInstallForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.install", {name: module.name}) }}">
+                {% set message %}{% trans "Are you sure you want to install this module?" %}{% endset %}
+                {{ forms.message(message) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}
