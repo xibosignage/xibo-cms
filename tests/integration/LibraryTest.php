@@ -8,9 +8,15 @@
 namespace Xibo\Tests\Integration;
 
 use Xibo\Tests\LocalWebTestCase;
+use Xibo\Entity\Media;
+use Xibo\Helper\Random;
 
 class LibraryTest extends LocalWebTestCase
 {
+
+    /**
+    * List all file sin library
+    */
 
     public function testListAll()
     {
@@ -23,5 +29,92 @@ class LibraryTest extends LocalWebTestCase
       //  fwrite(STDOUT, $this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+
+        return $object->id;
     }
+
+    /**
+    * Add new file to library
+    */
+
+
+
+    /**
+     * Edit soecific media file
+     */
+/*
+        public function testEdit($mediaId)
+    {
+
+        $media = $this->container->mediaFactory->getById($mediaId);
+
+        $name = Random::generateString(8, 'phpunit');
+
+        $this->client->put('/library/' . $mediaId, [
+            'name' => $name,
+            'duration' => 50,
+            'retired' => $media->retired,
+            'tags' => $media->tags,
+            'updateInLayouts' => 1
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+
+        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
+
+        $object = json_decode($this->client->response->body());
+        fwrite(STDERR, $this->client->response->body());
+
+        $this->assertObjectHasAttribute('data', $object);
+
+        return $mediaId;
+    }
+*/
+    /**
+     * Test delete added media
+     * @depends testEdit
+     */ 
+
+    /*
+        public function testDelete($mediaId)
+    {
+        $this->client->delete('/library/' . $mediaId);
+
+        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+    }
+    */
+
+    /**
+     * Edit soecific media file
+     */
+
+        public function testEdit2()
+    {
+        $name = Random::generateString(8, 'phpunit');
+
+        $this->client->put('/library/' . 17, [
+            'name' => $name,
+            'duration' => 50,
+            'retired' => 0,
+            'tags' => '',
+            'updateInLayouts' => 1
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+
+        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
+
+        $object = json_decode($this->client->response->body());
+//        fwrite(STDERR, $this->client->response->body());
+
+        $this->assertObjectHasAttribute('data', $object);
+    }
+
+    /**
+     * Test delete specific media file
+     */ 
+/*
+        public function testDelete2()
+    {
+        $this->client->delete('/library/' . 19);
+
+        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+    }
+*/
 }

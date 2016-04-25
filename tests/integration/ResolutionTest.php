@@ -25,6 +25,7 @@ class ResolutionTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
 
         $object = json_decode($this->client->response->body());
+     //   fwrite(STDOUT, $this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
@@ -106,6 +107,7 @@ class ResolutionTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
 
         $object = json_decode($this->client->response->body());
+//        fwrite(STDOUT, $this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
 

@@ -166,4 +166,9 @@ class LocalWebTestCase extends WebTestCase
 
         return $app;
     }
+
+    protected function tearDown()
+    {
+        $this->getContainer()->store->commitIfNecessary();
+    }
 }

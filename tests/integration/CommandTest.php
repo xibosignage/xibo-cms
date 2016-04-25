@@ -25,7 +25,7 @@ class CommandTest extends \Xibo\Tests\LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
 
         $object = json_decode($this->client->response->body());
-   //     fwrite(STDERR, $this->client->response->body());
+//        fwrite(STDERR, $this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
@@ -33,7 +33,7 @@ class CommandTest extends \Xibo\Tests\LocalWebTestCase
     /**
      * Shows this user commands with filters
      */
-
+/*
     public function testListAll2()
     {
         $this->client->get('/command', [
@@ -51,12 +51,12 @@ class CommandTest extends \Xibo\Tests\LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
       
     }
-
+*/
 
      /**
      * Add command test
      */
-
+/*
     public function testAdd()
     {
         $this->client->post('/command', [
@@ -76,12 +76,12 @@ class CommandTest extends \Xibo\Tests\LocalWebTestCase
 
         return $object->id;
     }
-
+*/
     /**
      * Edit command test
      * depends testAdd
      */
-
+/*
     public function testEdit($commandId)
     {
 
@@ -103,12 +103,12 @@ class CommandTest extends \Xibo\Tests\LocalWebTestCase
 
         return $commandId;
     }
-
+*/
     /**
      * Delete Added command
      * depends testEdit
      */
-
+/*
     public function testDelete($commandId)
     {
         $this->client->delete('/command/' . $commandId);
@@ -116,16 +116,17 @@ class CommandTest extends \Xibo\Tests\LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
 
-
+*/
     /**
      * Delete specific command
      */
 
+/*
     public function testDelete2()
     {
         $this->client->delete('/command/' . 5);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
-
+*/
 }

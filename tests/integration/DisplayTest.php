@@ -32,6 +32,7 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
      * Shows specific display test with filters 
      */
 
+/*
     public function testListAll2()
     {
         $this->client->get('/display', [
@@ -50,9 +51,13 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
 
+    */
+
     /**
      *  Delete Display Test
      */
+
+    /*
 
         public function testDelete()
     {
@@ -61,19 +66,19 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
    
-
+*/
 
    /**
    * Edit Display test
    */
-
+/*
         public function testEdit()
         {
-             $this->client->put('/display/' . 2, [
-            'display' => 'Android Peter',
-            'description' =>'z64',
+             $this->client->put('/display/' . 9, [
+            'display' => 'EVILSHADYPC',
+ //           'description' =>'z64',
             'isAuditing' => 0,
-            'defaultLayoutId' => 63,
+            'defaultLayoutId' => 51,
             'licensed' => 1,
  //           'license' => '',
             'incSchedule' => 0,
@@ -93,17 +98,19 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
             $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
 
             $object = json_decode($this->client->response->body());
-            fwrite(STDERR, $this->client->response->body());
+//            fwrite(STDERR, $this->client->response->body());
         } 
+
+        */
 
     /**
     * Request screenshot Test
     * Will tell if zeroMQ is required
     */
-
+/*
     public function testScreenshot()
     {
-        $this->client->put('/display/requestscreenshot/' . 2);
+        $this->client->put('/display/requestscreenshot/' . 7);
 
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
 
@@ -111,19 +118,21 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
 //        fwrite(STDERR, $this->client->response->body());
 
     }
-    
 
+*/
     /**
     * Wake On Lan Test
     */
-
+/*
     public function testWoL()
     {
-        $this->client->put('/display/wol/' . 2);
+        $this->client->put('/display/wol/' . 7);
 
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
 
         $object = json_decode($this->client->response->body());
 //        fwrite(STDERR, $this->client->response->body());
     }
+
+    */
 }
