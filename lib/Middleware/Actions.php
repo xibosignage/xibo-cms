@@ -46,7 +46,7 @@ class Actions extends Middleware
             // Process Actions
             if (!$app->configService->isUpgradePending() && $app->configService->GetSetting('DEFAULTS_IMPORTED') == 0) {
 
-                $folder = $app->configService->uri('layouts', true);
+                $folder = PROJECT_ROOT . '/web/' . $app->configService->uri('layouts', true);
 
                 foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                     if (stripos($file, '.zip')) {
