@@ -111,7 +111,7 @@ class Schedule extends Base
         $displays = array();
 
         foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $display) {
-            /* @var Xibo\Entity\DisplayGroup $display */
+            /* @var \Xibo\Entity\DisplayGroup $display */
             if ($display->isDisplaySpecific == 1) {
                 $displays[] = $display;
             } else {
@@ -282,7 +282,7 @@ class Schedule extends Base
         $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
         foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var Xibo\Entity\DisplayGroup $Xibo\Entity\DisplayGroup */
+            /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */
 
             // Can't schedule with view, but no edit permissions
             if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))
@@ -492,7 +492,7 @@ class Schedule extends Base
         $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
         foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var Xibo\Entity\DisplayGroup Xibo\Entity\DisplayGroup */
+            /* @var \Xibo\Entity\DisplayGroup \Xibo\Entity\DisplayGroup */
 
             // Can't schedule with view, but no edit permissions
             if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))
@@ -750,7 +750,7 @@ class Schedule extends Base
 
     /**
      * Is this event editable?
-     * @param array[DisplayGroup] $displayGroups
+     * @param array[\Xibo\Entity\DisplayGroup] $displayGroups
      * @return bool
      */
     private function isEventEditable($displayGroups)
@@ -760,7 +760,7 @@ class Schedule extends Base
         // Work out if this event is editable or not. To do this we need to compare the permissions
         // of each display group this event is associated with
         foreach ($displayGroups as $displayGroup) {
-            /* @var Xibo\Entity\DisplayGroup $Xibo\Entity\DisplayGroup */
+            /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */
 
             // Can schedule with view, but no view permissions
             if ($scheduleWithView && !$this->getUser()->checkViewable($displayGroup))
@@ -786,7 +786,7 @@ class Schedule extends Base
         $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
         foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var Xibo\Entity\DisplayGroup $Xibo\Entity\DisplayGroup */
+            /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */
 
             // Can't schedule with view, but no edit permissions
             if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))

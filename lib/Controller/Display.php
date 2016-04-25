@@ -817,11 +817,11 @@ class Display extends Base
         $checkboxes = array();
 
         foreach ($allGroups as $group) {
-            /* @var Xibo\Entity\DisplayGroup $group */
+            /* @var \Xibo\Entity\DisplayGroup $group */
             // Check to see if it exists in $usersAssigned
             $exists = false;
             foreach ($groupsAssigned as $groupAssigned) {
-                /* @var Xibo\Entity\DisplayGroup $groupAssigned */
+                /* @var \Xibo\Entity\DisplayGroup $groupAssigned */
                 if ($groupAssigned->displayGroupId == $group->displayGroupId) {
                     $exists = true;
                     break;
