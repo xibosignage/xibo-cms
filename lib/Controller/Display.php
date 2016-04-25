@@ -21,7 +21,7 @@
 namespace Xibo\Controller;
 use finfo;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Entity\DisplayGroup;
+//use Xibo\Entity\DisplayGroup;
 use Xibo\Entity\Stat;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
@@ -817,11 +817,11 @@ class Display extends Base
         $checkboxes = array();
 
         foreach ($allGroups as $group) {
-            /* @var DisplayGroup $group */
+            /* @var Xibo\Entity\DisplayGroup $group */
             // Check to see if it exists in $usersAssigned
             $exists = false;
             foreach ($groupsAssigned as $groupAssigned) {
-                /* @var DisplayGroup $groupAssigned */
+                /* @var Xibo\Entity\DisplayGroup $groupAssigned */
                 if ($groupAssigned->displayGroupId == $group->displayGroupId) {
                     $exists = true;
                     break;

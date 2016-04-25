@@ -8,8 +8,7 @@
 namespace Xibo\Tests\Integration;
 
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Entity\DisplayGroup;
-use Xibo\Entity\Display;
+//use Xibo\Entity\DisplayGroup;
 use Xibo\Helper\Random;
 
 class DisplayGroupTest extends LocalWebTestCase
@@ -35,6 +34,7 @@ class DisplayGroupTest extends LocalWebTestCase
  *  List specific display groups
  */ 
 
+/*
     public function testListAll2()
     {
         $this->client->get('/displaygroup', [
@@ -50,6 +50,8 @@ class DisplayGroupTest extends LocalWebTestCase
 
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
+
+    */
 
    /**
     *  Add new display group test
@@ -113,12 +115,16 @@ class DisplayGroupTest extends LocalWebTestCase
      * @param int $displayGroupId
      * @depends testEdit
      */ 
+
+    /*
         public function testDelete($displayGroupId)
     {
         $this->client->delete('/displaygroup/' . $displayGroupId);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
+
+  */
 
 	/**
 	 *Assign new displays Test
@@ -285,7 +291,7 @@ class DisplayGroupTest extends LocalWebTestCase
     /**
      * Collect now action test
      */
-
+/*
    	public function testCollect()
     {
 
@@ -297,11 +303,11 @@ class DisplayGroupTest extends LocalWebTestCase
 //        fwrite(STDERR, $this->client->response->body());
 
     }
-
+*/
     /**
      * Change Layout action test
      */
-
+/*
    	public function testChange()
     {
 
@@ -318,11 +324,11 @@ class DisplayGroupTest extends LocalWebTestCase
 //        fwrite(STDERR, $this->client->response->body());
 
     }
-
+*/
     /**
      * Revert to Schedule action test
      */
-
+/*
    	public function testRevert()
     {
 
@@ -334,11 +340,11 @@ class DisplayGroupTest extends LocalWebTestCase
 //        fwrite(STDERR, $this->client->response->body());
 
     }
-
+*/
     /**
      * Send command action test
      */
-
+/*
    	public function testCommand()
     {
 
@@ -352,6 +358,6 @@ class DisplayGroupTest extends LocalWebTestCase
 //        fwrite(STDERR, $this->client->response->body());
 
     }
-
+*/
 
 }
