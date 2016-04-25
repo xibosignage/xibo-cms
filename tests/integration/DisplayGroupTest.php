@@ -110,30 +110,16 @@ class DisplayGroupTest extends LocalWebTestCase
         return $displayGroupId;
     }
 
-    /**
-     * Test delete
-     * @param int $displayGroupId
-     * @depends testEdit
-     */ 
-
-    /*
-        public function testDelete($displayGroupId)
-    {
-        $this->client->delete('/displaygroup/' . $displayGroupId);
-
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
-    }
-
-  */
 
 	/**
-	 *Assign new displays Test
+	 * Assign new displays Test
+	 * @depends testEdit
 	 */
-
-    public function testAssign()
+/*
+    public function testAssign($displayGroupId)
     {
 
-		$this->client->post('/displaygroup/' . 7 . '/display/assign', [
+		$this->client->post('/displaygroup/' . $displayGroupId . '/display/assign', [
         'displayId' => [7]
         ]);
 
@@ -145,15 +131,16 @@ class DisplayGroupTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
     }
-
+*/
     /**
-	 *Unassign displays Test
+	 * Unassign displays Test
+	 * @depends testEdit
 	 */
-
-    public function testUnassign()
+/*
+    public function testUnassign($displayGroupId)
     {
 
-        $this->client->post('/displaygroup/' . 7 . '/display/unassign', [
+        $this->client->post('/displaygroup/' . $displayGroupId . '/display/unassign', [
         'displayId' => [7]
         ]);
 
@@ -165,15 +152,16 @@ class DisplayGroupTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
     }
-
+*/
 	/**
-	 *Assign new display group Test
+	 * Assign new display group Test
+	 * @depends testEdit
 	 */
-
-    public function testAssignGroup()
+/*
+    public function testAssignGroup($displayGroupId)
     {
 
-		$this->client->post('/displaygroup/' . 7 . '/displayGroup/assign', [
+		$this->client->post('/displaygroup/' . $displayGroupId . '/displayGroup/assign', [
         'displayGroupId' => [29]
         ]);
 
@@ -182,15 +170,16 @@ class DisplayGroupTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
 //        fwrite(STDERR, $this->client->response->body());
     }
-
+*/
     /**
-	 *Unassign displays group Test
+	 * Unassign displays group Test
+	 * @depends testEdit
 	 */
-
-    public function testUnassignGroup()
+/*
+    public function testUnassignGroup($displayGroupId)
     {
 
-		$this->client->post('/displaygroup/' . 7 . '/displayGroup/unassign', [
+		$this->client->post('/displaygroup/' . $displayGroupId . '/displayGroup/unassign', [
         	'displayGroupId' => [29]
         	]);
 
@@ -199,15 +188,16 @@ class DisplayGroupTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
 //        fwrite(STDERR, $this->client->response->body());
     }
-
+*/
     /**
 	 * Assign new media file to a group Test
+	 * @depends testEdit
 	 */
-
-    public function testAssignMedia()
+/*
+    public function testAssignMedia($displayGroupId)
     {
 
-		$this->client->post('/displaygroup/' . 7 . '/media/assign', [
+		$this->client->post('/displaygroup/' . $displayGroupId . '/media/assign', [
         	'mediaId' => [13, 17],
         	'unassignMediaId' => [13]
         	]);
@@ -217,15 +207,16 @@ class DisplayGroupTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
 //        fwrite(STDERR, $this->client->response->body());
     }
-
+*/
     /**
 	 * Unassign media files from a group Test
+	 * @depends testEdit
 	 */
-
-    public function testUnassignMedia()
+/*
+    public function testUnassignMedia($displayGroupId)
     {
 
-        $this->client->post('/displaygroup/' . 7 . '/media/unassign', [
+        $this->client->post('/displaygroup/' . $displayGroupId . '/media/unassign', [
         	'mediaId' => [17]
         	]);
 
@@ -234,17 +225,20 @@ class DisplayGroupTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
 //        fwrite(STDERR, $this->client->response->body());
     }
-
+*/
     /**
 	 * Assign new layouts to a group Test
+	 * @depends testEdit
 	 */
 
-    public function testAssignLayout()
+    public function testAssignLayout($displayGroupId)
     {
 
-        $this->client->post('/displaygroup/' . 7 . '/layout/assign', [
-        	'layoutId' => [51, 63],
-        	'unassignLayoutsId' => [51]
+    	$layout = $this->container->layoutFactory->query(null, ['start' => 1, 'length' => 1])[0];
+
+        $this->client->post('/displaygroup/' . $displayGroupId . '/layout/assign', [
+        	'layoutId' => [$layout->layoutId],
+        //	'unassignLayoutsId' => [$layout->layoutId]
         	]);
 
         $this->assertSame(200, $this->client->response->status());
@@ -255,30 +249,31 @@ class DisplayGroupTest extends LocalWebTestCase
 
     /**
 	 * Unassign layouts from a group Test     
-	 *  does not work, method name differences between /routes and controller/displayGroup
+	 * @depends testEdit
 	 */
 
-    public function testUnassignLayout()
+    public function testUnassignLayout($displayGroupId)
     {
-
-		$this->client->post('/displaygroup/' . 7 . '/layout/unassign', [
-        	'layoutId' => [63]
+		$layout = $this->container->layoutFactory->query(null, ['start' => 1, 'length' => 1])[0];
+		$this->client->post('/displaygroup/' . $displayGroupId . '/layout/unassign', [
+        	'layoutId' => [$layout->layoutId]
         	]);
 
         $this->assertSame(200, $this->client->response->status());
 
         $object = json_decode($this->client->response->body());
-//        fwrite(STDERR, $this->client->response->body());
+//       fwrite(STDERR, $this->client->response->body());
     }
 
     /**
 	 * Assign apk version to a group Test
+	 * @depends testEdit
 	 */
-
-    public function testVersion()
+/*
+    public function testVersion($displayGroupId)
     {
 
-        $this->client->post('/displaygroup/' . 7 . '/version', [
+        $this->client->post('/displaygroup/' . $displayGroupId . '/version', [
         	'mediaId' => 18
         	]);
 
@@ -287,15 +282,15 @@ class DisplayGroupTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
 //        fwrite(STDERR, $this->client->response->body());
     }
-
+*/
     /**
      * Collect now action test
      */
 /*
-   	public function testCollect()
+   	public function testCollect($displaGroupId)
     {
 
-        $this->client->post('/displaygroup/' . 7 . '/action/collectNow');
+        $this->client->post('/displaygroup/' . $displaGroupId . '/action/collectNow');
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
 
@@ -308,10 +303,10 @@ class DisplayGroupTest extends LocalWebTestCase
      * Change Layout action test
      */
 /*
-   	public function testChange()
+   	public function testChange($displaGroupId)
     {
 
-        $this->client->post('/displaygroup/' . 7 . '/action/changeLayout', [
+        $this->client->post('/displaygroup/' . $displaGroupId . '/action/changeLayout', [
 		'layoutId' => 3,
 		'duration' => 900,  
 		'downloadRequired' => 1,
@@ -329,10 +324,10 @@ class DisplayGroupTest extends LocalWebTestCase
      * Revert to Schedule action test
      */
 /*
-   	public function testRevert()
+   	public function testRevert($displaGroupId)
     {
 
-        $this->client->post('/displaygroup/' . 7 . '/action/revertToSchedule');
+        $this->client->post('/displaygroup/' . $displaGroupId . '/action/revertToSchedule');
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
 
@@ -345,10 +340,10 @@ class DisplayGroupTest extends LocalWebTestCase
      * Send command action test
      */
 /*
-   	public function testCommand()
+   	public function testCommand($displaGroupId)
     {
 
-        $this->client->post('/displaygroup/' . 7 . '/action/command' , [
+        $this->client->post('/displaygroup/' . $displaGroupId . '/action/command' , [
 		'commandId' => 5
         	]);
 
@@ -359,5 +354,20 @@ class DisplayGroupTest extends LocalWebTestCase
 
     }
 */
+
+
+    /**
+     * Test delete
+     * @param int $displayGroupId
+     * @depends testEdit
+     */ 
+
+        public function testDelete($displayGroupId)
+    {
+        $this->client->delete('/displaygroup/' . $displayGroupId);
+
+        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+    }
+
 
 }
