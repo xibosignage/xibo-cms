@@ -484,8 +484,22 @@ class Media implements \JsonSerializable
             /* @var \Xibo\Entity\Widget $widget */
             $widget->unassignMedia($this->mediaId);
 
-            if ($parentMedia != null)
+            if ($parentMedia != null) {
+                // Assign the parent media to the widget instead
                 $widget->assignMedia($parentMedia->mediaId);
+
+                // Swap any audio nodes over to this new widget media assignment.
+                $this->getStore()->update('
+                  UPDATE `lkwidgetaudio` SET mediaId = :mediaId WHERE widgetId = :widgetId AND oldMediaId = :oldMediaId
+                ' , [
+                    'mediaId' => $parentMedia->mediaId,
+                    'widgetId' => $widget->widgetId,
+                    'oldMediaId' => $this->mediaId
+                ]);
+            } else {
+                // Also delete the `lkwidgetaudio`
+                $widget->unassignAudioById($this->mediaId);
+            }
 
             // This action might result in us deleting a widget (unless we are a temporary file with an expiry date)
             if ($this->expires == 0 && count($widget->mediaIds) <= 0) {

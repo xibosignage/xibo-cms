@@ -827,6 +827,25 @@ class Layout implements \JsonSerializable
                         }
                     }
 
+                    // Handle associated audio
+                    $audioNodes = null;
+                    foreach ($widget->audio as $audio) {
+                        /** @var WidgetAudio $audio */
+                        if ($audioNodes == null)
+                            $audioNodes = $document->createElement('audio');
+
+                        // Get the full media node for this audio element
+                        $audioMedia = $this->mediaFactory->getById($audio->mediaId);
+
+                        $audioNode = $document->createElement('uri', $audioMedia->storedAs);
+                        $audioNode->setAttribute('volume', $audio->volume);
+                        $audioNode->setAttribute('loop', $audio->loop);
+                        $audioNodes->appendChild($audioNode);
+                    }
+
+                    if ($audioNodes != null)
+                        $mediaNode->appendChild($audioNodes);
+
                     // Save our widget
                     $widget->save([
                         'notify' => false,

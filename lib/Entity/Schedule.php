@@ -30,6 +30,7 @@ class Schedule implements \JsonSerializable
 
     public static $LAYOUT_EVENT = 1;
     public static $COMMAND_EVENT = 2;
+    public static $OVERLAY_EVENT = 3;
     public static $DAY_PART_CUSTOM = 0;
     public static $DAY_PART_ALWAYS = 1;
     public static $DATE_MIN = 0;
@@ -103,7 +104,7 @@ class Schedule implements \JsonSerializable
 
     /**
      * @SWG\Property(
-     *  description="Flag indicating whether the event should be considered priority or not."
+     *  description="Integer indicating the event priority."
      * )
      * @var int
      */
@@ -326,7 +327,7 @@ class Schedule implements \JsonSerializable
 
         $this->getLog()->debug('EventTypeId: %d. CampaignId: %d, CommandId: %d', $this->eventTypeId, $this->campaignId, $this->commandId);
 
-        if ($this->eventTypeId == Schedule::$LAYOUT_EVENT) {
+        if ($this->eventTypeId == Schedule::$LAYOUT_EVENT || $this->eventTypeId == Schedule::$OVERLAY_EVENT) {
             // Validate layout
             if (!v::int()->notEmpty()->validate($this->campaignId))
                 throw new \InvalidArgumentException(__('Please select a Campaign/Layout for this event.'));

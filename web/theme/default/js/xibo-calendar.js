@@ -140,6 +140,12 @@ var setupScheduleForm = function(dialog) {
     $('#campaignId', dialog).selectpicker();
     $('select[name="displayGroupIds[]"]', dialog).selectpicker();
 
+    // Bind to the event type dropdown
+    $("select#eventTypeId").on("change", function() {
+        postProcessLayoutList($(this).val());
+    });
+    postProcessLayoutList($("select#eventTypeId").val());
+
     // Bind to the dialog submit
     $("#scheduleAddForm, #scheduleEditForm, #scheduleDeleteForm").submit(function(e) {
         e.preventDefault();
@@ -164,6 +170,26 @@ var setupScheduleForm = function(dialog) {
         });
     });
 };
+
+/**
+ * Depending on the event type selected we either want to filter in or filter out the
+ * campaigns.
+ * @param eventTypeId
+ */
+function postProcessLayoutList(eventTypeId) {
+
+    $('#campaignId').parent().find(".bootstrap-select li").each(function() {
+
+        if (eventTypeId == 1) {
+            // Normal layout event - everything is visible.
+            $(this).css("display", "block");
+        } else if (eventTypeId == 3) {
+            // Overlay layout, hide all campaigns
+            if ($(this).data("optgroup") == 1)
+                $(this).css("display", "none");
+        }
+    });
+}
 
 /**
  * Callback for the schedule form

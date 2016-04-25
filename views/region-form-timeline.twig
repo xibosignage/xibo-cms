@@ -33,11 +33,16 @@
                     <ul class="nav nav-list">
                         <li class="nav-header">{% trans "Add Media" %}</li>
                         <li class="XiboFormButton" href="{{ urlFor("playlist.library.assign.form", {id: playlist.playlistId}) }}"><a tabindex="-1" href="#">{% trans "Library" %}</a></li>
+                        {% set isAudioEnabled = 0 %}
                         {% for module in modules %}
                             {% if module.regionSpecific %}
                                 <li class="XiboFormButton" href="{{ urlFor("module.widget.add.form", {type: module.type, id: playlist.playlistId}) }}"><a tabindex="-1" href="#">{{ module.name }}</a></li>
                             {% else %}
                                 <li class="libraryUploadForm" href="#" data-playlist-id="{{ playlist.playlistId }}" data-valid-ext="{{ module.validExtensions }}"><a tabindex="-1" href="#">{{ module.name }}</a></li>
+                            {% endif %}
+
+                            {% if module.type == "audio" %}
+                                {% set isAudioEnabled = 1 %}
                             {% endif %}
                         {% endfor %}
                     </ul>
@@ -81,6 +86,21 @@
                                             {% endif %}
                                             {% if transitions.out|length > 0 %}
                                                 <li><a class="XiboFormButton timelineMediaBarLink" href="{{ urlFor("module.widget.transition.edit.form", {type: "out", id: widget.widgetId}) }}" title="{% trans "Click to edit this transition" %}">{% trans "Out Transition" %}</a></li>
+                                            {% endif %}
+                                            {% if isAudioEnabled and widget.type != "audio" and currentUser.checkEditable(widget) %}
+                                                <li>
+                                                    <a class="XiboFormButton timelineMediaBarLink" href="{{ urlFor("module.widget.audio.form", {type: "out", id: widget.widgetId}) }}" title="{% trans "Click to assign audio to this widget" %}">
+                                                        <span class="fa-stack">
+                                                            {# Do we have audio already assigned? #}
+                                                            {% if widget.countAudio <= 0  %}
+                                                                <i class="fa fa-volume-off fa-stack-2x" style="color:#bebebe"></i>
+                                                                <i class="fa fa-plus-square fa-badge" style="color:#ffffff"></i>
+                                                            {% else %}
+                                                                <i class="fa fa-volume-up fa-stack-2x"></i>
+                                                            {% endif %}
+                                                        </span>
+                                                    </a>
+                                                </li>
                                             {% endif %}
                                         </ul>
                                         <div class="timelineMediaDetails {{ coloring }}">

@@ -646,7 +646,8 @@ class State extends Middleware
                 $container->transitionFactory,
                 $container->regionFactory,
                 $container->layoutFactory,
-                $container->displayGroupFactory
+                $container->displayGroupFactory,
+                $container->widgetAudioFactory
             );
         });
 
@@ -1286,12 +1287,21 @@ class State extends Middleware
                 $container->dateService,
                 $container->widgetOptionFactory,
                 $container->widgetMediaFactory,
+                $container->widgetAudioFactory,
                 $container->permissionFactory
             );
         });
 
         $container->singleton('widgetMediaFactory', function($container) {
             return new \Xibo\Factory\WidgetMediaFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
+        });
+
+        $container->singleton('widgetAudioFactory', function($container) {
+            return new \Xibo\Factory\WidgetAudioFactory(
                 $container->store,
                 $container->logService,
                 $container->sanitizerService
