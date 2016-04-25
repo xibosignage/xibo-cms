@@ -428,9 +428,9 @@ class Maintenance extends Base
 
                     $this->getConfig()->ChangeSetting('DEFAULTS_IMPORTED', 1);
 
-                    echo 'D';
+                    print __('Done.');
                 } else {
-                    echo 'S';
+                    print __('Not Required.');
                 }
 
                 print '<h1>' . __('Build Layouts') . '</h1>';
