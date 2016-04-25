@@ -31,6 +31,7 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Factory\WidgetAudioFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -95,6 +96,9 @@ class Module extends Base
     /** @var  DisplayGroupFactory */
     protected $displayGroupFactory;
 
+    /** @var  WidgetAudioFactory */
+    protected $widgetAudioFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -115,8 +119,9 @@ class Module extends Base
      * @param RegionFactory $regionFactory
      * @param LayoutFactory $layoutFactory
      * @param DisplayGroupFactory $displayGroupFactory
+     * @param WidgetAudioFactory $widgetAudioFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory, $layoutFactory, $displayGroupFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory, $layoutFactory, $displayGroupFactory, $widgetAudioFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -131,6 +136,7 @@ class Module extends Base
         $this->regionFactory = $regionFactory;
         $this->layoutFactory = $layoutFactory;
         $this->displayGroupFactory = $displayGroupFactory;
+        $this->widgetAudioFactory = $widgetAudioFactory;
     }
 
     /**
@@ -614,6 +620,94 @@ class Module extends Base
         // Successful
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited Transition')),
+            'id' => $widget->widgetId,
+            'data' => $widget
+        ]);
+    }
+
+    /**
+     * Widget Audio Form
+     * @param int $widgetId
+     */
+    public function widgetAudioForm($widgetId)
+    {
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
+
+        if (!$this->getUser()->checkEditable($module->widget))
+            throw new AccessDeniedException();
+
+        // Pass to view
+        $this->getState()->template = 'module-form-audio';
+        $this->getState()->setData([
+            'module' => $module,
+            'media' => $this->mediaFactory->getByMediaType('audio')
+        ]);
+    }
+
+    /**
+     * Widget Audio
+     * @param int $widgetId
+     */
+    public function widgetAudio($widgetId)
+    {
+        $widget = $this->widgetFactory->getById($widgetId);
+
+        if (!$this->getUser()->checkEditable($widget))
+            throw new AccessDeniedException();
+
+        $widget->load();
+
+        // Pull in the parameters we are expecting from the form.
+        $mediaId = $this->getSanitizer()->getInt('mediaId');
+        $volume = $this->getSanitizer()->getInt('volume');
+        $loop = $this->getSanitizer()->getCheckbox('loop');
+
+        if ($mediaId != 0) {
+            $widgetAudio = $this->widgetAudioFactory->createEmpty();
+            $widgetAudio->mediaId = $mediaId;
+            $widgetAudio->volume = $volume;
+            $widgetAudio->loop = $loop;
+
+            $widget->assignAudio($widgetAudio);
+        } else {
+            // Remove existing audio records.
+            foreach ($widget->audio as $audio) {
+                $widget->unassignAudio($audio);
+            }
+        }
+
+        $widget->save();
+
+        // Successful
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited Audio')),
+            'id' => $widget->widgetId,
+            'data' => $widget
+        ]);
+    }
+
+    /**
+     * Widget Audio
+     * @param int $widgetId
+     */
+    public function widgetAudioDelete($widgetId)
+    {
+        $widget = $this->widgetFactory->getById($widgetId);
+
+        if (!$this->getUser()->checkEditable($widget))
+            throw new AccessDeniedException();
+
+        $widget->load();
+
+        foreach ($widget->audio as $audio) {
+            $widget->unassignAudio($audio);
+        }
+
+        $widget->save();
+
+        // Successful
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Removed Audio')),
             'id' => $widget->widgetId,
             'data' => $widget
         ]);

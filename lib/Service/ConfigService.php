@@ -30,8 +30,8 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class ConfigService implements ConfigServiceInterface
 {
-    public static $WEBSITE_VERSION_NAME = '1.8.0-alpha3';
-    public static $WEBSITE_VERSION = 124;
+    public static $WEBSITE_VERSION_NAME = '1.8.0-beta';
+    public static $WEBSITE_VERSION = 125;
     public static $VERSION_REQUIRED = '5.5';
 
     /**
@@ -53,6 +53,10 @@ class ConfigService implements ConfigServiceInterface
     public $envFault = false;
     public $envWarning = false;
 
+    /**
+     * Database Config
+     * @var array
+     */
     public static $dbConfig = [];
 
     //
@@ -114,6 +118,14 @@ class ConfigService implements ConfigServiceInterface
             throw new \RuntimeException('Config Service called before setDependencies');
 
         return $this->store;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getDatabaseConfig()
+    {
+        return self::$dbConfig;
     }
 
     /**

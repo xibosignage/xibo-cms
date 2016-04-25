@@ -141,6 +141,8 @@ $app->post('/playlist/widget/:type/:id', '\Xibo\Controller\Module:addWidget')->n
 $app->put('/playlist/widget/:id', '\Xibo\Controller\Module:editWidget')->name('module.widget.edit');
 $app->delete('/playlist/widget/:id', '\Xibo\Controller\Module:deleteWidget')->name('module.widget.delete');
 $app->put('/playlist/widget/transition/:type/:id', '\Xibo\Controller\Module:editWidgetTransition')->name('module.widget.transition.edit');
+$app->put('/playlist/widget/:id/audio', '\Xibo\Controller\Module:widgetAudio')->name('module.widget.audio');
+$app->delete('/playlist/widget/:id/audio', '\Xibo\Controller\Module:widgetAudioDelete');
 
 /**
  * Campaign
@@ -234,6 +236,7 @@ $app->post('/displaygroup/:id/layout/unassign', '\Xibo\Controller\DisplayGroup:u
 
 $app->post('/displaygroup/:id/action/collectNow', '\Xibo\Controller\DisplayGroup:collectNow')->name('displayGroup.action.collectNow');
 $app->post('/displaygroup/:id/action/changeLayout', '\Xibo\Controller\DisplayGroup:changeLayout')->name('displayGroup.action.changeLayout');
+$app->post('/displaygroup/:id/action/overlayLayout', '\Xibo\Controller\DisplayGroup:overlayLayout')->name('displayGroup.action.overlayLayout');
 $app->post('/displaygroup/:id/action/revertToSchedule', '\Xibo\Controller\DisplayGroup:revertToSchedule')->name('displayGroup.action.revertToSchedule');
 $app->post('/displaygroup/:id/action/command', '\Xibo\Controller\DisplayGroup:command')->name('displayGroup.action.command');
 

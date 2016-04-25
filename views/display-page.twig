@@ -65,135 +65,138 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#displays").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true,
-            filter: false,
-            searchDelay: 3000,
-            "order": [[ 1, "asc"]],
-            ajax: {
-                "url": "{{ urlFor("display.search") }}",
-                "data": function(dataToSend) {
-                    console.log(dataToSend);
-                    //make a new object so as not to destroy the input.
-                    var data = {};
-                    data.draw = dataToSend.draw;
-                    data.length = dataToSend.length;
-                    data.start = dataToSend.start;
-                    data.order = dataToSend.order;
-                    data.columns = [];
+        $(document).ready(function() {
+            var table = $("#displays").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("display.search") }}",
+                    "data": function (dataToSend) {
+                        console.log(dataToSend);
+                        //make a new object so as not to destroy the input.
+                        var data = {};
+                        data.draw = dataToSend.draw;
+                        data.length = dataToSend.length;
+                        data.start = dataToSend.start;
+                        data.order = dataToSend.order;
+                        data.columns = [];
 
-                    $.each(dataToSend.columns, function (index, e) {
-                        var col = {};
-                        col.data = e.data;
-                        if (e.name != null && e.name != "")
-                            col.name = e.name;
-                        data.columns.push(col);
-                    });
+                        $.each(dataToSend.columns, function (index, e) {
+                            var col = {};
+                            col.data = e.data;
+                            if (e.name != null && e.name != "")
+                                col.name = e.name;
+                            data.columns.push(col);
+                        });
 
-                    $.extend(data, $("#displays").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                        $.extend(data, $("#displays").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
 
-                    return data;
-                }
-            },
-            "columns": [
-                { "data": "displayId" },
-                {
-                    "name": "display",
-                    "data": function(data, type) {
-                        if (type != "display")
-                            return data.display;
-
-                        if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" != "" && data.clientAddress != "") {
-                            return '<a href="{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" title="{% trans "VNC to this Display" %}" target="' + data.clientAddress + '">' + data.display + '</a>';
-                        }
-                        else {
-                            return data.display;
-                        }
+                        return data;
                     }
                 },
-                {
-                    "data": "mediaInventoryStatus",
-                    "render": function (data, type, row) {
-                        if (type != "display")
-                            return data;
+                "columns": [
+                    {"data": "displayId"},
+                    {
+                        "name": "display",
+                        "data": function (data, type) {
+                            if (type != "display")
+                                return data.display;
 
-                        var icon = "";
-                        if (data == 1)
-                            icon = "fa-check";
-                        else if (data == 0)
-                            icon = "fa-times";
-                        else
-                            icon = "fa-cloud-download";
+                            if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" != "" && data.clientAddress != "") {
+                                return '<a href="{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" title="{% trans "VNC to this Display" %}" target="' + data.clientAddress + '">' + data.display + '</a>';
+                            }
+                            else {
+                                return data.display;
+                            }
+                        }
+                    },
+                    {
+                        "data": "mediaInventoryStatus",
+                        "render": function (data, type, row) {
+                            if (type != "display")
+                                return data;
 
-                        return "<span class='fa " + icon + "'></span>";
+                            var icon = "";
+                            if (data == 1)
+                                icon = "fa-check";
+                            else if (data == 0)
+                                icon = "fa-times";
+                            else
+                                icon = "fa-cloud-download";
+
+                            return "<span class='fa " + icon + "'></span>";
+                        }
+                    },
+                    {"data": "licensed", "render": dataTableTickCrossColumn},
+                    {"data": "currentLayout"},
+                    {"data": "storageAvailableSpace", "visible": false},
+                    {"data": "storageTotalSpace", "visible": false},
+                    {"data": "storagePercentage", "visible": false},
+                    {"data": "description", "visible": false},
+                    {"data": "defaultLayout", "visible": false},
+                    {"data": "incSchedule", "render": dataTableTickCrossColumn},
+                    {"data": "emailAlert", "render": dataTableTickCrossColumn},
+                    {"data": "loggedIn", "render": dataTableTickCrossColumn},
+                    {"data": "lastAccessed", "render": dataTableDateFromUnix},
+                    {
+                        "name": "clientVersion",
+                        "data": function (data, type) {
+                            if (type != "display")
+                                return data.clientVersion;
+
+                            return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
+                        },
+                        "visible": false
+                    },
+                    {"data": "clientAddress", "visible": false},
+                    {"data": "macAddress"},
+                    {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false},
+                    {
+                        "orderable": false,
+                        "data": function (data, type) {
+                            if (type != "display")
+                                return data.thumbnail;
+
+                            if (data.thumbnail != "") {
+                                return '<a data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" /></a>';
+                            }
+                            else {
+                                return "";
+                            }
+                        },
+                        "visible": false
+                    },
+                    {
+                        "data": "lastCommandSuccess",
+                        "render": function (data, type, row) {
+                            if (type != "display")
+                                return data;
+
+                            var icon = "";
+                            if (data == 1)
+                                icon = "fa-check";
+                            else if (data == 0)
+                                icon = "fa-times";
+                            else
+                                icon = "fa-question";
+
+                            return "<span class='fa " + icon + "'></span>";
+                        },
+                        "visible": false
+                    },
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
                     }
-                },
-                { "data": "licensed", "render": dataTableTickCrossColumn },
-                { "data": "currentLayout" },
-                { "data": "storageAvailableSpace", "visible": false },
-                { "data": "storageTotalSpace", "visible": false },
-                { "data": "storagePercentage", "visible": false },
-                { "data": "description" , "visible": false},
-                { "data": "defaultLayout" , "visible": false},
-                { "data": "incSchedule", "render": dataTableTickCrossColumn },
-                { "data": "emailAlert", "render": dataTableTickCrossColumn },
-                { "data": "loggedIn", "render": dataTableTickCrossColumn },
-                { "data": "lastAccessed", "render": dataTableDateFromUnix },
-                {
-                    "name": "clientVersion",
-                    "data": function(data, type) {
-                        if (type != "display")
-                            return data.clientVersion;
+                ]
+            });
 
-                        return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
-                    },
-                    "visible": false
-                },
-                { "data": "clientAddress", "visible": false },
-                { "data": "macAddress" },
-                { "data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false },
-                {
-                    "orderable": false,
-                    "data": function(data, type) {
-                        if (type != "display")
-                            return data.thumbnail;
-
-                        if (data.thumbnail != "") {
-                            return '<a data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" /></a>';
-                        }
-                        else {
-                            return "";
-                        }
-                    },
-                    "visible": false
-                },
-                {
-                    "data": "lastCommandSuccess",
-                    "render": function (data, type, row) {
-                        if (type != "display")
-                            return data;
-
-                        var icon = "";
-                        if (data == 1)
-                            icon = "fa-check";
-                        else if (data == 0)
-                            icon = "fa-times";
-                        else
-                            icon = "fa-question";
-
-                        return "<span class='fa " + icon + "'></span>";
-                    },
-                    "visible": false
-                },
-                {
-                    "orderable": false,
-                    "data": dataTableButtonsColumn
-                }
-            ]
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#displays_wrapper').find('.col-sm-6').eq(1));
         });
-
-        table.on('draw', dataTableDraw);
-        table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#displays_wrapper').find('.col-sm-6').eq(1));
     </script>
 {% endblock %}

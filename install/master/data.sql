@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.8.0-alpha3', 5, 2, 124);
+('1.8.0-beta', 5, 2, 125);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`, `isSystemNotification`) VALUES
 (1, 'Users', 0, 0, 0),
@@ -104,7 +104,8 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`,
   (13, 'localvideo', 'Local Video', 1, 1, 'Play a video locally stored on the client', 'forms/video.gif', 1, NULL, 0, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\LocalVideo', 60),
   (14, 'genericfile', 'Generic File', 1, 0, 'A generic file to be stored in the library', 'forms/library.gif', 1, 'apk,js,html,htm', 0, 0, NULL, NULL, '../modules', 'Xibo\\Widget\\GenericFile', 10),
   (15, 'clock', 'Clock', 1, 1, '', 'forms/library.gif', 1, NULL, 1, 1, 'html', '[]', '../modules', 'Xibo\\Widget\\Clock', 10),
-  (16, 'font', 'Font', 1, 0, 'A font to use in other Modules', 'forms/library.gif', 1, 'ttf,otf,eot,svg,woff', 0, 0, NULL, NULL, '../modules', 'Xibo\\Widget\\Font', 10);
+  (16, 'font', 'Font', 1, 0, 'A font to use in other Modules', 'forms/library.gif', 1, 'ttf,otf,eot,svg,woff', 0, 0, NULL, NULL, '../modules', 'Xibo\\Widget\\Font', 10),
+  (17, 'audio', 'Audio', 1, 0, 'Audio - support varies depending on the client hardware', 'forms/video.gif', 1, 'mp4,wav', 0, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\Audio', 0);
 
 INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (1, 'dashboard', 'Dashboard', 1),

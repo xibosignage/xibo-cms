@@ -15,7 +15,11 @@ use Slim\Helper\Set;
 use Slim\Log;
 use Slim\Slim;
 use There4\Slim\Test\WebTestCase;
+use Xibo\Entity\User;
+use Xibo\Exception\NotFoundException;
 use Xibo\Helper\AccessibleMonologWriter;
+use Xibo\Helper\Random;
+use Xibo\Helper\Translate;
 use Xibo\Middleware\ApiView;
 use Xibo\Middleware\State;
 use Xibo\Middleware\Storage;
@@ -137,8 +141,28 @@ class LocalWebTestCase extends WebTestCase
         // Register the factory service
         State::registerFactoriesWithDi($this->container);
 
+        // Register the translations
+        Translate::InitLocale($this->container->configService, 'en-GB');
+
         // Find the PHPUnit user
-        $this->container->user = $this->container->userFactory->getByName('phpunit');
+        try {
+            $this->container->user = $this->container->userFactory->getByName('phpunit');
+        } catch (NotFoundException $e) {
+            // Create the phpunit user with a random password
+            /** @var User $user */
+            $user = $this->container->userFactory->create();
+            $user->setChildAclDependencies($this->container->userGroupFactory, $this->container->pageFactory);
+            $user->userTypeId = 1;
+            $user->userName = 'phpunit';
+            $user->libraryQuota = 0;
+            $user->homePageId = $this->container->pageFactory->getByName('statusdashboard')->pageId;
+            $user->isSystemNotification = 1;
+            $user->setNewPassword(Random::generateString());
+            $user->save();
+            $this->container->store->commitIfNecessary();
+
+            $this->container->user = $this->container->userFactory->getByName('phpunit');
+        }
 
         return $app;
     }

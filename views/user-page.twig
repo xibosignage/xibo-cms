@@ -68,43 +68,46 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#users").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true,
-            searchDelay: 3000,
-            "order": [[ 0, "asc"]],
-            "filter": false,
-            ajax: {
-                url: "{{ urlFor("user.search") }}",
-                "data": function(d) {
-                    $.extend(d, $("#users").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-                }
-            },
-            "columns": [
-                { "data": "userName" },
-                { "data": "homePage" },
-                { "data": "email" },
-                { "data": "libraryQuota" },
-                {
-                    "data": "retired",
-                    "render": dataTableTickCrossColumn
+        $(document).ready(function() {
+            var table = $("#users").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true,
+                searchDelay: 3000,
+                "order": [[0, "asc"]],
+                "filter": false,
+                ajax: {
+                    url: "{{ urlFor("user.search") }}",
+                    "data": function (d) {
+                        $.extend(d, $("#users").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
                 },
-                { "data": "firstName", "visible": false },
-                { "data": "lastName", "visible": false },
-                { "data": "phone", "visible": false },
-                { "data": "ref1", "visible": false },
-                { "data": "ref2", "visible": false },
-                { "data": "ref3", "visible": false },
-                { "data": "ref4", "visible": false },
-                { "data": "ref5", "visible": false },
-                {
-                    "orderable": false,
-                    "data": dataTableButtonsColumn
-                }
-            ]
-        });
+                "columns": [
+                    {"data": "userName"},
+                    {"data": "homePage"},
+                    {"data": "email"},
+                    {"data": "libraryQuota"},
+                    {
+                        "data": "retired",
+                        "render": dataTableTickCrossColumn
+                    },
+                    {"data": "firstName", "visible": false},
+                    {"data": "lastName", "visible": false},
+                    {"data": "phone", "visible": false},
+                    {"data": "ref1", "visible": false},
+                    {"data": "ref2", "visible": false},
+                    {"data": "ref3", "visible": false},
+                    {"data": "ref4", "visible": false},
+                    {"data": "ref5", "visible": false},
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
 
-        table.on('draw', dataTableDraw);
-        table.on('processing.dt', dataTableProcessing)
-        dataTableAddButtons(table, $('#users_wrapper').find('.col-sm-6').eq(1))
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing)
+            dataTableAddButtons(table, $('#users_wrapper').find('.col-sm-6').eq(1));
+        });
     </script>
 {% endblock %}

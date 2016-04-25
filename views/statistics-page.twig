@@ -61,7 +61,7 @@
     <div class="widget">
         <div class="widget-title">{% trans "Proof of Play" %}</div>
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="statsView">
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
@@ -101,51 +101,54 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#stats").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true,
-            filter: false,
-            searchDelay: 3000,
-            "order": [[ 1, "asc"]],
-            ajax: {
-                "url": "{{ urlFor("stats.search") }}",
-                "data": function(d) {
-                    $.extend(d, $("#stats").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-                }
-            },
-            "columns": [
-                { "data": "type" },
-                { "data": "display" },
-                { "data": "layout" },
-                { "data": "media" },
-                { "data": "numberPlays" },
-                {
-                    "data": "duration",
-                    "render": function(data, type, row, meta) {
-                        if (type != "display")
-                            return "";
-
-                        return moment().startOf("day").seconds(data).format("H:mm:ss")
+        $(document).ready(function() {
+            var table = $("#stats").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("stats.search") }}",
+                    "data": function (d) {
+                        $.extend(d, $("#stats").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }
                 },
-                { "data": "duration" },
-                { "data": "minStart" },
-                { "data": "maxEnd" }
-            ]
+                "columns": [
+                    {"data": "type"},
+                    {"data": "display"},
+                    {"data": "layout"},
+                    {"data": "media"},
+                    {"data": "numberPlays"},
+                    {
+                        "data": "duration",
+                        "render": function (data, type, row, meta) {
+                            if (type != "display")
+                                return "";
+
+                            return moment().startOf("day").seconds(data).format("H:mm:ss")
+                        }
+                    },
+                    {"data": "duration"},
+                    {"data": "minStart"},
+                    {"data": "maxEnd"}
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+
+            var bandwidthChart;
+            var bandwidthChartOptions = {
+                element: 'bandwidthChart',
+                data: [],
+                xkey: 'label',
+                ykeys: ['value'],
+                labels: ['{% trans "Bandwidth" %}'],
+                stacked: false,
+                postUnits: ''
+            };
         });
-
-        table.on('draw', dataTableDraw);
-        table.on('processing.dt', dataTableProcessing);
-
-        var bandwidthChart;
-        var bandwidthChartOptions = {
-            element: 'bandwidthChart',
-            data: [],
-            xkey: 'label',
-            ykeys: ['value'],
-            labels: ['{% trans "Bandwidth" %}'],
-            stacked: false,
-            postUnits: ''
-        };
 
         function setBandwidthChart() {
             $.ajax({
