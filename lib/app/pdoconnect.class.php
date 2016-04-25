@@ -140,8 +140,13 @@ Class PDOConnect {
 			$drivers = $cacheDrivers;
 		} else {
 			// File System Driver
+            $realPath = realpath(Config::GetSetting('LIBRARY_LOCATION'));
+			$cachePath = ($realPath) ? $realPath . '/cache/stash/' : Config::GetSetting('LIBRARY_LOCATION');
+
+			// Debug::Audit('Configuring cache path: ' . $cachePath);
+
 			$fileSystem = new \Stash\Driver\FileSystem();
-			$fileSystem->setOptions(array('path' => Config::GetSetting('LIBRARY_LOCATION') . 'cache/stash/'));
+			$fileSystem->setOptions(array('path' => $cachePath));
 			$drivers[] = $fileSystem;
 		}
 
