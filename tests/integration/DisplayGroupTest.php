@@ -115,6 +115,24 @@ class DisplayGroupTest extends LocalWebTestCase
         $this->assertSame($groupDescription, $object->data->description);
         $this->assertSame($expectedDynamic, $object->data->isDynamic);
         $this->assertSame($expectedDynamicCriteria, $object->data->dynamicCriteria);
+        
+        # Check that the group was really added
+        $displayGroups = $this->container->displayGroupFactory->query(null, []);
+        $this->assertEquals(1, count($displayGroups));
+        
+        # Check that the group was added correctly
+        $displayGroup = $this->container->displayGroupFactory->getById($object->id);
+        $displayGroup->setChildObjectDependencies($this->container->displayFactory,
+                                                  $this->container->layoutFactory,
+                                                  $this->container->mediaFactory,
+                                                  $this->container->scheduleFactory
+                                                  );
+        
+        $this->assertSame($groupName, $displayGroup->displayGroup);
+        $this->assertSame($groupDescription, $displayGroup->description);
+        $this->assertSame(strval($expectedDynamic), $displayGroup->isDynamic);
+        $this->assertSame($expectedDynamicCriteria, $displayGroup->dynamicCriteria);
+        
     }
     
    /**
