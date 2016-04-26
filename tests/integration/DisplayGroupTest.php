@@ -150,7 +150,10 @@ class DisplayGroupTest extends LocalWebTestCase
             [Random::generateString(8, 'phpunit'), 'Api', 1, 1, 'test', 'test'],
             ['Test de Français', 'Bienvenue à la suite de tests Xibo', 1, 1, 'test', 'test'],
             ['Deutsch Prüfung', 'Weiß mit schwarzem Text', 1, 1, 'test', 'test'],
-            // Invalid isDynamic flag (the CMS sanitises these for us)
+            // Tests for the various allowed values for isDynamic = 1
+            [Random::generateString(8, 'phpunit'), 'Api', 'on', 1, 'test', 'test'],
+            [Random::generateString(8, 'phpunit'), 'Api', 'true', 1, 'test', 'test'],
+            // Invalid isDynamic flag (the CMS sanitises these for us to false)
             ['Invalid isDynamic flag 1', 'Invalid isDynamic flag', 7, 0, null, null],
             ['Invalid isDynamic flag 2 ', 'Invalid isDynamic flag', 7, 0, 'criteria', 'criteria'],
             ['Invalid isDynamic flag alpha 1', 'Invalid isDynamic flag alpha', 'invalid', 0, null, null],
