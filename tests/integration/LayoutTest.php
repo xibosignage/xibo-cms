@@ -26,7 +26,7 @@ class LayoutTest extends LocalWebTestCase
     public function testRetire()
     {
         // Get any layout
-        $layout = $this->container->layoutFactory->query(null, ['start' => 1, 'length' => 1])[0];
+        $layout = $this->container->layoutFactory->query(null, ['start' => 0, 'length' => 1])[0];
 
         // Call retire
         $this->client->put('/layout/retire/' . $layout->layoutId, [], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
@@ -201,7 +201,7 @@ class LayoutTest extends LocalWebTestCase
         public function testAddRegion()
     {
 
-        $layout = $this->container->layoutFactory->query(null, ['start' => 1, 'length' => 1])[0];
+        $layout = $this->container->layoutFactory->query(null, ['start' => 0, 'length' => 1])[0];
         $this->client->post('/region/' . $layout->layoutId);
 
         $this->assertSame(200, $this->client->response->status());
@@ -257,7 +257,7 @@ class LayoutTest extends LocalWebTestCase
     {
     
         // Get any layout
-        $layout = $this->container->layoutFactory->query(null, ['start' => 1, 'length' => 1])[0];
+        $layout = $this->container->layoutFactory->query(null, ['start' => 0, 'length' => 1])[0];
 
         // Generate new random name
         $name = Random::generateString(8, 'phpunit');

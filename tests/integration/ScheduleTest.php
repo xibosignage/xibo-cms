@@ -39,9 +39,9 @@ class ScheduleTest extends LocalWebTestCase
     public function testAdd()
     {
         // Get a layout to schedule
-        $layout = $this->container->layoutFactory->query(null, ['start' => 1, 'length' => 1])[0];
+        $layout = $this->container->layoutFactory->query(null, ['start' => 0, 'length' => 1])[0];
         // Get a Display Group Id
-        $displayGroup = $this->container->displayGroupFactory->query(null, ['start' => 1, 'length' => 1])[0];
+        $displayGroup = $this->container->displayGroupFactory->query(null, ['start' => 0, 'length' => 1])[0];
 
         $fromDt = time();
         $toDt = time() + 3600;
