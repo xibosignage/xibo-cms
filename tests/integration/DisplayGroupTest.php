@@ -14,9 +14,48 @@ use Xibo\Helper\Random;
 class DisplayGroupTest extends LocalWebTestCase
 {
 
-/**
-*  List all display groups
-*/ 
+
+    protected $startDisplayGroups;
+
+    /**
+     * setUp - called before every test automatically
+     */
+    public function setUp()
+    {  
+        parent::setUp();
+        $this->startDisplayGroups = $this->container->displayGroupFactory->query(null, []);
+    }
+
+    /**
+     * assertPreConditions
+     */
+    public function assertPreConditions()
+    {
+        $this->assertEquals($this->startDisplayGroups, array());
+    }
+
+    /**
+     * tearDown - called after every test automatically
+     */
+    public function tearDown()
+    {
+        $finalDisplayGroups = $this->container->displayGroupFactory->query(null, []);
+        # Loop over any remaining display groups and nuke them
+        foreach ($finalDisplayGroups as $displayGroup)
+        {
+            $displayGroup->setChildObjectDependencies($this->container->displayFactory,
+                                                      $this->container->layoutFactory,
+                                                      $this->container->mediaFactory,
+                                                      $this->container->scheduleFactory
+                                                      );
+            $displayGroup->delete();
+        }
+        parent::tearDown();
+    }
+
+    /**
+     *  List all display groups
+     */ 
 
     public function testListAll()
     {
@@ -54,32 +93,73 @@ class DisplayGroupTest extends LocalWebTestCase
     */
 
    /**
-    *  Add new display group test
+    *  testAddSuccess - test adding various Display Groups that should be valid
+    *  @dataProvider addSuccessCases
     */ 
-
-    public function testAdd()
+    public function testAddSuccess($groupName, $groupDescription, $isDynamic, $expectedDynamic, $dynamicContent, $expectedDynamicContent)
     {
-        $name = Random::generateString(8, 'phpunit');
-
+ 
         $response = $this->client->post('/displaygroup', [
-            'displayGroup' => $name,
-            'description' => 'Api',
-            'isDynamic' => 0,
-            'dynamicContent' => ''
+            'displayGroup' => $groupName,
+            'description' => $groupDescription,
+            'isDynamic' => $isDynamic,
+            'dynamicContent' => $dynamicContent
         ]);
-
+        
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
 
         $object = json_decode($this->client->response->body());
-//        fwrite(STDERR, $this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
-        $this->assertSame($name, $object->data->displayGroup);
-        return $object->id;
+        $this->assertSame($groupName, $object->data->displayGroup);
+        $this->assertSame($groupDescription, $object->data->description);
+        $this->assertSame($expectedDynamic, $object->data->isDynamic);
+        $this->assertSame($expectedDynamicContent, $object->data->dynamicCriteria);
+    }
+    
+   /**
+    *  testAddFailure - test adding various Display Groups that should be invalid
+    *  @dataProvider addFailureCases
+    *  @expectedException \InvalidArgumentException
+    */ 
+    public function testAddFailure($groupName, $groupDescription, $isDynamic, $dynamicContent)
+    {
+        $response = $this->client->post('/displaygroup', [
+            'displayGroup' => $groupName,
+            'description' => $groupDescription,
+            'isDynamic' => $isDynamic,
+            'dynamicContent' => $dynamicContent
+        ]);
     }
 
 
+    public function addSuccessCases()
+    {
+    # Each array is a test run
+    # Format
+    # (Group Name, Group Description, isDynamic, Returned isDynamic (0 or 1),
+    #  Criteria for Dynamic group, Returned Criteria for Dynamic group)
+    # For example, if you set isDynamic to 0 and send criteria, it will come back
+    # with criteria = null
+        return array(
+            array(Random::generateString(8, 'phpunit'), 'Api', 0, 0, '', null),
+            array('Test de Français', 'Bienvenue à la suite de tests Xibo', 0, 0, null, null),
+            array('Invalid isDynamic flag 1', 'Invalid isDynamic flag', 7, 0, 0, null, null),
+            array('Invalid isDynamic flag 2 ', 'Invalid isDynamic flag', 7, 0, 'criteria', null),
+            array('Invalid isDynamic flag alpha 1', 'Invalid isDynamic flag alpha', 'invalid', 0, null, null),
+            array('Invalid isDynamic flag alpha 2', 'Invalid isDynamic flag alpha', 'invalid', 0, 'criteria', null)
+        );
+    }
+    
+    public function addFailureCases()
+    {
+        return array(
+            array('Too long description', Random::generateString(255), 0, null),
+            array('No dynamic criteria', 'No dynamic criteria', 1, null)
+        );
+    }
+    
    /**
     *  Edit display group test
     *  @depends testAdd
