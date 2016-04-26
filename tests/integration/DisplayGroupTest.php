@@ -41,8 +41,7 @@ class DisplayGroupTest extends LocalWebTestCase
     {
         $finalDisplayGroups = $this->container->displayGroupFactory->query(null, []);
         # Loop over any remaining display groups and nuke them
-        foreach ($finalDisplayGroups as $displayGroup)
-        {
+        foreach ($finalDisplayGroups as $displayGroup) {
             $displayGroup->setChildObjectDependencies($this->container->displayFactory,
                                                       $this->container->layoutFactory,
                                                       $this->container->mediaFactory,
@@ -96,14 +95,14 @@ class DisplayGroupTest extends LocalWebTestCase
     *  testAddSuccess - test adding various Display Groups that should be valid
     *  @dataProvider addSuccessCases
     */ 
-    public function testAddSuccess($groupName, $groupDescription, $isDynamic, $expectedDynamic, $dynamicContent, $expectedDynamicContent)
+    public function testAddSuccess($groupName, $groupDescription, $isDynamic, $expectedDynamic, $dynamicCriteria, $expectedDynamicCriteria)
     {
  
         $response = $this->client->post('/displaygroup', [
             'displayGroup' => $groupName,
             'description' => $groupDescription,
             'isDynamic' => $isDynamic,
-            'dynamicContent' => $dynamicContent
+            'dynamicCriteria' => $dynamicCriteria
         ]);
         
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
@@ -115,7 +114,7 @@ class DisplayGroupTest extends LocalWebTestCase
         $this->assertSame($groupName, $object->data->displayGroup);
         $this->assertSame($groupDescription, $object->data->description);
         $this->assertSame($expectedDynamic, $object->data->isDynamic);
-        $this->assertSame($expectedDynamicContent, $object->data->dynamicCriteria);
+        $this->assertSame($expectedDynamicCriteria, $object->data->dynamicCriteria);
     }
     
    /**
@@ -123,13 +122,13 @@ class DisplayGroupTest extends LocalWebTestCase
     *  @dataProvider addFailureCases
     *  @expectedException \InvalidArgumentException
     */ 
-    public function testAddFailure($groupName, $groupDescription, $isDynamic, $dynamicContent)
+    public function testAddFailure($groupName, $groupDescription, $isDynamic, $dynamicCriteria)
     {
         $response = $this->client->post('/displaygroup', [
             'displayGroup' => $groupName,
             'description' => $groupDescription,
             'isDynamic' => $isDynamic,
-            'dynamicContent' => $dynamicContent
+            'dynamicCriteria' => $dynamicCriteria
         ]);
     }
 
@@ -142,22 +141,29 @@ class DisplayGroupTest extends LocalWebTestCase
     #  Criteria for Dynamic group, Returned Criteria for Dynamic group)
     # For example, if you set isDynamic to 0 and send criteria, it will come back
     # with criteria = null
-        return array(
-            array(Random::generateString(8, 'phpunit'), 'Api', 0, 0, '', null),
-            array('Test de Français', 'Bienvenue à la suite de tests Xibo', 0, 0, null, null),
-            array('Invalid isDynamic flag 1', 'Invalid isDynamic flag', 7, 0, 0, null, null),
-            array('Invalid isDynamic flag 2 ', 'Invalid isDynamic flag', 7, 0, 'criteria', null),
-            array('Invalid isDynamic flag alpha 1', 'Invalid isDynamic flag alpha', 'invalid', 0, null, null),
-            array('Invalid isDynamic flag alpha 2', 'Invalid isDynamic flag alpha', 'invalid', 0, 'criteria', null)
-        );
+        return [
+            // Multi-language non-dynamic groups
+            [Random::generateString(8, 'phpunit'), 'Api', 0, 0, '', null],
+            ['Test de Français', 'Bienvenue à la suite de tests Xibo', 0, 0, null, null],
+            ['Deutsch Prüfung', 'Weiß mit schwarzem Text', 0, 0, null, null],
+            // Multi-language dynamic groups
+            [Random::generateString(8, 'phpunit'), 'Api', 1, 1, 'test', 'test'],
+            ['Test de Français', 'Bienvenue à la suite de tests Xibo', 1, 1, 'test', 'test'],
+            ['Deutsch Prüfung', 'Weiß mit schwarzem Text', 1, 1, 'test', 'test'],
+            // Invalid isDynamic flag (the CMS sanitises these for us)
+            ['Invalid isDynamic flag 1', 'Invalid isDynamic flag', 7, 0, null, null],
+            ['Invalid isDynamic flag 2 ', 'Invalid isDynamic flag', 7, 0, 'criteria', 'criteria'],
+            ['Invalid isDynamic flag alpha 1', 'Invalid isDynamic flag alpha', 'invalid', 0, null, null],
+            ['Invalid isDynamic flag alpha 2', 'Invalid isDynamic flag alpha', 'invalid', 0, 'criteria', 'criteria']
+        ];
     }
     
     public function addFailureCases()
     {
-        return array(
-            array('Too long description', Random::generateString(255), 0, null),
-            array('No dynamic criteria', 'No dynamic criteria', 1, null)
-        );
+        return [
+            ['Too long description', Random::generateString(255), 0, null],
+            ['No dynamic criteria', 'No dynamic criteria', 1, null]
+        ];
     }
     
    /**
