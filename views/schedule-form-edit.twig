@@ -58,8 +58,8 @@
     },{
     "field": "eventTypeId",
     "trigger": "init",
-    "value": "1",
-    "operation": "equals",
+    "value": "2",
+    "operation": "not",
     "actions": {
     ".layout-control": { "display": "block" },
     ".endtime-control": { "display": "block" },
@@ -69,8 +69,8 @@
     },{
     "field": "eventTypeId",
     "trigger": "change",
-    "value": "1",
-    "operation": "equals",
+    "value": "2",
+    "operation": "not",
     "actions": {
     ".layout-control": { "display": "block" },
     ".endtime-control": { "display": "block" },
@@ -80,8 +80,8 @@
     },{
     "field": "eventTypeId",
     "trigger": "init",
-    "value": "1",
-    "operation": "not",
+    "value": "2",
+    "operation": "equals",
     "actions": {
     ".layout-control": { "display": "none" },
     ".endtime-control": { "display": "none" },
@@ -92,8 +92,8 @@
     },{
     "field": "eventTypeId",
     "trigger": "change",
-    "value": "1",
-    "operation": "not",
+    "value": "2",
+    "operation": "equals",
     "actions": {
     ".layout-control": { "display": "none" },
     ".endtime-control": { "display": "none" },
@@ -154,9 +154,11 @@
                         {% set helpText %}{% trans "Select the type of event to schedule" %}{% endset %}
                         {% set layoutEventType %}{% trans "Campaign/Layout" %}{% endset %}
                         {% set commandEventType %}{% trans "Command" %}{% endset %}
+                        {% set overlayEventType %}{% trans "Overlay Layout" %}{% endset %}
                         {% set eventTypes = [
                         {id: 1, label: layoutEventType},
-                        {id: 2, label: commandEventType}
+                        {id: 2, label: commandEventType},
+                        {id: 3, label: overlayEventType}
                         ] %}
                         {{ forms.dropdown("eventTypeId", "single", title, event.eventTypeId, eventTypes, "id", "label", helpText) }}
 
@@ -220,8 +222,8 @@
                         {{ forms.number("displayOrder", title, event.displayOrder, helpText) }}
 
                         {% set title %}{% trans "Priority" %}{% endset %}
-                        {% set helpText %}{% trans "Sets whether or not this event has priority. If set the event will be show in preference to other events." %}{% endset %}
-                        {{ forms.checkbox("isPriority", title, event.isPriority, helpText) }}
+                        {% set helpText %}{% trans "Sets the event priority - events with the highest priority play in preference to lower priority events." %}{% endset %}
+                        {{ forms.number("isPriority", title, event.isPriority, helpText) }}
 
                     </div>
                     

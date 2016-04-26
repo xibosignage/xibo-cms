@@ -22,6 +22,7 @@ namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -50,6 +51,9 @@ class Stats extends Base
      */
     private $mediaFactory;
 
+    /** @var  LayoutFactory */
+    private $layoutFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -61,14 +65,16 @@ class Stats extends Base
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param DisplayFactory $displayFactory
+     * @param LayoutFactory $layoutFactory
      * @param MediaFactory $mediaFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $displayFactory, $mediaFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $displayFactory, $layoutFactory, $mediaFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->store = $store;
         $this->displayFactory = $displayFactory;
+        $this->layoutFactory = $layoutFactory;
         $this->mediaFactory = $mediaFactory;
     }
 
@@ -82,6 +88,8 @@ class Stats extends Base
             'displays' => $this->displayFactory->query(),
             // List of Media this user has permission for
             'media' => $this->mediaFactory->query(),
+            // List of Layouts this user has permission for
+            'layouts' => $this->layoutFactory->query(),
             'defaults' => [
                 'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
                 'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
@@ -159,6 +167,16 @@ class Stats extends Base
      *      required=false
      *   ),
      *   @SWG\Parameter(
+     *      name="layoutId",
+     *      description="An optional array of layout Id to filter",
+     *      in="formData",
+     *      required=false,
+     *      type="array",
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *   @SWG\Parameter(
      *      name="mediaId",
      *      description="An optional array of media Id to filter",
      *      in="formData",
@@ -185,6 +203,7 @@ class Stats extends Base
         $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getSanitizer()->getDate('statsFromDt', $this->getDate()->parse()->addDay(-1)));
         $toDt = $this->getSanitizer()->getDate('toDt', $this->getSanitizer()->getDate('statsToDt', $this->getDate()->parse()));
         $displayId = $this->getSanitizer()->getInt('displayId');
+        $layoutIds = $this->getSanitizer()->getIntArray('layoutId');
         $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
 
         // What if the fromdt and todt are exactly the same?
@@ -206,15 +225,20 @@ class Stats extends Base
             trigger_error(__('No displays with View permissions'), E_USER_ERROR);
 
         // Media on Layouts Ran
-        $sql = '
+        $select = '
           SELECT stat.type,
               display.Display,
               layout.Layout,
-              IFNULL(`media`.name, IFNULL(`widgetoption`.value, CONCAT(`widget`.type, \'-\', `widget`.widgetId))) AS Name,
+              IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) AS Media,
               COUNT(StatID) AS NumberPlays,
               SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration,
               MIN(start) AS MinStart,
-              MAX(end) AS MaxEnd
+              MAX(end) AS MaxEnd,
+              layout.layoutId,
+              stat.mediaId AS widgetId
+        ';
+
+        $body = '
             FROM stat
               INNER JOIN display
               ON stat.DisplayID = display.DisplayID
@@ -242,6 +266,21 @@ class Stats extends Base
             'toDt' => $this->getDate()->getLocalDate($toDt)
         ];
 
+        // Layout Filter
+        if (count($layoutIds) != 0) {
+
+            $layoutSql = '';
+            $i = 0;
+            foreach ($layoutIds as $layoutId) {
+                $i++;
+                $layoutSql .= ':layoutId_' . $i . ',';
+                $params['layoutId_' . $i] = $layoutId;
+            }
+
+            $body .= '  AND `stat`.layoutId IN (' . trim($layoutSql, ',') . ')';
+        }
+
+        // Media Filter
         if (count($mediaIds) != 0) {
 
             $mediaSql = '';
@@ -252,35 +291,59 @@ class Stats extends Base
                 $params['mediaId_' . $i] = $mediaId;
             }
 
-            $sql .= '  AND widget.widgetId IN (SELECT widgetId FROM `lkwidgetmedia` WHERE mediaId IN (' . trim($mediaSql, ',') . '))';
+            $body .= ' AND widget.widgetId IN (SELECT widgetId FROM `lkwidgetmedia` WHERE mediaId IN (' . trim($mediaSql, ',') . '))';
         }
 
         if ($displayId != 0) {
-            $sql .= '  AND stat.displayID = :displayId ';
+            $body .= '  AND stat.displayID = :displayId ';
             $params['displayId'] = $displayId;
         }
 
-        $sql .= '
-            GROUP BY stat.type, display.Display, layout.Layout, CONCAT(widget.type, \'-\', widget.widgetId)
-            ORDER BY stat.type, display.Display, layout.Layout, Name
-        ';
+        $body .= 'GROUP BY stat.type, display.Display, layout.Layout, layout.layoutId, stat.mediaId, IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ';
 
+        // Sorting?
+        $filterBy = $this->gridRenderFilter();
+        $sortOrder = $this->gridRenderSort();
+
+        $order = '';
+        if (is_array($sortOrder))
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        $limit = '';
+        // Paging
+        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        }
+
+        $sql = $select . $body . $order . $limit;
         $rows = array();
-
-
 
         foreach ($this->store->select($sql, $params) as $row) {
             $entry = [];
+
+            $widgetName = $this->getSanitizer()->string($row['Media']);
+            $widgetName = ($widgetName == '' && $row['widgetId'] != '') ? __('Deleted from Layout') : $widgetName;
+
             $entry['type'] = $this->getSanitizer()->string($row['type']);
             $entry['display'] = $this->getSanitizer()->string($row['Display']);
             $entry['layout'] = $this->getSanitizer()->string($row['Layout']);
-            $entry['media'] = $this->getSanitizer()->string($row['Name']);
+            $entry['media'] = $widgetName;
             $entry['numberPlays'] = $this->getSanitizer()->int($row['NumberPlays']);
             $entry['duration'] = $this->getSanitizer()->int($row['Duration']);
             $entry['minStart'] = $this->getDate()->getLocalDate($this->getDate()->parse($row['MinStart']));
             $entry['maxEnd'] = $this->getDate()->getLocalDate($this->getDate()->parse($row['MaxEnd']));
+            $entry['layoutId'] = $row['layoutId'];
+            $entry['widgetId'] = $row['widgetId'];
 
             $rows[] = $entry;
+        }
+
+        // Paging
+        if ($limit != '' && count($rows) > 0) {
+            $results = $this->store->select('
+              SELECT COUNT(*) AS total FROM (SELECT stat.type, display.Display, layout.Layout, IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ' . $body . ') total
+            ', $params);
+            $this->getState()->recordsTotal = intval($results[0]['total']);
         }
 
         $this->getState()->template = 'grid';

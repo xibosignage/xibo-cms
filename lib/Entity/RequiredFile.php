@@ -28,8 +28,8 @@ class RequiredFile implements \JsonSerializable
     public $layoutId;
     public $regionId;
     public $mediaId;
-    public $bytesRequested;
-    public $complete;
+    public $bytesRequested = 0;
+    public $complete = 0;
 
     /**
      * Entity constructor.
@@ -76,8 +76,8 @@ class RequiredFile implements \JsonSerializable
     private function add()
     {
         $this->rfId = $this->getStore()->insert('
-            INSERT INTO `requiredfile` (requestKey, nonce, expiry, lastUsed, displayId, size, storedAs, layoutId, regionId, mediaId)
-              VALUES (:requestKey, :nonce, :expiry, :lastUsed, :displayId, :size, :storedAs, :layoutId, :regionId, :mediaId)
+            INSERT INTO `requiredfile` (requestKey, nonce, expiry, lastUsed, displayId, size, storedAs, layoutId, regionId, mediaId, `bytesRequested`, `complete`)
+              VALUES (:requestKey, :nonce, :expiry, :lastUsed, :displayId, :size, :storedAs, :layoutId, :regionId, :mediaId, :bytesRequested, :complete)
         ', [
             'requestKey' => $this->requestKey,
             'nonce' => $this->nonce,
@@ -88,7 +88,9 @@ class RequiredFile implements \JsonSerializable
             'storedAs' => $this->storedAs,
             'layoutId' => $this->layoutId,
             'regionId' => $this->regionId,
-            'mediaId' => $this->mediaId
+            'mediaId' => $this->mediaId,
+            'bytesRequested' => $this->bytesRequested,
+            'complete' => $this->complete
         ]);
     }
 

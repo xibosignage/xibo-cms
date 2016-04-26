@@ -16,5 +16,12 @@ class ClockTest extends \Xibo\Tests\LocalWebTestCase
 
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($response);
+
+    //    fwrite(STDERR, $this->client->response->body());
+        $response = json_decode($this->client->response->body());
+
+
+        $this->assertNotEmpty($response->data);
+        
     }
 }

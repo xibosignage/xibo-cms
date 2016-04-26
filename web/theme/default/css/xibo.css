@@ -375,3 +375,26 @@ div.dt-buttons {
 .notification-unread, .notification-date {
     color: lightgrey;
 }
+
+.fa-stack > .fa-nudge-left{
+    left:auto;
+    right: 12%;
+}
+
+.fa-stack > .fa-right{
+    position:absolute;
+    line-height:inherit;
+    right:0;
+    font-size:1.5em
+}
+
+.fa-stack > .fa-badge{
+    position:absolute;
+    right:-10%;
+    bottom:-5%;
+    font-size:100%;
+    height:60%;
+    width:60%;
+    line-height:120%;
+    text-align:center;
+}

@@ -45,7 +45,7 @@ class CampaignTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
 
         $object = json_decode($this->client->response->body());
-
+//      fwrite(STDERR, $this->client->response->body());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($name, $object->data->campaign);
@@ -104,7 +104,7 @@ class CampaignTest extends LocalWebTestCase
 
         $this->getContainer()->store->commitIfNecessary();
 
-        $layout = $this->container->layoutFactory->query(null, ['start' => 1, 'length' => 1]);
+        $layout = $this->container->layoutFactory->query(null, ['start' => 0, 'length' => 1]);
 
         $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
 
@@ -129,7 +129,7 @@ class CampaignTest extends LocalWebTestCase
     public function testUnassignLayout($campaignId)
     {
         // Get any old layout
-        $layout = $this->container->layoutFactory->query(null, ['start' => 1, 'length' => 1]);
+        $layout = $this->container->layoutFactory->query(null, ['start' => 0, 'length' => 1]);
 
         // Call assign on the default layout
         $this->client->post('/campaign/layout/unassign/' . $campaignId, ['layoutId' => [['layoutId' => $layout[0]->layoutId, 'displayOrder' => 1]]]);

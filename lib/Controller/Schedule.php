@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use Xibo\Entity\DisplayGroup;
+//use Xibo\Entity\DisplayGroup;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
@@ -111,7 +111,7 @@ class Schedule extends Base
         $displays = array();
 
         foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $display) {
-            /* @var DisplayGroup $display */
+            /* @var \Xibo\Entity\DisplayGroup $display */
             if ($display->isDisplaySpecific == 1) {
                 $displays[] = $display;
             } else {
@@ -282,7 +282,7 @@ class Schedule extends Base
         $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
         foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var DisplayGroup $displayGroup */
+            /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */
 
             // Can't schedule with view, but no edit permissions
             if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))
@@ -345,7 +345,7 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="isPriority",
      *      in="formData",
-     *      description="A 0|1 flag indicating whether this event should be considered priority",
+     *      description="An integer indicating the priority of this event. Normal events have a priority of 0.",
      *      type="integer",
      *      required=true
      *   ),
@@ -425,7 +425,7 @@ class Schedule extends Base
         $schedule->campaignId = $this->getSanitizer()->getInt('campaignId');
         $schedule->commandId = $this->getSanitizer()->getInt('commandId');
         $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder', 0);
-        $schedule->isPriority = $this->getSanitizer()->getCheckbox('isPriority');
+        $schedule->isPriority = $this->getSanitizer()->getInt('isPriority', 0);
         $schedule->dayPartId = $this->getSanitizer()->getCheckbox('dayPartId', 0);
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
@@ -492,7 +492,7 @@ class Schedule extends Base
         $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
         foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var DisplayGroup $displayGroup */
+            /* @var \Xibo\Entity\DisplayGroup \Xibo\Entity\DisplayGroup */
 
             // Can't schedule with view, but no edit permissions
             if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))
@@ -567,7 +567,7 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="isPriority",
      *      in="formData",
-     *      description="A 0|1 flag indicating whether this event should be considered priority",
+     *      description="An integer indicating the priority of this event. Normal events have a priority of 0.",
      *      type="integer",
      *      required=true
      *   ),
@@ -644,7 +644,7 @@ class Schedule extends Base
         $schedule->campaignId = $this->getSanitizer()->getInt('campaignId');
         $schedule->commandId = $this->getSanitizer()->getInt('commandId');
         $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder');
-        $schedule->isPriority = $this->getSanitizer()->getCheckbox('isPriority');
+        $schedule->isPriority = $this->getSanitizer()->getInt('isPriority');
         $schedule->dayPartId = $this->getSanitizer()->getCheckbox('dayPartId');
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
@@ -750,7 +750,7 @@ class Schedule extends Base
 
     /**
      * Is this event editable?
-     * @param array[DisplayGroup] $displayGroups
+     * @param array[\Xibo\Entity\DisplayGroup] $displayGroups
      * @return bool
      */
     private function isEventEditable($displayGroups)
@@ -760,7 +760,7 @@ class Schedule extends Base
         // Work out if this event is editable or not. To do this we need to compare the permissions
         // of each display group this event is associated with
         foreach ($displayGroups as $displayGroup) {
-            /* @var DisplayGroup $displayGroup */
+            /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */
 
             // Can schedule with view, but no view permissions
             if ($scheduleWithView && !$this->getUser()->checkViewable($displayGroup))
@@ -786,7 +786,7 @@ class Schedule extends Base
         $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
         foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var DisplayGroup $displayGroup */
+            /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */
 
             // Can't schedule with view, but no edit permissions
             if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))

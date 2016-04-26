@@ -408,6 +408,31 @@ class Maintenance extends Base
                     $this->getLog()->error($e->getMessage());
                 }
 
+                echo '<h1>' . __('Import Layouts') . '</h1>';
+
+                if (!$this->getConfig()->isUpgradePending() && $this->getConfig()->GetSetting('DEFAULTS_IMPORTED') == 0) {
+
+                    $folder = PROJECT_ROOT . '/web/' . $this->getConfig()->uri('layouts', true);
+
+                    foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
+                        if (stripos($file, '.zip')) {
+                            $layout = $this->layoutFactory->createFromZip($folder . '/' . $file, null, 1, false, false, true);
+                            $layout->save([
+                                'audit' => false
+                            ]);
+                        }
+                    }
+
+                    // Install files
+                    $this->getApp()->container->get('\Xibo\Controller\Library')->installAllModuleFiles();
+
+                    $this->getConfig()->ChangeSetting('DEFAULTS_IMPORTED', 1);
+
+                    print __('Done.');
+                } else {
+                    print __('Not Required.');
+                }
+
                 print '<h1>' . __('Build Layouts') . '</h1>';
 
                 // Build Layouts

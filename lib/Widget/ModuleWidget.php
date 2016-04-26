@@ -435,7 +435,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     final protected function clearMedia()
     {
-        $this->widget->clearMedia();
+        $this->widget->clearCachedMedia();
     }
 
     /**
