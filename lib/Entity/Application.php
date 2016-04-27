@@ -193,13 +193,15 @@ class Application implements \JsonSerializable
 
         // Simple Insert for now
         $this->getStore()->insert('
-            INSERT INTO `oauth_clients` (`id`, `secret`, `name`, `userId`)
-              VALUES (:id, :secret, :name, :userId)
+            INSERT INTO `oauth_clients` (`id`, `secret`, `name`, `userId`, `authCode`, `clientCredentials`)
+              VALUES (:id, :secret, :name, :userId, :authCode, :clientCredentials)
         ', [
             'id' => $this->key,
             'secret' => $this->secret,
             'name' => $this->name,
-            'userId' => $this->userId
+            'userId' => $this->userId,
+            'authCode' => $this->authCode,
+            'clientCredentials' => $this->clientCredentials
         ]);
     }
 

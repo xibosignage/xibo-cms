@@ -89,6 +89,22 @@ class ApplicationFactory extends BaseFactory
     }
 
     /**
+     * Get by Name
+     * @param $name
+     * @return Application
+     * @throws NotFoundException
+     */
+    public function getByName($name)
+    {
+        $client = $this->query(null, ['name' => $name]);
+
+        if (count($client) <= 0)
+            throw new NotFoundException();
+
+        return $client[0];
+    }
+
+    /**
      * @param int $userId
      * @return array
      */
@@ -137,6 +153,11 @@ class ApplicationFactory extends BaseFactory
         if ($this->getSanitizer()->getString('clientId', $filterBy) != null) {
             $body .= ' AND `oauth_clients`.id = :clientId ';
             $params['clientId'] = $this->getSanitizer()->getString('clientId', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getString('name', $filterBy) != null) {
+            $body .= ' AND `oauth_clients`.name = :name';
+            $params['name'] = $this->getSanitizer()->getString('name', $filterBy);
         }
 
         // Sorting?
