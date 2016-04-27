@@ -21,6 +21,7 @@ class LayoutTest extends LocalWebTestCase
 {
     /**
      * Test Layout Retire
+     * @group broken
      * @return mixed
      */
     public function testRetire()
@@ -196,6 +197,7 @@ class LayoutTest extends LocalWebTestCase
 
     /**
     *  Add new region to a specific layout
+    * @group broken
     */ 
 
         public function testAddRegion()

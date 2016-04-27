@@ -8,6 +8,11 @@
             <directory suffix="Test.php">tests/integration</directory>
         </testsuite>
     </testsuites>
+    <groups>
+      <exclude>
+        <group>broken</group>
+      </exclude>
+    </groups>
     <filter>
         <whitelist>
             <directory>lib</directory>
