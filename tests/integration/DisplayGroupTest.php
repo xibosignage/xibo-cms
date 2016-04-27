@@ -353,8 +353,9 @@ class DisplayGroupTest extends LocalWebTestCase
         # Delete the one we created last
         $this->client->delete('/displaygroup/' . $displayGroup2->displayGroupId);
 
-        # This should really return 204 for success
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+        # This should return 204 for success
+        $response = json_decode($this->client->response->body());
+        $this->assertSame(204, $response->status, $this->client->response->body());
         
         # Check only one remains
         $groups = $this->container->displayGroupFactory->query(null, []);
