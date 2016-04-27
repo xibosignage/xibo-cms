@@ -300,7 +300,7 @@ class DisplayGroupTest extends LocalWebTestCase
 
     public function testAddDuplicate()
     {
-        # Load in a known layouts
+        # Load in a known layout
         $displayGroup = $this->container->displayGroupFactory->CreateEmpty();
         $displayGroup->setChildObjectDependencies($this->container->displayFactory,
                                                   $this->container->layoutFactory,
@@ -327,33 +327,67 @@ class DisplayGroupTest extends LocalWebTestCase
     }
     
    /**
-    *  Edit display group test
-    *  @group broken
+    *  Edit an existing display group
+    *  @group minimal
     */ 
 
-    public function testEdit($displayGroupId)
+    public function testEdit()
     {
-    //    $displayGroup = $this->container->displaGroupFactory->getById($displayGroupId);
+    
+        # Load in a known layout
+        $displayGroup = $this->container->displayGroupFactory->CreateEmpty();
+        $displayGroup->setChildObjectDependencies($this->container->displayFactory,
+                                                  $this->container->layoutFactory,
+                                                  $this->container->mediaFactory,
+                                                  $this->container->scheduleFactory
+                                                  );
+        $displayGroup->displayGroup = $this->container->sanitizerService->string('phpunit displaygroup');
+        $displayGroup->description = $this->container->sanitizerService->string('phpunit displaygroup');
+        $displayGroup->isDynamic = $this->container->sanitizerService->checkbox(0);
+        $displayGroup->dynamicCriteria = $this->container->sanitizerService->string('');;
+        $displayGroup->userId = 1;
+        $displayGroup->save();
+        
+        $this->container->store->commitIfNecessary();
 
         $name = Random::generateString(8, 'phpunit');
+        $description = Random::generateString(8, 'description');
+        $criteria = 'test';
 
-        $this->client->put('/displaygroup/' . $displayGroupId, [
+        $this->client->put('/displaygroup/' . $displayGroup->displayGroupId, [
             'displayGroup' => $name,
-            'description' => 'API',
-            'isDynamic' => 0,
-            'dynamicContent' => ''
+            'description' => $description,
+            'isDynamic' => 1,
+            'dynamicCriteria' => $criteria
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
 
         $object = json_decode($this->client->response->body());
-//        fwrite(STDERR, $this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($name, $object->data->displayGroup);
+        $this->assertSame($description, $object->data->description);
+        $this->assertSame(1, $object->data->isDynamic);
+        $this->assertSame($criteria, $object->data->dynamicCriteria);
 
-        return $displayGroupId;
+        # Check that the group was actually renamed
+        $displayGroup = $this->container->displayGroupFactory->getById($object->id);
+        $displayGroup->setChildObjectDependencies($this->container->displayFactory,
+                                                  $this->container->layoutFactory,
+                                                  $this->container->mediaFactory,
+                                                  $this->container->scheduleFactory
+                                                  );
+        
+        $this->assertSame($name, $displayGroup->displayGroup);
+        $this->assertSame($description, $displayGroup->description);
+        $this->assertSame('1', $displayGroup->isDynamic);
+        $this->assertSame($criteria, $displayGroup->dynamicCriteria);
+        
+        # Clean up the DisplayGroup as we no longer need it
+        $displayGroup->delete();
+
     }
 
     /**
