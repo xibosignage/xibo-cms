@@ -4711,12 +4711,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/dasgarner/oauth2-xibo-cms.git",
-                "reference": "01fc37d601e0db42d8ff436ddb8b81eefeca6594"
+                "reference": "cc5ed2ec6ab72f9ebce5d7549b9810eaa237fb2f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dasgarner/oauth2-xibo-cms/zipball/01fc37d601e0db42d8ff436ddb8b81eefeca6594",
-                "reference": "01fc37d601e0db42d8ff436ddb8b81eefeca6594",
+                "url": "https://api.github.com/repos/dasgarner/oauth2-xibo-cms/zipball/cc5ed2ec6ab72f9ebce5d7549b9810eaa237fb2f",
+                "reference": "cc5ed2ec6ab72f9ebce5d7549b9810eaa237fb2f",
                 "shasum": ""
             },
             "require": {
@@ -4756,7 +4756,7 @@
             "support": {
                 "source": "https://github.com/dasgarner/oauth2-xibo-cms/tree/master"
             },
-            "time": "2016-04-27 13:48:36"
+            "time": "2016-04-27 14:59:15"
         },
         {
             "name": "zircote/swagger-php",

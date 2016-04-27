@@ -37,6 +37,7 @@ class AboutTest extends \Xibo\Tests\LocalWebTestCase
      */
     public function testApiInitialisedTest()
     {
+        $this->assertNotNull($this->getEntityProvider(), 'Entity Provider not set');
         $this->assertNotNull($this->getEntityProvider()->getProvider(), 'Provider not set');
     }
 
@@ -49,6 +50,7 @@ class AboutTest extends \Xibo\Tests\LocalWebTestCase
         $token = $provider->getAccessToken('client_credentials');
 
         $this->assertNotNull($token);
+        $this->assertNotTrue($token->hasExpired(), 'Expired Token');
         $this->assertInstanceOf('League\OAuth2\Client\Token\AccessToken', $token);
 
         return $token;
