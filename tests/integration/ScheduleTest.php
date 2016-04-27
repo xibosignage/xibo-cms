@@ -35,6 +35,7 @@ class ScheduleTest extends LocalWebTestCase
     /**
      * @group add
      * @return int
+     * @group broken
      */
     public function testAdd()
     {
