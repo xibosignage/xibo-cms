@@ -53,10 +53,11 @@ class DisplayGroupTest extends LocalWebTestCase
     }
 
     /**
-     *  List all display groups
+     *  List all display groups known empty
+     *  @group minimal
      */ 
 
-    public function testListAll()
+    public function testListEmpty()
     {
         $this->client->get('/displaygroup');
 
@@ -64,37 +65,123 @@ class DisplayGroupTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
 
         $object = json_decode($this->client->response->body());
-//		fwrite(STDOUT, $this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-    }
-/**
- *  List specific display groups
- */ 
 
-/*
-    public function testListAll2()
+        # There should be no DisplayGroups in the system
+        $this->assertEquals(0, $object->data->recordsTotal);
+    }
+    
+    /**
+     *  List all display groups known set
+     *  @group minimal
+     *  @depend testAddSuccess
+     */ 
+
+    public function testListKnown()
     {
-        $this->client->get('/displaygroup', [
-		'displayGroupId' => 7,
-		'displayGroup' => 'Android'
-        	]);
+        # Load in a known set of layouts
+        # We can assume this works since we depend upon the test which
+        # has previously added and removed these without issue:
+        $cases =  $this->provideSuccessCases();
+        
+        foreach ($cases as $case) {
+            $displayGroup = $this->container->displayGroupFactory->CreateEmpty();
+            $displayGroup->setChildObjectDependencies($this->container->displayFactory,
+                                                      $this->container->layoutFactory,
+                                                      $this->container->mediaFactory,
+                                                      $this->container->scheduleFactory
+                                                      );
+            $displayGroup->displayGroup = $this->container->sanitizerService->string($case[0]);
+            $displayGroup->description = $this->container->sanitizerService->string($case[1]);
+            $displayGroup->isDynamic = $this->container->sanitizerService->checkbox($case[2]);
+            $displayGroup->dynamicCriteria = $this->container->sanitizerService->string($case[3]);;
+            $displayGroup->userId = 1;
+            $displayGroup->save();
+        }
+        
+        $this->container->store->commitIfNecessary();
+    
+        $this->client->get('/displaygroup');
 
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
 
         $object = json_decode($this->client->response->body());
-//		fwrite(STDOUT, $this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+
+        # There should be count($cases) DisplayGroups in the system
+        $this->assertEquals(count($cases), $object->data->recordsTotal);
+        
+        # Rely on tearDown() to clean up after us
     }
 
-    */
+    /**
+     *  List specific display groups
+     *  @group minimal
+     *  @depend testAddSuccess
+     *  @dataProvider provideSuccessCases
+     */ 
+
+    public function testListFilter($groupName, $groupDescription, $isDynamic, $expectedDynamic, $dynamicCriteria, $expectedDynamicCriteria)
+    {
+        # Load in a known set of layouts
+        # We can assume this works since we depend upon the test which
+        # has previously added and removed these without issue:
+        $cases =  $this->provideSuccessCases();
+        
+        foreach ($cases as $case) {
+            $displayGroup = $this->container->displayGroupFactory->CreateEmpty();
+            $displayGroup->setChildObjectDependencies($this->container->displayFactory,
+                                                      $this->container->layoutFactory,
+                                                      $this->container->mediaFactory,
+                                                      $this->container->scheduleFactory
+                                                      );
+            $displayGroup->displayGroup = $this->container->sanitizerService->string($case[0]);
+            $displayGroup->description = $this->container->sanitizerService->string($case[1]);
+            $displayGroup->isDynamic = $this->container->sanitizerService->checkbox($case[2]);
+            $displayGroup->dynamicCriteria = $this->container->sanitizerService->string($case[3]);;
+            $displayGroup->userId = 1;
+            $displayGroup->save();
+        }
+        
+        $this->container->store->commitIfNecessary();
+        
+        $this->client->get('/displaygroup', [
+                           'displayGroup' => $groupName
+                           ]);
+        $this->client->get('/displaygroup');
+
+        $this->assertSame(200, $this->client->response->status());
+        $this->assertNotEmpty($this->client->response->body());
+
+        $object = json_decode($this->client->response->body());
+
+        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+
+        # There should be count($cases) DisplayGroups in the system
+        $this->assertGreaterThanOrEqual(1, $object->data->recordsTotal);
+
+        $flag = false;
+        # Check that for the records returned, $groupName is in the groups names
+        foreach ($object->data->data as $group) {
+            if (strpos($groupName, $group->displayGroup) == 0) {
+                $flag = true;
+            }
+        }
+        
+        $this->assertTrue($flag, 'Search term not found');        
+        # Rely on tearDown() to clean up after us
+    }
+
 
    /**
     *  testAddSuccess - test adding various Display Groups that should be valid
-    *  @dataProvider addSuccessCases
+    *  @dataProvider provideSuccessCases
+    *  @group minimal
     */ 
+
     public function testAddSuccess($groupName, $groupDescription, $isDynamic, $expectedDynamic, $dynamicCriteria, $expectedDynamicCriteria)
     {
  
@@ -133,13 +220,18 @@ class DisplayGroupTest extends LocalWebTestCase
         $this->assertSame(strval($expectedDynamic), $displayGroup->isDynamic);
         $this->assertSame($expectedDynamicCriteria, $displayGroup->dynamicCriteria);
         
+        # Clean up the DisplayGroup as we no longer need it
+        $displayGroup->delete();
+        
     }
     
    /**
     *  testAddFailure - test adding various Display Groups that should be invalid
-    *  @dataProvider addFailureCases
+    *  @dataProvider provideFailureCases
     *  @expectedException \InvalidArgumentException
+    *  @group minimal
     */ 
+
     public function testAddFailure($groupName, $groupDescription, $isDynamic, $dynamicCriteria)
     {
         $response = $this->client->post('/displaygroup', [
@@ -151,7 +243,7 @@ class DisplayGroupTest extends LocalWebTestCase
     }
 
 
-    public function addSuccessCases()
+    public function provideSuccessCases()
     {
     # Each array is a test run
     # Format
@@ -159,18 +251,20 @@ class DisplayGroupTest extends LocalWebTestCase
     #  Criteria for Dynamic group, Returned Criteria for Dynamic group)
     # For example, if you set isDynamic to 0 and send criteria, it will come back
     # with criteria = null
+    # These are reused in other tests so please ensure Group Name is unique
+    # through the dataset
         return [
             // Multi-language non-dynamic groups
-            [Random::generateString(8, 'phpunit'), 'Api', 0, 0, '', null],
-            ['Test de Français', 'Bienvenue à la suite de tests Xibo', 0, 0, null, null],
-            ['Deutsch Prüfung', 'Weiß mit schwarzem Text', 0, 0, null, null],
+            ['phpunit test group', 'Api', 0, 0, '', null],
+            ['Test de Français 1', 'Bienvenue à la suite de tests Xibo', 0, 0, null, null],
+            ['Deutsch Prüfung 1', 'Weiß mit schwarzem Text', 0, 0, null, null],
             // Multi-language dynamic groups
-            [Random::generateString(8, 'phpunit'), 'Api', 1, 1, 'test', 'test'],
-            ['Test de Français', 'Bienvenue à la suite de tests Xibo', 1, 1, 'test', 'test'],
-            ['Deutsch Prüfung', 'Weiß mit schwarzem Text', 1, 1, 'test', 'test'],
+            ['phpunit test dynamic group', 'Api', 1, 1, 'test', 'test'],
+            ['Test de Français 2', 'Bienvenue à la suite de tests Xibo', 1, 1, 'test', 'test'],
+            ['Deutsch Prüfung 2', 'Weiß mit schwarzem Text', 1, 1, 'test', 'test'],
             // Tests for the various allowed values for isDynamic = 1
-            [Random::generateString(8, 'phpunit'), 'Api', 'on', 1, 'test', 'test'],
-            [Random::generateString(8, 'phpunit'), 'Api', 'true', 1, 'test', 'test'],
+            ['phpunit group dynamic is on', 'Api', 'on', 1, 'test', 'test'],
+            ['phpunit group dynamic is true', 'Api', 'true', 1, 'test', 'test'],
             // Invalid isDynamic flag (the CMS sanitises these for us to false)
             ['Invalid isDynamic flag 1', 'Invalid isDynamic flag', 7, 0, null, null],
             ['Invalid isDynamic flag 2 ', 'Invalid isDynamic flag', 7, 0, 'criteria', 'criteria'],
@@ -179,17 +273,27 @@ class DisplayGroupTest extends LocalWebTestCase
         ];
     }
     
-    public function addFailureCases()
+    
+    public function provideFailureCases()
     {
+    # Each array is a test run
+    # Format
+    # (Group Name, Group Description, isDynamic, Criteria for Dynamic group)
         return [
+            // Description is limited to 255 characters
             ['Too long description', Random::generateString(255), 0, null],
-            ['No dynamic criteria', 'No dynamic criteria', 1, null]
+            // If isDynamic = 1 then criteria must be set
+            ['No dynamic criteria', 'No dynamic criteria', 1, null],
+            // Group name is empty
+            ['', 'Group name is empty', 0, null],
+            // Group name is null
+            [null, 'Group name is null', 0, null]
         ];
     }
     
    /**
     *  Edit display group test
-    *  @depends testAdd
+    *  @group broken
     */ 
 
     public function testEdit($displayGroupId)
@@ -221,21 +325,21 @@ class DisplayGroupTest extends LocalWebTestCase
      * Test delete
      * @param int $displayGroupId
      * @depends testEdit
+     * @group broken
      */ 
 
-    /*
-        public function testDelete($displayGroupId)
+    public function testDelete($displayGroupId)
     {
         $this->client->delete('/displaygroup/' . $displayGroupId);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
 
-  */
 
-	/**
-	 *Assign new displays Test
-	 */
+    /**
+     *Assign new displays Test
+     * @group broken
+     */
 
     public function testAssign()
     {
@@ -254,8 +358,9 @@ class DisplayGroupTest extends LocalWebTestCase
     }
 
     /**
-	 *Unassign displays Test
-	 */
+     * Unassign displays Test
+     * @group broken
+     */
 
     public function testUnassign()
     {
@@ -273,9 +378,10 @@ class DisplayGroupTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('id', $object);
     }
 
-	/**
-	 *Assign new display group Test
-	 */
+    /**
+     * Assign new display group Test
+     * @group broken
+     */
 
     public function testAssignGroup()
     {
@@ -291,8 +397,9 @@ class DisplayGroupTest extends LocalWebTestCase
     }
 
     /**
-	 *Unassign displays group Test
-	 */
+     * Unassign displays group Test
+     * @group broken
+     */
 
     public function testUnassignGroup()
     {
@@ -308,8 +415,9 @@ class DisplayGroupTest extends LocalWebTestCase
     }
 
     /**
-	 * Assign new media file to a group Test
-	 */
+     * Assign new media file to a group Test
+     * @group broken
+     */
 
     public function testAssignMedia()
     {
@@ -326,8 +434,9 @@ class DisplayGroupTest extends LocalWebTestCase
     }
 
     /**
-	 * Unassign media files from a group Test
-	 */
+     * Unassign media files from a group Test
+     * @group broken
+     */
 
     public function testUnassignMedia()
     {
@@ -343,8 +452,9 @@ class DisplayGroupTest extends LocalWebTestCase
     }
 
     /**
-	 * Assign new layouts to a group Test
-	 */
+     * Assign new layouts to a group Test
+     * @group broken
+     */
 
     public function testAssignLayout()
     {
@@ -361,9 +471,10 @@ class DisplayGroupTest extends LocalWebTestCase
     }
 
     /**
-	 * Unassign layouts from a group Test     
-	 *  does not work, method name differences between /routes and controller/displayGroup
-	 */
+     * Unassign layouts from a group Test     
+     *  does not work, method name differences between /routes and controller/displayGroup
+     * @group broken
+     */
 
     public function testUnassignLayout()
     {
@@ -379,8 +490,9 @@ class DisplayGroupTest extends LocalWebTestCase
     }
 
     /**
-	 * Assign apk version to a group Test
-	 */
+     * Assign apk version to a group Test
+     * @group broken
+     */
 
     public function testVersion()
     {
@@ -397,9 +509,9 @@ class DisplayGroupTest extends LocalWebTestCase
 
     /**
      * Collect now action test
+     * @group broken
      */
-/*
-   	public function testCollect()
+    public function testCollect()
     {
 
         $this->client->post('/displaygroup/' . 7 . '/action/collectNow');
@@ -410,12 +522,13 @@ class DisplayGroupTest extends LocalWebTestCase
 //        fwrite(STDERR, $this->client->response->body());
 
     }
-*/
+
     /**
      * Change Layout action test
+     * @group broken
      */
-/*
-   	public function testChange()
+
+    public function testChange()
     {
 
         $this->client->post('/displaygroup/' . 7 . '/action/changeLayout', [
@@ -431,12 +544,13 @@ class DisplayGroupTest extends LocalWebTestCase
 //        fwrite(STDERR, $this->client->response->body());
 
     }
-*/
+
     /**
      * Revert to Schedule action test
+     * @group broken
      */
-/*
-   	public function testRevert()
+
+    public function testRevert()
     {
 
         $this->client->post('/displaygroup/' . 7 . '/action/revertToSchedule');
@@ -447,12 +561,13 @@ class DisplayGroupTest extends LocalWebTestCase
 //        fwrite(STDERR, $this->client->response->body());
 
     }
-*/
+    
     /**
      * Send command action test
+     * @group broken
      */
-/*
-   	public function testCommand()
+
+    public function testCommand()
     {
 
         $this->client->post('/displaygroup/' . 7 . '/action/command' , [
@@ -465,6 +580,5 @@ class DisplayGroupTest extends LocalWebTestCase
 //        fwrite(STDERR, $this->client->response->body());
 
     }
-*/
 
 }
