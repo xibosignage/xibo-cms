@@ -291,6 +291,41 @@ class DisplayGroupTest extends LocalWebTestCase
         ];
     }
     
+    /**
+     *  Try and add two display groups with the same name
+     *  @group minimal
+     *  @depend testAddSuccess
+     *  @expectedException \InvalidArgumentException
+     */ 
+
+    public function testAddDuplicate()
+    {
+        # Load in a known layouts
+        $displayGroup = $this->container->displayGroupFactory->CreateEmpty();
+        $displayGroup->setChildObjectDependencies($this->container->displayFactory,
+                                                  $this->container->layoutFactory,
+                                                  $this->container->mediaFactory,
+                                                  $this->container->scheduleFactory
+                                                  );
+        $displayGroup->displayGroup = $this->container->sanitizerService->string('phpunit displaygroup');
+        $displayGroup->description = $this->container->sanitizerService->string('phpunit displaygroup');
+        $displayGroup->isDynamic = $this->container->sanitizerService->checkbox(0);
+        $displayGroup->dynamicCriteria = $this->container->sanitizerService->string('');;
+        $displayGroup->userId = 1;
+        $displayGroup->save();
+        
+        $this->container->store->commitIfNecessary();
+    
+        $response = $this->client->post('/displaygroup', [
+            'displayGroup' => 'phpunit displaygroup',
+            'description' => 'phpunit displaygroup',
+            'isDynamic' => 0,
+            'dynamicCriteria' => ''
+        ]);    
+    
+        # Rely on tearDown() to clean up after us
+    }
+    
    /**
     *  Edit display group test
     *  @group broken
