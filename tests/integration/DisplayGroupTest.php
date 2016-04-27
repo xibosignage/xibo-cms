@@ -80,24 +80,13 @@ class DisplayGroupTest extends LocalWebTestCase
 
     public function testListKnown()
     {
-        # Load in a known set of layouts
+        # Load in a known set of display groups
         # We can assume this works since we depend upon the test which
         # has previously added and removed these without issue:
         $cases =  $this->provideSuccessCases();
         
         foreach ($cases as $case) {
-            $displayGroup = $this->container->displayGroupFactory->CreateEmpty();
-            $displayGroup->setChildObjectDependencies($this->container->displayFactory,
-                                                      $this->container->layoutFactory,
-                                                      $this->container->mediaFactory,
-                                                      $this->container->scheduleFactory
-                                                      );
-            $displayGroup->displayGroup = $this->container->sanitizerService->string($case[0]);
-            $displayGroup->description = $this->container->sanitizerService->string($case[1]);
-            $displayGroup->isDynamic = $this->container->sanitizerService->checkbox($case[2]);
-            $displayGroup->dynamicCriteria = $this->container->sanitizerService->string($case[3]);;
-            $displayGroup->userId = 1;
-            $displayGroup->save();
+            $displayGroup = $this->createDisplayGroup($case[0],$case[1],$case[2],$case[3]);
         }
         
         $this->container->store->commitIfNecessary();
@@ -126,24 +115,13 @@ class DisplayGroupTest extends LocalWebTestCase
 
     public function testListFilter($groupName, $groupDescription, $isDynamic, $expectedDynamic, $dynamicCriteria, $expectedDynamicCriteria)
     {
-        # Load in a known set of layouts
+        # Load in a known set of display groups
         # We can assume this works since we depend upon the test which
         # has previously added and removed these without issue:
         $cases =  $this->provideSuccessCases();
         
         foreach ($cases as $case) {
-            $displayGroup = $this->container->displayGroupFactory->CreateEmpty();
-            $displayGroup->setChildObjectDependencies($this->container->displayFactory,
-                                                      $this->container->layoutFactory,
-                                                      $this->container->mediaFactory,
-                                                      $this->container->scheduleFactory
-                                                      );
-            $displayGroup->displayGroup = $this->container->sanitizerService->string($case[0]);
-            $displayGroup->description = $this->container->sanitizerService->string($case[1]);
-            $displayGroup->isDynamic = $this->container->sanitizerService->checkbox($case[2]);
-            $displayGroup->dynamicCriteria = $this->container->sanitizerService->string($case[3]);;
-            $displayGroup->userId = 1;
-            $displayGroup->save();
+            $displayGroup = $this->createDisplayGroup($case[0], $case[1], $case[2], $case[3]);
         }
         
         $this->container->store->commitIfNecessary();
@@ -208,12 +186,7 @@ class DisplayGroupTest extends LocalWebTestCase
         $this->assertEquals(1, count($displayGroups));
         
         # Check that the group was added correctly
-        $displayGroup = $this->container->displayGroupFactory->getById($object->id);
-        $displayGroup->setChildObjectDependencies($this->container->displayFactory,
-                                                  $this->container->layoutFactory,
-                                                  $this->container->mediaFactory,
-                                                  $this->container->scheduleFactory
-                                                  );
+        $displayGroup = $this->getDisplayGroupById($object->id);
         
         $this->assertSame($groupName, $displayGroup->displayGroup);
         $this->assertSame($groupDescription, $displayGroup->description);
@@ -300,21 +273,8 @@ class DisplayGroupTest extends LocalWebTestCase
 
     public function testAddDuplicate()
     {
-        # Load in a known layout
-        $displayGroup = $this->container->displayGroupFactory->CreateEmpty();
-        $displayGroup->setChildObjectDependencies($this->container->displayFactory,
-                                                  $this->container->layoutFactory,
-                                                  $this->container->mediaFactory,
-                                                  $this->container->scheduleFactory
-                                                  );
-        $displayGroup->displayGroup = $this->container->sanitizerService->string('phpunit displaygroup');
-        $displayGroup->description = $this->container->sanitizerService->string('phpunit displaygroup');
-        $displayGroup->isDynamic = $this->container->sanitizerService->checkbox(0);
-        $displayGroup->dynamicCriteria = $this->container->sanitizerService->string('');;
-        $displayGroup->userId = 1;
-        $displayGroup->save();
-        
-        $this->container->store->commitIfNecessary();
+        # Load in a known display group
+        $displayGroup = $this->createDisplayGroup('phpunit displaygroup', 'phpunit displaygroup', 0, '');
     
         $response = $this->client->post('/displaygroup', [
             'displayGroup' => 'phpunit displaygroup',
@@ -327,29 +287,19 @@ class DisplayGroupTest extends LocalWebTestCase
     }
     
    /**
-    *  Edit an existing display group
-    *  @group minimal
+    * Edit an existing display group
+    * @depend testAddSuccess
+    * @group minimal
     */ 
 
     public function testEdit()
     {
     
         # Load in a known layout
-        $displayGroup = $this->container->displayGroupFactory->CreateEmpty();
-        $displayGroup->setChildObjectDependencies($this->container->displayFactory,
-                                                  $this->container->layoutFactory,
-                                                  $this->container->mediaFactory,
-                                                  $this->container->scheduleFactory
-                                                  );
-        $displayGroup->displayGroup = $this->container->sanitizerService->string('phpunit displaygroup');
-        $displayGroup->description = $this->container->sanitizerService->string('phpunit displaygroup');
-        $displayGroup->isDynamic = $this->container->sanitizerService->checkbox(0);
-        $displayGroup->dynamicCriteria = $this->container->sanitizerService->string('');;
-        $displayGroup->userId = 1;
-        $displayGroup->save();
-        
-        $this->container->store->commitIfNecessary();
+        $displayGroup = $this->createDisplayGroup('phpunit displaygroup', 'phpunit displaygroup', 0, '');
 
+        # Change the group name and description
+        # Change it to a dynamic group with a fixed criteria
         $name = Random::generateString(8, 'phpunit');
         $description = Random::generateString(8, 'description');
         $criteria = 'test';
@@ -365,6 +315,7 @@ class DisplayGroupTest extends LocalWebTestCase
 
         $object = json_decode($this->client->response->body());
 
+        # Examine the returned object and check that it's what we expect
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($name, $object->data->displayGroup);
@@ -373,12 +324,7 @@ class DisplayGroupTest extends LocalWebTestCase
         $this->assertSame($criteria, $object->data->dynamicCriteria);
 
         # Check that the group was actually renamed
-        $displayGroup = $this->container->displayGroupFactory->getById($object->id);
-        $displayGroup->setChildObjectDependencies($this->container->displayFactory,
-                                                  $this->container->layoutFactory,
-                                                  $this->container->mediaFactory,
-                                                  $this->container->scheduleFactory
-                                                  );
+        $displayGroup = $this->getDisplayGroupById($object->id);
         
         $this->assertSame($name, $displayGroup->displayGroup);
         $this->assertSame($description, $displayGroup->description);
@@ -393,15 +339,29 @@ class DisplayGroupTest extends LocalWebTestCase
     /**
      * Test delete
      * @param int $displayGroupId
-     * @depends testEdit
-     * @group broken
+     * @depends testAddSuccess
+     * @group minimal
      */ 
 
     public function testDelete($displayGroupId)
     {
-        $this->client->delete('/displaygroup/' . $displayGroupId);
+    
+        # Load in a couple of known display groups
+        $displayGroup1 = $this->createDisplayGroup('phpunit test', 'phpunit description', 0, '');
+        $displayGroup2 = $this->createDisplayGroup('phpunit test 2', 'phpunit description 2', 0, '');
+        
+        # Delete the one we created last
+        $this->client->delete('/displaygroup/' . $displayGroup2->displayGroupId);
 
+        # This should really return 204 for success
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+        
+        # Check only one remains
+        $groups = $this->container->displayGroupFactory->query(null, []);
+        $this->assertEquals(count($groups), 1);
+        $this->assertSame($groups[0]->displayGroupId, $displayGroup1->displayGroupId);
+        
+        $displayGroup1->delete();
     }
 
 
@@ -649,5 +609,40 @@ class DisplayGroupTest extends LocalWebTestCase
 //        fwrite(STDERR, $this->client->response->body());
 
     }
+    
+    /* 
+     * Convenience function to create an arbritrary display group
+     */
+    protected function createDisplayGroup($groupName, $groupDescription, $isDynamic, $dynamicCriteria)
+    {
+        $displayGroup = $this->container->displayGroupFactory->CreateEmpty();
+        $displayGroup->setChildObjectDependencies($this->container->displayFactory,
+                                                  $this->container->layoutFactory,
+                                                  $this->container->mediaFactory,
+                                                  $this->container->scheduleFactory
+                                                  );
+        $displayGroup->displayGroup = $this->container->sanitizerService->string($groupName);
+        $displayGroup->description = $this->container->sanitizerService->string($groupDescription);
+        $displayGroup->isDynamic = $this->container->sanitizerService->checkbox($isDynamic);
+        $displayGroup->dynamicCriteria = $this->container->sanitizerService->string($dynamicCriteria);;
+        $displayGroup->userId = 1;
+        $displayGroup->save();
+        
+        $this->container->store->commitIfNecessary();
+        
+        return $displayGroup;
+    }
 
+    /* 
+     * Convenience function to retrieve a display group by ID
+     */
+    protected function getDisplayGroupById($id) {
+        $displayGroup = $this->container->displayGroupFactory->getById($id);
+        $displayGroup->setChildObjectDependencies($this->container->displayFactory,
+                                                  $this->container->layoutFactory,
+                                                  $this->container->mediaFactory,
+                                                  $this->container->scheduleFactory
+                                                  );
+        return $displayGroup;
+    }
 }
