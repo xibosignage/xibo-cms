@@ -22,6 +22,7 @@ namespace Xibo\Widget;
 
 use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
+use Xibo\Exception\NotFoundException;
 
 class Image extends ModuleWidget
 {
@@ -86,9 +87,14 @@ class Image extends ModuleWidget
     {
         // Default Hover window contains a thumbnail, media type and duration
         $output = parent::hoverPreview();
-        $output .= '<div class="hoverPreview">';
-        $output .= '    <img src="' . $this->getApp()->urlFor('library.download', ['id' => $this->getMediaId()]) . '?preview=1&width=200&height=200&proportional=1" alt="Hover Preview">';
-        $output .= '</div>';
+
+        try {
+            $output .= '<div class="hoverPreview">';
+            $output .= '    <img src="' . $this->getApp()->urlFor('library.download', ['id' => $this->getMediaId()]) . '?preview=1&width=200&height=200&proportional=1" alt="Hover Preview">';
+            $output .= '</div>';
+        } catch (NotFoundException $e) {
+            $this->getLog()->error('Cannot find image to show in HoverPreview. WidgetId: %d', $this->getWidgetId());
+        }
 
         return $output;
     }

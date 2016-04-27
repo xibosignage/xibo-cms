@@ -50,6 +50,7 @@
                                 <th>{% trans "Screen shot?" %}</th>
                                 <th>{% trans "Thumbnail" %}</th>
                                 <th>{% trans "Last Command" %}</th>
+                                <th>{% trans "XMR Registered" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -182,6 +183,22 @@
                                 icon = "fa-times";
                             else
                                 icon = "fa-question";
+
+                            return "<span class='fa " + icon + "'></span>";
+                        },
+                        "visible": false
+                    },
+                    {
+                        "data": "xmrChannel",
+                        "render": function (data, type, row) {
+                            if (type != "display")
+                                return data;
+
+                            var icon = "";
+                            if (data != null && data != "")
+                                icon = "fa-check";
+                            else
+                                icon = "fa-times";
 
                             return "<span class='fa " + icon + "'></span>";
                         },
