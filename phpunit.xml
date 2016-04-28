@@ -2,8 +2,7 @@
          colors="true"
          convertErrorsToExceptions="true"
          convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true"
-         logIncompleteSkipped="true">
+         convertWarningsToExceptions="true">
     <testsuites>
         <testsuite name="Xibo Integration Test Suite">
             <directory suffix="Test.php">tests/integration</directory>
@@ -19,4 +18,7 @@
             <directory>lib</directory>
         </whitelist>
     </filter>
+    <logging>
+        <log type="junit" target="results.xml" logIncompleteSkipped="true"/>
+    </logging>
 </phpunit>
