@@ -36,6 +36,7 @@ class TemplateTest extends LocalWebTestCase
     public function testAdd()
     {
         $layout = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 1]);
+        $layout = $layout[0];
 
         $name = \Xibo\Helper\Random::generateString(8, 'phpunit');
 
