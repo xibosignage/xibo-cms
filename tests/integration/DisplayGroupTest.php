@@ -7,23 +7,25 @@
 
 namespace Xibo\Tests\Integration;
 
-use Xibo\Tests\LocalWebTestCase;
-use Xibo\Entity\DisplayGroup;
 use Xibo\Helper\Random;
+use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
+use Xibo\Tests\LocalWebTestCase;
 
+/**
+ * Class DisplayGroupTest
+ * @package Xibo\Tests\Integration
+ */
 class DisplayGroupTest extends LocalWebTestCase
 {
-
-
     protected $startDisplayGroups;
 
     /**
      * setUp - called before every test automatically
      */
-    public function setUp()
+    public function setup()
     {  
-        parent::setUp();
-        $this->startDisplayGroups = $this->container->displayGroupFactory->query(null, []);
+        parent::setup();
+        $this->startDisplayGroups = (new XiboDisplayGroup($this->getEntityProvider()))->get();
     }
 
     /**
@@ -31,7 +33,7 @@ class DisplayGroupTest extends LocalWebTestCase
      */
     public function assertPreConditions()
     {
-        $this->assertEquals($this->startDisplayGroups, array());
+        $this->assertEquals($this->startDisplayGroups, array(), 'There are ' . count($this->startDisplayGroups) . ' in $this->startDisplayGroups. Content: ' . json_encode($this->startDisplayGroups));
     }
 
     /**
@@ -39,15 +41,16 @@ class DisplayGroupTest extends LocalWebTestCase
      */
     public function tearDown()
     {
-        $finalDisplayGroups = $this->container->displayGroupFactory->query(null, []);
+        $finalDisplayGroups = (new XiboDisplayGroup($this->getEntityProvider()))->get(0, 1000);
+
         # Loop over any remaining display groups and nuke them
         foreach ($finalDisplayGroups as $displayGroup) {
-            $displayGroup->setChildObjectDependencies($this->container->displayFactory,
-                                                      $this->container->layoutFactory,
-                                                      $this->container->mediaFactory,
-                                                      $this->container->scheduleFactory
-                                                      );
-            $displayGroup->delete();
+            /** @var XiboDisplayGroup $displayGroup */
+            try {
+                $displayGroup->delete();
+            } catch (\Exception $e) {
+                fwrite(STDERR, 'Unable to delete ' . $displayGroup->displayGroupId . '. E:' . $e->getMessage());
+            }
         }
         parent::tearDown();
     }
@@ -55,8 +58,7 @@ class DisplayGroupTest extends LocalWebTestCase
     /**
      *  List all display groups known empty
      *  @group minimal
-     */ 
-
+     */
     public function testListEmpty()
     {
         $this->client->get('/displaygroup');
@@ -71,13 +73,71 @@ class DisplayGroupTest extends LocalWebTestCase
         # There should be no DisplayGroups in the system
         $this->assertEquals(0, $object->data->recordsTotal);
     }
+
+    /**
+     * testAddSuccess - test adding various Display Groups that should be valid
+     * @dataProvider provideSuccessCases
+     * @group minimal
+     * @depends testListEmpty
+     */
+    public function testAddSuccess($groupName, $groupDescription, $isDynamic, $expectedDynamic, $dynamicCriteria, $expectedDynamicCriteria)
+    {
+        $response = $this->client->post('/displaygroup', [
+            'displayGroup' => $groupName,
+            'description' => $groupDescription,
+            'isDynamic' => $isDynamic,
+            'dynamicCriteria' => $dynamicCriteria
+        ]);
+
+        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
+
+        $object = json_decode($this->client->response->body());
+
+        $this->assertObjectHasAttribute('data', $object);
+        $this->assertObjectHasAttribute('id', $object);
+        $this->assertSame($groupName, $object->data->displayGroup);
+        $this->assertSame($groupDescription, $object->data->description);
+        $this->assertSame($expectedDynamic, $object->data->isDynamic);
+        $this->assertSame($expectedDynamicCriteria, $object->data->dynamicCriteria);
+
+        # Check that the group was really added
+        $displayGroups = (new XiboDisplayGroup($this->getEntityProvider()))->get();
+        $this->assertEquals(1, count($displayGroups));
+
+        # Check that the group was added correctly
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->getById($object->id);
+
+        $this->assertSame($groupName, $displayGroup->displayGroup);
+        $this->assertSame($groupDescription, $displayGroup->description);
+        $this->assertSame(strval($expectedDynamic), $displayGroup->isDynamic);
+        $this->assertSame($expectedDynamicCriteria, $displayGroup->dynamicCriteria);
+
+        # Clean up the DisplayGroup as we no longer need it
+        $this->assertTrue($displayGroup->delete(), 'Unable to delete ' . $displayGroup->displayGroupId);
+    }
+
+    /**
+     * testAddFailure - test adding various Display Groups that should be invalid
+     * @dataProvider provideFailureCases
+     * @expectedException \InvalidArgumentException
+     * @group minimal
+     * @depends testListEmpty
+     */
+    public function testAddFailure($groupName, $groupDescription, $isDynamic, $dynamicCriteria)
+    {
+        $response = $this->client->post('/displaygroup', [
+            'displayGroup' => $groupName,
+            'description' => $groupDescription,
+            'isDynamic' => $isDynamic,
+            'dynamicCriteria' => $dynamicCriteria
+        ]);
+    }
     
     /**
      *  List all display groups known set
      *  @group minimal
-     *  @depend testAddSuccess
-     */ 
-
+     *  @depends testAddSuccess
+     */
     public function testListKnown()
     {
         # Load in a known set of display groups
@@ -86,10 +146,8 @@ class DisplayGroupTest extends LocalWebTestCase
         $cases =  $this->provideSuccessCases();
         
         foreach ($cases as $case) {
-            $displayGroup = $this->createDisplayGroup($case[0],$case[1],$case[2],$case[3]);
+            (new XiboDisplayGroup($this->getEntityProvider()))->create($case[0],$case[1],$case[2],$case[3]);
         }
-        
-        $this->container->store->commitIfNecessary();
     
         $this->client->get('/displaygroup');
 
@@ -107,12 +165,11 @@ class DisplayGroupTest extends LocalWebTestCase
     }
 
     /**
-     *  List specific display groups
-     *  @group minimal
-     *  @depend testAddSuccess
-     *  @dataProvider provideSuccessCases
-     */ 
-
+     * List specific display groups
+     * @group minimal
+     * @depends testListKnown
+     * @dataProvider provideSuccessCases
+     */
     public function testListFilter($groupName, $groupDescription, $isDynamic, $expectedDynamic, $dynamicCriteria, $expectedDynamicCriteria)
     {
         # Load in a known set of display groups
@@ -121,15 +178,12 @@ class DisplayGroupTest extends LocalWebTestCase
         $cases =  $this->provideSuccessCases();
         
         foreach ($cases as $case) {
-            $displayGroup = $this->createDisplayGroup($case[0], $case[1], $case[2], $case[3]);
+            (new XiboDisplayGroup($this->getEntityProvider()))->create($case[0], $case[1], $case[2], $case[3]);
         }
-        
-        $this->container->store->commitIfNecessary();
         
         $this->client->get('/displaygroup', [
                            'displayGroup' => $groupName
                            ]);
-        $this->client->get('/displaygroup');
 
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
@@ -154,78 +208,20 @@ class DisplayGroupTest extends LocalWebTestCase
     }
 
 
-   /**
-    *  testAddSuccess - test adding various Display Groups that should be valid
-    *  @dataProvider provideSuccessCases
-    *  @group minimal
-    */ 
-
-    public function testAddSuccess($groupName, $groupDescription, $isDynamic, $expectedDynamic, $dynamicCriteria, $expectedDynamicCriteria)
-    {
- 
-        $response = $this->client->post('/displaygroup', [
-            'displayGroup' => $groupName,
-            'description' => $groupDescription,
-            'isDynamic' => $isDynamic,
-            'dynamicCriteria' => $dynamicCriteria
-        ]);
-        
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-
-        $object = json_decode($this->client->response->body());
-
-        $this->assertObjectHasAttribute('data', $object);
-        $this->assertObjectHasAttribute('id', $object);
-        $this->assertSame($groupName, $object->data->displayGroup);
-        $this->assertSame($groupDescription, $object->data->description);
-        $this->assertSame($expectedDynamic, $object->data->isDynamic);
-        $this->assertSame($expectedDynamicCriteria, $object->data->dynamicCriteria);
-        
-        # Check that the group was really added
-        $displayGroups = $this->container->displayGroupFactory->query(null, []);
-        $this->assertEquals(1, count($displayGroups));
-        
-        # Check that the group was added correctly
-        $displayGroup = $this->getDisplayGroupById($object->id);
-        
-        $this->assertSame($groupName, $displayGroup->displayGroup);
-        $this->assertSame($groupDescription, $displayGroup->description);
-        $this->assertSame(strval($expectedDynamic), $displayGroup->isDynamic);
-        $this->assertSame($expectedDynamicCriteria, $displayGroup->dynamicCriteria);
-        
-        # Clean up the DisplayGroup as we no longer need it
-        $displayGroup->delete();
-        
-    }
-    
-   /**
-    *  testAddFailure - test adding various Display Groups that should be invalid
-    *  @dataProvider provideFailureCases
-    *  @expectedException \InvalidArgumentException
-    *  @group minimal
-    */ 
-
-    public function testAddFailure($groupName, $groupDescription, $isDynamic, $dynamicCriteria)
-    {
-        $response = $this->client->post('/displaygroup', [
-            'displayGroup' => $groupName,
-            'description' => $groupDescription,
-            'isDynamic' => $isDynamic,
-            'dynamicCriteria' => $dynamicCriteria
-        ]);
-    }
-
-
+    /**
+     * Each array is a test run
+     *  Format
+     *  (Group Name, Group Description, isDynamic, Returned isDynamic (0 or 1),
+     *   Criteria for Dynamic group, Returned Criteria for Dynamic group)
+     *  For example, if you set isDynamic to 0 and send criteria, it will come back
+     *  with criteria = null
+     *  These are reused in other tests so please ensure Group Name is unique
+     *  through the dataset
+     * @return array
+     */
     public function provideSuccessCases()
     {
-    # Each array is a test run
-    # Format
-    # (Group Name, Group Description, isDynamic, Returned isDynamic (0 or 1),
-    #  Criteria for Dynamic group, Returned Criteria for Dynamic group)
-    # For example, if you set isDynamic to 0 and send criteria, it will come back
-    # with criteria = null
-    # These are reused in other tests so please ensure Group Name is unique
-    # through the dataset
+
         return [
             // Multi-language non-dynamic groups
             ['phpunit test group', 'Api', 0, 0, '', null],
@@ -245,13 +241,16 @@ class DisplayGroupTest extends LocalWebTestCase
             ['Invalid isDynamic flag alpha 2', 'Invalid isDynamic flag alpha', 'invalid', 0, 'criteria', 'criteria']
         ];
     }
-    
-    
+
+    /**
+     *  Each array is a test run
+     *  Format
+     *  (Group Name, Group Description, isDynamic, Criteria for Dynamic group)
+     * @return array
+     */
     public function provideFailureCases()
     {
-    # Each array is a test run
-    # Format
-    # (Group Name, Group Description, isDynamic, Criteria for Dynamic group)
+
         return [
             // Description is limited to 255 characters
             ['Too long description', Random::generateString(255), 0, null],
@@ -267,14 +266,13 @@ class DisplayGroupTest extends LocalWebTestCase
     /**
      *  Try and add two display groups with the same name
      *  @group minimal
-     *  @depend testAddSuccess
+     *  @depends testAddSuccess
      *  @expectedException \InvalidArgumentException
-     */ 
-
+     */
     public function testAddDuplicate()
     {
         # Load in a known display group
-        $displayGroup = $this->createDisplayGroup('phpunit displaygroup', 'phpunit displaygroup', 0, '');
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit displaygroup', 'phpunit displaygroup', 0, '');
     
         $response = $this->client->post('/displaygroup', [
             'displayGroup' => 'phpunit displaygroup',
@@ -288,15 +286,15 @@ class DisplayGroupTest extends LocalWebTestCase
     
    /**
     * Edit an existing display group
-    * @depend testAddSuccess
+    * @depends testAddSuccess
     * @group minimal
-    */ 
-
+    */
     public function testEdit()
     {
     
         # Load in a known layout
-        $displayGroup = $this->createDisplayGroup('phpunit displaygroup', 'phpunit displaygroup', 0, '');
+        /** @var XiboDisplayGroup $displayGroup */
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit displaygroup', 'phpunit displaygroup', 0, '');
 
         # Change the group name and description
         # Change it to a dynamic group with a fixed criteria
@@ -324,7 +322,7 @@ class DisplayGroupTest extends LocalWebTestCase
         $this->assertSame($criteria, $object->data->dynamicCriteria);
 
         # Check that the group was actually renamed
-        $displayGroup = $this->getDisplayGroupById($object->id);
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->getById($object->id);
         
         $this->assertSame($name, $displayGroup->displayGroup);
         $this->assertSame($description, $displayGroup->description);
@@ -341,14 +339,12 @@ class DisplayGroupTest extends LocalWebTestCase
      * @param int $displayGroupId
      * @depends testAddSuccess
      * @group minimal
-     */ 
-
+     */
     public function testDelete($displayGroupId)
     {
-    
         # Load in a couple of known display groups
-        $displayGroup1 = $this->createDisplayGroup('phpunit test', 'phpunit description', 0, '');
-        $displayGroup2 = $this->createDisplayGroup('phpunit test 2', 'phpunit description 2', 0, '');
+        $displayGroup1 = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit test', 'phpunit description', 0, '');
+        $displayGroup2 = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit test 2', 'phpunit description 2', 0, '');
         
         # Delete the one we created last
         $this->client->delete('/displaygroup/' . $displayGroup2->displayGroupId);
@@ -358,19 +354,17 @@ class DisplayGroupTest extends LocalWebTestCase
         $this->assertSame(204, $response->status, $this->client->response->body());
         
         # Check only one remains
-        $groups = $this->container->displayGroupFactory->query(null, []);
+        $groups = (new XiboDisplayGroup($this->getEntityProvider()))->get();
         $this->assertEquals(count($groups), 1);
         $this->assertSame($groups[0]->displayGroupId, $displayGroup1->displayGroupId);
         
         $displayGroup1->delete();
     }
 
-
     /**
      *Assign new displays Test
      * @group broken
      */
-
     public function testAssign()
     {
 
@@ -391,7 +385,6 @@ class DisplayGroupTest extends LocalWebTestCase
      * Unassign displays Test
      * @group broken
      */
-
     public function testUnassign()
     {
 
@@ -412,7 +405,6 @@ class DisplayGroupTest extends LocalWebTestCase
      * Assign new display group Test
      * @group broken
      */
-
     public function testAssignGroup()
     {
 
@@ -430,7 +422,6 @@ class DisplayGroupTest extends LocalWebTestCase
      * Unassign displays group Test
      * @group broken
      */
-
     public function testUnassignGroup()
     {
 
@@ -448,7 +439,6 @@ class DisplayGroupTest extends LocalWebTestCase
      * Assign new media file to a group Test
      * @group broken
      */
-
     public function testAssignMedia()
     {
 
@@ -467,7 +457,6 @@ class DisplayGroupTest extends LocalWebTestCase
      * Unassign media files from a group Test
      * @group broken
      */
-
     public function testUnassignMedia()
     {
 
@@ -485,7 +474,6 @@ class DisplayGroupTest extends LocalWebTestCase
      * Assign new layouts to a group Test
      * @group broken
      */
-
     public function testAssignLayout()
     {
 
@@ -505,7 +493,6 @@ class DisplayGroupTest extends LocalWebTestCase
      *  does not work, method name differences between /routes and controller/displayGroup
      * @group broken
      */
-
     public function testUnassignLayout()
     {
 
@@ -523,7 +510,6 @@ class DisplayGroupTest extends LocalWebTestCase
      * Assign apk version to a group Test
      * @group broken
      */
-
     public function testVersion()
     {
 
@@ -557,7 +543,6 @@ class DisplayGroupTest extends LocalWebTestCase
      * Change Layout action test
      * @group broken
      */
-
     public function testChange()
     {
 
@@ -579,7 +564,6 @@ class DisplayGroupTest extends LocalWebTestCase
      * Revert to Schedule action test
      * @group broken
      */
-
     public function testRevert()
     {
 
@@ -596,7 +580,6 @@ class DisplayGroupTest extends LocalWebTestCase
      * Send command action test
      * @group broken
      */
-
     public function testCommand()
     {
 
@@ -609,41 +592,5 @@ class DisplayGroupTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
 //        fwrite(STDERR, $this->client->response->body());
 
-    }
-    
-    /* 
-     * Convenience function to create an arbritrary display group
-     */
-    protected function createDisplayGroup($groupName, $groupDescription, $isDynamic, $dynamicCriteria)
-    {
-        $displayGroup = $this->container->displayGroupFactory->CreateEmpty();
-        $displayGroup->setChildObjectDependencies($this->container->displayFactory,
-                                                  $this->container->layoutFactory,
-                                                  $this->container->mediaFactory,
-                                                  $this->container->scheduleFactory
-                                                  );
-        $displayGroup->displayGroup = $this->container->sanitizerService->string($groupName);
-        $displayGroup->description = $this->container->sanitizerService->string($groupDescription);
-        $displayGroup->isDynamic = $this->container->sanitizerService->checkbox($isDynamic);
-        $displayGroup->dynamicCriteria = $this->container->sanitizerService->string($dynamicCriteria);;
-        $displayGroup->userId = 1;
-        $displayGroup->save();
-        
-        $this->container->store->commitIfNecessary();
-        
-        return $displayGroup;
-    }
-
-    /* 
-     * Convenience function to retrieve a display group by ID
-     */
-    protected function getDisplayGroupById($id) {
-        $displayGroup = $this->container->displayGroupFactory->getById($id);
-        $displayGroup->setChildObjectDependencies($this->container->displayFactory,
-                                                  $this->container->layoutFactory,
-                                                  $this->container->mediaFactory,
-                                                  $this->container->scheduleFactory
-                                                  );
-        return $displayGroup;
     }
 }
