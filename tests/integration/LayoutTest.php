@@ -72,7 +72,7 @@ class LayoutTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
 
         $object = json_decode($this->client->response->body());
-      // fwrite(STDOUT, $this->client->response->body());
+//       fwrite(STDOUT, $this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
@@ -214,7 +214,8 @@ class LayoutTest extends LocalWebTestCase
             'height' => 500,
             'top' => 400,
             'left' => 400,
-            'loop' => 0
+            'loop' => 0,
+            'zIndex' => '1'
             ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
         
         $this->assertSame(200, $this->client->response->status());
@@ -226,9 +227,9 @@ class LayoutTest extends LocalWebTestCase
     }
   
    /**
-     *  delete region test
-     *  @depends testAddRegion
-     */
+    *  delete region test
+    *  @depends testEditRegion
+    */
    public function testDeleteRegion($regionId)
    {
        $this->client->delete('/region/' . $regionId);
@@ -276,6 +277,7 @@ class LayoutTest extends LocalWebTestCase
             'height' => 500,
             'top' => 400,
             'left' => 400,
+            'zIndex' => '1',
             'loop' => 0
         ],['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
@@ -298,6 +300,7 @@ class LayoutTest extends LocalWebTestCase
             'height' => 500,
             'top' => 400,
             'left' => 400,
+            'zIndex' => '1',
             'loop' => 0
             ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
         
@@ -307,6 +310,18 @@ class LayoutTest extends LocalWebTestCase
    //     fwrite(STDERR, $this->client->response->body());
 
         return $regionId;
+    }
+
+    /**
+     *  delete region test
+     *  @depends testEditRegion2
+     */
+
+        public function testDeleteRegion2($regionId)
+    {
+        $this->client->delete('/region/' . $regionId);
+
+        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
 
 
