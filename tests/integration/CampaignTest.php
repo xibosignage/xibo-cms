@@ -6,7 +6,8 @@
  */
 
 namespace Xibo\Tests\Integration;
-use Xibo\Entity\Campaign;
+use Xibo\OAuth2\Client\Entity\XiboCampaign;
+use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
@@ -98,23 +99,29 @@ class CampaignTest extends LocalWebTestCase
         // Make a campaign with a known name
         $name = \Xibo\Helper\Random::generateString(8, 'phpunit');
 
-        /* @var Campaign $campaign */
-        $campaign = $this->container->campaignFactory->create($name, 1);
-        $campaign->save();
+        /* @var XiboCampaign $campaign */
+        $campaign = (new XiboCampaign($this->getEntityProvider()))->create($name);
 
-        $this->getContainer()->store->commitIfNecessary();
-
-        $layout = $this->container->layoutFactory->query(null, ['start' => 0, 'length' => 1]);
+        // Get a layout for the test
+        // TODO: we should create and delete this
+        $layout = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 1]);
 
         $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
 
         // Call assign on the default layout
-        $this->client->post('/campaign/layout/assign/' . $campaign->campaignId, ['layoutId' => [['layoutId' => $layout[0]->layoutId, 'displayOrder' => 1]]]);
+        $this->client->post('/campaign/layout/assign/' . $campaign->campaignId, [
+            'layoutId' => [
+                [
+                    'layoutId' => $layout[0]->layoutId,
+                    'displayOrder' => 1
+                ]
+            ]
+        ]);
 
         $this->assertSame(200, $this->client->response->status(), '/campaign/layout/assign/' . $campaign->campaignId . '. Body: ' . $this->client->response->body());
 
         // Get this campaign and check it has 1 layout
-        $campaignCheck = $this->container->campaignFactory->getById($campaign->campaignId);
+        $campaignCheck = (new XiboCampaign($this->getEntityProvider()))->getById($campaign->campaignId);
 
         $this->assertSame($campaign->campaignId, $campaignCheck->campaignId, $this->client->response->body());
         $this->assertSame(1, $campaignCheck->numberLayouts, $this->client->response->body());
@@ -128,8 +135,9 @@ class CampaignTest extends LocalWebTestCase
      */
     public function testUnassignLayout($campaignId)
     {
-        // Get any old layout
-        $layout = $this->container->layoutFactory->query(null, ['start' => 0, 'length' => 1]);
+        // Get a layout for the test
+        // TODO: we should create and delete this
+        $layout = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 1]);
 
         // Call assign on the default layout
         $this->client->post('/campaign/layout/unassign/' . $campaignId, ['layoutId' => [['layoutId' => $layout[0]->layoutId, 'displayOrder' => 1]]]);
@@ -137,27 +145,27 @@ class CampaignTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
 
         // Get this campaign and check it has 0 layouts
-        $campaign = $this->container->campaignFactory->getById($campaignId);
+        $campaign = (new XiboCampaign($this->getEntityProvider()))->getById($campaignId);
 
         $this->assertSame($campaignId, $campaign->campaignId, $this->client->response->body());
         $this->assertSame(0, $campaign->numberLayouts, $this->client->response->body());
     }
 
+    /**
+     * Delete all tests
+     */
     public function testDeleteAllTests()
     {
         // Get a list of all phpunit related campaigns
-        $campaigns = $this->container->campaignFactory->query(null, ['name' => 'phpunit']);
+        $campaigns = (new XiboCampaign($this->getEntityProvider()))->get(['name' => 'phpunit', 'start' => 0, 'length' => 1000]);
 
         foreach ($campaigns as $campaign) {
-
+            /** @var XiboCampaign $campaign */
             // Check the name
             $this->assertStringStartsWith('phpunit', $campaign->campaign, 'Non-phpunit campaign found');
 
             // Issue a delete
-            /** @var Campaign $delete */
-            $delete = $this->container->campaignFactory->getById($campaign->campaignId);
-            $delete->setChildObjectDependencies($this->container->layoutFactory);
-            $delete->delete();
+            $campaign->delete();
         }
     }
 }

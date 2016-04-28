@@ -294,7 +294,7 @@ class Display
      * @SWG\Property(description="The last command success, 0 = failure, 1 = success, 2 = unknown")
      * @var int
      */
-    public $lastCommandSuccess;
+    public $lastCommandSuccess = 0;
 
     /**
      * Collect required on save?
@@ -577,8 +577,8 @@ class Display
     private function add()
     {
         $this->displayId = $this->getStore()->insert('
-            INSERT INTO display (display, isAuditing, defaultlayoutid, license, licensed, inc_schedule, email_alert, alert_timeout, xmrChannel, xmrPubKey)
-              VALUES (:display, :isauditing, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, :alert_timeout, :xmrChannel, :xmrPubKey)
+            INSERT INTO display (display, isAuditing, defaultlayoutid, license, licensed, inc_schedule, email_alert, alert_timeout, xmrChannel, xmrPubKey, lastCommandSuccess)
+              VALUES (:display, :isauditing, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, :alert_timeout, :xmrChannel, :xmrPubKey, :lastCommandSuccess)
         ', [
             'display' => $this->display,
             'isauditing' => 0,
@@ -589,7 +589,8 @@ class Display
             'email_alert' => 0,
             'alert_timeout' => 0,
             'xmrChannel' => $this->xmrChannel,
-            'xmrPubKey' => $this->xmrPubKey
+            'xmrPubKey' => $this->xmrPubKey,
+            'lastCommandSuccess' => $this->lastCommandSuccess
         ]);
 
         $displayGroup = $this->displayGroupFactory->createEmpty();

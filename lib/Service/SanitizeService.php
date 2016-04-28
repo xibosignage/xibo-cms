@@ -90,7 +90,7 @@ class SanitizeService implements SanitizerServiceInterface
         if (is_array($default)) {
             return isset($default[$param]) ? $default[$param] : null;
         }
-        else if ($source == null) {
+        else if ($source === null) {
 
             switch ($this->getRequest()->getMethod()) {
                 case 'GET':

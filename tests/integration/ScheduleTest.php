@@ -10,6 +10,7 @@ namespace Xibo\Tests\Integration;
 
 
 use Xibo\Entity\Schedule;
+use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
@@ -20,6 +21,9 @@ class ScheduleTest extends LocalWebTestCase
 {
     protected $route = '/schedule';
 
+    /**
+     * testListAll
+     */
     public function testListAll()
     {
         $this->client->get($this->route . '/data/events');
@@ -35,13 +39,15 @@ class ScheduleTest extends LocalWebTestCase
     /**
      * @group add
      * @return int
+     * @group broken
      */
     public function testAdd()
     {
         // Get a layout to schedule
-        $layout = $this->container->layoutFactory->query(null, ['start' => 1, 'length' => 1])[0];
+        $layout = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 1]);
+
         // Get a Display Group Id
-        $displayGroup = $this->container->displayGroupFactory->query(null, ['start' => 1, 'length' => 1])[0];
+        $displayGroup = $this->container->displayGroupFactory->query(null, ['start' => 0, 'length' => 1])[0];
 
         $fromDt = time();
         $toDt = time() + 3600;

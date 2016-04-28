@@ -8,7 +8,7 @@
     },
     {
       "step": "Add Audio Module",
-      "action": "INSERT INTO module (Module, Name, Enabled, RegionSpecific, Description, ImageUri, SchemaVersion, ValidExtensions, PreviewEnabled, assignable, render_as, settings, viewPath, class, defaultDuration) VALUES ('audio', 'Audio', 1, 0, 'Audio - support varies depending on the client hardware', 'forms/video.gif', 1, 'mp3,wav', 1, 1, null, null, '../modules', 'Xibo\\Widget\\Audio', 0);"
+      "action": "INSERT INTO module (Module, Name, Enabled, RegionSpecific, Description, ImageUri, SchemaVersion, ValidExtensions, PreviewEnabled, assignable, render_as, settings, viewPath, class, defaultDuration) VALUES ('audio', 'Audio', 1, 0, 'Audio - support varies depending on the client hardware', 'forms/video.gif', 1, 'mp3,wav', 1, 1, null, null, '../modules', 'Xibo\\\\Widget\\\\Audio', 0);"
     },
     {
       "step": "Create Widget/Audio Link table",

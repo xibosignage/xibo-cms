@@ -6,17 +6,14 @@
  */
 
 namespace Xibo\Tests\Integration;
-use Xibo\Entity\Command;
-use Xibo\Tests\LocalWebTestCase;
 
 
 class CommandTest extends \Xibo\Tests\LocalWebTestCase
 {
 
-	 /**
+	/**
      * Shows this user commands
      */
-
     public function testListAll()
     {
         $this->client->get('/command');
@@ -32,8 +29,8 @@ class CommandTest extends \Xibo\Tests\LocalWebTestCase
 
     /**
      * Shows this user commands with filters
+     * @group broken
      */
-/*
     public function testListAll2()
     {
         $this->client->get('/command', [
@@ -49,14 +46,12 @@ class CommandTest extends \Xibo\Tests\LocalWebTestCase
     //    fwrite(STDERR, $this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-      
     }
-*/
 
-     /**
+    /**
      * Add command test
+     * @group broken
      */
-/*
     public function testAdd()
     {
         $this->client->post('/command', [
@@ -76,15 +71,14 @@ class CommandTest extends \Xibo\Tests\LocalWebTestCase
 
         return $object->id;
     }
-*/
+
     /**
      * Edit command test
-     * depends testAdd
+     * @depends testAdd
+     * @group broken
      */
-/*
     public function testEdit($commandId)
     {
-
         $command = $this->container->displayProfileFactory->getByCommandId($commandId);
 
         $this->client->put('/command/' . $commandId, [
@@ -103,12 +97,12 @@ class CommandTest extends \Xibo\Tests\LocalWebTestCase
 
         return $commandId;
     }
-*/
+
     /**
      * Delete Added command
-     * depends testEdit
+     * @depends testEdit
+     * @group broken
      */
-/*
     public function testDelete($commandId)
     {
         $this->client->delete('/command/' . $commandId);
@@ -116,17 +110,14 @@ class CommandTest extends \Xibo\Tests\LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
 
-*/
     /**
      * Delete specific command
+     * @group broken
      */
-
-/*
     public function testDelete2()
     {
         $this->client->delete('/command/' . 5);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
-*/
 }

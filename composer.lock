@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "089586da7401c0a49429a1ef626691be",
-    "content-hash": "7eeff6edcaf207215ba98fe6e610d77e",
+    "hash": "60e17b39fc233934a57175c644ed4f7a",
+    "content-hash": "e79609093e63720eacc11b8866e0ffc7",
     "packages": [
         {
             "name": "akrabat/rka-slim-controller",
@@ -4706,6 +4706,59 @@
             "time": "2015-09-30 10:17:21"
         },
         {
+            "name": "xibosignage/oauth2-xibo-cms",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/dasgarner/oauth2-xibo-cms.git",
+                "reference": "528718803370e68e662b9cfd8fd002bdeb57c1c9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/dasgarner/oauth2-xibo-cms/zipball/528718803370e68e662b9cfd8fd002bdeb57c1c9",
+                "reference": "528718803370e68e662b9cfd8fd002bdeb57c1c9",
+                "shasum": ""
+            },
+            "require": {
+                "league/oauth2-client": "~1",
+                "php": ">=5.4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Xibo\\OAuth2\\Client\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Spring Signage Ltd",
+                    "homepage": "https://springsignage.com"
+                }
+            ],
+            "description": "A Xibo CMS provider for league/oauth2-client",
+            "homepage": "http://xibo.org.uk",
+            "keywords": [
+                "authentication",
+                "authorization",
+                "client",
+                "identity",
+                "idp",
+                "oauth",
+                "oauth2",
+                "single sign on",
+                "sso",
+                "xibo",
+                "xibo cms"
+            ],
+            "support": {
+                "source": "https://github.com/dasgarner/oauth2-xibo-cms/tree/master"
+            },
+            "time": "2016-04-28 13:09:13"
+        },
+        {
             "name": "zircote/swagger-php",
             "version": "2.0.6",
             "source": {
@@ -4775,7 +4828,8 @@
         "phpmailer/phpmailer": 20,
         "fguillot/picofeed": 0,
         "umpirsky/twig-gettext-extractor": 20,
-        "there4/slim-test-helpers": 20
+        "there4/slim-test-helpers": 20,
+        "xibosignage/oauth2-xibo-cms": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

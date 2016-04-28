@@ -6,16 +6,12 @@
  */
 
 namespace Xibo\Tests\Integration;
-use Xibo\Tests\LocalWebTestCase;
-use Xibo\Entity\Display;
 
 class DisplayTest extends \Xibo\Tests\LocalWebTestCase
 {
-
-	 /**
+	/**
      * Shows list of all displays Test
      */
-
     public function testListAll()
     {
         $this->client->get('/display');
@@ -31,8 +27,6 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
     /**
      * Shows specific display test with filters 
      */
-
-/*
     public function testListAll2()
     {
         $this->client->get('/display', [
@@ -51,36 +45,30 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
 
-    */
-
     /**
-     *  Delete Display Test
+     * Delete Display Test
+     * @group broken
      */
-
-    /*
-
-        public function testDelete()
+    public function testDelete()
     {
         $this->client->delete('/display/' . 5);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
-   
-*/
 
-   /**
-   * Edit Display test
-   */
-/*
-        public function testEdit()
-        {
-             $this->client->put('/display/' . 9, [
+    /**
+     * Edit Display test
+     * @group broken
+     */
+    public function testEdit()
+    {
+         $this->client->put('/display/' . 9, [
             'display' => 'EVILSHADYPC',
- //           'description' =>'z64',
+//           'description' =>'z64',
             'isAuditing' => 0,
             'defaultLayoutId' => 51,
             'licensed' => 1,
- //           'license' => '',
+//           'license' => '',
             'incSchedule' => 0,
             'emailAlert' => 0,
             'alertTimeout' =>0,
@@ -95,19 +83,18 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
 //            'clearCachedData' =>
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-            $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
+        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
 
-            $object = json_decode($this->client->response->body());
-//            fwrite(STDERR, $this->client->response->body());
-        } 
-
-        */
+        $object = json_decode($this->client->response->body());
+//
+//      fwrite(STDERR, $this->client->response->body());
+    }
 
     /**
-    * Request screenshot Test
-    * Will tell if zeroMQ is required
-    */
-/*
+     * Request screenshot Test
+     * Will tell if zeroMQ is required
+     * @group broken
+     */
     public function testScreenshot()
     {
         $this->client->put('/display/requestscreenshot/' . 7);
@@ -119,11 +106,10 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
 
     }
 
-*/
     /**
-    * Wake On Lan Test
-    */
-/*
+     * Wake On Lan Test
+     * @group broken
+     */
     public function testWoL()
     {
         $this->client->put('/display/wol/' . 7);
@@ -133,6 +119,4 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
         $object = json_decode($this->client->response->body());
 //        fwrite(STDERR, $this->client->response->body());
     }
-
-    */
 }

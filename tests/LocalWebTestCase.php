@@ -15,16 +15,17 @@ use Slim\Helper\Set;
 use Slim\Log;
 use Slim\Slim;
 use There4\Slim\Test\WebTestCase;
+use Xibo\Entity\Application;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
 use Xibo\Helper\AccessibleMonologWriter;
-use Xibo\Helper\Random;
 use Xibo\Helper\Translate;
 use Xibo\Middleware\ApiView;
 use Xibo\Middleware\State;
 use Xibo\Middleware\Storage;
+use Xibo\OAuth2\Client\Provider\XiboEntityProvider;
 use Xibo\Service\ConfigService;
 use Xibo\Service\SanitizeService;
+use Xibo\Storage\PdoStorageService;
 
 /**
  * Class LocalWebTestCase
@@ -32,27 +33,19 @@ use Xibo\Service\SanitizeService;
  */
 class LocalWebTestCase extends WebTestCase
 {
-    /**
-     * @var Set
-     */
-    protected $container;
+    /** @var  Set */
+    public static $container;
+
+    /** @var  XiboEntityProvider */
+    public static $entityProvider;
 
     /**
-     * Get App
-     * @return Slim
+     * Get Entity Provider
+     * @return XiboEntityProvider
      */
-    public function getApp()
+    public function getEntityProvider()
     {
-        return $this->app;
-    }
-
-    /**
-     * Get non-app container
-     * @return Set
-     */
-    protected function getContainer()
-    {
-        return $this->container;
+        return self::$entityProvider;
     }
 
     /**
@@ -109,14 +102,34 @@ class LocalWebTestCase extends WebTestCase
         require PROJECT_ROOT . '/lib/routes.php';
         require PROJECT_ROOT . '/lib/routes-web.php';
 
+        return $app;
+    }
+
+    /**
+     * Create container
+     * @return Set
+     */
+    public static function createContainer()
+    {
         // Create a container for non-app calls to Factories
-        $this->container = new Set();
+        $container = new Set();
+
+        // Create a logger
+        $logger = new AccessibleMonologWriter(array(
+            'name' => 'PHPUNIT',
+            'handlers' => array(
+                new StreamHandler('test.container.log')
+            ),
+            'processors' => array(
+                new \Monolog\Processor\UidProcessor(7)
+            )
+        ), false);
 
         // Create a logger for this container
-        $this->container->singleton('log', function ($c) use ($logger) {
+        $container->singleton('log', function ($c) use ($logger) {
             $log = new \Slim\Log($logger);
             $log->setEnabled(true);
-            $log->setLevel(Log::DEBUG);
+            $log->setLevel(Log::ERROR);
             $env = $c['environment'];
             $env['slim.log'] = $log;
 
@@ -124,51 +137,98 @@ class LocalWebTestCase extends WebTestCase
         });
 
         // Provide the same config
-        $this->container->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+        $container->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
 
-        Storage::setStorage($this->container);
+        Storage::setStorage($container);
 
-        $this->container->configService->setDependencies($this->container->store, '/');
+        $container->configService->setDependencies($container->store, '/');
 
         // Define versions, etc.
-        $this->container->configService->Version();
+        $container->configService->Version();
 
         // Register the sanitizer
-        $this->container->singleton('sanitizerService', function($container) {
+        $container->singleton('sanitizerService', function($container) {
             return new SanitizeService($container);
         });
 
         // Register the factory service
-        State::registerFactoriesWithDi($this->container);
+        State::registerFactoriesWithDi($container);
 
         // Register the translations
-        Translate::InitLocale($this->container->configService, 'en-GB');
+        Translate::InitLocale($container->configService, 'en-GB');
 
-        // Find the PHPUnit user
+        return $container;
+    }
+
+    public static function setUpBeforeClass()
+    {
+        // Configure global test state
+        // We want to ensure there is a
+        //  - global DB object
+        //  - phpunit user who executes the tests through Slim
+        //  - an API application owned by xibo_admin with client_credentials grant type
+        $container = \Xibo\Tests\LocalWebTestCase::createContainer();
+
+        // Find the PHPUnit user and if we don't create it
         try {
-            $this->container->user = $this->container->userFactory->getByName('phpunit');
-        } catch (NotFoundException $e) {
+            $container->user = $container->userFactory->getByName('phpunit');
+
+        } catch (\Xibo\Exception\NotFoundException $e) {
             // Create the phpunit user with a random password
-            /** @var User $user */
-            $user = $this->container->userFactory->create();
-            $user->setChildAclDependencies($this->container->userGroupFactory, $this->container->pageFactory);
+            /** @var \Xibo\Entity\User $user */
+            $user = $container->userFactory->create();
+            $user->setChildAclDependencies($container->userGroupFactory, $container->pageFactory);
             $user->userTypeId = 1;
             $user->userName = 'phpunit';
             $user->libraryQuota = 0;
-            $user->homePageId = $this->container->pageFactory->getByName('statusdashboard')->pageId;
+            $user->homePageId = $container->pageFactory->getByName('statusdashboard')->pageId;
             $user->isSystemNotification = 1;
-            $user->setNewPassword(Random::generateString());
+            $user->setNewPassword(\Xibo\Helper\Random::generateString());
             $user->save();
-            $this->container->store->commitIfNecessary();
+            $container->store->commitIfNecessary();
 
-            $this->container->user = $this->container->userFactory->getByName('phpunit');
+            $container->user = $container->userFactory->getByName('phpunit');
         }
 
-        return $app;
-    }
+        // Find the xibo_admin user and if we don't, complain
+        try {
+            /** @var User $admin */
+            $admin = $container->userFactory->getByName('phpunit');
 
-    protected function tearDown()
-    {
-        $this->getContainer()->store->commitIfNecessary();
+        } catch (\Xibo\Exception\NotFoundException $e) {
+            die ('Cant proceed without the xibo_admin user');
+        }
+
+        // Check to see if there is an API application we can use
+        /** @var Application $application */
+        try {
+            $application = $container->applicationFactory->getByName('phpunit');
+        } catch (\Xibo\Exception\NotFoundException $e) {
+            // Add it
+            $application = $container->applicationFactory->create();
+            $application->name = ('phpunit');
+            $application->authCode = 0;
+            $application->clientCredentials = 1;
+            $application->userId = $admin->userId;
+            $application->save();
+
+            /** @var PdoStorageService $store */
+            $store = $container->store;
+            $store->commitIfNecessary();
+        }
+
+        // Register a provider and entity provider to act as our API wrapper
+        $provider = new \Xibo\OAuth2\Client\Provider\Xibo([
+            'clientId' => $application->key,
+            'clientSecret' => $application->secret,
+            'redirectUri' => '',
+            'baseUrl' => 'http://localhost'
+        ]);
+
+        // Store our entityProvider
+        self::$entityProvider = new \Xibo\OAuth2\Client\Provider\XiboEntityProvider($provider);
+
+        // Store our container
+        self::$container = $container;
     }
 }

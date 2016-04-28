@@ -501,7 +501,7 @@ class DisplayGroup extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
-     *      name="dynamicContent",
+     *      name="dynamicCriteria",
      *      in="formData",
      *      description="The filter criteria for this dynamic group. A command separated set of regular expressions to apply",
      *      type="string",

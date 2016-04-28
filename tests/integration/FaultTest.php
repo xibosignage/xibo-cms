@@ -7,6 +7,10 @@
 
 namespace Xibo\Tests\Integration;
 
+/**
+ * Class FaultTest
+ * @package Xibo\Tests\Integration
+ */
 class FaultTest extends \Xibo\Tests\LocalWebTestCase
 {
     public function testCollect()
@@ -17,23 +21,13 @@ class FaultTest extends \Xibo\Tests\LocalWebTestCase
 
     public function testDebugOn()
     {
-        // Ensure we are
-        $this->getContainer()->configService->ChangeSetting('audit', 'emergency');
-
         $this->client->put('/fault/debug/on');
         $this->assertSame(200, $this->client->response->status());
-
-        $this->assertSame('DEBUG', $this->getContainer()->configService->GetSetting('audit'));
     }
 
     public function testDebugOff()
     {
-        // Ensure we are
-        $this->getContainer()->configService->ChangeSetting('audit', 'debug');
-
         $this->client->put('/fault/debug/off');
         $this->assertSame(200, $this->client->response->status());
-
-        $this->assertSame('EMERGENCY', $this->getContainer()->configService->GetSetting('audit'));
     }
 }
