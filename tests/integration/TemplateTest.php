@@ -6,7 +6,7 @@
  */
 
 namespace Xibo\Tests\Integration;
-use Xibo\Entity\Layout;
+use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
@@ -35,8 +35,7 @@ class TemplateTest extends LocalWebTestCase
      */
     public function testAdd()
     {
-
-        $layout = $this->container->layoutFactory->query(null, ['start' => 0, 'length' => 1])[0];
+        $layout = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 1]);
 
         $name = \Xibo\Helper\Random::generateString(8, 'phpunit');
 

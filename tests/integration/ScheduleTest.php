@@ -10,6 +10,7 @@ namespace Xibo\Tests\Integration;
 
 
 use Xibo\Entity\Schedule;
+use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
