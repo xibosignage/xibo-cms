@@ -7,17 +7,15 @@
 
 namespace Xibo\Tests\Integration;
 
-use Xibo\Tests\LocalWebTestCase;
-use Xibo\Entity\Media;
 use Xibo\Helper\Random;
+use Xibo\Tests\LocalWebTestCase;
 
 class LibraryTest extends LocalWebTestCase
 {
 
     /**
-    * List all file sin library
-    */
-
+     * List all file sin library
+     */
     public function testListAll()
     {
         $this->client->get('/library');
@@ -34,18 +32,21 @@ class LibraryTest extends LocalWebTestCase
     }
 
     /**
-    * Add new file to library
-    */
+     * Add new file to library
+     * @group broken
+     */
+    public function testAdd()
+    {
 
+    }
 
 
     /**
      * Edit soecific media file
+     * @group broken
      */
-/*
-        public function testEdit($mediaId)
+    public function testEdit($mediaId)
     {
-
         $media = $this->container->mediaFactory->getById($mediaId);
 
         $name = Random::generateString(8, 'phpunit');
@@ -67,27 +68,23 @@ class LibraryTest extends LocalWebTestCase
 
         return $mediaId;
     }
-*/
+
     /**
      * Test delete added media
      * @depends testEdit
-     */ 
-
-    /*
-        public function testDelete($mediaId)
+     */
+    public function testDelete($mediaId)
     {
         $this->client->delete('/library/' . $mediaId);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
-    */
 
     /**
      * Edit soecific media file
      * @group broken
      */
-
-        public function testEdit2()
+    public function testEdit2()
     {
         $name = Random::generateString(8, 'phpunit');
 
@@ -109,13 +106,11 @@ class LibraryTest extends LocalWebTestCase
 
     /**
      * Test delete specific media file
-     */ 
-/*
-        public function testDelete2()
+     */
+    public function testDelete2()
     {
         $this->client->delete('/library/' . 19);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
-*/
 }

@@ -7,18 +7,15 @@
 
 namespace Xibo\Tests\Integration;
 //use Xibo\Entity\DisplayProfile;
-use Xibo\Entity\Display;
-use Xibo\Tests\LocalWebTestCase;
 use Xibo\Helper\Random;
 
 
 class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
 {
 
-	 /**
+    /**
      * Shows all display pofiles
      */
-    
     public function testListAll()
     {
         $this->client->get('/displayprofile');
@@ -32,10 +29,9 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
 
-     /**
+    /**
      * Shows specific display pofiles
      */
-
     public function testListAll2()
     {
         $this->client->get('/displayprofile' , [
@@ -57,10 +53,8 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
     /**
      * 	Add new profile test
      */
-
-        public function testAdd()
+    public function testAdd()
     {
-
     	$name = Random::generateString(8, 'phpunit');
 
         $response = $this->client->post('/displayprofile', [
@@ -83,13 +77,12 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
     }
 
 	/**
-	* Edit profile Test
-	* @depends testAdd
-	*/
-
-        public function testEdit($displayProfileId)
+	 * Edit profile Test
+	 * @depends testAdd
+     * @group broken
+	 */
+    public function testEdit($displayProfileId)
     {
-
         $displayProfile = $this->container->displayProfileFactory->getById($displayProfileId);
 		$name = Random::generateString(8, 'phpunit');
 
@@ -118,13 +111,12 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
 
     /**
 	* Edit specific profile Test
+     * @group broken
 	*/
-/*
-        public function testEdit2()
+    public function testEdit2()
     {
     	$displayProfileId = 23;
         $displayProfile = $this->container->displayProfileFactory->getById($displayProfileId);
-
 		
 //		$name = Random::generateString(8, 'phpunit');
 
@@ -141,13 +133,12 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
 
         $this->assertObjectHasAttribute('data', $object);
     }
-*/
+
     /**
-     * 	delete added profile test
+     * Delete added profile test
      * @depends testAdd
      */
-
-        public function testDelete($displayProfileId)
+    public function testDelete($displayProfileId)
     {
         $this->client->delete('/displayprofile/' . $displayProfileId);
 
@@ -156,15 +147,13 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
 
 
     /**
-     * 	Delete specific profile
+     * Delete specific profile
+     * @group broken
      */
-
-/*
-        public function testDelete2()
+    public function testDelete2()
     {
         $this->client->delete('/displayprofile/' . 4);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
-*/
 }

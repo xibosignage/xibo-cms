@@ -8,15 +8,15 @@
 namespace Xibo\Tests\Integration;
 
 use Xibo\Helper\Random;
+use Xibo\OAuth2\Client\Entity\XiboResolution;
 use Xibo\Tests\LocalWebTestCase;
 
+/**
+ * Class ResolutionTest
+ * @package Xibo\Tests\Integration
+ */
 class ResolutionTest extends LocalWebTestCase
 {
-    public function __construct()
-    {
-        parent::__construct('Resolution Test');
-    }
-
     public function testListAll()
     {
         $this->client->get('/resolution');
@@ -62,7 +62,7 @@ class ResolutionTest extends LocalWebTestCase
      */
     public function testEdit($resolutionId)
     {
-        $resolution = $this->container->resolutionFactory->getById($resolutionId);
+        $resolution = (new XiboResolution($this->getEntityProvider()))->getById($resolutionId);
 
         $name = Random::generateString(8, 'phpunit');
 
@@ -80,7 +80,7 @@ class ResolutionTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object);
 
         // Deeper check by querying for resolution again
-        $object = $this->container->resolutionFactory->getById($resolutionId);
+        $object = (new XiboResolution($this->getEntityProvider()))->getById($resolutionId);
 
         $this->assertSame($name, $object->resolution);
         $this->assertSame(1, $object->enabled, 'Enabled has been switched');
@@ -95,7 +95,7 @@ class ResolutionTest extends LocalWebTestCase
      */
     public function testEditEnabled($resolutionId)
     {
-        $resolution = $this->container->resolutionFactory->getById($resolutionId);
+        $resolution = (new XiboResolution($this->getEntityProvider()))->getById($resolutionId);
 
         $this->client->put('/resolution/' . $resolutionId, [
             'resolution' => $resolution->resolution,
@@ -112,7 +112,7 @@ class ResolutionTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object);
 
         // Deeper check by querying for resolution again
-        $object = $this->container->resolutionFactory->getById($resolutionId);
+        $object = (new XiboResolution($this->getEntityProvider()))->getById($resolutionId);
 
         $this->assertSame($resolution->resolution, $object->resolution);
         $this->assertSame(1080, $object->width);

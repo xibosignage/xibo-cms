@@ -9,13 +9,16 @@ namespace Xibo\Tests\Integration;
 
 use Xibo\Tests\LocalWebTestCase;
 
+/**
+ * Class StatisticsTest
+ * @package Xibo\Tests\Integration
+ */
 class StatisticsTest extends LocalWebTestCase
 {
 
-/**
-*  Test the method call with default values
-*/ 
-
+    /**
+     *  Test the method call with default values
+     */
     public function testListAll()
     {
         $this->client->get('/stats');
@@ -30,11 +33,11 @@ class StatisticsTest extends LocalWebTestCase
     }
 
 
-/**
-*  Test the method call with custom values
-*/ 
-/*
-        public function testListAll2()
+    /**
+     *  Test the method call with custom values
+     * @group broken
+     */
+    public function testListAll2()
     {
         $this->client->get('/stats' , [
         	'fromDt' => '2016-04-14 09:00:00',
@@ -51,6 +54,4 @@ class StatisticsTest extends LocalWebTestCase
 
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
-
-    */
 }

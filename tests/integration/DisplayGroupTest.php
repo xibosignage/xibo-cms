@@ -41,7 +41,7 @@ class DisplayGroupTest extends LocalWebTestCase
      */
     public function tearDown()
     {
-        $finalDisplayGroups = (new XiboDisplayGroup($this->getEntityProvider()))->get(0, 1000);
+        $finalDisplayGroups = (new XiboDisplayGroup($this->getEntityProvider()))->get(['start' => 0, 'length' => 1000]);
 
         # Loop over any remaining display groups and nuke them
         foreach ($finalDisplayGroups as $displayGroup) {

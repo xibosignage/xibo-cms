@@ -8,9 +8,9 @@
 
 namespace Xibo\Tests\Integration;
 
-use Xibo\Helper\Random;
 use Xibo\Entity\Layout;
-use Xibo\Entity\Region;
+use Xibo\Helper\Random;
+use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
@@ -27,21 +27,21 @@ class LayoutTest extends LocalWebTestCase
     public function testRetire()
     {
         // Get any layout
-        $layout = $this->container->layoutFactory->query(null, ['start' => 1, 'length' => 1])[0];
+        $layout = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 1]);
+
+        $this->assertGreaterThan(0, count($layout));
 
         // Call retire
-        $this->client->put('/layout/retire/' . $layout->layoutId, [], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+        $this->client->put('/layout/retire/' . $layout[0]->layoutId, [], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         $this->assertSame(200, $this->client->response->status());
 
-
         // Get the same layout again and make sure its retired = 1
-        $layout = $this->container->layoutFactory->getById($layout->layoutId);
+        $layout = (new XiboLayout($this->getEntityProvider()))->getById($layout->layoutId);
 
         $this->assertSame(1, $layout->retired, 'Retired flag not updated');
 
         return $layout;
-
     }
 
     /**
@@ -56,15 +56,14 @@ class LayoutTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
 
         // Get the same layout again and make sure its retired = 1
-        $layout = $this->container->layoutFactory->getById($layout->layoutId);
+        $layout = (new XiboLayout($this->getEntityProvider()))->getById($layout->layoutId);
 
         $this->assertSame(0, $layout->retired, 'Retired flag not updated. ' . $this->client->response->body());
     }
 
     /**
-    *  List all layouts Test
-    */ 
-
+     * List all layouts Test
+     */
     public function testListAll()
     {
         $this->client->get('/layout');
@@ -79,9 +78,9 @@ class LayoutTest extends LocalWebTestCase
     }
 
     /**
-    *  List specific layouts Test
-    */ 
-
+     * List specific layouts Test
+     * @group broken
+     */
     public function testListAll2()
     {
         $this->client->get('/layout', [
@@ -103,9 +102,8 @@ class LayoutTest extends LocalWebTestCase
     }
 
     /**
-    *  Add new layout test
-    */ 
-
+     *  Add new layout test
+     */
     public function testAdd()
     {
         $name = Random::generateString(8, 'phpunit');
@@ -133,10 +131,9 @@ class LayoutTest extends LocalWebTestCase
      * @return int the id
      * @depends testAdd
      */
-
     public function testEdit($layoutId)
     {
-        $layout = $this->container->layoutFactory->getById($layoutId);
+        $layout = (new XiboLayout($this->getEntityProvider()))->getById($layoutId);
 
         $name = Random::generateString(8, 'phpunit');
 
@@ -159,7 +156,7 @@ class LayoutTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object);
 
         // Deeper check by querying for layout again
-        $object = $this->container->layoutFactory->getById($layoutId);
+        $object = (new XiboLayout($this->getEntityProvider()))->getById($layout->layoutId);
 
         $this->assertSame($name, $object->layout);
 
@@ -171,7 +168,7 @@ class LayoutTest extends LocalWebTestCase
      * @param int $layoutId
      * @depends testEdit
      */ 
-        public function testDelete($layoutId)
+    public function testDelete($layoutId)
     {
         $this->client->delete('/layout/' . $layoutId);
 
@@ -180,27 +177,21 @@ class LayoutTest extends LocalWebTestCase
 
 
     /**
-    * Delete specific layout
-    */
-
-/*
-        public function testDelete2()
+     * Delete specific layout
+     * @group broken
+     */
+    public function testDelete2()
     {
         $this->client->delete('/layout/' . 6);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
 
-*/
-
-
-
     /**
-    *  Add new region to a specific layout
-    * @group broken
-    */ 
-
-        public function testAddRegion()
+     * Add new region to a specific layout
+     * @group broken
+     */
+    public function testAddRegion()
     {
         $this->client->post('/region/' . 3);
 
@@ -213,12 +204,11 @@ class LayoutTest extends LocalWebTestCase
     }
 
     /**
-    * Edit added specific region
-    * @depends testAddRegion
-    */
-        public function testEditRegion($regionId)
+     * Edit added specific region
+     * @depends testAddRegion
+     */
+    public function testEditRegion($regionId)
     {
-
         $this->client->put('/region/' . $regionId, [
             'width' => 700,
             'height' => 500,
@@ -234,28 +224,24 @@ class LayoutTest extends LocalWebTestCase
 
         return $regionId;
     }
-
-
   
    /**
-    *  delete region test
-    *  @depends testAddRegion
-    */ 
+     *  delete region test
+     *  @depends testAddRegion
+     */
+   public function testDeleteRegion($regionId)
+   {
+       $this->client->delete('/region/' . $regionId);
 
-        public function testDeleteRegion($regionId)
-    {
-        $this->client->delete('/region/' . $regionId);
-
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
-    }
+       $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+   }
 
     /**
-    *  Copy Layout Test
-    */ 
-
+     * Copy Layout Test
+     * @group broken
+     */
     public function testCopy()
     {
-    
         // Get any layout
         $layout = $this->container->layoutFactory->query(null, ['start' => 3, 'length' => 3])[0];
 
@@ -282,11 +268,9 @@ class LayoutTest extends LocalWebTestCase
     /**
     *  Add new region to Copied Layout
     *  @depends testCopy
-    */ 
-
+    */
     public function testAddRegion2($layoutId)
     {
-
         $this->client->post('/region/' . $layoutId, [
             'width' => 500,
             'height' => 500,
@@ -303,15 +287,12 @@ class LayoutTest extends LocalWebTestCase
         return $object->id;
     }
 
-
     /**
     *  Edit region test
     *  @depends testAddRegion2
-    */ 
-
+    */
     public function testEditRegion2($regionId)
     {
-
         $this->client->put('/region/' . $regionId, [
             'width' => 700,
             'height' => 500,
@@ -330,14 +311,13 @@ class LayoutTest extends LocalWebTestCase
 
 
     /**
-    * Position Test
-    * @depends testCopy
-    * @depends testEditRegion2
-    */
-/*
+     * Position Test
+     * @depends testCopy
+     * @depends testEditRegion2
+     * @group broken
+     */
     public function testPosition($layoutId, $regionId)
     {
-
         $this->client->put('/region/position/all/' . $layoutId, ['regions' => [
             'regionId' => $regionId,
             'width' => 700,
@@ -353,18 +333,16 @@ class LayoutTest extends LocalWebTestCase
 
     }
 
-    */
     /**
      * Test delete
      * @param int $layoutId
      * @depends testCopy
-     */ 
- 
-        public function testDeleteCopy($layoutId)
+     * @group broken
+     */
+    public function testDeleteCopy($layoutId)
     {
         $this->client->delete('/layout/' . $layoutId);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
-
   }
