@@ -119,18 +119,27 @@ class DisplayGroupTest extends LocalWebTestCase
     /**
      * testAddFailure - test adding various Display Groups that should be invalid
      * @dataProvider provideFailureCases
-     * @expectedException \InvalidArgumentException
      * @group minimal
      * @depends testListEmpty
      */
     public function testAddFailure($groupName, $groupDescription, $isDynamic, $dynamicCriteria)
     {
-        $response = $this->client->post('/displaygroup', [
-            'displayGroup' => $groupName,
-            'description' => $groupDescription,
-            'isDynamic' => $isDynamic,
-            'dynamicCriteria' => $dynamicCriteria
-        ]);
+        try {
+            $response = $this->client->post('/displaygroup', [
+                'displayGroup' => $groupName,
+                'description' => $groupDescription,
+                'isDynamic' => $isDynamic,
+                'dynamicCriteria' => $dynamicCriteria
+            ]);
+        }
+        catch (\InvalidArgumentException $e) {
+            $this->assertTrue(true);
+            ob_get_clean();
+            ob_get_clean();
+            return;
+        }
+        
+        $this->fail('InvalidArgumentException not raised');
     }
     
     /**
@@ -267,21 +276,30 @@ class DisplayGroupTest extends LocalWebTestCase
      *  Try and add two display groups with the same name
      *  @group minimal
      *  @depends testAddSuccess
-     *  @expectedException \InvalidArgumentException
      */
     public function testAddDuplicate()
     {
         # Load in a known display group
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit displaygroup', 'phpunit displaygroup', 0, '');
     
-        $response = $this->client->post('/displaygroup', [
-            'displayGroup' => 'phpunit displaygroup',
-            'description' => 'phpunit displaygroup',
-            'isDynamic' => 0,
-            'dynamicCriteria' => ''
-        ]);    
+        try {
+            $response = $this->client->post('/displaygroup', [
+                'displayGroup' => 'phpunit displaygroup',
+                'description' => 'phpunit displaygroup',
+                'isDynamic' => 0,
+                'dynamicCriteria' => ''
+            ]);
+        }
+        catch (\InvalidArgumentException $e) {
+            $this->assertTrue(true);
+            ob_get_clean();
+            ob_get_clean();
+            $displayGroup->delete();
+            return;
+        }
+        
+        $this->fail('InvalidArgumentException not thown as expected');
     
-        # Rely on tearDown() to clean up after us
     }
     
    /**
