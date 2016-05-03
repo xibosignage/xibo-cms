@@ -646,7 +646,7 @@ class Soap
         $output = $cache->get();
 
         if ($cache->isHit()) {
-            $this->getLog()->info('Returning Schedule from Cache for display %s', $this->display->display);
+            $this->getLog()->info('Returning Schedule from Cache for display %s. Options %s.', $this->display->display, json_encode($options));
 
             // Log Bandwidth
             $this->logBandwidth($this->display->displayId, Bandwidth::$SCHEDULE, strlen($output));
