@@ -71,8 +71,9 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+        var table;
         $(document).ready(function() {
-            var table = $("#libraryItems").DataTable({
+            table = $("#libraryItems").DataTable({
                 "language": dataTablesLanguage,
                 serverSide: true, stateSave: true,
                 filter: false,
@@ -219,7 +220,10 @@
                 // Initialize the jQuery File Upload widget:
                 form.fileupload({
                     url: url,
-                    disableImageResize: false
+                    disableImageResize: true,
+                    previewMaxWidth: 100,
+                    previewMaxHeight: 100,
+                    previewCrop: true
                 });
 
                 // Upload server status check for browsers with CORS support:

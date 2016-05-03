@@ -398,3 +398,7 @@ div.dt-buttons {
     line-height:120%;
     text-align:center;
 }
+
+.template-upload span.preview {
+    position: relative;
+}

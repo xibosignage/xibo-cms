@@ -166,6 +166,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                         // Nothing to do then
                     }
 
+                    $oldMedia->setChildObjectDependencies($controller->getLayoutFactory(), $controller->getWidgetFactory(), $controller->getDisplayGroupFactory());
                     $oldMedia->delete();
 
                 } else {

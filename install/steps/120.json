@@ -164,7 +164,7 @@
     },
     {
       "step": "Upgrade Layouts - Ensure Layout XML field is nullable",
-      "action": "ALTER TABLE test.layout MODIFY xml longtext;"
+      "action": "ALTER TABLE layout MODIFY xml longtext;"
     },
     {
       "step": "Upgrade Layouts - Convert existing Layouts",

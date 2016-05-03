@@ -386,6 +386,10 @@ class Media implements \JsonSerializable
 
         // Are we loading for a delete? If so load the child models
         if ($options['deleting'] || $options['fullInfo']) {
+
+            if ($this->widgetFactory === null)
+                throw new ConfigurationException(__('Call setChildObjectDependencies before load'));
+
             // Permissions
             $this->permissions = $this->permissionFactory->getByObjectId(get_class($this), $this->mediaId);
 
