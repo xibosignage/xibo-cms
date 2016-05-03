@@ -219,6 +219,15 @@ class Library extends Base
     }
 
     /**
+     * Get DisplayGroup Factory
+     * @return DisplayGroupFactory
+     */
+    public function getDisplayGroupFactory()
+    {
+        return $this->displayGroupFactory;
+    }
+
+    /**
      * Displays the page logic
      */
     function displayPage()
