@@ -412,7 +412,7 @@ function MediaFormInitUpload(dialog) {
     // Initialize the jQuery File Upload widget:
     $('#fileupload').fileupload({
         url: url,
-        disableImageResize: false
+        disableImageResize: true
     });
 
     // Upload server status check for browsers with CORS support:
