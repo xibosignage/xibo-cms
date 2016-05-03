@@ -165,7 +165,7 @@ class UpgradeFactory extends BaseFactory
                 foreach ($config['steps'] as $step) {
                     // If the step defines a fixedIn version (i.e. 85)
                     // only run if we are going from a version which is after that
-                    if (isset($step['fixedIn']) && $step['fixedIn'] > $from)
+                    if (isset($step['fixedIn']) && $step['fixedIn'] >= $from)
                         continue;
 
                     if (!isset($step['type']))
