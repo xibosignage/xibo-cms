@@ -17,6 +17,10 @@
     {
       "step": "Create Widget/Audio Unique Key",
       "action": "CREATE UNIQUE INDEX lkwidgetaudio_widgetId_mediaId_uindex ON lkwidgetaudio (widgetId, mediaId);"
-    }
+    },
+    {
+      "step": "Add PDF Module",
+      "action": "INSERT INTO module (Module, Name, Enabled, RegionSpecific, Description, ImageUri, SchemaVersion, ValidExtensions, PreviewEnabled, assignable, render_as, settings, viewPath, class, defaultDuration) VALUES ('pdf', 'PDF', 1, 0, 'PDF document viewer', 'forms/pdf.gif', 1, 'pdf', 1, 1, 'html', null, '../modules', 'Xibo\\\\Widget\\\\Pdf', 60);"
+    },
   ]
 }
