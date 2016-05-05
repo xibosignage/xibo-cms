@@ -21,6 +21,7 @@ class Pdf extends ModuleWidget
     {
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/pdfjs/pdf.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/pdfjs/pdf.worker.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/pdfjs/compatibility.js')->save();
     }
 
     /**
@@ -57,8 +58,8 @@ class Pdf extends ModuleWidget
         $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
-        // If not preview, then return the file directly
-        if (!$isPreview) {
+        // If not preview or a display, then return the file directly
+        if (!$isPreview && $displayId === 0) {
             $this->download();
             return '';
         }
@@ -84,11 +85,14 @@ class Pdf extends ModuleWidget
         $data['file'] = ($isPreview) ? $this->getApp()->urlFor('library.download', ['id' => $this->getMediaId()]) : $this->getMedia()->storedAs;
 
         // Replace the head content
-        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/pdf.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/pdf.worker.js') . '"></script>';
+        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/pdf.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/compatibility.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '</script>';
+
+        $data['pdfWorkerSrc'] = $this->getResourceUrl('vendor/pdfjs/pdf.worker.js');
 
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;

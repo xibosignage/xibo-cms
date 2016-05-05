@@ -37,10 +37,9 @@
 <!--[if IE 8 ]><body class="ie8"><![endif]-->
 <!--[if IE 9 ]><body class="ie9"><![endif]-->
 <!--[if (gt IE 9)|!(IE)]><!--><body><!--<![endif]-->
-<div id="content" style="text-align: center">
-    <canvas id="the-canvas"></canvas>
-</div>
-</body>
+    <div id="content" style="text-align: center">
+        <canvas id="the-canvas"></canvas>
+    </div>
     {{ javaScript|raw }}
     <script type="text/javascript">
 
@@ -62,7 +61,7 @@
         // pdf.js's one, or the pdf.js is executed via eval(), the workerSrc property
         // shall be specified.
         //
-        // PDFJS.workerSrc = '../../build/pdf.worker.js';
+        PDFJS.workerSrc = "{{ pdfWorkerSrc }}";
 
         var pdfDoc = null,
                 pageNum = 1,
@@ -173,5 +172,6 @@
             }, interval * 1000);
         });
     </script>
+</body>
 </html>
 {{ controlMeta|raw }}
