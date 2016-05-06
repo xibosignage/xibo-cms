@@ -634,7 +634,8 @@ class Display
                     storageTotalSpace = :storageTotalSpace,
                     xmrChannel = :xmrChannel,
                     xmrPubKey = :xmrPubKey,
-                    `lastCommandSuccess` = :lastCommandSuccess
+                    `lastCommandSuccess` = :lastCommandSuccess,
+                    `version_instructions` = :versionInstructions
              WHERE displayid = :displayId
         ', [
             'display' => $this->display,
@@ -670,6 +671,7 @@ class Display
             'xmrChannel' => $this->xmrChannel,
             'xmrPubKey' => $this->xmrPubKey,
             'lastCommandSuccess' => $this->lastCommandSuccess,
+            'versionInstructions' => $this->versionInstructions,
             'displayId' => $this->displayId
         ]);
 
