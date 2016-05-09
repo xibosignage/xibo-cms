@@ -28,7 +28,11 @@
     },
     {
       "step": "Add oAuth Scope/Route table",
-      "action": "CREATE TABLE oauth_scope_routes(scopeId varchar(254) NOT NULL,route varchar(1000) NOT NULL,id int PRIMARY KEY AUTO_INCREMENT) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+      "action": "CREATE TABLE oauth_scope_routes(scopeId varchar(254) NOT NULL,route varchar(1000) NOT NULL,method varchar(8) NOT NULL,id int PRIMARY KEY AUTO_INCREMENT) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    },
+    {
+      "step": "Add scopes",
+      "action": "INSERT INTO oauth_scopes (id, description) VALUES ('all', 'All access'),('mcaas', 'Media Conversion as a Service');"
     }
   ]
 }

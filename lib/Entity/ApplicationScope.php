@@ -8,6 +8,7 @@
 
 namespace Xibo\Entity;
 
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -46,5 +47,28 @@ class ApplicationScope implements \JsonSerializable
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * Check whether this scope has permission for this route
+     * @param $method
+     * @param $route
+     */
+    public function checkRoute($method, $route)
+    {
+        $route = $this->getStore()->select('
+            SELECT *
+              FROM `oauth_scope_routes`
+             WHERE scopeId = :scope
+              AND method = :method
+              AND route = :route
+        ', [
+            'scope' => $this->getId(),
+            'method' => $method,
+            'route' => $route
+        ]);
+
+        if (count($route) <= 0)
+            throw new AccessDeniedException(__('Access to this route is denied for this scope'));
     }
 }

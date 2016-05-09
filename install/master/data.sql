@@ -280,4 +280,6 @@ INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES
 (7, 'Xibo\\Entity\\Region'),
 (8, 'Xibo\\Entity\\Playlist'),
 (9, 'Xibo\\Entity\\DataSet'),
-(10, 'Xibo\\Entity\\Notification')
+(10, 'Xibo\\Entity\\Notification');
+
+INSERT INTO `oauth_scopes` (id, description) VALUES ('all', 'All access'),('mcaas', 'Media Conversion as a Service');

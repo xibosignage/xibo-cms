@@ -637,6 +637,7 @@ CREATE TABLE IF NOT EXISTS `oauth_scope_routes`
 (
   scopeId varchar(254) NOT NULL,
   route varchar(1000) NOT NULL,
+  method varchar(8) NOT NULL,
   id int PRIMARY KEY AUTO_INCREMENT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

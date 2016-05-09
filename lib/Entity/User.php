@@ -26,6 +26,7 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\LibraryFullException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
@@ -298,6 +299,9 @@ class User implements \JsonSerializable
     /** @var  DisplayFactory */
     private $displayFactory;
 
+    /** @var  ApplicationScopeFactory */
+    private $applicationScopeFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -306,13 +310,15 @@ class User implements \JsonSerializable
      * @param UserFactory $userFactory
      * @param PermissionFactory $permissionFactory
      * @param UserOptionFactory $userOptionFactory
+     * @param ApplicationScopeFactory $applicationScopeFactory
      */
     public function __construct($store,
                                 $log,
                                 $configService,
                                 $userFactory,
                                 $permissionFactory,
-                                $userOptionFactory)
+                                $userOptionFactory,
+                                $applicationScopeFactory)
     {
         $this->setCommonDependencies($store, $log);
 
@@ -320,6 +326,7 @@ class User implements \JsonSerializable
         $this->userFactory = $userFactory;
         $this->permissionFactory = $permissionFactory;
         $this->userOptionFactory = $userOptionFactory;
+        $this->applicationScopeFactory = $applicationScopeFactory;
     }
 
     /**
@@ -873,21 +880,24 @@ class User implements \JsonSerializable
     /**
      * Authenticates the route given against the user credentials held
      * @param $route string
+     * @param $method string
      * @param $scopes array[ScopeEntity]
      * @throws AccessDeniedException if the user doesn't have access
      */
-    public function routeAuthentication($route, $scopes = null)
+    public function routeAuthentication($route, $method = null, $scopes = null)
     {
         // Scopes provided?
         if ($scopes !== null && is_array($scopes)) {
             //$this->getLog()->debug('Scopes: %s', json_encode($scopes));
             foreach ($scopes as $scope) {
                 /** @var ScopeEntity $scope */
-                $this->getLog()->debug('Test authentication for route %s against scope %s', $route, $scope->getId());
 
                 // Valid routes
-                if ($scope->getId() == 'mcaas') {
+                if ($scope->getId() != 'all') {
+                    $this->getLog()->debug('Test authentication for route %s %s against scope %s', $method, $route, $scope->getId());
 
+                    // Check the route and request method
+                    $this->applicationScopeFactory->getById($scope->getId())->checkRoute($method, $route);
                 }
             }
         }
