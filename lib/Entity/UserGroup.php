@@ -60,7 +60,7 @@ class UserGroup
      * @SWG\Property(description="Does this Group receive system notifications.")
      * @var int
      */
-    public $isSystemNotification;
+    public $isSystemNotification = 0;
 
     // Users
     private $users = [];
