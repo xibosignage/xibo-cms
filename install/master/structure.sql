@@ -476,6 +476,7 @@ CREATE TABLE IF NOT EXISTS `module` (
   `viewPath` varchar(254) NOT NULL DEFAULT '../modules',
   `class` varchar(254) NOT NULL,
   `defaultDuration` int(11) NOT NULL,
+  `installName` varchar(254) NULL,
   PRIMARY KEY (`ModuleID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Functional Modules' AUTO_INCREMENT=32 ;
 

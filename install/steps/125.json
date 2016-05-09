@@ -33,6 +33,10 @@
     {
       "step": "Add scopes",
       "action": "INSERT INTO oauth_scopes (id, description) VALUES ('all', 'All access'),('mcaas', 'Media Conversion as a Service');"
+    },
+    {
+      "step": "Add module install name",
+      "action": "ALTER TABLE `module` ADD `installName` varchar(254) NULL;"
     }
   ]
 }

@@ -133,6 +133,12 @@ class Module implements \JsonSerializable
     public $viewPath = '../modules';
 
     /**
+     * @SWG\Property(description="The original installation name of this module.")
+     * @var string
+     */
+    public $installName;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
@@ -174,9 +180,9 @@ class Module implements \JsonSerializable
     {
         $this->moduleId = $this->getStore()->insert('
           INSERT INTO `module` (`Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`,
-                `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`, `defaultDuration`)
+                `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`, `defaultDuration`, `installName`)
             VALUES (:module, :name, :enabled, :region_specific, :description,
-                :image_uri, :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings, :viewPath, :class, :defaultDuration)
+                :image_uri, :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings, :viewPath, :class, :defaultDuration, :installName)
         ', [
             'module' => $this->type,
             'name' => $this->name,
@@ -192,7 +198,8 @@ class Module implements \JsonSerializable
             'settings' => json_encode($this->settings),
             'viewPath' => $this->viewPath,
             'class' => $this->class,
-            'defaultDuration' => $this->defaultDuration
+            'defaultDuration' => $this->defaultDuration,
+            'installName' => $this->installName
         ]);
     }
 
