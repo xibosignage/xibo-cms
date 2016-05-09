@@ -28,6 +28,9 @@ class ApplicationFactory extends BaseFactory
      */
     private $applicationRedirectUriFactory;
 
+    /** @var  ApplicationScopeFactory */
+    private $applicationScopeFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -36,12 +39,13 @@ class ApplicationFactory extends BaseFactory
      * @param User $user
      * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $applicationRedirectUriFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $applicationRedirectUriFactory, $applicationScopeFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, null);
 
         $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
+        $this->applicationScopeFactory = $applicationScopeFactory;
 
         if ($this->applicationRedirectUriFactory == null)
             throw new \RuntimeException('Missing dependency: ApplicationRedirectUriFactory');
@@ -69,7 +73,10 @@ class ApplicationFactory extends BaseFactory
         if ($this->applicationRedirectUriFactory == null)
             throw new \RuntimeException('Missing dependency: ApplicationRedirectUriFactory');
 
-        return new Application($this->getStore(), $this->getLog(), $this->applicationRedirectUriFactory);
+        if ($this->applicationScopeFactory == null)
+            throw new \RuntimeException('Missing dependency: ApplicationScopeFactory');
+
+        return new Application($this->getStore(), $this->getLog(), $this->applicationRedirectUriFactory, $this->applicationScopeFactory);
     }
 
     /**

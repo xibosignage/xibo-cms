@@ -20,6 +20,7 @@
  */
 namespace Xibo\Entity;
 
+use League\OAuth2\Server\Entity\ScopeEntity;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
@@ -872,10 +873,26 @@ class User implements \JsonSerializable
     /**
      * Authenticates the route given against the user credentials held
      * @param $route string
+     * @param $scopes array[ScopeEntity]
      * @throws AccessDeniedException if the user doesn't have access
      */
-    public function routeAuthentication($route)
+    public function routeAuthentication($route, $scopes = null)
     {
+        // Scopes provided?
+        if ($scopes !== null && is_array($scopes)) {
+            //$this->getLog()->debug('Scopes: %s', json_encode($scopes));
+            foreach ($scopes as $scope) {
+                /** @var ScopeEntity $scope */
+                $this->getLog()->debug('Test authentication for route %s against scope %s', $route, $scope->getId());
+
+                // Valid routes
+                if ($scope->getId() == 'mcaas') {
+
+                }
+            }
+        }
+
+        // Check route
         if (!$this->routeViewable($route)) {
             $this->getLog()->debug('Blocked assess to unrecognised page: ' . $route . '.');
             throw new AccessDeniedException();

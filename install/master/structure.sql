@@ -567,6 +567,13 @@ CREATE TABLE IF NOT EXISTS `oauth_client_redirect_uris` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+
+CREATE TABLE oauth_client_scopes(
+  clientId varchar(254) NOT NULL,
+  scopeId varchar(254) NOT NULL,
+  id int PRIMARY KEY AUTO_INCREMENT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 -- --------------------------------------------------------
 
 --
@@ -625,6 +632,13 @@ CREATE TABLE IF NOT EXISTS `oauth_session_scopes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `oauth_scope_routes`
+(
+  scopeId varchar(254) NOT NULL,
+  route varchar(1000) NOT NULL,
+  id int PRIMARY KEY AUTO_INCREMENT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `pages`
@@ -1075,4 +1089,4 @@ CREATE TABLE IF NOT EXISTS `lkwidgetaudio` (
   mediaId int NOT NULL,
   volume tinyint DEFAULT 100,
   `loop` tinyint DEFAULT 0
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

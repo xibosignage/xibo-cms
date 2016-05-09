@@ -17,6 +17,18 @@
     {
       "step": "Create Widget/Audio Unique Key",
       "action": "CREATE UNIQUE INDEX lkwidgetaudio_widgetId_mediaId_uindex ON lkwidgetaudio (widgetId, mediaId);"
+    },
+    {
+      "step": "Add oAuth Client/Scope link table",
+      "action": "CREATE TABLE oauth_client_scopes(clientId varchar(254) NOT NULL,scopeId varchar(254) NOT NULL,id int PRIMARY KEY AUTO_INCREMENT) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    },
+    {
+      "step": "Add oAuth Client/Scope unique key",
+      "action": "CREATE UNIQUE INDEX oauth_client_scopes_clientId_scopeId_uindex ON oauth_client_scopes (clientId, scopeId);"
+    },
+    {
+      "step": "Add oAuth Scope/Route table",
+      "action": "CREATE TABLE oauth_scope_routes(scopeId varchar(254) NOT NULL,route varchar(1000) NOT NULL,id int PRIMARY KEY AUTO_INCREMENT) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
     }
   ]
 }

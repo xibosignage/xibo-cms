@@ -85,7 +85,7 @@ trait EntityTrait
         foreach ($properties as $prop => $val) {
             if (property_exists($this, $prop)) {
 
-                if (stripos(strrev($prop), 'dI') === 0 || in_array($prop, $intProperties))
+                if ((stripos(strrev($prop), 'dI') === 0 || in_array($prop, $intProperties)) && !in_array($prop, $stringProperties))
                     $val = intval($val);
                 else if (in_array($prop, $stringProperties))
                     $val = filter_var($val, FILTER_SANITIZE_STRING);

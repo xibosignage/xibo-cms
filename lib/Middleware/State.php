@@ -304,7 +304,8 @@ class State extends Middleware
                 $container->session,
                 $container->store,
                 $container->applicationFactory,
-                $container->applicationRedirectUriFactory
+                $container->applicationRedirectUriFactory,
+                $container->applicationScopeFactory
             );
         });
 
@@ -906,12 +907,21 @@ class State extends Middleware
                 $container->logService,
                 $container->sanitizerService,
                 $container->user,
-                $container->applicationRedirectUriFactory
+                $container->applicationRedirectUriFactory,
+                $container->applicationScopeFactory
             );
         });
 
         $container->singleton('applicationRedirectUriFactory', function($container) {
             return new \Xibo\Factory\ApplicationRedirectUriFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
+        });
+
+        $container->singleton('applicationScopeFactory', function($container) {
+            return new \Xibo\Factory\ApplicationScopeFactory(
                 $container->store,
                 $container->logService,
                 $container->sanitizerService
