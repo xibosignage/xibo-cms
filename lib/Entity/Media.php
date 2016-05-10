@@ -158,6 +158,18 @@ class Media implements \JsonSerializable
      */
     public $groupsWithPermissions;
 
+    /**
+     * @SWG\Property(description="A flag indicating whether this media has been released")
+     * @var int
+     */
+    public $released = 1;
+
+    /**
+     * @SWG\Property(description="An API reference")
+     * @var string
+     */
+    public $apiRef;
+
     // Private
     private $unassignTags = [];
 
@@ -554,8 +566,8 @@ class Media implements \JsonSerializable
     private function add()
     {
         $this->mediaId = $this->getStore()->insert('
-            INSERT INTO media (name, type, duration, originalFilename, userID, retired, moduleSystemFile, expires)
-              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :expires)
+            INSERT INTO media (name, type, duration, originalFilename, userID, retired, moduleSystemFile, expires, released, apiRef)
+              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :expires, :released, :apiRef)
         ', [
             'name' => $this->name,
             'type' => $this->mediaType,
@@ -564,7 +576,9 @@ class Media implements \JsonSerializable
             'userId' => $this->ownerId,
             'retired' => $this->retired,
             'moduleSystemFile' => (($this->moduleSystemFile) ? 1 : 0),
-            'expires' => $this->expires
+            'expires' => $this->expires,
+            'released' => $this->released,
+            'apiRef' => $this->apiRef
         ]);
 
         $this->saveFile();
@@ -603,7 +617,9 @@ class Media implements \JsonSerializable
                 moduleSystemFile = :moduleSystemFile,
                 editedMediaId = :editedMediaId,
                 isEdited = :isEdited,
-                userId = :userId
+                userId = :userId,
+                released = :released,
+                apiRef = :apiRef
            WHERE mediaId = :mediaId
         ', [
             'name' => $this->name,
@@ -616,6 +632,8 @@ class Media implements \JsonSerializable
             'editedMediaId' => $this->parentId,
             'isEdited' => $this->isEdited,
             'userId' => $this->ownerId,
+            'released' => $this->released,
+            'apiRef' => $this->apiRef,
             'mediaId' => $this->mediaId
         ]);
     }

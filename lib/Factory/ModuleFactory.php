@@ -140,7 +140,7 @@ class ModuleFactory extends BaseFactory
      */
     public function create($type)
     {
-        $modules = $this->query(['enabled'], array('type' => $type));
+        $modules = $this->query(['enabled DESC'], array('type' => $type));
 
         if (count($modules) <= 0)
             throw new NotFoundException(sprintf(__('Unknown type %s'), $type));
@@ -340,7 +340,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getByExtension($extension)
     {
-        $modules = $this->query(null, array('extension' => $extension));
+        $modules = $this->query(['enabled DESC'], array('extension' => $extension));
 
         if (count($modules) <= 0)
             throw new NotFoundException(sprintf(__('Extension %s does not match any enabled Module'), $extension));

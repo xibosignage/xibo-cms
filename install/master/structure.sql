@@ -450,6 +450,8 @@ CREATE TABLE IF NOT EXISTS `media` (
   `moduleSystemFile` tinyint(1) NOT NULL DEFAULT '0',
   `valid` tinyint(1) NOT NULL DEFAULT '1',
   `expires` int(11) DEFAULT NULL,
+  `released` tinyint(4) NOT NULL DEFAULT '1',
+  `apiRef` varchar(254) NULL,
   PRIMARY KEY (`mediaID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 

@@ -492,6 +492,7 @@ class Library extends Base
             'widgetId' => $this->getSanitizer()->getInt('widgetId'),
             'updateInLayouts' => $this->getSanitizer()->getCheckbox('updateInLayouts'),
             'deleteOldRevisions' => $this->getSanitizer()->getCheckbox('deleteOldRevisions'),
+            'allowMediaTypeChange' => $this->getSanitizer()->getCheckbox('allowMediaTypeChange'),
             'playlistId' => $this->getSanitizer()->getInt('playlistId'),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,

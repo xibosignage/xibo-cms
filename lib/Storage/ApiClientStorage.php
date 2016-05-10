@@ -105,6 +105,7 @@ class ApiClientStorage extends AbstractStorage implements ClientInterface
                     break;
 
                 case 'client_credentials':
+                case 'mcaas':
                     if ($result[0]['clientCredentials'] != 1)
                         return false;
 

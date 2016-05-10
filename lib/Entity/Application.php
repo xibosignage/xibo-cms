@@ -67,13 +67,13 @@ class Application implements \JsonSerializable
      * @SWG\Property(description="Flag indicating whether to allow the authorizationCode Grant Type")
      * @var int
      */
-    public $authCode;
+    public $authCode = 0;
 
     /**
      * @SWG\Property(description="Flag indicating whether to allow the clientCredentials Grant Type")
      * @var int
      */
-    public $clientCredentials;
+    public $clientCredentials = 0;
 
     /**
      * @var array[ApplicationRedirectUri]

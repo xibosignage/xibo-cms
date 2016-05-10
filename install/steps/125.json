@@ -37,6 +37,10 @@
     {
       "step": "Add module install name",
       "action": "ALTER TABLE `module` ADD `installName` varchar(254) NULL;"
+    },
+    {
+      "step": "Add released and api ref to media table",
+      "action": "ALTER TABLE `media` ADD released tinyint(4) NOT NULL DEFAULT 1, ADD apiRef varchar(254) NULL;"
     }
   ]
 }
