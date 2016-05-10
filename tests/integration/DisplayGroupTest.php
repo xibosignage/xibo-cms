@@ -459,11 +459,14 @@ class DisplayGroupTest extends LocalWebTestCase
 
     /**
      *Assign new displays Test
-     * @group broken
      */
     public function testAssign()
     {
 
+        $response = $this->xmds->RegisterDisplay('testhardwareid');
+        fwrite(STDERR, print_r($response));
+        exit(0);
+        
 		$this->client->post('/displaygroup/' . 7 . '/display/assign', [
         'displayId' => [7]
         ]);

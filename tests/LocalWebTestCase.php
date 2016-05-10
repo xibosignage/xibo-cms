@@ -38,6 +38,9 @@ class LocalWebTestCase extends WebTestCase
 
     /** @var  XiboEntityProvider */
     public static $entityProvider;
+    
+    /** @var  XmdsWrapper */
+    public static $xmds;
 
     /**
      * Get Entity Provider
@@ -224,12 +227,24 @@ class LocalWebTestCase extends WebTestCase
             'redirectUri' => '',
             'baseUrl' => 'http://localhost'
         ]);
+        
+        // Discover the CMS key for XMDS
+        /** @var PdoStorageService $store */
+        $store = $container->store;
+        $key = $store->select('SELECT value FROM `setting` WHERE `setting` = \'SERVER_KEY\'', [])[0];
+        $store->commitIfNecessary();
+        
+        // Create an XMDS wrapper for the tests to use
+        $xmds = new \Xibo\Tests\Xmds\XmdsWrapper('http://localhost/xmds.php', $key);
 
         // Store our entityProvider
         self::$entityProvider = new \Xibo\OAuth2\Client\Provider\XiboEntityProvider($provider);
 
         // Store our container
         self::$container = $container;
+        
+        // Store our XmdsWrapper
+        self::$xmds = $xmds;
     }
 
     // Convenience function to skip a test with a reason and close output
