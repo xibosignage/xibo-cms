@@ -6,7 +6,7 @@
  */
 
 namespace Xibo\Tests\Integration;
-//use Xibo\Entity\DisplayProfile;
+use Xibo\OAuth2\Client\Entity\XiboProfile;
 use Xibo\Helper\Random;
 
 
@@ -83,7 +83,7 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
 	 */
     public function testEdit($displayProfileId)
     {
-        $displayProfile = $this->container->displayProfileFactory->getById($displayProfileId);
+        $displayProfile = (new XiboDataSet($this->getEntityProvider()))->getById($displayProfileId);
 		$name = Random::generateString(8, 'phpunit');
 
         $this->client->put('/displayprofile/' . $displayProfileId, [
@@ -116,7 +116,7 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
     public function testEdit2()
     {
     	$displayProfileId = 23;
-        $displayProfile = $this->container->displayProfileFactory->getById($displayProfileId);
+        $displayProfile = (new XiboDataSet($this->getEntityProvider()))->getById($displayProfileId);
 		
 //		$name = Random::generateString(8, 'phpunit');
 

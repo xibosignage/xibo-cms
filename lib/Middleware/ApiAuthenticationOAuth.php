@@ -74,6 +74,8 @@ class ApiAuthenticationOAuth extends Middleware
 
             // Do they have permission?
             $this->app->user->routeAuthentication($resource);
+
+            $app->logService->debug($app->request()->get());
         };
 
         $app->hook('slim.before.dispatch', $isAuthorised);

@@ -7,8 +7,10 @@
 
 namespace Xibo\Tests\Integration;
 
+use Xibo\OAuth2\Client\Entity\XiboCommand;
 
-class CommandTest extends \Xibo\Tests\LocalWebTestCase
+
+class CommandTest extends LocalWebTestCase
 {
 
 	/**
@@ -27,30 +29,9 @@ class CommandTest extends \Xibo\Tests\LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
 
-    /**
-     * Shows this user commands with filters
-     * @group broken
-     */
-    public function testListAll2()
-    {
-        $this->client->get('/command', [
-      //  'commandId' => 5
-      //  'command' => 'TestCommand'
-      //  'code' => 'useful Code'
-            ]);
-
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-
-        $object = json_decode($this->client->response->body());
-    //    fwrite(STDERR, $this->client->response->body());
-
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-    }
 
     /**
      * Add command test
-     * @group broken
      */
     public function testAdd()
     {
@@ -79,7 +60,7 @@ class CommandTest extends \Xibo\Tests\LocalWebTestCase
      */
     public function testEdit($commandId)
     {
-        $command = $this->container->displayProfileFactory->getByCommandId($commandId);
+       $command = (new XiboCommand($this->getEntityProvider()))->getById($commandId);
 
         $this->client->put('/command/' . $commandId, [
         'command' => 'Another_test',
@@ -101,7 +82,6 @@ class CommandTest extends \Xibo\Tests\LocalWebTestCase
     /**
      * Delete Added command
      * @depends testEdit
-     * @group broken
      */
     public function testDelete($commandId)
     {
@@ -110,14 +90,4 @@ class CommandTest extends \Xibo\Tests\LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
 
-    /**
-     * Delete specific command
-     * @group broken
-     */
-    public function testDelete2()
-    {
-        $this->client->delete('/command/' . 5);
-
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
-    }
 }

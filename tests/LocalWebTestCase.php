@@ -231,4 +231,21 @@ class LocalWebTestCase extends WebTestCase
         // Store our container
         self::$container = $container;
     }
+
+    // Convenience function to skip a test with a reason and close output
+    // buffers nicely.
+    public function skipTest($reason)
+    {
+        $this->markTestSkipped($reason);
+        $this->closeOutputBuffers();
+    }
+
+    // If a test makes Slim quit early (via exception for example) then it
+    // leaves output buffers open which then causes a RISKY flag on the test
+    // in PHPUnit. Calling ob_get_clean() twice solves this.
+    public function closeOutputBuffers()
+    {
+        ob_get_clean();
+        ob_get_clean();
+    }
 }

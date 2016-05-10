@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "60e17b39fc233934a57175c644ed4f7a",
-    "content-hash": "e79609093e63720eacc11b8866e0ffc7",
+    "hash": "c0c62b1a5c7a9541f61a51ac42cf4f6b",
+    "content-hash": "cab619d5f36add7d712a2ba6eceb80d6",
     "packages": [
         {
             "name": "akrabat/rka-slim-controller",
@@ -4710,13 +4710,13 @@
             "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/dasgarner/oauth2-xibo-cms.git",
-                "reference": "528718803370e68e662b9cfd8fd002bdeb57c1c9"
+                "url": "https://github.com/PeterMis/oauth2-xibo-cms.git",
+                "reference": "f0016147ee9e34a870887be451d937fb5d49f611"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dasgarner/oauth2-xibo-cms/zipball/528718803370e68e662b9cfd8fd002bdeb57c1c9",
-                "reference": "528718803370e68e662b9cfd8fd002bdeb57c1c9",
+                "url": "https://api.github.com/repos/PeterMis/oauth2-xibo-cms/zipball/f0016147ee9e34a870887be451d937fb5d49f611",
+                "reference": "f0016147ee9e34a870887be451d937fb5d49f611",
                 "shasum": ""
             },
             "require": {
@@ -4754,9 +4754,9 @@
                 "xibo cms"
             ],
             "support": {
-                "source": "https://github.com/dasgarner/oauth2-xibo-cms/tree/master"
+                "source": "https://github.com/PeterMis/oauth2-xibo-cms/tree/master"
             },
-            "time": "2016-04-28 13:09:13"
+            "time": "2016-05-09 15:23:23"
         },
         {
             "name": "zircote/swagger-php",
