@@ -469,9 +469,18 @@ class Library extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @param array $options
      */
-    public function add()
+    public function add($options = [])
     {
+        $options = array_merge([
+            'oldMediaId' => null,
+            'updateInLayouts' => 0,
+            'deleteOldRevisions' => 0,
+            'allowMediaTypeChange' => 0
+        ], $options);
+
         $libraryFolder = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists
@@ -488,11 +497,11 @@ class Library extends Base
         $options = array(
             'userId' => $this->getUser()->userId,
             'controller' => $this,
-            'oldMediaId' => $this->getSanitizer()->getInt('oldMediaId'),
+            'oldMediaId' => $this->getSanitizer()->getInt('oldMediaId', $options['oldMediaId']),
             'widgetId' => $this->getSanitizer()->getInt('widgetId'),
-            'updateInLayouts' => $this->getSanitizer()->getCheckbox('updateInLayouts'),
-            'deleteOldRevisions' => $this->getSanitizer()->getCheckbox('deleteOldRevisions'),
-            'allowMediaTypeChange' => $this->getSanitizer()->getCheckbox('allowMediaTypeChange'),
+            'updateInLayouts' => $this->getSanitizer()->getCheckbox('updateInLayouts', $options['updateInLayouts']),
+            'deleteOldRevisions' => $this->getSanitizer()->getCheckbox('deleteOldRevisions', $options['deleteOldRevisions']),
+            'allowMediaTypeChange' => $options['allowMediaTypeChange'],
             'playlistId' => $this->getSanitizer()->getInt('playlistId'),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
@@ -917,5 +926,27 @@ class Library extends Base
             $entry->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
             $entry->delete();
         }
+    }
+
+    /**
+     * @param $mediaId
+     * @throws LibraryFullException
+     */
+    public function mcaas($mediaId)
+    {
+        // Call Add with the oldMediaId
+        $this->add([
+            'oldMediaId' => $mediaId,
+            'updateInLayouts' => 1,
+            'deleteOldRevisions' => 1,
+            'allowMediaTypeChange' => 1
+        ]);
+
+        // Remove the access token this request used
+        $accessToken = $this->getSanitizer()->getString('access_token');
+
+        // Direct delete using service locator
+        $this->getApp()->store->update('DELETE FROM `oauth_access_token_scopes` WHERE `access_token` = :token', ['token' => $accessToken]);
+        $this->getApp()->store->update('DELETE FROM `oauth_access_tokens` WHERE `access_token` = :token', ['token' => $accessToken]);
     }
 }
