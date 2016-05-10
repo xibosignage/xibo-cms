@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "60e17b39fc233934a57175c644ed4f7a",
-    "content-hash": "e79609093e63720eacc11b8866e0ffc7",
+    "hash": "f7a8bc249c31f025a34818c26be92938",
+    "content-hash": "476fa04e66a2c0dbd070f4b9e1ca5793",
     "packages": [
         {
             "name": "akrabat/rka-slim-controller",
@@ -4710,12 +4710,12 @@
             "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/dasgarner/oauth2-xibo-cms.git",
+                "url": "https://github.com/alexharrington/oauth2-xibo-cms.git",
                 "reference": "528718803370e68e662b9cfd8fd002bdeb57c1c9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dasgarner/oauth2-xibo-cms/zipball/528718803370e68e662b9cfd8fd002bdeb57c1c9",
+                "url": "https://api.github.com/repos/alexharrington/oauth2-xibo-cms/zipball/528718803370e68e662b9cfd8fd002bdeb57c1c9",
                 "reference": "528718803370e68e662b9cfd8fd002bdeb57c1c9",
                 "shasum": ""
             },
