@@ -50,6 +50,15 @@ class LocalWebTestCase extends WebTestCase
     {
         return self::$entityProvider;
     }
+    
+    /**
+     * Get Xmds Wrapper
+     * @return XmdsWrapper
+     */
+    public function getXmdsWrapper()
+    {
+        return self::$xmds;
+    }
 
     /**
      * Gets the Slim instance configured
@@ -231,7 +240,7 @@ class LocalWebTestCase extends WebTestCase
         // Discover the CMS key for XMDS
         /** @var PdoStorageService $store */
         $store = $container->store;
-        $key = $store->select('SELECT value FROM `setting` WHERE `setting` = \'SERVER_KEY\'', [])[0];
+        $key = $store->select('SELECT value FROM `setting` WHERE `setting` = \'SERVER_KEY\'', [])[0]['value'];
         $store->commitIfNecessary();
         
         // Create an XMDS wrapper for the tests to use

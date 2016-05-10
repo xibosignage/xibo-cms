@@ -20,7 +20,7 @@ class XmdsWrapper
     private $version;
     protected $client;
 
-    function __construct($URL = "http://localhost/xmds.php", $KEY="test", $version=5)
+    function __construct($URL = "http://localhost/xmds.php", $KEY="test", $version='5')
     {
         $this->URL = $URL;
         $this->KEY = $KEY;
@@ -42,27 +42,28 @@ class XmdsWrapper
             'exceptions'=>true,
             );
         
-        $this->client = new SoapClient($this->URL . '?wsdl', $options);
+        $this->client = new \SoapClient($this->URL . '?wsdl&v=' . $this->version, $options);
     }
     
-    function RegisterDisplay($hardwareKey, $displayName)
+    function RegisterDisplay($hardwareKey, $displayName, $clientType='windows', $clientVersion='', $clientCode='', $operatingSystem='', $macAddress='', $xmrChannel='', $xmrPubKey='')
     {
-        $params = [ "serverKey" => $this->KEY,
-                    "version" => $this->version,
-                    "hardwareKey" => $hardwareKey,
-                    "displayName" => $displayName ];
-        
-        $response = $this->client->RegisterDisplay($params);
+        $response = $this->client->RegisterDisplay($this->KEY,
+                                                   $hardwareKey,
+                                                   $displayName,
+                                                   $clientType,
+                                                   $clientVersion,
+                                                   $clientCode,
+                                                   $operatingSystem,
+                                                   $macAddress,
+                                                   $xmrChannel,
+                                                   $xmrPubKey);
         return $response;
     }
     
     function RequiredFiles($hardwareKey)
     {
-        $params = [ "serverKey" => $this->KEY,
-                    "version" => $this->version,
-                    "hardwareKey" => $hardwareKey ];
-        
-        $response = $this->client->RequiredFiles($params);
+        $response = $this->client->RequiredFiles($this->KEY,
+                                                 $hardwareKey);
         return $response;
     }
     
@@ -73,11 +74,8 @@ class XmdsWrapper
     
     function Schedule($hardwareKey)
     {
-        $params = [ "serverKey" => $this->KEY,
-                    "version" => $this->version,
-                    "hardwareKey" => $hardwareKey ];
-        
-        $response = $this->client->Schedule($params);
+        $response = $this->client->Schedule($this->KEY,
+                                            $hardwareKey);
         return $response;
     }
     
@@ -102,6 +100,16 @@ class XmdsWrapper
     }
     
     function GetResource()
+    {
+    
+    }
+    
+    function NotifyStatus()
+    {
+    
+    }
+    
+    function SubmitScreenShot()
     {
     
     }
