@@ -294,6 +294,8 @@ class MediaFactory extends BaseFactory
                media.retired,
                media.isEdited,
                IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS parentId,
+               `media`.released,
+               `media`.apiRef,
         ';
 
         $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
@@ -465,7 +467,7 @@ class MediaFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $media = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'duration', 'size'
+                    'duration', 'size', 'released'
                 ]
             ]);
         }

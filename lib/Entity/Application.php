@@ -9,6 +9,7 @@
 namespace Xibo\Entity;
 use League\OAuth2\Server\Util\SecureKey;
 use Xibo\Factory\ApplicationRedirectUriFactory;
+use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -66,13 +67,13 @@ class Application implements \JsonSerializable
      * @SWG\Property(description="Flag indicating whether to allow the authorizationCode Grant Type")
      * @var int
      */
-    public $authCode;
+    public $authCode = 0;
 
     /**
      * @SWG\Property(description="Flag indicating whether to allow the clientCredentials Grant Type")
      * @var int
      */
-    public $clientCredentials;
+    public $clientCredentials = 0;
 
     /**
      * @var array[ApplicationRedirectUri]
@@ -80,21 +81,31 @@ class Application implements \JsonSerializable
     public $redirectUris = [];
 
     /**
+     * @var array[ApplicationScope]
+     */
+    public $scopes = [];
+
+    /**
      * @var ApplicationRedirectUriFactory
      */
     private $applicationRedirectUriFactory;
+
+    /** @var  ApplicationScopeFactory */
+    private $applicationScopeFactory;
 
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
+     * @param ApplicationScopeFactory $applicationScopeFactory
      */
-    public function __construct($store, $log, $applicationRedirectUriFactory)
+    public function __construct($store, $log, $applicationRedirectUriFactory, $applicationScopeFactory)
     {
         $this->setCommonDependencies($store, $log);
 
         $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
+        $this->applicationScopeFactory = $applicationScopeFactory;
     }
 
     /**
@@ -129,6 +140,31 @@ class Application implements \JsonSerializable
     }
 
     /**
+     * @param ApplicationScope $scope
+     */
+    public function assignScope($scope) {
+        $this->load();
+
+        if (!in_array($scope, $this->scopes))
+            $this->scopes[] = $scope;
+    }
+
+    /**
+     * @param ApplicationScope $scope
+     */
+    public function unassignScope($scope) {
+        $this->load();
+
+        $this->scopes = array_udiff($this->scopes, [$scope], function($a, $b) {
+            /**
+             * @var ApplicationScope $a
+             * @var ApplicationScope $b
+             */
+            return $a->getId() - $b->getId();
+        });
+    }
+
+    /**
      * Load
      */
     public function load()
@@ -137,6 +173,9 @@ class Application implements \JsonSerializable
             return;
 
         $this->redirectUris = $this->applicationRedirectUriFactory->getByClientId($this->key);
+
+        // Get scopes
+        $this->scopes = $this->applicationScopeFactory->getByClientId($this->key);
 
         $this->loaded = true;
     }
@@ -154,6 +193,8 @@ class Application implements \JsonSerializable
             /* @var \Xibo\Entity\ApplicationRedirectUri $redirectUri */
             $redirectUri->save();
         }
+
+        $this->manageScopeAssignments();
     }
 
     public function delete()
@@ -169,6 +210,7 @@ class Application implements \JsonSerializable
         $this->deleteTokens();
         $this->getStore()->update('DELETE FROM `oauth_session_scopes` WHERE id IN (SELECT session_id FROM `oauth_sessions` WHERE `client_id` = :id)', ['id' => $this->key]);
         $this->getStore()->update('DELETE FROM `oauth_sessions` WHERE `client_id` = :id', ['id' => $this->key]);
+        $this->getStore()->update('DELETE FROM `oauth_client_scopes` WHERE `clientId` = :id', ['id' => $this->key]);
         $this->getStore()->update('DELETE FROM `oauth_clients` WHERE `id` = :id', ['id' => $this->key]);
     }
 
@@ -224,5 +266,33 @@ class Application implements \JsonSerializable
             'authCode' => $this->authCode,
             'clientCredentials' => $this->clientCredentials
         ]);
+    }
+
+    /**
+     * Compare the original assignments with the current assignments and delete any that are missing, add any new ones
+     */
+    private function manageScopeAssignments() {
+
+        $i = 0;
+        $params = ['clientId' => $this->key];
+        $unassignIn = '';
+
+        foreach ($this->scopes as $link) {
+            $this->getStore()->update('
+              INSERT INTO `oauth_client_scopes` (clientId, scopeId) VALUES (:clientId, :scopeId)
+              ON DUPLICATE KEY UPDATE scopeId = scopeId', [
+                'clientId' => $this->key,
+                'scopeId' => $link->id
+            ]);
+
+            $i++;
+            $unassignIn .= ',:scopeId' . $i;
+            $params['scopeId' . $i] = $link->id;
+        }
+
+        // Unlink any NOT in the collection
+        $sql = 'DELETE FROM `oauth_client_scopes` WHERE clientId = :clientId AND scopeId NOT IN (\'0\'' . $unassignIn . ')';
+
+        $this->getStore()->update($sql, $params);
     }
 }

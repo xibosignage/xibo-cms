@@ -73,6 +73,7 @@ $app->notFound(function () use ($app) {
 require PROJECT_ROOT . '/lib/routes.php';
 
 $app->get('/', '\Xibo\Controller\Login:About');
+$app->post('/library/mcaas/:id', '\Xibo\Controller\Library:mcaas');
 
 // Run app
 $app->run();

@@ -22,6 +22,7 @@ namespace Xibo\Widget;
 
 use Slim\Slim;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Entity\Media;
 use Xibo\Entity\User;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\NotFoundException;
@@ -972,11 +973,22 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Pre-processing
+     *  this is run before the media item is created.
      * @param string|null $fileName
      */
     public function preProcess($fileName = null)
     {
         $this->getLog()->debug('No pre-processing rules for this module type');
+    }
+
+    /**
+     * Post-processing
+     *  this is run after the media item has been created and before it is saved.
+     * @param Media $media
+     */
+    public function postProcess($media)
+    {
+
     }
 
     /**

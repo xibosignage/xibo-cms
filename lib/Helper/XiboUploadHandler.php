@@ -52,7 +52,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $module = $controller->getModuleFactory()->getByExtension(strtolower(substr(strrchr($fileName, '.'), 1)));
             $module = $controller->getModuleFactory()->create($module->type);
 
-            $controller->getLog()->debug('Module Type = %s', $module->getModuleType());
+            $controller->getLog()->debug('Module Type = %s, Name = ', $module->getModuleType(), $module->getModuleName());
 
             // Do we need to run any pre-processing on the file?
             $module->preProcess($filePath);
@@ -87,6 +87,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Save
                 $media->save(['oldMedia' => $oldMedia]);
+
+                // Post process
+                $module->postProcess($media);
 
                 $controller->getLog()->debug('Copying permissions to new media');
 
@@ -187,6 +190,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Save
                 $media->save();
+
+                // Post process
+                $module->postProcess($media);
 
                 // Permissions
                 foreach ($controller->getPermissionFactory()->createForNewEntity($controller->getUser(), get_class($media), $media->getId(), $controller->getConfig()->GetSetting('MEDIA_DEFAULT'), $controller->getUserGroupFactory()) as $permission) {
