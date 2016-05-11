@@ -23,36 +23,54 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#scopes" role="tab" data-toggle="tab"><span>{% trans "Permissions" %}</span></a></li>
+            </ul>
             <form id="applicationFormSubmit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("application.edit", {id: client.key}) }}">
-                {% set title %}{% trans "Application Name" %}{% endset %}
-                {{ forms.input("name", title, client.name) }}
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Application Name" %}{% endset %}
+                        {{ forms.input("name", title, client.name) }}
 
-                {% set title %}{% trans "Client Id" %}{% endset %}
-                {{ forms.disabled("clientId", title, client.key, "", "", "disabled") }}
+                        {% set title %}{% trans "Client Id" %}{% endset %}
+                        {{ forms.disabled("clientId", title, client.key, "", "", "disabled") }}
 
-                {% set title %}{% trans "Client Secret" %}{% endset %}
-                {{ forms.input("clientSecret", title, client.secret, "", "", "disabled") }}
+                        {% set title %}{% trans "Client Secret" %}{% endset %}
+                        {{ forms.input("clientSecret", title, client.secret, "", "", "disabled") }}
 
-                {% set title %}{% trans "Reset Secret?" %}{% endset %}
-                {% set helpText %}{% trans "Reset your client secret to prevent access from any existing application." %}{% endset %}
-                {{ forms.checkbox("resetKeys", title, 0, helpText) }}
+                        {% set title %}{% trans "Reset Secret?" %}{% endset %}
+                        {% set helpText %}{% trans "Reset your client secret to prevent access from any existing application." %}{% endset %}
+                        {{ forms.checkbox("resetKeys", title, 0, helpText) }}
 
-                {% set title %}{% trans "Authorization Code?" %}{% endset %}
-                {% set helpText %}{% trans "Allow the Authorization Code Grant for this Client?" %}{% endset %}
-                {{ forms.checkbox("authCode", title, client.authCode, helpText) }}
+                        {% set title %}{% trans "Authorization Code?" %}{% endset %}
+                        {% set helpText %}{% trans "Allow the Authorization Code Grant for this Client?" %}{% endset %}
+                        {{ forms.checkbox("authCode", title, client.authCode, helpText) }}
 
-                {% set title %}{% trans "Client Credentials?" %}{% endset %}
-                {% set helpText %}{% trans "Allow the Client Credentials Grant for this Client?" %}{% endset %}
-                {{ forms.checkbox("clientCredentials", title, client.clientCredentials, helpText) }}
+                        {% set title %}{% trans "Client Credentials?" %}{% endset %}
+                        {% set helpText %}{% trans "Allow the Client Credentials Grant for this Client?" %}{% endset %}
+                        {{ forms.checkbox("clientCredentials", title, client.clientCredentials, helpText) }}
 
-                {% set title %}{% trans "Redirect URI" %}{% endset %}
-                {% set helpText %}{% trans "White listed redirect URI's that will be allowed, only application for Authorization Code Grants" %}{% endset %}
-                {{ forms.input("redirectUri[]", title, "", helpText) }}
+                        {% set title %}{% trans "Redirect URI" %}{% endset %}
+                        {% set helpText %}{% trans "White listed redirect URI's that will be allowed, only application for Authorization Code Grants" %}{% endset %}
+                        {{ forms.input("redirectUri[]", title, "", helpText) }}
+                    </div>
+                    <div class="tab-pane" id="scopes">
+                        {% set message %}{% trans "Select permissions to grant to this application (scopes)." %}{% endset %}
+                        {{ forms.message(message) }}
 
-                {% for url in client.redirectUris %}
-                    {% set title %}{% trans "Redirect URI" %}{% endset %}
-                    {{ forms.input("redirectUri[]", title, url.redirectUri) }}
-                {% endfor %}
+                        {% for url in client.redirectUris %}
+                            {% set title %}{% trans "Redirect URI" %}{% endset %}
+                            {{ forms.input("redirectUri[]", title, url.redirectUri) }}
+                        {% endfor %}
+
+                        {% for scope in scopes %}
+                            {% set title %}{{ scope.description }}{% endset %}
+                            {% set id %}scope_{{ scope.id }}{% endset %}
+                            {{ forms.checkbox(id, title, scope.selected) }}
+                        {% endfor %}
+                    </div>
+                </div>
             </form>
         </div>
     </div>

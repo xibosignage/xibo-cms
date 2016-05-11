@@ -52,6 +52,9 @@ class UserFactory extends BaseFactory
      */
     private $userOptionFactory;
 
+    /** @var  ApplicationScopeFactory */
+    private $applicationScopeFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -60,17 +63,20 @@ class UserFactory extends BaseFactory
      * @param ConfigServiceInterface $configService
      * @param PermissionFactory $permissionFactory
      * @param UserOptionFactory $userOptionFactory
+     * @param ApplicationScopeFactory $applicationScopeFactory
      */
     public function __construct($store, $log, $sanitizerService,
                                 $configService,
                                 $permissionFactory,
-                                $userOptionFactory)
+                                $userOptionFactory,
+                                $applicationScopeFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
 
         $this->configService = $configService;
         $this->permissionFactory = $permissionFactory;
         $this->userOptionFactory = $userOptionFactory;
+        $this->applicationScopeFactory = $applicationScopeFactory;
     }
 
     /**
@@ -84,7 +90,8 @@ class UserFactory extends BaseFactory
             $this->configService,
             $this,
             $this->permissionFactory,
-            $this->userOptionFactory
+            $this->userOptionFactory,
+            $this->applicationScopeFactory
         );
     }
 

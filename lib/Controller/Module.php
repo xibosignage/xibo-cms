@@ -157,7 +157,7 @@ class Module extends Base
 
             foreach ($this->moduleFactory->query() as $row) {
                 /* @var \Xibo\Entity\Module $row */
-                $installed[] = $row->type;
+                $installed[] = $row->installName;
             }
 
             // Compare the two

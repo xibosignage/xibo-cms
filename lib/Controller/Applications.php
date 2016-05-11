@@ -24,9 +24,11 @@ use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Grant\AuthCodeGrant;
 use League\OAuth2\Server\Util\RedirectUri;
 use Xibo\Entity\Application;
+use Xibo\Entity\ApplicationScope;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\ApplicationRedirectUriFactory;
+use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -63,6 +65,9 @@ class Applications extends Base
      */
     private $applicationRedirectUriFactory;
 
+    /** @var  ApplicationScopeFactory */
+    private $applicationScopeFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -73,10 +78,11 @@ class Applications extends Base
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param Session $session
+     * @param StorageServiceInterface $store
      * @param ApplicationFactory $applicationFactory
      * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $store, $applicationFactory, $applicationRedirectUriFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $store, $applicationFactory, $applicationRedirectUriFactory, $applicationScopeFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -84,6 +90,7 @@ class Applications extends Base
         $this->store = $store;
         $this->applicationFactory = $applicationFactory;
         $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
+        $this->applicationScopeFactory = $applicationScopeFactory;
     }
 
     /**
@@ -170,6 +177,8 @@ class Applications extends Base
             $authCodeGrant = new AuthCodeGrant();
             $server->addGrantType($authCodeGrant);
 
+            // TODO: Add scopes element to $authParams based on the selections granted in the form
+
             // Authorize the request
             $redirectUri = $server->getGrantType('authorization_code')->newAuthorizeRequest('user', $this->getUser()->userId, $authParams);
         }
@@ -215,10 +224,26 @@ class Applications extends Base
         // Load this clients details.
         $client->load();
 
+        $scopes = $this->applicationScopeFactory->query();
+
+        foreach ($scopes as $scope) {
+            /** @var ApplicationScope $scope */
+            $found = false;
+            foreach ($client->scopes as $checked) {
+                if ($checked->id == $scope->id) {
+                    $found = true;
+                    break;
+                }
+            }
+
+            $scope->selected = $found ? 1 : 0;
+        }
+
         // Render the view
         $this->getState()->template = 'applications-form-edit';
         $this->getState()->setData([
             'client' => $client,
+            'scopes' => $scopes,
             'help' => $this->getHelp()->link('Services', 'Register')
         ]);
     }
@@ -282,6 +307,31 @@ class Applications extends Base
             $redirect->redirectUri = $redirectUri;
             $client->assignRedirectUri($redirect);
         }
+
+        // API Scopes
+        foreach ($this->applicationScopeFactory->query() as $scope) {
+            /** @var ApplicationScope $scope */
+
+            // See if this has been checked this time
+            $checked = $this->getSanitizer()->getCheckbox('scope_' . $scope->id);
+
+            // Does this scope already exist?
+            $found = false;
+            foreach ($client->scopes as $existingScope) {
+                /** @var ApplicationScope $existingScope */
+                if ($scope->id == $existingScope->id) {
+                    $found = true;
+                    break;
+                }
+            }
+
+            // Assign or unassign as necessary
+            if ($checked && !$found)
+                $client->assignScope($scope);
+            else if (!$checked && $found)
+                $client->unassignScope($scope);
+        }
+
 
         $client->save();
 
