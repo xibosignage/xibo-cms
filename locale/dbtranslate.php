@@ -175,6 +175,10 @@ echo __('Counter');
 echo __('Shell Command');
 echo __('Local Video');
 echo __('Generic File');
+echo __('Audio');
+echo __('PDF');
+
+echo __('PDF document viewer');
 
 echo __('Media will be created with these settings. If public everyone will be able to view and use this media.');
 echo __('New layouts will be created with these settings. If public everyone will be able to view and use this layout.');

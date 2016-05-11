@@ -685,6 +685,17 @@ class DisplayProfile
                         'helpText' => __('The number of log files to upload concurrently. The lower the number the longer it will take, but the better for memory usage.'),
                         'enabled' => true,
                         'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'EmbeddedServerPort',
+                        'tabId' => 'advanced',
+                        'title' => __('Embedded Web Server Port'),
+                        'type' => 'int',
+                        'fieldType' => 'number',
+                        'default' => 9696,
+                        'helpText' => __('The port number to use for the embedded web server on the Player. Only change this if there is a port conflict reported on the status screen.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     )
                 )
             ),
@@ -1077,6 +1088,17 @@ class DisplayProfile
                         ),
                         'default' => '1',
                         'helpText' => __('Mode for hardware acceleration of web based content.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'serverPort',
+                        'tabId' => 'advanced',
+                        'title' => __('Embedded Web Server Port'),
+                        'type' => 'int',
+                        'fieldType' => 'number',
+                        'default' => 9696,
+                        'helpText' => __('The port number to use for the embedded web server on the Player. Only change this if there is a port conflict reported on the status screen.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     )
