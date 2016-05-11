@@ -1,0 +1,177 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2016 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Xibo Open Source Digital Signage</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width={{ viewPortWidth }}" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <!-- Copyright 2006-2016 Daniel Garner and Spring Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+    <style type="text/css">
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: sans-serif, Arial, Verdana, "Trebuchet MS";
+        }
+        h1, h2, h3, h4, p {
+            margin-top: 0;
+        }
+        #iframe {
+            border: 0;
+        }
+        .cycle-slide p, p.cycle-slide {
+            margin-bottom:0;
+        }
+    </style>
+    {{ styleSheet|raw }}
+    {{ head|raw }}
+</head>
+<!--[if lt IE 7 ]><body class="ie6"><![endif]-->
+<!--[if IE 7 ]><body class="ie7"><![endif]-->
+<!--[if IE 8 ]><body class="ie8"><![endif]-->
+<!--[if IE 9 ]><body class="ie9"><![endif]-->
+<!--[if (gt IE 9)|!(IE)]><!--><body><!--<![endif]-->
+    <div id="content" style="text-align: center">
+        <canvas id="the-canvas"></canvas>
+    </div>
+    {{ javaScript|raw }}
+    <script type="text/javascript">
+
+        //
+        // If absolute URL from the remote server is provided, configure the CORS
+        // header on that server.
+        //
+        var url = "{{ file }}";
+
+        //
+        // Disable workers to avoid yet another cross-origin issue (workers need
+        // the URL of the script to be loaded, and dynamically loading a cross-origin
+        // script does not work).
+        //
+        // PDFJS.disableWorker = true;
+
+        //
+        // In cases when the pdf.worker.js is located at the different folder than the
+        // pdf.js's one, or the pdf.js is executed via eval(), the workerSrc property
+        // shall be specified.
+        //
+        PDFJS.workerSrc = "{{ pdfWorkerSrc }}";
+
+        var pdfDoc = null,
+                pageNum = 1,
+                pageRendering = false,
+                pageNumPending = null,
+                scale = 1,
+                canvas = document.getElementById('the-canvas'),
+                ctx = canvas.getContext('2d'),
+                width,
+                height,
+                interval;
+
+        if (options.previewWidth === 0 || options.previewHeight === 0) {
+            width = $(window).width();
+            height = $(window).height();
+        }
+        else {
+            width = options.previewWidth;
+            height = options.previewHeight;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        /**
+         * Get page info from document, resize canvas accordingly, and render page.
+         * @param num Page number.
+         */
+        function renderPage(num) {
+            pageRendering = true;
+            // Using promise to fetch the page
+            pdfDoc.getPage(num).then(function(page) {
+                var unscaledViewport = page.getViewport(1);
+                var scale = Math.min((canvas.height / unscaledViewport.height), (canvas.width / unscaledViewport.width));
+                var viewport = page.getViewport(scale);
+
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                // Render PDF page into canvas context
+                var renderContext = {
+                    canvasContext: ctx,
+                    viewport: viewport
+                };
+                var renderTask = page.render(renderContext);
+
+                // Wait for rendering to finish
+                renderTask.promise.then(function () {
+                    pageRendering = false;
+                    if (pageNumPending !== null) {
+                        // New page rendering is pending
+                        renderPage(pageNumPending);
+                        pageNumPending = null;
+                    }
+                });
+            });
+        }
+
+        /**
+         * If another page rendering in progress, waits until the rendering is
+         * finised. Otherwise, executes rendering immediately.
+         */
+        function queueRenderPage(num) {
+            if (pageRendering) {
+                pageNumPending = num;
+            } else {
+                renderPage(num);
+            }
+        }
+
+        /**
+         * Displays previous page.
+         */
+        function onPrevPage() {
+            if (pageNum <= 1) {
+                return;
+            }
+            pageNum--;
+            queueRenderPage(pageNum);
+        }
+
+        /**
+         * Displays next page.
+         */
+        function onNextPage() {
+            if (pageNum >= pdfDoc.numPages) {
+                pageNum = 0;
+            }
+            pageNum++;
+            queueRenderPage(pageNum);
+        }
+
+        /**
+         * Asynchronously downloads PDF.
+         */
+        PDFJS.getDocument(url).then(function (pdfDoc_) {
+            pdfDoc = pdfDoc_;
+
+            // Initial/first page rendering
+            renderPage(pageNum);
+
+            // Interval
+            interval = options.duration / pdfDoc.numPages;
+
+            // Set a timer
+            setInterval(function () {
+                onNextPage();
+            }, interval * 1000);
+        });
+    </script>
+</body>
+</html>
+{{ controlMeta|raw }}
