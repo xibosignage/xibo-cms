@@ -413,7 +413,15 @@ function layoutStatus(url) {
                     element.addClass("fa-times");
                 }
 
-                status.html(" " + response.html).prepend(element);
+                var html = response.html;
+
+                if (response.extra.statusMessage != undefined) {
+                    $.each(response.extra.statusMessage, function (index, value) {
+                        html += '<br/>' + value;
+                    });
+                }
+
+                status.html(" " + html).prepend(element);
 
                 // Duration
                 $("#layout-duration").html(moment().startOf("day").seconds(response.extra.duration).format("HH:mm:ss"));

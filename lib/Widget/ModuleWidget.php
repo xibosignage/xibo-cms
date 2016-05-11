@@ -84,6 +84,11 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected $codeSchemaVersion = -1;
 
+    /**
+     * @var string A module populated status message set during isValid.
+     */
+    protected $statusMessage;
+
     //
     // Injected Factory Classes and Services Follow
     //
@@ -998,5 +1003,14 @@ abstract class ModuleWidget implements ModuleInterface
     {
         $this->getLog()->debug('Default Widget Options: Setting use duration to 0');
         $this->setUseDuration(0);
+    }
+
+    /**
+     * Get Status Message
+     * @return string
+     */
+    public function getStatusMessage()
+    {
+        return $this->statusMessage;
     }
 }

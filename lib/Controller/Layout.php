@@ -628,6 +628,9 @@ class Layout extends Base
                 ]);
             }
 
+            // Populate the status message
+            $layout->getStatusMessage();
+
             if ($this->isApi())
                 continue;
 
@@ -984,7 +987,8 @@ class Layout extends Base
         $this->getState()->html = $status;
         $this->getState()->extra = [
             'status' => $layout->status,
-            'duration' => $layout->duration
+            'duration' => $layout->duration,
+            'statusMessage' => $layout->getStatusMessage()
         ];
 
         $this->getState()->success = true;

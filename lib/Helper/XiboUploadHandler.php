@@ -113,6 +113,16 @@ class XiboUploadHandler extends BlueImpUploadHandler
                             $controller->getLog()->info('Media used on Widget that we cannot edit. Delete Old Revisions has been disabled.');
                         }
 
+                        // Check whether this widget is of the same type as our incoming media item
+                        if ($widget->type != $module->getModuleType()) {
+                            // Are we supposed to switch, or should we prevent?
+                            if ($this->options['allowMediaTypeChange'] == 1) {
+                                $widget->type = $module->getModuleType();
+                            } else {
+                                throw new \InvalidArgumentException(__('You cannot replace this media with an item of a different type'));
+                            }
+                        }
+
                         $controller->getLog()->debug('Found widget that needs updating. ID = %d. Linking %d', $widget->getId(), $media->mediaId);
                         $widget->unassignMedia($oldMedia->mediaId);
                         $widget->assignMedia($media->mediaId);

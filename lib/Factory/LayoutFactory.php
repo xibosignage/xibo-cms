@@ -617,6 +617,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        `user`.UserName AS owner, ";
         $select .= "        campaign.CampaignID, ";
         $select .= "        layout.status, ";
+        $select .= "        layout.statusMessage, ";
         $select .= "        layout.width, ";
         $select .= "        layout.height, ";
         $select .= "        layout.retired, ";
@@ -839,6 +840,7 @@ class LayoutFactory extends BaseFactory
             $layout->createdDt = $row['createdDt'];
             $layout->modifiedDt = $row['modifiedDt'];
             $layout->displayOrder = $row['displayOrder'];
+            $layout->statusMessage = $row['statusMessage'];
 
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
 
