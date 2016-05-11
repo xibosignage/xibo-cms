@@ -114,13 +114,13 @@ class Media implements \JsonSerializable
      * @SWG\Property(description="Flag indicating whether this media is valid.")
      * @var int
      */
-    public $valid;
+    public $valid = 1;
 
     /**
      * @SWG\Property(description="Flag indicating whether this media is a system file or not")
-     * @var bool
+     * @var int
      */
-    public $moduleSystemFile = false;
+    public $moduleSystemFile = 0;
 
     /**
      * @SWG\Property(description="Timestamp indicating when this media should expire")
