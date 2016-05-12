@@ -86,7 +86,7 @@ class ScheduleFactory extends BaseFactory
      */
     public function getByDisplayGroupId($displayGroupId)
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'displayGroupIds' => [$displayGroupId]]);
     }
 
     /**
