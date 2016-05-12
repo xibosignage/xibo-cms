@@ -55,7 +55,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $controller->getLog()->debug('Module Type = %s, Name = ', $module->getModuleType(), $module->getModuleName());
 
             // Do we need to run any pre-processing on the file?
-            $module->preProcess($filePath);
+            $module->preProcessFile($filePath);
 
             // Old Media Id or not?
             if ($this->options['oldMediaId'] != 0) {
@@ -84,6 +84,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Set the duration
                 $media->duration = $module->determineDuration($filePath);
+
+                // Pre-process
+                $module->preProcess($media, $filePath);
 
                 // Save
                 $media->save(['oldMedia' => $oldMedia]);
@@ -197,6 +200,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Set the duration
                 $media->duration = $module->determineDuration($filePath);
+
+                // Pre-process
+                $module->preProcess($media, $filePath);
 
                 // Save
                 $media->save();

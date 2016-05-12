@@ -26,28 +26,35 @@
     <div class="row">
         <div class="col-md-12">
             <form id="mediaEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("library.edit", {"id": media.mediaId}) }}" data-media-id="{{ media.mediaId }}" data-valid-extensions="{{ validExtensions }}">
-                {% set title %}{% trans "Name" %}{% endset %}
-                {% set helpText %}{% trans "The Name of this item - Leave blank to use the file name" %}{% endset %}
-                {{ forms.input("name", title, media.name, helpText) }}
+                {% if media.mediaType != "font" %}
 
-                {% set title %}{% trans "Duration" %}{% endset %}
-                {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
-                {{ forms.number("duration", title, media.duration, helpText) }}
+                    {% set title %}{% trans "Name" %}{% endset %}
+                    {% set helpText %}{% trans "The Name of this item - Leave blank to use the file name" %}{% endset %}
+                    {{ forms.input("name", title, media.name, helpText) }}
 
-                {% set title %}{% trans "Tags" %}{% endset %}
-                {% set helpText %}{% trans "Tag this media. Comma Separated." %}{% endset %}
-                {{ forms.input("tags", title, media.tags, helpText) }}
+                    {% set title %}{% trans "Duration" %}{% endset %}
+                    {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
+                    {{ forms.number("duration", title, media.duration, helpText) }}
 
-                {% set title %}{% trans "Retire this media?" %}{% endset %}
-                {% set helpText %}{% trans "Retired media remains on existing Layouts but is not available to assign to new Layouts." %}{% endset %}
-                {{ forms.checkbox("retired", title, media.retired, helpText) }}
+                    {% set title %}{% trans "Tags" %}{% endset %}
+                    {% set helpText %}{% trans "Tag this media. Comma Separated." %}{% endset %}
+                    {{ forms.input("tags", title, media.tags, helpText) }}
 
-                {% set title %}{% trans "Update this media in all layouts it is assigned to?" %}{% endset %}
-                {% set helpText %}{% trans "Note: It will only be updated in layouts you have permission to edit." %}{% endset %}
-                {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}
-                    {% set checked = 1 %}
+                    {% set title %}{% trans "Retire this media?" %}{% endset %}
+                    {% set helpText %}{% trans "Retired media remains on existing Layouts but is not available to assign to new Layouts." %}{% endset %}
+                    {{ forms.checkbox("retired", title, media.retired, helpText) }}
+
+                    {% set title %}{% trans "Update this media in all layouts it is assigned to?" %}{% endset %}
+                    {% set helpText %}{% trans "Note: It will only be updated in layouts you have permission to edit." %}{% endset %}
+                    {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}
+                        {% set checked = 1 %}
+                    {% endif %}
+                    {{ forms.checkbox("updateInLayouts", title, checked, helpText) }}
+
+                {% else %}
+                    {% set message %}{% trans "Sorry, Fonts do not have any editable properties." %}{% endset %}
+                    {{ forms.message(message) }}
                 {% endif %}
-                {{ forms.checkbox("updateInLayouts", title, checked, helpText) }}
             </form>
         </div>
     </div>

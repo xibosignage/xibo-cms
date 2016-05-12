@@ -45,6 +45,31 @@ class Font extends ModuleWidget
     }
 
     /**
+     * @inheritdoc
+     */
+    public function preProcess($media, $filePath)
+    {
+        parent::preProcess($media, $filePath);
+
+        // Load the file and check it allows embedding.
+        $font = \FontLib\Font::load($filePath);
+
+        if ($font == null)
+            throw new \InvalidArgumentException(__('Font file unreadable'));
+
+        // Reset the media name to be the font file name
+        $media->name = $font->getFontName() . ' ' . $font->getFontSubfamily();
+
+        // Font type
+        $embed = intval($font->getData('OS/2', 'fsType'));
+
+        $this->getLog()->debug('Font name adjusted to %s and embeddable flag is %s', $media->name, $embed);
+
+        if ($embed != 0 && $embed != 8)
+            throw new \InvalidArgumentException(__('Font file is not embeddable due to its permissions'));
+    }
+
+    /**
      * Preview code for a module
      * @param int $width
      * @param int $height

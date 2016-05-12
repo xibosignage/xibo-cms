@@ -981,9 +981,19 @@ abstract class ModuleWidget implements ModuleInterface
      *  this is run before the media item is created.
      * @param string|null $fileName
      */
-    public function preProcess($fileName = null)
+    public function preProcessFile($fileName = null)
     {
         $this->getLog()->debug('No pre-processing rules for this module type');
+    }
+
+    /**
+     * Pre-process
+     *  this is run before the media item is saved
+     * @param Media $media
+     * @param string $filePath
+     */
+    public function preProcess($media, $filePath) {
+
     }
 
     /**
