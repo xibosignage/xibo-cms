@@ -63,112 +63,9 @@ class ResolutionTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
 
         $object = json_decode($this->client->response->body());
-     //   fwrite(STDOUT, $this->client->response->body());
-
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-    }
-
-    /**
-     * @group add
-     * @return int
-     */
-    public function testAdd()
-    {
-        $name = Random::generateString(8, 'phpunit');
-
-        $response = $this->client->post('/resolution', [
-            'resolution' => $name,
-            'width' => 1920,
-            'height' => 1080
-        ]);
-
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-
-        $object = json_decode($this->client->response->body());
-
-        $this->assertObjectHasAttribute('data', $object);
-        $this->assertObjectHasAttribute('id', $object);
-        $this->assertSame($name, $object->data->resolution);
-        return $object->id;
-    }
-
-    /**
-     * Test edit
-     * @param int $resolutionId
-     * @return int the id
-     * @depends testAdd
-     */
-    public function testEdit($resolutionId)
-    {
-        $resolution = (new XiboResolution($this->getEntityProvider()))->getById($resolutionId);
-
-        $name = Random::generateString(8, 'phpunit');
-
-        $this->client->put('/resolution/' . $resolutionId, [
-            'resolution' => $name,
-            'width' => $resolution->width,
-            'height' => $resolution->height,
-            'enabled' => 1
-        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-
-        $object = json_decode($this->client->response->body());
-
-        $this->assertObjectHasAttribute('data', $object);
-
-        // Deeper check by querying for resolution again
-        $object = (new XiboResolution($this->getEntityProvider()))->getById($resolutionId);
-
-        $this->assertSame($name, $object->resolution);
-        $this->assertSame(1, $object->enabled, 'Enabled has been switched');
-
-        return $resolutionId;
-    }
-
-    /**
-     * @param $resolutionId
-     * @return int
-     * @depends testEdit
-     */
-    public function testEditEnabled($resolutionId)
-    {
-        $resolution = (new XiboResolution($this->getEntityProvider()))->getById($resolutionId);
-
-        $this->client->put('/resolution/' . $resolutionId, [
-            'resolution' => $resolution->resolution,
-            'width' => 1080,
-            'height' => 1920,
-            'enabled' => $resolution->enabled
-        ], array('CONTENT_TYPE' => 'application/x-www-form-urlencoded'));
-
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-
-        $object = json_decode($this->client->response->body());
 //        fwrite(STDOUT, $this->client->response->body());
 
-        $this->assertObjectHasAttribute('data', $object);
-
-        // Deeper check by querying for resolution again
-        $object = (new XiboResolution($this->getEntityProvider()))->getById($resolutionId);
-
-        $this->assertSame($resolution->resolution, $object->resolution);
-        $this->assertSame(1080, $object->width);
-        $this->assertSame(1920, $object->height);
-        $this->assertSame($resolution->enabled, $object->enabled, 'Enabled has been switched');
-
-        return $resolutionId;
-    }
-
-    /**
-     * @param $resolutionId
-     * @depends testEditEnabled
-     */
-    public function testDelete($resolutionId)
-    {
-        $this->client->delete('/resolution/' . $resolutionId);
-
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
 
     /**
@@ -260,23 +157,24 @@ class ResolutionTest extends LocalWebTestCase
         ];
     }
 
-       /**
-    * Edit an existing resolution
-    * @depends testAddSuccess
-    * @group minimal
-    */
-    public function testEditNew()
+    /**
+     * Edit an existing resolution
+     * @depends testAddSuccess
+     *  @group minimal
+     */
+    public function testEdit()
     {
         # Load in a known resolution
         /** @var XiboResolution $resolution */
         $resolution = (new XiboResolution($this->getEntityProvider()))->create('phpunit resolution', 1200, 860);
         $newWidth = 2400;
-        # Change the resolution name and width
+        # Change the resolution name, width and enable flag
         $name = Random::generateString(8, 'phpunit');
         $this->client->put('/resolution/' . $resolution->resolutionId, [
             'resolution' => $name,
             'width' => $newWidth,
-            'height' => $resolution->height
+            'height' => $resolution->height,
+            'enabled' => 0
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
        
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
@@ -286,6 +184,7 @@ class ResolutionTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($name, $object->data->resolution);
         $this->assertSame($newWidth, $object->data->width);
+        $this->assertSame(0, $object->data->enabled);
         # Check that the resolution was actually renamed
         $resolution = (new XiboResolution($this->getEntityProvider()))->getById($object->id);
         $this->assertSame($name, $resolution->resolution);
@@ -300,7 +199,7 @@ class ResolutionTest extends LocalWebTestCase
      * @depends testAddSuccess
      * @group minimal
      */
-    public function testDeleteNew()
+    public function testDelete()
     {
         $name1 = Random::generateString(8, 'phpunit');
         $name2 = Random::generateString(8, 'phpunit');
