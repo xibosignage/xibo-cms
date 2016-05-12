@@ -20,21 +20,12 @@
  */
 namespace Xibo\Widget;
 
-
+/**
+ * Class Font
+ * @package Xibo\Widget
+ */
 class Font extends ModuleWidget
 {
-    /*
-     * Installs any files specific to this module
-     */
-    public function installFiles()
-    {
-        $fontsCss = PROJECT_ROOT . '/web/modules/fonts.css';
-
-        if (!file_exists($fontsCss)) {
-            touch($fontsCss);
-        }
-    }
-
     /**
      * Form for updating the module settings
      */

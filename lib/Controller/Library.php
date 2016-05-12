@@ -638,6 +638,12 @@ class Library extends Base
 
         $media->save();
 
+        // Are we a font
+        if ($media->mediaType == 'font') {
+            // We may have made changes and need to regenerate
+            $this->installFonts();
+        }
+
         // Return
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $media->name),
@@ -890,6 +896,10 @@ class Library extends Base
 
                 foreach ($fonts as $font) {
                     /* @var Media $font */
+
+                    // Skip unreleased fonts
+                    if ($font->released == 0)
+                        continue;
 
                     // Separate out the display name and the referenced name (referenced name cannot contain any odd characters or numbers)
                     $displayName = $font->name;
