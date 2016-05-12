@@ -60,7 +60,7 @@ var text_callback = function(dialog, extra) {
     });
 
     // Conjure up a text editor
-    CKEDITOR.replace("ta_text");
+    CKEDITOR.replace("ta_text", CKEDITOR_DEFAULT_CONFIG);
     
     CKEDITOR.instances["ta_text"].on('instanceReady', function() {
         var scale = $('#layout').attr('designer_scale');
@@ -89,7 +89,7 @@ var text_callback = function(dialog, extra) {
     });
 
     if ($("#noDataMessage").length > 0) {
-        CKEDITOR.replace("noDataMessage");
+        CKEDITOR.replace("noDataMessage", CKEDITOR_DEFAULT_CONFIG);
         CKEDITOR.instances["noDataMessage"].on('instanceReady', function () {
 
             $("#cke_noDataMessage .cke_contents").css({
