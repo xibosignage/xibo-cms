@@ -271,6 +271,11 @@ class MediaFactory extends BaseFactory
         return $this->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId]);
     }
 
+    /**
+     * @param null $sortOrder
+     * @param null $filterBy
+     * @return Media[]
+     */
     public function query($sortOrder = null, $filterBy = null)
     {
         if ($sortOrder === null)

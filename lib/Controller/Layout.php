@@ -1071,6 +1071,7 @@ class Layout extends Base
         $options = array(
             'userId' => $this->getUser()->userId,
             'controller' => $this,
+            'libraryController' => $this->getApp()->container->get('\Xibo\Controller\Library')->setApp($this->getApp()),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
             'script_url' => $this->urlFor('layout.import'),

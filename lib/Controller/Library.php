@@ -548,9 +548,6 @@ class Library extends Base
         if (!$this->getUser()->checkEditable($media))
             throw new AccessDeniedException();
 
-        if ($media->mediaType == 'font')
-            throw new \InvalidArgumentException(__('Sorry, Fonts do not have any editable properties.'));
-
         $this->getState()->template = 'library-form-edit';
         $this->getState()->setData([
             'media' => $media,
@@ -624,6 +621,9 @@ class Library extends Base
 
         if (!$this->getUser()->checkEditable($media))
             throw new AccessDeniedException();
+
+        if ($media->mediaType == 'font')
+            throw new \InvalidArgumentException(__('Sorry, Fonts do not have any editable properties.'));
 
         $media->name = $this->getSanitizer()->getString('name');
         $media->duration = $this->getSanitizer()->getInt('duration');
