@@ -25,7 +25,8 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
     }
 
     /**
-     * Shows specific display test with filters 
+     * Shows specific display test with filters
+     * @group broken
      */
     public function testListAll2()
     {

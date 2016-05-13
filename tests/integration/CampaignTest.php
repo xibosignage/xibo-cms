@@ -46,7 +46,7 @@ class CampaignTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
 
         $object = json_decode($this->client->response->body());
-//      fwrite(STDERR, $this->client->response->body());
+
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($name, $object->data->campaign);
@@ -103,8 +103,7 @@ class CampaignTest extends LocalWebTestCase
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create($name);
 
         // Get a layout for the test
-        // TODO: we should create and delete this
-        $layout = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 1]);
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit description', '', 9);
 
         $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
 
@@ -112,7 +111,7 @@ class CampaignTest extends LocalWebTestCase
         $this->client->post('/campaign/layout/assign/' . $campaign->campaignId, [
             'layoutId' => [
                 [
-                    'layoutId' => $layout[0]->layoutId,
+                    'layoutId' => $layout->layoutId,
                     'displayOrder' => 1
                 ]
             ]
@@ -136,7 +135,6 @@ class CampaignTest extends LocalWebTestCase
     public function testUnassignLayout($campaignId)
     {
         // Get a layout for the test
-        // TODO: we should create and delete this
         $layout = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 1]);
 
         // Call assign on the default layout
@@ -158,6 +156,7 @@ class CampaignTest extends LocalWebTestCase
     {
         // Get a list of all phpunit related campaigns
         $campaigns = (new XiboCampaign($this->getEntityProvider()))->get(['name' => 'phpunit', 'start' => 0, 'length' => 1000]);
+        $layouts = (new XiboLayout($this->getEntityProvider()))->get(['name' => 'phpunit', 'start' => 0, 'length' => 1000]);
 
         foreach ($campaigns as $campaign) {
             /** @var XiboCampaign $campaign */
@@ -166,6 +165,15 @@ class CampaignTest extends LocalWebTestCase
 
             // Issue a delete
             $campaign->delete();
+        }
+
+        foreach ($layouts as $layout) {
+            /** @var Xibolayout $layout */
+            // Check the name
+            $this->assertStringStartsWith('phpunit', $layout->layout, 'Non-phpunit layout found');
+
+            // Issue a delete
+            $layout->delete();
         }
     }
 }

@@ -592,24 +592,75 @@ class LayoutTest extends LocalWebTestCase
 
     /**
      * Position Test
-     * @depends testCopy
-     * @depends testEditRegion2
      * @group broken
      */
-    public function testPosition($layoutId, $regionId)
+    public function testPosition()
     {
-        $this->client->put('/region/position/all/' . $layoutId, ['regions' => [
-            'regionId' => $regionId,
-            'width' => 700,
-            'height' => 500,
-            'top' => 400,
-            'left' => 400
-            ]]);
+
+        # Load in a known layout
+        /** @var XiboLayout $layout */
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', 9);
+
+        # Create Two known regions and add them to that layout
+        $region1 = $this->client->post('/region/' . $layout->layoutId, [
+        'width' => 200,
+        'height' => 670,
+        'top' => 100,
+        'left' => 100
+            ]);
+
+        $this->assertSame(200, $this->client->response->status());
+        $object = json_decode($this->client->response->body());
+        
+
+        $this->assertSame(200, $object->data->width);
+        $this->assertSame(670, $object->data->height);
+        $this->assertSame(100, $object->data->top);
+        $this->assertSame(100, $object->data->left);
+
+
+        $region2 = $this->client->post('/region/' . $layout->layoutId, [
+        'width' => 450,
+        'height' => 300,
+        'top' => 200,
+        'left' => 350
+            ]);
+
+        $this->assertSame(200, $this->client->response->status());
+        $object = json_decode($this->client->response->body());
+        
+
+        $this->assertSame(450, $object->data->width);
+        $this->assertSame(300, $object->data->height);
+        $this->assertSame(200, $object->data->top);
+        $this->assertSame(350, $object->data->left);
+
+        
+        #Reposition regions on that layout
+
+        $this->client->put('/region/position/all/' . $layout->layoutId, [
+            ['regions' => [
+                    [
+                        'regionId' => $region1->regionId,
+                        'width' => 700,'height' => 500,
+                        'top' => 400,
+                        'left' => 400
+                    ],
+                    [
+                        'regionId' => $region2->regionId,
+                        'width' => 100,
+                        'height' => 100,
+                        'top' => 40,
+                        'left' => 40
+                    ]
+                ]
+            ]
+        ]);
         
         $this->assertSame(200, $this->client->response->status());
 
         $object = json_decode($this->client->response->body());
-   //     fwrite(STDERR, $this->client->response->body());
 
+        $layout->delete();
     }
 }
