@@ -267,6 +267,7 @@ CREATE TABLE IF NOT EXISTS `layout` (
   `backgroundColor` varchar(25) DEFAULT NULL,
   `backgroundzIndex` int(11) NOT NULL DEFAULT '1',
   `schemaVersion` tinyint(4) NOT NULL,
+  `statusMessage` TEXT NULL,
   PRIMARY KEY (`layoutID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Layouts' AUTO_INCREMENT=1 ;
 

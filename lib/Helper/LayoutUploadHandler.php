@@ -40,7 +40,8 @@ class LayoutUploadHandler extends BlueImpUploadHandler
                 $this->options['userId'],
                 $template,
                 $replaceExisting,
-                $importTags
+                $importTags,
+                $this->options['libraryController']
             );
 
             $layout->save();

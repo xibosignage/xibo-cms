@@ -45,6 +45,19 @@
     {
       "step": "Add released and api ref to media table",
       "action": "ALTER TABLE `media` ADD released tinyint(4) NOT NULL DEFAULT 1, ADD apiRef varchar(254) NULL;"
+    },
+    {
+      "step": "Add MCAAS Routes to Scope",
+      "action": "INSERT INTO `oauth_scope_routes` (scopeId, route, id, method) VALUES ('mcaas', '/', 1, 'GET'),('mcaas', '/library/download/:id(/:type)', 2, 'GET'),('mcaas', '/library/mcaas/:id', 3, 'POST');"
+    },
+    {
+      "step": "Add Layout status message column",
+      "action": "ALTER TABLE `layout` ADD `statusMessage` TEXT NULL;"
+    },
+    {
+      "step": "Add missing constraint to Display/DisplayGroup Link",
+      "action": "ALTER TABLE `lkdisplaydg` ADD CONSTRAINT `DisplayGroupDisplayId` UNIQUE KEY (DisplayGroupId, DisplayId);",
+      "fixedIn": 120
     }
   ]
 }

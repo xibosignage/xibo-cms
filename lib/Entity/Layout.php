@@ -179,6 +179,12 @@ class Layout implements \JsonSerializable
      */
     public $duration;
 
+    /**
+     * @var string
+     * @SWG\Property(description="A status message detailing any errors with the layout")
+     */
+    public $statusMessage;
+
     // Child items
     public $regions = [];
     public $tags = [];
@@ -299,7 +305,7 @@ class Layout implements \JsonSerializable
      */
     public function __toString()
     {
-        return sprintf('Layout %s - %d x %d. Regions = %d, Tags = %d. layoutId = %d. Status = %d', $this->layout, $this->width, $this->height, count($this->regions), count($this->tags), $this->layoutId, $this->status);
+        return sprintf('Layout %s - %d x %d. Regions = %d, Tags = %d. layoutId = %d. Status = %d, messages %d', $this->layout, $this->width, $this->height, count($this->regions), count($this->tags), $this->layoutId, $this->status, count($this->getStatusMessage()));
     }
 
     /**
@@ -307,7 +313,7 @@ class Layout implements \JsonSerializable
      */
     private function hash()
     {
-        return md5($this->layoutId . $this->ownerId . $this->campaignId . $this->backgroundImageId . $this->backgroundColor . $this->width . $this->height . $this->status . $this->description);
+        return md5($this->layoutId . $this->ownerId . $this->campaignId . $this->backgroundImageId . $this->backgroundColor . $this->width . $this->height . $this->status . $this->description . json_encode($this->statusMessage));
     }
 
     /**
@@ -386,6 +392,41 @@ class Layout implements \JsonSerializable
         }
 
         return $widgets;
+    }
+
+    /**
+     * @return array
+     */
+    public function getStatusMessage()
+    {
+        if (empty($this->statusMessage))
+            return [];
+
+        if (is_array($this->statusMessage))
+            return $this->statusMessage;
+
+        $this->statusMessage = json_decode($this->statusMessage, true);
+
+        return $this->statusMessage;
+    }
+
+    /**
+     * Push a new message
+     * @param $message
+     */
+    public function pushStatusMessage($message)
+    {
+        $this->getStatusMessage();
+
+        $this->statusMessage[] = $message;
+    }
+
+    /**
+     * Clear status message
+     */
+    private function clearStatusMessage()
+    {
+        $this->statusMessage = null;
     }
 
     /**
@@ -672,6 +713,7 @@ class Layout implements \JsonSerializable
 
         // Track module status within the layout
         $status = 0;
+        $this->clearStatusMessage();
 
         // We need to make some assessment based on the duration
         //  1. Find out whether any of the regions have more than 1 widget
@@ -750,7 +792,11 @@ class Layout implements \JsonSerializable
                     $module = $this->moduleFactory->createWithWidget($widget, $region);
 
                     // Set the Layout Status
-                    $status = ($module->isValid() > $status) ? $module->isValid() : $status;
+                    $moduleStatus = $module->isValid();
+                    $status = ($moduleStatus > $status) ? $moduleStatus : $status;
+
+                    if ($moduleStatus > 1 && $module->getStatusMessage() != '')
+                        $this->pushStatusMessage($module->getStatusMessage());
 
                     // Determine the duration of this widget
                     if ($widget->useDuration == 1) {
@@ -921,7 +967,8 @@ class Layout implements \JsonSerializable
                 'name' => $media->name,
                 'type' => $media->mediaType,
                 'duration' => $media->duration,
-                'background' => 0
+                'background' => 0,
+                'font' => 0
             ];
         }
 
@@ -936,8 +983,43 @@ class Layout implements \JsonSerializable
                 'name' => $media->name,
                 'type' => $media->mediaType,
                 'duration' => $media->duration,
-                'background' => 1
+                'background' => 1,
+                'font' => 0
             ];
+        }
+
+        // Add any fonts
+        //  parse the XLF file for any font declarations contains therein
+        //  get those font media files by name and add them to the zip
+        $fonts = null;
+        preg_match_all('/font-family:(.*?);/', $this->toXlf(), $fonts);
+
+        if ($fonts != null) {
+
+            $this->getLog()->debug('Matched fonts: %s', json_encode($fonts));
+
+            foreach ($fonts[1] as $font) {
+                $matches = $this->mediaFactory->query(null, array('disableUserCheck' => 1, 'nameExact' => $font, 'allModules' => 1, 'type' => 'font'));
+
+                if (count($matches) <= 0) {
+                    $this->getLog()->info('Unmatched font during export: %s', $font);
+                    continue;
+                }
+
+                $media = $matches[0];
+
+                $zip->addFile($libraryLocation . $media->storedAs, 'library/' . $media->fileName);
+
+                $mappings[] = [
+                    'file' => $media->fileName,
+                    'mediaid' => $media->mediaId,
+                    'name' => $media->name,
+                    'type' => $media->mediaType,
+                    'duration' => $media->duration,
+                    'background' => 0,
+                    'font' => 1
+                ];
+            }
         }
 
         // Add the mappings file to the ZIP
@@ -1062,7 +1144,8 @@ class Layout implements \JsonSerializable
               backgroundzIndex = :backgroundzIndex,
               `status` = :status,
               `userId` = :userId,
-              `schemaVersion` = :schemaVersion
+              `schemaVersion` = :schemaVersion,
+              `statusMessage` = :statusMessage
          WHERE layoutID = :layoutid
         ';
 
@@ -1082,7 +1165,8 @@ class Layout implements \JsonSerializable
             'backgroundzIndex' => $this->backgroundzIndex,
             'status' => $this->status,
             'userId' => $this->ownerId,
-            'schemaVersion' => $this->schemaVersion
+            'schemaVersion' => $this->schemaVersion,
+            'statusMessage' => (empty($this->statusMessage)) ? null : json_encode($this->statusMessage)
         ));
 
         // Update the Campaign

@@ -84,6 +84,11 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected $codeSchemaVersion = -1;
 
+    /**
+     * @var string A module populated status message set during isValid.
+     */
+    protected $statusMessage;
+
     //
     // Injected Factory Classes and Services Follow
     //
@@ -976,9 +981,19 @@ abstract class ModuleWidget implements ModuleInterface
      *  this is run before the media item is created.
      * @param string|null $fileName
      */
-    public function preProcess($fileName = null)
+    public function preProcessFile($fileName = null)
     {
         $this->getLog()->debug('No pre-processing rules for this module type');
+    }
+
+    /**
+     * Pre-process
+     *  this is run before the media item is saved
+     * @param Media $media
+     * @param string $filePath
+     */
+    public function preProcess($media, $filePath) {
+
     }
 
     /**
@@ -998,5 +1013,14 @@ abstract class ModuleWidget implements ModuleInterface
     {
         $this->getLog()->debug('Default Widget Options: Setting use duration to 0');
         $this->setUseDuration(0);
+    }
+
+    /**
+     * Get Status Message
+     * @return string
+     */
+    public function getStatusMessage()
+    {
+        return $this->statusMessage;
     }
 }

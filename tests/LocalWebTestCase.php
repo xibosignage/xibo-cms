@@ -210,6 +210,7 @@ class LocalWebTestCase extends WebTestCase
             $application->authCode = 0;
             $application->clientCredentials = 1;
             $application->userId = $admin->userId;
+            $application->assignScope($container->applicationScopeFactory->getById('all'));
             $application->save();
 
             /** @var PdoStorageService $store */

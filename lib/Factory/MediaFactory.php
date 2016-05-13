@@ -127,6 +127,7 @@ class MediaFactory extends BaseFactory
      * Create Module File
      * @param $name
      * @param $file
+     * @param $systemFile
      * @return Media
      */
     public function createModuleFile($name, $file = '', $systemFile = 0)
@@ -271,6 +272,11 @@ class MediaFactory extends BaseFactory
         return $this->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId]);
     }
 
+    /**
+     * @param null $sortOrder
+     * @param null $filterBy
+     * @return Media[]
+     */
     public function query($sortOrder = null, $filterBy = null)
     {
         if ($sortOrder === null)

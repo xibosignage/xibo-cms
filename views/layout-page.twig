@@ -123,7 +123,7 @@
                             else
                                 icon = "fa-exclamation";
 
-                            return "<span class='fa " + icon + "' title='" + (data.statusDescription) + "'></span>";
+                            return "<span class='fa " + icon + "' title='" + (data.statusDescription) + ((data.statusMessage == null) ? "" : " - " + (data.statusMessage)) + "'></span>";
                         }
                     },
                     {

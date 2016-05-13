@@ -55,7 +55,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $controller->getLog()->debug('Module Type = %s, Name = ', $module->getModuleType(), $module->getModuleName());
 
             // Do we need to run any pre-processing on the file?
-            $module->preProcess($filePath);
+            $module->preProcessFile($filePath);
 
             // Old Media Id or not?
             if ($this->options['oldMediaId'] != 0) {
@@ -85,6 +85,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 // Set the duration
                 $media->duration = $module->determineDuration($filePath);
 
+                // Pre-process
+                $module->preProcess($media, $filePath);
+
                 // Save
                 $media->save(['oldMedia' => $oldMedia]);
 
@@ -111,6 +114,16 @@ class XiboUploadHandler extends BlueImpUploadHandler
                             $deleteOldRevisions = false;
 
                             $controller->getLog()->info('Media used on Widget that we cannot edit. Delete Old Revisions has been disabled.');
+                        }
+
+                        // Check whether this widget is of the same type as our incoming media item
+                        if ($widget->type != $module->getModuleType()) {
+                            // Are we supposed to switch, or should we prevent?
+                            if ($this->options['allowMediaTypeChange'] == 1) {
+                                $widget->type = $module->getModuleType();
+                            } else {
+                                throw new \InvalidArgumentException(__('You cannot replace this media with an item of a different type'));
+                            }
                         }
 
                         $controller->getLog()->debug('Found widget that needs updating. ID = %d. Linking %d', $widget->getId(), $media->mediaId);
@@ -187,6 +200,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Set the duration
                 $media->duration = $module->determineDuration($filePath);
+
+                // Pre-process
+                $module->preProcess($media, $filePath);
 
                 // Save
                 $media->save();

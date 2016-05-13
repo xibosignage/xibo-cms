@@ -122,7 +122,7 @@
         configureQueryBuilder(dialog);
 
         // Configure the editor
-        CKEDITOR.replace("noDataMessage");
+        CKEDITOR.replace("noDataMessage", CKEDITOR_DEFAULT_CONFIG);
         CKEDITOR.instances["noDataMessage"].on('instanceReady', function () {
 
             $("#cke_noDataMessage .cke_contents").css({
