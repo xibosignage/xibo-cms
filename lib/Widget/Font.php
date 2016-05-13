@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Widget;
+use Xibo\Exception\NotFoundException;
 
 /**
  * Class Font
@@ -26,6 +27,31 @@ namespace Xibo\Widget;
  */
 class Font extends ModuleWidget
 {
+    /**
+     * Install some fonts
+     */
+    public function installFiles()
+    {
+        // Create font media items for each of the fonts found in the theme default fonts folder
+        $folder = PROJECT_ROOT . '/web/modules/fonts';
+        foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
+
+            $filePath = $folder . DIRECTORY_SEPARATOR . $file;
+
+            $font = $this->mediaFactory->create($file, $filePath, 'font', 1);
+            $font->alwaysCopy = true;
+            $this->preProcess($font, $filePath);
+
+            // If it already exists, then skip it
+            try {
+                $this->mediaFactory->getByName($font->name);
+            } catch (NotFoundException $e) {
+                // Excellent, we don't have it
+                $font->save(['validate' => false]);
+            }
+        }
+    }
+
     /**
      * Form for updating the module settings
      */

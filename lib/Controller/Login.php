@@ -226,6 +226,6 @@ class Login extends Base
             $response->template = 'about-page';
         }
 
-        $response->setData(['version' => VERSION]);
+        $response->setData(['version' => VERSION, 'sourceUrl' => $this->getConfig()->getThemeConfig('cms_source_url')]);
     }
 }

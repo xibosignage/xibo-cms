@@ -445,6 +445,11 @@ class Library extends Base
         // Delete
         $media->delete();
 
+        // Do we need to reassess fonts?
+        if ($media->mediaType == 'font') {
+            $this->installFonts();
+        }
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
@@ -938,6 +943,9 @@ class Library extends Base
                 $cssItem->set($cssDetails);
                 $cssItem->expiresAfter(new \DateInterval('P30D'));
                 $this->pool->saveDeferred($cssItem);
+
+                // Clear the display cache
+                $this->pool->deleteItem('/display');
             }
         } else {
             $this->getLog()->debug('CMS font CSS returned from Cache.');

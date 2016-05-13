@@ -178,6 +178,7 @@ class Media implements \JsonSerializable
     public $isRemote;
     public $cloned = false;
     public $newExpiry;
+    public $alwaysCopy = false;
 
     private $widgets = [];
     private $displayGroups = [];
@@ -572,7 +573,7 @@ class Media implements \JsonSerializable
             'name' => $this->name,
             'type' => $this->mediaType,
             'duration' => $this->duration,
-            'originalFileName' => $this->fileName,
+            'originalFileName' => basename($this->fileName),
             'userId' => $this->ownerId,
             'retired' => $this->retired,
             'moduleSystemFile' => (($this->moduleSystemFile) ? 1 : 0),
@@ -656,18 +657,28 @@ class Media implements \JsonSerializable
         // Work out the extension
         $extension = strtolower(substr(strrchr($this->fileName, '.'), 1));
 
-        $this->getLog()->debug('saveFile for "%s" with storedAs = "%s", fileName = "%s" to "%s"', $this->name, $this->storedAs, $this->fileName, $this->mediaId . '.' . $extension);
+        $this->getLog()->debug('saveFile for "%s" with storedAs = "%s" (empty = %s), fileName = "%s" to "%s". Always Copy = "%s", Cloned = "%s"',
+            $this->name,
+            $this->storedAs,
+            empty($this->storedAs),
+            $this->fileName,
+            $this->mediaId . '.' . $extension,
+            $this->alwaysCopy,
+            $this->cloned
+        );
 
         // If the storesAs is empty, then set it to be the moved file name
-        if (empty($this->storedAs)) {
+        if (empty($this->storedAs) && !$this->alwaysCopy) {
 
             // We could be a fresh file entirely, or we could be a clone
             if ($this->cloned) {
+                $this->getLog()->debug('Copying cloned file');
                 // Copy the file into the library
                 if (!@copy($libraryFolder . $this->fileName, $libraryFolder . $this->mediaId . '.' . $extension))
                     throw new ConfigurationException(__('Problem copying file in the Library Folder'));
 
             } else {
+                $this->getLog()->debug('Moving temporary file');
                 // Move the file into the library
                 if (!@rename($libraryFolder . 'temp/' . $this->fileName, $libraryFolder . $this->mediaId . '.' . $extension))
                     throw new ConfigurationException(__('Problem moving uploaded file into the Library Folder'));
@@ -677,9 +688,15 @@ class Media implements \JsonSerializable
             $this->storedAs = $this->mediaId . '.' . $extension;
         }
         else {
+            $this->getLog()->debug('Copying specified file');
             // We have pre-defined where we want this to be stored
+            if (empty($this->storedAs)) {
+                // Assume we want to set this automatically (i.e. we are set to always copy)
+                $this->storedAs = $this->mediaId . '.' . $extension;
+            }
+
             if (!@copy($this->fileName, $libraryFolder . $this->storedAs)) {
-                $this->getLog()->error('Cannot move %s to %s', $this->fileName, $libraryFolder . $this->storedAs);
+                $this->getLog()->error('Cannot copy %s to %s', $this->fileName, $libraryFolder . $this->storedAs);
                 throw new ConfigurationException(__('Problem moving provided file into the Library Folder'));
             }
         }
