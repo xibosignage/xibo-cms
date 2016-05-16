@@ -76,7 +76,7 @@ class Soap4 extends Soap
             $display = $this->displayFactory->getByLicence($hardwareKey);
             $this->display = $display;
 
-            $this->logProcessor->setDisplay($display->displayId, ($display->isAuditing == 1));
+            $this->logProcessor->setDisplay($display->displayId, ($display->isAuditing()));
 
             // Audit in
             $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
@@ -144,7 +144,7 @@ class Soap4 extends Soap
                 $display = $this->displayFactory->createEmpty();
                 $this->display = $display;
                 $display->display = $displayName;
-                $display->isAuditing = 0;
+                $display->auditingUntil = 0;
                 $display->defaultLayoutId = 4;
                 $display->license = $hardwareKey;
                 $display->licensed = 0;
@@ -231,7 +231,7 @@ class Soap4 extends Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
-        if ($this->display->isAuditing == 1)
+        if ($this->display->isAuditing())
             $this->getLog()->debug('hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize);
 
         try {
@@ -397,7 +397,7 @@ class Soap4 extends Soap
         // Update the last accessed date/logged in
         $this->touchDisplay();
 
-        if ($this->display->isAuditing == 1)
+        if ($this->display->isAuditing())
             $this->getLog()->debug($status);
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
@@ -453,7 +453,7 @@ class Soap4 extends Soap
         // Update the last accessed date/logged in
         $this->touchDisplay();
 
-        if ($this->display->isAuditing == 1)
+        if ($this->display->isAuditing())
             $this->getLog()->debug('Received Screen shot');
 
         // Open this displays screen shot file and save this.
@@ -464,11 +464,11 @@ class Soap4 extends Soap
             try {
                 $screenShotImg = Img::make($screenShot);
             } catch (\Exception $e) {
-                if ($this->display->isAuditing == 1)
+                if ($this->display->isAuditing())
                     $this->getLog()->debug($imgDriver . " - " . $e->getMessage());
             }
             if($screenShotImg !== false) {
-                if ($this->display->isAuditing == 1)
+                if ($this->display->isAuditing())
                     $this->getLog()->debug("Use " . $imgDriver);
                 break;
             }
@@ -480,12 +480,12 @@ class Soap4 extends Soap
             if($imgMime != $screenShotMime) {
                 $needConversion = true;
                 try {
-                    if ($this->display->isAuditing == 1)
+                    if ($this->display->isAuditing())
                         $this->getLog()->debug("converting: '" . $imgMime . "' to '" . $screenShotMime . "'");
                     $screenShot = (string) $screenShotImg->encode($screenShotFmt);
                     $converted = true;
                 } catch (\Exception $e) {
-                    if ($this->display->isAuditing == 1)
+                    if ($this->display->isAuditing())
                         $this->getLog()->debug($e->getMessage());
                 }
             }

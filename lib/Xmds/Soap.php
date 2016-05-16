@@ -270,7 +270,7 @@ class Soap
         $fromFilter = $fromFilter - ($fromFilter % 3600);
         $toFilter = $rfLookAhead - ($rfLookAhead % 3600);
 
-        if ($this->display->isAuditing == 1)
+        if ($this->display->isAuditing())
             $this->getLog()->debug(sprintf('Required files date criteria. FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)));
 
         try {
@@ -475,7 +475,7 @@ class Soap
             $fileName = basename($path);
 
             // Log
-            if ($this->display->isAuditing == 1)
+            if ($this->display->isAuditing())
                 $this->getLog()->debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
 
             // Add nonce
@@ -586,7 +586,7 @@ class Soap
         // Phone Home?
         $this->phoneHome();
 
-        if ($this->display->isAuditing == 1)
+        if ($this->display->isAuditing())
             $this->getLog()->debug($requiredFilesXml->saveXML());
 
         // Return the results of requiredFiles()
@@ -673,7 +673,7 @@ class Soap
         else
             $toFilter = ($fromFilter + 3600) - (($fromFilter + 3600) % 3600);
 
-        if ($this->display->isAuditing == 1)
+        if ($this->display->isAuditing())
             $this->getLog()->debug(sprintf('FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)));
 
         try {
@@ -747,7 +747,7 @@ class Soap
                 'fromdt' => $fromFilter
             );
 
-            if ($this->display->isAuditing)
+            if ($this->display->isAuditing())
                 $this->getLog()->sql($SQL, $params);
 
             $sth = $dbh->prepare($SQL);
@@ -936,7 +936,7 @@ class Soap
         // Format the output
         $scheduleXml->formatOutput = true;
 
-        if ($this->display->isAuditing == 1)
+        if ($this->display->isAuditing())
             $this->getLog()->debug($scheduleXml->saveXML());
 
         $output = $scheduleXml->saveXML();
@@ -984,7 +984,7 @@ class Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', "This display client is not licensed", $hardwareKey);
 
-        if ($this->display->isAuditing == 1)
+        if ($this->display->isAuditing())
             $this->getLog()->debug('Blacklisting ' . $mediaId . ' for ' . $reason);
 
         try {
@@ -1029,7 +1029,7 @@ class Soap
                     }
                 }
             } else {
-                if ($this->display->isAuditing == 1)
+                if ($this->display->isAuditing())
                     $this->getLog()->debug($mediaId . ' already black listed');
             }
         } catch (\Exception $e) {
@@ -1069,7 +1069,7 @@ class Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Sender', 'This display client is not licensed.');
 
-        if ($this->display->isAuditing == 1)
+        if ($this->display->isAuditing())
             $this->getLog()->debug('XML log: ' . $logXml);
 
         // Load the XML into a DOMDocument
@@ -1169,7 +1169,7 @@ class Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
-        if ($this->display->isAuditing == 1)
+        if ($this->display->isAuditing())
             $this->getLog()->debug('Received XML. ' . $statXml);
 
         if ($statXml == "")
@@ -1250,7 +1250,7 @@ class Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', 'This display client is not licensed');
 
-        if ($this->display->isAuditing == 1)
+        if ($this->display->isAuditing())
             $this->getLog()->debug($inventory);
 
         // Check that the $inventory contains something
@@ -1402,7 +1402,7 @@ class Soap
 
                     $PHONE_HOME_URL = $this->getConfig()->GetSetting('PHONE_HOME_URL') . "?id=" . urlencode($this->getConfig()->GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
 
-                    if ($this->display->isAuditing == 1)
+                    if ($this->display->isAuditing())
                         $this->getLog()->notice("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL, "xmds", "RequiredFiles");
 
                     // Set PHONE_HOME_TIME to NOW.
@@ -1414,7 +1414,7 @@ class Soap
 
                     @file_get_contents($PHONE_HOME_URL);
 
-                    if ($this->display->isAuditing == 1)
+                    if ($this->display->isAuditing())
                         $this->getLog()->notice("audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles");
 
                 } catch (\Exception $e) {
@@ -1441,7 +1441,7 @@ class Soap
                 return false;
 
             // Configure our log processor
-            $this->logProcessor->setDisplay($this->display->displayId, ($this->display->isAuditing == 1));
+            $this->logProcessor->setDisplay($this->display->displayId, ($this->display->isAuditing()));
 
             return true;
 

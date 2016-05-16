@@ -58,7 +58,7 @@ class Display
      * @SWG\Property(description="Flag indicating whether this Display is recording Auditing Information from XMDS")
      * @var int
      */
-    public $isAuditing;
+    public $auditingUntil;
 
     /**
      * @SWG\Property(description="The Name of this Display")
@@ -420,6 +420,17 @@ class Display
     }
 
     /**
+     * Is this display auditing?
+     * return bool
+     */
+    public function isAuditing()
+    {
+        $this->getLog()->debug('Testing whether this display is auditing. %d vs %d.', $this->auditingUntil, time());
+        // Test $this->auditingUntil against the current date.
+        return ($this->auditingUntil >= time());
+    }
+
+    /**
      * Set the Media Status to Incomplete
      */
     public function setMediaIncomplete()
@@ -577,11 +588,11 @@ class Display
     private function add()
     {
         $this->displayId = $this->getStore()->insert('
-            INSERT INTO display (display, isAuditing, defaultlayoutid, license, licensed, inc_schedule, email_alert, alert_timeout, xmrChannel, xmrPubKey, lastCommandSuccess)
-              VALUES (:display, :isauditing, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, :alert_timeout, :xmrChannel, :xmrPubKey, :lastCommandSuccess)
+            INSERT INTO display (display, auditingUntil, defaultlayoutid, license, licensed, inc_schedule, email_alert, alert_timeout, xmrChannel, xmrPubKey, lastCommandSuccess)
+              VALUES (:display, :auditingUntil, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, :alert_timeout, :xmrChannel, :xmrPubKey, :lastCommandSuccess)
         ', [
             'display' => $this->display,
-            'isauditing' => 0,
+            'auditingUntil' => 0,
             'defaultlayoutid' => $this->defaultLayoutId,
             'license' => $this->license,
             'licensed' => 0,
@@ -608,7 +619,7 @@ class Display
                     inc_schedule = :incSchedule,
                     license = :license,
                     licensed = :licensed,
-                    isAuditing = :isAuditing,
+                    auditingUntil = :auditingUntil,
                     email_alert = :emailAlert,
                     alert_timeout = :alertTimeout,
                     WakeOnLan = :wakeOnLanEnabled,
@@ -643,7 +654,7 @@ class Display
             'incSchedule' => $this->incSchedule,
             'license' => $this->license,
             'licensed' => $this->licensed,
-            'isAuditing' => $this->isAuditing,
+            'auditingUntil' => ($this->auditingUntil == null) ? 0 : $this->auditingUntil,
             'emailAlert' => $this->emailAlert,
             'alertTimeout' => $this->alertTimeout,
             'wakeOnLanEnabled' => $this->wakeOnLanEnabled,

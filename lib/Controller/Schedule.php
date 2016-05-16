@@ -492,7 +492,7 @@ class Schedule extends Base
         $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
         foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var \Xibo\Entity\DisplayGroup \Xibo\Entity\DisplayGroup */
+            /* @var \Xibo\Entity\DisplayGroup $displayGroup */
 
             // Can't schedule with view, but no edit permissions
             if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))

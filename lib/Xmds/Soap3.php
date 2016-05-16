@@ -58,7 +58,7 @@ class Soap3 extends Soap
         try {
             $display = $this->displayFactory->getByLicence($hardwareKey);
 
-            $this->logProcessor->setDisplay($display->displayId, ($display->isAuditing == 1));
+            $this->logProcessor->setDisplay($display->displayId, ($display->isAuditing()));
 
             if ($display->licensed == 0) {
                 $active = 'Display is awaiting licensing approval from an Administrator.';
@@ -137,7 +137,7 @@ class Soap3 extends Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
-        if ($this->display->isAuditing == 1)
+        if ($this->display->isAuditing())
             $this->getLog()->debug("[IN] Params: [$hardwareKey] [$filePath] [$fileType] [$chunkOffset] [$chunkSize]");
 
         $file = null;

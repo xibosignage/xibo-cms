@@ -58,6 +58,10 @@
       "step": "Add missing constraint to Display/DisplayGroup Link",
       "action": "ALTER TABLE `lkdisplaydg` ADD CONSTRAINT `DisplayGroupDisplayId` UNIQUE KEY (DisplayGroupId, DisplayId);",
       "fixedIn": 120
+    },
+    {
+      "step": "Change display is auditing to be date based",
+      "action": "ALTER TABLE display CHANGE isAuditing auditingUntil int NOT NULL DEFAULT '0' COMMENT 'Is this display auditing';"
     }
   ]
 }
