@@ -692,7 +692,7 @@ class Soap
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
             $SQL = '
-                SELECT `schedule`.eventTypeId, layout.layoutId, `command`.code, schedule_detail.fromDt, schedule_detail.toDt, schedule.eventId, schedule.is_priority
+                SELECT `schedule`.eventTypeId, layout.layoutId, `layout`.status, `command`.code, schedule_detail.fromDt, schedule_detail.toDt, schedule.eventId, schedule.is_priority
             ';
 
             if (!$options['dependentsAsNodes']) {
@@ -806,6 +806,13 @@ class Soap
                 $is_priority = $this->getSanitizer()->int($row['is_priority']);
 
                 if ($eventTypeId == Schedule::$LAYOUT_EVENT) {
+                    // Check the layout status
+                    // https://github.com/xibosignage/xibo/issues/743
+                    if (intval($row['status']) > 3) {
+                        $this->getLog()->error('Player has invalid layout scheduled. Display = %s, LayoutId = %d', $this->display->display, $layoutId);
+                        continue;
+                    }
+
                     // Add a layout node to the schedule
                     $layout = $scheduleXml->createElement("layout");
                     $layout->setAttribute("file", $layoutId);
@@ -840,6 +847,14 @@ class Soap
                     $command->setAttribute('code', $commandCode);
                     $layoutElements->appendChild($command);
                 } else if ($eventTypeId == Schedule::$OVERLAY_EVENT && $options['includeOverlays']) {
+
+                    // Check the layout status
+                    // https://github.com/xibosignage/xibo/issues/743
+                    if (intval($row['status']) > 3) {
+                        $this->getLog()->error('Player has invalid layout scheduled. Display = %s, LayoutId = %d', $this->display->display, $layoutId);
+                        continue;
+                    }
+
                     if ($overlayNodes == null) {
                         $overlayNodes = $scheduleXml->createElement('overlays');
                     }
