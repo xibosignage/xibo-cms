@@ -297,6 +297,10 @@ class ConfigService implements ConfigServiceInterface
             $data = $result['value'];
 
         if ($this->getPool() != null) {
+
+            if ($setting == 'ELEVATE_LOG_UNTIL' && intval($data) > time())
+                $item->expiresAfter(intval($data) - time());
+
             $this->getPool()->saveDeferred($item->set($data));
         }
 

@@ -145,6 +145,8 @@ echo __('Please enter the private address for XMR.');
 echo __('Please enter the public address for XMR.');
 echo __('CDN Address');
 echo __('Content Delivery Network Address for serving file requests to Players');
+echo __('Elevate Log Until');
+echo __('Elevate the log level until this date.');
 
 // Transitions
 echo __('Fade In');
