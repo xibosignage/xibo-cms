@@ -31,6 +31,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\LogFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
+use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -342,6 +343,8 @@ class Display extends Base
                 break;
 
             /* @var \Xibo\Entity\Display $display */
+            $display->storageAvailableSpaceFormatted = ByteFormatter::format($display->storageAvailableSpace);
+            $display->storageTotalSpaceFormatted = ByteFormatter::format($display->storageTotalSpace);
 
             // Set some text for the display status
             switch ($display->mediaInventoryStatus) {
