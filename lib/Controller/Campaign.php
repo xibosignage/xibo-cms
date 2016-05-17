@@ -144,6 +144,16 @@ class Campaign extends Base
                 'text' => __('Schedule Now')
             );
 
+            // Preview
+            // // FIXME : check permissions pour ce bouton 
+            $campaign->buttons[] = array(
+                'id' => 'campaign_button_preview',
+                'linkType' => '_blank',
+                'external' => true,
+                'url' => $this->urlFor('campaign.preview', ['id' => $campaign->campaignId]),
+                'text' => __('Preview Campaign')
+            );
+
             // Buttons based on permissions
             if ($this->getUser()->checkEditable($campaign)) {
                 // Assign Layouts
@@ -575,6 +585,32 @@ class Campaign extends Base
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Unassigned Layouts from %s'), $campaign->campaign)
+        ]);
+    }
+
+    /**
+     * Returns a Campaign's preview
+     * @param int $campaignId
+     *
+     * @SWG\Get(
+     *  path="/campaign/{campaignId}",
+     *  operationId="campaignPreview",
+     *  tags={"campaign"},
+     *  summary="Preview Campaign",
+     *  description="Preview an existing Campaign"
+     * )
+     */
+    public function preview($campaignId)
+    {
+        $campaign = $this->campaignFactory->getById($campaignId);
+	// FIXME : pas de checkEditable
+    //    if (!$this->getUser()->checkEditable($campaign))
+    //        throw new AccessDeniedException();
+
+        $this->getState()->template = 'campaign-preview';
+        $this->getState()->setData([
+            'campaign' => $campaign,
+            'help' => $this->getHelp()->link('Campaign', 'Preview')
         ]);
     }
 }

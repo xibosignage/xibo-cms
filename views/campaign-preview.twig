@@ -1,0 +1,32 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (campaign-page.twig)
+ */
+This is the template for the campaign page
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li><a class="XiboFormButton" title="{% trans "Add a new Campaign" %}" href="{{ urlFor("campaign.add.form") }}">{% trans "Add Campaign" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Campaign preview" %}</div>
+        <div class="widget-body">
+        
+       {% for layout in campaign.layouts %}
+       hello
+       {% endfor %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+{% endblock %}
