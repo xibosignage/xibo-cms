@@ -369,6 +369,13 @@ class Playlist extends Base
      *      required=true,
      *      @SWG\Items(type="integer")
      *   ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="Optional duration for all Media in this assignment to use on the Widget",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -391,6 +398,9 @@ class Playlist extends Base
         if (count($media) <= 0)
             throw new \InvalidArgumentException(__('Please provide Media to Assign'));
 
+        // Optional Duration
+        $duration = ($this->getSanitizer()->getInt('duration'));
+
         $newWidgets = [];
 
         // Loop through all the media
@@ -404,8 +414,12 @@ class Playlist extends Base
             // Create a module
             $module = $this->moduleFactory->create($item->mediaType);
 
+            // Determine the duration
+            $itemDuration = ($duration !== null) ? $duration : $item->duration;
+            $itemDuration = ($itemDuration == 0) ? $module->determineDuration() : $itemDuration;
+
             // Create a widget
-            $widget = $this->widgetFactory->create($this->getUser()->userId, $playlistId, $item->mediaType, (($item->duration) == 0 ? $module->determineDuration() : $item->duration));
+            $widget = $this->widgetFactory->create($this->getUser()->userId, $playlistId, $item->mediaType, $itemDuration);
             $widget->assignMedia($item->mediaId);
 
             // Assign the widget to the module
@@ -413,6 +427,10 @@ class Playlist extends Base
 
             // Set default options (this sets options on the widget)
             $module->setDefaultWidgetOptions();
+
+            // If a duration is provided, then we want to use it
+            if ($duration !== null)
+                $widget->useDuration = 0;
 
             // Assign the widget to the playlist
             $playlist->assignWidget($widget);

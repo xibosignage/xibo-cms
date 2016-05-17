@@ -11,7 +11,7 @@
             "name": "AGPLv3 or later",
             "url": "http://www.gnu.org/licenses/"
         },
-        "version": "1.8.0-alpha"
+        "version": "1.8.0-alpha3"
     },
     "basePath": "/api",
     "schemes": [
@@ -284,13 +284,6 @@
                         "in": "formData",
                         "description": "A description for the command",
                         "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "code",
-                        "in": "formData",
-                        "description": "A unique code for this command",
-                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -928,7 +921,8 @@
                         "in": "formData",
                         "description": "Flag indicating whether this Display records auditing information.",
                         "required": true,
-                        "type": "integer"
+                        "type": "string",
+                        "format": "date-time"
                     },
                     {
                         "name": "defaultLayoutId",
@@ -1251,7 +1245,7 @@
                         "type": "integer"
                     },
                     {
-                        "name": "dynamicContent",
+                        "name": "dynamicCriteria",
                         "in": "formData",
                         "description": "The filter criteria for this dynamic group. A command separated set of regular expressions to apply",
                         "required": false,
@@ -1723,6 +1717,51 @@
                         "in": "path",
                         "description": "The display group id",
                         "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/action/overlayLayout": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Action: Overlay Layout",
+                "description": "Send the overlay layout action to this DisplayGroup",
+                "operationId": "displayGroupActionOverlayLayout",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The Display Group Id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "layoutId",
+                        "in": "formData",
+                        "description": "The Layout Id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The duration in seconds for this Overlay to remain in effect",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "downloadRequired",
+                        "in": "formData",
+                        "description": "Flag indicating whether the player should perform a collect before adding the Overlay",
+                        "required": false,
                         "type": "integer"
                     }
                 ],
@@ -2483,6 +2522,146 @@
                 }
             }
         },
+        "/notification": {
+            "get": {
+                "tags": [
+                    "notification"
+                ],
+                "summary": "Notification Search",
+                "description": "Search this users Notifications",
+                "operationId": "notificationSearch",
+                "parameters": [
+                    {
+                        "name": "notificationId",
+                        "in": "formData",
+                        "description": "Filter by Notification Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "subject",
+                        "in": "formData",
+                        "description": "Filter by Subject",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Notification"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "notification"
+                ],
+                "summary": "Notification Add",
+                "description": "Add a Notification",
+                "operationId": "notificationAdd",
+                "parameters": [
+                    {
+                        "name": "subject",
+                        "in": "formData",
+                        "description": "The Subject",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "body",
+                        "in": "formData",
+                        "description": "The Body",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "releaseDt",
+                        "in": "formData",
+                        "description": "ISO date representing the release date for this notification",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isEmail",
+                        "in": "formData",
+                        "description": "Flag indicating whether this notification should be emailed.",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isInterrupt",
+                        "in": "formData",
+                        "description": "Flag indication whether this notification should interrupt the web portal nativation/login",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "displayGroupIds",
+                        "in": "formData",
+                        "description": "The display group ids to assign this notification to",
+                        "required": true,
+                        "type": "",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "userGroupId",
+                        "in": "formData",
+                        "description": "The user group ids to assign to this notification",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Notification"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/notification/{notificationId}": {
+            "delete": {
+                "tags": [
+                    "notification"
+                ],
+                "summary": "Delete Notification",
+                "description": "Delete the provided notification",
+                "operationId": "notificationDelete",
+                "parameters": [
+                    {
+                        "name": "notificationId",
+                        "in": "path",
+                        "description": "The Notification Id to Delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/playlist/widget": {
             "get": {
                 "tags": [
@@ -2538,6 +2717,13 @@
                         "items": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "Optional duration for all Media in this assignment to use on the Widget",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -3003,7 +3189,7 @@
                     {
                         "name": "isPriority",
                         "in": "formData",
-                        "description": "A 0|1 flag indicating whether this event should be considered priority",
+                        "description": "An integer indicating the priority of this event. Normal events have a priority of 0.",
                         "required": true,
                         "type": "integer"
                     },
@@ -3135,7 +3321,7 @@
                     {
                         "name": "isPriority",
                         "in": "formData",
-                        "description": "A 0|1 flag indicating whether this event should be considered priority",
+                        "description": "An integer indicating the priority of this event. Normal events have a priority of 0.",
                         "required": true,
                         "type": "integer"
                     },
@@ -3263,6 +3449,16 @@
                         "description": "An optional display Id to filter",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "layoutId",
+                        "in": "formData",
+                        "description": "An optional array of layout Id to filter",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
                     },
                     {
                         "name": "mediaId",
@@ -4071,7 +4267,7 @@
                     "description": "The ID of this Display",
                     "type": "integer"
                 },
-                "isAuditing": {
+                "auditingUntil": {
                     "description": "Flag indicating whether this Display is recording Auditing Information from XMDS",
                     "type": "integer"
                 },
@@ -4406,6 +4602,10 @@
                 "duration": {
                     "description": "A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1 or 2.",
                     "type": "integer"
+                },
+                "statusMessage": {
+                    "description": "A status message detailing any errors with the layout",
+                    "type": "string"
                 }
             }
         },
@@ -4504,7 +4704,7 @@
                 },
                 "moduleSystemFile": {
                     "description": "Flag indicating whether this media is a system file or not",
-                    "type": "boolean"
+                    "type": "integer"
                 },
                 "expires": {
                     "description": "Timestamp indicating when this media should expire",
@@ -4528,6 +4728,14 @@
                 },
                 "groupsWithPermissions": {
                     "description": "A comma separated list of groups/users with permissions to this Media",
+                    "type": "string"
+                },
+                "released": {
+                    "description": "A flag indicating whether this media has been released",
+                    "type": "integer"
+                },
+                "apiRef": {
+                    "description": "An API reference",
                     "type": "string"
                 }
             }
@@ -4599,6 +4807,10 @@
                 },
                 "viewPath": {
                     "description": "The Twig View path for module specific templates",
+                    "type": "string"
+                },
+                "installName": {
+                    "description": "The original installation name of this module.",
                     "type": "string"
                 }
             }
@@ -4890,7 +5102,7 @@
                     "type": "integer"
                 },
                 "isPriority": {
-                    "description": "Flag indicating whether the event should be considered priority or not.",
+                    "description": "Integer indicating the event priority.",
                     "type": "integer"
                 },
                 "displayOrder": {
@@ -5119,6 +5331,10 @@
                     "items": {
                         "$ref": "#/definitions/UserOption"
                     }
+                },
+                "isSystemNotification": {
+                    "description": "Does this Group receive system notifications.",
+                    "type": "integer"
                 }
             }
         },
@@ -5142,6 +5358,10 @@
                 },
                 "libraryQuota": {
                     "description": "This users library quota in bytes. 0 = unlimited",
+                    "type": "integer"
+                },
+                "isSystemNotification": {
+                    "description": "Does this Group receive system notifications.",
                     "type": "integer"
                 }
             }
@@ -5210,6 +5430,13 @@
                         "type": "integer"
                     }
                 },
+                "audio": {
+                    "description": "An array of Audio MediaIds this widget is linked to",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/WidgetAudio"
+                    }
+                },
                 "permissions": {
                     "description": "An array of permissions for this widget",
                     "type": "array",
@@ -5220,6 +5447,26 @@
                 "module": {
                     "description": "The Module Object for this Widget",
                     "$ref": "#/definitions/ModuleWidget"
+                }
+            }
+        },
+        "WidgetAudio": {
+            "properties": {
+                "widgetId": {
+                    "description": "The Widget Id",
+                    "type": "integer"
+                },
+                "mediaId": {
+                    "description": "The Media Id",
+                    "type": "integer"
+                },
+                "volume": {
+                    "description": "The percentage volume",
+                    "type": "integer"
+                },
+                "loop": {
+                    "description": "Flag indicating whether to loop",
+                    "type": "integer"
                 }
             }
         },
@@ -5285,6 +5532,10 @@
         {
             "name": "schedule",
             "description": "Schedule"
+        },
+        {
+            "name": "notification",
+            "description": "Notifications"
         },
         {
             "name": "layout",
