@@ -1031,9 +1031,8 @@ class Library extends Base
             'allowMediaTypeChange' => 1
         ]);
 
-        // Direct delete using service locator
-        $this->getApp()->store->update('DELETE FROM `oauth_access_token_scopes` WHERE `access_token` = :token', ['token' => $accessToken->getId()]);
-        $this->getApp()->store->update('DELETE FROM `oauth_access_tokens` WHERE `access_token` = :token', ['token' => $accessToken->getId()]);
+        // Expire the token
+        $accessToken->expire();
     }
 
     /**
