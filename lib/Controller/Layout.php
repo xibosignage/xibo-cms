@@ -952,6 +952,128 @@ class Layout extends Base
     }
 
     /**
+     * @SWG\Post(
+     *  path="/layout/{layoutId}/tag",
+     *  operationId="layoutTag",
+     *  tags={"layout"},
+     *  summary="Tag Layout",
+     *  description="Tag a Layout with one or more tags",
+     * @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout Id to Tag",
+     *      type="integer",
+     *      required=true
+     *   ),
+     * @SWG\Parameter(
+     *      name="tag",
+     *      in="formData",
+     *      description="An array of tags",
+     *      type="array",
+     *      required=true,
+     *      @SWG\Items(type="string")
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Layout")
+     *  )
+     * )
+     *
+     * @param $layoutId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function tag($layoutId)
+    {
+        // Edit permission
+        // Get the layout
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException();
+
+        $tags = $this->getSanitizer()->getStringArray('tag');
+
+        if (count($tags) <= 0)
+            throw new \InvalidArgumentException(__('No tags to assign'));
+
+        foreach ($tags as $tag) {
+            $layout->assignTag($this->tagFactory->tagFromString($tag));
+        }
+
+        $layout->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Tagged %s'), $layout->layout),
+            'id' => $layout->layoutId,
+            'data' => $layout
+        ]);
+    }
+
+    /**
+     * @SWG\Delete(
+     *  path="/layout/{layoutId}/tag",
+     *  operationId="layoutUntag",
+     *  tags={"layout"},
+     *  summary="Untag Layout",
+     *  description="Untag a Layout with one or more tags",
+     * @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout Id to Untag",
+     *      type="integer",
+     *      required=true
+     *   ),
+     * @SWG\Parameter(
+     *      name="tag",
+     *      in="formData",
+     *      description="An array of tags",
+     *      type="array",
+     *      required=true,
+     *      @SWG\Items(type="string")
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Layout")
+     *  )
+     * )
+     *
+     * @param $layoutId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function untag($layoutId)
+    {
+        // Edit permission
+        // Get the layout
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException();
+
+        $tags = $this->getSanitizer()->getStringArray('tag');
+
+        if (count($tags) <= 0)
+            throw new \InvalidArgumentException(__('No tags to assign'));
+
+        foreach ($tags as $tag) {
+            $layout->unassignTag($this->tagFactory->tagFromString($tag));
+        }
+
+        $layout->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Untagged %s'), $layout->layout),
+            'id' => $layout->layoutId,
+            'data' => $layout
+        ]);
+    }
+
+    /**
      * Layout Status
      * @param int $layoutId
      */

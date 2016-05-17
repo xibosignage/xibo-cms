@@ -2267,6 +2267,78 @@
                 }
             }
         },
+        "/layout/{layoutId}/tag": {
+            "post": {
+                "tags": [
+                    "layout"
+                ],
+                "summary": "Tag Layout",
+                "description": "Tag a Layout with one or more tags",
+                "operationId": "layoutTag",
+                "parameters": [
+                    {
+                        "name": "layoutId",
+                        "in": "path",
+                        "description": "The Layout Id to Tag",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "tag",
+                        "in": "formData",
+                        "description": "An array of tags",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Layout"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "layout"
+                ],
+                "summary": "Untag Layout",
+                "description": "Untag a Layout with one or more tags",
+                "operationId": "layoutUntag",
+                "parameters": [
+                    {
+                        "name": "layoutId",
+                        "in": "path",
+                        "description": "The Layout Id to Untag",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "tag",
+                        "in": "formData",
+                        "description": "An array of tags",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Layout"
+                        }
+                    }
+                }
+            }
+        },
         "/library": {
             "get": {
                 "tags": [
@@ -2495,6 +2567,78 @@
                                 "description": "nginx send file header - if enabled.",
                                 "type": "string"
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/media/{mediaId}/tag": {
+            "post": {
+                "tags": [
+                    "media"
+                ],
+                "summary": "Tag Media",
+                "description": "Tag a Media with one or more tags",
+                "operationId": "mediaTag",
+                "parameters": [
+                    {
+                        "name": "mediaId",
+                        "in": "path",
+                        "description": "The Media Id to Tag",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "tag",
+                        "in": "formData",
+                        "description": "An array of tags",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Media"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "media"
+                ],
+                "summary": "Untag Media",
+                "description": "Untag a Media with one or more tags",
+                "operationId": "mediaUntag",
+                "parameters": [
+                    {
+                        "name": "mediaId",
+                        "in": "path",
+                        "description": "The Media Id to Untag",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "tag",
+                        "in": "formData",
+                        "description": "An array of tags",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Media"
                         }
                     }
                 }

@@ -1029,4 +1029,126 @@ class Library extends Base
         $this->getApp()->store->update('DELETE FROM `oauth_access_token_scopes` WHERE `access_token` = :token', ['token' => $accessToken]);
         $this->getApp()->store->update('DELETE FROM `oauth_access_tokens` WHERE `access_token` = :token', ['token' => $accessToken]);
     }
+
+    /**
+     * @SWG\Post(
+     *  path="/media/{mediaId}/tag",
+     *  operationId="mediaTag",
+     *  tags={"media"},
+     *  summary="Tag Media",
+     *  description="Tag a Media with one or more tags",
+     * @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The Media Id to Tag",
+     *      type="integer",
+     *      required=true
+     *   ),
+     * @SWG\Parameter(
+     *      name="tag",
+     *      in="formData",
+     *      description="An array of tags",
+     *      type="array",
+     *      required=true,
+     *      @SWG\Items(type="string")
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Media")
+     *  )
+     * )
+     *
+     * @param $mediaId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function tag($mediaId)
+    {
+        // Edit permission
+        // Get the media
+        $media = $this->mediaFactory->getById($mediaId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($media))
+            throw new AccessDeniedException();
+
+        $tags = $this->getSanitizer()->getStringArray('tag');
+
+        if (count($tags) <= 0)
+            throw new \InvalidArgumentException(__('No tags to assign'));
+
+        foreach ($tags as $tag) {
+            $media->assignTag($this->tagFactory->tagFromString($tag));
+        }
+
+        $media->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Tagged %s'), $media->name),
+            'id' => $media->mediaId,
+            'data' => $media
+        ]);
+    }
+
+    /**
+     * @SWG\Delete(
+     *  path="/media/{mediaId}/tag",
+     *  operationId="mediaUntag",
+     *  tags={"media"},
+     *  summary="Untag Media",
+     *  description="Untag a Media with one or more tags",
+     * @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The Media Id to Untag",
+     *      type="integer",
+     *      required=true
+     *   ),
+     * @SWG\Parameter(
+     *      name="tag",
+     *      in="formData",
+     *      description="An array of tags",
+     *      type="array",
+     *      required=true,
+     *      @SWG\Items(type="string")
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Media")
+     *  )
+     * )
+     *
+     * @param $mediaId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function untag($mediaId)
+    {
+        // Edit permission
+        // Get the media
+        $media = $this->mediaFactory->getById($mediaId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($media))
+            throw new AccessDeniedException();
+
+        $tags = $this->getSanitizer()->getStringArray('tag');
+
+        if (count($tags) <= 0)
+            throw new \InvalidArgumentException(__('No tags to assign'));
+
+        foreach ($tags as $tag) {
+            $media->unassignTag($this->tagFactory->tagFromString($tag));
+        }
+
+        $media->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Untagged %s'), $media->name),
+            'id' => $media->mediaId,
+            'data' => $media
+        ]);
+    }
 }
