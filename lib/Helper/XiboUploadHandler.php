@@ -72,6 +72,10 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 if (!$controller->getUser()->checkEditable($oldMedia))
                     throw new AccessDeniedException(__('Access denied replacing old media'));
 
+                // Check to see if we are changing the media type
+                if ($oldMedia->mediaType != $module->getModuleType() && $this->options['allowMediaTypeChange'] == 0)
+                    throw new \InvalidArgumentException(__('You cannot replace this media with an item of a different type'));
+
                 // Set the old record to edited
                 $oldMedia->isEdited = 1;
                 $oldMedia->save(['validate' => false]);
@@ -80,7 +84,13 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $name = ($name == '') ? $oldMedia->name : $name;
 
                 // Add the Media
-                $media = $controller->getMediaFactory()->create($name, $fileName, $module->getModuleType(), $this->options['userId']);
+                //  the userId is either the existing user (if we are changing media type) or the currently logged in user otherwise.
+                $media = $controller->getMediaFactory()->create(
+                    $name,
+                    $fileName,
+                    $module->getModuleType(),
+                    (($this->options['allowMediaTypeChange'] == 1) ? $oldMedia->getOwnerId() : $this->options['userId'])
+                );
 
                 // Set the duration
                 $media->duration = $module->determineDuration($filePath);
@@ -261,7 +271,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
             $file->error = $e->getMessage();
 
-            $this->options['controller']->getApp()->commit = false;
+            $controller->getApp()->commit = false;
         }
     }
 }
