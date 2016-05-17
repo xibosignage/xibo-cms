@@ -13,6 +13,8 @@ use Xibo\Storage\StorageServiceInterface;
 /**
  * Class UserGroupNotification
  * @package Xibo\Entity
+ *
+ * @SWG\Definition()
  */
 class UserNotification implements \JsonSerializable
 {

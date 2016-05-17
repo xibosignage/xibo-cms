@@ -106,7 +106,7 @@ class StatusDashboard extends Base
         $data = [];
 
         // Set up some suffixes
-        $suffixes = array('bytes', 'k', 'M', 'G', 'T');
+        $suffixes = array('B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB');
 
         try {
             // Displays this user has access to

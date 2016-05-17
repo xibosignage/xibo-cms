@@ -21,7 +21,6 @@
 namespace Xibo\Controller;
 use finfo;
 use Stash\Interfaces\PoolInterface;
-//use Xibo\Entity\DisplayGroup;
 use Xibo\Entity\Stat;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
@@ -32,6 +31,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\LogFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
+use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -40,6 +40,8 @@ use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\XMR\ScreenShotAction;
+
+//use Xibo\Entity\DisplayGroup;
 
 /**
  * Class Display
@@ -341,6 +343,8 @@ class Display extends Base
                 break;
 
             /* @var \Xibo\Entity\Display $display */
+            $display->storageAvailableSpaceFormatted = ByteFormatter::format($display->storageAvailableSpace);
+            $display->storageTotalSpaceFormatted = ByteFormatter::format($display->storageTotalSpace);
 
             // Set some text for the display status
             switch ($display->mediaInventoryStatus) {
@@ -508,6 +512,9 @@ class Display extends Base
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
+        // Dates
+        $display->auditingUntilIso = $this->getDate()->getLocalDate($display->auditingUntil);
+
         // Get the settings from the profile
         $profile = $display->getSettings();
 
@@ -591,7 +598,8 @@ class Display extends Base
      *      name="isAuditing",
      *      in="formData",
      *      description="Flag indicating whether this Display records auditing information.",
-     *      type="integer",
+     *      type="string",
+     *      format="date-time",
      *      required=true
      *   ),
      *  @SWG\Parameter(
@@ -719,7 +727,7 @@ class Display extends Base
         // Update properties
         $display->display = $this->getSanitizer()->getString('display');
         $display->description = $this->getSanitizer()->getString('description');
-        $display->isAuditing = $this->getSanitizer()->getInt('isAuditing');
+        $display->auditingUntil = $this->getSanitizer()->getDate('auditingUntil');
         $display->defaultLayoutId = $this->getSanitizer()->getInt('defaultLayoutId');
         $display->licensed = $this->getSanitizer()->getInt('licensed');
         $display->license = $this->getSanitizer()->getString('license');
@@ -734,6 +742,9 @@ class Display extends Base
         $display->latitude = $this->getSanitizer()->getDouble('latitude');
         $display->longitude = $this->getSanitizer()->getDouble('longitude');
         $display->displayProfileId = $this->getSanitizer()->getInt('displayProfileId');
+
+        if ($display->auditingUntil !== null)
+            $display->auditingUntil = $display->auditingUntil->format('U');
 
         // Should we invalidate this display?
         if ($defaultLayoutId != $display->defaultLayoutId) {

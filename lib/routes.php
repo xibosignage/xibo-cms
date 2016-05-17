@@ -112,6 +112,9 @@ $app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->name('layout.
 $app->map('/layout/import', '\Xibo\Controller\Library:add')->via('HEAD');
 $app->post('/layout/import', '\Xibo\Controller\Layout:import')->name('layout.import');
 $app->post('/layout/:id/upgrade', '\Xibo\Controller\Layout:upgrade')->name('layout.upgrade');
+// Tagging
+$app->post('/layout/:id/tag', '\Xibo\Controller\Layout:tag')->name('layout.tag');
+$app->delete('/layout/:id/untag', '\Xibo\Controller\Layout:untag')->name('layout.untag');
 
 /**
  * Region
@@ -196,6 +199,9 @@ $app->post('/library', '\Xibo\Controller\Library:add')->name('library.add');
 $app->put('/library/:id', '\Xibo\Controller\Library:edit')->name('library.edit');
 $app->delete('/library/:id', '\Xibo\Controller\Library:delete')->name('library.delete');
 $app->delete('/library/tidy', '\Xibo\Controller\Library:tidy')->name('library.tidy');
+// Tagging
+$app->post('/library/:id/tag', '\Xibo\Controller\Library:tag')->name('library.tag');
+$app->delete('/library/:id/untag', '\Xibo\Controller\Library:untag')->name('library.untag');
 
 /**
  * Displays

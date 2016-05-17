@@ -128,15 +128,14 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                         ] %}
                         {{ forms.dropdown("incSchedule", "single", title, display.incSchedule, options, "id", "value", helpText) }}
 
-                        {% set title %}{% trans "Auditing" %}{% endset %}
+                        {% set title %}{% trans "Auditing until" %}{% endset %}
                         {% set helpText %}{% trans "Collect auditing from this client. Should only be used if there is a problem with the display." %}{% endset %}
-                        {% set yes %}{% trans "Yes" %}{% endset %}
-                        {% set no %}{% trans "No" %}{% endset %}
-                        {% set options = [
-                        { id: 0, value: no },
-                        { id: 1, value: yes }
-                        ] %}
-                        {{ forms.dropdown("isAuditing", "single", title, display.isAuditing, options, "id", "value", helpText) }}
+                        {% if display.isAuditing() %}
+                            {% set auditing = display.auditingUntilIso %}
+                        {% else %}
+                            {% set auditing = "" %}
+                        {% endif %}
+                        {{ forms.datetime("auditingUntil", title, auditing, helpText) }}
 
                         {% set title %}{% trans "Clear Cached Data" %}{% endset %}
                         {% set helpText %}{% trans "Remove any cached data for this display." %}{% endset %}

@@ -210,7 +210,7 @@
             var mediaTable = $("#mediaAssignments").DataTable({ "language": dataTablesLanguage,
                 serverSide: true, stateSave: true,
                 searchDelay: 3000,
-                "order": [[ 0, "asc"]],
+                "order": [[ 1, "asc"]],
                 "filter": false,
                 ajax: {
                     url: "{{ urlFor("library.search") }}",
@@ -219,6 +219,7 @@
                     }
                 },
                 "columns": [
+                    { "data": "mediaId" },
                     { "data": "name" },
                     { "data": "mediaType" },
                     {

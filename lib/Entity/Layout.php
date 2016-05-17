@@ -663,6 +663,37 @@ class Layout implements \JsonSerializable
     }
 
     /**
+     * Assign Tag
+     * @param Tag $tag
+     * @return $this
+     */
+    public function assignTag($tag)
+    {
+        $this->load();
+
+        if (!in_array($tag, $this->tags))
+            $this->tags[] = $tag;
+
+        return $this;
+    }
+
+    /**
+     * Unassign tag
+     * @param Tag $tag
+     * @return $this
+     */
+    public function unassignTag($tag)
+    {
+        $this->tags = array_udiff($this->tags, [$tag], function($a, $b) {
+            /* @var Tag $a */
+            /* @var Tag $b */
+            return $a->tagId - $b->tagId;
+        });
+
+        return $this;
+    }
+
+    /**
      * @param array[Tag] $tags
      */
     public function replaceTags($tags = [])
