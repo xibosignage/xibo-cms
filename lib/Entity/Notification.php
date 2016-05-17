@@ -15,6 +15,8 @@ use Xibo\Storage\StorageServiceInterface;
 /**
  * Class Notification
  * @package Xibo\Entity
+ *
+ * @SWG\Definition()
  */
 class Notification implements \JsonSerializable
 {

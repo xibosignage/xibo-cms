@@ -2750,7 +2750,7 @@
                         "in": "formData",
                         "description": "The display group ids to assign this notification to",
                         "required": true,
-                        "type": "",
+                        "type": "array",
                         "items": {
                             "type": "integer"
                         }
@@ -2783,6 +2783,86 @@
             }
         },
         "/notification/{notificationId}": {
+            "post": {
+                "tags": [
+                    "notification"
+                ],
+                "summary": "Notification Edit",
+                "description": "Edit a Notification",
+                "operationId": "notificationEdit",
+                "parameters": [
+                    {
+                        "name": "notificationId",
+                        "in": "path",
+                        "description": "The NotificationId",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "subject",
+                        "in": "formData",
+                        "description": "The Subject",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "body",
+                        "in": "formData",
+                        "description": "The Body",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "releaseDt",
+                        "in": "formData",
+                        "description": "ISO date representing the release date for this notification",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isEmail",
+                        "in": "formData",
+                        "description": "Flag indicating whether this notification should be emailed.",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isInterrupt",
+                        "in": "formData",
+                        "description": "Flag indication whether this notification should interrupt the web portal nativation/login",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "displayGroupIds",
+                        "in": "formData",
+                        "description": "The display group ids to assign this notification to",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "userGroupId",
+                        "in": "formData",
+                        "description": "The user group ids to assign to this notification",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Notification"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "tags": [
                     "notification"
@@ -4959,6 +5039,60 @@
                 }
             }
         },
+        "Notification": {
+            "properties": {
+                "notificationId": {
+                    "description": "The Notifcation ID",
+                    "type": "integer"
+                },
+                "createdDt": {
+                    "description": "Create Date as Unix Timestamp",
+                    "type": "integer"
+                },
+                "releaseDt": {
+                    "description": "Release Date as Unix Timestamp",
+                    "type": "integer"
+                },
+                "subject": {
+                    "description": "The subject line",
+                    "type": "string"
+                },
+                "body": {
+                    "description": "The HTML body of the notification",
+                    "type": "string"
+                },
+                "isEmail": {
+                    "description": "Should the notification be emailed",
+                    "type": "integer"
+                },
+                "isInterrupt": {
+                    "description": "Should the notification interrupt the CMS UI on navigate/login",
+                    "type": "integer"
+                },
+                "isSystem": {
+                    "description": "Flag for system notification",
+                    "type": "integer"
+                },
+                "userId": {
+                    "description": "The Owner User Id",
+                    "type": "integer"
+                },
+                "userGroups": {
+                    "description": "User Group Notifications associated with this notification",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/UserGroup"
+                    }
+                },
+                "displayGroups": {
+                    "description": "Display Groups associated with this notification",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DisplayGroup"
+                    }
+                }
+            }
+        },
         "Page": {
             "properties": {
                 "pageId": {
@@ -5506,6 +5640,50 @@
                 },
                 "isSystemNotification": {
                     "description": "Does this Group receive system notifications.",
+                    "type": "integer"
+                }
+            }
+        },
+        "UserNotification": {
+            "properties": {
+                "userId": {
+                    "description": "The User Id",
+                    "type": "integer"
+                },
+                "notificationId": {
+                    "description": "The Notification Id",
+                    "type": "integer"
+                },
+                "releaseDt": {
+                    "description": "Release Date expressed as Unix Timestamp",
+                    "type": "integer"
+                },
+                "readDt": {
+                    "description": "Read Date expressed as Unix Timestamp",
+                    "type": "integer"
+                },
+                "emailDt": {
+                    "description": "Email Date expressed as Unix Timestamp",
+                    "type": "integer"
+                },
+                "read": {
+                    "description": "A flag indicating whether to show as read or not",
+                    "type": "integer"
+                },
+                "subject": {
+                    "description": "The subject",
+                    "type": "string"
+                },
+                "body": {
+                    "description": "The body",
+                    "type": "string"
+                },
+                "isInterrupt": {
+                    "description": "Should the notification interrupt the CMS UI on navigate/login",
+                    "type": "integer"
+                },
+                "isSystem": {
+                    "description": "Flag for system notification",
                     "type": "integer"
                 }
             }
