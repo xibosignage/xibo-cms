@@ -1014,6 +1014,15 @@ class Library extends Base
      */
     public function mcaas($mediaId)
     {
+        // This is only available through the API
+        if (!$this->isApi())
+            throw new AccessDeniedException(__('Route is available through the API'));
+
+        // We need to get the access token we used to authorize this request.
+        // as we are API we can expect that in the $app.
+        /** @var $accessToken \League\OAuth2\Server\Entity\AccessTokenEntity */
+        $accessToken = $this->getApp()->server->getAccessToken();
+
         // Call Add with the oldMediaId
         $this->add([
             'oldMediaId' => $mediaId,
@@ -1022,12 +1031,8 @@ class Library extends Base
             'allowMediaTypeChange' => 1
         ]);
 
-        // Remove the access token this request used
-        $accessToken = $this->getSanitizer()->getString('access_token');
-
-        // Direct delete using service locator
-        $this->getApp()->store->update('DELETE FROM `oauth_access_token_scopes` WHERE `access_token` = :token', ['token' => $accessToken]);
-        $this->getApp()->store->update('DELETE FROM `oauth_access_tokens` WHERE `access_token` = :token', ['token' => $accessToken]);
+        // Expire the token
+        $accessToken->expire();
     }
 
     /**

@@ -66,7 +66,7 @@ class Theme extends Middleware
                     'maxSizeMessage' => sprintf(__('This form accepts files up to a maximum size of %s'), $app->configService->getMaxUploadSize()),
                     'validExt' => implode('|', $app->moduleFactory->getValidExtensions())
                 ],
-                'ckeditorConfig' => $app->container->get('\Xibo\Controller\Library')->fontCKEditorConfig()
+                'ckeditorConfig' => $app->container->get('\Xibo\Controller\Library')->setApp($app)->fontCKEditorConfig()
             ));
         });
 

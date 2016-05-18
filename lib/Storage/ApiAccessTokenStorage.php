@@ -143,6 +143,7 @@ class ApiAccessTokenStorage extends AbstractStorage implements AccessTokenInterf
      */
     public function delete(AccessTokenEntity $token)
     {
-        $this->getStore()->update('DELETE FROM WHERE access_token = :access_token', [ 'access_token' => $token->getId()]);
+        $this->getStore()->update('DELETE FROM `oauth_access_token_scopes` WHERE access_token = :access_token', [ 'access_token' => $token->getId()]);
+        $this->getStore()->update('DELETE FROM `oauth_access_tokens` WHERE access_token = :access_token', [ 'access_token' => $token->getId()]);
     }
 }

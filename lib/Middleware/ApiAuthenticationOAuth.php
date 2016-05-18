@@ -52,7 +52,7 @@ class ApiAuthenticationOAuth extends Middleware
             /* @var ResourceServer $server */
             $server = $this->app->server;
 
-            $app->server->isValidRequest(false);
+            $server->isValidRequest(false);
 
             /* @var \Xibo\Entity\User $user */
             $user = null;
