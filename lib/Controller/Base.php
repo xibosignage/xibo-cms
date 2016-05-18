@@ -106,15 +106,16 @@ class Base
     /**
      * Called by Slim when the Controller is instantiated from a route definition
      * @param Slim $app
+     * @param bool $setController
      * @return $this
      */
-    public function setApp($app)
+    public function setApp($app, $setController = true)
     {
         $this->app = $app;
 
         // Reference back to this from the app
         // but only the first time
-        if ($app->controller == null)
+        if ($app->controller == null && $setController)
             $app->controller = $this;
 
         return $this;
@@ -332,8 +333,10 @@ class Base
         }
         else {
             // WEB Normal
-            if (empty($state->template))
+            if (empty($state->template)) {
+                $this->getLog()->debug('Template Missing. State: %s', json_encode($state));
                 throw new ControllerNotImplemented(__('Template Missing'));
+            }
 
             // Append the side bar content
             $data['clock'] = $this->getDate()->getLocalDate(null, 'H:i T');
