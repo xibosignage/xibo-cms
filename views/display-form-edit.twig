@@ -48,8 +48,8 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                         {% set helpText %}{% trans "A description - (1 - 254 characters)." %}{% endset %}
                         {{ forms.input("description", title, display.description, helpText) }}
 
-                        {% set title %}{% trans "Licence display?" %}{% endset %}
-                        {% set helpText %}{% trans "Use one of the available licenses for this display?" %}{% endset %}
+                        {% set title %}{% trans "Authorise display?" %}{% endset %}
+                        {% set helpText %}{% trans "Use one of the available slots for this display?" %}{% endset %}
                         {% set yes %}{% trans "Yes" %}{% endset %}
                         {% set no %}{% trans "No" %}{% endset %}
                         {% set options = [
