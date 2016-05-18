@@ -362,7 +362,8 @@ class LayoutFactory extends BaseFactory
                 $widget->duration = $mediaNode->getAttribute('duration');
                 $widget->useDuration = $mediaNode->getAttribute('useDuration');
                 $widget->useDuration = ($widget->useDuration == '') ? 0 : 1;
-                $widget->tempId = $mediaNode->getAttribute('id');
+                $widget->tempId = $mediaNode->getAttribute('fileId');
+                $widgetId = $mediaNode->getAttribute('id');
 
                 $this->getLog()->debug('Adding Widget to object model. %s', $widget);
 
@@ -380,12 +381,9 @@ class LayoutFactory extends BaseFactory
                 if ($module->type == 'datasetview')
                     continue;
 
-                if ($module->regionSpecific == 0) {
-                    $widget->assignMedia($widget->tempId);
-                }
-
                 // Get all widget options
-                foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media[@id="' . $widget->tempId . '"]/options') as $optionsNode) {
+                $xpathQuery = '//region[@id="' . $region->tempId . '"]/media[@id="' . $widgetId . '"]/options';
+                foreach ($xpath->query($xpathQuery) as $optionsNode) {
                     /* @var \DOMElement $optionsNode */
                     foreach ($optionsNode->childNodes as $mediaOption) {
                         /* @var \DOMElement $mediaOption */
@@ -398,12 +396,28 @@ class LayoutFactory extends BaseFactory
                     }
                 }
 
+                $this->getLog()->debug('Added %d options with xPath query: %s', count($widget->widgetOptions), $xpathQuery);
+
+                // Get the MediaId associated with this widget (using the URI)
+                if ($module->regionSpecific == 0) {
+                    $this->getLog()->debug('Library Widget, getting mediaId');
+
+                    if (empty($widget->tempId)) {
+                        $this->getLog()->debug('FileId node is empty, setting tempId from uri option. Options: %s', json_encode($widget->widgetOptions));
+                        $mediaId = explode('.', $widget->getOptionValue('uri', '0.*'));
+                        $widget->tempId = $mediaId[0];
+                    }
+
+                    $this->getLog()->debug('Assigning mediaId %d', $widget->tempId);
+                    $widget->assignMedia($widget->tempId);
+                }
+
                 // Skip dataset backed ticker widgets
                 if ($module->type == 'ticker' && $widget->getOptionValue('sourceId', 1) != 1)
                     continue;
 
                 // Get all widget raw content
-                foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media[@id="' . $widget->tempId . '"]/raw') as $rawNode) {
+                foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media[@id="' . $widgetId . '"]/raw') as $rawNode) {
                     /* @var \DOMElement $rawNode */
                     // Get children
                     foreach ($rawNode->childNodes as $mediaOption) {
