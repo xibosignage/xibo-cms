@@ -40,7 +40,9 @@ This is the template for the campaign page
     <script type="text/javascript">
         (function($){
           $(document).ready(function(){
-            dsInit({{ layout.layoutId }}, {{ previewOptions|json_encode() }})
+            {% for layout in layouts %}
+              dsInit({{ layout.layoutId }}, {{ previewOptions|json_encode()|raw }});
+            {% endfor %}
           });
         }(jQuery));
     </script>
