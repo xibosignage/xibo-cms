@@ -14,12 +14,21 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         
+        <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
+        <link rel="stylesheet" type="text/css" href="{{ theme.uri("css/html-preview.css") }}" />
         
-        {% block headContent %}{% endblock %}
     </head>
     <body>
-      {% block content %}{% endblock %}
-      {% block javaScript %}{% endblock %}
-      {% include 'layout-preview-partial.twig' with {'layout': layout, 'previewOptions': previewOptions } %}
+        {% include 'layout-preview-partial.twig' with {'layout': layout, 'previewOptions': previewOptions} %}
+        <script src="{{ theme.uri("libraries/jquery/jquery-1.11.1.min.js") }}"></script>
+        <script src="{{ theme.uri("libraries/html5preloader/html5Preloader.js") }}"></script>
+        <script src="{{ theme.uri("js/html-preview.js") }}"></script>
+        <script type="text/javascript">
+            (function($){
+              $(document).ready(function(){
+                dsInit({{ layout.layoutId }}, {{ previewOptions|json_encode() }})
+              });
+            }(jQuery));
+        </script>
     </body>
 </html>

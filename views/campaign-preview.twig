@@ -20,16 +20,38 @@ This is the template for the campaign page
     <div class="widget">
         <div class="widget-title">{% trans "Campaign preview" %}</div>
         <div class="widget-body">
-       <p><b>number of layouts</b> : {{ campaign.numberLayouts }} </p>
-       {% for layout in layouts %}
-       <p> <b>layout id :</b> {{ layout.layoutId }},
-       <b> layout name :</b> {{ layout.layout }},
-       <b> layout duration :</b> {{ layout.duration }}</p>
-       {% include 'layout-preview-partial.twig' with {'layout': layout } %}
-       {% endfor %}
+            <p><b>number of layouts</b> : {{ campaign.numberLayouts }} </p>
+            <div class="row clearfix">
+              {% for layout in layouts %}
+                <div class="col-sm-6">
+                  <div class="embed-responsive embed-responsive-4by3">
+                      <div class="embed-responsive-item preview-container">
+                        {% include 'layout-preview-partial.twig' with {'layout': layout, 'previewOptions': previewOptions } %}
+                      </div>
+                  </div>
+                        <b>layout id :</b> {{ layout.layoutId }},
+                        <b> layout name :</b> {{ layout.layout }},
+                        <b> layout duration :</b> {{ layout.duration }}
+                </div>
+              {% endfor %}
+            </div>
         </div>
     </div>
 {% endblock %}
 
 {% block javaScript %}
+    <script src="{{ theme.uri("libraries/jquery/jquery-1.11.1.min.js") }}"></script>
+    <script src="{{ theme.uri("libraries/html5preloader/html5Preloader.js") }}"></script>
+    <script src="{{ theme.uri("js/html-preview.js") }}"></script>
+    <script type="text/javascript">
+        (function($){
+          $(document).ready(function(){
+            dsInit({{ layout.layoutId }}, {{ previewOptions|json_encode() }})
+          });
+        }(jQuery));
+    </script>
+{% endblock %}
+
+{% block headContent %}
+        <link rel="stylesheet" type="text/css" href="{{ theme.uri("css/html-preview.css") }}" />
 {% endblock %}

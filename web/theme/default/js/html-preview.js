@@ -35,9 +35,9 @@ function dsInit(layoutid, options) {
     OPTIONS = options;
 
     /* Hide the info and log divs */
-    $("#log").css("display", "none");
-    $("#info").css("display", "none");
-    $("#end").css("display", "none");
+    $(".preview-log").css("display", "none");
+    $(".preview-info").css("display", "none");
+    $(".preview-end").css("display", "none");
 
     /* Setup a keypress handler for local commands */
     document.onkeypress = keyHandler;
@@ -103,7 +103,7 @@ function keyHandler(event) {
     var letter = String.fromCharCode(chCode);
 
     if (letter == 'l') {
-        var log = $("#log");
+        var log = $(".preview-log");
         if (log.css("display") == 'none') {
             log.css("display", "block");
         }
@@ -146,7 +146,7 @@ function Layout(id) {
         self.containerName = "L" + self.id + "-" + nextId();
         
         /* Create a hidden div to show the layout in */
-        var screen = $("#screen");
+        var screen = $(".preview-screen");
         screen.append('<div id="' + self.containerName + '"></div>');
 
         var layout = $("#" + self.containerName);
