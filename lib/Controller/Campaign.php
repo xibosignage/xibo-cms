@@ -606,12 +606,18 @@ class Campaign extends Base
 	// FIXME : pas de checkEditable
     //    if (!$this->getUser()->checkEditable($campaign))
     //        throw new AccessDeniedException();
-
+        $layouts = $this->layoutFactory->getByCampaignId($campaignId);
+        $duration = 0 ;
+        foreach($layouts as $layout)    
+        {
+            $duration += $layout->duration ;
+        }
         $this->getState()->template = 'campaign-preview';
         $this->getState()->setData([
             'campaign' => $campaign,
             'help' => $this->getHelp()->link('Campaign', 'Preview'),
-            'layouts' => $this->layoutFactory->getByCampaignId($campaignId)
+            'layouts' => $layouts,
+            'duration' => $duration
         ]);
     }
 }

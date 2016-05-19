@@ -20,6 +20,7 @@ This is the template for the campaign page
     <div class="widget">
         <div class="widget-title">{% trans "Campaign preview" %}</div>
         <div class="widget-body">
+            <p><b>total duration</b> : {{ duration }} </p>
             <p><b>number of layouts</b> : {{ campaign.numberLayouts }} </p>
             <div class="row clearfix">
               {% for layout in layouts %}
