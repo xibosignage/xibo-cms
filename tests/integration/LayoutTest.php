@@ -426,7 +426,7 @@ class LayoutTest extends LocalWebTestCase
      * Add new region to a specific layout
      * @dataProvider regionSuccessCases
      */
-    public function testAddRegion()
+    public function testAddRegion($regionWidth, $regionHeight, $regionTop, $regionLeft)
     {
         $name = Random::generateString(8, 'phpunit');
         $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
@@ -445,10 +445,10 @@ class LayoutTest extends LocalWebTestCase
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
-//        $this->assertSame($regionWidth, $object->data->width);
- //       $this->assertSame($regionHeight, $object->data->height);
-//        $this->assertSame($regionTop, $object->data->top);
- //       $this->assertSame($regionLeft, $object->data->left);
+        $this->assertSame($regionWidth, $object->data->width);
+        $this->assertSame($regionHeight, $object->data->height);
+        $this->assertSame($regionTop, $object->data->top);
+        $this->assertSame($regionLeft, $object->data->left);
 
         $this->assertTrue($layout->delete(), 'Unable to delete ' . $layout->layoutId);
     }
@@ -655,7 +655,7 @@ class LayoutTest extends LocalWebTestCase
                     ]
                 ]
             ]
-        ]);
+        ],['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
         
         $this->assertSame(200, $this->client->response->status());
 

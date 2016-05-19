@@ -9,7 +9,7 @@
 namespace Xibo\Controller;
 
 
-use Xibo\Entity\DataSetColumn;
+//use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\MediaFactory;
@@ -187,7 +187,7 @@ class DataSetData extends Base
 
         // Expect input for each value-column
         foreach ($dataSet->getColumn() as $column) {
-            /* @var DataSetColumn $column */
+            /* @var Xibo\Entity\DataSetColumn $column */
             if ($column->dataSetColumnTypeId == 1) {
 
                 // Sanitize accordingly
@@ -299,7 +299,7 @@ class DataSetData extends Base
 
         // Expect input for each value-column
         foreach ($dataSet->getColumn() as $column) {
-            /* @var DataSetColumn $column */
+            /* @var Xibo\Entity\DataSetColumn $column */
 
             $existingValue = $this->getSanitizer()->getParam($column->heading, null, $existingRow);
 

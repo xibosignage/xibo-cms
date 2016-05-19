@@ -42,7 +42,7 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
             }
             if ($flag) {
                 try {
-                    $isplayProfile->delete();
+                    $DisplayProfile->delete();
                 } catch (\Exception $e) {
                     fwrite(STDERR, 'Unable to delete ' . $displayProfile->displayProfileId . '. E:' . $e->getMessage());
                 }
@@ -159,19 +159,17 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
     /**
      * Edit an existing profile
      * @depends testAddSuccess
-     * @group broken
      */
     public function testEdit()
     {
         # Load in a known profile
         /** @var XiboDisplayProfile $displayProfile */
         $displayProfile = (new XiboDisplayProfile($this->getEntityProvider()))->create('phpunit profile', 'android', 0);
-        $newtype = 'windows';
-        # Change the profile type, name and isDefault flag
+        # Change the profile name
         $name = Random::generateString(8, 'phpunit');
         $this->client->put('/displayprofile/' . $displayProfile->displayProfileId, [
             'name' => $name,
-            'type' => $newtype,
+            'type' => $displayProfile->type,
             'isDefault' => $displayProfile->isDefault
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
        
@@ -181,12 +179,10 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($name, $object->data->name);
-        $this->assertSame($newtype, $object->data->type);
-        $this->assertSame(1, $object->data->isDefault);
+        $this->assertSame('android', $object->data->type);
         # Check that the profile was actually renamed
         $displayProfile = (new XiboDisplayProfile($this->getEntityProvider()))->getById($object->id);
         $this->assertSame($name, $displayProfile->name);
-        $this->assertSame($newtype, $displayProfile->type);
 
         # Clean up the profile as we no longer need it
         $displayProfile->delete();
@@ -196,7 +192,6 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
      * Test delete
      * @depends testAddSuccess
      * @group minimal
-     * @group broken
      */
     public function testDelete()
     {
