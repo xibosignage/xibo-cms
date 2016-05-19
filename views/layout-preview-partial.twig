@@ -1,0 +1,33 @@
+{% block headContent %}
+        <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
+        <link rel="stylesheet" type="text/css" href="{{ theme.uri("css/html-preview.css") }}" />
+{% endblock %}
+
+{% block content %}
+        <div id="player">
+            <div id="info"></div>
+            <div id="log"></div>
+            <div id="screen">
+                <div id="splash">
+                    <div id="loader"></div>
+                    <div id="loaderCaption">
+                        <p>{% trans "Loading Layout..." %}</p>
+                    </div>
+                </div>
+                <div id="end"><a href="javascript:history.go(0)" style="text-decoration: none; color: #ffffff">{% trans "Play again?" %}</a></div>
+            </div>
+        </div>
+{% endblock %}
+
+{% block javaScript %}
+        <script src="{{ theme.uri("libraries/jquery/jquery-1.11.1.min.js") }}"></script>
+        <script src="{{ theme.uri("libraries/html5preloader/html5Preloader.js") }}"></script>
+        <script src="{{ theme.uri("js/html-preview.js") }}"></script>
+        <script type="text/javascript">
+            (function($){
+              $(document).ready(function(){
+                dsInit({{ layout.layoutId }}, {{ previewOptions|json_encode() }})
+              });
+            }(jQuery));
+        </script>
+{% endblock %}

@@ -610,7 +610,8 @@ class Campaign extends Base
         $this->getState()->template = 'campaign-preview';
         $this->getState()->setData([
             'campaign' => $campaign,
-            'help' => $this->getHelp()->link('Campaign', 'Preview')
+            'help' => $this->getHelp()->link('Campaign', 'Preview'),
+            'layouts' => $this->layoutFactory->getByCampaignId($this->campaignId)
         ]);
     }
 }

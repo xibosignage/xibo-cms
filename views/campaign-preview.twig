@@ -20,9 +20,12 @@ This is the template for the campaign page
     <div class="widget">
         <div class="widget-title">{% trans "Campaign preview" %}</div>
         <div class="widget-body">
-        
-       {% for layout in campaign.layouts %}
-       hello
+       <p><b>number of layouts</b> : {{ campaign.numberLayouts }} </p>
+       {% for layout in layouts %}
+       <p> <b>layout id :</b> {{ layout.layoutId }},
+       <b> layout name :</b> {{ layout.layout }},
+       <b> layout duration :</b> {{ layout.duration }}</p>
+       {% include 'layout-preview-partial.twig' with {'layout': layout } %}
        {% endfor %}
         </div>
     </div>
