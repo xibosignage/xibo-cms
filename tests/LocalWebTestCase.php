@@ -38,6 +38,9 @@ class LocalWebTestCase extends WebTestCase
 
     /** @var  XiboEntityProvider */
     public static $entityProvider;
+    
+    /** @var  XmdsWrapper */
+    public static $xmds;
 
     /**
      * Get Entity Provider
@@ -46,6 +49,15 @@ class LocalWebTestCase extends WebTestCase
     public function getEntityProvider()
     {
         return self::$entityProvider;
+    }
+    
+    /**
+     * Get Xmds Wrapper
+     * @return XmdsWrapper
+     */
+    public function getXmdsWrapper()
+    {
+        return self::$xmds;
     }
 
     /**
@@ -225,11 +237,40 @@ class LocalWebTestCase extends WebTestCase
             'redirectUri' => '',
             'baseUrl' => 'http://localhost'
         ]);
+        
+        // Discover the CMS key for XMDS
+        /** @var PdoStorageService $store */
+        $store = $container->store;
+        $key = $store->select('SELECT value FROM `setting` WHERE `setting` = \'SERVER_KEY\'', [])[0]['value'];
+        $store->commitIfNecessary();
+        
+        // Create an XMDS wrapper for the tests to use
+        $xmds = new \Xibo\Tests\Xmds\XmdsWrapper('http://localhost/xmds.php', $key);
 
         // Store our entityProvider
         self::$entityProvider = new \Xibo\OAuth2\Client\Provider\XiboEntityProvider($provider);
 
         // Store our container
         self::$container = $container;
+        
+        // Store our XmdsWrapper
+        self::$xmds = $xmds;
+    }
+
+    // Convenience function to skip a test with a reason and close output
+    // buffers nicely.
+    public function skipTest($reason)
+    {
+        $this->markTestSkipped($reason);
+        $this->closeOutputBuffers();
+    }
+
+    // If a test makes Slim quit early (via exception for example) then it
+    // leaves output buffers open which then causes a RISKY flag on the test
+    // in PHPUnit. Calling ob_get_clean() twice solves this.
+    public function closeOutputBuffers()
+    {
+        ob_get_clean();
+        ob_get_clean();
     }
 }
