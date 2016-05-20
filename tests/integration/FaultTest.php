@@ -19,12 +19,18 @@ class FaultTest extends \Xibo\Tests\LocalWebTestCase
         $this->assertSame(200, $this->client->response->status());
     }
 
+    /*
+    * @group broken
+    */
     public function testDebugOn()
     {
         $this->client->put('/fault/debug/on');
         $this->assertSame(200, $this->client->response->status());
     }
 
+    /*
+    * @group broken
+    */
     public function testDebugOff()
     {
         $this->client->put('/fault/debug/off');
