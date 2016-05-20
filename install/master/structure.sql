@@ -141,7 +141,7 @@ CREATE TABLE IF NOT EXISTS `datatype` (
 
 CREATE TABLE IF NOT EXISTS `display` (
   `displayid` int(11) NOT NULL AUTO_INCREMENT,
-  `isAuditing` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Is this display auditing',
+  `auditingUntil` int(11) NOT NULL DEFAULT '0' COMMENT 'Is this display auditing',
   `display` varchar(50) NOT NULL,
   `defaultlayoutid` int(8) NOT NULL,
   `license` varchar(40) DEFAULT NULL,
@@ -267,6 +267,7 @@ CREATE TABLE IF NOT EXISTS `layout` (
   `backgroundColor` varchar(25) DEFAULT NULL,
   `backgroundzIndex` int(11) NOT NULL DEFAULT '1',
   `schemaVersion` tinyint(4) NOT NULL,
+  `statusMessage` TEXT NULL,
   PRIMARY KEY (`layoutID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Layouts' AUTO_INCREMENT=1 ;
 
@@ -450,6 +451,8 @@ CREATE TABLE IF NOT EXISTS `media` (
   `moduleSystemFile` tinyint(1) NOT NULL DEFAULT '0',
   `valid` tinyint(1) NOT NULL DEFAULT '1',
   `expires` int(11) DEFAULT NULL,
+  `released` tinyint(4) NOT NULL DEFAULT '1',
+  `apiRef` varchar(254) NULL,
   PRIMARY KEY (`mediaID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
@@ -476,6 +479,7 @@ CREATE TABLE IF NOT EXISTS `module` (
   `viewPath` varchar(254) NOT NULL DEFAULT '../modules',
   `class` varchar(254) NOT NULL,
   `defaultDuration` int(11) NOT NULL,
+  `installName` varchar(254) NULL,
   PRIMARY KEY (`ModuleID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Functional Modules' AUTO_INCREMENT=32 ;
 
@@ -567,6 +571,13 @@ CREATE TABLE IF NOT EXISTS `oauth_client_redirect_uris` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+
+CREATE TABLE oauth_client_scopes(
+  clientId varchar(254) NOT NULL,
+  scopeId varchar(254) NOT NULL,
+  id int PRIMARY KEY AUTO_INCREMENT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 -- --------------------------------------------------------
 
 --
@@ -625,6 +636,14 @@ CREATE TABLE IF NOT EXISTS `oauth_session_scopes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `oauth_scope_routes`
+(
+  scopeId varchar(254) NOT NULL,
+  route varchar(1000) NOT NULL,
+  method varchar(8) NOT NULL,
+  id int PRIMARY KEY AUTO_INCREMENT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Table structure for table `pages`
@@ -1075,4 +1094,4 @@ CREATE TABLE IF NOT EXISTS `lkwidgetaudio` (
   mediaId int NOT NULL,
   volume tinyint DEFAULT 100,
   `loop` tinyint DEFAULT 0
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

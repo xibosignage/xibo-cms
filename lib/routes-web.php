@@ -141,6 +141,7 @@ $app->get('/library/view', '\Xibo\Controller\Library:displayPage')->name('librar
 $app->get('/library/form/edit/:id', '\Xibo\Controller\Library:editForm')->name('library.edit.form');
 $app->get('/library/form/delete/:id', '\Xibo\Controller\Library:deleteForm')->name('library.delete.form');
 $app->get('/library/form/tidy', '\Xibo\Controller\Library:tidyForm')->name('library.tidy.form');
+$app->get('/library/fontcss', '\Xibo\Controller\Library:fontCss')->name('library.font.css');
 
 //
 // display
@@ -278,6 +279,8 @@ $app->post('/module/inst/:name', '\Xibo\Controller\Module:install')->name('modul
 $app->get('/module/form/inst/:name', '\Xibo\Controller\Module:installForm')->name('module.install.form');
 $app->get('/module/form/verify', '\Xibo\Controller\Module:verifyForm')->name('module.verify.form');
 $app->get('/module/form/settings/:id', '\Xibo\Controller\Module:settingsForm')->name('module.settings.form');
+$app->get('/module/form/:id/custom/:name', '\Xibo\Controller\Module:customFormRender')->name('module.custom.form');
+$app->map('/module/:id/custom/:name', '\Xibo\Controller\Module:customFormExecute')->name('module.custom')->via('GET', 'POST');
 
 //
 // transition

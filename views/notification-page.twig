@@ -91,7 +91,7 @@
             $('select[name="userGroupIds[]"]', dialog).selectpicker();
 
             // Conjure up a text editor
-            CKEDITOR.replace("body");
+            CKEDITOR.replace("body", CKEDITOR_DEFAULT_CONFIG);
 
             // Make sure when we close the dialog we also destroy the editor
             dialog.on("hide.bs.modal", function(event) {

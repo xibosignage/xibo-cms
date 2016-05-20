@@ -123,6 +123,7 @@ class Error extends Base
         $app->commit = false;
 
         if ($handled) {
+            $this->getLog()->debug($e->getMessage() . $e->getTraceAsString());
             $this->getLog()->debug($e->getMessage());
         }
         else {

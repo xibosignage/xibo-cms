@@ -52,10 +52,10 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $module = $controller->getModuleFactory()->getByExtension(strtolower(substr(strrchr($fileName, '.'), 1)));
             $module = $controller->getModuleFactory()->create($module->type);
 
-            $controller->getLog()->debug('Module Type = %s', $module->getModuleType());
+            $controller->getLog()->debug('Module Type = %s, Name = ', $module->getModuleType(), $module->getModuleName());
 
             // Do we need to run any pre-processing on the file?
-            $module->preProcess($filePath);
+            $module->preProcessFile($filePath);
 
             // Old Media Id or not?
             if ($this->options['oldMediaId'] != 0) {
@@ -72,6 +72,10 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 if (!$controller->getUser()->checkEditable($oldMedia))
                     throw new AccessDeniedException(__('Access denied replacing old media'));
 
+                // Check to see if we are changing the media type
+                if ($oldMedia->mediaType != $module->getModuleType() && $this->options['allowMediaTypeChange'] == 0)
+                    throw new \InvalidArgumentException(__('You cannot replace this media with an item of a different type'));
+
                 // Set the old record to edited
                 $oldMedia->isEdited = 1;
                 $oldMedia->save(['validate' => false]);
@@ -80,13 +84,25 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $name = ($name == '') ? $oldMedia->name : $name;
 
                 // Add the Media
-                $media = $controller->getMediaFactory()->create($name, $fileName, $module->getModuleType(), $this->options['userId']);
+                //  the userId is either the existing user (if we are changing media type) or the currently logged in user otherwise.
+                $media = $controller->getMediaFactory()->create(
+                    $name,
+                    $fileName,
+                    $module->getModuleType(),
+                    (($this->options['allowMediaTypeChange'] == 1) ? $oldMedia->getOwnerId() : $this->options['userId'])
+                );
 
                 // Set the duration
                 $media->duration = $module->determineDuration($filePath);
 
+                // Pre-process
+                $module->preProcess($media, $filePath);
+
                 // Save
                 $media->save(['oldMedia' => $oldMedia]);
+
+                // Post process
+                $module->postProcess($media);
 
                 $controller->getLog()->debug('Copying permissions to new media');
 
@@ -108,6 +124,16 @@ class XiboUploadHandler extends BlueImpUploadHandler
                             $deleteOldRevisions = false;
 
                             $controller->getLog()->info('Media used on Widget that we cannot edit. Delete Old Revisions has been disabled.');
+                        }
+
+                        // Check whether this widget is of the same type as our incoming media item
+                        if ($widget->type != $module->getModuleType()) {
+                            // Are we supposed to switch, or should we prevent?
+                            if ($this->options['allowMediaTypeChange'] == 1) {
+                                $widget->type = $module->getModuleType();
+                            } else {
+                                throw new \InvalidArgumentException(__('You cannot replace this media with an item of a different type'));
+                            }
                         }
 
                         $controller->getLog()->debug('Found widget that needs updating. ID = %d. Linking %d', $widget->getId(), $media->mediaId);
@@ -166,6 +192,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                         // Nothing to do then
                     }
 
+                    $oldMedia->setChildObjectDependencies($controller->getLayoutFactory(), $controller->getWidgetFactory(), $controller->getDisplayGroupFactory());
                     $oldMedia->delete();
 
                 } else {
@@ -184,8 +211,14 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 // Set the duration
                 $media->duration = $module->determineDuration($filePath);
 
+                // Pre-process
+                $module->preProcess($media, $filePath);
+
                 // Save
                 $media->save();
+
+                // Post process
+                $module->postProcess($media);
 
                 // Permissions
                 foreach ($controller->getPermissionFactory()->createForNewEntity($controller->getUser(), get_class($media), $media->getId(), $controller->getConfig()->GetSetting('MEDIA_DEFAULT'), $controller->getUserGroupFactory()) as $permission) {
@@ -238,7 +271,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
             $file->error = $e->getMessage();
 
-            $this->options['controller']->getApp()->commit = false;
+            $controller->getApp()->commit = false;
         }
     }
 }

@@ -22,6 +22,7 @@ namespace Xibo\Widget;
 
 use Slim\Slim;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Entity\Media;
 use Xibo\Entity\User;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\NotFoundException;
@@ -82,6 +83,11 @@ abstract class ModuleWidget implements ModuleInterface
      * @var int $codeSchemaVersion The Schema Version of this code
      */
     protected $codeSchemaVersion = -1;
+
+    /**
+     * @var string A module populated status message set during isValid.
+     */
+    protected $statusMessage;
 
     //
     // Injected Factory Classes and Services Follow
@@ -275,6 +281,9 @@ abstract class ModuleWidget implements ModuleInterface
     // End of Injected Factories and Services
     //
 
+    /**
+     * Any initialisation code
+     */
     public function init()
     {
 
@@ -797,6 +806,24 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * Module settings buttons to be displayed on the module admin page
+     * @return array
+     */
+    public function settingsButtons()
+    {
+        return [];
+    }
+
+    /**
+     * Configure any additional module routes
+     *  these are available through the api and web portal
+     */
+    public function configureRoutes()
+    {
+
+    }
+
+    /**
      * Default view for add form
      */
     public function addForm()
@@ -972,11 +999,32 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Pre-processing
+     *  this is run before the media item is created.
      * @param string|null $fileName
      */
-    public function preProcess($fileName = null)
+    public function preProcessFile($fileName = null)
     {
         $this->getLog()->debug('No pre-processing rules for this module type');
+    }
+
+    /**
+     * Pre-process
+     *  this is run before the media item is saved
+     * @param Media $media
+     * @param string $filePath
+     */
+    public function preProcess($media, $filePath) {
+
+    }
+
+    /**
+     * Post-processing
+     *  this is run after the media item has been created and before it is saved.
+     * @param Media $media
+     */
+    public function postProcess($media)
+    {
+
     }
 
     /**
@@ -986,5 +1034,14 @@ abstract class ModuleWidget implements ModuleInterface
     {
         $this->getLog()->debug('Default Widget Options: Setting use duration to 0');
         $this->setUseDuration(0);
+    }
+
+    /**
+     * Get Status Message
+     * @return string
+     */
+    public function getStatusMessage()
+    {
+        return $this->statusMessage;
     }
 }

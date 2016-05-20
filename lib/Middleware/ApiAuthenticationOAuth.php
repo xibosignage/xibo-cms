@@ -52,7 +52,7 @@ class ApiAuthenticationOAuth extends Middleware
             /* @var ResourceServer $server */
             $server = $this->app->server;
 
-            $app->server->isValidRequest(false);
+            $server->isValidRequest(false);
 
             /* @var \Xibo\Entity\User $user */
             $user = null;
@@ -73,9 +73,7 @@ class ApiAuthenticationOAuth extends Middleware
             $resource = $app->router->getCurrentRoute()->getPattern();
 
             // Do they have permission?
-            $this->app->user->routeAuthentication($resource);
-
-            $app->logService->debug($app->request()->get());
+            $this->app->user->routeAuthentication($resource, $app->request()->getMethod(), $server->getAccessToken()->getScopes());
         };
 
         $app->hook('slim.before.dispatch', $isAuthorised);

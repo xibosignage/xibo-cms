@@ -22,6 +22,7 @@ namespace Xibo\Controller;
 
 use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
@@ -157,7 +158,7 @@ class Module extends Base
 
             foreach ($this->moduleFactory->query() as $row) {
                 /* @var \Xibo\Entity\Module $row */
-                $installed[] = $row->type;
+                $installed[] = $row->installName;
             }
 
             // Compare the two
@@ -203,12 +204,13 @@ class Module extends Base
                 );
             }
 
+            // Create a module object and return any buttons it may require
+            $moduleObject = $this->moduleFactory->create($module->type);
+
             // Are there any buttons we need to provide as part of the module?
-            if (isset($module->settings['buttons'])) {
-                foreach ($module->settings['buttons'] as $button) {
-                    $button['text'] = __($button['text']);
-                    $module->buttons[] = $button;
-                }
+            foreach ($moduleObject->settingsButtons() as $button) {
+                $button['text'] = __($button['text']);
+                $module->buttons[] = $button;
             }
         }
 
@@ -746,6 +748,40 @@ class Module extends Base
 
         // Call module GetResource
         echo $module->getResource();
+        $this->setNoOutput(true);
+    }
+
+    /**
+     * @param $moduleId
+     * @param $formName
+     * @throws ConfigurationException
+     */
+    public function customFormRender($moduleId, $formName)
+    {
+        $module = $this->moduleFactory->createById($moduleId);
+
+        if (!method_exists($module, $formName))
+            throw new ConfigurationException(__('Method does not exist'));
+
+        $formDetails = $module->$formName();
+
+        $this->getState()->template = $formDetails['template'];
+        $this->getState()->setData($formDetails['data']);
+    }
+
+    /**
+     * @param $moduleId
+     * @param $formName
+     * @throws ConfigurationException
+     */
+    public function customFormExecute($moduleId, $formName)
+    {
+        $module = $this->moduleFactory->createById($moduleId);
+
+        if (!method_exists($module, $formName))
+            throw new ConfigurationException(__('Method does not exist'));
+
+        $module->$formName();
         $this->setNoOutput(true);
     }
 }

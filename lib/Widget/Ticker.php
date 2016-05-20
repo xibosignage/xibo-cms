@@ -100,12 +100,18 @@ class Ticker extends ModuleWidget
      */
     public function getExtra()
     {
-        return [
-            'templates' => $this->templatesAvailable(),
-            'orderClause' => $this->getOrderClause(),
-            'filterClause' => $this->getFilterClause(),
-            'columns' => $this->dataSetColumns()
-        ];
+        if ($this->getOption('sourceId') == 2) {
+            return [
+                'templates' => $this->templatesAvailable(),
+                'orderClause' => $this->getOrderClause(),
+                'filterClause' => $this->getFilterClause(),
+                'columns' => $this->dataSetColumns()
+            ];
+        } else {
+            return [
+                'templates' => $this->templatesAvailable(),
+            ];
+        }
     }
 
     /**
@@ -200,10 +206,12 @@ class Ticker extends ModuleWidget
         $this->setOption('xmds', true);
         $this->setOption('sourceId', $this->getSanitizer()->getInt('sourceId'));
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
-        $this->setOption('dataSetId', $this->getSanitizer()->getInt('dataSetId', 0));
         $this->setOption('durationIsPerItem', 1);
         $this->setOption('updateInterval', 120);
         $this->setOption('speed', 2);
+
+        if ($this->getOption('sourceId') == 2)
+            $this->setOption('dataSetId', $this->getSanitizer()->getInt('dataSetId', 0));
 
         // New tickers have template override set to 0 by add.
         // the edit form can then default to 1 when the element doesn't exist (for legacy)
@@ -456,7 +464,7 @@ class Ticker extends ModuleWidget
         }
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         // Replace the Head Content with our generated javascript

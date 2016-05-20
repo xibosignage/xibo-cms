@@ -105,7 +105,8 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`,
   (14, 'genericfile', 'Generic File', 1, 0, 'A generic file to be stored in the library', 'forms/library.gif', 1, 'apk,js,html,htm', 0, 0, NULL, NULL, '../modules', 'Xibo\\Widget\\GenericFile', 10),
   (15, 'clock', 'Clock', 1, 1, '', 'forms/library.gif', 1, NULL, 1, 1, 'html', '[]', '../modules', 'Xibo\\Widget\\Clock', 10),
   (16, 'font', 'Font', 1, 0, 'A font to use in other Modules', 'forms/library.gif', 1, 'ttf,otf,eot,svg,woff', 0, 0, NULL, NULL, '../modules', 'Xibo\\Widget\\Font', 10),
-  (17, 'audio', 'Audio', 1, 0, 'Audio - support varies depending on the client hardware', 'forms/video.gif', 1, 'mp4,wav', 0, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\Audio', 0);
+  (17, 'audio', 'Audio', 1, 0, 'Audio - support varies depending on the client hardware', 'forms/video.gif', 1, 'mp3,wav', 0, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\Audio', 0),
+  (18, 'pdf', 'PDF', 1, 0, 'PDF document viewer', 'forms/pdf.gif', 1, 'pdf', 1, 1, 'html', null, '../modules', 'Xibo\\Widget\\Pdf', 60);
 
 INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (1, 'dashboard', 'Dashboard', 1),
@@ -220,7 +221,8 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (86, 'INHERIT_PARENT_PERMISSIONS', '1', 'checkbox', 'Inherit permissions from Parent when adding a new item?', NULL, 'permissions', 1, 'Inherit permissions', '', 50, '1', 1, 'checkbox'),
 (87, 'XMR_ADDRESS', 'tcp:://localhost:5555', 'text', 'Please enter the private address for XMR.', NULL, 'displays', 1, 'XMR Private Address', '', 5, 'tcp:://localhost:5555', 1, 'string'),
 (88, 'XMR_PUB_ADDRESS', '', 'text', 'Please enter the public address for XMR.', NULL, 'displays', 1, 'XMR Public Address', '', 6, '', 1, 'string'),
-(89, 'CDN_URL', '', 'text', 'Content Delivery Network Address for serving file requests to Players', '', 'network', 0, 'CDN Address', '', 33, '', 0, 'string');
+(89, 'CDN_URL', '', 'text', 'Content Delivery Network Address for serving file requests to Players', '', 'network', 0, 'CDN Address', '', 33, '', 0, 'string'),
+(90, 'ELEVATE_LOG_UNTIL', '1463396415', 'datetime', 'Elevate the log level until this date.', null, 'troubleshooting', 1, 'Elevate Log Until', ' ', 25, '', 1, 'datetime');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),
@@ -280,4 +282,6 @@ INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES
 (7, 'Xibo\\Entity\\Region'),
 (8, 'Xibo\\Entity\\Playlist'),
 (9, 'Xibo\\Entity\\DataSet'),
-(10, 'Xibo\\Entity\\Notification')
+(10, 'Xibo\\Entity\\Notification');
+
+INSERT INTO `oauth_scopes` (id, description) VALUES ('all', 'All access'),('mcaas', 'Media Conversion as a Service');

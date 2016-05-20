@@ -410,6 +410,7 @@ class DisplayGroup implements \JsonSerializable
         $options = array_merge([
             'validate' => true,
             'saveGroup' => true,
+            'manageLinks' => true,
             'manageDisplayLinks' => true
         ], $options);
 
@@ -423,22 +424,27 @@ class DisplayGroup implements \JsonSerializable
         else if ($options['saveGroup'])
             $this->edit();
 
-        if ($this->loaded && $options['manageDisplayLinks']) {
-            $this->getLog()->debug('Manage links to Display Group');
+        if ($this->loaded) {
 
-            // Handle any changes in the displays linked
-            $this->manageDisplayLinks();
+            if ($options['manageLinks']) {
+                $this->getLog()->debug('Manage links to Display Group');
 
-            // Handle any changes in the media linked
-            $this->linkMedia();
-            $this->unlinkMedia();
+                // Handle any changes in the media linked
+                $this->linkMedia();
+                $this->unlinkMedia();
 
-            // Handle any changes in the layouts linked
-            $this->linkLayouts();
-            $this->unlinkLayouts();
+                // Handle any changes in the layouts linked
+                $this->linkLayouts();
+                $this->unlinkLayouts();
+            }
 
-            // Handle any group links
-            $this->manageDisplayGroupLinks();
+            if ($options['manageDisplayLinks']) {
+                // Handle any changes in the displays linked
+                $this->manageDisplayLinks();
+
+                // Handle any group links
+                $this->manageDisplayGroupLinks();
+            }
 
         } else if ($this->isDynamic && $options['manageDisplayLinks']) {
             $this->manageDisplayLinks();

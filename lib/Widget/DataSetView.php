@@ -343,7 +343,7 @@ class DataSetView extends ModuleWidget
         );
 
         // Add our fonts.css file
-        $headContent = '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
+        $headContent = '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
         $headContent .= '<style type="text/css">' . $styleSheet . '</style>';
 

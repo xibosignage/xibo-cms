@@ -9,10 +9,9 @@
 namespace Xibo\Tests\Integration;
 
 
-use Xibo\OAuth2\Client\Entity\XiboSchedule;
-use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
 use Xibo\OAuth2\Client\Entity\XiboCampaign;
+use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
+use Xibo\OAuth2\Client\Entity\XiboSchedule;
 use Xibo\Tests\LocalWebTestCase;
 
 

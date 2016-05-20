@@ -19,19 +19,36 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Widget;
+use Xibo\Exception\NotFoundException;
 
-
+/**
+ * Class Font
+ * @package Xibo\Widget
+ */
 class Font extends ModuleWidget
 {
-    /*
-     * Installs any files specific to this module
+    /**
+     * Install some fonts
      */
     public function installFiles()
     {
-        $fontsCss = PROJECT_ROOT . '/web/modules/fonts.css';
+        // Create font media items for each of the fonts found in the theme default fonts folder
+        $folder = PROJECT_ROOT . '/web/modules/fonts';
+        foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
 
-        if (!file_exists($fontsCss)) {
-            touch($fontsCss);
+            $filePath = $folder . DIRECTORY_SEPARATOR . $file;
+
+            $font = $this->mediaFactory->create($file, $filePath, 'font', 1);
+            $font->alwaysCopy = true;
+            $this->preProcess($font, $filePath);
+
+            // If it already exists, then skip it
+            try {
+                $this->mediaFactory->getByName($font->name);
+            } catch (NotFoundException $e) {
+                // Excellent, we don't have it
+                $font->save(['validate' => false]);
+            }
         }
     }
 
@@ -49,8 +66,33 @@ class Font extends ModuleWidget
     public function settings()
     {
         if ($this->getSanitizer()->getCheckbox('rebuildFonts', 0) == 1) {
-            $this->getApp()->container->get('\Xibo\Controller\Library')->installFonts();
+            $this->getApp()->container->get('\Xibo\Controller\Library')->setApp($this->getApp())->installFonts();
         }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function preProcess($media, $filePath)
+    {
+        parent::preProcess($media, $filePath);
+
+        // Load the file and check it allows embedding.
+        $font = \FontLib\Font::load($filePath);
+
+        if ($font == null)
+            throw new \InvalidArgumentException(__('Font file unreadable'));
+
+        // Reset the media name to be the font file name
+        $media->name = $font->getFontName() . ' ' . $font->getFontSubfamily();
+
+        // Font type
+        $embed = intval($font->getData('OS/2', 'fsType'));
+
+        $this->getLog()->debug('Font name adjusted to %s and embeddable flag is %s', $media->name, $embed);
+
+        if ($embed != 0 && $embed != 8)
+            throw new \InvalidArgumentException(__('Font file is not embeddable due to its permissions'));
     }
 
     /**

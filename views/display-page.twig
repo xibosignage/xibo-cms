@@ -33,7 +33,7 @@
                                 <th>{% trans "ID" %}</th>
                                 <th>{% trans "Display" %}</th>
                                 <th>{% trans "Status" %}</th>
-                                <th>{% trans "Licence" %}</th>
+                                <th>{% trans "Authorised?" %}</th>
                                 <th>{% trans "Current Layout" %}</th>
                                 <th>{% trans "Storage Available" %}</th>
                                 <th>{% trans "Storage Total" %}</th>
@@ -133,8 +133,26 @@
                     },
                     {"data": "licensed", "render": dataTableTickCrossColumn},
                     {"data": "currentLayout"},
-                    {"data": "storageAvailableSpace", "visible": false},
-                    {"data": "storageTotalSpace", "visible": false},
+                    {
+                        "data": "storageAvailableSpace",
+                        "visible": false,
+                        "render": function (data, type, row) {
+                            if (type != "display")
+                                return data;
+
+                            return row.storageAvailableSpaceFormatted;
+                        }
+                    },
+                    {
+                        "data": "storageTotalSpace",
+                        "visible": false,
+                        "render": function (data, type, row) {
+                            if (type != "display")
+                                return data;
+
+                            return row.storageTotalSpaceFormatted;
+                        }
+                    },
                     {"data": "storagePercentage", "visible": false},
                     {"data": "description", "visible": false},
                     {"data": "defaultLayout", "visible": false},

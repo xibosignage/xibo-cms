@@ -20,6 +20,7 @@
  */
 namespace Xibo\Controller;
 
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
@@ -54,6 +55,9 @@ class Library extends Base
      * @var StorageServiceInterface
      */
     private $store;
+
+    /** @var  PoolInterface */
+    private $pool;
 
     /**
      * @var UserFactory
@@ -116,6 +120,7 @@ class Library extends Base
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
+     * @param PoolInterface $pool
      * @param UserFactory $userFactory
      * @param ModuleFactory $moduleFactory
      * @param TagFactory $tagFactory
@@ -128,7 +133,7 @@ class Library extends Base
      * @param DisplayGroupFactory $displayGroupFactory
      * @param RegionFactory $regionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -136,6 +141,7 @@ class Library extends Base
         $this->moduleFactory = $moduleFactory;
         $this->mediaFactory = $mediaFactory;
         $this->widgetFactory = $widgetFactory;
+        $this->pool = $pool;
         $this->userFactory = $userFactory;
         $this->tagFactory = $tagFactory;
         $this->permissionFactory = $permissionFactory;
@@ -216,6 +222,15 @@ class Library extends Base
     public function getRegionFactory()
     {
         return $this->regionFactory;
+    }
+
+    /**
+     * Get DisplayGroup Factory
+     * @return DisplayGroupFactory
+     */
+    public function getDisplayGroupFactory()
+    {
+        return $this->displayGroupFactory;
     }
 
     /**
@@ -430,6 +445,11 @@ class Library extends Base
         // Delete
         $media->delete();
 
+        // Do we need to reassess fonts?
+        if ($media->mediaType == 'font') {
+            $this->installFonts();
+        }
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
@@ -460,9 +480,18 @@ class Library extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @param array $options
      */
-    public function add()
+    public function add($options = [])
     {
+        $options = array_merge([
+            'oldMediaId' => null,
+            'updateInLayouts' => 0,
+            'deleteOldRevisions' => 0,
+            'allowMediaTypeChange' => 0
+        ], $options);
+
         $libraryFolder = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists
@@ -479,10 +508,11 @@ class Library extends Base
         $options = array(
             'userId' => $this->getUser()->userId,
             'controller' => $this,
-            'oldMediaId' => $this->getSanitizer()->getInt('oldMediaId'),
+            'oldMediaId' => $this->getSanitizer()->getInt('oldMediaId', $options['oldMediaId']),
             'widgetId' => $this->getSanitizer()->getInt('widgetId'),
-            'updateInLayouts' => $this->getSanitizer()->getCheckbox('updateInLayouts'),
-            'deleteOldRevisions' => $this->getSanitizer()->getCheckbox('deleteOldRevisions'),
+            'updateInLayouts' => $this->getSanitizer()->getCheckbox('updateInLayouts', $options['updateInLayouts']),
+            'deleteOldRevisions' => $this->getSanitizer()->getCheckbox('deleteOldRevisions', $options['deleteOldRevisions']),
+            'allowMediaTypeChange' => $options['allowMediaTypeChange'],
             'playlistId' => $this->getSanitizer()->getInt('playlistId'),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
@@ -597,6 +627,9 @@ class Library extends Base
         if (!$this->getUser()->checkEditable($media))
             throw new AccessDeniedException();
 
+        if ($media->mediaType == 'font')
+            throw new \InvalidArgumentException(__('Sorry, Fonts do not have any editable properties.'));
+
         $media->name = $this->getSanitizer()->getString('name');
         $media->duration = $this->getSanitizer()->getInt('duration');
         $media->retired = $this->getSanitizer()->getCheckbox('retired');
@@ -612,6 +645,12 @@ class Library extends Base
         }
 
         $media->save();
+
+        // Are we a font
+        if ($media->mediaType == 'font') {
+            // We may have made changes and need to regenerate
+            $this->installFonts();
+        }
 
         // Return
         $this->getState()->hydrate([
@@ -795,65 +834,125 @@ class Library extends Base
     }
 
     /**
-     * Installs fonts
+     * Return the CMS flavored font css
      */
-    public function installFonts()
+    public function fontCss()
     {
-        $fontTemplate = '
-@font-face {
+        // Regenerate the CSS for fonts
+        $css = $this->installFonts(['invalidateCache' => false]);
+
+        // Work out the etag
+        $app = $this->getApp();
+        $app->response()->header('Content-Type', 'text/css');
+        $app->etag(md5($css['css']));
+
+        // Return the CSS to the browser as a file
+        $out = fopen('php://output', 'w');
+        fputs($out, $css['css']);
+        fclose($out);
+
+        $this->setNoOutput(true);
+    }
+
+    /**
+     * Get font CKEditor config
+     * @return string
+     */
+    public function fontCKEditorConfig()
+    {
+        // Regenerate the CSS for fonts
+        $css = $this->installFonts(['invalidateCache' => false]);
+
+        return $css['ckeditor'];
+    }
+
+    /**
+     * Installs fonts
+     * @param array $options
+     * @return array
+     */
+    public function installFonts($options = [])
+    {
+        $options = array_merge([
+            'invalidateCache' => true
+        ], $options);
+
+        $this->getLog()->debug('Install Fonts called with options: %s', json_encode($options));
+
+        // Get the item from the cache
+        $cssItem = $this->pool->getItem('fontCss');
+
+        // Get the CSS
+        $cssDetails = $cssItem->get();
+
+        if ($options['invalidateCache'] || $cssItem->isMiss()) {
+            $this->getLog()->info('Regenerating font cache');
+
+            $fontTemplate = '@font-face {
     font-family: \'[family]\';
     src: url(\'[url]\');
-}
-        ';
+}';
 
-        // Save a fonts.css file to the library for use as a module
-        $fonts = $this->mediaFactory->getByMediaType('font');
+            // Save a fonts.css file to the library for use as a module
+            $fonts = $this->mediaFactory->getByMediaType('font');
 
-        if (count($fonts) < 1)
-            return;
+            $css = '';
+            $localCss = '';
+            $ckEditorString = '';
 
-        $css = '';
-        $localCss = '';
-        $ckEditorString = '';
+            if (count($fonts) > 0) {
 
-        foreach ($fonts as $font) {
-            /* @var Media $font */
+                foreach ($fonts as $font) {
+                    /* @var Media $font */
 
-            // Separate out the display name and the referenced name (referenced name cannot contain any odd characters or numbers)
-            $displayName = $font->name;
-            $familyName = preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $font->name));
+                    // Skip unreleased fonts
+                    if ($font->released == 0)
+                        continue;
 
-            // Css for the client contains the actual stored as location of the font.
-            $css .= str_replace('[url]', $font->storedAs, str_replace('[family]', $familyName, $fontTemplate));
+                    // Separate out the display name and the referenced name (referenced name cannot contain any odd characters or numbers)
+                    $displayName = $font->name;
+                    $familyName = preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $font->name));
 
-            // Css for the local CMS contains the full download path to the font
-            $url = $this->urlFor('library.download', ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
-            $localCss .= str_replace('[url]', $url, str_replace('[family]', $familyName, $fontTemplate));
+                    // Css for the client contains the actual stored as location of the font.
+                    $css .= str_replace('[url]', $font->storedAs, str_replace('[family]', $familyName, $fontTemplate));
 
-            // CKEditor string
-            $ckEditorString .= $displayName . '/' . $familyName . ';';
+                    // Css for the local CMS contains the full download path to the font
+                    $url = $this->urlFor('library.download', ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
+                    $localCss .= str_replace('[url]', $url, str_replace('[family]', $familyName, $fontTemplate));
+
+                    // CKEditor string
+                    $ckEditorString .= $displayName . '/' . $familyName . ';';
+                }
+
+                // Put the player CSS into the temporary library location
+                $tempUrl = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/fonts.css';
+                file_put_contents($tempUrl, $css);
+
+                // Install it (doesn't expire, isn't a system file, force update)
+                $media = $this->mediaFactory->createModuleSystemFile('fonts.css', $tempUrl);
+                $media->expires = 0;
+                $media->moduleSystemFile = true;
+                $media->force = true;
+                $media->save();
+
+                $cssDetails = [
+                    'css' => $localCss,
+                    'ckeditor' => $ckEditorString
+                ];
+
+                $cssItem->set($cssDetails);
+                $cssItem->expiresAfter(new \DateInterval('P30D'));
+                $this->pool->saveDeferred($cssItem);
+
+                // Clear the display cache
+                $this->pool->deleteItem('/display');
+            }
+        } else {
+            $this->getLog()->debug('CMS font CSS returned from Cache.');
         }
 
-        // Put the player CSS into the modules font.css file so that we can copy it into the library
-        file_put_contents(PROJECT_ROOT . '/web/modules/fonts.css', $css);
-
-        // Install it (doesn't expire, isn't a system file, force update)
-        $media = $this->mediaFactory->createModuleSystemFile('fonts.css', PROJECT_ROOT . '/web/modules/fonts.css');
-        $media->expires = 0;
-        $media->moduleSystemFile = true;
-        $media->force = true;
-        $media->save();
-
-        // Generate a fonts.css file for use locally (in the CMS)
-        file_put_contents(PROJECT_ROOT . '/web/modules/fonts.css', $localCss);
-
-        // Edit the CKEditor file
-        $ckEditor = file_get_contents($this->getConfig()->uri('libraries/ckeditor/config.js', true));
-        $replace = "/*REPLACE*/ config.font_names = '" . $ckEditorString . "' + config.font_names; /*ENDREPLACE*/";
-
-        $ckEditor = preg_replace('/\/\*REPLACE\*\/.*?\/\*ENDREPLACE\*\//', $replace, $ckEditor);
-
-        file_put_contents($this->getConfig()->uri('libraries/ckeditor/config.js', true), $ckEditor);
+        // Return a fonts css string for use locally (in the CMS)
+        return $cssDetails;
     }
 
     /**
@@ -907,5 +1006,154 @@ class Library extends Base
             $entry->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
             $entry->delete();
         }
+    }
+
+    /**
+     * @param $mediaId
+     * @throws LibraryFullException
+     */
+    public function mcaas($mediaId)
+    {
+        // This is only available through the API
+        if (!$this->isApi())
+            throw new AccessDeniedException(__('Route is available through the API'));
+
+        // We need to get the access token we used to authorize this request.
+        // as we are API we can expect that in the $app.
+        /** @var $accessToken \League\OAuth2\Server\Entity\AccessTokenEntity */
+        $accessToken = $this->getApp()->server->getAccessToken();
+
+        // Call Add with the oldMediaId
+        $this->add([
+            'oldMediaId' => $mediaId,
+            'updateInLayouts' => 1,
+            'deleteOldRevisions' => 1,
+            'allowMediaTypeChange' => 1
+        ]);
+
+        // Expire the token
+        $accessToken->expire();
+    }
+
+    /**
+     * @SWG\Post(
+     *  path="/media/{mediaId}/tag",
+     *  operationId="mediaTag",
+     *  tags={"media"},
+     *  summary="Tag Media",
+     *  description="Tag a Media with one or more tags",
+     * @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The Media Id to Tag",
+     *      type="integer",
+     *      required=true
+     *   ),
+     * @SWG\Parameter(
+     *      name="tag",
+     *      in="formData",
+     *      description="An array of tags",
+     *      type="array",
+     *      required=true,
+     *      @SWG\Items(type="string")
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Media")
+     *  )
+     * )
+     *
+     * @param $mediaId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function tag($mediaId)
+    {
+        // Edit permission
+        // Get the media
+        $media = $this->mediaFactory->getById($mediaId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($media))
+            throw new AccessDeniedException();
+
+        $tags = $this->getSanitizer()->getStringArray('tag');
+
+        if (count($tags) <= 0)
+            throw new \InvalidArgumentException(__('No tags to assign'));
+
+        foreach ($tags as $tag) {
+            $media->assignTag($this->tagFactory->tagFromString($tag));
+        }
+
+        $media->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Tagged %s'), $media->name),
+            'id' => $media->mediaId,
+            'data' => $media
+        ]);
+    }
+
+    /**
+     * @SWG\Delete(
+     *  path="/media/{mediaId}/tag",
+     *  operationId="mediaUntag",
+     *  tags={"media"},
+     *  summary="Untag Media",
+     *  description="Untag a Media with one or more tags",
+     * @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The Media Id to Untag",
+     *      type="integer",
+     *      required=true
+     *   ),
+     * @SWG\Parameter(
+     *      name="tag",
+     *      in="formData",
+     *      description="An array of tags",
+     *      type="array",
+     *      required=true,
+     *      @SWG\Items(type="string")
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Media")
+     *  )
+     * )
+     *
+     * @param $mediaId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function untag($mediaId)
+    {
+        // Edit permission
+        // Get the media
+        $media = $this->mediaFactory->getById($mediaId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($media))
+            throw new AccessDeniedException();
+
+        $tags = $this->getSanitizer()->getStringArray('tag');
+
+        if (count($tags) <= 0)
+            throw new \InvalidArgumentException(__('No tags to assign'));
+
+        foreach ($tags as $tag) {
+            $media->unassignTag($this->tagFactory->tagFromString($tag));
+        }
+
+        $media->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Untagged %s'), $media->name),
+            'id' => $media->mediaId,
+            'data' => $media
+        ]);
     }
 }

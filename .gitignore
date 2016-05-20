@@ -5,6 +5,5 @@ settings.php
 .vagrant/
 .idea/
 cache/
-web/modules/fonts.css
 web/swagger-ui/
 custom/

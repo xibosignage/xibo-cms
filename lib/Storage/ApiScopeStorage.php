@@ -66,6 +66,17 @@ class ApiScopeStorage extends AbstractStorage implements ScopeInterface
             return;
         }
 
+        if ($clientId !== null) {
+            // Check to see if this scope exists for this client
+            $clientScope = $this->getStore()->select('SELECT * FROM `oauth_client_scopes` WHERE clientId = :clientId AND scopeId = :id', [
+                'clientId' => $clientId,
+                'id' => $scope
+            ]);
+
+            if (count($clientScope) == 0)
+                return;
+        }
+
         return (new ScopeEntity($this->server))->hydrate([
             'id'            =>  $result[0]['id'],
             'description'   =>  $result[0]['description'],

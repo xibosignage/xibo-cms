@@ -198,7 +198,23 @@ class State extends Middleware
             $app->getLog()->setLevel(\Slim\Log::DEBUG);
         }
         else {
-            $app->getLog()->setLevel(\Xibo\Service\LogService::resolveLogLevel($app->configService->GetSetting('audit')));
+
+            // Log level
+            $level = \Xibo\Service\LogService::resolveLogLevel($app->configService->GetSetting('audit'));
+
+            if ($level > \Slim\Log::ERROR) {
+                // Do we allow the log level to be this high
+                $elevateUntil = $app->configService->GetSetting('ELEVATE_LOG_UNTIL');
+
+                if (intval($elevateUntil) < time()) {
+                    // Elevation has expired, revery log level
+                    $app->configService->ChangeSetting('audit', 'Error');
+
+                    $level = \Slim\Log::ERROR;
+                }
+            }
+
+            $app->getLog()->setLevel($level);
         }
 
         // Configure any extra log handlers
@@ -304,7 +320,8 @@ class State extends Middleware
                 $container->session,
                 $container->store,
                 $container->applicationFactory,
-                $container->applicationRedirectUriFactory
+                $container->applicationRedirectUriFactory,
+                $container->applicationScopeFactory
             );
         });
 
@@ -548,6 +565,7 @@ class State extends Middleware
                 $container->dateService,
                 $container->configService,
                 $container->store,
+                $container->pool,
                 $container->userFactory,
                 $container->moduleFactory,
                 $container->tagFactory,
@@ -906,12 +924,21 @@ class State extends Middleware
                 $container->logService,
                 $container->sanitizerService,
                 $container->user,
-                $container->applicationRedirectUriFactory
+                $container->applicationRedirectUriFactory,
+                $container->applicationScopeFactory
             );
         });
 
         $container->singleton('applicationRedirectUriFactory', function($container) {
             return new \Xibo\Factory\ApplicationRedirectUriFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
+        });
+
+        $container->singleton('applicationScopeFactory', function($container) {
+            return new \Xibo\Factory\ApplicationScopeFactory(
                 $container->store,
                 $container->logService,
                 $container->sanitizerService
@@ -1237,7 +1264,8 @@ class State extends Middleware
                 $container->sanitizerService,
                 $container->configService,
                 $container->permissionFactory,
-                $container->userOptionFactory
+                $container->userOptionFactory,
+                $container->applicationScopeFactory
             );
         });
 

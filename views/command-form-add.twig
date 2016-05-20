@@ -28,12 +28,12 @@
                 {% set helpText %}{% trans "The Name for this Command" %}{% endset %}
                 {{ forms.input("command", title, "", helpText, "", "required") }}
 
-                {% set title %}{% trans "Code" %}{% endset %}
-                {% set helpText %}{% trans "The Code for this Command" %}{% endset %}
+                {% set title %}{% trans "Reference" %}{% endset %}
+                {% set helpText %}{% trans "A reference code for this command which is used to identify the command internally." %}{% endset %}
                 {{ forms.input("code", title, "", helpText, "", "required") }}
 
                 {% set title %}{% trans "Description" %}{% endset %}
-                {% set helpText %}{% trans "Description of Command" %}{% endset %}
+                {% set helpText %}{% trans "Description of Command. This should be a textual description of what the command is trying to achieve. It should not be the actual command string - that is entered on the Display Settings Profile." %}{% endset %}
                 {{ forms.textarea("description", title, "", helpText) }}
 
             </form>

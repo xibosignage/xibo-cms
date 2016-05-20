@@ -126,7 +126,15 @@ class Command extends Base
                 $command->buttons[] = array(
                     'id' => 'command_button_delete',
                     'url' => $this->urlFor('command.delete.form', ['id' => $command->commandId]),
-                    'text' => __('Delete')
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor('command.delete', ['id' => $command->commandId])),
+                        array('name' => 'commit-method', 'value' => 'delete'),
+                        array('name' => 'id', 'value' => 'command_button_delete'),
+                        array('name' => 'text', 'value' => __('Delete')),
+                        array('name' => 'rowtitle', 'value' => $command->command)
+                    )
                 );
             }
         }
@@ -269,13 +277,6 @@ class Command extends Base
      *      type="string",
      *      required=false
      *   ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="formData",
-     *      description="A unique code for this command",
-     *      type="string",
-     *      required=true
-     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -292,7 +293,6 @@ class Command extends Base
 
         $command->command = $this->getSanitizer()->getString('command');
         $command->description = $this->getSanitizer()->getString('description');
-        $command->code = $this->getSanitizer()->getString('code');
         $command->save();
 
         // Return

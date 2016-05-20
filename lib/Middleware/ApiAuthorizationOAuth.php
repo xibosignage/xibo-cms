@@ -39,6 +39,9 @@ class ApiAuthorizationOAuth extends Middleware
         $refreshTokenGrant = new \League\OAuth2\Server\Grant\RefreshTokenGrant();
         $server->addGrantType($refreshTokenGrant);
 
+        // Default scope
+        $server->setDefaultScope('all');
+
         // DI in the server
         $app->server = $server;
 

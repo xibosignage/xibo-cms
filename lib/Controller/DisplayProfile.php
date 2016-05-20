@@ -128,12 +128,12 @@ class DisplayProfile extends Base
         foreach ($profiles as $profile) {
             /* @var \Xibo\Entity\DisplayProfile $profile */
 
-            // load profile
+            // Load the config
             $profile->load();
 
-            if($this->isApi())
+            if ($this->isApi())
                 break;
-            
+
             // Default Layout
             $profile->buttons[] = array(
                 'id' => 'displayprofile_button_edit',

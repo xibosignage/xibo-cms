@@ -432,6 +432,9 @@ class User extends Base
         // Initial user group
         $group = $this->userGroupFactory->getById($this->getSanitizer()->getInt('groupId'));
 
+        if ($group->isUserSpecific == 1)
+            throw new \InvalidArgumentException(__('Invalid display group selected'));
+
         // Save the user
         $user->save();
 

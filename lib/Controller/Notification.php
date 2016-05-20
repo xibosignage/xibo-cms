@@ -329,7 +329,7 @@ class Notification extends Base
      *      name="displayGroupIds",
      *      in="formData",
      *      description="The display group ids to assign this notification to",
-     *      type="",
+     *      type="array",
      *      required=true,
      *      @SWG\Items(type="integer")
      *   ),
@@ -440,7 +440,7 @@ class Notification extends Base
      *      name="displayGroupIds",
      *      in="formData",
      *      description="The display group ids to assign this notification to",
-     *      type="",
+     *      type="array",
      *      required=true,
      *      @SWG\Items(type="integer")
      *   ),
@@ -454,7 +454,7 @@ class Notification extends Base
      *   ),
      *  @SWG\Response(
      *      response=200,
-     *      description="successful operation",,
+     *      description="successful operation",
      *      @SWG\Schema(ref="#/definitions/Notification")
      *  )
      * )

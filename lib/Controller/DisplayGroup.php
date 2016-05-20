@@ -1286,6 +1286,7 @@ class DisplayGroup extends Base
 
         // Assign the media file
         $displayGroup->assignMedia($media);
+        $displayGroup->setCollectRequired(true);
 
         // Update each display in the group with the new version
         foreach ($this->displayFactory->getByDisplayGroupId($displayGroupId) as $display) {
@@ -1293,6 +1294,9 @@ class DisplayGroup extends Base
             $display->versionInstructions = json_encode(['id' => $media->mediaId, 'file' => $media->storedAs]);
             $display->save(['validate' => false]);
         }
+
+        // Save the group (for the file assignment)
+        $displayGroup->save(['manageDisplayLinks' => false]);
 
         // Return
         $this->getState()->hydrate([

@@ -362,7 +362,8 @@ class LayoutFactory extends BaseFactory
                 $widget->duration = $mediaNode->getAttribute('duration');
                 $widget->useDuration = $mediaNode->getAttribute('useDuration');
                 $widget->useDuration = ($widget->useDuration == '') ? 0 : 1;
-                $widget->tempId = $mediaNode->getAttribute('id');
+                $widget->tempId = $mediaNode->getAttribute('fileId');
+                $widgetId = $mediaNode->getAttribute('id');
 
                 $this->getLog()->debug('Adding Widget to object model. %s', $widget);
 
@@ -380,12 +381,9 @@ class LayoutFactory extends BaseFactory
                 if ($module->type == 'datasetview')
                     continue;
 
-                if ($module->regionSpecific == 0) {
-                    $widget->assignMedia($widget->tempId);
-                }
-
                 // Get all widget options
-                foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media[@id="' . $widget->tempId . '"]/options') as $optionsNode) {
+                $xpathQuery = '//region[@id="' . $region->tempId . '"]/media[@id="' . $widgetId . '"]/options';
+                foreach ($xpath->query($xpathQuery) as $optionsNode) {
                     /* @var \DOMElement $optionsNode */
                     foreach ($optionsNode->childNodes as $mediaOption) {
                         /* @var \DOMElement $mediaOption */
@@ -398,12 +396,28 @@ class LayoutFactory extends BaseFactory
                     }
                 }
 
+                $this->getLog()->debug('Added %d options with xPath query: %s', count($widget->widgetOptions), $xpathQuery);
+
+                // Get the MediaId associated with this widget (using the URI)
+                if ($module->regionSpecific == 0) {
+                    $this->getLog()->debug('Library Widget, getting mediaId');
+
+                    if (empty($widget->tempId)) {
+                        $this->getLog()->debug('FileId node is empty, setting tempId from uri option. Options: %s', json_encode($widget->widgetOptions));
+                        $mediaId = explode('.', $widget->getOptionValue('uri', '0.*'));
+                        $widget->tempId = $mediaId[0];
+                    }
+
+                    $this->getLog()->debug('Assigning mediaId %d', $widget->tempId);
+                    $widget->assignMedia($widget->tempId);
+                }
+
                 // Skip dataset backed ticker widgets
                 if ($module->type == 'ticker' && $widget->getOptionValue('sourceId', 1) != 1)
                     continue;
 
                 // Get all widget raw content
-                foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media[@id="' . $widget->tempId . '"]/raw') as $rawNode) {
+                foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media[@id="' . $widgetId . '"]/raw') as $rawNode) {
                     /* @var \DOMElement $rawNode */
                     // Get children
                     foreach ($rawNode->childNodes as $mediaOption) {
@@ -455,9 +469,10 @@ class LayoutFactory extends BaseFactory
      * @param int $template
      * @param int $replaceExisting
      * @param int $importTags
+     * @param \Xibo\Controller\Library $libraryController
      * @return Layout
      */
-    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags)
+    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $libraryController)
     {
         $this->getLog()->debug('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName);
 
@@ -501,6 +516,9 @@ class LayoutFactory extends BaseFactory
         // Set the owner
         $layout->setOwner($userId);
 
+        // Track if we've added any fonts
+        $fontsAdded = false;
+
         $this->getLog()->debug('Process mapping.json file.');
 
         // Go through each region and add the media (updating the media ids)
@@ -530,12 +548,15 @@ class LayoutFactory extends BaseFactory
                 throw new \InvalidArgumentException(__('Cannot save media file from ZIP file'));
 
             // Check we don't already have one
+            $newMedia = false;
+            $isFont = (isset($file['font']) && $file['font'] == 1);
+
             try {
                 $media = $this->mediaFactory->getByName($intendedMediaName);
 
                 $this->getLog()->debug('Media already exists with name: %s', $intendedMediaName);
 
-                if ($replaceExisting) {
+                if ($replaceExisting && !$isFont) {
                     // Media with this name already exists, but we don't want to use it.
                     $intendedMediaName = 'import_' . $layout . '_' . uniqid();
                     throw new NotFoundException();
@@ -548,6 +569,8 @@ class LayoutFactory extends BaseFactory
                 $media = $this->mediaFactory->create($intendedMediaName, $file['file'], $file['type'], $userId, $file['duration']);
                 $media->tags[] = $this->tagFactory->tagFromString('imported');
                 $media->save();
+
+                $newMedia = true;
             }
 
             // Find where this is used and swap for the real mediaId
@@ -558,7 +581,12 @@ class LayoutFactory extends BaseFactory
             $this->getLog()->debug('Layout has %d widgets', count($widgets));
 
             if ($file['background'] == 1) {
+                // Set the background image on the new layout
                 $layout->backgroundImageId = $newMediaId;
+            } else if ($isFont) {
+                // Just raise a flag to say that we've added some fonts to the library
+                if ($newMedia)
+                    $fontsAdded = true;
             }
             else {
                 // Go through all widgets and replace if necessary
@@ -590,6 +618,11 @@ class LayoutFactory extends BaseFactory
         // Finished
         $zip->close();
 
+        if ($fontsAdded) {
+            $this->getLog()->debug('Fonts have been added');
+            $libraryController->installFonts();
+        }
+
         return $layout;
     }
 
@@ -617,6 +650,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        `user`.UserName AS owner, ";
         $select .= "        campaign.CampaignID, ";
         $select .= "        layout.status, ";
+        $select .= "        layout.statusMessage, ";
         $select .= "        layout.width, ";
         $select .= "        layout.height, ";
         $select .= "        layout.retired, ";
@@ -839,6 +873,7 @@ class LayoutFactory extends BaseFactory
             $layout->createdDt = $row['createdDt'];
             $layout->modifiedDt = $row['modifiedDt'];
             $layout->displayOrder = $row['displayOrder'];
+            $layout->statusMessage = $row['statusMessage'];
 
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
 

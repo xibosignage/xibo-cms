@@ -416,7 +416,7 @@ class Maintenance extends Base
 
                     foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                         if (stripos($file, '.zip')) {
-                            $layout = $this->layoutFactory->createFromZip($folder . '/' . $file, null, 1, false, false, true);
+                            $layout = $this->layoutFactory->createFromZip($folder . '/' . $file, null, 1, false, false, true, $this->getApp()->container->get('\Xibo\Controller\Library')->setApp($this->getApp()));
                             $layout->save([
                                 'audit' => false
                             ]);

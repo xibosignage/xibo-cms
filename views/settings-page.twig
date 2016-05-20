@@ -65,6 +65,8 @@
                                     {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value", field.helpText) }}
                                 {% elseif field.fieldType == "timezone" %}
                                     {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value", field.helpText) }}
+                                {% elseif field.fieldType == "datetime" %}
+                                    {{ forms.datetime(field.name, field.title, field.value, field.helpText) }}
                                 {% endif %}
                             {% endfor %}
                         </div>

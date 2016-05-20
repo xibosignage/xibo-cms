@@ -189,7 +189,7 @@ class DisplayFactory extends BaseFactory
                   display.licensed AS currentlyLicensed,
                   display.loggedIn,
                   display.lastAccessed,
-                  display.isAuditing,
+                  display.auditingUntil,
                   display.inc_schedule AS incSchedule,
                   display.email_alert AS emailAlert,
                   display.alert_timeout AS alertTimeout,
@@ -462,7 +462,7 @@ class DisplayFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['auditingUntil']]);
         }
 
         // Paging

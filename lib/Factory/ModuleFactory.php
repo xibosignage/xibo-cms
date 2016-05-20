@@ -140,7 +140,9 @@ class ModuleFactory extends BaseFactory
      */
     public function create($type)
     {
-        $modules = $this->query(['enabled'], array('type' => $type));
+        $modules = $this->query(['enabled DESC'], array('type' => $type));
+
+        $this->getLog()->debug('Creating %s out of possible %s', $type, json_encode(array_map(function($element) { return $element->class; }, $modules)));
 
         if (count($modules) <= 0)
             throw new NotFoundException(sprintf(__('Unknown type %s'), $type));
@@ -340,7 +342,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getByExtension($extension)
     {
-        $modules = $this->query(null, array('extension' => $extension));
+        $modules = $this->query(['enabled DESC'], array('extension' => $extension));
 
         if (count($modules) <= 0)
             throw new NotFoundException(sprintf(__('Extension %s does not match any enabled Module'), $extension));
@@ -430,6 +432,13 @@ class ModuleFactory extends BaseFactory
                 ';
             }
 
+            if (DBVERSION >= 125) {
+                $select .= '
+                    ,
+                    IFNULL(`installName`, `module`) AS installName
+                ';
+            }
+
             $body = '
                   FROM `module`
                  WHERE 1 = 1
@@ -512,6 +521,10 @@ class ModuleFactory extends BaseFactory
 
                 if (DBVERSION >= 122) {
                     $module->defaultDuration = $this->getSanitizer()->int($row['defaultDuration']);
+                }
+
+                if (DBVERSION >= 125) {
+                    $module->installName = $this->getSanitizer()->string($row['installName']);
                 }
 
                 $settings = $row['settings'];

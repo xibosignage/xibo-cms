@@ -116,6 +116,15 @@ class Settings extends Base
                     $options[] = ['id' => basename($file->getPath()), 'value' => $config['theme_name']];
                 }
 
+            } else if ($setting['setting'] == 'ELEVATE_LOG_UNTIL') {
+
+                // If we are less that the current date, then show as empty
+                if (intval($setting['value']) >= time()) {
+                    $setting['value'] = $this->getDate()->getLocalDate($setting['value']);
+                } else {
+                    $setting['value'] = null;
+                }
+
             } else {
                 // Are there any options
                 $options = NULL;
@@ -197,6 +206,14 @@ class Settings extends Base
 
                 case 'checkbox':
                     $value = $this->getSanitizer()->getCheckbox($setting['setting']);
+                    break;
+
+                case 'datetime':
+                    $value = $this->getSanitizer()->getDate($setting['setting']);
+
+                    if ($value !== null)
+                        $value = $value->format('U');
+
                     break;
 
                 default:

@@ -51,6 +51,10 @@
       "action": "ALTER TABLE  `schedule` CHANGE  `ToDT`  `ToDT` BIGINT( 20 ) NULL DEFAULT NULL;"
     },
     {
+      "step": "Allow Events to have an empty to date",
+      "action": "ALTER TABLE  `schedule_detail` CHANGE  `ToDT`  `ToDT` BIGINT( 20 ) NULL DEFAULT NULL;"
+    },
+    {
       "step": "Update all Videos with their real duration",
       "type": "php",
       "action": "Xibo\\Upgrade\\VideoDurationStep"
