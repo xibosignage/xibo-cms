@@ -66,6 +66,11 @@
     {
       "step": "Add elevate log level setting",
       "action": "INSERT INTO setting (setting, value, fieldType, helptext, options, cat, userChange, title, validation, ordering, `default`, userSee, type) VALUES ('ELEVATE_LOG_UNTIL', '1463396415', 'datetime', 'Elevate the log level until this date.', null, 'troubleshooting', 1, 'Elevate Log Until', ' ', 25, '', 1, 'datetime');"
+    },
+    {
+      "step": "Allow Events to have an empty to date",
+      "action": "ALTER TABLE  `schedule_detail` CHANGE  `ToDT`  `ToDT` BIGINT( 20 ) NULL DEFAULT NULL;",
+      "fixedIn": 121
     }
   ]
 }
