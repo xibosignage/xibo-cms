@@ -8,8 +8,8 @@
 namespace Xibo\Tests\Integration;
 
 use Xibo\Helper\Random;
-use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
+use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
