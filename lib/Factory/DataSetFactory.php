@@ -210,6 +210,7 @@ class DataSetFactory extends BaseFactory
 
             // Paging
             if ($limit != '' && count($entries) > 0) {
+                unset($params['groupsWithPermissionsEntity']);
                 $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
                 $this->_countLast = intval($results[0]['total']);
             }

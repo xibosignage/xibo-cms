@@ -18,6 +18,7 @@ class StatisticsTest extends LocalWebTestCase
 
     /**
      *  Test the method call with default values
+     * @group broken
      */
     public function testListAll()
     {

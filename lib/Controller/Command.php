@@ -111,7 +111,7 @@ class Command extends Base
             /* @var \Xibo\Entity\Command $command */
 
             if ($this->isApi())
-                return;
+                break;
 
             $command->includeProperty('buttons');
 

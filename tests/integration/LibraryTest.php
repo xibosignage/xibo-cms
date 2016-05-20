@@ -9,6 +9,7 @@ namespace Xibo\Tests\Integration;
 
 use Xibo\Helper\Random;
 use Xibo\Tests\LocalWebTestCase;
+use Xibo\OAuth2\Client\Entity\XiboLibrary;
 
 class LibraryTest extends LocalWebTestCase
 {
@@ -42,12 +43,12 @@ class LibraryTest extends LocalWebTestCase
 
 
     /**
-     * Edit soecific media file
+     * Edit specific media file
      * @group broken
      */
     public function testEdit($mediaId)
     {
-        $media = $this->container->mediaFactory->getById($mediaId);
+        $media = $$displayProfile = (new XiboLibrary($this->getEntityProvider()))->getById($mediaId);
 
         $name = Random::generateString(8, 'phpunit');
 
@@ -72,6 +73,7 @@ class LibraryTest extends LocalWebTestCase
     /**
      * Test delete added media
      * @depends testEdit
+     * @group broken
      */
     public function testDelete($mediaId)
     {
@@ -106,6 +108,7 @@ class LibraryTest extends LocalWebTestCase
 
     /**
      * Test delete specific media file
+          * @group broken
      */
     public function testDelete2()
     {

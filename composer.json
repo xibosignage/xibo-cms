@@ -33,7 +33,7 @@
     },
     {
       "type": "vcs",
-      "url": "https://github.com/alexharrington/oauth2-xibo-cms"
+      "url": "https://github.com/PeterMis/oauth2-xibo-cms"
     }
   ],
   "require": {

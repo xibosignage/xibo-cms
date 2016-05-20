@@ -9,9 +9,12 @@
 namespace Xibo\Tests\Integration;
 
 
-use Xibo\Entity\Schedule;
+use Xibo\OAuth2\Client\Entity\XiboSchedule;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
+use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
+use Xibo\OAuth2\Client\Entity\XiboCampaign;
 use Xibo\Tests\LocalWebTestCase;
+
 
 /**
  * Class ScheduleTest
@@ -19,14 +22,16 @@ use Xibo\Tests\LocalWebTestCase;
  */
 class ScheduleTest extends LocalWebTestCase
 {
+
     protected $route = '/schedule';
+    
 
     /**
      * testListAll
      */
     public function testListAll()
     {
-        $this->client->get($this->route . '/data/events');
+        $this->client->get('/schedule/data/events');
 
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
@@ -39,15 +44,19 @@ class ScheduleTest extends LocalWebTestCase
     /**
      * @group add
      * @return int
-     * @group broken
      */
     public function testAdd()
     {
         // Get a layout to schedule
-        $layout = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 1]);
+//        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', 9);
 
         // Get a Display Group Id
-        $displayGroup = $this->container->displayGroupFactory->query(null, ['start' => 0, 'length' => 1])[0];
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
+
+        //Create Campaign
+
+        /* @var XiboCampaign $campaign */
+        $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
 
         $fromDt = time();
         $toDt = time() + 3600;
@@ -55,8 +64,8 @@ class ScheduleTest extends LocalWebTestCase
         $this->client->post($this->route, [
             'fromDt' => date('Y-m-d h:i:s', $fromDt),
             'toDt' => date('Y-m-d h:i:s', $toDt),
-            'eventTypeId' => Schedule::$LAYOUT_EVENT,
-            'campaignId' => $layout->campaignId,
+            'eventTypeId' => 1,
+            'campaignId' => $campaign->campaignId,
             'displayGroupIds' => [$displayGroup->displayGroupId],
             'displayOrder' => 1,
             'isPriority' => 0
@@ -69,19 +78,20 @@ class ScheduleTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
         $this->assertObjectHasAttribute('id', $object, $this->client->response->body());
 
-        return $object->id;
+        $displayGroup->delete();
+        $campaign->delete();
     }
 
     /**
      * Test edit
-     * @param int $eventId
      * @return int the id
      * @depends testAdd
+     * @group broken
      */
-    public function testEdit($eventId)
+    public function testEdit()
     {
         // Get the scheduled event
-        $event = $this->container->scheduleFactory->getById($eventId);
+        $event = (new XiboSchedule($this->getEntityProvider()))->getById($eventId);
         $event->load();
 
         $displayGroups = array_map(function ($displayGroup) {
@@ -115,6 +125,7 @@ class ScheduleTest extends LocalWebTestCase
     /**
      * @param $eventId
      * @depends testEdit
+     * @group broken
      */
     public function testDelete($eventId)
     {

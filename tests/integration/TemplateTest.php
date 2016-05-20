@@ -8,6 +8,7 @@
 namespace Xibo\Tests\Integration;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\Tests\LocalWebTestCase;
+use Xibo\Helper\Random;
 
 /**
  * Class TemplateTest
@@ -35,13 +36,13 @@ class TemplateTest extends LocalWebTestCase
      */
     public function testAdd()
     {
-        $layout = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 1]);
-        $layout = $layout[0];
+        $name1 = Random::generateString(8, 'phpunit');
+        $layout = (new XiboLayout($this->getEntityProvider()))->create($name1, 'phpunit description', '', 9);
 
-        $name = \Xibo\Helper\Random::generateString(8, 'phpunit');
+        $name2 = Random::generateString(8, 'phpunit');
 
         $this->client->post('/template/' . $layout->layoutId, [
-            'name' => $name,
+            'name' => $name2,
             'includeWidgets' =>1,
             'tags' => $layout->tags,
             'description' => $layout->description 
@@ -50,9 +51,14 @@ class TemplateTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
 
         $object = json_decode($this->client->response->body());
-//      fwrite(STDERR, $this->client->response->body());
+
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
-        $this->assertSame($name, $object->data->layout);
+        $this->assertSame($name2, $object->data->layout);
+
+        $layout->delete();
+
+       # TO DO Delete template... 
+
     }
 }
