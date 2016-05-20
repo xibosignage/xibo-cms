@@ -24,6 +24,7 @@ namespace Xibo\Widget;
 use Emojione\Client;
 use Emojione\Ruleset;
 use Respect\Validation\Validator as v;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\ModuleFactory;
 
 
@@ -358,10 +359,8 @@ class Twitter extends ModuleWidget
 
     protected function getTwitterFeed($displayId = 0, $isPreview = true)
     {
-        if (!extension_loaded('curl')) {
-            trigger_error(__('cURL extension is required for Twitter'));
-            return false;
-        }
+        if (!extension_loaded('curl'))
+            throw new ConfigurationException(__('cURL extension is required for Twitter'));
 
         // Do we need to add a geoCode?
         $geoCode = '';

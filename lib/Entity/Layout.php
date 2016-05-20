@@ -881,6 +881,9 @@ class Layout implements \JsonSerializable
                         $optionNode = $document->createElement('uri', $media->storedAs);
                         $optionsNode->appendChild($optionNode);
                         $uriInjected = true;
+
+                        // Add the fileId attribute to the media element
+                        $mediaNode->setAttribute('fileId', $media->mediaId);
                     }
 
                     foreach ($widget->widgetOptions as $option) {

@@ -281,6 +281,9 @@ abstract class ModuleWidget implements ModuleInterface
     // End of Injected Factories and Services
     //
 
+    /**
+     * Any initialisation code
+     */
     public function init()
     {
 
@@ -798,6 +801,24 @@ abstract class ModuleWidget implements ModuleInterface
      * Process any module settings
      */
     public function settings()
+    {
+
+    }
+
+    /**
+     * Module settings buttons to be displayed on the module admin page
+     * @return array
+     */
+    public function settingsButtons()
+    {
+        return [];
+    }
+
+    /**
+     * Configure any additional module routes
+     *  these are available through the api and web portal
+     */
+    public function configureRoutes()
     {
 
     }

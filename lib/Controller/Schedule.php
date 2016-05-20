@@ -611,7 +611,7 @@ class Schedule extends Base
      *      enum={"", "Minute", "Hour", "Day", "Week", "Month", "Year"}
      *   ),
      *   @SWG\Parameter(
-     *      name="recurrentDetail",
+     *      name="recurrenceDetail",
      *      in="formData",
      *      description="The interval for the recurrence.",
      *      type="integer",

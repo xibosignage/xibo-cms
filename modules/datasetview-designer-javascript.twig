@@ -162,6 +162,10 @@
     function configureQueryBuilder(dialog) {
         // Order Clause
         var orderClauseFields = $("#orderClause");
+
+        if (orderClauseFields.length == 0)
+            return;
+
         var orderClauseTemplate = Handlebars.compile($("#dataSetViewOrderClauseTemplate").html());
         var ascTitle = "{% trans "Ascending" %}";
         var descTitle = "{% trans "Descending" %}";
