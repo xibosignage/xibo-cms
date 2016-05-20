@@ -8,8 +8,8 @@
 namespace Xibo\Tests\Integration;
 
 use Xibo\Helper\Random;
-use Xibo\Tests\LocalWebTestCase;
 use Xibo\OAuth2\Client\Entity\XiboLibrary;
+use Xibo\Tests\LocalWebTestCase;
 
 class LibraryTest extends LocalWebTestCase
 {

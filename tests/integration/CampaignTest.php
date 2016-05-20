@@ -6,10 +6,10 @@
  */
 
 namespace Xibo\Tests\Integration;
+use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboCampaign;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Helper\Random;
 
 /**
  * Class CampaignTest

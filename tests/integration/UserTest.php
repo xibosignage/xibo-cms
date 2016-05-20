@@ -8,7 +8,6 @@
 namespace Xibo\Tests\Integration;
 use Xibo\OAuth2\Client\Entity\XiboUser;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Helper\Random;
 
 /**
  * Class UserTest

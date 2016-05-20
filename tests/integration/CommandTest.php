@@ -7,9 +7,9 @@
 
 namespace Xibo\Tests\Integration;
 
+use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboCommand;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Helper\Random;
 
 
 class CommandTest extends LocalWebTestCase

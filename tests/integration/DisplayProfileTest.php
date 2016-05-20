@@ -6,9 +6,8 @@
  */
 
 namespace Xibo\Tests\Integration;
-use Xibo\OAuth2\Client\Entity\XiboDisplayProfile;
-use Xibo\Tests\LocalWebTestCase;
 use Xibo\Helper\Random;
+use Xibo\OAuth2\Client\Entity\XiboDisplayProfile;
 
 
 class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase

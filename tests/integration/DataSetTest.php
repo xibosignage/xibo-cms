@@ -7,8 +7,8 @@
 
 namespace Xibo\Tests\Integration;
 
-use Xibo\OAuth2\Client\Entity\XiboDataSet;
 use Xibo\Helper\Random;
+use Xibo\OAuth2\Client\Entity\XiboDataSet;
 use Xibo\Tests\LocalWebTestCase;
 
 class DataSetTest extends LocalWebTestCase
