@@ -69,7 +69,8 @@ function playLog(logLevel, logClass, logMessage, logToScreen) {
         }
         
         if (logToScreen) {
-            document.getElementById("log").innerHTML = msg;
+            //document.getElementById("log").innerHTML = msg;
+            $('.preview-log').html(msg);
         }
     }
 }
@@ -296,12 +297,11 @@ function Layout(id) {
     self.regionObjects = [];
     
     playLog(3, "debug", "Loading Layout " + self.id , true);
-
     $.ajax({
         "type": "GET",
         "url": OPTIONS.getXlfUrl,
         "success": self.parseXlf
-    });
+    }); 
 }
 
 function Region(parent, id, xml) {
