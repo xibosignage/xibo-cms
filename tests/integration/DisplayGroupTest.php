@@ -7,6 +7,7 @@
 namespace Xibo\Tests\Integration;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
+use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\Tests\LocalWebTestCase;
 /**
  * Class DisplayGroupTest
@@ -15,13 +16,15 @@ use Xibo\Tests\LocalWebTestCase;
 class DisplayGroupTest extends LocalWebTestCase
 {
     protected $startDisplayGroups;
+    protected $startDisplays;
     /**
      * setUp - called before every test automatically
      */
     public function setup()
     {
         parent::setup();
-        $this->startDisplayGroups = (new XiboDisplayGroup($this->getEntityProvider()))->get();
+        $this->startDisplayGroups = (new XiboDisplayGroup($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+        $this->startDisplays = (new XiboDisplay($this->getEntityProvider()))->get();
     }
     /**
      * tearDown - called after every test automatically
@@ -29,7 +32,7 @@ class DisplayGroupTest extends LocalWebTestCase
     public function tearDown()
     {
         // tearDown all display groups that weren't there initially
-        $finalDisplayGroups = (new XiboDisplayGroup($this->getEntityProvider()))->get(['start' => 0, 'length' => 1000]);
+        $finalDisplayGroups = (new XiboDisplayGroup($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
         # Loop over any remaining display groups and nuke them
         foreach ($finalDisplayGroups as $displayGroup) {
             /** @var XiboDisplayGroup $displayGroup */
@@ -44,6 +47,26 @@ class DisplayGroupTest extends LocalWebTestCase
                     $displayGroup->delete();
                 } catch (\Exception $e) {
                     fwrite(STDERR, 'Unable to delete ' . $displayGroup->displayGroupId . '. E:' . $e->getMessage());
+                }
+            }
+        }
+        // Tear down any displays that weren't there before
+        $finalDisplays = (new XiboDisplay($this->getEntityProvider()))->get();
+        
+        # Loop over any remaining displays and nuke them
+        foreach ($finalDisplays as $display) {
+            /** @var XiboDisplay $display */
+            $flag = true;
+            foreach ($this->startDisplays as $startDisplay) {
+               if ($startDisplay->displayId == $display->displayId) {
+                   $flag = false;
+               }
+            }
+            if ($flag) {
+                try {
+                    $display->delete();
+                } catch (\Exception $e) {
+                    fwrite(STDERR, 'Unable to delete ' . $display->displayId . '. E:' . $e->getMessage());
                 }
             }
         }
@@ -378,19 +401,44 @@ class DisplayGroupTest extends LocalWebTestCase
         $displayGroup1->delete();
     }
     /**
-     *Assign new displays Test
+     * Assign new displays Test
      * @group broken
      */
     public function testAssign()
     {
-        $this->client->post('/displaygroup/' . 7 . '/display/assign', [
-        'displayId' => [7]
-        ]);
-        $this->assertSame(200, $this->client->response->status());
-        $object = json_decode($this->client->response->body());
-//        fwrite(STDERR, $this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object);
-        $this->assertObjectHasAttribute('id', $object);
+        // Create a Display in the system
+        $hardwareId = Random::generateString(12, 'phpunit');
+        $response = $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 'PHPUnit Test Display');
+        
+        // Now find the Id of that Display
+        $displays = (new XiboDisplay($this->getEntityProvider()))->get();
+        $display = null;
+        
+        foreach ($displays as $disp) {
+            if ($disp->license == $hardwareId) {
+                $display = $disp;
+            }
+        }
+        
+        if ($display === null) {
+            $this->fail('Display was not added correctly');
+        }
+        
+        // Create a DisplayGroup to add the display to
+        $name = Random::generateString(8, 'phpunit');
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
+        
+        $this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/display/assign', [
+                            'displayId' => [$display->displayId]
+                             ]);
+        $response = json_decode($this->client->response->body());
+        $this->assertSame(204, $response->status, $this->client->response->body());
+        // Get a list of all Displays in the group
+        $displays = (new XiboDisplay($this->getEntityProvider()))->get(['displayGroupId' => $displayGroup->displayGroupId]);
+        
+        // Check that there's only us in that group
+        $this->assertEquals(1, count($displays));
+        $this->assertEquals($display->displayId, $displays[0]->displayId);
     }
     /**
      * Unassign displays Test

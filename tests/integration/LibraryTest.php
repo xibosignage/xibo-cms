@@ -73,6 +73,7 @@ class LibraryTest extends LocalWebTestCase
     /**
      * Test delete added media
      * @depends testEdit
+     * @group broken
      */
     public function testDelete($mediaId)
     {

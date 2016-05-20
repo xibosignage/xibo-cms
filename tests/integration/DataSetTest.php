@@ -184,8 +184,8 @@ class DataSetTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($nameCol, $object->data->heading);
-        
-        return $object->id;
+
+        $dataSet->delete();
     }
 
     /**
@@ -229,6 +229,8 @@ class DataSetTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+
+        $dataSet->delete();
     }
 
     /**
@@ -288,6 +290,8 @@ class DataSetTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $objectNew);
         $this->assertObjectHasAttribute('id', $objectNew);
         $this->assertSame($nameNew, $objectNew->data->heading);
+
+        $dataSet->delete();
     }
 
     /**
@@ -328,6 +332,8 @@ class DataSetTest extends LocalWebTestCase
         $response = $this->client->delete('/dataset/' . $dataSet->dataSetId . '/column/' . $columnId);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+
+        $dataSet->delete();
     }
 
     /*
@@ -350,6 +356,8 @@ class DataSetTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+
+        $dataSet->delete();
     }
 
     /**
@@ -392,6 +400,9 @@ class DataSetTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $data);
 
         $object = json_decode($this->client->response->body());
+        $this->assertSame('test', $object->data->dataSetColumnId_ID);
+
+        $dataSet->delete();
 
     }
 
@@ -439,6 +450,7 @@ class DataSetTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $data);
 
         $object = json_decode($this->client->response->body());
+        $this->assertSame('test', $object->data->dataSetColumnId_ID);
         
         $rowId = $object->id;
 
@@ -454,6 +466,8 @@ class DataSetTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $objectNew);
         $this->assertObjectHasAttribute('id', $objectNew);
         $this->assertSame('API EDITED', $objectNew->data->dataSetColumnId_ID);
+
+        $dataSet->delete();
     }
 
     /*
@@ -499,6 +513,7 @@ class DataSetTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $data);
 
         $object = json_decode($this->client->response->body());
+        $this->assertSame('test', $object->data->dataSetColumnId_ID);
         
         $rowId = $object->id;
 
@@ -508,5 +523,7 @@ class DataSetTest extends LocalWebTestCase
 
         $response = json_decode($this->client->response->body());
         $this->assertSame(204, $response->status, $this->client->response->body());
+
+        $dataSet->delete();
     }
 }
