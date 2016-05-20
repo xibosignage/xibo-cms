@@ -148,7 +148,6 @@ class CampaignTest extends LocalWebTestCase
 
     /**
      * Assign Layout
-     * @return int
      * @throws \Xibo\Exception\NotFoundException
      */
     public function testAssignUnassignLayout()
@@ -194,28 +193,5 @@ class CampaignTest extends LocalWebTestCase
 
         # delete layout as we no longer need it
         $layout->delete();
-    }
-
-    /**
-     * @param campaign $campaignId
-     * @depends testAssignLayout
-     * @group broken
-     */
-    public function testUnassignLayout($campaignId)
-    {
-        $campaign = (new XiboCampaign($this->getEntityProvider()))->getById($campaignId);
-        // Get a layout for the test
-        $layout = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 1]);
-
-        // Call unassign on the default layout
-        $this->client->post('/campaign/layout/unassign/' . $campaign->campaignId, ['layoutId' => [['layoutId' => $layout[0]->layoutId, 'displayOrder' => 1]]]);
-
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
-
-        // Get this campaign and check it has 0 layouts
-        $campaigncheck = (new XiboCampaign($this->getEntityProvider()))->getById($campaignId);
-
-        $this->assertSame($campaignId, $campaignCheck->campaignId, $this->client->response->body());
-        $this->assertSame(0, $campaignCheck->numberLayouts, $this->client->response->body());
     }
 }

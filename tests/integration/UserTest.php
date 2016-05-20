@@ -55,7 +55,10 @@ class UserTest extends LocalWebTestCase
 
     public function testAdd()
     {
-            $this->client->post('/user', [
+        // Wrapper, get Users Group
+        
+
+        $this->client->post('/user', [
             'userName' => 'Alex',
             'userTypeId' => 3,
             'homePageId' => 29,

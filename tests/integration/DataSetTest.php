@@ -190,6 +190,7 @@ class DataSetTest extends LocalWebTestCase
 
     /**
      * Search columns for DataSet
+     * @group broken
      * @depends testColumnAdd
      */
     public function testListAllColumns()
@@ -235,6 +236,7 @@ class DataSetTest extends LocalWebTestCase
 
     /**
      * Test edit column
+          * @group broken
      * @depends testColumnAdd
      */
     public function testColumnEdit()
@@ -296,6 +298,7 @@ class DataSetTest extends LocalWebTestCase
 
     /**
      * @param $dataSetId
+          * @group broken
      * @depends testColumnAdd
      */
     public function testDeleteColumn()
@@ -362,6 +365,7 @@ class DataSetTest extends LocalWebTestCase
 
     /**
      * Test row of data
+          * @group broken
      */
     public function testRowAdd()
     {
@@ -409,6 +413,7 @@ class DataSetTest extends LocalWebTestCase
     /**
      * Test edit row
      * @depends testColumnAdd
+          * @group broken
      */
     public function testRowEdit()
     {
@@ -472,6 +477,7 @@ class DataSetTest extends LocalWebTestCase
 
     /*
     * delete row data
+         * @group broken
     */
 
     public function testRowDelete()
