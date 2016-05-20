@@ -142,6 +142,8 @@ class ModuleFactory extends BaseFactory
     {
         $modules = $this->query(['enabled DESC'], array('type' => $type));
 
+        $this->getLog()->debug('Creating %s out of possible %s', $type, json_encode(array_map(function($element) { return $element->class; }, $modules)));
+
         if (count($modules) <= 0)
             throw new NotFoundException(sprintf(__('Unknown type %s'), $type));
 
