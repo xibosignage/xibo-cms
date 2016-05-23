@@ -1,0 +1,22 @@
+{
+  "name": "xibo-cms",
+  "homepage": "https://github.com/xibosignage/xibo-cms",
+  "authors": [
+    "Dan Garner <dan@springsignage.com>"
+  ],
+  "description": "Xibo Open Source Digital Signage",
+  "main": "",
+  "license": "AGPL-3.0",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^2.2.4",
+    "bootstrap": "^3.3.6"
+  }
+}

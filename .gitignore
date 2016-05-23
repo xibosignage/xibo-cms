@@ -7,3 +7,4 @@ settings.php
 cache/
 web/swagger-ui/
 custom/
+bower_components/
