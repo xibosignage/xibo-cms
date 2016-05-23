@@ -617,7 +617,7 @@ class Campaign extends Base
             'campaign' => $campaign,
             'help' => $this->getHelp()->link('Campaign', 'Preview'),
             'layouts' => $layouts,
-            'duration' => $duration
+            'duration' => gmdate('H:i:s', $duration)
         ]);
     }
 }
