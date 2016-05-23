@@ -608,16 +608,25 @@ class Campaign extends Base
     //        throw new AccessDeniedException();
         $layouts = $this->layoutFactory->getByCampaignId($campaignId);
         $duration = 0 ;
-        foreach($layouts as $layout)    
+        $extendedLayouts = [];
+        foreach($layouts as $layout)
         {
             $duration += $layout->duration ;
+            $extendedLayouts[] = ['layout' => $layout,
+                                  'previewOptions' => [
+                                      'getXlfUrl' => $this->urlFor('layout.getXlf', ['id' => $layout->layoutId]),
+                                      'getResourceUrl' => $this->urlFor('module.getResource'),
+                                      'libraryDownloadUrl' => $this->urlFor('library.download'),
+                                      'loaderUrl' => $this->getConfig()->uri('img/loader.gif')]
+                                 ];
         }
         $this->getState()->template = 'campaign-preview';
         $this->getState()->setData([
             'campaign' => $campaign,
             'help' => $this->getHelp()->link('Campaign', 'Preview'),
             'layouts' => $layouts,
-            'duration' => gmdate('H:i:s', $duration)
+            'duration' => gmdate('H:i:s', $duration),
+            'extendedLayouts' => $extendedLayouts
         ]);
     }
 }
