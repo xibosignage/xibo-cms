@@ -18,6 +18,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 /* Int: Current logging level */
 var LOG_LEVEL;
 
@@ -27,12 +28,8 @@ var VERSION = "1.8.0";
 /* Int: Counter to ensure unique IDs */
 var ID_COUNTER = 0;
 
-var PRELOAD;
-var OPTIONS;
-
 function dsInit(layoutid, options) {
     LOG_LEVEL = 10;
-    OPTIONS = options;
 
     /* Hide the info and log divs */
     $(".preview-log").css("display", "none");
@@ -43,9 +40,9 @@ function dsInit(layoutid, options) {
     document.onkeypress = keyHandler;
 
     playLog(0, "info", "Xibo HTML Preview v" + VERSION + " Starting Up", true);
-    
-    PRELOAD = html5Preloader();
-    new Layout(layoutid);
+    preload = html5Preloader();
+
+    new Layout(layoutid, options, preload);
 }
 
 /* Generate a unique ID for region DIVs, media nodes etc */
@@ -136,7 +133,7 @@ function keyHandler(event) {
     }*/
 }
 
-function Layout(id) {
+function Layout(id, options, preload) {
     /* Layout Object */
     /* Parses a layout and when run runs it in containerName */
     
@@ -196,9 +193,9 @@ function Layout(id) {
             /* Extract the image ID from the filename */
             self.bgId = self.bgImage.substring(0, self.bgImage.indexOf('.'));
 
-            var tmpUrl = OPTIONS.libraryDownloadUrl.replace(":id", self.bgId).replace(":type", "image") + '?preview=1';
+            var tmpUrl = options.libraryDownloadUrl.replace(":id", self.bgId).replace(":type", "image") + '?preview=1';
             
-            PRELOAD.addFiles(tmpUrl + "&width=" + self.sWidth + "&height=" + self.sHeight + "&dynamic&proportional=0");
+            preload.addFiles(tmpUrl + "&width=" + self.sWidth + "&height=" + self.sHeight + "&dynamic&proportional=0");
             layout.css("background", "url('" + tmpUrl + "&width=" + self.sWidth + "&height=" + self.sHeight + "&dynamic&proportional=0')");
             layout.css("background-repeat", "no-repeat");
             layout.css("background-size", self.sWidth + "px " + self.sHeight + "px");
@@ -211,13 +208,13 @@ function Layout(id) {
         $(self.layoutNode).find("region").each(function() {
             playLog(4, "debug", "Creating region " + $(this).attr('id'), false);
 
-            self.regionObjects.push(new Region(self, $(this).attr('id'), this));
+            self.regionObjects.push(new Region(self, $(this).attr('id'), this, options, preload));
         });
 
         playLog(4, "debug", "Layout " + self.id + " has " + self.regionObjects.length + " regions");
         self.ready = true;
-        PRELOAD.addFiles(OPTIONS.loaderUrl);
-        PRELOAD.on('finish', self.run);
+        preload.addFiles(options.loaderUrl);
+        preload.on('finish', self.run);
     };
 
     self.run = function() {
@@ -299,12 +296,12 @@ function Layout(id) {
     playLog(3, "debug", "Loading Layout " + self.id , true);
     $.ajax({
         "type": "GET",
-        "url": OPTIONS.getXlfUrl,
+        "url": options.getXlfUrl,
         "success": self.parseXlf
     }); 
 }
 
-function Region(parent, id, xml) {
+function Region(parent, id, xml, options, preload) {
     var self = this;
     self.layout = parent;
     self.id = id;
@@ -423,13 +420,13 @@ function Region(parent, id, xml) {
     playLog(7, "debug", "Offset will be (" + self.offsetX + "," + self.offsetY + ") pixels");
     
     $(self.xml).find("media").each(function() { playLog(5, "debug", "Creating media " + $(this).attr('id'), false);
-                                                self.mediaObjects.push(new media(self, $(this).attr('id'), this));
+                                                self.mediaObjects.push(new media(self, $(this).attr('id'), this, options, preload));
                                               });
     
     playLog(4, "debug", "Region " + self.id + " has " + self.mediaObjects.length + " media items");
 }
 
-function media(parent, id, xml) {
+function media(parent, id, xml, options, preload) {
     var self = this;
     self.region = parent;
     self.xml = xml;
@@ -491,13 +488,13 @@ function media(parent, id, xml) {
     /* media.css("left", self.offsetX + "px");
     media.css("top", self.offsetY + "px"); */
 
-    var tmpUrl = OPTIONS.getResourceUrl.replace(":regionId", self.region.id).replace(":id", self.id) + '?preview=1';
+    var tmpUrl = options.getResourceUrl.replace(":regionId", self.region.id).replace(":id", self.id) + '?preview=1';
     
     if (self.render == "html") {
         media.append('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
     }
     else if (self.mediaType == "image") {
-        PRELOAD.addFiles(tmpUrl);
+        preload.addFiles(tmpUrl);
         media.css("background-image", "url('" + tmpUrl + "')");
         if (self.options['scaletype'] == 'stretch')
             media.css("background-size", "cover");
@@ -531,13 +528,13 @@ function media(parent, id, xml) {
         }
     }
     else if (self.mediaType == "video") {
-        PRELOAD.addFiles(tmpUrl);
+        preload.addFiles(tmpUrl);
         media.append('<video id="' + self.containerName + '-vid" preload="auto" ' + ((self.options["mute"] == 1) ? 'muted' : '') + '><source src="' + tmpUrl + '">Unsupported Video</video>');
     }
     else if (self.mediaType == "flash") {
         var embedCode = '<OBJECT classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,0,0" WIDTH="100%" HEIGHT="100%" id="Yourfilename" ALIGN="">';
         embedCode = embedCode + '<PARAM NAME=movie VALUE="' + tmpUrl + '"> <PARAM NAME=quality VALUE=high> <param name="wmode" value="transparent"> <EMBED src="' + tmpUrl + '" quality="high" wmode="transparent" WIDTH="100%" HEIGHT="100%" NAME="Yourfilename" ALIGN="" TYPE="application/x-shockwave-flash" PLUGINSPAGE="http://www.macromedia.com/go/getflashplayer"></EMBED> </OBJECT>';
-        PRELOAD.addFiles(tmpUrl);
+        preload.addFiles(tmpUrl);
         media.append(embedCode);
     }
     else {
