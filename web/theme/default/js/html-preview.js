@@ -27,10 +27,8 @@ var VERSION = "1.8.0";
 
 /* Int: Counter to ensure unique IDs */
 var ID_COUNTER = 0;
-
 function dsInit(layoutid, options) {
     LOG_LEVEL = 10;
-
     /* Hide the info and log divs */
     $(".preview-log").css("display", "none");
     $(".preview-info").css("display", "none");
@@ -40,8 +38,7 @@ function dsInit(layoutid, options) {
     document.onkeypress = keyHandler;
 
     playLog(0, "info", "Xibo HTML Preview v" + VERSION + " Starting Up", true);
-    preload = html5Preloader();
-
+    var preload = html5Preloader();
     new Layout(layoutid, options, preload);
 }
 
@@ -110,25 +107,25 @@ function keyHandler(event) {
         }
     }
     /*else if (letter == 'i') {
-        if ($("#info").css("display") == 'none') {
-            sw = $("#screen").width();
-            sh = $("#screen").height();
+        if ($("#info_"+self.id).css("display") == 'none') {
+            sw = $("#screen_"+self.id).width();
+            sh = $("#screen_"+self.id).height();
             
             x = Math.round((sw - 500) / 2);
             y = Math.round((sh - 400) / 2);
             
             if (x > 0) {
-                $("#info").css("left", x);
+                $("#info_"+self.id).css("left", x);
             }
             
             if (y > 0) {
-                $("#info").css("top", y);
+                $("#info_"+self.id).css("top", y);
             }
             
-            $("#info").css("display", "block");
+            $("#info_"+self.id).css("display", "block");
         }
         else {
-            $("#info").css("display", "none");
+            $("#info_"+self.id).css("display", "none");
         }
     }*/
 }
@@ -136,16 +133,16 @@ function keyHandler(event) {
 function Layout(id, options, preload) {
     /* Layout Object */
     /* Parses a layout and when run runs it in containerName */
-    
+
     var self = this;
-    
+    self.id = id;
     self.parseXlf = function(data) {
         playLog(10, "debug", "Parsing Layout " + self.id, false);
         self.containerName = "L" + self.id + "-" + nextId();
         
         /* Create a hidden div to show the layout in */
-        var screen = $(".preview-screen");
-        screen.append('<div id="' + self.containerName + '"></div>');
+        var screen = $('#screen_' + self.id) ;
+        screen.append('<div id="' + self.containerName  + '"></div>');
 
         var layout = $("#" + self.containerName);
         layout.css("display", "none");
@@ -214,14 +211,16 @@ function Layout(id, options, preload) {
         playLog(4, "debug", "Layout " + self.id + " has " + self.regionObjects.length + " regions");
         self.ready = true;
         preload.addFiles(options.loaderUrl);
-        preload.on('finish', self.run);
+        self.run()
+        //preload.on('finish', self.run);
     };
 
     self.run = function() {
         playLog(4, "debug", "Running Layout ID " + self.id, false);
         if (self.ready) {
             $("#" + self.containerName).css("display", "block");
-            $("#splash").css("display", "none");
+            $("#splash_" + self.id).css("display", "none");
+
             for (var i = 0; i < self.regionObjects.length; i++) {
                 playLog(4, "debug", "Running region " + self.regionObjects[i].id, false);
                 self.regionObjects[i].run();
@@ -283,7 +282,7 @@ function Layout(id, options, preload) {
         
         if (self.allEnded) {
             playLog(4, "debug", "All regions have ended", false);
-            $("#end").css("display", "block");
+            $("#end_" +  self.id).css("display", "block");
             //$("#" + self.containerName).remove();
         }
 
