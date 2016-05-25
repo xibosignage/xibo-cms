@@ -8,3 +8,4 @@ cache/
 web/swagger-ui/
 custom/
 bower_components/
+node_modules/
