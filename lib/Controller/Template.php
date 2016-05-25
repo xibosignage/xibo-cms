@@ -97,6 +97,7 @@ class Template extends Base
         $templates = $this->layoutFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'excludeTemplates' => 0,
             'tags' => $this->getSanitizer()->getString('tags'),
+            'templateId' => $this->getSanitizer()->getInt('templateId'),
             'layout' => $this->getSanitizer()->getString('template')
         ]));
 
