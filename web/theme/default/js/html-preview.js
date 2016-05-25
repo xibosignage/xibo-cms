@@ -27,7 +27,7 @@ var VERSION = "1.8.0";
 
 /* Int: Counter to ensure unique IDs */
 var ID_COUNTER = 0;
-function dsInit(layoutid, options) {
+function dsInit(layoutid, options, layoutPreview) {
     LOG_LEVEL = 10;
     /* Hide the info and log divs */
     $(".preview-log").css("display", "none");
@@ -39,7 +39,7 @@ function dsInit(layoutid, options) {
 
     playLog(0, "info", "Xibo HTML Preview v" + VERSION + " Starting Up", true);
     var preload = html5Preloader();
-    new Layout(layoutid, options, preload);
+    new Layout(layoutid, options, preload, layoutPreview);
 }
 
 /* Generate a unique ID for region DIVs, media nodes etc */
@@ -130,7 +130,7 @@ function keyHandler(event) {
     }*/
 }
 
-function Layout(id, options, preload) {
+function Layout(id, options, preload, layoutPreview) {
     /* Layout Object */
     /* Parses a layout and when run runs it in containerName */
 
@@ -211,8 +211,13 @@ function Layout(id, options, preload) {
         playLog(4, "debug", "Layout " + self.id + " has " + self.regionObjects.length + " regions");
         self.ready = true;
         preload.addFiles(options.loaderUrl);
-        self.run()
-        //preload.on('finish', self.run);
+        if (layoutPreview){
+            // previewing only one layout in the layout preview page
+            preload.on('finish', self.run);
+        } else {
+            // previewing a set of layouts in the campaign preview page
+            self.run();
+        }
     };
 
     self.run = function() {

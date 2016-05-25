@@ -41,7 +41,7 @@ This is the template for the campaign page
         (function($){
           $(document).ready(function(){
             {% for extendedLayout in extendedLayouts %}
-              dsInit({{ extendedLayout.layout.layoutId }}, {{ extendedLayout.previewOptions|json_encode()|raw }});
+              dsInit({{ extendedLayout.layout.layoutId }}, {{ extendedLayout.previewOptions|json_encode()|raw }}, false);
             {% endfor %}
           });
         }(jQuery));
