@@ -927,7 +927,7 @@ abstract class ModuleWidget implements ModuleInterface
         }
         // Send via Nginx X-Accel-Redirect?
         else if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Nginx') {
-            header("X-Accel-Redirect: /download/" . $attachmentName);
+            header("X-Accel-Redirect: /download/" . $media->storedAs);
         }
         else {
             // Return the file with PHP

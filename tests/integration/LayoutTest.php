@@ -126,20 +126,14 @@ class LayoutTest extends LocalWebTestCase
 
     public function testAddFailure($layoutName, $layoutDescription, $layoutTemplateId, $layoutResolutionId)
     {
-        try {
-            $response = $this->client->post('/layout', [
-                'name' => $layoutName,
-                'description' => $layoutDescription,
-                'layoutId' => $layoutTemplateId,
-                'resolutionId' => $layoutResolutionId
+        $response = $this->client->post('/layout', [
+            'name' => $layoutName,
+            'description' => $layoutDescription,
+            'layoutId' => $layoutTemplateId,
+            'resolutionId' => $layoutResolutionId
         ]);
-        }
-        catch (\InvalidArgumentException $e) {
-            $this->assertTrue(true);
-            $this->closeOutputBuffers();
-            return;
-        }
-        $this->fail('InvalidArgumentException not raised');
+
+        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
     }
 
     /**
@@ -283,19 +277,13 @@ class LayoutTest extends LocalWebTestCase
         if ($flag) {
             $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', 9);
         }
-        try {
-            $response = $this->client->post('/layout', [
+
+        $response = $this->client->post('/layout', [
             'name' => 'phpunit layout',
             'description' => 'phpunit layout'
-            ]);
-        }
-        catch (\InvalidArgumentException $e) {
-            $this->assertTrue(true);
-            $this->closeOutputBuffers();
-            $layout->delete();
-            return;
-        }
-        $this->fail('InvalidArgumentException not thown as expected');
+        ]);
+
+        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
     }
 
     /**

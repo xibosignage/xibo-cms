@@ -129,22 +129,16 @@ class CommandTest extends LocalWebTestCase
      * testAddFailure - test adding various commands that should be invalid
      * @dataProvider provideFailureCases
      */
-
-        public function testAddFailure($commandName, $commandDescription, $commandCode)
+    public function testAddFailure($commandName, $commandDescription, $commandCode)
     {
-        try {
-            $response = $this->client->post('/command', [
+
+        $response = $this->client->post('/command', [
             'command' => $commandName,
             'description' => $commandDescription,
             'code' => $commandCode
         ]);
-        }
-        catch (\InvalidArgumentException $e) {
-            $this->assertTrue(true);
-            $this->closeOutputBuffers();
-            return;
-        }
-        $this->fail('InvalidArgumentException not raised');
+
+        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
     }
 
     /**
@@ -208,15 +202,14 @@ class CommandTest extends LocalWebTestCase
         # Load in a known command
         /** @var XiboCommand $command */
         $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunit code');
-        # Change the comand name, description and code
+        # Change the comand name, description
         $name = Random::generateString(8, 'command');
         $description = Random::generateString(8, 'description');
-        $code = Random::generateString(8, 'code');
 
         $this->client->put('/command/' . $command->commandId, [
             'command' => $name,
             'description' => $description,
-            'code' => $code
+            'code' => $command->code
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
         
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
@@ -227,13 +220,11 @@ class CommandTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($name, $object->data->command);
         $this->assertSame($description, $object->data->description);
-        $this->assertSame($code, $object->data->code);
 
         # Check that the command was actually renamed
         $command = (new XiboCommand($this->getEntityProvider()))->getById($object->id);
         $this->assertSame($name, $command->command);
         $this->assertSame($description, $command->description);
-        $this->assertSame($code, $command->code);
 
         # Clean up the Layout as we no longer need it
         $command->delete();

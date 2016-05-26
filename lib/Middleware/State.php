@@ -988,7 +988,9 @@ class State extends Middleware
             return new \Xibo\Factory\DataSetColumnFactory(
                 $container->store,
                 $container->logService,
-                $container->sanitizerService
+                $container->sanitizerService,
+                $container->dataTypeFactory,
+                $container->dataSetColumnTypeFactory
             );
         });
 

@@ -10,6 +10,7 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\DataType;
+use Xibo\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -40,6 +41,22 @@ class DataTypeFactory extends BaseFactory
     }
 
     /**
+     * Get By Id
+     * @param int $id
+     * @return DataType
+     * @throws NotFoundException
+     */
+    public function getById($id)
+    {
+        $results = $this->query(null, ['dataTypeId' => $id]);
+
+        if (count($results) <= 0)
+            throw new NotFoundException();
+
+        return $results[0];
+    }
+
+    /**
      * @param null $sortOrder
      * @param null $filterBy
      * @return array[DataType]
@@ -48,7 +65,15 @@ class DataTypeFactory extends BaseFactory
     {
         $entries = [];
 
-        foreach ($this->getStore()->select('SELECT dataTypeId, dataType FROM `datatype` ', []) as $row) {
+        $params = [];
+        $sql = 'SELECT dataTypeId, dataType FROM `datatype` WHERE 1 = 1 ';
+
+        if ($this->getSanitizer()->getInt('dataTypeId') !== null) {
+            $sql .= ' AND `datatype`.dataTypeId = :dataTypeId ';
+            $params['dataTypeId'] = $this->getSanitizer()->getInt('dataTypeId');
+        }
+
+        foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row);
         }
 
