@@ -87,8 +87,8 @@ class DataSetTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($name, $object->data->dataSet);
-        return $object->id;
     }
+
 
     /**
      * Test edit
@@ -154,27 +154,22 @@ class DataSetTest extends LocalWebTestCase
     # TO DO /dataset/import/
 
     /**
-     * Test adding a column
-     * return int
+     * @dataProvider provideSuccessCases
      */
-    public function testColumnAdd()
+    public function testAddColumnSuccess($columnName, $columnListContent, $columnOrd, $columnDataTypeId, $columnDataSetColumnTypeId, $columnFormula)
     {
-        // Create a new dataset to use
-        /** @var XiboDataSet $dataSet */
+
         $name = Random::generateString(8, 'phpunit');
-        $description = 'PHP Unit column assign';
+        $description = 'PHP Unit column add';
         $dataSet = (new XiboDataSet($this->getEntityProvider()))->create($name, $description);
-
-        // Generate a new name for the new column
-        $nameCol = Random::generateString(8, 'phpunit');
-
+        
         $response = $this->client->post('/dataset/' . $dataSet->dataSetId . '/column', [
-            'heading' => $nameCol,
-            'listContent' => '',
-            'columnOrder' => 2,
-            'dataTypeId' => 1,
-            'dataSetColumnTypeId' => 1,
-            'formula' => ''
+            'heading' => $columnName,
+            'listContent' => $columnListContent,
+            'columnOrder' => $columnOrd,
+            'dataTypeId' => $columnDataTypeId,
+            'dataSetColumnTypeId' => $columnDataSetColumnTypeId,
+            'formula' => $columnFormula
         ]);
 
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
@@ -183,42 +178,106 @@ class DataSetTest extends LocalWebTestCase
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
-        $this->assertSame($nameCol, $object->data->heading);
+        $this->assertSame($columnName, $object->data->heading);
+        $this->assertSame($columnListContent, $object->data->listContent);
+        $this->assertSame($columnOrd, $object->data->columnOrder);
+        $this->assertSame($columnDataTypeId, $object->data->dataTypeId);
+        $this->assertSame($columnDataSetColumnTypeId, $object->data->dataSetColumnTypeId);
+        $this->assertSame($columnFormula, $object->data->formula);
+        
+      //  $dataSetCheck = (new XiboDataSet($this->getEntityProvider()))->getByColumnId($object->id);
+        
+        # Clean up the dataset as we no longer need it
+     //   $this->assertTrue($dataSet->delete(), 'Unable to delete ' . $dataSet->dataSetId);
 
-        $dataSet->delete();
+
+    }
+
+    /**
+     * Each array is a test run
+     * Format ($columnName, $columnListContent, $columnOrd, $columnDataTypeId, $columnDataSetColumnTypeId, $columnFormula)
+     * @return array
+     */
+
+    public function provideSuccessCases()
+    {
+
+        return [
+            // Value
+            'test case 1' => ['Test Column Value String', NULL, 2, 1, 1, NULL],
+            'test case 1' => ['Test Column list content', 'one,two,three', 2, 1, 1, NULL],
+            'test case 2' => ['Test Column Value Number', NULL, 2, 2, 1, NULL],
+            'test case 3' => ['Test Column Value Date', NULL, 2, 3, 1, NULL],
+            'test case 4' => ['Test Column Value External Image', NULL, 2, 4, 1, NULL],
+            'test case 5' => ['Test Column Value Internal Image', NULL, 2, 5, 1, NULL],
+            // Formula
+            'test case 6' => ['Test Column Formula', NULL, 2, 5, 1, 'Where Name = Dan'],
+        ];
+    }
+
+    /**
+     * @dataProvider provideFailureCases
+     * @group broken
+     */
+
+    public function testAddColumnFailure($columnName, $columnListContent, $columnOrd, $columnDataTypeId, $columnDataSetColumnTypeId, $columnFormula)
+    {
+
+        $name = Random::generateString(8, 'phpunit');
+        $description = 'PHP Unit column add';
+        $dataSet = (new XiboDataSet($this->getEntityProvider()))->create($name, $description);
+
+        try {
+        $response = $this->client->post('/dataset/' . $dataSet->dataSetId . '/column', [
+            'heading' => $columnName,
+            'listContent' => $columnListContent,
+            'columnOrder' => $columnOrd,
+            'dataTypeId' => $columnDataTypeId,
+            'dataSetColumnTypeId' => $columnDataSetColumnTypeId,
+            'formula' => $columnFormula
+        ]);
+        }
+        catch (\InvalidArgumentException $e) {
+            $this->assertTrue(true);
+            $this->closeOutputBuffers();
+            return;
+        }
+        $this->fail('InvalidArgumentException not raised');
+    }
+
+    /**
+     * Each array is a test run
+     * Format ($columnName, $columnListContent, $columnOrd, $columnDataTypeId, $columnDataSetColumnTypeId, $columnFormula)
+     * @return array
+     */
+
+    public function provideFailureCases()
+    {
+
+        return [
+            // Value
+            'test case 1' => ['incorrect data type', NULL, 2, 12, 1, NULL],     
+            'test case 2' => ['incorrect column type', NULL, 2, 19, 1, NULL],   
+            'test case 3 no name' => [NULL, NULL, 2, 3, 1, NULL]
+        ];
     }
 
     /**
      * Search columns for DataSet
-     * @group broken
-     * @depends testColumnAdd
+     * @depends testAddColumnSuccess
      */
     public function testListAllColumns()
     {
         // create new dataSet
         $name = Random::generateString(8, 'phpunit');
-        $description = 'PHP Unit column assign';
+        $description = 'PHP Unit column edit';
         $dataSet = (new XiboDataSet($this->getEntityProvider()))->create($name, $description);
 
         // add a new column
 
         $nameCol = Random::generateString(8, 'phpunit');
 
-        $response = $this->client->post('/dataset/' . $dataSet->dataSetId . '/column', [
-            'heading' => $nameCol,
-            'listContent' => '',
-            'columnOrder' => 2,
-            'dataTypeId' => 1,
-            'dataSetColumnTypeId' => 1,
-            'formula' => ''
-        ]);
-        
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-        $object = json_decode($this->client->response->body());
-
-        $this->assertObjectHasAttribute('data', $object);
-        $this->assertObjectHasAttribute('id', $object);
-        $this->assertSame($nameCol, $object->data->heading);
+        $dataSet->createColumn($nameCol,'', 2, 1, 1, '');
         
         // search for columns
 
@@ -236,8 +295,8 @@ class DataSetTest extends LocalWebTestCase
 
     /**
      * Test edit column
-          * @group broken
-     * @depends testColumnAdd
+     * @group broken
+     * @depends testAddColumnSuccess
      */
     public function testColumnEdit()
     {
@@ -252,25 +311,9 @@ class DataSetTest extends LocalWebTestCase
 
         $nameCol = Random::generateString(8, 'phpunit');
 
-        $column = $this->client->post('/dataset/' . $dataSet->dataSetId . '/column', [
-            'heading' => $nameCol,
-            'listContent' => '',
-            'columnOrder' => 2,
-            'dataTypeId' => 1,
-            'dataSetColumnTypeId' => 1,
-            'formula' => ''
-        ]);
-        
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $column);
-        $object = json_decode($this->client->response->body());
+        $column = $dataSet->createColumn($nameCol,'', 2, 1, 1, '');
 
-        return $object->id;
-        $columnId = $object->id;
-
-        $this->assertObjectHasAttribute('data', $object);
-        $this->assertObjectHasAttribute('id', $object);
-        $this->assertSame($nameCol, $object->data->heading);
-        $this->assertSame(1, $object->data->dataTypeId);
+        $dataSetCheck = $dataSet->getByColumnId($column);
         
         // edit column
         
@@ -525,7 +568,7 @@ class DataSetTest extends LocalWebTestCase
 
         // delete row
 
-        $this->cliet->delete('/dataset/data/' . $dataSet->dataSetId . $rowId);
+        $this->client->delete('/dataset/data/' . $dataSet->dataSetId . $rowId);
 
         $response = json_decode($this->client->response->body());
         $this->assertSame(204, $response->status, $this->client->response->body());
