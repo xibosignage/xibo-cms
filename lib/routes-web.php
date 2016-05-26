@@ -182,6 +182,7 @@ $app->get('/campaign/form/copy/:id', '\Xibo\Controller\Campaign:copyForm')->name
 $app->get('/campaign/form/delete/:id', '\Xibo\Controller\Campaign:deleteForm')->name('campaign.delete.form');
 $app->get('/campaign/form/retire/:id', '\Xibo\Controller\Campaign:retireForm')->name('campaign.retire.form');
 $app->get('/campaign/form/layouts/:id', '\Xibo\Controller\Campaign:layoutsForm')->name('campaign.layouts.form');
+$app->get('/campaign/:id/preview', '\Xibo\Controller\Campaign:preview')->name('campaign.preview');
 
 //
 // template

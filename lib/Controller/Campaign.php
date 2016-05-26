@@ -145,7 +145,6 @@ class Campaign extends Base
             );
 
             // Preview
-            // // FIXME : check permissions pour ce bouton 
             $campaign->buttons[] = array(
                 'id' => 'campaign_button_preview',
                 'linkType' => '_blank',
@@ -603,9 +602,6 @@ class Campaign extends Base
     public function preview($campaignId)
     {
         $campaign = $this->campaignFactory->getById($campaignId);
-	// FIXME : pas de checkEditable
-    //    if (!$this->getUser()->checkEditable($campaign))
-    //        throw new AccessDeniedException();
         $layouts = $this->layoutFactory->getByCampaignId($campaignId);
         $duration = 0 ;
         $extendedLayouts = [];
