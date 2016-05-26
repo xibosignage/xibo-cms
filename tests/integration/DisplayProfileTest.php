@@ -123,22 +123,15 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
      * testAddFailure - test adding various profiles that should be invalid
      * @dataProvider provideFailureCases
      */
-
-        public function testAddFailure($profileName, $profileType, $profileIsDefault)
+    public function testAddFailure($profileName, $profileType, $profileIsDefault)
     {
-        try {
-            $response = $this->client->post('/displayprofile', [
+        $response = $this->client->post('/displayprofile', [
             'name' => $profileName,
             'type' => $profileType,
             'isDefault' => $profileIsDefault
         ]);
-        }
-        catch (\InvalidArgumentException $e) {
-            $this->assertTrue(true);
-            $this->closeOutputBuffers();
-            return;
-        }
-        $this->fail('InvalidArgumentException not raised');
+
+        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
     }
 
     /**

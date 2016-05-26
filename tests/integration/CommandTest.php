@@ -129,22 +129,16 @@ class CommandTest extends LocalWebTestCase
      * testAddFailure - test adding various commands that should be invalid
      * @dataProvider provideFailureCases
      */
-
-        public function testAddFailure($commandName, $commandDescription, $commandCode)
+    public function testAddFailure($commandName, $commandDescription, $commandCode)
     {
-        try {
-            $response = $this->client->post('/command', [
+
+        $response = $this->client->post('/command', [
             'command' => $commandName,
             'description' => $commandDescription,
             'code' => $commandCode
         ]);
-        }
-        catch (\InvalidArgumentException $e) {
-            $this->assertTrue(true);
-            $this->closeOutputBuffers();
-            return;
-        }
-        $this->fail('InvalidArgumentException not raised');
+
+        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
     }
 
     /**

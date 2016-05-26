@@ -170,21 +170,14 @@ class DisplayGroupTest extends LocalWebTestCase
      */
     public function testAddFailure($groupName, $groupDescription, $isDynamic, $dynamicCriteria)
     {
-        try {
-            $response = $this->client->post('/displaygroup', [
-                'displayGroup' => $groupName,
-                'description' => $groupDescription,
-                'isDynamic' => $isDynamic,
-                'dynamicCriteria' => $dynamicCriteria
-            ]);
-        }
-        catch (\InvalidArgumentException $e) {
-            $this->assertTrue(true);
-            $this->closeOutputBuffers();
-            return;
-        }
+        $response = $this->client->post('/displaygroup', [
+            'displayGroup' => $groupName,
+            'description' => $groupDescription,
+            'isDynamic' => $isDynamic,
+            'dynamicCriteria' => $dynamicCriteria
+        ]);
 
-        $this->fail('InvalidArgumentException not raised');
+        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
     }
 
     /**
@@ -372,23 +365,17 @@ class DisplayGroupTest extends LocalWebTestCase
             $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit displaygroup', 'phpunit displaygroup', 0, '');
         }
 
-        try {
-            $response = $this->client->post('/displaygroup', [
-                'displayGroup' => 'phpunit displaygroup',
-                'description' => 'phpunit displaygroup',
-                'isDynamic' => 0,
-                'dynamicCriteria' => ''
-            ]);
-        }
-        catch (\InvalidArgumentException $e) {
-            $this->assertTrue(true);
-            $this->closeOutputBuffers();
-            $displayGroup->delete();
-            return;
-        }
 
-        $this->fail('InvalidArgumentException not thown as expected');
+        $response = $this->client->post('/displaygroup', [
+            'displayGroup' => 'phpunit displaygroup',
+            'description' => 'phpunit displaygroup',
+            'isDynamic' => 0,
+            'dynamicCriteria' => ''
+        ]);
 
+        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
+
+        $displayGroup->delete();
     }
 
    /**

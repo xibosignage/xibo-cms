@@ -125,22 +125,15 @@ class ResolutionTest extends LocalWebTestCase
      * testAddFailure - test adding various resolutions that should be invalid
      * @dataProvider provideFailureCases
      */
-
-        public function testAddFailure($resolutionName, $resolutionWidth, $resolutionHeight)
+    public function testAddFailure($resolutionName, $resolutionWidth, $resolutionHeight)
     {
-        try {
-            $response = $this->client->post('/resolution', [
+        $response = $this->client->post('/resolution', [
             'resolution' => $resolutionName,
             'width' => $resolutionWidth,
             'height' => $resolutionHeight
         ]);
-        }
-        catch (\InvalidArgumentException $e) {
-            $this->assertTrue(true);
-            $this->closeOutputBuffers();
-            return;
-        }
-        $this->fail('InvalidArgumentException not raised');
+
+        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
     }
 
     /**
@@ -148,7 +141,6 @@ class ResolutionTest extends LocalWebTestCase
      * Format (resolution name, width, height)
      * @return array
      */
-
     public function provideFailureCases()
     {
         return [

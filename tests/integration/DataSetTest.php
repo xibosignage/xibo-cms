@@ -23,8 +23,6 @@ class DataSetTest extends LocalWebTestCase
     {
         parent::setup();
         $this->startDataSets = (new XiboDataSet($this->getEntityProvider()))->get(['start' => 0, 'length' => 1000]);
-
-        fwrite(STDERR, 'Start: ' . json_encode($this->startDataSets) . PHP_EOL . PHP_EOL);
     }
     
     /**
@@ -34,8 +32,6 @@ class DataSetTest extends LocalWebTestCase
     {
         // tearDown all datasets that weren't there initially
         $finalDataSets = (new XiboDataSet($this->getEntityProvider()))->get(['start' => 0, 'length' => 1000]);
-
-        fwrite(STDERR, 'Final: ' . json_encode($finalDataSets) . PHP_EOL);
 
         $difference = array_udiff($finalDataSets, $this->startDataSets, function ($a, $b) {
             /** @var XiboDataSet $a */
@@ -208,30 +204,29 @@ class DataSetTest extends LocalWebTestCase
         return [
             // Value
             'test case 1' => ['Test Column Value String', NULL, 2, 1, 1, NULL],
-            'test case 1' => ['Test Column list content', 'one,two,three', 2, 1, 1, NULL],
-            'test case 2' => ['Test Column Value Number', NULL, 2, 2, 1, NULL],
-            'test case 3' => ['Test Column Value Date', NULL, 2, 3, 1, NULL],
-            'test case 4' => ['Test Column Value External Image', NULL, 2, 4, 1, NULL],
-            'test case 5' => ['Test Column Value Internal Image', NULL, 2, 5, 1, NULL],
+            'test case 2' => ['Test Column list content', 'one,two,three', 2, 1, 1, NULL],
+            'test case 3' => ['Test Column Value Number', NULL, 2, 2, 1, NULL],
+            'test case 4' => ['Test Column Value Date', NULL, 2, 3, 1, NULL],
+            'test case 5' => ['Test Column Value External Image', NULL, 2, 4, 1, NULL],
+            'test case 6' => ['Test Column Value Internal Image', NULL, 2, 5, 1, NULL],
             // Formula
-            'test case 6' => ['Test Column Formula', NULL, 2, 5, 1, 'Where Name = Dan'],
+            'test case 7' => ['Test Column Formula', NULL, 2, 5, 1, 'Where Name = Dan'],
         ];
     }
 
     /**
      * @dataProvider provideFailureCases
-     * @group broken
      */
-
     public function testAddColumnFailure($columnName, $columnListContent, $columnOrd, $columnDataTypeId, $columnDataSetColumnTypeId, $columnFormula)
     {
 
         $name = Random::generateString(8, 'phpunit');
-        $description = 'PHP Unit column add';
+        $description = 'PHP Unit column add failure';
+
+        /** @var XiboDataSet $dataSet */
         $dataSet = (new XiboDataSet($this->getEntityProvider()))->create($name, $description);
 
-        try {
-        $response = $this->client->post('/dataset/' . $dataSet->dataSetId . '/column', [
+        $this->client->post('/dataset/' . $dataSet->dataSetId . '/column', [
             'heading' => $columnName,
             'listContent' => $columnListContent,
             'columnOrder' => $columnOrd,
@@ -239,13 +234,8 @@ class DataSetTest extends LocalWebTestCase
             'dataSetColumnTypeId' => $columnDataSetColumnTypeId,
             'formula' => $columnFormula
         ]);
-        }
-        catch (\InvalidArgumentException $e) {
-            $this->assertTrue(true);
-            $this->closeOutputBuffers();
-            return;
-        }
-        $this->fail('InvalidArgumentException not raised');
+
+        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
     }
 
     /**
@@ -256,7 +246,6 @@ class DataSetTest extends LocalWebTestCase
 
     public function provideFailureCases()
     {
-
         return [
             // Value
             'test case 1' => ['incorrect data type', NULL, 2, 12, 1, NULL],     
