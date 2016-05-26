@@ -295,7 +295,6 @@ class DataSetTest extends LocalWebTestCase
 
     /**
      * Test edit column
-     * @group broken
      * @depends testAddColumnSuccess
      */
     public function testColumnEdit()
@@ -313,28 +312,28 @@ class DataSetTest extends LocalWebTestCase
 
         $column = $dataSet->createColumn($nameCol,'', 2, 1, 1, '');
 
-        $dataSetCheck = $dataSet->getByColumnId($column);
-        
+        $dataSetCheck = $dataSet->getByColumnId($column->dataSetColumnId);
+    
         // edit column
         
         $nameNew = Random::generateString(8, 'phpunit');
 
-        $response = $this->client->put('/dataset/' . $dataSet->dataSetId . '/column/' . $columnId, [
+        $response = $this->client->put('/dataset/' . $dataSet->dataSetId . '/column/' . $dataSetCheck->dataSetColumnId, [
             'heading' => $nameNew,
             'listContent' => '',
-            'columnOrder' => $object->data->columnOrder,
-            'dataTypeId' => $object->data->dataTypeId,
-            'dataSetColumnTypeId' => $object->data->dataSetColumnTypeId,
+            'columnOrder' => $dataSetCheck->columnOrder,
+            'dataTypeId' => $dataSetCheck->dataTypeId,
+            'dataSetColumnTypeId' => $dataSetCheck->dataSetColumnTypeId,
             'formula' => ''
         ]);
 
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
 
-        $objectNew = json_decode($this->client->response->body());
+        $object = json_decode($this->client->response->body());
 
-        $this->assertObjectHasAttribute('data', $objectNew);
-        $this->assertObjectHasAttribute('id', $objectNew);
-        $this->assertSame($nameNew, $objectNew->data->heading);
+        $this->assertObjectHasAttribute('data', $object);
+        $this->assertObjectHasAttribute('id', $object);
+        $this->assertSame($nameNew, $object->data->heading);
 
         $dataSet->delete();
     }
