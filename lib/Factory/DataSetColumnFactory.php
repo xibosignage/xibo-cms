@@ -21,15 +21,26 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class DataSetColumnFactory extends BaseFactory
 {
+    /** @var  DataTypeFactory */
+    private $dataTypeFactory;
+
+    /** @var  DataSetColumnTypeFactory */
+    private $dataSetColumnTypeFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param DataTypeFactory $dataTypeFactory
+     * @param DataSetColumnTypeFactory $dataSetColumnTypeFactory
      */
-    public function __construct($store, $log, $sanitizerService)
+    public function __construct($store, $log, $sanitizerService, $dataTypeFactory, $dataSetColumnTypeFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+
+        $this->dataTypeFactory = $dataTypeFactory;
+        $this->dataSetColumnTypeFactory = $dataSetColumnTypeFactory;
     }
 
     /**
@@ -37,7 +48,7 @@ class DataSetColumnFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new DataSetColumn($this->getStore(), $this->getLog());
+        return new DataSetColumn($this->getStore(), $this->getLog(), $this->dataTypeFactory, $this->dataSetColumnTypeFactory);
     }
 
     /**

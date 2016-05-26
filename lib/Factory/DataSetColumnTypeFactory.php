@@ -10,6 +10,7 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\DataSetColumnType;
+use Xibo\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -40,6 +41,22 @@ class DataSetColumnTypeFactory extends BaseFactory
     }
 
     /**
+     * Get By Id
+     * @param int $id
+     * @return DataSetColumnType
+     * @throws NotFoundException
+     */
+    public function getById($id)
+    {
+        $results = $this->query(null, ['dataSetColumnTypeId' => $id]);
+
+        if (count($results) <= 0)
+            throw new NotFoundException();
+
+        return $results[0];
+    }
+
+    /**
      * @param null $sortOrder
      * @param null $filterBy
      * @return array[DataSetColumnType]
@@ -47,8 +64,15 @@ class DataSetColumnTypeFactory extends BaseFactory
     public function query($sortOrder = null, $filterBy = null)
     {
         $entries = [];
+        $params = [];
+        $sql = 'SELECT dataSetColumnTypeId, dataSetColumnType FROM `datasetcolumntype` WHERE 1 = 1 ';
 
-        foreach ($this->getStore()->select('SELECT dataSetColumnTypeId, dataSetColumnType FROM `datasetcolumntype` ', []) as $row) {
+        if ($this->getSanitizer()->getInt('dataSetColumnTypeId') !== null) {
+            $sql .= ' AND `datasetcolumntype`.dataSetColumnTypeId = :dataSetColumnTypeId ';
+            $params['dataSetColumnTypeId'] = $this->getSanitizer()->getInt('dataSetColumnTypeId');
+        }
+
+        foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row);
         }
 

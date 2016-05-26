@@ -22,7 +22,9 @@ class DataSetTest extends LocalWebTestCase
     public function setup()
     {
         parent::setup();
-        $this->startDataSets = (new XiboDataSet($this->getEntityProvider()))->get();
+        $this->startDataSets = (new XiboDataSet($this->getEntityProvider()))->get(['start' => 0, 'length' => 1000]);
+
+        fwrite(STDERR, 'Start: ' . json_encode($this->startDataSets) . PHP_EOL . PHP_EOL);
     }
     
     /**
@@ -32,21 +34,22 @@ class DataSetTest extends LocalWebTestCase
     {
         // tearDown all datasets that weren't there initially
         $finalDataSets = (new XiboDataSet($this->getEntityProvider()))->get(['start' => 0, 'length' => 1000]);
+
+        fwrite(STDERR, 'Final: ' . json_encode($finalDataSets) . PHP_EOL);
+
+        $difference = array_udiff($finalDataSets, $this->startDataSets, function ($a, $b) {
+            /** @var XiboDataSet $a */
+            /** @var XiboDataSet $b */
+            return $a->dataSetId - $b->dataSetId;
+        });
+
         # Loop over any remaining datasets and nuke them
-        foreach ($finalDataSets as $dataSet) {
+        foreach ($difference as $dataSet) {
             /** @var XiboDataSet $dataSet */
-            $flag = true;
-            foreach ($this->startDataSets as $startData) {
-               if ($startData->dataSetId == $dataSet->dataSetId) {
-                   $flag = false;
-               }
-            }
-            if ($flag) {
-                try {
-                    $dataSet->delete();
-                } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $dataSet->dataSetId . '. E:' . $e->getMessage());
-                }
+            try {
+                $dataSet->delete();
+            } catch (\Exception $e) {
+                fwrite(STDERR, 'Unable to delete ' . $dataSet->dataSetId . '. E: ' . $e->getMessage() . PHP_EOL);
             }
         }
         parent::tearDown();
