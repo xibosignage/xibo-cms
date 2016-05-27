@@ -10,6 +10,7 @@ namespace Xibo\Tests\Integration;
 
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
+use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
@@ -243,6 +244,8 @@ class LayoutTest extends LocalWebTestCase
         ];
     }
 
+
+
     /**
      * Each array is a test run
      * Format (LayoutName, description, layoutID (template), resolution ID)
@@ -414,7 +417,7 @@ class LayoutTest extends LocalWebTestCase
      * Add new region to a specific layout
      * @dataProvider regionSuccessCases
      */
-    public function testAddRegion($regionWidth, $regionHeight, $regionTop, $regionLeft)
+    public function testAddRegionSuccess($regionWidth, $regionHeight, $regionTop, $regionLeft)
     {
         $name = Random::generateString(8, 'phpunit');
         $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
@@ -451,16 +454,57 @@ class LayoutTest extends LocalWebTestCase
     {
 
         return [
-            // Multi-language layouts
-            'test case 1' => [500, 350, 100, 150],
-            'test case 2' => [350, 200, 50, 50],
-            'test case 3' => [69,69,20,420]
+            // various correct regions
+            'region 1' => [500, 350, 100, 150],
+            'region 2' => [350, 200, 50, 50],
+            'region 3' => [69, 69, 20, 420],
+            'region 4 no offsets' => [69, 69, 0, 0]
+        ];
+    }
+
+
+    /**
+     * testAddFailure - test adding various regions that should be invalid
+     * @dataProvider regionFailureCases
+     * @group broken
+     */
+
+    public function testAddRegionFailure($regionWidth, $regionHeight, $regionTop, $regionLeft)
+    {
+        $name = Random::generateString(8, 'phpunit');
+        $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
+
+        
+        $this->client->post('/region/' . $layout->layoutId, [
+        'width' => $regionWidth,
+        'height' => $regionHeight,
+        'top' => $regionTop,
+        'left' => $regionLeft
+            ]);
+
+        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
+    }
+
+    /**
+     * Each array is a test run
+     * Format (width, height, top,  left)
+     * @return array
+     */
+
+    public function regionFailureCases()
+    {
+
+        return [
+            // various incorrect regions
+            'region incorrect size' => [5000, 12333, 0, 0],
+            'region incorroct offset' => [350, 200, 6969, 12999],
+            'region no size' => [NULL, NULL, 20, 420]
         ];
     }
 
     /**
      * Edit known region
-     * @depends testAddRegion
+     * @depends testAddRegionSuccess
      */
     public function testEditRegion()
     {
@@ -470,7 +514,7 @@ class LayoutTest extends LocalWebTestCase
 
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,300,75,125);
        
-        $this->client->put('/region/' . $region->$regionId, [
+        $this->client->put('/region/' . $region->regionId, [
             'width' => 700,
             'height' => 500,
             'top' => 400,
@@ -503,7 +547,7 @@ class LayoutTest extends LocalWebTestCase
         $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200, 670, 100, 100);
 
-        $this->client->delete('/region/' . $region->$regionId);
+        $this->client->delete('/region/' . $region->regionId);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
    }
@@ -542,17 +586,18 @@ class LayoutTest extends LocalWebTestCase
 
     /**
      * Position Test
+     * @group broken
      */
     public function testPosition()
     {
 
         # Load in a known layout
         /** @var XiboLayout $layout */
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', 9);
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout position', 'phpunit layout', '', 9);
 
         $region1 = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,670,75,125);
         # Create Two known regions and add them to that layout
-        $region2 = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,300,75,125);
+        $region2 = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,300,475,625);
        
         #Reposition regions on that layout
         $regionJson = json_encode([

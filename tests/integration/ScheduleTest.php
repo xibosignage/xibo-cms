@@ -10,8 +10,10 @@ namespace Xibo\Tests\Integration;
 
 
 use Xibo\OAuth2\Client\Entity\XiboCampaign;
+use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
 use Xibo\OAuth2\Client\Entity\XiboSchedule;
+use Xibo\Helper\Random;
 use Xibo\Tests\LocalWebTestCase;
 
 
@@ -47,13 +49,9 @@ class ScheduleTest extends LocalWebTestCase
     public function testAdd()
     {
         // Get a layout to schedule
-//        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', 9);
-
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', 9);
         // Get a Display Group Id
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
-
-        //Create Campaign
-
         /* @var XiboCampaign $campaign */
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
 
@@ -70,16 +68,99 @@ class ScheduleTest extends LocalWebTestCase
             'isPriority' => 0
         ]);
 
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
-
         $object = json_decode($this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
         $this->assertObjectHasAttribute('id', $object, $this->client->response->body());
 
+        $layout->delete();
         $displayGroup->delete();
         $campaign->delete();
     }
+
+    /**
+     * @group add
+     * @dataProvider provideSuccessCasesLayout
+     * @group broken
+     */
+    public function testAddEventLayout($scheduleFrom, $scheduleTo, $scheduleCampaignId, $scheduleDisplays, $scheduledayPartId, $scheduleRecurrenceType, $scheduleRecurrenceDetail, $scheduleRecurrenceRange, $scheduleOrder, $scheduleIsPriority)
+    {
+        // Get a layout to schedule
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', 9);
+
+        // Get a Display Group Id
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
+
+        //Create Campaign
+
+        /* @var XiboCampaign $campaign */
+        $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
+
+        $response = $this->client->post($this->route, [
+            'fromDt' => date('Y-m-d h:i:s', $scheduleFrom),
+            'toDt' => date('Y-m-d h:i:s', $scheduleTo),
+            'eventTypeId' => 1,
+            'campaignId' => $scheduleCampaignId,
+            'displayGroupIds' => $scheduleDisplays,
+            'displayOrder' => $scheduleOrder,
+            'isPriority' => $scheduleIsPriority,
+            'scheduleRecurrenceType' => $scheduleRecurrenceType,
+            'scheduleRecurrenceDetail' => $scheduleRecurrenceDetail,
+            'scheduleRecurrenceRange' => $scheduleRecurrenceRange
+        ]);
+
+        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
+
+        $object = json_decode($this->client->response->body());
+
+        $this->assertObjectHasAttribute('data', $object);
+        $this->assertObjectHasAttribute('id', $object);
+
+        $layout->delete();
+        $displayGroup->delete();
+        $campaign->delete();
+    }
+
+    /**
+     * Each array is a test run
+     * Format ($scheduleFrom, $scheduleTo, $scheduleCampaignId, $scheduleDisplays, $scheduledayPartId, $scheduleRecurrenceType, $scheduleRecurrenceDetail, $scheduleRecurrenceRange, $scheduleOrder, $scheduleIsPriority)
+     * @return array
+     */
+
+    public function provideSuccessCasesLayout()
+    {
+
+        return [
+            'Campaign no priority, no recurrence' => [time(), time()+3600, $campaign->campaignId, $displayGroup->displayGroupId, 0, NULL, NULL, NULL, 0, 0]
+        ];
+    }
+
+    /**
+     * @group add
+     * @group broken
+     */
+    public function testAddEventLayout2()
+    {
+        // Get a layout to schedule
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', 9);
+
+        // Get a Display Group Id
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
+
+        //Create Campaign
+
+        /* @var XiboCampaign $campaign */
+        $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
+
+        $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(date('Y-m-d h:i:s', time()), date('Y-m-d h:i:s', time()+3600), $campaign->campaignId, $displayGroup->displayGroupId, 0, NULL, NULL, NULL, 0, 0);
+
+        $layout->delete();
+        $displayGroup->delete();
+        $campaign->delete();
+        $event->delete();
+    }
+     
+        
 
     /**
      * Test edit
