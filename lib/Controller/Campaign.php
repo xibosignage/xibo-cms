@@ -609,6 +609,7 @@ class Campaign extends Base
         {
             $duration += $layout->duration ;
             $extendedLayouts[] = ['layout' => $layout,
+                                  'duration' => gmdate('H:i:s', $layout->duration),
                                   'previewOptions' => [
                                       'getXlfUrl' => $this->urlFor('layout.getXlf', ['id' => $layout->layoutId]),
                                       'getResourceUrl' => $this->urlFor('module.getResource'),

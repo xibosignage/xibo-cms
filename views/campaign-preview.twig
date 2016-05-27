@@ -16,16 +16,16 @@ This is the template for the campaign page
             <p><b>total duration</b> {{ duration }} <i>(hours:min:sec)</i></p>
             <p><b>number of layouts</b> : {{ campaign.numberLayouts }} </p>
             <div class="row clearfix">
-              {% for layout in layouts %}
+              {% for extendedLayout in extendedLayouts %}
                 <div class="col-sm-6 col-md-4 col-lg-3">
                   <div class="embed-responsive embed-responsive-4by3">
                       <div class="embed-responsive-item preview-container">
-                        {% include 'layout-preview-partial.twig' with {'layout': layout, 'previewOptions': previewOptions } %}
+                        {% include 'layout-preview-partial.twig' with {'layout': extendedLayout.layout, 'previewOptions': extendedLayout.previewOptions } %}
                       </div>
                   </div>
-                        <b>layout id :</b> {{ layout.layoutId }},
-                        <b> layout name :</b> {{ layout.layout }},
-                        <b> layout duration :</b> {{ layout.duration }}
+                        <small>id:</small> {{ extendedLayout.layout.layoutId }}<br/>
+                        <small>name:</small> {{ extendedLayout.layout.layout }}<br/>
+                        <small>duration:</small> {{ extendedLayout.duration }}</br>
                 </div>
               {% endfor %}
             </div>
