@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "09e4be32f7102535c1c2c2f3d03510e5",
+    "hash": "3f2916c2e66eba5d00ec543f80159b7c",
     "content-hash": "dc45578b38c9f0fd2a9dfc00b0417c28",
     "packages": [
         {
@@ -1777,12 +1777,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPMailer/PHPMailer.git",
-                "reference": "7b9fd0730946d56f4a194cf68bb9b75a8eb2563c"
+                "reference": "d3c73b1739aeee621217fdd675708474cf6121e4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/7b9fd0730946d56f4a194cf68bb9b75a8eb2563c",
-                "reference": "7b9fd0730946d56f4a194cf68bb9b75a8eb2563c",
+                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/d3c73b1739aeee621217fdd675708474cf6121e4",
+                "reference": "d3c73b1739aeee621217fdd675708474cf6121e4",
                 "shasum": ""
             },
             "require": {
@@ -1829,7 +1829,7 @@
                 }
             ],
             "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
-            "time": "2016-05-13 07:30:56"
+            "time": "2016-05-22 08:26:48"
         },
         {
             "name": "psr/cache",
@@ -4804,12 +4804,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PeterMis/oauth2-xibo-cms.git",
-                "reference": "62427260d7d9c956e62547e884be57542eb465e0"
+                "reference": "80f950c2baf9815f6705be78fd135d04d097d91f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PeterMis/oauth2-xibo-cms/zipball/62427260d7d9c956e62547e884be57542eb465e0",
-                "reference": "62427260d7d9c956e62547e884be57542eb465e0",
+                "url": "https://api.github.com/repos/PeterMis/oauth2-xibo-cms/zipball/80f950c2baf9815f6705be78fd135d04d097d91f",
+                "reference": "80f950c2baf9815f6705be78fd135d04d097d91f",
                 "shasum": ""
             },
             "require": {
@@ -4849,7 +4849,7 @@
             "support": {
                 "source": "https://github.com/PeterMis/oauth2-xibo-cms/tree/master"
             },
-            "time": "2016-05-20 09:28:47"
+            "time": "2016-05-25 13:22:36"
         },
         {
             "name": "zircote/swagger-php",

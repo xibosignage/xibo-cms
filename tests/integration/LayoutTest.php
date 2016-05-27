@@ -473,7 +473,6 @@ class LayoutTest extends LocalWebTestCase
     /**
      * Edit known region
      * @depends testAddRegion
-          * @group broken
      */
     public function testEditRegion()
     {
@@ -481,27 +480,7 @@ class LayoutTest extends LocalWebTestCase
         $name = Random::generateString(8, 'phpunit');
         $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
 
-        $region = $layout->createRegion(200, 300, 75, 125);
-        
-        $region = $this->client->post('/region/' . $layout->layoutId, [
-        'width' => 200,
-        'height' => 300,
-        'top' => 75,
-        'left' => 125
-            ]);
-       
-        $this->assertSame(200, $this->client->response->status());
-        $object = json_decode($this->client->response->body());
-
-        $this->assertObjectHasAttribute('data', $object);
-        $this->assertObjectHasAttribute('id', $object);
-
-        $this->assertSame(200, $object->data->width);
-        $this->assertSame(300, $object->data->height);
-        $this->assertSame(75, $object->data->top);
-        $this->assertSame(125, $object->data->left);
-
-
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,300,75,125);
        
         $this->client->put('/region/' . $region->$regionId, [
             'width' => 700,
@@ -523,43 +502,22 @@ class LayoutTest extends LocalWebTestCase
         $this->assertSame(500, $object->data->height);
         $this->assertSame(400, $object->data->top);
         $this->assertSame(400, $object->data->left);
-
-        $layout->delete();
     }
   
    /**
     *  delete region test
     *  @depends testEditRegion
-         * @group broken
     */
    public function testDeleteRegion()
    {
 
     $name = Random::generateString(8, 'phpunit');
         $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
-
-        $region = $this->client->post('/region/' . $layout->layoutId, [
-        'width' => 200,
-        'height' => 670,
-        'top' => 100,
-        'left' => 100
-            ]);
-       
-        $this->assertSame(200, $this->client->response->status());
-        $object = json_decode($this->client->response->body());
-
-        return $object->id;
-
-        $this->assertSame(200, $object->data->width);
-        $this->assertSame(670, $object->data->height);
-        $this->assertSame(100, $object->data->top);
-        $this->assertSame(100, $object->data->left);
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200, 670, 100, 100);
 
         $this->client->delete('/region/' . $region->$regionId);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
-
-        $layout->delete();
    }
 
     /**
@@ -596,7 +554,6 @@ class LayoutTest extends LocalWebTestCase
 
     /**
      * Position Test
-          * @group broken
      */
     public function testPosition()
     {
@@ -605,58 +562,27 @@ class LayoutTest extends LocalWebTestCase
         /** @var XiboLayout $layout */
         $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', 9);
 
+        $region1 = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,670,75,125);
         # Create Two known regions and add them to that layout
-        $this->client->post('/region/' . $layout->layoutId, [
-        'width' => 200,
-        'height' => 670,
-        'top' => 100,
-        'left' => 100
-            ]);
-
-        $this->assertSame(200, $this->client->response->status());
-        $object = json_decode($this->client->response->body());
-        
-        $region1 = $object->data->regionId;
-
-        $this->assertSame(200, $object->data->width);
-        $this->assertSame(670, $object->data->height);
-        $this->assertSame(100, $object->data->top);
-        $this->assertSame(100, $object->data->left);
-
-
-        $this->client->post('/region/' . $layout->layoutId, [
-        'width' => 450,
-        'height' => 300,
-        'top' => 200,
-        'left' => 350
-            ]);
-
-        $this->assertSame(200, $this->client->response->status());
-        $object = json_decode($this->client->response->body());
-        
-        $region2 = $object->data->regionId;
-
-
-        
+        $region2 = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,300,75,125);
+       
         #Reposition regions on that layout
         $regionJson = json_encode([
                     [
-                        'regionId' => $region1,
+                        'regionId' => $region1->regionId,
                         'width' => 700,
                         'height' => 500,
                         'top' => 400,
                         'left' => 400
                     ],
                     [
-                        'regionId' => $region2,
+                        'regionId' => $region2->regionId,
                         'width' => 100,
                         'height' => 100,
                         'top' => 40,
                         'left' => 40
                     ]
                 ]);
-
-        fwrite(STDERR, $regionJson);
 
         $this->client->put('/region/position/all/' . $layout->layoutId, [
             'regions' => $regionJson
