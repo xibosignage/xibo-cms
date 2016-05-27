@@ -143,6 +143,9 @@ function Layout(id, options, preload, layoutPreview) {
         /* Create a hidden div to show the layout in */
         var screen = $('#screen_' + self.id) ;
         screen.append('<div id="' + self.containerName  + '"></div>');
+        if (layoutPreview === false){
+          screen.append('<a style="position:absolute;top:0;left:0;width:100%;height:100%;" target="_blank" href="'+ screen.parent().parent().attr('data-url') + '"></a>');
+        }
 
         var layout = $("#" + self.containerName);
         layout.css("display", "none");
