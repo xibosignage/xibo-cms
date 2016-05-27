@@ -22,7 +22,7 @@ class DataSetTest extends LocalWebTestCase
     public function setup()
     {
         parent::setup();
-        $this->startDataSets = (new XiboDataSet($this->getEntityProvider()))->get();
+        $this->startDataSets = (new XiboDataSet($this->getEntityProvider()))->get(['start' => 0, 'length' => 1000]);
     }
     
     /**
@@ -32,21 +32,20 @@ class DataSetTest extends LocalWebTestCase
     {
         // tearDown all datasets that weren't there initially
         $finalDataSets = (new XiboDataSet($this->getEntityProvider()))->get(['start' => 0, 'length' => 1000]);
+
+        $difference = array_udiff($finalDataSets, $this->startDataSets, function ($a, $b) {
+            /** @var XiboDataSet $a */
+            /** @var XiboDataSet $b */
+            return $a->dataSetId - $b->dataSetId;
+        });
+
         # Loop over any remaining datasets and nuke them
-        foreach ($finalDataSets as $dataSet) {
+        foreach ($difference as $dataSet) {
             /** @var XiboDataSet $dataSet */
-            $flag = true;
-            foreach ($this->startDataSets as $startData) {
-               if ($startData->dataSetId == $dataSet->dataSetId) {
-                   $flag = false;
-               }
-            }
-            if ($flag) {
-                try {
-                    $dataSet->delete();
-                } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $dataSet->dataSetId . '. E:' . $e->getMessage());
-                }
+            try {
+                $dataSet->delete();
+            } catch (\Exception $e) {
+                fwrite(STDERR, 'Unable to delete ' . $dataSet->dataSetId . '. E: ' . $e->getMessage() . PHP_EOL);
             }
         }
         parent::tearDown();
@@ -205,30 +204,29 @@ class DataSetTest extends LocalWebTestCase
         return [
             // Value
             'test case 1' => ['Test Column Value String', NULL, 2, 1, 1, NULL],
-            'test case 1' => ['Test Column list content', 'one,two,three', 2, 1, 1, NULL],
-            'test case 2' => ['Test Column Value Number', NULL, 2, 2, 1, NULL],
-            'test case 3' => ['Test Column Value Date', NULL, 2, 3, 1, NULL],
-            'test case 4' => ['Test Column Value External Image', NULL, 2, 4, 1, NULL],
-            'test case 5' => ['Test Column Value Internal Image', NULL, 2, 5, 1, NULL],
+            'test case 2' => ['Test Column list content', 'one,two,three', 2, 1, 1, NULL],
+            'test case 3' => ['Test Column Value Number', NULL, 2, 2, 1, NULL],
+            'test case 4' => ['Test Column Value Date', NULL, 2, 3, 1, NULL],
+            'test case 5' => ['Test Column Value External Image', NULL, 2, 4, 1, NULL],
+            'test case 6' => ['Test Column Value Internal Image', NULL, 2, 5, 1, NULL],
             // Formula
-            'test case 6' => ['Test Column Formula', NULL, 2, 5, 1, 'Where Name = Dan'],
+            'test case 7' => ['Test Column Formula', NULL, 2, 5, 1, 'Where Name = Dan'],
         ];
     }
 
     /**
      * @dataProvider provideFailureCases
-     * @group broken
      */
-
     public function testAddColumnFailure($columnName, $columnListContent, $columnOrd, $columnDataTypeId, $columnDataSetColumnTypeId, $columnFormula)
     {
 
         $name = Random::generateString(8, 'phpunit');
-        $description = 'PHP Unit column add';
+        $description = 'PHP Unit column add failure';
+
+        /** @var XiboDataSet $dataSet */
         $dataSet = (new XiboDataSet($this->getEntityProvider()))->create($name, $description);
 
-        try {
-        $response = $this->client->post('/dataset/' . $dataSet->dataSetId . '/column', [
+        $this->client->post('/dataset/' . $dataSet->dataSetId . '/column', [
             'heading' => $columnName,
             'listContent' => $columnListContent,
             'columnOrder' => $columnOrd,
@@ -236,13 +234,8 @@ class DataSetTest extends LocalWebTestCase
             'dataSetColumnTypeId' => $columnDataSetColumnTypeId,
             'formula' => $columnFormula
         ]);
-        }
-        catch (\InvalidArgumentException $e) {
-            $this->assertTrue(true);
-            $this->closeOutputBuffers();
-            return;
-        }
-        $this->fail('InvalidArgumentException not raised');
+
+        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
     }
 
     /**
@@ -253,7 +246,6 @@ class DataSetTest extends LocalWebTestCase
 
     public function provideFailureCases()
     {
-
         return [
             // Value
             'test case 1' => ['incorrect data type', NULL, 2, 12, 1, NULL],     

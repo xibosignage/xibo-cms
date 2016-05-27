@@ -7,6 +7,9 @@
 
 
 namespace Xibo\Entity;
+use Xibo\Exception\NotFoundException;
+use Xibo\Factory\DataSetColumnTypeFactory;
+use Xibo\Factory\DataTypeFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -81,14 +84,25 @@ class DataSetColumn implements \JsonSerializable
      */
     public $dataSetColumnType;
 
+    /** @var  DataTypeFactory */
+    private $dataTypeFactory;
+
+    /** @var  DataSetColumnTypeFactory */
+    private $dataSetColumnTypeFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param DataTypeFactory $dataTypeFactory
+     * @param DataSetColumnTypeFactory $dataSetColumnTypeFactory
      */
-    public function __construct($store, $log)
+    public function __construct($store, $log, $dataTypeFactory, $dataSetColumnTypeFactory)
     {
         $this->setCommonDependencies($store, $log);
+
+        $this->dataTypeFactory = $dataTypeFactory;
+        $this->dataSetColumnTypeFactory = $dataSetColumnTypeFactory;
     }
 
     /**
@@ -116,6 +130,19 @@ class DataSetColumn implements \JsonSerializable
 
         if ($this->heading == '')
             throw new \InvalidArgumentException(__('Please provide a column heading.'));
+
+        // Check the actual values
+        try {
+            $this->dataTypeFactory->getById($this->dataTypeId);
+        } catch (NotFoundException $e) {
+            throw new \InvalidArgumentException(__('Provided Data Type doesn\'t exist'));
+        }
+
+        try {
+            $this->dataSetColumnTypeFactory->getById($this->dataTypeId);
+        } catch (NotFoundException $e) {
+            throw new \InvalidArgumentException(__('Provided DataSet Column Type doesn\'t exist'));
+        }
 
         // Validation
         if ($this->dataSetColumnId != 0 && $this->listContent != '') {
