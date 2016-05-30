@@ -134,6 +134,14 @@ class Campaign extends Base
             if ($this->isApi())
                 break;
 
+            $campaign->includeProperty('totalDuration');
+            $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId);
+            $campaign->totalDuration = array_reduce($layouts, function($duration, $layout){
+                $duration += $layout->duration;
+                return $duration;
+            });
+            if (!isset($campaign->totalDuration)) { $campaign->totalDuration = 0; }
+
             $campaign->includeProperty('buttons');
             $campaign->buttons = [];
 
