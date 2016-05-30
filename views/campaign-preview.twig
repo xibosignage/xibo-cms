@@ -13,8 +13,8 @@ This is the template for the campaign page
     <div class="widget">
         <div class="widget-title">{% trans "Campaign preview" %}</div>
         <div class="widget-body">
-            <p><b>total duration</b> {{ duration }} <i>(hours:min:sec)</i></p>
-            <p><b>number of layouts</b> : {{ campaign.numberLayouts }} </p>
+            <p><b>{% trans "total duration" %}</b> {{ duration }} <i>({% trans "hours:min:sec" %})</i></p>
+            <p><b>{% trans "number of layouts" %}</b> : {{ campaign.numberLayouts }} </p>
             <div class="row clearfix">
               {% for extendedLayout in extendedLayouts %}
                 <div class="col-sm-6 col-md-4 col-lg-3">
@@ -23,9 +23,9 @@ This is the template for the campaign page
                           {% include 'layout-preview-partial.twig' with {'layout': extendedLayout.layout, 'previewOptions': extendedLayout.previewOptions } %}
                         </div>
                   </div>
-                        <small>id:</small> {{ extendedLayout.layout.layoutId }}<br/>
-                        <small>name:</small> {{ extendedLayout.layout.layout }}<br/>
-                        <small>duration:</small> {{ extendedLayout.duration }}</br>
+                        <small>{% trans "id" %}:</small> {{ extendedLayout.layout.layoutId }}<br/>
+                        <small>{% trans "name" %}:</small> {{ extendedLayout.layout.layout }}<br/>
+                        <small>{% trans "duration" %}:</small> {{ extendedLayout.duration }}</br>
                 </div>
               {% endfor %}
             </div>
