@@ -924,6 +924,9 @@ class Library extends Base
                     $ckEditorString .= $displayName . '/' . $familyName . ';';
                 }
 
+                // Make sure the library exists, otherwise we can't copy the temporary file.
+                $this->ensureLibraryExists($this->getConfig()->GetSetting('LIBRARY_LOCATION'));
+
                 // Put the player CSS into the temporary library location
                 $tempUrl = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/fonts.css';
                 file_put_contents($tempUrl, $css);
