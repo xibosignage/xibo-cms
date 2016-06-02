@@ -166,7 +166,7 @@ class Schedule extends Data
 
                         // Check to make sure that our from/to date isn't longer than the first repeat
                         if ($t_start_temp < $toDT)
-                            throw new \InvalidArgumentException(__('The first event repeat is inside the event from/to dates.'));
+                            $this->ThrowError(__('The first event repeat is inside the event from/to dates.'));
                         
                         if (!$this->AddDetail($displayGroupID, $t_start_temp, $t_end_temp, $userID, $eventID))
                             throw new Exception("Error Processing Request", 1);     
