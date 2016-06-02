@@ -11,7 +11,7 @@ This is the template for the campaign page
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a class="XiboFormButton" title="{% trans "Add a new Campaign" %}" href="{{ urlFor("campaign.add.form") }}">{% trans "Add Campaign" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Campaign" %}" href="{{ urlFor("campaign.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i>  {% trans "Add Campaign" %}</a></li>
     </ul>
 {% endblock %}
 
