@@ -18,14 +18,3 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
  
-
-.nav>li>a:hover, .nav>li>a:focus {
-    background-color: transparent !important;
-}
-
-ul li a.btns {
-    color: #fff !important; 
-    font-size: 1.1em;
-    
-}
-
