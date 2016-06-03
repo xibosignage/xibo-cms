@@ -11,7 +11,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a class="XiboFormButton" title="{% trans "Add a new Display Settings Profile" %}" href="{{ urlFor("displayProfile.add.form") }}">{% trans "Add Profile" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Display Settings Profile" %}" href="{{ urlFor("displayProfile.add.form") }}"> <i class="fa fa-cogs" aria-hidden="true"></i> {% trans "Add Profile" %}</a></li>
     </ul>
 {% endblock %}
 

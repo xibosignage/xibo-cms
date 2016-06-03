@@ -11,7 +11,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a class="XiboFormButton" title="{% trans "Add a new User Group" %}" href="{{ urlFor("group.add.form") }}">{% trans "Add User Group" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new User Group" %}" href="{{ urlFor("group.add.form") }}"> <i class="fa fa-users" aria-hidden="true"></i> {% trans "Add User Group" %}</a></li>
     </ul>
 {% endblock %}
 

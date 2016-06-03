@@ -402,3 +402,15 @@ div.dt-buttons {
 .template-upload span.preview {
     position: relative;
 }
+
+
+.nav>li>a:hover, .nav>li>a:focus {
+    background-color: transparent !important;
+}
+
+ul li a.btns {
+    color: #fff !important;
+    font-size: 1.1em;
+
+}
+

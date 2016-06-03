@@ -11,7 +11,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a class="XiboFormButton" title="{% trans "Add a new resolution for use on layouts" %}" href="{{ urlFor("resolution.add.form") }}">{% trans "Add Resolution" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new resolution for use on layouts" %}" href="{{ urlFor("resolution.add.form") }}"><span class="glyphicon glyphicon-plus-sign"></span> {% trans "Add Resolution" %}</a></li>
     </ul>
 {% endblock %}
 

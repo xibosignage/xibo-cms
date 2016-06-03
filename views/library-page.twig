@@ -11,9 +11,9 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a href="#" id="libraryUploadForm" title="{% trans "Add a new media item to the library" %}">{% trans "Add Media" %}</a></li>
+    <li class="btn btn-success btn-xs"><a class="btns" href="#" id="libraryUploadForm" title="{% trans "Add a new media item to the library" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Media" %}</a></li>
         {% if settings.SETTING_LIBRARY_TIDY_ENABLED == 1 %}
-            <li><a class="XiboFormButton" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ urlFor("library.tidy.form") }}">{% trans "Tidy Library" %}</a></li>
+            <li class="btn btn-danger btn-xs"><a class="XiboFormButton btns" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ urlFor("library.tidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</a></li>
         {% endif %}
     </ul>
 {% endblock %}

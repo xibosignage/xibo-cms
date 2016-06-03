@@ -3,8 +3,8 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a class="XiboFormButton" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ urlFor("layout.add.form") }}">{% trans "Add Layout" %}</a></li>
-        <li><a id="layoutUploadForm" title="{% trans "Import a Layout from a ZIP file." %}" href="#">{% trans "Import" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ urlFor("layout.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="btns" id="layoutUploadForm" title="{% trans "Import a Layout from a ZIP file." %}" href="#"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Import" %}</a></li>
     </ul>
 {% endblock %}
 

@@ -11,8 +11,8 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a class="XiboFormButton" title="{% trans "Add a row to the end of this DataSet" %}" href="{{ urlFor("dataSet.data.add.form", {"id": dataSet.dataSetId}) }}">{% trans "Add Row" %}</a></li>
-        <li><a href="{{ urlFor("dataSet.column.view", {"id": dataSet.dataSetId}) }}">{% trans "View Columns" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a row to the end of this DataSet" %}" href="{{ urlFor("dataSet.data.add.form", {"id": dataSet.dataSetId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Row" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="btns" href="{{ urlFor("dataSet.column.view", {"id": dataSet.dataSetId}) }}"><i class="fa fa-columns" aria-hidden="true"></i> {% trans "View Columns" %}</a></li>
     </ul>
 {% endblock %}
 
