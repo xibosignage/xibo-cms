@@ -10,8 +10,8 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a class="XiboFormButton" title="{% trans "Export raw data to CSV" %}" href="{{ urlFor("auditLog.export.form") }}">{% trans "Export" %}</a></li>
-        <li><a id="refreshLog" title="{% trans "Refresh the Log" %}" href="#">{% trans "Refresh" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Export raw data to CSV" %}" href="{{ urlFor("auditLog.export.form") }}"><i class="fa fa-cloud-upload" aria-hidden="true"></i> {% trans "Export" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="btns" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"> <i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
     </ul>
 {% endblock %}
 

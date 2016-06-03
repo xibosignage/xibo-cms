@@ -11,7 +11,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a class="XiboFormButton" title="{% trans "Export raw data to CSV" %}" href="{{ urlFor("stats.export.form") }}">{% trans "Export" %}</a></li>
+        <li class="btn btn-primary btn-xs"><a class="XiboFormButton btns" title="{% trans "Export raw data to CSV" %}" href="{{ urlFor("stats.export.form") }}"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Export" %}</a></li>
     </ul>
 {% endblock %}
 

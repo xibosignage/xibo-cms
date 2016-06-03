@@ -11,7 +11,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a class="XiboFormButton" title="{% trans "Add a new Help page" %}" href="{{ urlFor("help.add.form") }}">{% trans "Add Help Link" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Help page" %}" href="{{ urlFor("help.add.form") }}"><i class="fa fa-question-circle" aria-hidden="true"></i> {% trans "Add Help Link" %}</a></li>
     </ul>
 {% endblock %}
 

@@ -11,8 +11,8 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a class="XiboFormButton" title="{% trans "Add a new User" %}" href="{{ urlFor("user.add.form") }}">{% trans "Add User" %}</a></li>
-        <li><a class="XiboFormButton" title="{% trans "View my authenticated applications" %}" href="{{ urlFor("user.applications") }}">{% trans "My Applications" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new User" %}" href="{{ urlFor("user.add.form") }}"><i class="fa fa-user-plus" aria-hidden="true"></i> {% trans "Add User" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="XiboFormButton btns" title="{% trans "View my authenticated applications" %}" href="{{ urlFor("user.applications") }}"><i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "My Applications" %}</a></li>
     </ul>
 {% endblock %}
 
