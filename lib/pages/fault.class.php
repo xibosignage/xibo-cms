@@ -32,6 +32,9 @@ class faultDAO extends baseDAO {
         Theme::Set('environment_check', $config->CheckEnvironment());
         Theme::Set('collect_data_url', 'index.php?p=fault&q=CollectData');
 
+		// Check if we have a bin log fault to report
+		Theme::Set('binLogError', ($config->checkBinLogEnabled() && !$config->checkBinLogFormat()));
+
         // Render the Theme and output
         Theme::Render('fault_page');
 	}
