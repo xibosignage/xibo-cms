@@ -999,4 +999,32 @@ class ConfigService implements ConfigServiceInterface
     {
         return ini_get('upload_max_filesize');
     }
+
+    /**
+     * Check binlog format
+     * @return bool
+     */
+    public function checkBinLogEnabled()
+    {
+        $results = $this->getStore()->select('show variables like \'log_bin\'', []);
+
+        if (count($results) <= 0)
+            return false;
+
+        return ($results[0]['Value'] != 'OFF');
+    }
+
+    /**
+     * Check binlog format
+     * @return bool
+     */
+    public function checkBinLogFormat()
+    {
+        $results = $this->getStore()->select('show variables like \'binlog_format\'', []);
+
+        if (count($results) <= 0)
+            return false;
+
+        return ($results[0]['Value'] != 'STATEMENT');
+    }
 }
