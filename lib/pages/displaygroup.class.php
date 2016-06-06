@@ -479,7 +479,7 @@ class displaygroupDAO extends baseDAO
                 }
 
                 // Clear the cache for that displayId
-                PDOConnect::getPool()->getItem('/display' . $displayID)->clear();
+                PDOConnect::getPool()->getItem('display/' . $displayID)->clear();
             }
             else
             {
@@ -498,7 +498,7 @@ class displaygroupDAO extends baseDAO
                 }
                 
                 // Clear the cache for that displayId
-                PDOConnect::getPool()->getItem('/display' . $displayID)->clear();
+                PDOConnect::getPool()->getItem('display/' . $displayID)->clear();
             }
         }
         
