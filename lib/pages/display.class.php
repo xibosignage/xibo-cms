@@ -965,6 +965,9 @@ class displayDAO extends baseDAO
             trigger_error(__('Error getting Display Groups'), E_USER_ERROR);
         }
 
+        // Track whether we have made a change
+        $changed = false;
+
         while($row = $db->get_assoc_row($resultIn))
         {
             // Test whether this ID is in the array or not
@@ -978,6 +981,8 @@ class displayDAO extends baseDAO
                 {
                     trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
                 }
+
+                $changed = true;
             }
             else
             {
@@ -994,8 +999,14 @@ class displayDAO extends baseDAO
                 {
                     trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
                 }
+
+                $changed = true;
             }
         }
+
+        if ($changed)
+            // Clear the cache for that displayId
+            PDOConnect::getPool()->getItem('display/' . $displayID)->clear();
 
         $response->SetFormSubmitResponse(__('Group membership set'), false);
         $response->Respond();
