@@ -341,6 +341,17 @@ $CLIENT_CONFIG = array(
                         'helpText' => __('The number of log files to upload concurrently. The lower the number the longer it will take, but the better for memory usage.'),
                         'enabled' => true,
                         'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'PreventSleep',
+                        'tabId' => 'advanced',
+                        'title' => __('Prevent Sleep?'),
+                        'type' => _CHECKBOX,
+                        'fieldType' => 'checkbox',
+                        'default' => 1,
+                        'helpText' => __('Stop the player PC power management from Sleeping the PC'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     )
                 )
             ),

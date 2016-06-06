@@ -368,7 +368,13 @@ class Session {
 	private function beginTransaction()
 	{
 		if (!$this->getDb()->inTransaction() && DBVERSION > 91) {
-			$this->pdo->exec('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+			try {
+				$this->pdo->exec('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+			} catch (\PDOException $e) {
+				// https://github.com/xibosignage/xibo/issues/787
+				// this only works if BINLOG format is set to MIXED or ROW
+				Debug::Error('Unable to set session transaction isolation level, message = ' . $e->getMessage());
+			}
 			$this->pdo->beginTransaction();
 		}
 	}

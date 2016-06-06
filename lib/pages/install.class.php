@@ -213,7 +213,7 @@ class Install {
                     );
                 }
                 else {
-                    $dbh->exec(sprintf("GRANT ALL PRIVILEGES ON `%s`.* to %s@%% IDENTIFIED BY %s",
+                    $dbh->exec(sprintf('GRANT ALL PRIVILEGES ON `%s`.* to %s@\'%%\' IDENTIFIED BY %s',
                         $this->new_db_name,
                         $dbh->quote($this->new_db_user),
                         $dbh->quote($this->new_db_pass))

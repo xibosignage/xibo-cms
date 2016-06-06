@@ -477,6 +477,9 @@ class displaygroupDAO extends baseDAO
                 {
                     trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
                 }
+
+                // Clear the cache for that displayId
+                PDOConnect::getPool()->getItem('/display' . $displayID)->clear();
             }
             else
             {
@@ -493,6 +496,9 @@ class displaygroupDAO extends baseDAO
                 {
                     trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
                 }
+                
+                // Clear the cache for that displayId
+                PDOConnect::getPool()->getItem('/display' . $displayID)->clear();
             }
         }
         

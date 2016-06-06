@@ -27,6 +27,10 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<h2><?php echo Theme::Translate('Report a fault with Xibo'); ?></h2>
 		<p><?php echo Theme::Translate('Before reporting a fault it would be appreciated if you follow the below steps.'); ?></p>
 
+		<?php if (Theme::Get('binLogError')) { ?>
+			<p class="alert alert-info"><?php echo Theme::Translate('The CMS may not be working as expected because MySQL BINLOG format is set to STATEMENT. This can effect sessions and should be set to ROW or MIXED.'); ?></p>
+		<?php } ?>
+
 		<div class="ReportFault">
 		<ol>
 		<li><p><?php echo Theme::Translate('Check that the Environment passes all the Xibo Environment checks.'); ?></p>
