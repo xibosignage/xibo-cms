@@ -617,7 +617,7 @@ class Campaign extends Base
         {
             $duration += $layout->duration ;
             $extendedLayouts[] = ['layout' => $layout,
-                                  'duration' => gmdate('H:i:s', $layout->duration),
+                                  'duration' => $layout->duration,
                                   'previewOptions' => [
                                       'getXlfUrl' => $this->urlFor('layout.getXlf', ['id' => $layout->layoutId]),
                                       'getResourceUrl' => $this->urlFor('module.getResource'),
@@ -630,7 +630,7 @@ class Campaign extends Base
             'campaign' => $campaign,
             'help' => $this->getHelp()->link('Campaign', 'Preview'),
             'layouts' => $layouts,
-            'duration' => gmdate('H:i:s', $duration),
+            'duration' => $duration,
             'extendedLayouts' => $extendedLayouts
         ]);
     }
