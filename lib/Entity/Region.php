@@ -342,6 +342,15 @@ class Region implements \JsonSerializable
     }
 
     /**
+     * Validate the region
+     */
+    public function validate()
+    {
+        if ($this->width == 0 || $this->height == 0)
+            throw new \InvalidArgumentException(__('The Region dimensions cannot be empty'));
+    }
+
+    /**
      * Save
      * @param array $options
      */
@@ -349,10 +358,14 @@ class Region implements \JsonSerializable
     {
         $options = array_merge([
             'saveRegionOptions' => true,
-            'manageRegionAssignments' => true
+            'manageRegionAssignments' => true,
+            'validate' => true
         ], $options);
 
         $this->getLog()->debug('Saving %s. Options = %s', $this, json_encode($options, JSON_PRETTY_PRINT));
+
+        if ($options['validate'])
+            $this->validate();
 
         if ($this->regionId == null || $this->regionId == 0)
             $this->add();
