@@ -696,6 +696,17 @@ class DisplayProfile
                         'helpText' => __('The port number to use for the embedded web server on the Player. Only change this if there is a port conflict reported on the status screen.'),
                         'enabled' => true,
                         'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'PreventSleep',
+                        'tabId' => 'advanced',
+                        'title' => __('Prevent Sleep?'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 1,
+                        'helpText' => __('Stop the player PC power management from Sleeping the PC'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     )
                 )
             ),

@@ -169,7 +169,7 @@ class SanitizeService implements SanitizerServiceInterface
         if ($param === null)
             return null;
 
-        return filter_var($param, FILTER_SANITIZE_STRING);
+        return filter_var($param, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
     }
 
     /**

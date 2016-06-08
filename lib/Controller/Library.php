@@ -860,6 +860,9 @@ class Library extends Base
      */
     public function fontCKEditorConfig()
     {
+        if (DBVERSION < 120)
+            return null;
+
         // Regenerate the CSS for fonts
         $css = $this->installFonts(['invalidateCache' => false]);
 
@@ -923,6 +926,9 @@ class Library extends Base
                     // CKEditor string
                     $ckEditorString .= $displayName . '/' . $familyName . ';';
                 }
+
+                // Make sure the library exists, otherwise we can't copy the temporary file.
+                $this->ensureLibraryExists($this->getConfig()->GetSetting('LIBRARY_LOCATION'));
 
                 // Put the player CSS into the temporary library location
                 $tempUrl = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/fonts.css';

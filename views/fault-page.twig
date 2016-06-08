@@ -21,6 +21,10 @@
                         <p class="alert alert-warning">{% trans "There is a warning listed below that you should resolve first." %}</p>
                     {% endif %}
 
+                    {% if binLogError %}
+                        <p class="alert alert-info">{% trans "The CMS may not be working as expected because MySQL BINLOG format is set to STATEMENT. This can effect sessions and should be set to ROW or MIXED." %}</p>
+                    {% endif %}
+
                     <p>{% trans "Before reporting a fault it would be appreciated if you follow the below steps." %}</p>
 
                     <div class="ReportFault">

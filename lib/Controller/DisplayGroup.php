@@ -628,6 +628,8 @@ class DisplayGroup extends Base
         if ($displayGroup->isDynamic == 1)
             throw new \InvalidArgumentException(__('Displays cannot be manually assigned to a Dynamic Group'));
 
+        $modifiedDisplays = [];
+
         $displays = $this->getSanitizer()->getIntArray('displayId');
 
         foreach ($displays as $displayId) {
@@ -637,6 +639,10 @@ class DisplayGroup extends Base
                 throw new AccessDeniedException(__('Access Denied to Display'));
 
             $displayGroup->assignDisplay($display);
+
+            // Store so that we can flag as incomplete
+            if (!in_array($display, $modifiedDisplays))
+                $modifiedDisplays[] = $display;
         }
 
         // Have we been provided with unassign id's as well?
@@ -649,10 +655,21 @@ class DisplayGroup extends Base
                 throw new AccessDeniedException(__('Access Denied to Display'));
 
             $displayGroup->unassignDisplay($display);
+
+            // Store so that we can flag as incomplete
+            if (!in_array($display, $modifiedDisplays))
+                $modifiedDisplays[] = $display;
         }
 
         // Save the result
         $displayGroup->save(['validate' => false]);
+
+        // Save the displays themselves
+        foreach ($modifiedDisplays as $display) {
+            /** @var Display $display */
+            $display->setMediaIncomplete();
+            $display->save(Display::$saveOptionsMinimum);
+        }
 
         // Return
         $this->getState()->hydrate([

@@ -278,7 +278,7 @@ class Session implements \SessionHandlerInterface
      */
     public function gc($maxLifetime)
     {
-        $this->log->error('GC Called');
+        $this->log->debug('Session GC Called');
         $this->gcCalled = true;
         return true;
     }
@@ -397,7 +397,13 @@ class Session implements \SessionHandlerInterface
     private function beginTransaction()
     {
         if (!$this->getDb()->getConnection()->inTransaction() && DBVERSION > 122) {
-            $this->getDb()->getConnection()->exec('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+            try {
+                $this->getDb()->getConnection()->exec('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+            } catch (\PDOException $e) {
+                // https://github.com/xibosignage/xibo/issues/787
+                // this only works if BINLOG format is set to MIXED or ROW
+                $this->log->error('Unable to set session transaction isolation level, message = ' . $e->getMessage());
+            }
             $this->getDb()->getConnection()->beginTransaction();
         }
     }

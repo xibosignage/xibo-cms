@@ -22,7 +22,6 @@ namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\LogFactory;
-use Xibo\Service\ConfigService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -59,11 +58,12 @@ class Fault extends Base
 
     function displayPage()
     {
-        $config = new ConfigService();
+        $config = $this->getConfig();
         $data = [
             'environmentCheck' => $config->CheckEnvironment(),
             'environmentFault' => $config->envFault,
-            'environmentWarning' => $config->envWarning
+            'environmentWarning' => $config->envWarning,
+            'binLogError' => ($config->checkBinLogEnabled() && !$config->checkBinLogFormat())
         ];
 
         $this->getState()->template = 'fault-page';
