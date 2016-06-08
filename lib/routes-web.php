@@ -100,7 +100,6 @@ $app->get('/notification/form/delete/:id', '\Xibo\Controller\Notification:delete
 //
 $app->get('/layout/view', '\Xibo\Controller\Layout:displayPage')->name('layout.view');
 $app->get('/layout/designer/:id', '\Xibo\Controller\Layout:displayDesigner')->name('layout.designer');
-$app->get('/layout/status/:id', '\Xibo\Controller\Layout:status')->setName('layout.status');
 $app->get('/layout/preview/:id', '\Xibo\Controller\Preview:show')->name('layout.preview');
 $app->get('/layout/xlf/:id', '\Xibo\Controller\Preview:getXlf')->name('layout.getXlf');
 $app->get('/layout/export/:id', '\Xibo\Controller\Layout:export')->name('layout.export');

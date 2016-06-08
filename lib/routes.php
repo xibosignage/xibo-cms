@@ -108,6 +108,7 @@ $app->put('/layout/:id', '\Xibo\Controller\Layout:edit')->name('layout.edit');
 $app->post('/layout/copy/:id', '\Xibo\Controller\Layout:copy')->name('layout.copy');
 $app->delete('/layout/:id', '\Xibo\Controller\Layout:delete')->name('layout.delete');
 $app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->name('layout.retire');
+$app->get('/layout/status/:id', '\Xibo\Controller\Layout:status')->name('layout.status');
 // Layout Import
 $app->map('/layout/import', '\Xibo\Controller\Library:add')->via('HEAD');
 $app->post('/layout/import', '\Xibo\Controller\Layout:import')->name('layout.import');

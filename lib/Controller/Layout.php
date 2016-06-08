@@ -1076,6 +1076,26 @@ class Layout extends Base
     /**
      * Layout Status
      * @param int $layoutId
+     *
+     * @SWG\Get(
+     *  path="/layout/status/{layoutId}",
+     *  operationId="layoutStatus",
+     *  tags={"layout"},
+     *  summary="Layout Status",
+     *  description="Calculate the Layout status and return a Layout",
+     * @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout Id to Untag",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Layout")
+     *  )
+     * )
      */
     public function status($layoutId)
     {
@@ -1106,15 +1126,28 @@ class Layout extends Base
         // Maintenance should also do this.
         $this->getApp()->container->get('\Xibo\Controller\Library')->removeExpiredFiles();
 
-        $this->getState()->html = $status;
-        $this->getState()->extra = [
-            'status' => $layout->status,
-            'duration' => $layout->duration,
-            'statusMessage' => $layout->getStatusMessage()
-        ];
+        // We want a different return depending on whether we are arriving through the API or WEB routes
+        if ($this->isApi()) {
 
-        $this->getState()->success = true;
-        $this->session->refreshExpiry = false;
+            $this->getState()->hydrate([
+                'httpStatus' => 200,
+                'message' => $status,
+                'id' => $layout->status,
+                'data' => $layout
+            ]);
+
+        } else {
+
+            $this->getState()->html = $status;
+            $this->getState()->extra = [
+                'status' => $layout->status,
+                'duration' => $layout->duration,
+                'statusMessage' => $layout->getStatusMessage()
+            ];
+
+            $this->getState()->success = true;
+            $this->session->refreshExpiry = false;
+        }
     }
 
     /**
