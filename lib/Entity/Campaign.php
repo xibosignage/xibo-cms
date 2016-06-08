@@ -70,6 +70,12 @@ class Campaign implements \JsonSerializable
      */
     public $numberLayouts;
 
+    /**
+     * @SWG\Property(description="The total duration of the campaign (sum of layout's durations)")
+     * @var int
+     */
+    public $totalDuration;
+
     private $layouts = [];
     private $permissions = [];
     private $events = [];

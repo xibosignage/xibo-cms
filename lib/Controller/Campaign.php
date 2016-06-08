@@ -126,21 +126,18 @@ class Campaign extends Base
             'name' => $this->getSanitizer()->getString('name'),
         ];
 
-        $campaigns = $this->campaignFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+
+        $options = [
+            'totalDuration' => 1,
+        ];
+
+        $campaigns = $this->campaignFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter), $options);
 
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
 
             if ($this->isApi())
                 break;
-
-            $campaign->includeProperty('totalDuration');
-            $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId);
-            $campaign->totalDuration = array_reduce($layouts, function($duration, $layout){
-                $duration += $layout->duration;
-                return $duration;
-            });
-            if (!isset($campaign->totalDuration)) { $campaign->totalDuration = 0; }
 
             $campaign->includeProperty('buttons');
             $campaign->buttons = [];
