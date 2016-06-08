@@ -187,7 +187,7 @@ class DataSetData extends Base
 
         // Expect input for each value-column
         foreach ($dataSet->getColumn() as $column) {
-            /* @var Xibo\Entity\DataSetColumn $column */
+            /* @var \Xibo\Entity\DataSetColumn $column */
             if ($column->dataSetColumnTypeId == 1) {
 
                 // Sanitize accordingly
@@ -299,7 +299,7 @@ class DataSetData extends Base
 
         // Expect input for each value-column
         foreach ($dataSet->getColumn() as $column) {
-            /* @var Xibo\Entity\DataSetColumn $column */
+            /* @var \Xibo\Entity\DataSetColumn $column */
 
             $existingValue = $this->getSanitizer()->getParam($column->heading, null, $existingRow);
 
