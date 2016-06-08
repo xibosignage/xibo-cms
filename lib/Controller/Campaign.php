@@ -126,7 +126,12 @@ class Campaign extends Base
             'name' => $this->getSanitizer()->getString('name'),
         ];
 
-        $campaigns = $this->campaignFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+
+        $options = [
+            'totalDuration' => 1,
+        ];
+
+        $campaigns = $this->campaignFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter), $options);
 
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
@@ -142,6 +147,15 @@ class Campaign extends Base
                 'id' => 'campaign_button_schedulenow',
                 'url' => $this->urlFor('schedule.now.form', ['id' => $campaign->campaignId, 'from' => 'Campaign']),
                 'text' => __('Schedule Now')
+            );
+
+            // Preview
+            $campaign->buttons[] = array(
+                'id' => 'campaign_button_preview',
+                'linkType' => '_blank',
+                'external' => true,
+                'url' => $this->urlFor('campaign.preview', ['id' => $campaign->campaignId]),
+                'text' => __('Preview Campaign')
             );
 
             // Buttons based on permissions
@@ -575,6 +589,46 @@ class Campaign extends Base
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Unassigned Layouts from %s'), $campaign->campaign)
+        ]);
+    }
+
+    /**
+     * Returns a Campaign's preview
+     * @param int $campaignId
+     *
+     * @SWG\Get(
+     *  path="/campaign/{campaignId}",
+     *  operationId="campaignPreview",
+     *  tags={"campaign"},
+     *  summary="Preview Campaign",
+     *  description="Preview an existing Campaign"
+     * )
+     */
+    public function preview($campaignId)
+    {
+        $campaign = $this->campaignFactory->getById($campaignId);
+        $layouts = $this->layoutFactory->getByCampaignId($campaignId);
+        $duration = 0 ;
+        $extendedLayouts = [];
+        foreach($layouts as $layout)
+        {
+            $duration += $layout->duration ;
+            $extendedLayouts[] = ['layout' => $layout,
+                                  'duration' => $layout->duration,
+                                  'previewOptions' => [
+                                      'getXlfUrl' => $this->urlFor('layout.getXlf', ['id' => $layout->layoutId]),
+                                      'getResourceUrl' => $this->urlFor('module.getResource'),
+                                      'libraryDownloadUrl' => $this->urlFor('library.download'),
+                                      'loaderUrl' => $this->getConfig()->uri('img/loader.gif')]
+                                 ];
+        }
+        $this->getState()->template = 'campaign-preview';
+        $this->getState()->setData([
+            'campaign' => $campaign,
+            'help' => $this->getHelp()->link('Campaign', 'Preview'),
+            'layouts' => $layouts,
+            'duration' => $duration,
+            'extendedLayouts' => $extendedLayouts
         ]);
     }
 }
