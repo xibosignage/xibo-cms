@@ -164,6 +164,7 @@ class ForecastIo extends ModuleWidget
         $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
         $this->setRawNode('currentTemplate', $this->getSanitizer()->getParam('currentTemplate', null));
         $this->setRawNode('dailyTemplate', $this->getSanitizer()->getParam('dailyTemplate', null));
+        $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
 
         // Save the widget
         $this->validate();
@@ -194,6 +195,7 @@ class ForecastIo extends ModuleWidget
         $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
         $this->setRawNode('currentTemplate', $this->getSanitizer()->getParam('currentTemplate', null));
         $this->setRawNode('dailyTemplate', $this->getSanitizer()->getParam('dailyTemplate', null));
+        $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
 
         // Save the widget
         $this->validate();
@@ -459,6 +461,9 @@ class ForecastIo extends ModuleWidget
         $body = $this->parseLibraryReferences($isPreview, $this->getRawNode('currentTemplate', null));
         $dailyTemplate = $this->parseLibraryReferences($isPreview, $this->getRawNode('dailyTemplate', null));
 
+        // Get the JavaScript node
+        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
+
         // Handle the daily template (if its here)
         if (stripos($body, '[dailyForecast]')) {
             // Pull it out, and run substitute over it for each day
@@ -495,6 +500,7 @@ class ForecastIo extends ModuleWidget
                 $("body").xiboLayoutScaler(options);
             });
         </script>';
+        $javaScriptContent .= $javaScript;
 
         // Replace the After body Content
         $data['javaScript'] = $javaScriptContent;

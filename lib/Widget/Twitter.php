@@ -195,6 +195,7 @@ class Twitter extends ModuleWidget
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
         $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
         $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
+        $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
     }
 
     protected function getToken()
@@ -613,6 +614,9 @@ class Twitter extends ModuleWidget
             $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css) . '</style>';
         }
 
+        // Get the JavaScript node
+        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
+
         $backgroundColor = $this->getOption('backgroundColor');
         if ($backgroundColor != '') {
             $headContent .= '<style type="text/css">body, .page, .item { background-color: ' . $backgroundColor . ' }</style>';
@@ -645,6 +649,7 @@ class Twitter extends ModuleWidget
         $javaScriptContent .= '   $(document).ready(function() { ';
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); ';
         $javaScriptContent .= '   }); ';
+        $javaScriptContent .= $javaScript;
         $javaScriptContent .= '</script>';
 
         // Replace the Head Content with our generated javascript

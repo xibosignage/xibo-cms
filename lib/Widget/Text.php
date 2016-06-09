@@ -60,6 +60,7 @@ class Text extends ModuleWidget
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('marqueeInlineSelector', $this->getSanitizer()->getString('marqueeInlineSelector'));
         $this->setRawNode('text', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('text', null)));
+        $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
 
         // Save the widget
         $this->validate();

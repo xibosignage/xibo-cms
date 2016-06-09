@@ -251,6 +251,9 @@
                         {% set title %}{% trans "Only show Daytime weather conditions" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to only show the Daytime weather conditions." %}{% endset %}
                         {{ forms.checkbox("dayConditionsOnly", title, 1, helpText) }}
+
+                        {% set title %}{% trans "Optional JavaScript" %}{% endset %}
+                        {{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), title, "", "", 10) }}
                     </div>
                 </div>
             </form>
