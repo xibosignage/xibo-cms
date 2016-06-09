@@ -850,6 +850,7 @@ CREATE TABLE IF NOT EXISTS `stat` (
   `start` datetime NOT NULL,
   `end` datetime DEFAULT NULL,
   `Tag` varchar(254) DEFAULT NULL,
+  `widgetId` int(8) DEFAULT NULL,
   PRIMARY KEY (`statID`),
   KEY `statDate` (`statDate`),
   KEY `Type` (`displayID`,`end`,`Type`)

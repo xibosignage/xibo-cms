@@ -1,0 +1,10 @@
+{
+  "dbVersion": 126,
+  "appVersion": "1.8.0-beta",
+  "steps": [
+    {
+      "step": "Add the WidgetId to the Stat Table",
+      "action": "ALTER TABLE `stat` ADD widgetId INT NULL;"
+    }
+  ]
+}
