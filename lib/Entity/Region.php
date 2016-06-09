@@ -346,8 +346,8 @@ class Region implements \JsonSerializable
      */
     public function validate()
     {
-        if ($this->width == 0 || $this->height == 0)
-            throw new \InvalidArgumentException(__('The Region dimensions cannot be empty'));
+        if ($this->width <= 0 || $this->height <= 0)
+            throw new \InvalidArgumentException(__('The Region dimensions cannot be empty or negative'));
     }
 
     /**
