@@ -1096,3 +1096,14 @@ CREATE TABLE IF NOT EXISTS `lkwidgetaudio` (
   volume tinyint DEFAULT 100,
   `loop` tinyint DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `displayevent` (
+  `displayEventId` bigint(20) NOT NULL AUTO_INCREMENT,
+  `eventDate` int(11) NOT NULL,
+  `displayId` int(4) NOT NULL,
+  `start` int(11) NOT NULL,
+  `end` int(11) DEFAULT NULL,
+  PRIMARY KEY (`displayEventId`),
+  KEY `eventDate` (`eventDate`),
+  KEY `displayId` (`displayID`,`end`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;

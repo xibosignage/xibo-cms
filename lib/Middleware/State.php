@@ -443,7 +443,8 @@ class State extends Middleware
                 $container->layoutFactory,
                 $container->displayProfileFactory,
                 $container->mediaFactory,
-                $container->scheduleFactory
+                $container->scheduleFactory,
+                $container->displayEventFactory
             );
         });
 
@@ -1036,6 +1037,14 @@ class State extends Middleware
                 $container->playerActionService,
                 $container->displayGroupFactory,
                 $container->displayProfileFactory
+            );
+        });
+
+        $container->singleton('displayEventFactory', function($container) {
+            return new \Xibo\Factory\DisplayEventFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
             );
         });
 

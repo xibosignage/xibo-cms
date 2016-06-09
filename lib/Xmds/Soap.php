@@ -25,6 +25,7 @@ use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\BandwidthFactory;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
@@ -111,6 +112,9 @@ class Soap
     /** @var  NotificationFactory */
     protected $notificationFactory;
 
+    /** @var  DisplayEventFactory */
+    protected $displayEventFactory;
+
     /**
      * Soap constructor.
      * @param LogProcessor $logProcessor
@@ -131,8 +135,9 @@ class Soap
      * @param WidgetFactory $widgetFactory
      * @param RegionFactory $regionFactory
      * @param NotificationFactory $notificationFactory
+     * @param DisplayEventFactory $displayEventFactory
      */
-    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory)
+    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory)
     {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
@@ -152,6 +157,7 @@ class Soap
         $this->widgetFactory = $widgetFactory;
         $this->regionFactory = $regionFactory;
         $this->notificationFactory = $notificationFactory;
+        $this->displayEventFactory = $displayEventFactory;
     }
 
     /**
@@ -1491,7 +1497,7 @@ class Soap
             $this->getLog()->info('Display %s was down, now its up.', $this->display->display);
 
             // Log display up
-            (new Stat($this->getStore(), $this->getLog()))->displayUp($this->display->displayId);
+            $this->displayEventFactory->createEmpty()->displayUp($this->display->displayId);
 
             // Do we need to email?
             if ($this->display->emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected')

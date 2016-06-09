@@ -365,25 +365,19 @@ class Stats extends Base
             trigger_error(__('No displays with View permissions'), E_USER_ERROR);
 
         // Get some data for a bandwidth chart
-        $dbh = $this->store->getConnection();
-
         $params = array(
-            'type' => 'displaydown',
-            'start' => $this->getDate()->getLocalDate($fromDt),
-            'boundaryStart' => $this->getDate()->getLocalDate($fromDt),
-            'end' => $this->getDate()->getLocalDate($toDt),
-            'boundaryEnd' => $this->getDate()->getLocalDate($toDt)
+            'start' => $fromDt->format('U'),
+            'end' => $toDt->format('U')
         );
 
         $SQL = '
             SELECT display.display,
-                SUM(TIME_TO_SEC(TIMEDIFF(LEAST(end, :boundaryEnd), GREATEST(start, :boundaryStart)))) AS duration
-              FROM `stat`
+                SUM(LEAST(end, :end) - GREATEST(start, :start)) AS duration
+              FROM `displayevent`
                 INNER JOIN `display`
-                ON display.displayId = stat.displayId
+                ON display.displayId = `displayevent`.displayId
              WHERE start <= :end
                 AND end >= :start
-                AND type = :type
                 AND display.displayId IN (' . implode(',', $displayIds) . ') ';
 
         if ($displayId != 0) {
@@ -395,15 +389,9 @@ class Stats extends Base
             GROUP BY display.display
         ';
 
-
-
-        $sth = $dbh->prepare($SQL);
-
-        $sth->execute($params);
+        $rows = $this->store->select($SQL, $params);
 
         $output = array();
-
-        $rows = $sth->fetchAll();
         $maxDuration = 0;
 
         foreach ($rows as $row) {
