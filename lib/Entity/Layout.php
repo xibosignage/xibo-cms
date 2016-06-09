@@ -856,6 +856,14 @@ class Layout implements \JsonSerializable
                     // Region duration
                     $region->duration = $region->duration + $widget->calculatedDuration;
 
+                    // We also want to add any transition OUT duration
+                    // only the OUT duration because IN durations do not get added to the widget duration by the player
+                    // https://github.com/xibosignage/xibo/issues/705
+                    if ($widget->getOptionValue('transOut', '') != '') {
+                        // Transition durations are in milliseconds
+                        $region->duration = $region->duration + ($widget->getOptionValue('transOutDuration', 0) / 1000);
+                    }
+
                     // Create media xml node for XLF.
                     $renderAs = $module->getModule()->renderAs;
                     $mediaNode = $document->createElement('media');
