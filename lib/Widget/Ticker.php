@@ -255,6 +255,7 @@ class Ticker extends ModuleWidget
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
+        $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
 
         // DataSet
         if ($this->getOption('sourceId') == 2) {
@@ -379,6 +380,9 @@ class Ticker extends ModuleWidget
         // Get the CSS Node
         $css = $this->parseLibraryReferences($isPreview, $this->getRawNode('css', ''));
 
+        // Get the JavaScript node
+        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
+
         // Handle older layouts that have a direction node but no effect node
         $oldDirection = $this->getOption('direction', 'none');
 
@@ -490,6 +494,7 @@ class Ticker extends ModuleWidget
         $javaScriptContent .= '   $(document).ready(function() { ';
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items);';
         $javaScriptContent .= '   }); ';
+        $javaScriptContent .= $javaScript;
         $javaScriptContent .= '</script>';
 
         // Replace the Head Content with our generated javascript

@@ -80,6 +80,7 @@ class Text extends ModuleWidget
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('marqueeInlineSelector', $this->getSanitizer()->getString('marqueeInlineSelector'));
         $this->setRawNode('text', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('text', null)));
+        $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
 
         // Save the widget
         $this->validate();
@@ -105,6 +106,9 @@ class Text extends ModuleWidget
         $duration = $this->getCalculatedDurationForGetResource();
 
         $text = $this->parseLibraryReferences($isPreview, $this->getRawNode('text', null));
+
+        // Get the JavaScript node
+        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
 
         // Handle older layouts that have a direction node but no effect node
         $oldDirection = $this->getOption('direction', 'none');
@@ -202,6 +206,7 @@ class Text extends ModuleWidget
             ';
         }
 
+        $javaScriptContent .= $javaScript;
         $javaScriptContent .= '</script>';
 
         // Replace the Head Content with our generated javascript

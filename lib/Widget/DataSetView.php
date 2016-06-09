@@ -255,6 +255,7 @@ class DataSetView extends ModuleWidget
         $this->setOption('useOrderingClause', $this->getSanitizer()->getCheckbox('useOrderingClause'));
         $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
         $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
+        $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
 
         // Order and Filter criteria
         $orderClauses = $this->getSanitizer()->getStringArray('orderClause');
@@ -331,6 +332,9 @@ class DataSetView extends ModuleWidget
         // Get the embedded HTML out of RAW
         $styleSheet = $this->parseLibraryReferences($isPreview, $this->getRawNode('styleSheet', ''));
 
+        // Get the JavaScript node
+        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
+
         $options = array(
             'type' => $this->getModuleType(),
             'duration' => $this->getCalculatedDurationForGetResource(),
@@ -362,6 +366,7 @@ class DataSetView extends ModuleWidget
         $javaScriptContent .= '   $(document).ready(function() { ';
         $javaScriptContent .= '       $("#DataSetTableContainer").dataSetRender(options); $("body").xiboLayoutScaler(options);';
         $javaScriptContent .= '   }); ';
+        $javaScriptContent .= $javaScript;
         $javaScriptContent .= '</script>';
 
         // Replace the Head Content with our generated javascript
