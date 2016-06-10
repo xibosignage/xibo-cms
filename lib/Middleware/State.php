@@ -552,7 +552,8 @@ class State extends Middleware
                 $container->permissionFactory,
                 $container->userGroupFactory,
                 $container->tagFactory,
-                $container->mediaFactory
+                $container->mediaFactory,
+                $container->dataSetFactory
             );
         });
 

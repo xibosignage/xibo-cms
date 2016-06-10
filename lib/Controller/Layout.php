@@ -28,6 +28,7 @@ use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\LibraryFullException;
+use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -94,6 +95,9 @@ class Layout extends Base
      */
     private $mediaFactory;
 
+    /** @var  DataSetFactory */
+    private $dataSetFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -112,8 +116,9 @@ class Layout extends Base
      * @param UserGroupFactory $userGroupFactory
      * @param TagFactory $tagFactory
      * @param MediaFactory $mediaFactory
+     * @param DataSetFactory $dataSetFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -126,6 +131,7 @@ class Layout extends Base
         $this->userGroupFactory = $userGroupFactory;
         $this->tagFactory = $tagFactory;
         $this->mediaFactory = $mediaFactory;
+        $this->dataSetFactory = $dataSetFactory;
     }
 
     /**
@@ -757,8 +763,7 @@ class Layout extends Base
                 // Export Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_export',
-                    'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor('layout.export', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor('layout.export.form', ['id' => $layout->layoutId]),
                     'text' => __('Export')
                 );
 
@@ -1151,6 +1156,26 @@ class Layout extends Base
     }
 
     /**
+     * Export Form
+     * @param $layoutId
+     */
+    public function exportForm($layoutId)
+    {
+        // Get the layout
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($layout))
+            throw new AccessDeniedException();
+
+        // Render the form
+        $this->getState()->template = 'layout-form-export';
+        $this->getState()->setData([
+            'layout' => $layout
+        ]);
+    }
+
+    /**
      * @param int $layoutId
      */
     public function export($layoutId)
@@ -1165,7 +1190,7 @@ class Layout extends Base
             throw new AccessDeniedException();
 
         $fileName = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/export_' . $layout->layout . '.zip';
-        $layout->toZip($fileName);
+        $layout->toZip($this->dataSetFactory, $fileName, ['includeData' => ($this->getSanitizer()->getCheckbox('includeData')== 1)]);
 
         if (ini_get('zlib.output_compression')) {
             ini_set('zlib.output_compression', 'Off');

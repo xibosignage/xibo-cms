@@ -85,7 +85,11 @@ class DataSet implements \JsonSerializable
     public $isLookup = 0;
 
     private $permissions = [];
-    private $columns = [];
+
+    /**
+     * @var DataSetColumn array
+     */
+    public $columns = [];
 
     private $countLast = 0;
 

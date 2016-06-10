@@ -22,6 +22,7 @@ namespace Xibo\Entity;
 
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
+use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -977,10 +978,17 @@ class Layout implements \JsonSerializable
 
     /**
      * Export the Layout as a ZipArchive
+     * @param DataSetFactory $dataSetFactory
      * @param string $fileName
+     * @param array $options
      */
-    public function toZip($fileName)
+    public function toZip($dataSetFactory, $fileName, $options = [])
     {
+        $options = array_merge([
+            'includeData' => false
+        ], $options);
+
+        // We export to a ZIP file
         $zip = new \ZipArchive();
         $result = $zip->open($fileName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
         if ($result !== true)
@@ -1066,6 +1074,32 @@ class Layout implements \JsonSerializable
 
         // Add the mappings file to the ZIP
         $zip->addFromString('mapping.json', json_encode($mappings));
+
+        // Handle any DataSet structures
+        $dataSets = [];
+
+        foreach ($this->getWidgets() as $widget) {
+            /** @var Widget $widget */
+            if ($widget->type == 'datasetview' || $widget->type == 'ticker') {
+                $dataSetId = $widget->getOptionValue('dataSetId', 0);
+
+                if ($dataSetId != 0) {
+                    // Export the structure for this dataSet
+                    $dataSet = $dataSetFactory->getById($dataSetId);
+                    $dataSet->load();
+
+                    // Are we also looking to export the data?
+                    if ($options['includeData']) {
+                        $dataSet->data = $dataSet->getData();
+                    }
+
+                    $dataSets[] = $dataSet;
+                }
+            }
+        }
+
+        // Add the mappings file to the ZIP
+        $zip->addFromString('dataSet.json', json_encode($dataSets, JSON_PRETTY_PRINT));
 
         $zip->close();
     }

@@ -246,6 +246,12 @@
                 });
             });
         }
+
+        function layoutExportFormOpen() {
+            $("#layoutExportForm").submit(function(e) {
+                XiboDialogClose();
+            });
+        }
     </script>
 {% endblock %}
 
