@@ -413,6 +413,33 @@ function layoutStatus(url) {
                     element.addClass("fa-times");
                 }
 
+                if (response.extra.status == 1) {
+                    $("#action-tab").find("i").removeClass('fa-bell').addClass('fa-bell');
+                }
+                else if (response.extra.status == 2) {
+                    $("#action-tab").find("i").removeClass('fa-bell').addClass('fa-bell');
+                }
+                else if (response.extra.status == 3) {
+                    $("#action-tab").find("i").removeClass('fa-bell').addClass('fa-bell');
+                }
+                else  {
+                    $("#action-tab").find("i").removeClass('fa-bell').addClass('fa-times');
+                }
+
+
+                if (response.extra.status == 1) {
+                    $("#schedule-btn").find("i").removeClass('fa-clock-o').addClass('fa-clock-o');
+                }
+                else if (response.extra.status == 2) {
+                    $("#schedule-btn").find("i").removeClass('fa-clock-o').addClass('fa-clock-o');
+                }
+                else if (response.extra.status == 3) {
+                    $("#schedule-btn").find("i").removeClass('fa-clock-o').addClass('fa-clock-o');
+                }
+                else  {
+                    $("#schedule-btn").find("i").removeClass('fa-clock-o').addClass('fa-times');
+                }
+
                 var html = response.html;
 
                 if (response.extra.statusMessage != undefined) {
