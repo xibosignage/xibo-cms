@@ -482,15 +482,15 @@ class DataSetTest extends LocalWebTestCase
         $dataSetCheck = $dataSet->getByColumnId($column->dataSetColumnId);
         $colId = $dataSetCheck->dataSetColumnId;
         // Add new row data
-//        $row = $dataSet->createRow($colId, 'test');
+        $row = $dataSet->createRow($colId, 'test');
         $rowCheck = $dataSet->getByRowId($row->rowId);
         // delete row
 
-        $this->client->delete('/dataset/data/' . $dataSet->dataSetId . $rowCheck->rowId);
+        $this->client->delete('/dataset/data/' . $dataSet->dataSetId . $rowCheck->rowId, [
+            'deleteData' =>1
+            ]);
 
         $response = json_decode($this->client->response->body());
         $this->assertSame(204, $response->status, $this->client->response->body());
-
- //       $dataSet -> deleteWData();
     }
 }
