@@ -502,7 +502,7 @@ class Ticker extends ModuleWidget
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true]);
 
         return $this->renderTemplate($data);
     }

@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\WidgetAudioFactory;
 use Xibo\Factory\WidgetMediaFactory;
@@ -171,6 +172,9 @@ class Widget implements \JsonSerializable
      */
     private $permissionFactory;
 
+    /** @var  DisplayFactory */
+    private $displayFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -180,8 +184,9 @@ class Widget implements \JsonSerializable
      * @param WidgetMediaFactory $widgetMediaFactory
      * @param WidgetAudioFactory $widgetAudioFactory
      * @param PermissionFactory $permissionFactory
+     * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log, $date, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory)
+    public function __construct($store, $log, $date, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->excludeProperty('module');
@@ -190,6 +195,7 @@ class Widget implements \JsonSerializable
         $this->widgetMediaFactory = $widgetMediaFactory;
         $this->widgetAudioFactory = $widgetAudioFactory;
         $this->permissionFactory = $permissionFactory;
+        $this->displayFactory = $displayFactory;
     }
 
     /**
@@ -484,7 +490,8 @@ class Widget implements \JsonSerializable
         $options = array_merge([
             'saveWidgetOptions' => true,
             'saveWidgetAudio' => true,
-            'notify' => true
+            'notify' => true,
+            'notifyDisplays' => false
         ], $options);
 
         $this->getLog()->debug('Saving widgetId %d with options. %s', $this->getId(), json_encode($options, JSON_PRETTY_PRINT));
@@ -538,7 +545,7 @@ class Widget implements \JsonSerializable
         $this->unlinkMedia();
 
         if ($options['notify'])
-            $this->notify();
+            $this->notify($options);
     }
 
     /**
@@ -585,15 +592,16 @@ class Widget implements \JsonSerializable
         $this->getStore()->update('DELETE FROM `widget` WHERE widgetId = :widgetId', array('widgetId' => $this->widgetId));
 
         if ($options['notify'])
-            $this->notify();
+            $this->notify($options);
 
         $this->getLog()->debug('Delete Widget Complete');
     }
 
     /**
      * Notify
+     * @param $options
      */
-    private function notify()
+    private function notify($options)
     {
         $this->getLog()->debug('Notifying upstream playlist');
 
@@ -610,6 +618,44 @@ class Widget implements \JsonSerializable
             'playlistId' => $this->playlistId,
             'modifiedDt' => $this->dateService->getLocalDate()
         ]);
+
+        // Notify any displays (clearing their cache)
+        if ($options['notifyDisplays']) {
+            // Get a list of these layouts campaignIds
+            $campaignIds = array_map(function ($element) {
+                return $element['campaignId'];
+            }, $this->getStore()->select('
+                SELECT DISTINCT `lkcampaignlayout`.campaignId
+                 FROM `lkregionplaylist`
+                  INNER JOIN `region`
+                  ON region.regionId = `lkregionplaylist`.regionId
+                  INNER JOIN `lkcampaignlayout`
+                  ON `lkcampaignlayout`.layoutId = `region`.layoutId
+                 WHERE `lkregionplaylist`.playlistId = :playlistId
+            ', [
+                'playlistId' => $this->playlistId
+            ]));
+
+            // Store a list of displayId's we've already notified so we don't duplicate our work
+            $displayIds = [];
+
+            foreach ($campaignIds as $campaignId) {
+                $displays = array_merge($this->displayFactory->getByActiveCampaignId($campaignId), $this->displayFactory->getByAssignedCampaignId($campaignId));
+
+                foreach ($displays as $display) {
+                    /* @var \Xibo\Entity\Display $display */
+
+                    if (in_array($display->displayId, $displayIds))
+                        continue;
+
+                    $display->setMediaIncomplete();
+                    $display->setCollectRequired(true);
+                    $display->save(['validate' => false, 'audit' => false]);
+
+                    $displayIds[] = $display->displayId;
+                }
+            }
+        }
     }
 
     private function add()

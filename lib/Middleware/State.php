@@ -1327,7 +1327,8 @@ class State extends Middleware
                 $container->widgetOptionFactory,
                 $container->widgetMediaFactory,
                 $container->widgetAudioFactory,
-                $container->permissionFactory
+                $container->permissionFactory,
+                $container->displayFactory
             );
         });
 
