@@ -14,10 +14,9 @@ namespace Xibo\Tests\Integration;
 class FaultTest extends \Xibo\Tests\LocalWebTestCase
 {
     /*
-     * @group broken
      */
 
-    public function Collect()
+    public function testCollect()
     {
         $this->client->get('/fault/collect');
         $this->assertSame(200, $this->client->response->status());

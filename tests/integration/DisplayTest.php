@@ -179,25 +179,33 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
      */
     public function testWoL()
     {
-        // Create a Display in the system
         $hardwareId = Random::generateString(12, 'phpunit');
-        $response = $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 'PHPUnit Test Display');
-        
+        $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 
+            'PHPUnit Test Display', 
+            'windows', 
+            null, 
+            null, 
+            null, 
+            '00:16:D9:C9:AL:69', 
+            Random::generateString(50), 
+            Random::generateString(50)
+        );
+
         // Now find the Id of that Display
         $displays = (new XiboDisplay($this->getEntityProvider()))->get();
         $display = null;
-        
+
         foreach ($displays as $disp) {
             if ($disp->license == $hardwareId) {
                 $display = $disp;
             }
         }
-        
+
         if ($display === null) {
             $this->fail('Display was not added correctly');
         }
 
-        $this->client->put('/display/wol/' . $display->displayId);
+        $this->client->get('/display/wol/' . $display->displayId);
 
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
 

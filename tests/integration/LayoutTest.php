@@ -260,7 +260,7 @@ class LayoutTest extends LocalWebTestCase
             // Missing layout names
             'layout name empty' => ['', 'Layout name is empty', '', 9],
             'Layout name null' => [null, 'Layout name is null', '', 9],
- //           'Wrong resolution ID' => ['id not found', 'not found exception', '', 69]
+            'Wrong resolution ID' => ['id not found', 'not found exception', '', 69]
         ];
     }
 
@@ -466,7 +466,6 @@ class LayoutTest extends LocalWebTestCase
     /**
      * testAddFailure - test adding various regions that should be invalid
      * @dataProvider regionFailureCases
-     * @group broken
      */
 
     public function testAddRegionFailure($regionWidth, $regionHeight, $regionTop, $regionLeft)
@@ -496,9 +495,8 @@ class LayoutTest extends LocalWebTestCase
 
         return [
             // various incorrect regions
-            'region incorrect size' => [5000, 12333, 0, 0],
-            'region incorroct offset' => [350, 200, 6969, 12999],
-            'region no size' => [NULL, NULL, 20, 420]
+            'region no size' => [NULL, NULL, 20, 420],
+            'region negaive dimesions' => [-69, -420, 20, 420]
         ];
     }
 
@@ -586,7 +584,6 @@ class LayoutTest extends LocalWebTestCase
 
     /**
      * Position Test
-     * @group broken
      */
     public function testPosition()
     {
@@ -602,14 +599,14 @@ class LayoutTest extends LocalWebTestCase
         #Reposition regions on that layout
         $regionJson = json_encode([
                     [
-                        'regionId' => $region1->regionId,
+                        'regionid' => $region1->regionId,
                         'width' => 700,
                         'height' => 500,
                         'top' => 400,
                         'left' => 400
                     ],
                     [
-                        'regionId' => $region2->regionId,
+                        'regionid' => $region2->regionId,
                         'width' => 100,
                         'height' => 100,
                         'top' => 40,
@@ -622,6 +619,48 @@ class LayoutTest extends LocalWebTestCase
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
         
         $this->assertSame(200, $this->client->response->status());
+
+        $object = json_decode($this->client->response->body());
+
+        $layout->delete();
+    }
+
+    /**
+     * Position Test with incorrect properities (missing height and incorrect spelling)
+     * @group broken  // just because I don't have additional checks here please remove for testing
+     */
+    public function testPositionFailure()
+    {
+
+        # Load in a known layout
+        /** @var XiboLayout $layout */
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout position', 'phpunit layout', '', 9);
+
+        $region1 = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,670,75,125);
+        # Create Two known regions and add them to that layout
+        $region2 = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,300,475,625);
+       
+        #Reposition regions on that layout
+        $regionJson = json_encode([
+                    [
+                        'regionid' => $region1->regionId,
+                        'width' => 700,
+                        'top' => 400,
+                        'left' => 400
+                    ],
+                    [
+                        'regionid' => $region2->regionId,
+                        'heigTH' => 100,
+                        'top' => 40,
+                        'left' => 40
+                    ]
+                ]);
+
+        $this->client->put('/region/position/all/' . $layout->layoutId, [
+            'regions' => $regionJson
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+        
+        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
 
         $object = json_decode($this->client->response->body());
 

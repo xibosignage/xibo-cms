@@ -79,7 +79,7 @@ class LocalWebTestCase extends WebTestCase
         $logger = new AccessibleMonologWriter(array(
             'name' => 'PHPUNIT',
             'handlers' => array(
-                new StreamHandler('test.log')
+                new StreamHandler('test.log', Logger::DEBUG)
             ),
             'processors' => array(
                 new \Xibo\Helper\LogProcessor(),

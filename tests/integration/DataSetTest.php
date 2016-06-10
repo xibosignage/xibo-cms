@@ -184,10 +184,12 @@ class DataSetTest extends LocalWebTestCase
         $this->assertSame($columnDataSetColumnTypeId, $object->data->dataSetColumnTypeId);
         $this->assertSame($columnFormula, $object->data->formula);
         
+        $dataSetCheck = $dataSet->getByColumnId($object->id);
+      //  $this->assertSame($columnName, $dataSetCheck->heading);
       //  $dataSetCheck = (new XiboDataSet($this->getEntityProvider()))->getByColumnId($object->id);
         
         # Clean up the dataset as we no longer need it
-     //   $this->assertTrue($dataSet->delete(), 'Unable to delete ' . $dataSet->dataSetId);
+        $this->assertTrue($dataSet->delete(), 'Unable to delete ' . $dataSet->dataSetId);
 
 
     }
@@ -287,8 +289,6 @@ class DataSetTest extends LocalWebTestCase
 
     /**
      * Test edit column
-     * @depends testAddColumnSuccess
-     * @group broken
      */
     public function testColumnEdit()
     {
@@ -306,7 +306,7 @@ class DataSetTest extends LocalWebTestCase
         $column = $dataSet->createColumn($nameCol,'', 2, 1, 1, '');
 
         $dataSetCheck = $dataSet->getByColumnId($column->dataSetColumnId);
-    
+
         // edit column
         
         $nameNew = Random::generateString(8, 'phpunit');
@@ -318,9 +318,9 @@ class DataSetTest extends LocalWebTestCase
             'dataTypeId' => $dataSetCheck->dataTypeId,
             'dataSetColumnTypeId' => $dataSetCheck->dataSetColumnTypeId,
             'formula' => ''
-        ]);
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
+        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $this->client->response->body());
 
         $object = json_decode($this->client->response->body());
 
@@ -382,7 +382,6 @@ class DataSetTest extends LocalWebTestCase
 
     /**
      * Test add row
-     * @group broken
      */
     public function testRowAdd()
     {
@@ -392,10 +391,29 @@ class DataSetTest extends LocalWebTestCase
         $description = 'PHP Unit row add';
         $dataSet = (new XiboDataSet($this->getEntityProvider()))->create($name, $description);
 
+        // create column
+
+        $nameCol = Random::generateString(8, 'phpunit');
+        $column = $dataSet->createColumn($nameCol,'', 2, 1, 1, '');
+
+        $dataSetCheck = $dataSet->getByColumnId($column->dataSetColumnId);
+
+        //fwrite(STDERR,$dataSetCheck->dataSetColumnId);
+
+
+
+        $this->client->get('/dataset/' . $dataSet->dataSetId . '/column');
+
+        $this->assertSame(200, $this->client->response->status());
+        $this->assertNotEmpty($this->client->response->body());
+
+        $object = json_decode($this->client->response->body());
+       
+        // fwrite(STDERR, $this->client->response->body());
         // add new row
 
         $response = $this->client->post('/dataset/data/' . $dataSet->dataSetId, [
-            'dataSetColumnId_ID' => ['test']
+            'dataSetColumnId_' . $dataSetCheck->dataSetColumnId => 'test',
             ]);
 
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
@@ -403,6 +421,8 @@ class DataSetTest extends LocalWebTestCase
         
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
+
+    //    $dataSet -> deleteWData();
     }
 
     /**
@@ -422,12 +442,14 @@ class DataSetTest extends LocalWebTestCase
         $nameCol = Random::generateString(8, 'phpunit');
         $column = $dataSet->createColumn($nameCol,'', 2, 1, 1, '');
         
+        $dataSetCheck = $dataSet->getByColumnId($column->dataSetColumnId);
+        $colId = $dataSetCheck->dataSetColumnId;
         // Add new row data
-        $row = $dataSet->createRow('test');
+        $row = $dataSet->createRow($colId, 'test');
         $rowCheck = $dataSet->getByRowId($row->rowId);
         //edit row data
         $response = $this->client->put('/dataset/data/' . $dataSet->dataSetId . $rowCheck->rowId, [
-            'dataSetColumnId_ID' => 'API EDITED'
+            'dataSetColumnId_' . $colId =>  'API EDITED'
             ]);
 
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
@@ -436,6 +458,8 @@ class DataSetTest extends LocalWebTestCase
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
+
+     //   $dataSet -> deleteWData();
     }
 
     /*
@@ -451,15 +475,22 @@ class DataSetTest extends LocalWebTestCase
         $description = 'PHP Unit row delete';
         $dataSet = (new XiboDataSet($this->getEntityProvider()))->create($name, $description);
 
+        // Generate a new name for the new column
+        $nameCol = Random::generateString(8, 'phpunit');
+        $column = $dataSet->createColumn($nameCol,'', 2, 1, 1, '');
+        
+        $dataSetCheck = $dataSet->getByColumnId($column->dataSetColumnId);
+        $colId = $dataSetCheck->dataSetColumnId;
         // Add new row data
-
-        $row = $dataSet->createRow('test');
+//        $row = $dataSet->createRow($colId, 'test');
         $rowCheck = $dataSet->getByRowId($row->rowId);
         // delete row
 
         $this->client->delete('/dataset/data/' . $dataSet->dataSetId . $rowCheck->rowId);
 
         $response = json_decode($this->client->response->body());
-    //    $this->assertSame(204, $response->status, $this->client->response->body());
+        $this->assertSame(204, $response->status, $this->client->response->body());
+
+ //       $dataSet -> deleteWData();
     }
 }
