@@ -779,12 +779,15 @@ li.active:after {
     padding: 4px !important;
 }
 
-ul li.tab-design:hover {
-    border-top: 2px solid white;
-    padding-bottom: 0px;
+ul li.tab-design:hover a {
+    color: #ccc !important;
 }
 
-ul li.tab-design:hover a {
-    color: #fff !important;
+li.active.tab-design {
+    background: white;
+    border-radius: 3px;
+}
 
+ul li.active.tab-design:hover a {
+    color: #666 !important;
 }
