@@ -748,7 +748,7 @@ li.active:after {
 }
 
 .nav-tabs>li {
-    margin-bottom: -4px !important;
+    margin-bottom: -5px !important;
 }
 
 .col-md-2 ul.list-group {
@@ -777,4 +777,14 @@ li.active:after {
 
 .alert.no-pad {
     padding: 4px !important;
+}
+
+ul li.tab-design:hover {
+    border-top: 2px solid white;
+    padding-bottom: 0px;
+}
+
+ul li.tab-design:hover a {
+    color: #fff !important;
+
 }

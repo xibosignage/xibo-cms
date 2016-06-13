@@ -36,11 +36,11 @@
             <div class="panel bttm-fix with-nav-tabs panel-primary">
                 <div class="panel-heading">
                     <ul class="nav nav-tabs">
-                        <li class="active">
-                            <a class="text-center" id="designer-tab" href="#tab1primary" data-toggle="tab"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Designer</a>
+                        <li class="active tab-design">
+                            <a class="text-center" id="designer-tab" href="#tab1primary" data-toggle="tab"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  {% trans "Designer" %}</a>
                         </li>
-                        <li>
-                            <a class="text-center" id="action-tab" href="#tab2primary" data-toggle="tab"><i class="fa fa-bell" aria-hidden="true"></i>  Actions</a>
+                        <li class="tab-design"">
+                            <a class="text-center" id="action-tab" href="#tab2primary" data-toggle="tab"><i class="fa fa-bell" aria-hidden="true"></i>   {% trans "Action" %}s</a>
                         </li>
                         <div class="pull-right">
                             <small class="text-center" data-toggle="tooltip" data-placement="bottom" data-title="{% trans "Layout Duration: Duration may change depending on the exact number of items in ticker/twitter media items." %}">
@@ -71,27 +71,30 @@
                             </div>
 
                             <div class="col-md-2 text-center">
-                                <div class="designer-control-panel-checkbox override-layout">
-                                    <input type="checkbox" class="switch-check-box" name="lockPosition" checked data-size="small" data-off-color="danger" data-on-color="success" data-label-width="100" data-label-text="{% trans "Lock Positions" %}" {% if currentUser.getOptionValue("lockPosition", "false") == "true" %}checked="checked"{% endif %}
+
+                               <div class="designer-control-panel-checkbox override-layout">
+                                    <input type="checkbox" class="switch-check-box" name="lockPosition"  data-size="small" data-off-color="danger" data-on-color="success" data-label-width="100" data-label-text="{% trans "Lock Positions" %}" {% if currentUser.getOptionValue("lockPosition", "false") == "true" %}checked="checked"{% endif %}
                                            data-on-text="{% trans "On" %}" data-off-text="{% trans "Off" %}"/>
                                 </div>
                             </div>
                             <div class="col-md-2 text-center">
                                 <div class="designer-control-panel-checkbox override-layout">
-                                    <input type="checkbox" checked data-size="small" data-off-color="danger" data-on-color="success" class="switch-check-box" data-label-text="{% trans "Hide Controls" %}" data-label-width="100" name="hideControls" {% if currentUser.getOptionValue("hideControls", "false") == "true" %}checked="checked"{% endif %}
+                                    <input type="checkbox"  data-size="small" data-off-color="danger" data-on-color="success" class="switch-check-box" data-label-text="{% trans "Hide Controls" %}" data-label-width="100" name="hideControls" {% if currentUser.getOptionValue("hideControls", "false") == "true" %}checked="checked"{% endif %}
                                            data-on-text="{% trans "On" %}" data-off-text="{% trans "Off" %}"/>
                                 </div>
                             </div>
                             <div class="col-md-2 text-center">
                                 <div class="btn-group btn-group-justified" role="group" aria-label="...">
                                     <div class="btn-group" role="group">
-                                        <a class="btn btn-default btn-sm" role="button" href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom - 0.3 }}"><span><i class="fa fa-search-minus" aria-hidden="true"></i>{% trans "" %}</span></a>
+
+                                        <a class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="bottom" title="{% trans "Decrease the canvas size" %}" role="button" href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom - 0.3 }}" ><span><i class="fa fa-search-minus"  aria-hidden="true"></i>{% trans "" %}</span> </a>
                                     </div>
                                     <div class="btn-group" role="group">
-                                        <a class="btn btn-default btn-sm" role="button" href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom + 0.3 }}"><span><i class="fa fa-search-plus" aria-hidden="true"></i> {% trans "" %}</span></a>
+
+                                        <a class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="bottom" title="{% trans "Increase the canvas size" %}" role="button" href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom + 0.3 }}"><span><i class="fa fa-search-plus" aria-hidden="true"></i> {% trans "" %}</span></a>
                                     </div>
                                     <div class="btn-group" role="group">
-                                        <button id="saveDesignerSize" class="btn btn-success btn-sm " role="button" data-designer-size="{{ zoom }}">
+                                        <button id="saveDesignerSize" data-toggle="tooltip" data-placement="bottom" title="{% trans "Save canvas size as default" %}" class="btn btn-success btn-sm " role="button" data-designer-size="{{ zoom }}">
                                             <i class="fa fa-floppy-o" aria-hidden="true"></i></button>
                                     </div>
                                 </div>
@@ -105,7 +108,7 @@
                                 </div>
                                 <div class="btn-group" role="group">
                                     <button id="layout-save-all" class="btn btn-success btn-sm disabled btn-block">
-                                        <i class="fa fa-floppy-o" aria-hidden="true"></i> {% trans "Save as Default" %}
+                                        <i class="fa fa-floppy-o" aria-hidden="true"></i> {% trans "Save Region Positions" %}
                                     </button>
                                 </div>
                             </div>
@@ -169,16 +172,13 @@
                         {% set previewCss = "" %}
                     {% endif %}
 
-                    <div id="region_{{ region.regionId }}" regionEnabled="{{ currentUser.checkEditable(region) }}" regionid="{{ region.regionId }}" layoutid="{{ layout.layoutId }}" zindex="{{ region.zIndex }}" tip_scale="1" designer_scale="{{ designerScale }}" width="{{ region.width }}" height="{{ region.height }}" href="{{ urlFor("region.timeline.form", {id: region.regionId}) }}" {% if currentUser.checkEditable(region) %}ondblclick="XiboFormRender($(this).attr('href'))"{% endif %}
-                         class="{{ disabledCss }} {{ previewCss }}" data-preview-url="{{ urlFor("region.preview", {id: region.regionId}) }}" style="position:absolute; width:{{ regionWidth }}px; height:{{ regionHeight }}px; top: {{ regionTop }}px; left:{{ regionLeft }}px; z-index: {{ region.zIndex }};">
+                    <div id="region_{{ region.regionId }}" regionEnabled="{{ currentUser.checkEditable(region) }}" regionid="{{ region.regionId }}" layoutid="{{ layout.layoutId }}" zindex="{{ region.zIndex }}" tip_scale="1" designer_scale="{{ designerScale }}" width="{{ region.width }}" height="{{ region.height }}" href="{{ urlFor("region.timeline.form", {id: region.regionId}) }}" {% if currentUser.checkEditable(region) %}ondblclick="XiboFormRender($(this).attr('href'))"{% endif %} class="{{ disabledCss }} {{ previewCss }}" data-preview-url="{{ urlFor("region.preview", {id: region.regionId}) }}" style="position:absolute; width:{{ regionWidth }}px; height:{{ regionHeight }}px; top: {{ regionTop }}px; left:{{ regionLeft }}px; z-index: {{ region.zIndex }};">
                         <div class="regionTransparency {{ transparencyCss }}" style="width:100%; height:100%;"></div>
 
                         {% if currentUser.checkEditable(region) %}
                             <div class="btn-group regionInfo pull-right">
                                 <button class="btn dropdown-toggle" data-toggle="dropdown">
-                                    <span class="region-tip">{{ region.width|round }} x {{ region.height|round }}
-                                        ({{ region.left|round }}
-                                        ,{{ region.top|round }})</span> <span class="caret"></span>
+                                    <span class="region-tip">{{ region.width|round }} x {{ region.height|round }} ({{ region.left|round }} ,{{ region.top|round }})</span> <span class="caret"></span>
                                 </button>
                                 <ul class="dropdown-menu">
                                     <li>
