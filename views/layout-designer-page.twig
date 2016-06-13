@@ -43,10 +43,10 @@
                             <a class="text-center" id="action-tab" href="#tab2primary" data-toggle="tab"><i class="fa fa-bell" aria-hidden="true"></i>   {% trans "Action" %}s</a>
                         </li>
                         <div class="pull-right">
-                            <small class="text-center" data-toggle="tooltip" data-placement="bottom" data-title="{% trans "Layout Duration: Duration may change depending on the exact number of items in ticker/twitter media items." %}">
+                            <span class="text-center" data-toggle="tooltip" data-placement="bottom" data-title="{% trans "Layout Duration: Duration may change depending on the exact number of items in ticker/twitter media items." %}">
                                 <i class="fa fa-clock-o" aria-hidden="true"></i> {% trans "" %}
-                                <span id="layout-duration" class="label label-success"></span></small>
-                            <small>| <b>Currently Editing</b></small>
+                                <span id="layout-duration" class="label label-success big-duration"></span></span>
+                            <span>| <b>Currently Editing</b></span>
                             <select id="layoutJumpList" data-live-search="true">
                                 {% for item in layouts %}
                                     <option value="{{ urlFor("layout.designer", {id: item.layoutId}) }}"{% if item.layoutId == layout.layoutId %} selected{% endif %}>{{ item.layout }}</option>
