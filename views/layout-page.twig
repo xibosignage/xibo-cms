@@ -222,6 +222,11 @@
                     if (refreshSessionInterval != null && form.fileupload("active") <= 0)
                         clearInterval(refreshSessionInterval);
                 });
+
+                // Configure the active behaviour of the checkboxes
+                $("#useExistingDataSets").on("click", function () {
+                    $("#importDataSetData").prop("disabled", ($(this).is(":checked")));
+                });
             });
         });
 
@@ -323,7 +328,7 @@
                     </div>
                     <div class="col-md-6">
                         <label for="importDataSetData">
-                            <input type="checkbox" id="importDataSetData" name="importDataSetData">
+                            <input type="checkbox" id="importDataSetData" name="importDataSetData" disabled>
                             {{ trans.dataSetDataMessage }}
                         </label>
                     </div>
