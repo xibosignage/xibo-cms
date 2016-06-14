@@ -1076,6 +1076,7 @@ class Layout implements \JsonSerializable
         $zip->addFromString('mapping.json', json_encode($mappings));
 
         // Handle any DataSet structures
+        $dataSetIds = [];
         $dataSets = [];
 
         foreach ($this->getWidgets() as $widget) {
@@ -1084,15 +1085,20 @@ class Layout implements \JsonSerializable
                 $dataSetId = $widget->getOptionValue('dataSetId', 0);
 
                 if ($dataSetId != 0) {
+
+                    if (in_array($dataSetId, $dataSetIds))
+                        continue;
+
                     // Export the structure for this dataSet
                     $dataSet = $dataSetFactory->getById($dataSetId);
                     $dataSet->load();
 
                     // Are we also looking to export the data?
                     if ($options['includeData']) {
-                        $dataSet->data = $dataSet->getData();
+                        $dataSet->data = $dataSet->getData([], ['includeFormulaColumns' => false]);
                     }
 
+                    $dataSetIds[] = $dataSet->dataSetId;
                     $dataSets[] = $dataSet;
                 }
             }

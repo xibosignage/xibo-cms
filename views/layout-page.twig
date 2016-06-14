@@ -148,7 +148,11 @@
                     trans: {
                         addFiles: "{% trans "Add ZIP Files" %}",
                         startUpload: "{% trans "Start upload" %}",
-                        cancelUpload: "{% trans "Cancel upload" %}"
+                        cancelUpload: "{% trans "Cancel upload" %}",
+                        replaceExistingMediaMessage: "{% trans "Replace Existing Media?" %}",
+                        importTagsMessage: "{% trans "Import Tags?" %}",
+                        useExistingDataSetsMessage: "{% trans "Use existing DataSets matched by name?" %}",
+                        dataSetDataMessage: "{% trans "Import DataSet Data?" %}"
                     },
                     upload: {
                         maxSize: {{ libraryUpload.maxSize }},
@@ -300,13 +304,27 @@
                     <div class="col-md-6">
                         <label for="replaceExisting" title="If the import finds existing media with the same name, should it be replaced in the Layout or should the Layout use that media.">
                             <input type="checkbox" id="replaceExisting" name="replaceExisting">
-                            Replace Existing Media?
+                            {{ trans.replaceExistingMediaMessage }}
                         </label>
                     </div>
                     <div class="col-md-6">
                         <label for="importTags" title="Would you like to import any tags contained on the layout.">
                             <input type="checkbox" id="importTags" name="importTags">
-                            Import Tags?
+                            {{ trans.importTagsMessage }}
+                        </label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="useExistingDataSets">
+                            <input type="checkbox" id="useExistingDataSets" name="useExistingDataSets" checked>
+                            {{ trans.useExistingDataSetsMessage }}
+                        </label>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="importDataSetData">
+                            <input type="checkbox" id="importDataSetData" name="importDataSetData">
+                            {{ trans.dataSetDataMessage }}
                         </label>
                     </div>
                 </div>

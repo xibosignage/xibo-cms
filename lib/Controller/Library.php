@@ -26,6 +26,7 @@ use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\LibraryFullException;
+use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
@@ -110,6 +111,9 @@ class Library extends Base
     /** @var  RegionFactory */
     private $regionFactory;
 
+    /** @var  DataSetFactory */
+    private $dataSetFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -132,8 +136,9 @@ class Library extends Base
      * @param UserGroupFactory $userGroupFactory
      * @param DisplayGroupFactory $displayGroupFactory
      * @param RegionFactory $regionFactory
+     * @param DataSetFactory $dataSetFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -150,6 +155,7 @@ class Library extends Base
         $this->userGroupFactory = $userGroupFactory;
         $this->displayGroupFactory = $displayGroupFactory;
         $this->regionFactory = $regionFactory;
+        $this->dataSetFactory = $dataSetFactory;
     }
 
     /**
@@ -231,6 +237,14 @@ class Library extends Base
     public function getDisplayGroupFactory()
     {
         return $this->displayGroupFactory;
+    }
+
+    /**
+     * @return DataSetFactory
+     */
+    public function getDataSetFactory()
+    {
+        return $this->dataSetFactory;
     }
 
     /**

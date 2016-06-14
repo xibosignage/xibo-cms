@@ -554,7 +554,8 @@ class Widget implements \JsonSerializable
     public function delete($options = [])
     {
         $options = array_merge([
-            'notify' => true
+            'notify' => true,
+            'notifyDisplays' => false
         ], $options);
 
         // We must ensure everything is loaded before we delete

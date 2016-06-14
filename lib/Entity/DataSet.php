@@ -87,7 +87,7 @@ class DataSet implements \JsonSerializable
     private $permissions = [];
 
     /**
-     * @var DataSetColumn array
+     * @var DataSetColumn[]
      */
     public $columns = [];
 
@@ -131,6 +131,16 @@ class DataSet implements \JsonSerializable
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->permissionFactory = $permissionFactory;
         $this->displayFactory = $displayFactory;
+    }
+
+    /**
+     * Clone
+     */
+    public function __clone()
+    {
+        $this->dataSetId = null;
+
+        $this->columns = array_map(function ($object) { return clone $object; }, $this->columns);
     }
 
     /**
@@ -186,15 +196,20 @@ class DataSet implements \JsonSerializable
     /**
      * Get DataSet Data
      * @param array $filterBy
+     * @param array $options
      * @return array
      */
-    public function getData($filterBy = [])
+    public function getData($filterBy = [], $options = [])
     {
         $start = $this->sanitizer->getInt('start', 0, $filterBy);
         $size = $this->sanitizer->getInt('size', 0, $filterBy);
         $filter = $this->sanitizer->getParam('filter', $filterBy);
         $ordering = $this->sanitizer->getString('order', $filterBy);
         $displayId = $this->sanitizer->getInt('displayId', 0, $filterBy);
+
+        $options = array_merge([
+            'includeFormulaColumns' => true
+        ], $options);
 
         // Params
         $params = [];
@@ -224,6 +239,9 @@ class DataSet implements \JsonSerializable
         foreach ($this->getColumn() as $column) {
             /* @var DataSetColumn $column */
             $allowedOrderCols[] = $column->heading;
+            
+            if ($column->dataSetColumnTypeId == 2 && !$options['includeFormulaColumns'])
+                continue;
 
             // Formula column?
             if ($column->dataSetColumnTypeId == 2) {

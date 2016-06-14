@@ -143,6 +143,14 @@ class Layout extends Base
     }
 
     /**
+     * @return DataSetFactory
+     */
+    public function getDataSetFactory()
+    {
+        return $this->dataSetFactory;
+    }
+
+    /**
      * Displays the Layout Page
      */
     function displayPage()

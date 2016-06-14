@@ -91,6 +91,12 @@ class DataSetColumn implements \JsonSerializable
     private $dataSetColumnTypeFactory;
 
     /**
+     * The prior dataset column id, when cloning
+     * @var int
+     */
+    public $priorDatasetColumnId;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
@@ -99,10 +105,21 @@ class DataSetColumn implements \JsonSerializable
      */
     public function __construct($store, $log, $dataTypeFactory, $dataSetColumnTypeFactory)
     {
+        $this->excludeProperty('priorDatasetColumnId');
         $this->setCommonDependencies($store, $log);
 
         $this->dataTypeFactory = $dataTypeFactory;
         $this->dataSetColumnTypeFactory = $dataSetColumnTypeFactory;
+    }
+
+    /**
+     * Clone
+     */
+    public function __clone()
+    {
+        $this->priorDatasetColumnId = $this->dataSetColumnId;
+        $this->dataSetColumnId = null;
+        $this->dataSetId = null;
     }
 
     /**
