@@ -506,7 +506,9 @@ class State extends Middleware
                 $container->helpService,
                 $container->dateService,
                 $container->configService,
-                $container->logFactory
+                $container->store,
+                $container->logFactory,
+                $container->displayFactory
             );
         });
 
