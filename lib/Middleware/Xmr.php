@@ -26,11 +26,8 @@ class Xmr extends Middleware
 
             $app = $this->app;
 
-            // $app->logService->debug('Registering Player Action Service with DI');
-
             // Player Action Helper
             $app->container->singleton('playerActionService', function() use ($app) {
-                // $app->logService->debug('New Player Action Service from DI');
                 return new PlayerActionService($app->configService, $app->logService);
             });
         });
@@ -42,8 +39,7 @@ class Xmr extends Middleware
             try {
                 $app->playerActionService->processQueue();
             } catch (\Exception $e) {
-                $app->logService->error('Unable to Process Queue of Player actions due to %s.', $e->getMessage());
-                $app->logService->debug($e->getTraceAsString());
+                $app->logService->error('Unable to Process Queue of Player actions due to %s', $e->getMessage());
             }
         }
     }
