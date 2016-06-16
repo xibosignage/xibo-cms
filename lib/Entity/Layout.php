@@ -601,6 +601,7 @@ class Layout implements \JsonSerializable
         // Unassign from all Campaigns
         foreach ($this->campaigns as $campaign) {
             /* @var Campaign $campaign */
+            $campaign->setChildObjectDependencies($this->layoutFactory);
             $campaign->unassignLayout($this);
             $campaign->save(['validate' => false]);
         }
