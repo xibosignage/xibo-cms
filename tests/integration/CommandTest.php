@@ -117,10 +117,9 @@ class CommandTest extends LocalWebTestCase
         public function provideSuccessCases()
     {
         return [
-            'Test case 1' => ['test command', 'test description', '-reboot'],
-            'Test case 2' => ['test command 2', 'aaa', '|01100100|01100001|01101110|00001101'],
-            'Test case 3' => ['test command', 'test description', '-sleep'],
-            'Test case 4' => ['test command 2', 'aaa', 'beep beeeep beeep']
+            'reboot' => ['test command', 'test description', '-reboot'],
+            'binary' => ['test command 2', 'aaa', '|01100100|01100001|01101110|00001101'],
+            'sleep' => ['test command 3', 'test description', '-sleep'],
         ];
     }
 
@@ -150,10 +149,11 @@ class CommandTest extends LocalWebTestCase
     public function provideFailureCases()
     {
         return [
-            'Test case 1' => ['No code', 'aa', NULL],
-            'Test case 2' => ['no description', NULL, 'code'], 
-            'French command case' => ['Test de Français 1', 'Bienvenue à la suite de tests Xibo', NULL],
-            'German command case' => ['Deutsch Prüfung 1', 'Weiß mit schwarzem Text', NULL] 
+            'No code' => ['No code', 'aa', NULL],
+            'No description' => ['no description', NULL, 'code'], 
+            'No Name' => [NULL, 'Bienvenue à la suite de tests Xibo', 'beep'],
+            'Only Name' => ['Deutsch Prüfung 1', NULL, NULL],
+            'Empty' => [NULL, NULL, NULL] 
         ];
     }
 
@@ -195,7 +195,6 @@ class CommandTest extends LocalWebTestCase
     /**
      * Edit an existing comand
      * @depends testAddSuccess
-     * @group broken
      */
     public function testEdit()
     {
