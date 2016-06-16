@@ -100,7 +100,6 @@ $app->get('/notification/form/delete/:id', '\Xibo\Controller\Notification:delete
 //
 $app->get('/layout/view', '\Xibo\Controller\Layout:displayPage')->name('layout.view');
 $app->get('/layout/designer/:id', '\Xibo\Controller\Layout:displayDesigner')->name('layout.designer');
-$app->get('/layout/status/:id', '\Xibo\Controller\Layout:status')->setName('layout.status');
 $app->get('/layout/preview/:id', '\Xibo\Controller\Preview:show')->name('layout.preview');
 $app->get('/layout/xlf/:id', '\Xibo\Controller\Preview:getXlf')->name('layout.getXlf');
 $app->get('/layout/export/:id', '\Xibo\Controller\Layout:export')->name('layout.export');
@@ -111,6 +110,7 @@ $app->get('/layout/form/copy/:id', '\Xibo\Controller\Layout:copyForm')->name('la
 $app->get('/layout/form/delete/:id', '\Xibo\Controller\Layout:deleteForm')->name('layout.delete.form');
 $app->get('/layout/form/retire/:id', '\Xibo\Controller\Layout:retireForm')->name('layout.retire.form');
 $app->get('/layout/form/upgrade/:id', '\Xibo\Controller\Layout:upgradeForm')->name('layout.upgrade.form');
+$app->get('/layout/form/export/:id', '\Xibo\Controller\Layout:exportForm')->name('layout.export.form');
 
 //
 // regions

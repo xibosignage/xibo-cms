@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-//use Xibo\Entity\DisplayGroup;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
@@ -445,14 +444,22 @@ class Schedule extends Base
 
             $this->getLog()->debug('Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
 
-            // Set on schedule object
-            $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
+            // In some circumstances we want to trim the seconds from the provided dates.
+            // this happens when the date format provided does not include seconds and when the add
+            // event comes from the UI.
+            if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
+                $this->getLog()->debug('Date format does not include seconds, removing them');
+                $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
 
-            if ($toDt !== null)
-                $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
+                if ($toDt !== null)
+                    $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
 
-            if ($recurrenceRange != null)
-                $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
+                if ($recurrenceRange != null)
+                    $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
+            } else {
+                $schedule->fromDt = $fromDt->format('U');
+                $schedule->toDt = $toDt->format('U');
+            }
         }
 
         // Ready to do the add
@@ -665,15 +672,23 @@ class Schedule extends Base
 
             $this->getLog()->debug('Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
 
-            // Set on schedule object
-            $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
+            // In some circumstances we want to trim the seconds from the provided dates.
+            // this happens when the date format provided does not include seconds and when the add
+            // event comes from the UI.
+            if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
+                $this->getLog()->debug('Date format does not include seconds, removing them');
+                $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
 
-            // If we have a toDt
-            if ($toDt !== null)
-                $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
+                // If we have a toDt
+                if ($toDt !== null)
+                    $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
 
-            if ($recurrenceRange != null)
-                $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
+                if ($recurrenceRange != null)
+                    $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
+            } else {
+                $schedule->fromDt = $fromDt->format('U');
+                $schedule->toDt = $toDt->format('U');
+            }
         }
 
         // Ready to do the add

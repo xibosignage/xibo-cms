@@ -520,6 +520,23 @@ class Region extends Base
 
         // Go through each region and update the region in the layout we have
         foreach ($regions as $newCoordinates) {
+
+            // Check that the properties we are expecting do actually exist
+            if (!property_exists($newCoordinates, 'regionid'))
+                throw new \InvalidArgumentException(__('Missing regionid property'));
+
+            if (!property_exists($newCoordinates, 'top'))
+                throw new \InvalidArgumentException(__('Missing top property'));
+
+            if (!property_exists($newCoordinates, 'left'))
+                throw new \InvalidArgumentException(__('Missing left property'));
+
+            if (!property_exists($newCoordinates, 'width'))
+                throw new \InvalidArgumentException(__('Missing width property'));
+
+            if (!property_exists($newCoordinates, 'height'))
+                throw new \InvalidArgumentException(__('Missing height property'));
+
             $regionId = $this->getSanitizer()->int($newCoordinates->regionid);
 
             // Load the region

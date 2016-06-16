@@ -443,7 +443,8 @@ class State extends Middleware
                 $container->layoutFactory,
                 $container->displayProfileFactory,
                 $container->mediaFactory,
-                $container->scheduleFactory
+                $container->scheduleFactory,
+                $container->displayEventFactory
             );
         });
 
@@ -505,7 +506,9 @@ class State extends Middleware
                 $container->helpService,
                 $container->dateService,
                 $container->configService,
-                $container->logFactory
+                $container->store,
+                $container->logFactory,
+                $container->displayFactory
             );
         });
 
@@ -551,7 +554,8 @@ class State extends Middleware
                 $container->permissionFactory,
                 $container->userGroupFactory,
                 $container->tagFactory,
-                $container->mediaFactory
+                $container->mediaFactory,
+                $container->dataSetFactory
             );
         });
 
@@ -576,7 +580,8 @@ class State extends Middleware
                 $container->playlistFactory,
                 $container->userGroupFactory,
                 $container->displayGroupFactory,
-                $container->regionFactory
+                $container->regionFactory,
+                $container->dataSetFactory
             );
         });
 
@@ -1039,6 +1044,14 @@ class State extends Middleware
             );
         });
 
+        $container->singleton('displayEventFactory', function($container) {
+            return new \Xibo\Factory\DisplayEventFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
+        });
+
         $container->singleton('displayGroupFactory', function($container) {
             return new \Xibo\Factory\DisplayGroupFactory(
                 $container->store,
@@ -1318,7 +1331,8 @@ class State extends Middleware
                 $container->widgetOptionFactory,
                 $container->widgetMediaFactory,
                 $container->widgetAudioFactory,
-                $container->permissionFactory
+                $container->permissionFactory,
+                $container->displayFactory
             );
         });
 

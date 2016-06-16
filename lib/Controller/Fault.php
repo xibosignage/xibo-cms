@@ -21,11 +21,14 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LogFactory;
+use Xibo\Helper\Random;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Fault
@@ -33,10 +36,16 @@ use Xibo\Service\SanitizerServiceInterface;
  */
 class Fault extends Base
 {
+    /** @var  StorageServiceInterface */
+    private $store;
+
     /**
      * @var LogFactory
      */
     private $logFactory;
+
+    /** @var  DisplayFactory */
+    private $displayFactory;
 
     /**
      * Set common dependencies.
@@ -47,13 +56,16 @@ class Fault extends Base
      * @param \Xibo\Service\HelpServiceInterface $help
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
+     * @param StorageServiceInterface $store
      * @param LogFactory $logFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $logFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $logFactory, $displayFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
+        $this->store = $store;
         $this->logFactory = $logFactory;
+        $this->displayFactory = $displayFactory;
     }
 
     function displayPage()
@@ -72,24 +84,104 @@ class Fault extends Base
 
     public function collect()
     {
-        $out = fopen('php://output', 'w');
-        fputcsv($out, ['logId', 'runNo', 'logDate', 'channel', 'page', 'function', 'message', 'display.display', 'type']);
+        $this->setNoOutput(true);
 
-        // Do some post processing
-        foreach ($this->logFactory->query(['logId'], ['fromDt' => (time() - (60 * 10))]) as $row) {
-            /* @var \Xibo\Entity\LogEntry $row */
-            fputcsv($out, [$row->logId, $row->runNo, $row->logDate, $row->channel, $row->page, $row->function, $row->message, $row->display, $row->type]);
+        // Create a ZIP file
+        $tempFileName = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/' . Random::generateString();
+        $zip = new \ZipArchive();
+
+        $result = $zip->open($tempFileName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+        if ($result !== true)
+            throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: ' . $result));
+
+        // Decide what we output based on the options selected.
+        $outputLog = $this->getSanitizer()->getCheckbox('outputLog') == 1;
+        $outputEnvCheck = $this->getSanitizer()->getCheckbox('outputEnvCheck') == 1;
+        $outputSettings = $this->getSanitizer()->getCheckbox('outputSettings') == 1;
+        $outputDisplays = $this->getSanitizer()->getCheckbox('outputDisplays') == 1;
+        $outputDisplayProfile = $this->getSanitizer()->getCheckbox('outputDisplayProfile') == 1;
+
+        if (!$outputLog && !$outputEnvCheck && !$outputSettings && !$outputDisplays && !$outputDisplayProfile)
+            throw new \InvalidArgumentException(__('Please select at least one option'));
+
+        // Should we output a log?
+        if ($outputLog) {
+            $tempLogFile = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/log_' . Random::generateString();
+            $out = fopen($tempLogFile, 'w');
+            fputcsv($out, ['logId', 'runNo', 'logDate', 'channel', 'page', 'function', 'message', 'display.display', 'type']);
+
+            // Do some post processing
+            foreach ($this->logFactory->query(['logId'], ['fromDt' => (time() - (60 * 10))]) as $row) {
+                /* @var \Xibo\Entity\LogEntry $row */
+                fputcsv($out, [$row->logId, $row->runNo, $row->logDate, $row->channel, $row->page, $row->function, $row->message, $row->display, $row->type]);
+            }
+
+            fclose($out);
+
+            $zip->addFile($tempLogFile, 'log.csv');
         }
 
-        fclose($out);
+        // Output ENV Check
+        if ($outputEnvCheck) {
+            $zip->addFromString('environment.json', json_encode(array_map(function ($element) {
+                unset($element['advice']);
+                return $element;
+            }, $this->getConfig()->CheckEnvironment()), JSON_PRETTY_PRINT));
+        }
 
-        // We want to output a load of stuff to the browser as a text file.
-        $app = $this->getApp();
-        $app->response()->header('Content-Type', 'text/csv');
-        $app->response()->header('Content-Disposition', 'attachment; filename="troubleshoot.csv"');
-        $app->response()->header('Content-Transfer-Encoding', 'binary"');
-        $app->response()->header('Accept-Ranges', 'bytes');
-        $this->setNoOutput(true);
+        // Output Settings
+        if ($outputSettings) {
+            $zip->addFromString('settings.json', json_encode(array_map(function($element) {
+                return [$element['setting'] => $element['value']];
+            }, $this->store->select('SELECT setting, `value` FROM `setting`', [])), JSON_PRETTY_PRINT));
+        }
+
+        // Output Displays
+        if ($outputDisplays) {
+
+            $displays = $this->displayFactory->query(['display']);
+
+            // Output Profiles
+            if ($outputDisplayProfile) {
+                foreach ($displays as $display) {
+                    /** @var \Xibo\Entity\Display $display */
+                    $display->settingProfile = array_map(function ($element) {
+                        unset($element['helpText']);
+                        return $element;
+                    }, $display->getSettings());
+                }
+            }
+
+            $zip->addFromString('displays.json', json_encode($displays, JSON_PRETTY_PRINT));
+        }
+
+        // Close the ZIP file
+        $zip->close();
+
+        // Prepare the download
+        if (ini_get('zlib.output_compression')) {
+            ini_set('zlib.output_compression', 'Off');
+        }
+
+        header('Content-Type: application/octet-stream');
+        header("Content-Transfer-Encoding: Binary");
+        header("Content-disposition: attachment; filename=troubleshoot.zip");
+        header('Content-Length: ' . filesize($tempFileName));
+
+        // Send via Apache X-Sendfile header?
+        if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Apache') {
+            header("X-Sendfile: $tempFileName");
+            $this->getApp()->halt(200);
+        }
+        // Send via Nginx X-Accel-Redirect?
+        if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Nginx') {
+            header("X-Accel-Redirect: /download/temp/" . basename($tempFileName));
+            $this->getApp()->halt(200);
+        }
+
+        // Return the file with PHP
+        // Disable any buffering to prevent OOM errors.
+        readfile($tempFileName);
     }
 
     public function debugOn()
@@ -98,6 +190,7 @@ class Fault extends Base
             throw new AccessDeniedException();
 
         $this->getConfig()->ChangeSetting('audit', 'DEBUG');
+        $this->getConfig()->ChangeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addMinutes(30)->format('U'));
 
         // Return
         $this->getState()->hydrate([
@@ -111,6 +204,7 @@ class Fault extends Base
             throw new AccessDeniedException();
 
         $this->getConfig()->ChangeSetting('audit', 'EMERGENCY');
+        $this->getConfig()->ChangeSetting('ELEVATE_LOG_UNTIL', '');
 
         // Return
         $this->getState()->hydrate([

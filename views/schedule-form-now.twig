@@ -59,7 +59,7 @@
                 
                 {% set title %}{% trans "Seconds" %}{% endset %}
                 {% set helpText %}{% trans "Seconds this event should be scheduled for" %}{% endset %}
-                {{ forms.input("seconds", title, "", helpText) }}
+                {{ forms.input("seconds", title, "", helpText, "schedule-now-seconds-field") }}
 
                 {% set title %}{% trans "Display" %}{% endset %}
                 {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}

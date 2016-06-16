@@ -175,6 +175,9 @@
                         {% set title %}{% trans "Marquee Selector" %}{% endset %}
                         {% set helpText %}{% trans "The selector to use for stacking marquee items in a line when scrolling Left/Right." %}{% endset %}
                         {{ forms.input("marqueeInlineSelector", title, module.getOption("marqueeInlineSelector"), helpText, "effect-controls") }}
+
+                        {% set title %}{% trans "Optional JavaScript" %}{% endset %}
+                        {{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), title, "", "", 10) }}
                     </div>
                 </div>
             </form>

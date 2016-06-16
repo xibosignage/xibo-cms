@@ -795,7 +795,9 @@ var assignLayoutToCampaign = function(url, layout, unassignLayout) {
 };
 
 function regionEditFormSubmit() {
-    XiboFormSubmit($("#regionEditForm"), null, function() {
+    XiboFormSubmit($("#regionEditForm"), null, function(xhr, form) {
+
+        if (xhr.success)
             window.location.reload();
     });
 }

@@ -32,6 +32,8 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             $template = isset($_REQUEST['template']) ? $_REQUEST['template'][$index] : 0;
             $replaceExisting = isset($_REQUEST['replaceExisting']) ? $_REQUEST['replaceExisting'][$index] : 0;
             $importTags = isset($_REQUEST['importTags']) ? $_REQUEST['importTags'][$index] : 0;
+            $useExistingDataSets = isset($_REQUEST['useExistingDataSets']) ? $_REQUEST['useExistingDataSets'][$index] : 0;
+            $importDataSetData = isset($_REQUEST['importDataSetData']) ? $_REQUEST['importDataSetData'][$index] : 0;
 
             /* @var Layout $layout */
             $layout = $controller->getLayoutFactory()->createFromZip(
@@ -41,6 +43,8 @@ class LayoutUploadHandler extends BlueImpUploadHandler
                 $template,
                 $replaceExisting,
                 $importTags,
+                $useExistingDataSets,
+                $importDataSetData,
                 $this->options['libraryController']
             );
 

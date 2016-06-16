@@ -21,9 +21,9 @@
 namespace Xibo\Controller;
 use finfo;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Entity\Stat;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
@@ -40,8 +40,6 @@ use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\XMR\ScreenShotAction;
-
-//use Xibo\Entity\DisplayGroup;
 
 /**
  * Class Display
@@ -99,6 +97,9 @@ class Display extends Base
      */
     private $scheduleFactory;
 
+    /** @var  DisplayEventFactory */
+    private $displayEventFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -118,8 +119,9 @@ class Display extends Base
      * @param DisplayProfileFactory $displayProfileFactory
      * @param MediaFactory $mediaFactory
      * @param ScheduleFactory $scheduleFactory
+     * @param DisplayEventFactory $displayEventFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -133,6 +135,7 @@ class Display extends Base
         $this->displayProfileFactory = $displayProfileFactory;
         $this->mediaFactory = $mediaFactory;
         $this->scheduleFactory = $scheduleFactory;
+        $this->displayEventFactory = $displayEventFactory;
     }
 
     /**
@@ -1107,11 +1110,10 @@ class Display extends Base
                     $display->loggedIn = 1;
 
                     // Log the down event
-                    $stat = new Stat($this->store, $this->getLog());
-                    $stat->type = 'displaydown';
-                    $stat->displayId = $display->displayId;
-                    $stat->fromDt = $this->getDate()->getLocalDate($display->lastAccessed);
-                    $stat->save();
+                    $event = $this->displayEventFactory->createEmpty();
+                    $event->displayId = $display->displayId;
+                    $event->start = $display->lastAccessed;
+                    $event->save();
                 }
 
                 // Store this row

@@ -168,6 +168,7 @@ class Finance extends ModuleWidget
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
         $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
         $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
+        $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
     }
 
     /**
@@ -360,6 +361,9 @@ class Finance extends ModuleWidget
         // Replace the control meta with our data from twitter
         $data['controlMeta'] = '<!-- NUMITEMS=' . count($items) . ' -->' . PHP_EOL . '<!-- DURATION=' . ($this->getOption('durationIsPerItem', 0) == 0 ? $duration : ($duration * count($items))) . ' -->';
 
+        // Get the JavaScript node
+        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
+
         // Replace the head content
         $headContent = '';
 
@@ -401,6 +405,7 @@ class Finance extends ModuleWidget
         $javaScriptContent .= '   $(document).ready(function() { ';
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); ';
         $javaScriptContent .= '   }); ';
+        $javaScriptContent .= $javaScript;
         $javaScriptContent .= '</script>';
 
         // Replace the Head Content with our generated javascript
@@ -408,7 +413,7 @@ class Finance extends ModuleWidget
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true]);
 
         return $this->renderTemplate($data);
     }

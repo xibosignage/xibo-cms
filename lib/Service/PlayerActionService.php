@@ -99,16 +99,24 @@ class PlayerActionService implements PlayerActionServiceInterface
         if ($this->xmrAddress == null)
             $this->xmrAddress = $this->getConfig()->GetSetting('XMR_ADDRESS');
 
+        $failures = 0;
+
         foreach ($this->actions as $action) {
             /** @var PlayerAction $action */
             try {
-                // Assign the Layout to the Display
-                if (!$action->send($this->xmrAddress))
+                // Send each action
+                if (!$action->send($this->xmrAddress)) {
                     $this->log->error('Player action refused.');
+                    $failures++;
+                }
 
             } catch (PlayerActionException $sockEx) {
                 $this->log->error('Player action connection failed.');
+                $failures++;
             }
         }
+
+        if ($failures > 0)
+            throw new ConfigurationException(sprintf(__('%d of %d player actions failed'), $failures, count($this->actions)));
     }
 }

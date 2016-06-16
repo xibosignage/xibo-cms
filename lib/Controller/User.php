@@ -649,7 +649,9 @@ class User extends Base
             throw new \InvalidArgumentException(__('Passwords do not match'));
 
         $user->setNewPassword($newPassword, $oldPassword);
-        $user->save();
+        $user->save([
+            'passwordUpdate' => true
+        ]);
 
         // Return
         $this->getState()->hydrate([

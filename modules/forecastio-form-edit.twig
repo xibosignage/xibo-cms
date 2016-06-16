@@ -252,6 +252,9 @@
                         {% set helpText %}{% trans "Tick if you would like to only show the Daytime weather conditions." %}{% endset %}
                         {{ forms.checkbox("dayConditionsOnly", title, module.getOption("dayConditionsOnly"), helpText) }}
 
+                        {% set title %}{% trans "Optional JavaScript" %}{% endset %}
+                        {{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), title, "", "", 10) }}
+
                     </div>
                     <div class="tab-pane" id="forecast">
                         {% set message %}{% trans "Please press Request Forecast" %}{% endset %}

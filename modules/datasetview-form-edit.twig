@@ -305,6 +305,9 @@
 
                         {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
                         {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}
+
+                        {% set title %}{% trans "Optional JavaScript" %}{% endset %}
+                        {{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), title, "", "", 10) }}
                     </div>
                 </div>
             </form>
