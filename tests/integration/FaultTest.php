@@ -13,6 +13,9 @@ namespace Xibo\Tests\Integration;
  */
 class FaultTest extends \Xibo\Tests\LocalWebTestCase
 {
+    /*
+     */
+
     public function testCollect()
     {
         $this->client->get('/fault/collect');
@@ -20,18 +23,18 @@ class FaultTest extends \Xibo\Tests\LocalWebTestCase
     }
 
     /*
-    * @group broken
-    */
-    public function testDebugOn()
+     * @group broken
+     */
+    public function DebugOn()
     {
         $this->client->put('/fault/debug/on');
         $this->assertSame(200, $this->client->response->status());
     }
 
     /*
-    * @group broken
-    */
-    public function testDebugOff()
+     * @group broken
+     */
+    public function DebugOff()
     {
         $this->client->put('/fault/debug/off');
         $this->assertSame(200, $this->client->response->status());

@@ -113,9 +113,9 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
         public function provideSuccessCases()
     {
         return [
-            'Test case 1' => ['test profile', 'android', 0],
-            'Test case 2' => ['different test profile', 'windows', 0],
-            'Test case 3' => ['Test de Français 1', 'android', 0]
+            'Android notDefault' => ['test profile', 'android', 0],
+            'Windows notDefault' => ['different test profile', 'windows', 0],
+            'French Android' => ['Test de Français 1', 'android', 0]
         ];
     }
 
@@ -143,8 +143,9 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
     public function provideFailureCases()
     {
         return [
-            'Test case 1' => ['no type', NULL, 0],
-            'Test case 2' => [NULL, 'android', 1]
+            'NULL Type' => ['no type', NULL, 0],
+            'NULL name' => [NULL, 'android', 1],
+            'is Default 1' => ['TEST PHP', 'android', 1]
         ];
     }
 
