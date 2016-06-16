@@ -58,6 +58,7 @@ class Fault extends Base
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param LogFactory $logFactory
+     * @param DisplayFactory $displayFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $logFactory, $displayFactory)
     {
