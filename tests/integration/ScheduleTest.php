@@ -10,11 +10,10 @@ namespace Xibo\Tests\Integration;
 
 
 use Xibo\OAuth2\Client\Entity\XiboCampaign;
-use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
-use Xibo\OAuth2\Client\Entity\XiboSchedule;
 use Xibo\OAuth2\Client\Entity\XiboCommand;
-use Xibo\Helper\Random;
+use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
+use Xibo\OAuth2\Client\Entity\XiboLayout;
+use Xibo\OAuth2\Client\Entity\XiboSchedule;
 use Xibo\Tests\LocalWebTestCase;
 
 
@@ -40,8 +39,9 @@ class ScheduleTest extends LocalWebTestCase
     {
         parent::setup();
         $this->startDisplayGroups = (new XiboDisplayGroup($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        $this->startLayouts = (new XiboLayout($this->getEntityProvider()))->get();
-        $this->startCampaigns = (new XiboCampaign($this->getEntityProvider()))->get();
+        $this->startLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+        $this->startCampaigns = (new XiboCampaign($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+        $this->startCommands = (new XiboCommand($this->getEntityProvider()))->get(['start' => 0, 'length' => 1000]);
     }
 
     /**
@@ -74,7 +74,7 @@ class ScheduleTest extends LocalWebTestCase
         }
 
         // tearDown all layouts that weren't there initially
-        $finalLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 1000]);
+        $finalLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
         # Loop over any remaining layouts and nuke them
         foreach ($finalLayouts as $layout) {
             /** @var XiboLayout $layout */
@@ -88,7 +88,7 @@ class ScheduleTest extends LocalWebTestCase
                 try {
                     $layout->delete();
                 } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $layout->layoutId . '. E:' . $e->getMessage());
+                    fwrite(STDERR, 'Layout: Unable to delete ' . $layout->layoutId . '. E:' . $e->getMessage());
                 }
             }
         }
@@ -108,7 +108,7 @@ class ScheduleTest extends LocalWebTestCase
                 try {
                     $campaign->delete();
                 } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $campaign->campaignId . '. E:' . $e->getMessage());
+                    fwrite(STDERR, 'Campaign: Unable to delete ' . $campaign->campaignId . '. E:' . $e->getMessage());
                 }
             }
         }
@@ -128,7 +128,7 @@ class ScheduleTest extends LocalWebTestCase
                 try {
                     $command->delete();
                 } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $command->commandId . '. E:' . $e->getMessage());
+                    fwrite(STDERR, 'Command: Unable to delete ' . $command->commandId . '. E:' . $e->getMessage());
                 }
             }
         }
