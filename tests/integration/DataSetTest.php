@@ -467,7 +467,7 @@ class DataSetTest extends LocalWebTestCase
     * @group broken
     */
 
-    public function testRowDelete()
+    public function RowDelete()
     {
         // Create a new dataset to use
         /** @var XiboDataSet $dataSet */
@@ -486,9 +486,7 @@ class DataSetTest extends LocalWebTestCase
         $rowCheck = $dataSet->getByRowId($row->rowId);
         // delete row
 
-        $this->client->delete('/dataset/data/' . $dataSet->dataSetId . $rowCheck->rowId, [
-            'deleteData' =>1
-            ]);
+        $this->client->delete('/dataset/data/' . $dataSet->dataSetId . $rowCheck->rowId);
 
         $response = json_decode($this->client->response->body());
         $this->assertSame(204, $response->status, $this->client->response->body());

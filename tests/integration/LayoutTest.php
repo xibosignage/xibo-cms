@@ -64,7 +64,7 @@ class LayoutTest extends LocalWebTestCase
     public function testListEmpty()
     {
 
-        if (count($this->startLayouts) > 0) {
+        if (count($this->startLayouts) > 1) {
             $this->skipTest("There are pre-existing Layouts");
             return;
         }
@@ -79,7 +79,7 @@ class LayoutTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
 
         # There should be no layouts in the system
-        $this->assertEquals(0, $object->data->recordsTotal);
+        $this->assertEquals(1, $object->data->recordsTotal);
     }
     
     /**
@@ -103,7 +103,6 @@ class LayoutTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($layoutName, $object->data->layout);
         $this->assertSame($layoutDescription, $object->data->description);
- //       $this->assertSame($layoutResolutionId, $object->data->resolutionId);
 
         # Check that the layout was really added
         $layouts = (new XiboLayout($this->getEntityProvider()))->get();
@@ -114,8 +113,6 @@ class LayoutTest extends LocalWebTestCase
 
         $this->assertSame($layoutName, $layout->layout);
         $this->assertSame($layoutDescription, $layout->description);
-//        $this->assertSame($layoutResolutionId, $layout->resolutionId);
-
         # Clean up the Layout as we no longer need it
         $this->assertTrue($layout->delete(), 'Unable to delete ' . $layout->layoutId);
     }
@@ -182,7 +179,7 @@ class LayoutTest extends LocalWebTestCase
      */
     public function testListFilter($layoutName, $layoutDescription, $layoutTemplateId, $layoutResolutionId)
     {
-        if (count($this->startLayouts) > 0) {
+        if (count($this->startLayouts) > 1) {
             $this->skipTest("There are pre-existing Layouts");
             return;
         }
@@ -213,7 +210,7 @@ class LayoutTest extends LocalWebTestCase
                 // The object we got wasn't the exact one we searched for
                 // Make sure all the words we searched for are in the result
                 foreach (array_map('trim',explode(",",$layoutName)) as $word) {
-                    assertTrue((strpos($word, $lay->layout) !== false), 'Group returned did not match the query string: ' . $lay->layout);
+                    assertTrue((strpos($word, $lay->layout) !== false), 'Layout returned did not match the query string: ' . $lay->layout);
                 }
             }
         }
@@ -496,7 +493,7 @@ class LayoutTest extends LocalWebTestCase
         return [
             // various incorrect regions
             'region no size' => [NULL, NULL, 20, 420],
-            'region negaive dimesions' => [-69, -420, 20, 420]
+            'region negative dimesions' => [-69, -420, 20, 420]
         ];
     }
 
@@ -541,7 +538,7 @@ class LayoutTest extends LocalWebTestCase
    public function testDeleteRegion()
    {
 
-    $name = Random::generateString(8, 'phpunit');
+        $name = Random::generateString(8, 'phpunit');
         $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200, 670, 100, 100);
 
