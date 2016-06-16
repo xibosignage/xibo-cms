@@ -20,7 +20,6 @@
  */
 namespace Xibo\Controller;
 
-use Xibo\Entity\Display;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LogFactory;
@@ -145,7 +144,7 @@ class Fault extends Base
             // Output Profiles
             if ($outputDisplayProfile) {
                 foreach ($displays as $display) {
-                    /** @var Display $display */
+                    /** @var \Xibo\Entity\Display $display */
                     $display->settingProfile = array_map(function ($element) {
                         unset($element['helpText']);
                         return $element;
