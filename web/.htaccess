@@ -1,5 +1,7 @@
 RewriteEngine On
 
+#RewriteBase /xibo
+
 # fix authorization header
 RewriteCond %{HTTP:Authorization} .+
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

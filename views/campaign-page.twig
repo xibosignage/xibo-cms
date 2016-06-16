@@ -33,6 +33,7 @@ This is the template for the campaign page
                             <tr>
                                 <th>{% trans "Name" %}</th>
                                 <th>{% trans "# Layouts" %}</th>
+                                <th>{% trans "Duration" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -63,6 +64,7 @@ This is the template for the campaign page
             "columns": [
                 { "data": "campaign" },
                 { "data": "numberLayouts" },
+                { "data": "totalDuration" },
                 {
                     "orderable": false,
                     "data": dataTableButtonsColumn

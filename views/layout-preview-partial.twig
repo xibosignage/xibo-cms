@@ -1,0 +1,14 @@
+<div id="player_{{layout.layoutId}}" class="preview-player">
+    <div id="info_{{layout.layoutId}}" class="preview-info"></div>
+    <div id="log_{{layout.layoutId}}" class="preview-log"></div>
+    <div id="screen_{{layout.layoutId}}" class="preview-screen">
+        <div id="splash_{{layout.layoutId}}" class="preview-splash">
+            <div id="loader_{{layout.layoutId}}" class="preview-loader"></div>
+            <div id="loaderCaption_{{layout.layoutId}}" class="preview-loaderCaption">
+                <p>{% trans "Loading Layout..." %}</p>
+            </div>
+        </div>
+        <div id="end_{{layout.layoutId}}" class="preview-end"><a href="javascript:history.go(0)" style="text-decoration: none; color: #ffffff">{% trans "Play again?" %}</a></div>
+    </div>
+</div>
+
