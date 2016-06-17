@@ -273,6 +273,17 @@ class MediaFactory extends BaseFactory
     }
 
     /**
+     * Get Media by LayoutId
+     * @param int $layoutId
+     * @param int $widgetId
+     * @return array[Media]
+     */
+    public function getByLayoutAndWidget($layoutId, $widgetId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'widgetId' => $widgetId]);
+    }
+
+    /**
      * @param null $sortOrder
      * @param null $filterBy
      * @return Media[]
@@ -300,9 +311,14 @@ class MediaFactory extends BaseFactory
                media.retired,
                media.isEdited,
                IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS parentId,
+        ';
+
+        if (DBVERSION >= 125) {
+            $select .= '
                `media`.released,
                `media`.apiRef,
-        ';
+            ';
+        }
 
         $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
         $select .= "        `user`.UserName AS owner, ";
@@ -425,8 +441,14 @@ class MediaFactory extends BaseFactory
                         ON `lkregionplaylist`.playlistId = `widget`.playlistId
                         INNER JOIN `region`
                         ON `region`.regionId = `lkregionplaylist`.regionId
-                    WHERE region.layoutId = :layoutId
-                )
+                    WHERE region.layoutId = :layoutId ';
+
+            if ($this->getSanitizer()->getInt('widgetId', $filterBy) !== null) {
+                $body .= ' AND `widget`.wigetId = :widgetId ';
+                $params['widgetId'] = $this->getSanitizer()->getInt('widgetId', $filterBy);
+            }
+
+            $body .= '    )
                 AND media.type <> \'module\'
             ';
             $params['layoutId'] = $this->getSanitizer()->getInt('layoutId', $filterBy);

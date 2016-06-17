@@ -116,8 +116,8 @@ class ResolutionTest extends LocalWebTestCase
         public function provideSuccessCases()
     {
         return [
-            'Test case 1' => ['test resolution', 800, 200],
-            'Test case 2' => ['different test resolution', 1069, 1699]
+            'resolution 1' => ['test resolution', 800, 200],
+            'resolution 2' => ['different test resolution', 1069, 1699]
         ];
     }
 
@@ -144,8 +144,8 @@ class ResolutionTest extends LocalWebTestCase
     public function provideFailureCases()
     {
         return [
-            'Test case 1' => ['wrong parameters', 'abc', NULL],
-            'Test case 2' => [12, 'width', 1699]
+            'incorrect width and height' => ['wrong parameters', 'abc', NULL],
+            'incorrect width' => [12, 'width', 1699]
         ];
     }
 
@@ -212,7 +212,7 @@ class ResolutionTest extends LocalWebTestCase
                 $flag = true;
             }
         }
-      //  $this->assertTrue($flag, 'Resolution ID ' . $res1->resolutionId . ' was not found after deleting a different Resolution');
+        $this->assertTrue($flag, 'Resolution ID ' . $res1->resolutionId . ' was not found after deleting a different Resolution');
         $res1->delete();
     }
 }

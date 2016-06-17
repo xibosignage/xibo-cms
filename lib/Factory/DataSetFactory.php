@@ -57,6 +57,14 @@ class DataSetFactory extends BaseFactory
     }
 
     /**
+     * @return DataSetColumnFactory
+     */
+    public function getDataSetColumnFactory()
+    {
+        return $this->dataSetColumnFactory;
+    }
+
+    /**
      * @return DataSet
      */
     public function createEmpty()

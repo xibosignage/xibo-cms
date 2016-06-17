@@ -23,6 +23,8 @@
 namespace Xibo\Factory;
 
 
+use Xibo\Entity\DataSet;
+use Xibo\Entity\DataSetColumn;
 use Xibo\Entity\Layout;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
@@ -376,11 +378,6 @@ class LayoutFactory extends BaseFactory
                 $module = $modules[$widget->type];
                 /* @var \Xibo\Entity\Module $module */
 
-                // Skip dataset view widgets
-                // pending: https://github.com/xibosignage/xibo/issues/642
-                if ($module->type == 'datasetview')
-                    continue;
-
                 // Get all widget options
                 $xpathQuery = '//region[@id="' . $region->tempId . '"]/media[@id="' . $widgetId . '"]/options';
                 foreach ($xpath->query($xpathQuery) as $optionsNode) {
@@ -411,10 +408,6 @@ class LayoutFactory extends BaseFactory
                     $this->getLog()->debug('Assigning mediaId %d', $widget->tempId);
                     $widget->assignMedia($widget->tempId);
                 }
-
-                // Skip dataset backed ticker widgets
-                if ($module->type == 'ticker' && $widget->getOptionValue('sourceId', 1) != 1)
-                    continue;
 
                 // Get all widget raw content
                 foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media[@id="' . $widgetId . '"]/raw') as $rawNode) {
@@ -469,10 +462,12 @@ class LayoutFactory extends BaseFactory
      * @param int $template
      * @param int $replaceExisting
      * @param int $importTags
+     * @param bool $useExistingDataSets
+     * @param bool $importDataSetData
      * @param \Xibo\Controller\Library $libraryController
      * @return Layout
      */
-    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $libraryController)
+    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController)
     {
         $this->getLog()->debug('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName);
 
@@ -518,6 +513,9 @@ class LayoutFactory extends BaseFactory
 
         // Track if we've added any fonts
         $fontsAdded = false;
+
+        $widgets = $layout->getWidgets();
+        $this->getLog()->debug('Layout has %d widgets', count($widgets));
 
         $this->getLog()->debug('Process mapping.json file.');
 
@@ -574,11 +572,8 @@ class LayoutFactory extends BaseFactory
             }
 
             // Find where this is used and swap for the real mediaId
-            $widgets = $layout->getWidgets();
             $oldMediaId = $file['mediaid'];
             $newMediaId = $media->mediaId;
-
-            $this->getLog()->debug('Layout has %d widgets', count($widgets));
 
             if ($file['background'] == 1) {
                 // Set the background image on the new layout
@@ -612,6 +607,156 @@ class LayoutFactory extends BaseFactory
                 }
             }
         }
+
+        // Handle any datasets provided with the layout
+        $dataSets = $zip->getFromName('dataSet.json');
+
+        if ($dataSets !== false) {
+
+            $this->getLog()->debug('There are DataSets to import.');
+
+            $dataSets = json_decode($dataSets, true);
+            
+            foreach ($dataSets as $item) {
+                // Hydrate a new dataset object with this json object
+                $dataSet = $libraryController->getDataSetFactory()->createEmpty()->hydrate($item);
+                $dataSet->columns = [];
+                $dataSetId = $dataSet->dataSetId;
+
+                // We must null the ID so that we don't try to load the dataset when we assign columns
+                $dataSet->dataSetId = null;
+                
+                // Hydrate the columns
+                foreach ($item['columns'] as $columnItem) {
+                    $this->getLog()->debug('Assigning column: %s', json_encode($columnItem));
+                    $dataSet->assignColumn($libraryController->getDataSetFactory()->getDataSetColumnFactory()->createEmpty()->hydrate($columnItem));
+                }
+
+                /** @var DataSet $existingDataSet */
+                $existingDataSet = null;
+
+                // Do we want to try and use a dataset that already exists?
+                if ($useExistingDataSets) {
+                    // Check to see if we already have a dataset with the same code/name, prefer code.
+                    try {
+                        // try and get by name
+                        $existingDataSet = $libraryController->getDataSetFactory()->getByCode($dataSet->code);
+
+                        $this->getLog()->debug('Existing dataset not found with code %s', $dataSet->code);
+
+                    } catch (NotFoundException $e) {
+                        // try by name
+                        try {
+                            $existingDataSet = $libraryController->getDataSetFactory()->getByName($dataSet->dataSet);
+                        } catch (NotFoundException $e) {
+                            $this->getLog()->debug('Existing dataset not found with name %s', $dataSet->code);
+                        }
+                    }
+                }
+
+                if ($existingDataSet === null) {
+
+                    $this->getLog()->debug('Matching DataSet not found, will need to add one. useExistingDataSets = %s', $useExistingDataSets);
+
+                    // We want to add the dataset we have as a new dataset.
+                    // we will need to make sure we clear the ID's and save it
+                    $existingDataSet = clone $dataSet;
+                    $existingDataSet->save();
+
+                    // Do we need to add data
+                    if ($importDataSetData) {
+
+                        // Import the data here
+                        $this->getLog()->debug('Importing data into new DataSet %d', $existingDataSet->dataSetId);
+
+                        foreach ($item['data'] as $itemData) {
+                            if (isset($itemData['id']))
+                                unset($itemData['id']);
+
+                            $existingDataSet->addRow($itemData);
+                        }
+                    }
+
+                } else {
+
+                    $this->getLog()->debug('Matching DataSet found, validating the columns');
+
+                    // Load the existing dataset
+                    $existingDataSet->load();
+
+                    // Validate that the columns are the same
+                    if (count($dataSet->columns) != count($existingDataSet->columns)) {
+                        $this->getLog()->debug('Columns for Imported DataSet = %s', json_encode($dataSet->columns));
+                        throw new \InvalidArgumentException(sprintf(__('DataSets have different number of columns imported = %d, existing = %d'), count($dataSet->columns), count($existingDataSet->columns)));
+                    }
+
+                    // Check the column headings
+                    $diff = array_udiff($dataSet->columns, $existingDataSet->columns, function ($a, $b) {
+                        /** @var DataSetColumn $a */
+                        /** @var DataSetColumn $b */
+                        return $a->heading == $b->heading;
+                    });
+
+                    if (count($diff) > 0)
+                        throw new \InvalidArgumentException(__('DataSets have different column names'));
+                }
+
+                // Replace instances of this dataSetId with the existing dataSetId, which will either be the existing
+                // dataSet or one we've added above.
+                // Also make sure we replace the columnId's with the columnId's in the new "existing" DataSet.
+                foreach ($widgets as $widget) {
+                    /* @var Widget $widget */
+                    if ($widget->type == 'datasetview' || $widget->type == 'ticker') {
+                        $widgetDataSetId = $widget->getOptionValue('dataSetId', 0);
+
+                        if ($widgetDataSetId != 0 && $widgetDataSetId == $dataSetId) {
+                            // Widget has a dataSet and it matches the one we've just actioned.
+                            $widget->setOptionValue('dataSetId', 'attrib', $existingDataSet->dataSetId);
+
+                            // Check for and replace column references.
+                            // We are looking in the "columns" option for datasetview
+                            // and the "template" option for ticker
+                            if ($widget->type == 'datasetview') {
+                                // Get the columns option
+                                $columns = explode(',', $widget->getOptionValue('columns', ''));
+
+                                $this->getLog()->debug('Looking to replace columns from %s', json_encode($columns));
+
+                                foreach ($existingDataSet->columns as $column) {
+                                    foreach ($columns as $index => $col) {
+                                        if ($col == $column->priorDatasetColumnId) {
+                                            $columns[$index] = $column->dataSetColumnId;
+                                        }
+                                    }
+                                }
+
+                                $columns = implode(',', $columns);
+
+                                $widget->setOptionValue('columns', 'attrib', $columns);
+
+                                $this->getLog()->debug('Replaced columns with %s', $columns);
+                                
+                            } else if ($widget->type == 'ticker') {
+                                // Get the template option
+                                $template = $widget->getOptionValue('template', '');
+
+                                $this->getLog()->debug('Looking to replace columns from %s', $template);
+
+                                foreach ($existingDataSet->columns as $column) {
+                                    // We replace with the |%d] so that we dont experience double replacements
+                                    $template = str_replace('|' . $column->priorDatasetColumnId . ']', '|' . $column->dataSetColumnId . ']', $template);
+                                }
+
+                                $widget->setOptionValue('template', 'raw', $template);
+
+                                $this->getLog()->debug('Replaced columns with %s', $template);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
 
         $this->getLog()->debug('Finished creating from Zip');
 

@@ -25,6 +25,7 @@ use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\BandwidthFactory;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
@@ -111,6 +112,9 @@ class Soap
     /** @var  NotificationFactory */
     protected $notificationFactory;
 
+    /** @var  DisplayEventFactory */
+    protected $displayEventFactory;
+
     /**
      * Soap constructor.
      * @param LogProcessor $logProcessor
@@ -131,8 +135,9 @@ class Soap
      * @param WidgetFactory $widgetFactory
      * @param RegionFactory $regionFactory
      * @param NotificationFactory $notificationFactory
+     * @param DisplayEventFactory $displayEventFactory
      */
-    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory)
+    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory)
     {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
@@ -152,6 +157,7 @@ class Soap
         $this->widgetFactory = $widgetFactory;
         $this->regionFactory = $regionFactory;
         $this->notificationFactory = $notificationFactory;
+        $this->displayEventFactory = $displayEventFactory;
     }
 
     /**
@@ -1197,7 +1203,22 @@ class Soap
 
             $scheduleID = $node->getAttribute('scheduleid');
             $layoutID = $node->getAttribute('layoutid');
-            $mediaID = $node->getAttribute('mediaid');
+            
+            // Slightly confusing behaviour here to support old players without introducting a different call in 
+            // xmds v=5.
+            // MediaId is actually the widgetId (since 1.8) and the mediaId is looked up by this service
+            $widgetId = $node->getAttribute('mediaid');
+            
+            // Lookup the mediaId
+            $media = $this->mediaFactory->getByLayoutAndWidget($layoutID, $widgetId);
+
+            if (count($media) <= 0) {
+                // Non-media widget
+                $mediaId = 0;
+            } else {
+                $mediaId = $media[0]->mediaId;
+            }
+            
             $tag = $node->getAttribute('tag');
 
             // Write the stat record with the information we have available to us.
@@ -1209,7 +1230,8 @@ class Soap
                 $stat->scheduleId = $scheduleID;
                 $stat->displayId = $this->display->displayId;
                 $stat->layoutId = $layoutID;
-                $stat->mediaId = $mediaID;
+                $stat->mediaId = $mediaId;
+                $stat->widgetId = $widgetId;
                 $stat->tag = $tag;
                 $stat->save();
             }
@@ -1475,7 +1497,7 @@ class Soap
             $this->getLog()->info('Display %s was down, now its up.', $this->display->display);
 
             // Log display up
-            (new Stat($this->getStore(), $this->getLog()))->displayUp($this->display->displayId);
+            $this->displayEventFactory->createEmpty()->displayUp($this->display->displayId);
 
             // Do we need to email?
             if ($this->display->emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected')

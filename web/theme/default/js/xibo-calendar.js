@@ -200,6 +200,11 @@ var setupScheduleNowForm = function(form) {
     $('#campaignId', form).selectpicker();
     $('select[name="displayGroupIds[]"]', form).selectpicker();
 
+    // Hide the seconds input option unless seconds are enabled in the date format
+    if (dateFormat.indexOf("s") <= -1) {
+        $(form).find(".schedule-now-seconds-field").hide();
+    }
+
     // Bind to the form submit
     $("#scheduleNowForm").submit(function(e) {
         e.preventDefault();

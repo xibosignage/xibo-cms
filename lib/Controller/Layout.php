@@ -28,6 +28,7 @@ use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\LibraryFullException;
+use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -94,6 +95,9 @@ class Layout extends Base
      */
     private $mediaFactory;
 
+    /** @var  DataSetFactory */
+    private $dataSetFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -112,8 +116,9 @@ class Layout extends Base
      * @param UserGroupFactory $userGroupFactory
      * @param TagFactory $tagFactory
      * @param MediaFactory $mediaFactory
+     * @param DataSetFactory $dataSetFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -126,6 +131,7 @@ class Layout extends Base
         $this->userGroupFactory = $userGroupFactory;
         $this->tagFactory = $tagFactory;
         $this->mediaFactory = $mediaFactory;
+        $this->dataSetFactory = $dataSetFactory;
     }
 
     /**
@@ -134,6 +140,14 @@ class Layout extends Base
     public function getLayoutFactory()
     {
         return $this->layoutFactory;
+    }
+
+    /**
+     * @return DataSetFactory
+     */
+    public function getDataSetFactory()
+    {
+        return $this->dataSetFactory;
     }
 
     /**
@@ -757,8 +771,7 @@ class Layout extends Base
                 // Export Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_export',
-                    'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor('layout.export', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor('layout.export.form', ['id' => $layout->layoutId]),
                     'text' => __('Export')
                 );
 
@@ -1076,6 +1089,26 @@ class Layout extends Base
     /**
      * Layout Status
      * @param int $layoutId
+     *
+     * @SWG\Get(
+     *  path="/layout/status/{layoutId}",
+     *  operationId="layoutStatus",
+     *  tags={"layout"},
+     *  summary="Layout Status",
+     *  description="Calculate the Layout status and return a Layout",
+     * @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout Id to Untag",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Layout")
+     *  )
+     * )
      */
     public function status($layoutId)
     {
@@ -1106,15 +1139,48 @@ class Layout extends Base
         // Maintenance should also do this.
         $this->getApp()->container->get('\Xibo\Controller\Library')->removeExpiredFiles();
 
-        $this->getState()->html = $status;
-        $this->getState()->extra = [
-            'status' => $layout->status,
-            'duration' => $layout->duration,
-            'statusMessage' => $layout->getStatusMessage()
-        ];
+        // We want a different return depending on whether we are arriving through the API or WEB routes
+        if ($this->isApi()) {
 
-        $this->getState()->success = true;
-        $this->session->refreshExpiry = false;
+            $this->getState()->hydrate([
+                'httpStatus' => 200,
+                'message' => $status,
+                'id' => $layout->status,
+                'data' => $layout
+            ]);
+
+        } else {
+
+            $this->getState()->html = $status;
+            $this->getState()->extra = [
+                'status' => $layout->status,
+                'duration' => $layout->duration,
+                'statusMessage' => $layout->getStatusMessage()
+            ];
+
+            $this->getState()->success = true;
+            $this->session->refreshExpiry = false;
+        }
+    }
+
+    /**
+     * Export Form
+     * @param $layoutId
+     */
+    public function exportForm($layoutId)
+    {
+        // Get the layout
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($layout))
+            throw new AccessDeniedException();
+
+        // Render the form
+        $this->getState()->template = 'layout-form-export';
+        $this->getState()->setData([
+            'layout' => $layout
+        ]);
     }
 
     /**
@@ -1132,7 +1198,7 @@ class Layout extends Base
             throw new AccessDeniedException();
 
         $fileName = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/export_' . $layout->layout . '.zip';
-        $layout->toZip($fileName);
+        $layout->toZip($this->dataSetFactory, $fileName, ['includeData' => ($this->getSanitizer()->getCheckbox('includeData')== 1)]);
 
         if (ini_get('zlib.output_compression')) {
             ini_set('zlib.output_compression', 'Off');

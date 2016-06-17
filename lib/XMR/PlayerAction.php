@@ -113,15 +113,42 @@ abstract class PlayerAction implements PlayerActionInterface
             ];
 
             // Issue a message payload to XMR.
-            $requester = new \ZMQSocket(new \ZMQContext(), \ZMQ::SOCKET_REQ);
-            $requester->connect($connection);
+            $context = new \ZMQContext();
 
-            $requester->send(json_encode($message));
+            // Connect to socket
+            $socket = new \ZMQSocket($context, \ZMQ::SOCKET_REQ);
+            $socket->connect($connection);
 
-            return $requester->recv();
+            // Send the message to the socket
+            $socket->send(json_encode($message));
+
+            // Need to replace this with a non-blocking recv() with a retry loop
+            $retries = 5;
+
+            do {
+                try {
+                    // Try and receive
+                    $reply = $socket->recv(\ZMQ::MODE_DONTWAIT);
+
+                    return $reply;
+
+                } catch (\ZMQSocketException $sockEx) {
+                    if ($sockEx->getCode() != \ZMQ::ERR_EAGAIN)
+                        throw $sockEx;
+                }
+
+                usleep(15);
+
+            } while (--$retries);
+
+            // Disconnect socket
+            $socket->disconnect($connection);
         }
-        catch (\ZMQSocketException $sockEx) {
+        catch (\ZMQSocketException $ex) {
             throw new PlayerActionException('XMR connection failed.');
         }
+
+        // We didn't get a response
+        return false;
     }
 }

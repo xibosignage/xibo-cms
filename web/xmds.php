@@ -202,7 +202,8 @@ try {
         $app->mediaFactory,
         $app->widgetFactory,
         $app->regionFactory,
-        $app->notificationFactory
+        $app->notificationFactory,
+        $app->displayEventFactory
     );
     $soap->handle();
 

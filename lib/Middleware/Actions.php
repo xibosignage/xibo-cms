@@ -50,7 +50,8 @@ class Actions extends Middleware
 
                 foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                     if (stripos($file, '.zip')) {
-                        $layout = $app->layoutFactory->createFromZip($folder . '/' . $file, null, 1, false, false, true);
+                        /** @var \Xibo\Entity\Layout $layout */
+                        $layout = $app->layoutFactory->createFromZip($folder . '/' . $file, null, 1, false, false, true, $app->container->get('\Xibo\Controller\Library')->setApp($app));
                         $layout->save([
                             'audit' => false
                         ]);

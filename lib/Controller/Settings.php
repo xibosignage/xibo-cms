@@ -213,6 +213,8 @@ class Settings extends Base
 
                     if ($value !== null)
                         $value = $value->format('U');
+                    else
+                        $value = '';
 
                     break;
 

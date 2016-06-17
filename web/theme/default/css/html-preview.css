@@ -12,25 +12,25 @@ div {
 }
 
 /* Make the screen div fill the player */
-div#player {
+div.preview-player {
     height: 100%;
     z-index: 1;
     background-color: #000000;
 }
 
-div#screen {
+div.preview-screen {
     height: 100%;
     z-index: 1;
 }
 
 /* Style the Splash Screen */
-div#splash {
+div.preview-splash {
     height: 100%;
     background:#000000 url('../img/xibologo.png') no-repeat center center;
     background-size: 50%;
 }
 
-div#loader {
+div.preview-loader {
     height: 19px;
     width: 220px;
     position: relative;
@@ -40,7 +40,7 @@ div#loader {
     background-size: 100%;
 }
 
-div#loaderCaption p {
+div.preview-loaderCaption p {
     position: absolute;
     font-family: sans-serif;
     color: #ffffff;
@@ -49,7 +49,7 @@ div#loaderCaption p {
     width: 100%;
 }
 
-div#log {
+div.preview-log {
     height: 20px;
     background:#ffffff;
     position:absolute;
@@ -60,10 +60,10 @@ div#log {
     z-index: 100;
 }
 
-div#info {
+div.preview-info {
     position: absolute;
-    height: 400px;
-    width: 500px;
+    height: 100%; /* 400px; */
+    width: 100%; /*500px;*/
     background:#ffffff;
     font-family: sans-serif;
     opacity:0.6;
@@ -71,7 +71,7 @@ div#info {
     z-index: 100;
 }
 
-div#end {
+div.preview-end {
     position: absolute;
     height: 100%;
     width: 100%;

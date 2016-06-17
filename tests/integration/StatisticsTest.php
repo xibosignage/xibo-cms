@@ -17,7 +17,7 @@ class StatisticsTest extends LocalWebTestCase
 {
 
     /**
-     *  Test the method call with default values
+     * Test the method call with default values
      * @group broken
      */
     public function testListAll()
@@ -28,14 +28,13 @@ class StatisticsTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
 
         $object = json_decode($this->client->response->body());
-    //    fwrite(STDERR, $this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
 
 
     /**
-     *  Test the method call with custom values
+     * Test the method call with custom values
      * @group broken
      */
     public function testListAll2()

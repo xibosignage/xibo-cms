@@ -895,7 +895,7 @@ function XiboFormSubmit(form, e, callBack) {
             XiboSubmitResponse(xhr, form);
 
             if (callBack != null && callBack != undefined)
-                callBack();
+                callBack(xhr, form);
         },
         error: function(xhr, textStatus, errorThrown) {
             SystemMessage(xhr.responseText, false);

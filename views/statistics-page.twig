@@ -113,6 +113,7 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+
         $(document).ready(function() {
             var table = $("#stats").DataTable({
                 "language": dataTablesLanguage,
@@ -151,18 +152,18 @@
 
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
-
-            var bandwidthChart;
-            var bandwidthChartOptions = {
-                element: 'bandwidthChart',
-                data: [],
-                xkey: 'label',
-                ykeys: ['value'],
-                labels: ['{% trans "Bandwidth" %}'],
-                stacked: false,
-                postUnits: ''
-            };
         });
+
+        var bandwidthChart = null;
+        var bandwidthChartOptions = {
+            element: 'bandwidthChart',
+            data: [],
+            xkey: 'label',
+            ykeys: ['value'],
+            labels: ['{% trans "Bandwidth" %}'],
+            stacked: false,
+            postUnits: ''
+        };
 
         function setBandwidthChart() {
             $.ajax({
@@ -172,7 +173,7 @@
                 dataType: "json",
                 data: $("#bandwidthFilter").find("form").serialize(),
                 success: function(response) {
-                    if (bandwidthChart == undefined) {
+                    if (bandwidthChart == null) {
                         // Create our chart
                         bandwidthChartOptions.data = response.extra.data;
                         bandwidthChartOptions.postUnits = response.extra.postUnits;
@@ -193,7 +194,7 @@
             });
         });
 
-        var availabilityChart;
+        var availabilityChart = null;
         var availabilityChartOptions = {
             element: 'availabilityChart',
             data: [],
@@ -213,7 +214,7 @@
                 dataType: "json",
                 data: $("#availabilityFilter").find("form").serialize(),
                 success: function(response) {
-                    if (availabilityChart == undefined) {
+                    if (availabilityChart == null) {
                         // Create our chart
                         availabilityChartOptions.data = response.extra.data;
                         availabilityChartOptions.postUnits = ' ' + response.extra.postUnits;

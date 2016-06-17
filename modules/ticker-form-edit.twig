@@ -266,6 +266,9 @@
                 {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
                 {% set fieldStyleSheet %}{{ forms.textarea("ta_css", "", module.getRawNode("css"), title, "template-override-controls", "", 10) }}{% endset %}
 
+                {% set title %}{% trans "Optional JavaScript" %}{% endset %}
+                {% set fieldJavaScript %}{{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), title, "", "", 10) }}{% endset %}
+
                 {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
                 {% set fieldNoDataMessage %}{{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}{% endset %}
 
@@ -369,6 +372,8 @@
                         {{ forms.checkbox("disableDateSort", title, module.getOption("disableDateSort"), helpText) }}
 
                         {{ fieldNoDataMessage }}
+
+                        {{ fieldJavaScript }}
                     </div>
                 {% else %}
                     {# Source = Dataset #}
@@ -443,6 +448,8 @@
                         {{ forms.number("upperLimit", title, module.getOption("upperLimit"), helpText) }}
 
                         {{ fieldNoDataMessage }}
+
+                        {{ fieldJavaScript }}
                     </div>
                 {% endif %}
                 </div>

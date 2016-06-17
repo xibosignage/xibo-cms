@@ -140,7 +140,7 @@ class CampaignFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Campaign]
      */
-    public function query($sortOrder = null, $filterBy = array())
+    public function query($sortOrder = null, $filterBy = array(), $options = array())
     {
         if ($sortOrder == null)
             $sortOrder = array('campaign');
@@ -235,9 +235,16 @@ class CampaignFactory extends BaseFactory
             $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
 
+        $intProperties = ['intProperties' => ['numberLayouts']];
+
+        // Layout durations
+        if ($this->getSanitizer()->getInt('totalDuration', 0, $options) != 0) {
+            $select .= ", SUM(`layout`.duration) AS totalDuration";
+            $intProperties = ['intProperties' => ['numberLayouts', 'totalDuration']];
+        }
+
         $sql = $select . $body . $group . $order . $limit;
 
-        $intProperties = ['intProperties' => ['numberLayouts']];
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $campaigns[] = $this->createEmpty()->hydrate($row, $intProperties);
@@ -251,4 +258,5 @@ class CampaignFactory extends BaseFactory
 
         return $campaigns;
     }
+
 }

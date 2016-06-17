@@ -29,6 +29,7 @@ class Stat
     public $scheduleId = 0;
     public $layoutId = 0;
     public $mediaId = 0;
+    public $widgetId = 0;
     public $tag;
 
     /**
@@ -52,8 +53,8 @@ class Stat
     private function add()
     {
         $this->statId = $this->getStore()->insert('
-            INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag)
-              VALUES (:type, :statDate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag)
+            INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag, `widgetId`)
+              VALUES (:type, :statDate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag, :widgetId)
         ', [
             'type' => $this->type,
             'statDate' => date("Y-m-d H:i:s"),
@@ -63,25 +64,13 @@ class Stat
             'displayId' => $this->displayId,
             'layoutId' => $this->layoutId,
             'mediaId' => $this->mediaId,
-            'tag' => $this->tag
+            'tag' => $this->tag,
+            'widgetId' => $this->widgetId
         ]);
     }
 
     private function edit()
     {
         $this->getStore()->update('UPDATE stat SET end = :toDt WHERE statId = :statId', ['statId' => $this->statId, 'toDt' => $this->toDt]);
-    }
-
-    /**
-     * Record the display coming online
-     * @param $displayId
-     */
-    public function displayUp($displayId)
-    {
-        $this->getStore()->update('UPDATE `stat` SET end = :toDt WHERE displayId = :displayId AND `end` IS NULL AND `type` = :type', [
-            'toDt' => date('Y-m-d H:i:s'),
-            'type' => 'displaydown',
-            'displayId' => $displayId
-        ]);
     }
 }
