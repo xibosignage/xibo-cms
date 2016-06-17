@@ -56,12 +56,12 @@
                     </div>
                     <div class="tab-content">
                         <div class="tab-pane fade in active" id="home">
-                            <h3 class="head text-center">Report an application fault<span style="color:#f48260;"></span>
+                            <h3 class="head text-center">{% trans "Report an application fault" %}<span style="color:#f48260;"></span>
                             </h3>
                             {% if environmentFault %}
                                 <p class="alert alert-danger narrow text-center">{% trans "There is a critical error that you should resolve first. Click start to check the list" %}</p>
                             {% elseif environmentWarning %}
-                                <p class="alert alert-warning narrow text-center">{% trans "There is a warning listed below that you should resolve first." %}</p>
+                                <p class="alert alert-warning narrow text-center">{% trans "There is a warning on the checklist that you should resolve, please click Start to see it" %}</p>
                             {% endif %}
 
                             {% if binLogError %}
@@ -70,7 +70,7 @@
                             {% endif %}
 
 
-                            <p class="narrow text-center">{% trans "Before reporting a fault it would be appreciated if you follow the below steps." %}</p>
+                            <p class="narrow text-center">{% trans "Before reporting a fault it would be appreciated if you follow the steps. Click start " %}</p>
 
                             <form class="form-horizontal text-center" id="home_form" name="home_form" role="form">
                                 <fieldset>
@@ -178,11 +178,11 @@
                                 <div class="funkyradio">
                                     <div class="funkyradio-primary">
                                         <input type="checkbox" name="outputLog" id="outputLog" checked/>
-                                        <label for="outputLog">{% trans "CSV log file" %}</label>
+                                        <label for="outputLog">{% trans "Log File" %}</label>
                                     </div>
                                     <div class="funkyradio-primary">
                                         <input type="checkbox" name="outputEnvCheck" id="outputEnvCheck" checked/>
-                                        <label for="outputEnvCheck">{% trans "An environment check file" %}</label>
+                                        <label for="outputEnvCheck">{% trans "Environment Check" %}</label>
                                     </div>
                                     <div class="funkyradio-primary">
                                         <input type="checkbox" name="outputSettings" id="outputSettings" checked/>
@@ -247,11 +247,11 @@
                             </p>
                             <form class="text-center">
                                 <fieldset>
-                                    <a class="btn btn-success" href="https://community.xibo.org.uk/c/support" target="_blank">
+                                    <a class="btn btn-success" href="{{ theme.getThemeConfig("support_url", "https://community.xibo.org.uk/c/support") }}" target="_blank">
                                         <i class="fa fa-question" aria-hidden="true"></i> {% trans "Ask a question" %}
                                     </a>
                                     <button type="submit" href="#home" name="turnoff_form" class="btn-submit btn btn-info">
-                                        <i class="fa fa-home" aria-hidden="true"></i>{% trans "Start all over" %}
+                                        <i class="fa fa-home" aria-hidden="true"></i> {% trans "Start again" %}
                                     </button>
                                 </fieldset>
                             </form>
