@@ -21,7 +21,7 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
     public function setup()
     {
         parent::setup();
-        $this->startDisplays = (new XiboDisplay($this->getEntityProvider()))->get();
+        $this->startDisplays = (new XiboDisplay($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
     }
 
     /**
@@ -66,9 +66,7 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
 
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
-
         $object = json_decode($this->client->response->body());
-
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
 
@@ -110,7 +108,6 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
         // Create a Display in the system
         $hardwareId = Random::generateString(12, 'phpunit');
         $response = $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 'PHPUnit Test Display');
-        
         // Now find the Id of that Display
         $displays = (new XiboDisplay($this->getEntityProvider()))->get();
         $display = null;
@@ -137,7 +134,6 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-
         $object = json_decode($this->client->response->body());
         $this->assertSame('API EDITED', $object->data->display);
     }
@@ -151,7 +147,6 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
         // Create a Display in the system
         $hardwareId = Random::generateString(12, 'phpunit');
         $response = $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 'PHPUnit Test Display');
-        
         // Now find the Id of that Display
         $displays = (new XiboDisplay($this->getEntityProvider()))->get();
         $display = null;
@@ -206,9 +201,7 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
         }
 
         $this->client->get('/display/wol/' . $display->displayId);
-
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-
         $object = json_decode($this->client->response->body());
     }
 }

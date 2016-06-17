@@ -26,9 +26,7 @@ class StatisticsTest extends LocalWebTestCase
 
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
-
         $object = json_decode($this->client->response->body());
-
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
 
@@ -48,10 +46,7 @@ class StatisticsTest extends LocalWebTestCase
 
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
-
         $object = json_decode($this->client->response->body());
-    //    fwrite(STDERR, $this->client->response->body());
-
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
 }

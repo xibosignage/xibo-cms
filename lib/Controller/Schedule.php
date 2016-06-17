@@ -458,7 +458,8 @@ class Schedule extends Base
                     $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
             } else {
                 $schedule->fromDt = $fromDt->format('U');
-                $schedule->toDt = $toDt->format('U');
+                if ($toDt !== null)
+                    $schedule->toDt = $toDt->format('U');
             }
         }
 

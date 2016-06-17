@@ -22,7 +22,7 @@ class CommandTest extends LocalWebTestCase
     public function setup()
     {
         parent::setup();
-        $this->startCommands = (new XiboCommand($this->getEntityProvider()))->get();
+        $this->startCommands = (new XiboCommand($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
     }
     
     /**
@@ -31,7 +31,7 @@ class CommandTest extends LocalWebTestCase
     public function tearDown()
     {
         // tearDown all commands that weren't there initially
-        $finalCommands = (new XiboCommand($this->getEntityProvider()))->get(['start' => 0, 'length' => 1000]);
+        $finalCommands = (new XiboCommand($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
         # Loop over any remaining commands and nuke them
         foreach ($finalCommands as $command) {
             /** @var XiboCommand $command */
@@ -58,12 +58,10 @@ class CommandTest extends LocalWebTestCase
     public function testListAll()
     {
         $this->client->get('/command');
-
+        
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
-
         $object = json_decode($this->client->response->body());
-
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
 
@@ -91,7 +89,6 @@ class CommandTest extends LocalWebTestCase
         ]);
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
         $object = json_decode($this->client->response->body());
-//        fwrite(STDERR, $this->client->response->body());
        
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
@@ -258,5 +255,4 @@ class CommandTest extends LocalWebTestCase
         $this->assertTrue($flag, 'Command ID ' . $command1->commandId . ' was not found after deleting a different command');
         $command1->delete();
     }
-
 }

@@ -4,27 +4,19 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (ScheduleTest.php)
  */
-
-
 namespace Xibo\Tests\Integration;
-
-
 use Xibo\OAuth2\Client\Entity\XiboCampaign;
-use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
-use Xibo\OAuth2\Client\Entity\XiboSchedule;
 use Xibo\OAuth2\Client\Entity\XiboCommand;
-use Xibo\Helper\Random;
+use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
+use Xibo\OAuth2\Client\Entity\XiboLayout;
+use Xibo\OAuth2\Client\Entity\XiboSchedule;
 use Xibo\Tests\LocalWebTestCase;
-
-
 /**
  * Class ScheduleTest
  * @package Xibo\Tests\Integration
  */
 class ScheduleTest extends LocalWebTestCase
 {
-
     protected $route = '/schedule';
     
     protected $startCommands;
@@ -32,7 +24,6 @@ class ScheduleTest extends LocalWebTestCase
     protected $startEvents;
     protected $startLayouts;
     protected $startCampaigns;
-
     /**
      * setUp - called before every test automatically
      */
@@ -40,10 +31,10 @@ class ScheduleTest extends LocalWebTestCase
     {
         parent::setup();
         $this->startDisplayGroups = (new XiboDisplayGroup($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        $this->startLayouts = (new XiboLayout($this->getEntityProvider()))->get();
-        $this->startCampaigns = (new XiboCampaign($this->getEntityProvider()))->get();
+        $this->startLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+        $this->startCampaigns = (new XiboCampaign($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+        $this->startCommands = (new XiboCommand($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
     }
-
     /**
      * tearDown - called after every test automatically
      */
@@ -51,19 +42,15 @@ class ScheduleTest extends LocalWebTestCase
     {
         // tearDown all display groups that weren't there initially
         $finalDisplayGroups = (new XiboDisplayGroup($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-
         # Loop over any remaining display groups and nuke them
         foreach ($finalDisplayGroups as $displayGroup) {
             /** @var XiboDisplayGroup $displayGroup */
-
             $flag = true;
-
             foreach ($this->startDisplayGroups as $startGroup) {
                if ($startGroup->displayGroupId == $displayGroup->displayGroupId) {
                    $flag = false;
                }
             }
-
             if ($flag) {
                 try {
                     $displayGroup->delete();
@@ -72,9 +59,8 @@ class ScheduleTest extends LocalWebTestCase
                 }
             }
         }
-
         // tearDown all layouts that weren't there initially
-        $finalLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 1000]);
+        $finalLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
         # Loop over any remaining layouts and nuke them
         foreach ($finalLayouts as $layout) {
             /** @var XiboLayout $layout */
@@ -88,13 +74,13 @@ class ScheduleTest extends LocalWebTestCase
                 try {
                     $layout->delete();
                 } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $layout->layoutId . '. E:' . $e->getMessage());
+                    fwrite(STDERR, 'Layout: Unable to delete ' . $layout->layoutId . '. E:' . $e->getMessage());
                 }
             }
         }
         
         // tearDown all campaigns that weren't there initially
-        $finalCamapigns = (new XiboCampaign($this->getEntityProvider()))->get(['start' => 0, 'length' => 1000]);
+        $finalCamapigns = (new XiboCampaign($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
         # Loop over any remaining campaigns and nuke them
         foreach ($finalCamapigns as $campaign) {
             /** @var XiboCampaign $campaign */
@@ -108,13 +94,12 @@ class ScheduleTest extends LocalWebTestCase
                 try {
                     $campaign->delete();
                 } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $campaign->campaignId . '. E:' . $e->getMessage());
+                    fwrite(STDERR, 'Campaign: Unable to delete ' . $campaign->campaignId . '. E:' . $e->getMessage());
                 }
             }
         }
-
         // tearDown all commands that weren't there initially
-        $finalCommands = (new XiboCommand($this->getEntityProvider()))->get(['start' => 0, 'length' => 1000]);
+        $finalCommands = (new XiboCommand($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
         # Loop over any remaining commands and nuke them
         foreach ($finalCommands as $command) {
             /** @var XiboCommand $command */
@@ -128,36 +113,29 @@ class ScheduleTest extends LocalWebTestCase
                 try {
                     $command->delete();
                 } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $command->commandId . '. E:' . $e->getMessage());
+                    fwrite(STDERR, 'Command: Unable to delete ' . $command->commandId . '. E:' . $e->getMessage());
                 }
             }
         }
-
         parent::tearDown();
     }
-
     /**
      * testListAll
      */
     public function testListAll()
     {
         $this->client->get('/schedule/data/events');
-
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
-
         $object = json_decode($this->client->response->body());
-
         $this->assertObjectHasAttribute('result', $object, $this->client->response->body());
     }
-
     /**
      * @group add
      * @dataProvider provideSuccessCasesLayout
      */
     public function testAddEventCampaign($isCampaign,$scheduleFrom, $scheduleTo, $scheduledayPartId, $scheduleRecurrenceType, $scheduleRecurrenceDetail, $scheduleRecurrenceRange, $scheduleOrder, $scheduleIsPriority)
     {
-
         // Create layout
         $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', 9);
         // Get a Display Group Id
@@ -165,12 +143,10 @@ class ScheduleTest extends LocalWebTestCase
         //Create Campaign
         /* @var XiboCampaign $campaign */
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
-
         if ($isCampaign == true) {
-
             $response = $this->client->post($this->route, [
-                'fromDt' => date('Y-m-d h:i:s', $scheduleFrom),
-                'toDt' => date('Y-m-d h:i:s', $scheduleTo),
+                'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
+                'toDt' => date('Y-m-d H:i:s', $scheduleTo),
                 'eventTypeId' => 1,
                 'campaignId' => $campaign->campaignId,
                 'displayGroupIds' => [$displayGroup->displayGroupId],
@@ -181,11 +157,10 @@ class ScheduleTest extends LocalWebTestCase
                 'scheduleRecurrenceRange' => $scheduleRecurrenceRange
             ]);
         }
-
-        else {
+        else if ($isCampaign == false) {
             $response = $this->client->post($this->route, [
-                'fromDt' => date('Y-m-d h:i:s', $scheduleFrom),
-                'toDt' => date('Y-m-d h:i:s', $scheduleTo),
+                'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
+                'toDt' => date('Y-m-d H:i:s', $scheduleTo),
                 'eventTypeId' => 1,
                 'campaignId' => $layout->campaignId,
                 'displayGroupIds' => [$displayGroup->displayGroupId],
@@ -196,19 +171,14 @@ class ScheduleTest extends LocalWebTestCase
                 'scheduleRecurrenceRange' => $scheduleRecurrenceRange
             ]);
         }
-
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-
         $object = json_decode($this->client->response->body());
-
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
-
         $displayGroup->delete();
         $campaign->delete();
         $layout->delete();
     }
-
     /**
      * Each array is a test run
      * Format ($isCampaign, $scheduleFrom, $scheduleTo, $scheduledayPartId, $scheduleRecurrenceType, $scheduleRecurrenceDetail, $scheduleRecurrenceRange, $scheduleOrder, $scheduleIsPriority)
@@ -216,27 +186,23 @@ class ScheduleTest extends LocalWebTestCase
      */
     public function provideSuccessCasesLayout()
     {
-
         return [
             'Campaign no priority, no recurrence' => [true, time()+3600, time()+7200, 0, NULL, NULL, NULL, 0, 0],
-//            'Layout no priority, no recurrence' => [false, time()+3600, time()+7200, 0, NULL, NULL, NULL, 0, 0]  campaign id is null with $layout->campaigId
-        ];
+            'Campaign priority, schedule now' => [true, time(), time()+2800, 0, NULL, NULL, NULL, 0, 1]
+            ];
     }
-
     /**
      * @group add
      * @dataProvider provideSuccessCasesCommand
      */
     public function testAddEventCommand($scheduleFrom, $scheduledayPartId, $scheduleRecurrenceType, $scheduleRecurrenceDetail, $scheduleRecurrenceRange, $scheduleOrder, $scheduleIsPriority)
     {
-
         // Create command
         $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit command desc', 'code');
         // Get a Display Group Id
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
-
             $response = $this->client->post($this->route, [
-                'fromDt' => date('Y-m-d h:i:s', $scheduleFrom),
+                'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
                 'eventTypeId' => 2,
                 'commandId' => $command->commandId,
                 'displayGroupIds' => [$displayGroup->displayGroupId],
@@ -246,19 +212,14 @@ class ScheduleTest extends LocalWebTestCase
                 'scheduleRecurrenceDetail' => $scheduleRecurrenceDetail,
                 'scheduleRecurrenceRange' => $scheduleRecurrenceRange
             ]);
-
         
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-
         $object = json_decode($this->client->response->body());
-
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
-
         $displayGroup->delete();
         $command->delete();
     }
-
     /**
      * Each array is a test run
      * Format ($scheduleFrom, $scheduleDisplays, $scheduledayPartId, $scheduleRecurrenceType, $scheduleRecurrenceDetail, $scheduleRecurrenceRange, $scheduleOrder, $scheduleIsPriority)
@@ -266,7 +227,6 @@ class ScheduleTest extends LocalWebTestCase
      */
     public function provideSuccessCasesCommand()
     {
-
         return [
             'Command no priority, no recurrence' => [time()+3600, 0, NULL, NULL, NULL, 0, 0],
         ];
@@ -279,37 +239,28 @@ class ScheduleTest extends LocalWebTestCase
     {
         // Get a Display Group Id
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
-
         //Create Campaign
         /* @var XiboCampaign $campaign */
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
-
         $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(date('Y-m-d h:i:s', time()+3600), date('Y-m-d h:i:s', time()+7200), $campaign->campaignId, [$displayGroup->displayGroupId], 0, NULL, NULL, NULL, 0, 0);
-
         $fromDt = time();
         $toDt = time() + 86400;
-
         $this->client->put($this->route . '/' . $event->eventId, [
-            'fromDt' => date('Y-m-d h:i:s', $fromDt),
-            'toDt' => date('Y-m-d h:i:s', $toDt),
+            'fromDt' => date('Y-m-d H:i:s', $fromDt),
+            'toDt' => date('Y-m-d H:i:s', $toDt),
             'eventTypeId' => 1,
             'campaignId' => $event->campaignId,
             'displayGroupIds' => $event->$displayGroups,
             'displayOrder' => 1,
             'isPriority' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-
         $displayGroup->delete();
         $campaign->delete();
-
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-
         $object = json_decode($this->client->response->body());
-
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
     }
-
     /**
      * Test edit
      * @return int the id
@@ -321,35 +272,27 @@ class ScheduleTest extends LocalWebTestCase
         // Get the scheduled event
         $event = (new XiboSchedule($this->getEntityProvider()))->getById($eventId);
         $event->load();
-
         $displayGroups = array_map(function ($displayGroup) {
             /** DisplayGroup $displayGroup */
             return $displayGroup->displayGroupId;
         }, $event->displayGroups);
-
         $fromDt = time();
         $toDt = time() + 86400;
-
         $this->client->put($this->route . '/' . $eventId, [
-            'fromDt' => date('Y-m-d h:i:s', $fromDt),
-            'toDt' => date('Y-m-d h:i:s', $toDt),
+            'fromDt' => date('Y-m-d H:i:s', $fromDt),
+            'toDt' => date('Y-m-d H:i:s', $toDt),
             'eventTypeId' => Schedule::$LAYOUT_EVENT,
             'campaignId' => $event->campaignId,
             'displayGroupIds' => $displayGroups,
             'displayOrder' => 1,
             'isPriority' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-
         $this->assertSame(200, $this->client->response->status());
-
         $object = json_decode($this->client->response->body());
-
         $this->assertObjectHasAttribute('data', $object);
         $this->assertSame(1, $object->data->isPriority);
-
         return $eventId;
     }
-
     /**
      * @param $eventId
      * @depends testEdit
@@ -358,7 +301,6 @@ class ScheduleTest extends LocalWebTestCase
     public function testDelete($eventId)
     {
         $this->client->delete($this->route . '/' . $eventId);
-
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
 }
