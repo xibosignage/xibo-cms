@@ -64,12 +64,19 @@
                                 <p class="alert alert-warning narrow text-center">{% trans "There is a warning listed below that you should resolve first." %}</p>
                             {% endif %}
 
+                            {% if binLogError %}
+                                    
+                                <p class="alert alert-info">{% trans "The CMS may not be working as expected because MySQL BINLOG format is set to STATEMENT. This can effect sessions and should be set to ROW or MIXED." %}</p>
+                            {% endif %}
+
+
                             <p class="narrow text-center">{% trans "Before reporting a fault it would be appreciated if you follow the below steps." %}</p>
 
                             <form class="form-horizontal text-center" id="home_form" name="home_form" role="form">
                                 <fieldset>
                                     <button type="submit" href="#checklist" name="home_form" class="btn-submit btn btn-success">
-                                        Start <i class="fa fa-chevron-circle-right" aria-hidden="true"></i></button>
+                                        {% trans "Start" %}
+                                        <i class="fa fa-chevron-circle-right" aria-hidden="true"></i></button>
 
                                 </fieldset>
                             </form>
@@ -108,9 +115,11 @@
                             <form class="form-horizontal text-center" id="checklist_form" name="checklist_form" role="form">
                                 <fieldset>
                                     <button type="submit" href="#home" name="home_form" class="btn-submit btn btn-info">
-                                        <i class="fa fa-chevron-circle-left" aria-hidden="true"> Previous </i></button>
+                                        <i class="fa fa-chevron-circle-left" aria-hidden="true"></i> {% trans "Previous" %}
+                                    </button>
                                     <button type="submit" href="#turnons" name="checklist_form" class="btn-submit btn btn-primary">
-                                        Next <i class="fa fa-chevron-circle-right" aria-hidden="true"></i></button>
+                                        {% trans "Next" %} <i class="fa fa-chevron-circle-right" aria-hidden="true"></i>
+                                    </button>
                                 </fieldset>
                             </form>
                         </div>
@@ -125,10 +134,11 @@
                             <form class="form-horizontal text-center" id="turnons_form" name="turnons_form" role="form">
                                 <fieldset>
                                     <button type="submit" href="#checklist" name="turnons_form" class="btn-submit btn btn-info">
-                                        <i class="fa fa-chevron-circle-left" aria-hidden="true"></i> Previous
+                                        <i class="fa fa-chevron-circle-left" aria-hidden="true"></i> {% trans "Previous" %}
                                     </button>
                                     <button type="submit" href="#replicate" name="turnons_form" class="btn-submit btn btn-primary">
-                                        Next <i class="fa fa-chevron-circle-right" aria-hidden="true"></i></button>
+                                        {% trans "Next" %} <i class="fa fa-chevron-circle-right" aria-hidden="true"></i>
+                                    </button>
                                 </fieldset>
                             </form>
 
@@ -147,10 +157,11 @@
                             <form class="form-horizontal text-center" id="replicate_form" name="replicate_form" role="form">
                                 <fieldset>
                                     <button type="submit" href="#turnons" name="replicate_form" class="btn-submit btn btn btn-info">
-                                        <i class="fa fa-chevron-circle-left" aria-hidden="true"></i> Previous
+                                        <i class="fa fa-chevron-circle-left" aria-hidden="true"></i> {% trans "Previous" %}
                                     </button>
                                     <button type="submit" href="#collect" name="replicate_form" class="btn-submit btn btn-primary">
-                                        Next <i class="fa fa-chevron-circle-right" aria-hidden="true"></i></button>
+                                        {% trans "Next" %} <i class="fa fa-chevron-circle-right" aria-hidden="true"></i>
+                                    </button>
                                 </fieldset>
                             </form>
                         </div>
@@ -166,39 +177,38 @@
                             <div class="col-md-6 col-md-offset-3 ">
                                 <div class="funkyradio">
                                     <div class="funkyradio-primary">
-                                        <input type="checkbox" name="checkbox" id="checkbox1" checked/>
-                                        <label for="checkbox1">CSV log file</label>
+                                        <input type="checkbox" name="outputLog" id="outputLog" checked/>
+                                        <label for="outputLog">{% trans "CSV log file" %}</label>
                                     </div>
                                     <div class="funkyradio-primary">
-                                        <input type="checkbox" name="checkbox" id="checkbox2" checked/>
-                                        <label for="checkbox2">An environment check file</label>
+                                        <input type="checkbox" name="outputEnvCheck" id="outputEnvCheck" checked/>
+                                        <label for="outputEnvCheck">{% trans "An environment check file" %}</label>
                                     </div>
                                     <div class="funkyradio-primary">
-                                        <input type="checkbox" name="checkbox" id="checkbox3" checked/>
-                                        <label for="checkbox3">Settings</label>
+                                        <input type="checkbox" name="outputSettings" id="outputSettings" checked/>
+                                        <label for="outputSettings">{% trans "Settings" %}</label>
                                     </div>
                                     <div class="funkyradio-primary">
-                                        <input type="checkbox" name="checkbox" id="checkbox4" checked/>
-                                        <label for="checkbox4">Display List</label>
+                                        <input type="checkbox" name="outputDisplays" id="outputDisplays" checked/>
+                                        <label for="outputDisplays">{% trans "Display List" %}</label>
                                     </div>
                                     <div class="funkyradio-primary">
-                                        <input type="checkbox" name="checkbox" id="checkbox5" checked/>
-                                        <label for="checkbox5">Display Settings Profile (included with each
-                                            display)</label>
+                                        <input type="checkbox" name="outputDisplayProfile" id="outputDisplayProfile" checked/>
+                                        <label for="outputDisplayProfile">{% trans "Display Settings Profile (included with each display)" %}</label>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="col-md-12 text-center">
-                                <a id="dldata" class="btn btn-success text-center" type="submit" href="{{ urlFor("fault.collect") }}" onclick="clickAndDisable(this);">
+                                <a id="dldata" class="btn btn-success text-center" type="submit" href="#" data-base-href="{{ urlFor("fault.collect") }}">
                                     <i class="fa fa-floppy-o" aria-hidden="true"></i> {% trans "Collect and Save Data" %}
                                 </a> <br/><br/>
                                 <form class="form-horizontal text-center" id="collect_form" name="collect_form" role="form">
                                     <button type="submit" href="#replicate" name="collect_form" class="btn-submit btn btn-info">
-                                        <i class="fa fa-chevron-circle-left" aria-hidden="true"></i> Previous
+                                        <i class="fa fa-chevron-circle-left" aria-hidden="true"></i>{% trans "Previous" %}
                                     </button>
                                     <button type="submit" href="#turnoff" name="collect_form" class="btn-submit btn btn-primary">
-                                        Next <i class="fa fa-chevron-circle-right" aria-hidden="true"></i>
+                                        {% trans "Next" %} <i class="fa fa-chevron-circle-right" aria-hidden="true"></i>
                                     </button>
                                 </form>
                             </div>
@@ -212,18 +222,15 @@
                             <form id="2" class="XiboAutoForm text-center " action="{{ urlFor("fault.debug.off") }}" method="put" onsubmit="return checkFormOff(this);">
                                 <input class="btn btn-danger" type="submit" name="offDeb" value="{% trans " Turn OFF Debugging" %}"></input>
                             </form>
-
-
-                            <!-- <form id="2" class="XiboAutoForm" action="{{ urlFor("fault.debug.off") }}" method="put" onsubmit="return checkForm(this);">
-                                <input class="btn btn-danger" type="submit" name="offDeb" value="{% trans " Turn OFF Debugging" %}"></input>
-                            </form>--><br/>
+                            <br/>
                             <form class="form-horizontal text-center" id="turnoff_form" name="turnoff_form" role="form">
                                 <fieldset>
                                     <button type="submit" href="#collect" name="turnoff_form" class="btn-submit btn btn-info">
-                                        <i class="fa fa-chevron-circle-left" aria-hidden="true"></i> Previous
+                                        <i class="fa fa-chevron-circle-left" aria-hidden="true"></i> {% trans "Previous" %}
                                     </button>
                                     <button type="submit" href="#ask" name="turnoff_form" class="btn-submit btn btn-primary">
-                                        Next <i class="fa fa-chevron-circle-right" aria-hidden="true"></i></button>
+                                        {% trans "Next" %} <i class="fa fa-chevron-circle-right" aria-hidden="true"></i>
+                                    </button>
                                 </fieldset>
                             </form>
                         </div>
@@ -244,7 +251,7 @@
                                         <i class="fa fa-question" aria-hidden="true"></i> {% trans "Ask a question" %}
                                     </a>
                                     <button type="submit" href="#home" name="turnoff_form" class="btn-submit btn btn-info">
-                                        <i class="fa fa-home" aria-hidden="true"></i> Start all over
+                                        <i class="fa fa-home" aria-hidden="true"></i>{% trans "Start all over" %}
                                     </button>
                                 </fieldset>
                             </form>
@@ -289,6 +296,7 @@
             $('[data-toggle="popover"]').popover()
         })
 
+
         function checkFormOn(form) {
             form.onDeb.disabled = true;
             form.onDeb.value = "Debugging mode ON";
@@ -301,59 +309,32 @@
             return true;
         }
 
-        $("#dldata").click(function (event) {
+        $("#dldata").on("click", function (event) {
             if ($(this).hasClass("disabled")) {
                 event.preventDefault();
             }
-            $(this).addClass("disabled btn-info");
-            $("#dldata").text('Downloading file');
+
+            // Disable download button when downloading
+            $(this).addClass("btn-success disabled");
+            $("#dldata").text('{% trans "Downloading file" %}');
+            $("#dldata").prop("href", $("#dldata").data().baseHref + "?" + $(".funkyradio").find("input[type=checkbox]").serialize());
+
+
+            //Re Enables download button after new checkbox selection
+            $('.funkyradio').click(function () {
+                if ($(this).is(':checked')) {
+                    $('#dldata').removeClass('disabled');
+
+                } else {
+                    $('#dldata').removeClass('disabled').attr('enabled');;
+                    $("#dldata").text('{% trans "Download selected items" %}');
+                }
+            });
 
         });
+
+
     </script>
-
-
-
-    <!-- <script type="text/javascript">
-         // Fault Page List switcher
-         $(document).ready(function () {
-
-             $(".XiboFaultNext").on("submit", function (e) {
-                 e.preventDefault();
-
-                 var tabname = "replicate";
-                 var form = $(this);
-
-                 $.ajax({
-                     type: form.attr("method"),
-                     url: form.attr("action"),
-                     cache: false,
-                     dataType: "json",
-                     data: form.serialize(),
-                     success: function (xhr, textStatus, error) {
-
-                         XiboSubmitResponse(xhr, form);
-
-                         if (xhr.success) {
-
-                             $('ul.nav li a[href="' + tabname + '"]')
-                                     .parent()
-                                     .removeClass('disabled')
-                                     .trigger('click');
-                         }
-                     },
-                     error: function (xhr, textStatus, errorThrown) {
-                         SystemMessage(xhr.responseText, false);
-                     }
-                 });
-
-
-                 return false;
-             });
-
-
-         });
-     </script>-->
-
 
 
 
