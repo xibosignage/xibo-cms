@@ -1198,6 +1198,9 @@ class Layout implements \JsonSerializable
 
         // Ready to save the Campaign
         $campaign->save();
+
+        // Assign the new campaignId to this layout
+        $this->campaignId = $campaign->campaignId;
     }
 
     /**

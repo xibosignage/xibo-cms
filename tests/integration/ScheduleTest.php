@@ -155,18 +155,17 @@ class ScheduleTest extends LocalWebTestCase
      * @group add
      * @dataProvider provideSuccessCasesLayout
      */
-    public function testAddEventCampaign($isCampaign,$scheduleFrom, $scheduleTo, $scheduledayPartId, $scheduleRecurrenceType, $scheduleRecurrenceDetail, $scheduleRecurrenceRange, $scheduleOrder, $scheduleIsPriority)
+    public function testAddEventCampaign($isCampaign, $scheduleFrom, $scheduleTo, $scheduledayPartId, $scheduleRecurrenceType, $scheduleRecurrenceDetail, $scheduleRecurrenceRange, $scheduleOrder, $scheduleIsPriority)
     {
-
-        // Create layout
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', 9);
         // Get a Display Group Id
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
-        //Create Campaign
-        /* @var XiboCampaign $campaign */
-        $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
+        $layout = null;
+        $campaign = null;
 
-        if ($isCampaign == true) {
+        if ($isCampaign) {
+            // Create Campaign
+            /* @var XiboCampaign $campaign */
+            $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
 
             $response = $this->client->post($this->route, [
                 'fromDt' => date('Y-m-d h:i:s', $scheduleFrom),
@@ -180,9 +179,10 @@ class ScheduleTest extends LocalWebTestCase
                 'scheduleRecurrenceDetail' => $scheduleRecurrenceDetail,
                 'scheduleRecurrenceRange' => $scheduleRecurrenceRange
             ]);
-        }
+        } else {
+            // Create layout
+            $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', 9);
 
-        else {
             $response = $this->client->post($this->route, [
                 'fromDt' => date('Y-m-d h:i:s', $scheduleFrom),
                 'toDt' => date('Y-m-d h:i:s', $scheduleTo),
@@ -205,8 +205,12 @@ class ScheduleTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('id', $object);
 
         $displayGroup->delete();
-        $campaign->delete();
-        $layout->delete();
+
+        if ($campaign != null)
+            $campaign->delete();
+
+        if ($layout != null)
+            $layout->delete();
     }
 
     /**
@@ -216,10 +220,9 @@ class ScheduleTest extends LocalWebTestCase
      */
     public function provideSuccessCasesLayout()
     {
-
         return [
             'Campaign no priority, no recurrence' => [true, time()+3600, time()+7200, 0, NULL, NULL, NULL, 0, 0],
-//            'Layout no priority, no recurrence' => [false, time()+3600, time()+7200, 0, NULL, NULL, NULL, 0, 0]  campaign id is null with $layout->campaigId
+            'Layout no priority, no recurrence' => [false, time()+3600, time()+7200, 0, NULL, NULL, NULL, 0, 0]
         ];
     }
 
