@@ -588,8 +588,8 @@ class Display
     private function add()
     {
         $this->displayId = $this->getStore()->insert('
-            INSERT INTO display (display, auditingUntil, defaultlayoutid, license, licensed, inc_schedule, email_alert, alert_timeout, xmrChannel, xmrPubKey, lastCommandSuccess)
-              VALUES (:display, :auditingUntil, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, :alert_timeout, :xmrChannel, :xmrPubKey, :lastCommandSuccess)
+            INSERT INTO display (display, auditingUntil, defaultlayoutid, license, licensed, inc_schedule, email_alert, alert_timeout, xmrChannel, xmrPubKey, lastCommandSuccess, macAddress)
+              VALUES (:display, :auditingUntil, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, :alert_timeout, :xmrChannel, :xmrPubKey, :lastCommandSuccess, :macAddress)
         ', [
             'display' => $this->display,
             'auditingUntil' => 0,
@@ -601,7 +601,8 @@ class Display
             'alert_timeout' => 0,
             'xmrChannel' => $this->xmrChannel,
             'xmrPubKey' => $this->xmrPubKey,
-            'lastCommandSuccess' => $this->lastCommandSuccess
+            'lastCommandSuccess' => $this->lastCommandSuccess,
+            'macAddress' => $this->macAddress
         ]);
 
         $displayGroup = $this->displayGroupFactory->createEmpty();

@@ -229,7 +229,8 @@ class LayoutTest extends LocalWebTestCase
             'Wrong resolution ID' => ['id not found', 'not found exception', '', 69]
         ];
     }
-    /**
+
+     /**
      * Try and add two layouts with the same name
      */
     public function testAddDuplicate()
@@ -249,9 +250,9 @@ class LayoutTest extends LocalWebTestCase
         ]);
         $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status() . '. Body = ' . $this->client->response->body());
     }
+
     /**
     * Edit an existing layout
-    * @depends testAddSuccess
     */
     public function testEdit()
     {
@@ -289,6 +290,7 @@ class LayoutTest extends LocalWebTestCase
         # Clean up the Layout as we no longer need it
         $layout->delete();
     }
+
     /**
      * Test delete
      * @depends testAddSuccess
@@ -318,6 +320,7 @@ class LayoutTest extends LocalWebTestCase
         $this->assertTrue($flag, 'Layout ID ' . $layout1->layoutId . ' was not found after deleting a different layout');
         $layout1->delete();
     }
+
     /**
      * Test Layout Retire
      * @return mixed
@@ -334,6 +337,7 @@ class LayoutTest extends LocalWebTestCase
         $this->assertSame(1, $layout->retired, 'Retired flag not updated');
         return $layout->layoutId;
     }
+
     /**
      * @param Layout $layoutId
      * @depends testRetire
@@ -377,6 +381,7 @@ class LayoutTest extends LocalWebTestCase
         $this->assertSame($regionLeft, $object->data->left);
         $this->assertTrue($layout->delete(), 'Unable to delete ' . $layout->layoutId);
     }
+
     /**
      * Each array is a test run
      * Format (width, height, top,  left)
@@ -392,6 +397,7 @@ class LayoutTest extends LocalWebTestCase
             'region 4 no offsets' => [69, 69, 0, 0]
         ];
     }
+
     /**
      * testAddFailure - test adding various regions that should be invalid
      * @dataProvider regionFailureCases
@@ -416,6 +422,7 @@ class LayoutTest extends LocalWebTestCase
             $this->assertSame($expectedHeight, $object->data->height);
         }
     }
+
     /**
      * Each array is a test run
      * Format (width, height, top,  left)
@@ -429,6 +436,7 @@ class LayoutTest extends LocalWebTestCase
             'region negative dimesions' => [-69, -420, 20, 420, 500, null, null]
         ];
     }
+
     /**
      * Edit known region
      * @depends testAddRegionSuccess
@@ -470,6 +478,7 @@ class LayoutTest extends LocalWebTestCase
         $this->client->delete('/region/' . $region->regionId);
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
    }
+
     /**
      * Copy Layout Test
      */
@@ -494,6 +503,7 @@ class LayoutTest extends LocalWebTestCase
         # Clean up the Layout as we no longer need it
         $this->assertTrue($layout->delete(), 'Unable to delete ' . $layout->layoutId);
     }
+
     /**
      * Position Test
      */
@@ -531,7 +541,7 @@ class LayoutTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
         $layout->delete();
     }
-    
+
     /**
      * Position Test with incorrect properities (missing height and incorrect spelling)
      */
