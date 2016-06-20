@@ -168,8 +168,8 @@ class ScheduleTest extends LocalWebTestCase
             $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
 
             $response = $this->client->post($this->route, [
-                'fromDt' => date('Y-m-d h:i:s', $scheduleFrom),
-                'toDt' => date('Y-m-d h:i:s', $scheduleTo),
+                'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
+                'toDt' => date('Y-m-d H:i:s', $scheduleTo),
                 'eventTypeId' => 1,
                 'campaignId' => $campaign->campaignId,
                 'displayGroupIds' => [$displayGroup->displayGroupId],
@@ -184,8 +184,8 @@ class ScheduleTest extends LocalWebTestCase
             $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', 9);
 
             $response = $this->client->post($this->route, [
-                'fromDt' => date('Y-m-d h:i:s', $scheduleFrom),
-                'toDt' => date('Y-m-d h:i:s', $scheduleTo),
+                'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
+                'toDt' => date('Y-m-d H:i:s', $scheduleTo),
                 'eventTypeId' => 1,
                 'campaignId' => $layout->campaignId,
                 'displayGroupIds' => [$displayGroup->displayGroupId],
@@ -239,7 +239,7 @@ class ScheduleTest extends LocalWebTestCase
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
 
             $response = $this->client->post($this->route, [
-                'fromDt' => date('Y-m-d h:i:s', $scheduleFrom),
+                'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
                 'eventTypeId' => 2,
                 'commandId' => $command->commandId,
                 'displayGroupIds' => [$displayGroup->displayGroupId],
@@ -288,8 +288,8 @@ class ScheduleTest extends LocalWebTestCase
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
 
         $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d h:i:s', time()+3600),
-            date('Y-m-d h:i:s', time()+7200),
+            date('Y-m-d H:i:s', time()+3600),
+            date('Y-m-d H:i:s', time()+7200),
             $campaign->campaignId,
             [$displayGroup->displayGroupId],
             0,
@@ -304,8 +304,8 @@ class ScheduleTest extends LocalWebTestCase
         $toDt = time() + 86400;
 
         $this->client->put($this->route . '/' . $event->eventId, [
-            'fromDt' => date('Y-m-d h:i:s', $fromDt),
-            'toDt' => date('Y-m-d h:i:s', $toDt),
+            'fromDt' => date('Y-m-d H:i:s', $fromDt),
+            'toDt' => date('Y-m-d H:i:s', $toDt),
             'eventTypeId' => 1,
             'campaignId' => $event->campaignId,
             'displayGroupIds' => [$displayGroup->displayGroupId],
@@ -346,8 +346,8 @@ class ScheduleTest extends LocalWebTestCase
         $toDt = time() + 86400;
 
         $this->client->put($this->route . '/' . $eventId, [
-            'fromDt' => date('Y-m-d h:i:s', $fromDt),
-            'toDt' => date('Y-m-d h:i:s', $toDt),
+            'fromDt' => date('Y-m-d H:i:s', $fromDt),
+            'toDt' => date('Y-m-d H:i:s', $toDt),
             'eventTypeId' => Schedule::$LAYOUT_EVENT,
             'campaignId' => $event->campaignId,
             'displayGroupIds' => $displayGroups,
