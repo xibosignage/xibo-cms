@@ -131,13 +131,31 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
 
     /**
      * Request screenshot Test
-     * @group broken
      */
     public function testScreenshot()
     {
         // Create a Display in the system
         $hardwareId = Random::generateString(12, 'phpunit');
-        $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 'PHPUnit Test Display');
+        $xmrChannel = Random::generateString(50);
+
+        // This is a dummy pubKey and isn't used by anything important
+        $xmrPubkey = '-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDmdnXL4gGg3yJfmqVkU1xsGSQI
+3b6YaeAKtWuuknIF1XAHAHtl3vNhQN+SmqcNPOydhK38OOfrdb09gX7OxyDh4+JZ
+inxW8YFkqU0zTqWaD+WcOM68wTQ9FCOEqIrbwWxLQzdjSS1euizKy+2GcFXRKoGM
+pbBhRgkIdydXoZZdjQIDAQAB
+-----END PUBLIC KEY-----';
+
+        $this->getXmdsWrapper()->RegisterDisplay($hardwareId,
+            'PHPUnit Test Display',
+            'windows',
+            null,
+            null,
+            null,
+            '00:16:D9:C9:AL:69',
+            $xmrChannel,
+            $xmrPubkey
+        );
 
         // Now find the Id of that Display
         $displays = (new XiboDisplay($this->getEntityProvider()))->get(['hardwareKey' => $hardwareId]);
@@ -148,6 +166,9 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
         /** @var XiboDisplay $display */
         $display = $displays[0];
 
+        $this->assertSame($xmrChannel, $display->xmrChannel, 'XMR Channel not set correctly by XMDS Register Display');
+        $this->assertSame($xmrPubkey, $display->xmrPubKey, 'XMR PubKey not set correctly by XMDS Register Display');
+
         $this->client->put('/display/requestscreenshot/' . $display->displayId);
 
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
@@ -157,6 +178,7 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
 
     /**
      * Wake On Lan Test
+     * @broken
      */
     public function testWoL()
     {
