@@ -386,34 +386,24 @@ class DataSetTest extends LocalWebTestCase
     public function testRowAdd()
     {
         // Create a new dataset to use
-        /** @var XiboDataSet $dataSet */
         $name = Random::generateString(8, 'phpunit');
         $description = 'PHP Unit row add';
+
+        /** @var XiboDataSet $dataSet */
         $dataSet = (new XiboDataSet($this->getEntityProvider()))->create($name, $description);
 
         // create column
-
         $nameCol = Random::generateString(8, 'phpunit');
         $column = $dataSet->createColumn($nameCol,'', 2, 1, 1, '');
 
-        $dataSetCheck = $dataSet->getByColumnId($column->dataSetColumnId);
+        // Populate the properties for the dataset column
+        // TODO: it would be better to have separate wrappers for DataSet and DataSetColumn, with a single wrapper
+        // you can only ever operate on 1 column at a time.
+        $dataSet->getByColumnId($column->dataSetColumnId);
 
-        //fwrite(STDERR,$dataSetCheck->dataSetColumnId);
-
-
-
-        $this->client->get('/dataset/' . $dataSet->dataSetId . '/column');
-
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-
-        $object = json_decode($this->client->response->body());
-       
-        // fwrite(STDERR, $this->client->response->body());
         // add new row
-
         $response = $this->client->post('/dataset/data/' . $dataSet->dataSetId, [
-            'dataSetColumnId_' . $dataSetCheck->dataSetColumnId => 'test',
+            'dataSetColumnId_' . $dataSet->dataSetColumnId => 'test',
             ]);
 
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
@@ -422,7 +412,7 @@ class DataSetTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
 
-    //    $dataSet -> deleteWData();
+        // TODO: This test should verify that the data was added
     }
 
     /**

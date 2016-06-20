@@ -94,6 +94,13 @@ class DataSetColumn extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="dataSetColumnId",
+     *      in="formData",
+     *      description="Filter by DataSet ColumnID",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -111,7 +118,10 @@ class DataSetColumn extends Base
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
 
-        $dataSetColumns = $this->dataSetColumnFactory->getByDataSetId($dataSetId);
+        $dataSetColumns = $this->dataSetColumnFactory->query(null, [
+            'dataSetId' => $dataSetId,
+            'dataSetColumnId' => $this->getSanitizer()->getInt('dataSetColumnId')
+        ]);
 
         foreach ($dataSetColumns as $column) {
             /* @var \Xibo\Entity\DataSetColumn $column */
