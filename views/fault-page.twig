@@ -60,12 +60,9 @@
                                 <span style="color:#f48260;"></span>
                             </h3>
 
-
                             {% if binLogError %}
-                                    
                                 <p class="alert alert-info">{% trans "The CMS may not be working as expected because MySQL BINLOG format is set to STATEMENT. This can effect sessions and should be set to ROW or MIXED." %}</p>
                             {% endif %}
-
 
                             <p class="narrow text-center">{% trans "Before reporting a fault it would be appreciated if you follow the steps. Click start " %}</p>
 
@@ -74,19 +71,22 @@
                                     <button type="submit" href="#checklist" name="home_form" class="btn-submit btn btn-success">
                                         {% trans "Start" %}
                                         <i class="fa fa-chevron-circle-right" aria-hidden="true"></i></button>
-
                                 </fieldset>
                             </form>
                         </div>
                         <div class="tab-pane fade" id="checklist">
                             <p class="text-center">{% trans "Check that the Environment passes all the CMS Environment checks." %}</p>
 
-
                             {% if environmentFault %}
-                            <p class="alert alert-danger narrow text-center">{% trans "There is a critical error that you should resolve first." %}</p>
+                                <p class="alert alert-danger narrow text-center">{% trans "There is a critical error that you should resolve first." %}</p>
+                            {% elseif environmentWarning %}
+                                <p class="alert alert-warning narrow text-center">{% trans "There is a warning on the checklist that you should resolve." %}</p>
+                            {% else %}
+                                <p class="alert alert-success narrow text-center">{% trans "All checks pass. Click next to continue" %}</p>
+                            {% endif %}
 
                             <br/>
-                            {% if environmentFault %}
+                            {% if environmentFault or environmentWarning %}
                                 <table id="checksWithFaults" class="table table-striped">
                                     <thead>
                                     <tr>
@@ -113,46 +113,16 @@
                                     {% endfor %}
                                     </tbody>
                                 </table>
+
+                                <p class="text-center"><b>{% trans "All other checks passed" %}</b></p>
+
                             {% endif %}
-
-                                <p class="text-center"><b>The rest of the items seems to be working fine</b></p>
-                                <div class="row text-center">
-                                    <a id="toggler" href="#" class="btn btn-info" onclick="toggler('checksWithSuccess');">{% trans "I want to see the list anyway." %}</a>
-                                </div>
-                                <br/>
-                                {% if environmentCheck %}
-                                    <table id="checksWithSuccess" class="table table-striped hide-table">
-                                        <thead>
-                                        <tr>
-                                            <th>{% trans "Item" %}</th>
-                                            <th>{% trans "Status" %}</th>
-                                            <th>{% trans "Advice" %}</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        {% for check in environmentCheck %}
-                                            {% if check.status == 1 %}
-                                                <tr>
-                                                    <td>{{ check.item }}</td>
-                                                    <td>
-                                                        {% if check.status == 1 %}
-                                                            <span class="fa fa-check fa-2x text-success"></span>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>{{ check.advice }}</td>
-                                                </tr>
-                                            {% endif %}
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
-                                {% endif %}
-
-
-
-                            {% elseif environmentWarning %}
-                            <p class="alert alert-warning narrow text-center">{% trans "There is a warning on the checklist that you should resolve." %}</p>
-                            {% if environmentWarning %}
-                                <table id="checksWithWarning" class="table table-striped">
+                            <div class="row text-center">
+                                <a id="toggler" href="#" class="btn btn-info">{% trans "I want to see the list anyway." %}</a>
+                            </div>
+                            <br/>
+                            {% if environmentCheck %}
+                                <table id="checksWithSuccess" class="table table-striped hide-table">
                                     <thead>
                                     <tr>
                                         <th>{% trans "Item" %}</th>
@@ -162,14 +132,12 @@
                                     </thead>
                                     <tbody>
                                     {% for check in environmentCheck %}
-                                        {% if check.status != 1 %}
+                                        {% if check.status == 1 %}
                                             <tr>
                                                 <td>{{ check.item }}</td>
                                                 <td>
-                                                    {% if check.status == 0 %}
-                                                        <span class="fa fa-times"></span>
-                                                    {% else %}
-                                                        <span class="fa fa-exclamation"></span>
+                                                    {% if check.status == 1 %}
+                                                        <span class="fa fa-check fa-2x text-success"></span>
                                                     {% endif %}
                                                 </td>
                                                 <td>{{ check.advice }}</td>
@@ -178,73 +146,6 @@
                                     {% endfor %}
                                     </tbody>
                                 </table>
-                            {% endif %}
-
-                            <p class="text-center"><b>The rest of the items seems to be working fine</b></p>
-                                <div class="row text-center">
-                                    <a id="toggler" href="#" class="btn btn-info" onclick="toggler('checksWithSuccess');">{% trans "I want to see the list anyway. " %}</a>
-                                </div>
-                                <br/>
-                                {% if environmentCheck %}
-                                    <table id="checksWithSuccess" class="table table-striped hide-table">
-                                        <thead>
-                                        <tr>
-                                            <th>{% trans "Item" %}</th>
-                                            <th>{% trans "Status" %}</th>
-                                            <th>{% trans "Advice" %}</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        {% for check in environmentCheck %}
-                                            {% if check.status == 1 %}
-                                                <tr>
-                                                    <td>{{ check.item }}</td>
-                                                    <td>
-                                                        {% if check.status == 1 %}
-                                                            <span class="fa fa-check fa-2x text-success"></span>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>{{ check.advice }}</td>
-                                                </tr>
-                                            {% endif %}
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
-                                {% endif %}
-
-                        {% elseif environmentCheck %}
-                            <p class="alert alert-success narrow text-center">{% trans "All checks pass. Click next to continue" %}</p>
-                            <div class="row text-center">
-                                <a id="toggler" href="#" class="btn btn-info" onclick="toggler('sessions');">{% trans "I want to see the list anyway." %}</a>
-                            </div>
-                            <br/>
-                            <table id="sessions" class="table table-striped hide-table">
-                                <thead>
-                                <tr>
-                                    <th class="text-center">{% trans "Item" %}</th>
-                                    <th class="text-center">{% trans "Status" %}</th>
-                                    <th>{% trans "Advice" %}</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {% for check in environmentCheck %}
-                                    <tr>
-                                        <td>{{ check.item }}</td>
-                                        <td class="text-center">
-                                            {% if check.status == 0 %}
-                                                <i class="fa fa-times fa-2x text-warning"></i>
-                                            {% elseif check.status == 1 %}
-                                                <i class="fa fa-check fa-2x text-success"></i>
-                                            {% else %}
-                                                <i class="fa fa-exclamation fa-2x text-warning"></i>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ check.advice }}</td>
-                                    </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
-
                             {% endif %}
 
 
@@ -474,14 +375,11 @@
         </script>
 
         <script>
-            function toggler(divId) {
-                $("#" + divId).toggle();
-            }
-
             $("#toggler").click(function () {
                 $(this).text(function (i, v) {
                     return v === '{% trans "Hide Environment checks" %}' ? '{% trans "Show Environment checks" %}' : '{% trans "Hide Environment checks" %}'
                 })
+                $("#checksWithSuccess").toggle();
             });
 
         </script>
