@@ -413,6 +413,9 @@ class DataSetTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('id', $object);
 
         // TODO: This test should verify that the data was added
+
+        // Delete the dataSet we used
+        $dataSet->deleteWData();
     }
 
     /**
