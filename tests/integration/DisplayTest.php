@@ -178,7 +178,7 @@ pbBhRgkIdydXoZZdjQIDAQAB
 
     /**
      * Wake On Lan Test
-     * @broken
+     * @group broken
      */
     public function testWoL()
     {
@@ -211,7 +211,7 @@ pbBhRgkIdydXoZZdjQIDAQAB
 
 
         // Call WOL
-        $this->client->get('/display/wol/' . $display->displayId);
+        $this->client->post('/display/wol/' . $display->displayId);
 
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
     }
