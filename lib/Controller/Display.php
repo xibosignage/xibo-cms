@@ -308,6 +308,13 @@ class Display extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="hardwareKey",
+     *      in="formData",
+     *      description="Filter by Hardware Key",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="clientVersion",
      *      in="formData",
      *      description="Filter by Client Version",
@@ -330,6 +337,7 @@ class Display extends Base
             'displayId' => $this->getSanitizer()->getInt('displayId'),
             'display' => $this->getSanitizer()->getString('display'),
             'macAddress' => $this->getSanitizer()->getString('macAddress'),
+            'license' => $this->getSanitizer()->getString('hardwareKey'),
             'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
             'clientVersion' => $this->getSanitizer()->getString('clientVersion')
         ];
@@ -1024,7 +1032,7 @@ class Display extends Base
      * Wake this display using a WOL command
      * @param int $displayId
      *
-     * @SWG\Get(
+     * @SWG\Post(
      *  path="/display/wol/{displayId}",
      *  operationId="displayWakeOnLan",
      *  tags={"display"},
