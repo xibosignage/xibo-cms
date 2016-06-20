@@ -7,9 +7,8 @@
 
 namespace Xibo\Tests\Integration;
 
-use Xibo\OAuth2\Client\Entity\XiboDisplay;
-use Xibo\Tests\LocalWebTestCase;
 use Xibo\Helper\Random;
+use Xibo\OAuth2\Client\Entity\XiboDisplay;
 
 class DisplayTest extends \Xibo\Tests\LocalWebTestCase
 {
@@ -77,24 +76,18 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
      */
     public function testDelete()
     {
-
         // Create a Display in the system
         $hardwareId = Random::generateString(12, 'phpunit');
-        $response = $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 'PHPUnit Test Display');
-        
+        $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 'PHPUnit Test Display');
+
         // Now find the Id of that Display
-        $displays = (new XiboDisplay($this->getEntityProvider()))->get();
-        $display = null;
-        
-        foreach ($displays as $disp) {
-            if ($disp->license == $hardwareId) {
-                $display = $disp;
-            }
-        }
-        
-        if ($display === null) {
+        $displays = (new XiboDisplay($this->getEntityProvider()))->get(['hardwareKey' => $hardwareId]);
+
+        if (count($displays) != 1)
             $this->fail('Display was not added correctly');
-        }
+
+        /** @var XiboDisplay $display */
+        $display = $displays[0];
 
         $this->client->delete('/display/' . $display->displayId);
 
@@ -106,26 +99,20 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
      */
     public function testEdit()
     {
-
         // Create a Display in the system
         $hardwareId = Random::generateString(12, 'phpunit');
-        $response = $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 'PHPUnit Test Display');
-        
-        // Now find the Id of that Display
-        $displays = (new XiboDisplay($this->getEntityProvider()))->get();
-        $display = null;
-        
-        foreach ($displays as $disp) {
-            if ($disp->license == $hardwareId) {
-                $display = $disp;
-            }
-        }
-        
-        if ($display === null) {
-            $this->fail('Display was not added correctly');
-        }
+        $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 'PHPUnit Test Display');
 
-         $this->client->put('/display/' . $display->displayId, [
+        // Now find the Id of that Display
+        $displays = (new XiboDisplay($this->getEntityProvider()))->get(['hardwareKey' => $hardwareId]);
+
+        if (count($displays) != 1)
+            $this->fail('Display was not added correctly');
+
+        /** @var XiboDisplay $display */
+        $display = $displays[0];
+
+        $this->client->put('/display/' . $display->displayId, [
             'display' => 'API EDITED',
             'isAuditing' => $display->isAuditing,
             'defaultLayoutId' => $display->defaultLayoutId,
@@ -144,27 +131,43 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
 
     /**
      * Request screenshot Test
-     * @group broken
      */
     public function testScreenshot()
     {
         // Create a Display in the system
         $hardwareId = Random::generateString(12, 'phpunit');
-        $response = $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 'PHPUnit Test Display');
-        
+        $xmrChannel = Random::generateString(50);
+
+        // This is a dummy pubKey and isn't used by anything important
+        $xmrPubkey = '-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDmdnXL4gGg3yJfmqVkU1xsGSQI
+3b6YaeAKtWuuknIF1XAHAHtl3vNhQN+SmqcNPOydhK38OOfrdb09gX7OxyDh4+JZ
+inxW8YFkqU0zTqWaD+WcOM68wTQ9FCOEqIrbwWxLQzdjSS1euizKy+2GcFXRKoGM
+pbBhRgkIdydXoZZdjQIDAQAB
+-----END PUBLIC KEY-----';
+
+        $this->getXmdsWrapper()->RegisterDisplay($hardwareId,
+            'PHPUnit Test Display',
+            'windows',
+            null,
+            null,
+            null,
+            '00:16:D9:C9:AL:69',
+            $xmrChannel,
+            $xmrPubkey
+        );
+
         // Now find the Id of that Display
-        $displays = (new XiboDisplay($this->getEntityProvider()))->get();
-        $display = null;
-        
-        foreach ($displays as $disp) {
-            if ($disp->license == $hardwareId) {
-                $display = $disp;
-            }
-        }
-        
-        if ($display === null) {
+        $displays = (new XiboDisplay($this->getEntityProvider()))->get(['hardwareKey' => $hardwareId]);
+
+        if (count($displays) != 1)
             $this->fail('Display was not added correctly');
-        }
+
+        /** @var XiboDisplay $display */
+        $display = $displays[0];
+
+        $this->assertSame($xmrChannel, $display->xmrChannel, 'XMR Channel not set correctly by XMDS Register Display');
+        $this->assertSame($xmrPubkey, $display->xmrPubKey, 'XMR PubKey not set correctly by XMDS Register Display');
 
         $this->client->put('/display/requestscreenshot/' . $display->displayId);
 
@@ -180,35 +183,36 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
     public function testWoL()
     {
         $hardwareId = Random::generateString(12, 'phpunit');
+        $macAddress = '00:16:D9:C9:AL:69';
+
         $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 
             'PHPUnit Test Display', 
             'windows', 
             null, 
             null, 
             null, 
-            '00:16:D9:C9:AL:69', 
+            $macAddress,
             Random::generateString(50), 
             Random::generateString(50)
         );
 
         // Now find the Id of that Display
-        $displays = (new XiboDisplay($this->getEntityProvider()))->get();
-        $display = null;
+        $displays = (new XiboDisplay($this->getEntityProvider()))->get(['hardwareKey' => $hardwareId]);
 
-        foreach ($displays as $disp) {
-            if ($disp->license == $hardwareId) {
-                $display = $disp;
-            }
-        }
-
-        if ($display === null) {
+        if (count($displays) != 1)
             $this->fail('Display was not added correctly');
-        }
 
-        $this->client->get('/display/wol/' . $display->displayId);
+        /** @var XiboDisplay $display */
+        $display = $displays[0];
+
+        $this->assertSame($macAddress, $display->macAddress, 'Mac Address not set correctly by XMDS Register Display');
+
+        // TODO: Set the broadcast address
+
+
+        // Call WOL
+        $this->client->post('/display/wol/' . $display->displayId);
 
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-
-        $object = json_decode($this->client->response->body());
     }
 }

@@ -155,22 +155,21 @@ class ScheduleTest extends LocalWebTestCase
      * @group add
      * @dataProvider provideSuccessCasesLayout
      */
-    public function testAddEventCampaign($isCampaign,$scheduleFrom, $scheduleTo, $scheduledayPartId, $scheduleRecurrenceType, $scheduleRecurrenceDetail, $scheduleRecurrenceRange, $scheduleOrder, $scheduleIsPriority)
+    public function testAddEventCampaign($isCampaign, $scheduleFrom, $scheduleTo, $scheduledayPartId, $scheduleRecurrenceType, $scheduleRecurrenceDetail, $scheduleRecurrenceRange, $scheduleOrder, $scheduleIsPriority)
     {
-
-        // Create layout
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', 9);
         // Get a Display Group Id
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
-        //Create Campaign
-        /* @var XiboCampaign $campaign */
-        $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
+        $layout = null;
+        $campaign = null;
 
-        if ($isCampaign == true) {
+        if ($isCampaign) {
+            // Create Campaign
+            /* @var XiboCampaign $campaign */
+            $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
 
             $response = $this->client->post($this->route, [
-                'fromDt' => date('Y-m-d h:i:s', $scheduleFrom),
-                'toDt' => date('Y-m-d h:i:s', $scheduleTo),
+                'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
+                'toDt' => date('Y-m-d H:i:s', $scheduleTo),
                 'eventTypeId' => 1,
                 'campaignId' => $campaign->campaignId,
                 'displayGroupIds' => [$displayGroup->displayGroupId],
@@ -180,12 +179,13 @@ class ScheduleTest extends LocalWebTestCase
                 'scheduleRecurrenceDetail' => $scheduleRecurrenceDetail,
                 'scheduleRecurrenceRange' => $scheduleRecurrenceRange
             ]);
-        }
+        } else {
+            // Create layout
+            $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', 9);
 
-        else {
             $response = $this->client->post($this->route, [
-                'fromDt' => date('Y-m-d h:i:s', $scheduleFrom),
-                'toDt' => date('Y-m-d h:i:s', $scheduleTo),
+                'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
+                'toDt' => date('Y-m-d H:i:s', $scheduleTo),
                 'eventTypeId' => 1,
                 'campaignId' => $layout->campaignId,
                 'displayGroupIds' => [$displayGroup->displayGroupId],
@@ -205,8 +205,12 @@ class ScheduleTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('id', $object);
 
         $displayGroup->delete();
-        $campaign->delete();
-        $layout->delete();
+
+        if ($campaign != null)
+            $campaign->delete();
+
+        if ($layout != null)
+            $layout->delete();
     }
 
     /**
@@ -216,10 +220,9 @@ class ScheduleTest extends LocalWebTestCase
      */
     public function provideSuccessCasesLayout()
     {
-
         return [
             'Campaign no priority, no recurrence' => [true, time()+3600, time()+7200, 0, NULL, NULL, NULL, 0, 0],
-//            'Layout no priority, no recurrence' => [false, time()+3600, time()+7200, 0, NULL, NULL, NULL, 0, 0]  campaign id is null with $layout->campaigId
+            'Layout no priority, no recurrence' => [false, time()+3600, time()+7200, 0, NULL, NULL, NULL, 0, 0]
         ];
     }
 
@@ -236,7 +239,7 @@ class ScheduleTest extends LocalWebTestCase
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
 
             $response = $this->client->post($this->route, [
-                'fromDt' => date('Y-m-d h:i:s', $scheduleFrom),
+                'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
                 'eventTypeId' => 2,
                 'commandId' => $command->commandId,
                 'displayGroupIds' => [$displayGroup->displayGroupId],
@@ -271,43 +274,55 @@ class ScheduleTest extends LocalWebTestCase
             'Command no priority, no recurrence' => [time()+3600, 0, NULL, NULL, NULL, 0, 0],
         ];
     }
+
     /**
      * @group add
-     * @group broken
      */
     public function testEdit()
     {
         // Get a Display Group Id
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
 
-        //Create Campaign
+        // Create Campaign
         /* @var XiboCampaign $campaign */
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
 
-        $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(date('Y-m-d h:i:s', time()+3600), date('Y-m-d h:i:s', time()+7200), $campaign->campaignId, [$displayGroup->displayGroupId], 0, NULL, NULL, NULL, 0, 0);
+        $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
+            date('Y-m-d H:i:s', time()+3600),
+            date('Y-m-d H:i:s', time()+7200),
+            $campaign->campaignId,
+            [$displayGroup->displayGroupId],
+            0,
+            NULL,
+            NULL,
+            NULL,
+            0,
+            0
+        );
 
         $fromDt = time();
         $toDt = time() + 86400;
 
         $this->client->put($this->route . '/' . $event->eventId, [
-            'fromDt' => date('Y-m-d h:i:s', $fromDt),
-            'toDt' => date('Y-m-d h:i:s', $toDt),
+            'fromDt' => date('Y-m-d H:i:s', $fromDt),
+            'toDt' => date('Y-m-d H:i:s', $toDt),
             'eventTypeId' => 1,
             'campaignId' => $event->campaignId,
-            'displayGroupIds' => $event->$displayGroups,
+            'displayGroupIds' => [$displayGroup->displayGroupId],
             'displayOrder' => 1,
             'isPriority' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $displayGroup->delete();
-        $campaign->delete();
-
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
+        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $this->client->response->body());
 
         $object = json_decode($this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
+
+        // Tidy up
+        $displayGroup->delete();
+        $campaign->delete();
     }
 
     /**
@@ -331,8 +346,8 @@ class ScheduleTest extends LocalWebTestCase
         $toDt = time() + 86400;
 
         $this->client->put($this->route . '/' . $eventId, [
-            'fromDt' => date('Y-m-d h:i:s', $fromDt),
-            'toDt' => date('Y-m-d h:i:s', $toDt),
+            'fromDt' => date('Y-m-d H:i:s', $fromDt),
+            'toDt' => date('Y-m-d H:i:s', $toDt),
             'eventTypeId' => Schedule::$LAYOUT_EVENT,
             'campaignId' => $event->campaignId,
             'displayGroupIds' => $displayGroups,
