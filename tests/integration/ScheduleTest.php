@@ -274,20 +274,31 @@ class ScheduleTest extends LocalWebTestCase
             'Command no priority, no recurrence' => [time()+3600, 0, NULL, NULL, NULL, 0, 0],
         ];
     }
+
     /**
      * @group add
-     * @group broken
      */
     public function testEdit()
     {
         // Get a Display Group Id
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
 
-        //Create Campaign
+        // Create Campaign
         /* @var XiboCampaign $campaign */
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
 
-        $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(date('Y-m-d h:i:s', time()+3600), date('Y-m-d h:i:s', time()+7200), $campaign->campaignId, [$displayGroup->displayGroupId], 0, NULL, NULL, NULL, 0, 0);
+        $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
+            date('Y-m-d h:i:s', time()+3600),
+            date('Y-m-d h:i:s', time()+7200),
+            $campaign->campaignId,
+            [$displayGroup->displayGroupId],
+            0,
+            NULL,
+            NULL,
+            NULL,
+            0,
+            0
+        );
 
         $fromDt = time();
         $toDt = time() + 86400;
@@ -297,20 +308,21 @@ class ScheduleTest extends LocalWebTestCase
             'toDt' => date('Y-m-d h:i:s', $toDt),
             'eventTypeId' => 1,
             'campaignId' => $event->campaignId,
-            'displayGroupIds' => $event->$displayGroups,
+            'displayGroupIds' => [$displayGroup->displayGroupId],
             'displayOrder' => 1,
             'isPriority' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $displayGroup->delete();
-        $campaign->delete();
-
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
+        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $this->client->response->body());
 
         $object = json_decode($this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
+
+        // Tidy up
+        $displayGroup->delete();
+        $campaign->delete();
     }
 
     /**
