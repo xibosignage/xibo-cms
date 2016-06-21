@@ -116,11 +116,11 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
         $xmrChannel = Random::generateString(50);
         // This is a dummy pubKey and isn't used by anything important
         $xmrPubkey = '-----BEGIN PUBLIC KEY-----
-        MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDmdnXL4gGg3yJfmqVkU1xsGSQI
-        3b6YaeAKtWuuknIF1XAHAHtl3vNhQN+SmqcNPOydhK38OOfrdb09gX7OxyDh4+JZ
-        inxW8YFkqU0zTqWaD+WcOM68wTQ9FCOEqIrbwWxLQzdjSS1euizKy+2GcFXRKoGM
-        pbBhRgkIdydXoZZdjQIDAQAB
-        -----END PUBLIC KEY-----';
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDmdnXL4gGg3yJfmqVkU1xsGSQI
+3b6YaeAKtWuuknIF1XAHAHtl3vNhQN+SmqcNPOydhK38OOfrdb09gX7OxyDh4+JZ
+inxW8YFkqU0zTqWaD+WcOM68wTQ9FCOEqIrbwWxLQzdjSS1euizKy+2GcFXRKoGM
+pbBhRgkIdydXoZZdjQIDAQAB
+-----END PUBLIC KEY-----';
         $this->getXmdsWrapper()->RegisterDisplay($hardwareId,
             'PHPUnit Test Display',
             'windows',
@@ -131,7 +131,7 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
             $xmrChannel,
             $xmrPubkey
         );
-        
+
         // Now find the Id of that Display
         $displays = (new XiboDisplay($this->getEntityProvider()))->get(['hardwareKey' => $hardwareId]);
         if (count($displays) != 1)
@@ -152,7 +152,7 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
     public function testWoL()
     {
         $hardwareId = Random::generateString(12, 'phpunit');
-        $macAddress = '00:16:D9:C9:AL:69';
+        $macAddress = '00-16-D9-C9-AL-69';
         $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 
             'PHPUnit Test Display', 
             'windows', 
@@ -170,7 +170,17 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
         /** @var XiboDisplay $display */
         $display = $displays[0];
         $this->assertSame($macAddress, $display->macAddress, 'Mac Address not set correctly by XMDS Register Display');
-        // TODO: Set the broadcast address
+        
+        $display->edit($display->display,
+        $display->description, 
+        $display->isAuditing, 
+        $display->defaultLayoutId, 
+        $display->licensed, 
+        $display->license, 
+        $display->incSchedule, 
+        $display->emailAlert, 
+        $display->wakeOnLanEnabled, 
+        '127.0.0.1');
         // Call WOL
         $this->client->post('/display/wol/' . $display->displayId);
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());

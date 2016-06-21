@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "09e4be32f7102535c1c2c2f3d03510e5",
+    "hash": "3f2916c2e66eba5d00ec543f80159b7c",
     "content-hash": "dc45578b38c9f0fd2a9dfc00b0417c28",
     "packages": [
         {
@@ -4804,12 +4804,9 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PeterMis/oauth2-xibo-cms.git",
-                "reference": "1836606c1b52f39e67829289315e91392d7eb8fb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PeterMis/oauth2-xibo-cms/zipball/1836606c1b52f39e67829289315e91392d7eb8fb",
-                "reference": "1836606c1b52f39e67829289315e91392d7eb8fb",
                 "shasum": ""
             },
             "require": {
@@ -4849,7 +4846,6 @@
             "support": {
                 "source": "https://github.com/PeterMis/oauth2-xibo-cms/tree/master"
             },
-            "time": "2016-06-20 10:02:55"
         },
         {
             "name": "zircote/swagger-php",

@@ -32,6 +32,7 @@ class DisplayGroupTest extends LocalWebTestCase
         $this->startDisplayGroups = (new XiboDisplayGroup($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
         $this->startDisplays = (new XiboDisplay($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
         $this->startLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+        $this->startCommands = (new XiboCommand($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
     }
 
     /**
@@ -103,6 +104,26 @@ class DisplayGroupTest extends LocalWebTestCase
                     $layout->delete();
                 } catch (\Exception $e) {
                     fwrite(STDERR, 'Unable to delete ' . $layout->layoutId . '. E:' . $e->getMessage());
+                }
+            }
+        }
+
+        // tearDown all commands that weren't there initially
+        $finalCommands = (new XiboCommand($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+        # Loop over any remaining commands and nuke them
+        foreach ($finalCommands as $command) {
+            /** @var XiboCommand $command */
+            $flag = true;
+            foreach ($this->startCommands as $startCom) {
+               if ($startCom->commandId == $command->commandId) {
+                   $flag = false;
+               }
+            }
+            if ($flag) {
+                try {
+                    $command->delete();
+                } catch (\Exception $e) {
+                    fwrite(STDERR, 'Unable to delete ' . $command->commandId . '. E:' . $e->getMessage());
                 }
             }
         }

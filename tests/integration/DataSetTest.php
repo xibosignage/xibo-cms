@@ -13,7 +13,6 @@ use Xibo\Tests\LocalWebTestCase;
 
 class DataSetTest extends LocalWebTestCase
 {
-
     protected $startDataSets;
     
     /**
@@ -43,7 +42,7 @@ class DataSetTest extends LocalWebTestCase
         foreach ($difference as $dataSet) {
             /** @var XiboDataSet $dataSet */
             try {
-                $dataSet->delete();
+                $dataSet->deleteWData();
             } catch (\Exception $e) {
                 fwrite(STDERR, 'Unable to delete ' . $dataSet->dataSetId . '. E: ' . $e->getMessage() . PHP_EOL);
             }
@@ -173,11 +172,10 @@ class DataSetTest extends LocalWebTestCase
         $this->assertSame($columnDataTypeId, $object->data->dataTypeId);
         $this->assertSame($columnDataSetColumnTypeId, $object->data->dataSetColumnTypeId);
         $this->assertSame($columnFormula, $object->data->formula);
-        
+        # Check that column was correctly added
         $dataSetCheck = $dataSet->getByColumnId($object->id);
-      //  $this->assertSame($columnName, $dataSetCheck->heading);
-      //  $dataSetCheck = (new XiboDataSet($this->getEntityProvider()))->getByColumnId($object->id);
-        
+        $this->assertSame($columnName, $dataSetCheck->heading);
+
         # Clean up the dataset as we no longer need it
         $this->assertTrue($dataSet->delete(), 'Unable to delete ' . $dataSet->dataSetId);
 
@@ -352,6 +350,7 @@ class DataSetTest extends LocalWebTestCase
         // create column
         $nameCol = Random::generateString(8, 'phpunit');
         $column = $dataSet->createColumn($nameCol,'', 2, 1, 1, '');
+        //$column = (new XiboDataSetColumn($this->getEntityProvider()))->create($dataSet->dataSetId, $nameCol,'', 2, 1, 1, '');
         // Populate the properties for the dataset column
         // TODO: it would be better to have separate wrappers for DataSet and DataSetColumn, with a single wrapper
         // you can only ever operate on 1 column at a time.
@@ -362,10 +361,10 @@ class DataSetTest extends LocalWebTestCase
             ]);
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
         $object = json_decode($this->client->response->body());
-        
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         // TODO: This test should verify that the data was added
+        // $this->assertSame('test', $object->data->dataSetColumnId_ . $dataSet->dataSetColumnId);
         // Delete the dataSet we used
         $dataSet->deleteWData();
     }
@@ -384,20 +383,19 @@ class DataSetTest extends LocalWebTestCase
         $nameCol = Random::generateString(8, 'phpunit');
         $column = $dataSet->createColumn($nameCol,'', 2, 1, 1, '');
         
-        $dataSetCheck = $dataSet->getByColumnId($column->dataSetColumnId);
-        $colId = $dataSetCheck->dataSetColumnId;
+        $dataSet->getByColumnId($column->dataSetColumnId);
         // Add new row data
         $row = $dataSet->createRow($colId, 'test');
         $rowCheck = $dataSet->getByRowId($row->rowId);
         //edit row data
         $response = $this->client->put('/dataset/data/' . $dataSet->dataSetId . $rowCheck->rowId, [
-            'dataSetColumnId_' . $colId =>  'API EDITED'
+            'dataSetColumnId_' . $dataSet->dataSetColumnId =>  'API EDITED'
             ]);
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
-     //   $dataSet -> deleteWData();
+        $dataSet -> deleteWData();
     }
     /*
     * delete row data
@@ -423,5 +421,7 @@ class DataSetTest extends LocalWebTestCase
         $this->client->delete('/dataset/data/' . $dataSet->dataSetId . $rowCheck->rowId);
         $response = json_decode($this->client->response->body());
         $this->assertSame(204, $response->status, $this->client->response->body());
+
+        $dataSet -> deleteWData();
     }
 }
