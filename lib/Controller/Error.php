@@ -59,6 +59,9 @@ class Error extends Base
         // Configure the locale for date/time
         if (Translate::GetLocale(2) != '')
             $this->getDate()->setLocale(Translate::GetLocale(2));
+        
+        // Set up theme
+        \Xibo\Middleware\Theme::setTheme($app);
 
         $this->getLog()->debug('Page Not Found. %s', $app->request()->getResourceUri());
 
