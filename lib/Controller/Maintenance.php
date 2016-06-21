@@ -384,7 +384,7 @@ class Maintenance extends Base
                                 $this->getLog()->notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);
 
                                 try {
-                                    WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9');
+                                    WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9', $this->getLog());
                                     print $display->display . ':Sent WOL Message. Previous WOL send time: ' . $this->getDate()->getLocalDate($display->lastWakeOnLanCommandSent) . '<br/>\n';
 
                                     $display->lastWakeOnLanCommandSent = time();

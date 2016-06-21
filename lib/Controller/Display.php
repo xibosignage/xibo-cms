@@ -1063,7 +1063,7 @@ class Display extends Base
 
         $this->getLog()->notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);
 
-        WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9');
+        WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9', $this->getLog());
 
         $display->lastWakeOnLanCommandSent = time();
         $display->save(['validate' => false]);

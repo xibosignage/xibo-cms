@@ -9,6 +9,8 @@
 namespace Xibo\Helper;
 
 
+use Xibo\Service\LogService;
+
 class WakeOnLan
 {
     /**
@@ -18,6 +20,7 @@ class WakeOnLan
      * @param string $address
      * @param int $cidr
      * @param int $port
+     * @param LogService $logger
      * @version 2
      * @author DS508_customer (http://www.synology.com/enu/forum/memberlist.php?mode=viewprofile&u=12636)
      * Please inform the author of any suggestions on (the functionality, graphical design, ... of) this application.
@@ -27,7 +30,7 @@ class WakeOnLan
      *
      * Modified for use with the Xibo project by Dan Garner.
      */
-    public static function TransmitWakeOnLan($macAddress, $secureOn, $address, $cidr, $port) {
+    public static function TransmitWakeOnLan($macAddress, $secureOn, $address, $cidr, $port, $logger) {
 
         // Prepare magic packet: part 1/3 (defined constant)
         $buf = "";
@@ -187,7 +190,7 @@ class WakeOnLan
 
                     unset($socket);
 
-                    $this->getLog()->notice($sent_fsockopen, 'display', 'WakeOnLan');
+                    $logger->notice($sent_fsockopen, 'display', 'WakeOnLan');
                     return true;
                 }
                 else
@@ -201,7 +204,7 @@ class WakeOnLan
             {
                 unset($socket);
 
-                $this->getLog()->notice(__('Using fsockopen() failed, due to denied permission'));
+                $logger->notice(__('Using fsockopen() failed, due to denied permission'));
             }
         }
 
@@ -243,7 +246,7 @@ class WakeOnLan
                     socket_close($socket);
                     unset($socket);
 
-                    $this->getLog()->notice($socket_create, 'display', 'WakeOnLan');
+                    $logger->notice($socket_create, 'display', 'WakeOnLan');
                     return true;
                 }
                 else
