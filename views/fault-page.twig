@@ -183,13 +183,11 @@
 
 
                         <div class="tab-pane fade text-center" id="replicate">
-                            <p class="narrow text-center">{% trans "Recreate the Problem in a new window." %}</p>
-                            <div class="text-center center-block">
-                                <button type="button" class="btn btn-success" data-toggle="popover" data-placement="bottom" data-content="{% trans "In this stage, we are going to log and record all of the actions to detect the problem.
-                                         Don't worry, we won't capture screenshots or videos, just some internal logging. You may attach screenshots from the issue and add it to the zip file" %}">
-                                    What's going on now? <i class="fa fa-question-circle" aria-hidden="true"></i>
-                                </button>
-                            </div>
+                            <p class="narrow">{% trans "Recreate the Problem in a new window." %}</p>
+                            <p class="narrow">{% trans "Please open a new window and recreate the problem. While you do that we are going to log all of the actions taken in a text based log. We won't capture screenshots or videos, so if you feel that this would be useful please capture those manually and add them to the zip file you will download in the next step." %}</p>
+                            <br/>
+                            <a href="{{ urlFor("home") }}" target="_blank" class="btn btn-success"><i class="fa fa-external-link"></i> {% trans "Open a new window" %}</a>
+                            <br/>
                             <br/>
                             <form class="form-horizontal text-center" id="replicate_form" name="replicate_form" role="form">
                                 <fieldset>
