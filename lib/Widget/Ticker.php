@@ -105,7 +105,8 @@ class Ticker extends ModuleWidget
                 'templates' => $this->templatesAvailable(),
                 'orderClause' => $this->getOrderClause(),
                 'filterClause' => $this->getFilterClause(),
-                'columns' => $this->dataSetColumns()
+                'columns' => $this->dataSetColumns(),
+                'dataSet' => ($this->getOption('dataSetId', 0) != 0) ? $this->dataSetFactory->getById($this->getOption('dataSetId')) : null
             ];
         } else {
             return [
