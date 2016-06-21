@@ -9,6 +9,7 @@ use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\Tests\LocalWebTestCase;
+
 /**
  * Class LayoutTest
  * @package Xibo\Tests\Integration
