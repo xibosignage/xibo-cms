@@ -320,6 +320,9 @@ class Ticker extends ModuleWidget
         $this->saveWidget();
     }
 
+    /**
+     * @inheritdoc
+     */
     public function hoverPreview()
     {
         $name = $this->getOption('name');
@@ -333,8 +336,12 @@ class Ticker extends ModuleWidget
         $output .= '    <li>' . __('Type') . ': ' . $this->module->name . '</li>';
         $output .= '    <li>' . __('Name') . ': ' . $name . '</li>';
 
-        if ($sourceId == 2)
-            $output .= '    <li>' . __('Source') . ': DataSet</li>';
+        if ($sourceId == 2) {
+            // Get the DataSet name
+            $dataSet = $this->dataSetFactory->getById($this->getOption('dataSetId'));
+
+            $output .= '    <li>' . __('Source: DataSet named "%s".', $dataSet->dataSet) . '</li>';
+        }
         else
             $output .= '    <li>' . __('Source') . ': <a href="' . $url . '" target="_blank" title="' . __('Source') . '">' . $url . '</a></li>';
 

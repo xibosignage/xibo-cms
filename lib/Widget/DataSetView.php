@@ -311,6 +311,33 @@ class DataSetView extends ModuleWidget
     }
 
     /**
+     * @inheritdoc
+     */
+    public function hoverPreview()
+    {
+        // Default Hover window contains a thumbnail, media type and duration
+        $output = '<div class="well">';
+        $output .= '<div class="preview-module-image"><img alt="' . __($this->module->name) . ' thumbnail" src="' . $this->getConfig()->uri('img/' . $this->module->imageUri) . '" /></div>';
+        $output .= '<div class="info">';
+        $output .= '    <ul>';
+        $output .= '    <li>' . __('Type') . ': ' . $this->module->name . '</li>';
+        $output .= '    <li>' . __('Name') . ': ' . $this->getName() . '</li>';
+
+        // Get the DataSet name
+        $dataSet = $this->dataSetFactory->getById($this->getOption('dataSetId'));
+
+        $output .= '    <li>' . __('Source: DataSet named "%s".', $dataSet->dataSet) . '</li>';
+
+        if ($this->getUseDuration() == 1)
+            $output .= '    <li>' . __('Duration') . ': ' . $this->widget->duration . ' ' . __('seconds') . '</li>';
+        $output .= '    </ul>';
+        $output .= '</div>';
+        $output .= '</div>';
+
+        return $output;
+    }
+
+    /**
      * GetResource
      * Return the rendered resource to be used by the client (or a preview)
      * for displaying this content.
