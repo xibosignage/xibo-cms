@@ -96,14 +96,20 @@ class Fault extends Base
             throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: ' . $result));
 
         // Decide what we output based on the options selected.
+        $outputVersion = $this->getSanitizer()->getCheckbox('outputVersion') == 1;
         $outputLog = $this->getSanitizer()->getCheckbox('outputLog') == 1;
         $outputEnvCheck = $this->getSanitizer()->getCheckbox('outputEnvCheck') == 1;
         $outputSettings = $this->getSanitizer()->getCheckbox('outputSettings') == 1;
         $outputDisplays = $this->getSanitizer()->getCheckbox('outputDisplays') == 1;
         $outputDisplayProfile = $this->getSanitizer()->getCheckbox('outputDisplayProfile') == 1;
 
-        if (!$outputLog && !$outputEnvCheck && !$outputSettings && !$outputDisplays && !$outputDisplayProfile)
+        if (!$outputVersion && !$outputLog && !$outputEnvCheck && !$outputSettings && !$outputDisplays && !$outputDisplayProfile)
             throw new \InvalidArgumentException(__('Please select at least one option'));
+
+        // Should we output the version?
+        if ($outputVersion) {
+            $zip->addFromString('version.json', json_encode($this->store->select('SELECT * FROM `version`', []), JSON_PRETTY_PRINT));
+        }
 
         // Should we output a log?
         if ($outputLog) {
