@@ -591,7 +591,10 @@ function XiboFormRender(formUrl, data) {
                                 $.each(fieldAction.actions, function(index, action) {
                                     //console.log("Setting child field on " + index + " to " + JSON.stringify(action));
                                     // Action the field
-                                    $(index).css(action);
+                                    var field = $(index);
+
+                                    if (!field.data("initActioned"))
+                                        field.css(action).data("initActioned", true);
                                 });
                             }
                         }
