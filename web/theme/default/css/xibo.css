@@ -457,9 +457,9 @@ p.narrow {
     z-index: 1;
 }
 
-.nav-tabs > li.active > a,
-.nav-tabs > li.active > a:hover,
-.nav-tabs > li.active > a:focus {
+.layout-toolbox .nav-tabs > li.active > a,
+.layout-toolbox .nav-tabs > li.active > a:hover,
+.layout-toolbox .nav-tabs > li.active > a:focus {
     color: #fff;
     cursor: default;
     background-color: #428bca;
@@ -724,7 +724,7 @@ i.fa.fa-ban.fa-stack-2x {
     border-bottom-color: transparent;
 }
 
-.nav-tabs > li {
+.layout-toolbox .nav-tabs > li {
     margin-bottom: -5px !important;
 }
 
