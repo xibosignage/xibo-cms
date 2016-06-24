@@ -10,7 +10,12 @@
 {% import "forms.twig" as forms %}
 
 {% block formTitle %}
-    {% trans "Edit Ticker" %}
+    {% if module.getOption("sourceId") == 2 %}
+        {% set dataSetName = module.getExtra().dataSet.dataSet %}
+        {% trans %}Edit Ticker: DataSet is {{ dataSetName }}{% endtrans %}
+    {% else %}
+        {% trans "Edit Ticker" %}
+    {% endif %}
 {% endblock %}
 
 {% block formButtons %}

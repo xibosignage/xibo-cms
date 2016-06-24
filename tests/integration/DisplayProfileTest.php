@@ -21,7 +21,7 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
     public function setup()
     {
         parent::setup();
-        $this->startProfiles = (new XiboDisplayProfile($this->getEntityProvider()))->get();
+        $this->startProfiles = (new XiboDisplayProfile($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
     }
     /**
      * tearDown - called after every test automatically
@@ -29,7 +29,7 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
     public function tearDown()
     {
         // tearDown all profiles that weren't there initially
-        $finalProfiles = (new XiboDisplayProfile($this->getEntityProvider()))->get(['start' => 0, 'length' => 1000]);
+        $finalProfiles = (new XiboDisplayProfile($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
         # Loop over any remaining profiles and nuke them
         foreach ($finalProfiles as $displayProfile) {
             /** @var XiboDisplayProfile $displayProfile */
@@ -58,9 +58,7 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
 
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
-
         $object = json_decode($this->client->response->body());
-
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
 
@@ -95,7 +93,6 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
         $this->assertSame($profileName, $object->data->name);
         $this->assertSame($profileType, $object->data->type);
         $this->assertSame($profileIsDefault, $object->data->isDefault);
-
         # Check that the profile was added correctly
         $profile = (new XiboDisplayProfile($this->getEntityProvider()))->getById($object->id);
         $this->assertSame($profileName, $profile->name);

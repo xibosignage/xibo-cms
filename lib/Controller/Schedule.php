@@ -214,6 +214,10 @@ class Schedule extends Base
 
             $this->getLog()->debug('Parsing event dates from %s and %s', $row->fromDt, $row->toDt);
 
+            // Handle command events which do not have a toDt
+            if ($row->eventTypeId == \Xibo\Entity\Schedule::$COMMAND_EVENT)
+                $row->toDt = $row->fromDt;
+
             // Parse our dates into a Date object, so that we convert to local time correctly.
             $fromDt = $this->getDate()->parse($row->fromDt, 'U');
             $toDt = $this->getDate()->parse($row->toDt, 'U');

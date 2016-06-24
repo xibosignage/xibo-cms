@@ -26,7 +26,7 @@ class ResolutionTest extends LocalWebTestCase
     public function setup()
     {
         parent::setup();
-        $this->startResolutions = (new XiboResolution($this->getEntityProvider()))->get();
+        $this->startResolutions = (new XiboResolution($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
     }
     /**
      * tearDown - called after every test automatically
@@ -34,7 +34,7 @@ class ResolutionTest extends LocalWebTestCase
     public function tearDown()
     {
         // tearDown all resolutions that weren't there initially
-        $finalResolutions = (new XiboResolution($this->getEntityProvider()))->get(['start' => 0, 'length' => 1000]);
+        $finalResolutions = (new XiboResolution($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
         # Loop over any remaining resolutions and nuke them
         foreach ($finalResolutions as $resolution) {
             /** @var XiboResolution $resolution */
@@ -61,10 +61,7 @@ class ResolutionTest extends LocalWebTestCase
 
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
-
         $object = json_decode($this->client->response->body());
-//        fwrite(STDOUT, $this->client->response->body());
-
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
 
@@ -97,7 +94,6 @@ class ResolutionTest extends LocalWebTestCase
         $this->assertSame($resolutionName, $object->data->resolution);
         $this->assertSame($resolutionWidth, $object->data->width);
         $this->assertSame($resolutionHeight, $object->data->height);
-
         # Check that the resolution was added correctly
         $resolution = (new XiboResolution($this->getEntityProvider()))->getById($object->id);
         $this->assertSame($resolutionName, $resolution->resolution);

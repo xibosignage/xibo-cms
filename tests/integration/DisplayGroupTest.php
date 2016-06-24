@@ -8,8 +8,10 @@
 namespace Xibo\Tests\Integration;
 
 use Xibo\Helper\Random;
+use Xibo\OAuth2\Client\Entity\XiboCommand;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
+use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
@@ -28,7 +30,9 @@ class DisplayGroupTest extends LocalWebTestCase
     {
         parent::setup();
         $this->startDisplayGroups = (new XiboDisplayGroup($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        $this->startDisplays = (new XiboDisplay($this->getEntityProvider()))->get();
+        $this->startDisplays = (new XiboDisplay($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+        $this->startLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+        $this->startCommands = (new XiboCommand($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
     }
 
     /**
@@ -84,6 +88,46 @@ class DisplayGroupTest extends LocalWebTestCase
             }
         }
 
+        // tearDown all layouts that weren't there initially
+        $finalLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+        # Loop over any remaining layouts and nuke them
+        foreach ($finalLayouts as $layout) {
+            /** @var XiboLayout $layout */
+            $flag = true;
+            foreach ($this->startLayouts as $startLayout) {
+               if ($startLayout->layoutId == $layout->layoutId) {
+                   $flag = false;
+               }
+            }
+            if ($flag) {
+                try {
+                    $layout->delete();
+                } catch (\Exception $e) {
+                    fwrite(STDERR, 'Unable to delete ' . $layout->layoutId . '. E:' . $e->getMessage());
+                }
+            }
+        }
+
+        // tearDown all commands that weren't there initially
+        $finalCommands = (new XiboCommand($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+        # Loop over any remaining commands and nuke them
+        foreach ($finalCommands as $command) {
+            /** @var XiboCommand $command */
+            $flag = true;
+            foreach ($this->startCommands as $startCom) {
+               if ($startCom->commandId == $command->commandId) {
+                   $flag = false;
+               }
+            }
+            if ($flag) {
+                try {
+                    $command->delete();
+                } catch (\Exception $e) {
+                    fwrite(STDERR, 'Unable to delete ' . $command->commandId . '. E:' . $e->getMessage());
+                }
+            }
+        }
+
         parent::tearDown();
     }
 
@@ -98,16 +142,11 @@ class DisplayGroupTest extends LocalWebTestCase
             $this->skipTest("There are pre-existing DisplayGroups");
             return;
         }
-
         $this->client->get('/displaygroup');
-
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
-
         $object = json_decode($this->client->response->body());
-
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-
         # There should be no DisplayGroups in the system
         $this->assertEquals(0, $object->data->recordsTotal);
     }
@@ -139,26 +178,21 @@ class DisplayGroupTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
 
         $object = json_decode($this->client->response->body());
-
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($groupName, $object->data->displayGroup);
         $this->assertSame($groupDescription, $object->data->description);
         $this->assertSame($expectedDynamic, $object->data->isDynamic);
         $this->assertSame($expectedDynamicCriteria, $object->data->dynamicCriteria);
-
         # Check that the group was really added
         $displayGroups = (new XiboDisplayGroup($this->getEntityProvider()))->get();
         $this->assertEquals(count($this->startDisplayGroups) + 1, count($displayGroups));
-
         # Check that the group was added correctly
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->getById($object->id);
-
         $this->assertSame($groupName, $displayGroup->displayGroup);
         $this->assertSame($groupDescription, $displayGroup->description);
         $this->assertSame(strval($expectedDynamic), $displayGroup->isDynamic);
         $this->assertSame($expectedDynamicCriteria, $displayGroup->dynamicCriteria);
-
         # Clean up the DisplayGroup as we no longer need it
         $this->assertTrue($displayGroup->delete(), 'Unable to delete ' . $displayGroup->displayGroupId);
     }
@@ -192,7 +226,6 @@ class DisplayGroupTest extends LocalWebTestCase
         # has previously added and removed these without issue:
         $cases =  $this->provideSuccessCases();
         $displayGroups = [];
-
         // Check each possible case to ensure it's not pre-existing
         // If it is, skip over it
         foreach ($cases as $case) {
@@ -210,17 +243,12 @@ class DisplayGroupTest extends LocalWebTestCase
         }
 
         $this->client->get('/displaygroup');
-
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
-
         $object = json_decode($this->client->response->body());
-
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-
         # There should be as many groups as we created plus the number we started with in the system
         $this->assertEquals(count($displayGroups) + count($this->startDisplayGroups), $object->data->recordsTotal);
-
         # Clean up the groups we created
         foreach ($displayGroups as $group) {
             $group->delete();
@@ -241,17 +269,14 @@ class DisplayGroupTest extends LocalWebTestCase
             $this->skipTest("There are pre-existing DisplayGroups");
             return;
         }
-
         # Load in a known set of display groups
         # We can assume this works since we depend upon the test which
         # has previously added and removed these without issue:
         $cases =  $this->provideSuccessCases();
         $displayGroups = [];
-
         foreach ($cases as $case) {
             $displayGroups[] = (new XiboDisplayGroup($this->getEntityProvider()))->create($case[0], $case[1], $case[2], $case[3]);
         }
-
         $this->client->get('/displaygroup', [
                            'displayGroup' => $groupName
                            ]);
@@ -260,12 +285,9 @@ class DisplayGroupTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
 
         $object = json_decode($this->client->response->body());
-
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-
         # There should be at least one match
         $this->assertGreaterThanOrEqual(1, $object->data->recordsTotal);
-
         $flag = false;
         # Check that for the records returned, $groupName is in the groups names
         foreach ($object->data->data as $group) {
@@ -353,7 +375,6 @@ class DisplayGroupTest extends LocalWebTestCase
     public function testAddDuplicate()
     {
         $flag = true;
-
         foreach ($this->startDisplayGroups as $group) {
             if ($group->displayGroup == 'phpunit displaygroup') {
                 $flag = false;
@@ -365,7 +386,6 @@ class DisplayGroupTest extends LocalWebTestCase
             $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit displaygroup', 'phpunit displaygroup', 0, '');
         }
 
-
         $response = $this->client->post('/displaygroup', [
             'displayGroup' => 'phpunit displaygroup',
             'description' => 'phpunit displaygroup',
@@ -374,7 +394,6 @@ class DisplayGroupTest extends LocalWebTestCase
         ]);
 
         $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
-
         $displayGroup->delete();
     }
 
@@ -391,11 +410,9 @@ class DisplayGroupTest extends LocalWebTestCase
                 return;
             }
         }
-
         # Load in a known layout
         /** @var XiboDisplayGroup $displayGroup */
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit displaygroup', 'phpunit displaygroup', 0, '');
-
         # Change the group name and description
         # Change it to a dynamic group with a fixed criteria
         $name = Random::generateString(8, 'phpunit');
@@ -410,9 +427,7 @@ class DisplayGroupTest extends LocalWebTestCase
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-
         $object = json_decode($this->client->response->body());
-
         # Examine the returned object and check that it's what we expect
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
@@ -420,18 +435,14 @@ class DisplayGroupTest extends LocalWebTestCase
         $this->assertSame($description, $object->data->description);
         $this->assertSame(1, $object->data->isDynamic);
         $this->assertSame($criteria, $object->data->dynamicCriteria);
-
         # Check that the group was actually renamed
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->getById($object->id);
-
         $this->assertSame($name, $displayGroup->displayGroup);
         $this->assertSame($description, $displayGroup->description);
         $this->assertSame('1', $displayGroup->isDynamic);
         $this->assertSame($criteria, $displayGroup->dynamicCriteria);
-
         # Clean up the DisplayGroup as we no longer need it
         $displayGroup->delete();
-
     }
 
     /**
@@ -443,18 +454,14 @@ class DisplayGroupTest extends LocalWebTestCase
     {
         $name1 = Random::generateString(8, 'phpunit');
         $name2 = Random::generateString(8, 'phpunit');
-
         # Load in a couple of known display groups
         $displayGroup1 = (new XiboDisplayGroup($this->getEntityProvider()))->create($name1, 'phpunit description', 0, '');
         $displayGroup2 = (new XiboDisplayGroup($this->getEntityProvider()))->create($name2, 'phpunit description', 0, '');
-
         # Delete the one we created last
         $this->client->delete('/displaygroup/' . $displayGroup2->displayGroupId);
-
         # This should return 204 for success
         $response = json_decode($this->client->response->body());
         $this->assertSame(204, $response->status, $this->client->response->body());
-
         # Check only one remains
         $groups = (new XiboDisplayGroup($this->getEntityProvider()))->get();
         $this->assertEquals(count($this->startDisplayGroups) + 1, count($groups));
@@ -467,19 +474,18 @@ class DisplayGroupTest extends LocalWebTestCase
         }
 
         $this->assertTrue($flag, 'DisplayGroup ID ' . $displayGroup1->displayGroupId . ' was not found after deleting a different DisplayGroup');
-
         $displayGroup1->delete();
     }
 
     /**
      * Assign new displays Test
+     * @return mixed
      */
     public function testAssign()
     {
         // Create a Display in the system
         $hardwareId = Random::generateString(12, 'phpunit');
         $response = $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 'PHPUnit Test Display');
-        
         // Now find the Id of that Display
         $displays = (new XiboDisplay($this->getEntityProvider()))->get();
         $display = null;
@@ -493,7 +499,6 @@ class DisplayGroupTest extends LocalWebTestCase
         if ($display === null) {
             $this->fail('Display was not added correctly');
         }
-        
         // Create a DisplayGroup to add the display to
         $name = Random::generateString(8, 'phpunit');
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
@@ -504,67 +509,76 @@ class DisplayGroupTest extends LocalWebTestCase
 
         $response = json_decode($this->client->response->body());
         $this->assertSame(204, $response->status, $this->client->response->body());
-
         // Get a list of all Displays in the group
         $displays = (new XiboDisplay($this->getEntityProvider()))->get(['displayGroupId' => $displayGroup->displayGroupId]);
-        
         // Check that there's only us in that group
         $this->assertEquals(1, count($displays));
         $this->assertEquals($display->displayId, $displays[0]->displayId);
+
+        return array ($display->displayId, $displayGroup->displayGroupId);
     }
 
     /**
      * Unassign displays Test
+     * @depends testAssign
+     * @param display $displayId
+     * @param displayGroup $displayGroupId
      * @group broken
      */
-    public function testUnassign()
+    public function testUnassign($displayId, $displayGroupId)
     {
+        $display = (new XiboDisplay($this->getEntityProvider()))->getById($displayId);
+        $group = (new XiboDisplayGroup($this->getEntityProvider()))->getById($displayGroupId);
 
-        $this->client->post('/displaygroup/' . 7 . '/display/unassign', [
-        'displayId' => [7]
+        $this->client->post('/displaygroup/' . $group->displayGroupId . '/display/unassign', [
+        'displayId' => [$display->displayId]
         ]);
 
         $this->assertSame(200, $this->client->response->status());
-
         $object = json_decode($this->client->response->body());
-//        fwrite(STDERR, $this->client->response->body());
-
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
     }
 
     /**
      * Assign new display group Test
-     * @group broken
+     * @return mixed
      */
     public function testAssignGroup()
     {
+        $name = Random::generateString(8, 'phpunit');
+        $name2 = Random::generateString(8, 'phpunit');
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
+        $displayGroup2 = (new XiboDisplayGroup($this->getEntityProvider()))->create($name2, 'phpunit description', 0, '');
 
-		$this->client->post('/displaygroup/' . 7 . '/displayGroup/assign', [
-        'displayGroupId' => [29]
+		$this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/displayGroup/assign', [
+        'displayGroupId' => [$displayGroup2->displayGroupId]
         ]);
 
         $this->assertSame(200, $this->client->response->status());
-
         $object = json_decode($this->client->response->body());
-//        fwrite(STDERR, $this->client->response->body());
+
+        return array ($displayGroup->displayGroupId, $displayGroup2->displayGroupId);
     }
 
     /**
      * Unassign displays group Test
+     * @param displayGroup $displayGroupId
+     * @param displayGroup2 $displayGroupId
+     * @depends testAssignGroup
      * @group broken
      */
     public function testUnassignGroup()
     {
-
-		$this->client->post('/displaygroup/' . 7 . '/displayGroup/unassign', [
-        	'displayGroupId' => [29]
+        $group = (new XiboDisplayGroup($this->getEntityProvider()))->getById($displayGroupId);
+        $group2 = (new XiboDisplayGroup($this->getEntityProvider()))->getById($displayGroupId);
+		$this->client->post('/displaygroup/' . $group->displayGroupId . '/displayGroup/unassign', [
+        	'displayGroupId' => [$group2->displayGroupId]
         	]);
 
         $this->assertSame(200, $this->client->response->status());
 
         $object = json_decode($this->client->response->body());
-//        fwrite(STDERR, $this->client->response->body());
     }
 
     /**
@@ -604,25 +618,25 @@ class DisplayGroupTest extends LocalWebTestCase
 
     /**
      * Assign new layouts to a group Test
-     * @group broken
      */
     public function testAssignLayout()
     {
+        $name = Random::generateString(8, 'phpunit');
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('test layout', 'test description', '', 9);
+        $layout2 = (new XiboLayout($this->getEntityProvider()))->create('test layout 2', 'test description 2', '', 9);
 
-        $this->client->post('/displaygroup/' . 7 . '/layout/assign', [
-        	'layoutId' => [51, 63],
-        	'unassignLayoutsId' => [51]
+        $this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/layout/assign', [
+        	'layoutId' => [$layout->layoutId, $layout2->layoutId],
+        	'unassignLayoutsId' => [$layout2->layoutId]
         	]);
 
         $this->assertSame(200, $this->client->response->status());
-
         $object = json_decode($this->client->response->body());
-//        fwrite(STDERR, $this->client->response->body());
     }
 
     /**
      * Unassign layouts from a group Test
-     *  does not work, method name differences between /routes and controller/displayGroup
      * @group broken
      */
     public function testUnassignLayout()
@@ -657,72 +671,66 @@ class DisplayGroupTest extends LocalWebTestCase
 
     /**
      * Collect now action test
-     * @group broken
      */
-    public function testCollect()
+    public function testCollectNow()
     {
+        $name = Random::generateString(8, 'phpunit');
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
 
-        $this->client->post('/displaygroup/' . 7 . '/action/collectNow');
+        $this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/action/collectNow');
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
-
         $object = json_decode($this->client->response->body());
-//        fwrite(STDERR, $this->client->response->body());
-
     }
 
     /**
      * Change Layout action test
-     * @group broken
      */
-    public function testChange()
+    public function testChangeLayout()
     {
+        $name = Random::generateString(8, 'phpunit');
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('test layout', 'test description', '', 9);
 
-        $this->client->post('/displaygroup/' . 7 . '/action/changeLayout', [
-		'layoutId' => 3,
+        $this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/action/changeLayout', [
+		'layoutId' => $layout->layoutId,
 		'duration' => 900,
 		'downloadRequired' => 1,
 		'changeMode' => 'queue'
     	]);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
-
         $object = json_decode($this->client->response->body());
-//        fwrite(STDERR, $this->client->response->body());
-
     }
 
     /**
      * Revert to Schedule action test
-     * @group broken
      */
-    public function testRevert()
+    public function testRevertToSchedule()
     {
+        $name = Random::generateString(8, 'phpunit');
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
 
-        $this->client->post('/displaygroup/' . 7 . '/action/revertToSchedule');
+        $this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/action/revertToSchedule');
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
-
         $object = json_decode($this->client->response->body());
-//        fwrite(STDERR, $this->client->response->body());
-
     }
 
     /**
      * Send command action test
-     * @group broken
      */
     public function testCommand()
     {
+        $name = Random::generateString(8, 'phpunit');
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
+        $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunit code');
 
-        $this->client->post('/displaygroup/' . 7 . '/action/command' , [
-		'commandId' => 5
+        $this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/action/command' , [
+		'commandId' => $command->commandId
         	]);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
-
         $object = json_decode($this->client->response->body());
-//        fwrite(STDERR, $this->client->response->body());
-
     }
 }

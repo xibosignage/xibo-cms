@@ -38,6 +38,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserTypeFactory;
+use Xibo\Helper\ByteFormatter;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -241,8 +242,10 @@ class User extends Base
         foreach ($users as $user) {
             /* @var \Xibo\Entity\User $user */
 
+            $user->libraryQuotaFormatted = ByteFormatter::format($user->libraryQuota * 1024);
+
             if ($this->isApi())
-                continue;
+                break;
 
             $user->includeProperty('buttons');
             $user->homePage = __($user->homePage);

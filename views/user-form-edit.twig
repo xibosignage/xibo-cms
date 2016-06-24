@@ -20,6 +20,8 @@
     {% trans "Save" %}, $("#userEditForm").submit()
 {% endblock %}
 
+{% block callBack %}userFormOpen{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -27,7 +29,7 @@
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "Details" %}</span></a></li>
                 <li><a href="#reference" role="tab" data-toggle="tab"><span>{% trans "Reference" %}</span></a></li>
             </ul>
-            <form id="userEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("user.edit", {id: user.userId}) }}">
+            <form id="userEditForm" class="UserForm form-horizontal" method="put" action="{{ urlFor("user.edit", {id: user.userId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "User Name" %}{% endset %}
@@ -58,8 +60,21 @@
                         {{ forms.dropdown("userTypeId", "single", title, user.userTypeId, options.userTypes, "userTypeId", "userType", helpText) }}
 
                         {% set title %}{% trans "Library Quota" %}{% endset %}
-                        {% set helpText %}{% trans "The quota in Kb that should be applied. Enter 0 for no quota." %}{% endset %}
-                        {{ forms.number("libraryQuota", title, user.libraryQuota, helpText) }}
+                        {% set helpText %}{% trans "The quota that should be applied. Enter 0 for no quota." %}{% endset %}
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="libraryQuota">{{ title }}</label>
+                            <div class="col-sm-6">
+                                <input class="form-control" name="libraryQuota" type="number" id="libraryQuota" value="{{ user.libraryQuota }}" />
+                                <span class="help-block">{{ helpText }}</span>
+                            </div>
+                            <div class="col-sm-4">
+                                <select name="libraryQuotaUnits" class="form-control">
+                                    <option value="kb">KiB</option>
+                                    <option value="mb">MiB</option>
+                                    <option value="gb">GiB</option>
+                                </select>
+                            </div>
+                        </div>
 
                         {% set title %}{% trans "Retired?" %}{% endset %}
                         {% set helpText %}{% trans "Is this user retired?" %}{% endset %}

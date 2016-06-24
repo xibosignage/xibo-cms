@@ -25,9 +25,7 @@ class TemplateTest extends LocalWebTestCase
 
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
-
         $object = json_decode($this->client->response->body());
-
         $this->assertObjectHasAttribute('data', $object);
     }
 
@@ -38,7 +36,6 @@ class TemplateTest extends LocalWebTestCase
     {
         $name1 = Random::generateString(8, 'phpunit');
         $layout = (new XiboLayout($this->getEntityProvider()))->create($name1, 'phpunit description', '', 9);
-
         $name2 = Random::generateString(8, 'phpunit');
 
         $this->client->post('/template/' . $layout->layoutId, [
@@ -49,18 +46,14 @@ class TemplateTest extends LocalWebTestCase
         ]);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
-
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($name2, $object->data->layout);
-        
         $templateId = $object->id;
-
         // delete template as we no longer need it
         $template = (new XiboLayout($this->getEntityProvider()))->getByTemplateId($object->id);
         $template->delete();
-        
         // delete layout as we no longer need it
         $layout->delete();
     }

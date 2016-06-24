@@ -85,7 +85,19 @@ var text_callback = function(dialog, extra) {
                 "background": "transparent"
             });
         });
-        
+
+        // We need to convert any library references [123] to their full URL counterparts
+        // we leave well alone non-library references.
+        var regex = /\[[0-9]+\]/gi;
+
+        var data = CKEDITOR.instances["ta_text"].getData().replace(regex, function (match) {
+            var inner = match.replace("]", "").replace("[", "");
+            var replacement = CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.replace(":id", inner);
+            //console.log("match = " + match + ". replacement = " + replacement);
+            return replacement;
+        });
+
+        CKEDITOR.instances["ta_text"].setData(data);
     });
 
     if ($("#noDataMessage").length > 0) {
@@ -141,6 +153,21 @@ var text_callback = function(dialog, extra) {
         }
 
         return false;
+    });
+
+    // Do we have a media selector?
+    $("#ckeditor_library_select").selectpicker({
+        liveSearch: true
+    }).on('changed.bs.select', function (e) {
+        var select = $(e.target);
+        var linkedTo = select.data().linkedTo;
+        var value = $(e.target).find(":selected").data().imageUrl;
+        
+        if (value != "" && linkedTo != null) {
+            if (CKEDITOR.instances[linkedTo] != undefined) {
+                CKEDITOR.instances[linkedTo].insertHtml("<img src=\"" + value + "\" />");
+            }
+        }
     });
 
     // Turn the background colour into a picker
