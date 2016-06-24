@@ -163,7 +163,8 @@
             // CKEditor default config
             var CKEDITOR_DEFAULT_CONFIG = {
                 contentsCss: [ CKEDITOR.getUrl('contents.css'), "{{ urlFor("library.font.css") }}" ],
-                font_names: '{{ ckeditorConfig }}' + CKEDITOR.config.font_names
+                font_names: '{{ ckeditorConfig }}' + CKEDITOR.config.font_names,
+                imageDownloadUrl: "{{ urlFor("library.download") }}?preview=1"
             }
 
         </script>
