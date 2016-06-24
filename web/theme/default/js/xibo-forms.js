@@ -88,7 +88,7 @@ var text_callback = function(dialog, extra) {
 
         // We need to convert any library references [123] to their full URL counterparts
         // we leave well alone non-library references.
-        var regex = /\[.[0-9]+\]/gi;
+        var regex = /\[[0-9]+\]/gi;
 
         var data = CKEDITOR.instances["ta_text"].getData().replace(regex, function (match) {
             var inner = match.replace("]", "").replace("[", "");
