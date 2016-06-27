@@ -1,0 +1,44 @@
+{
+  "name": "xibo-cms",
+  "homepage": "https://github.com/xibosignage/xibo-cms",
+  "authors": [
+    "Dan Garner <dan@springsignage.com>"
+  ],
+  "description": "Xibo Open Source Digital Signage",
+  "main": "",
+  "license": "AGPL-3.0",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^2.2.4",
+    "bootstrap": "^3.3.6",
+    "morris.js": "morrisjs#^0.5.1",
+    "font-awesome": "fontawesome#^4.6.3",
+    "mjolnic-bootstrap-colorpicker": "bootstrap-colorpicker#^2.3.3",
+    "handlebars": "^4.0.5",
+    "smalot-bootstrap-datetimepicker": "^2.3.8",
+    "ekko-lightbox": "^4.0.2",
+    "bootstrap-select": "^1.10.0",
+    "bootstrap-switch": "^3.3.2",
+    "bootstrap-calendar": "0.2.5",
+    "ckeditor": "^4.5.9",
+    "Colors": "https://github.com/mbjordan/Colors.git",
+    "datatables.net": "^1.10.12",
+    "datatables.net-bs": "^1.10.12",
+    "datatables.net-buttons-bs": "^1.2.0",
+    "blueimp-file-upload": "jquery-file-upload#^9.12.3",
+    "jquery-message-queuing": "https://github.com/cowboy/jquery-message-queuing.git",
+    "jquery-serialize-object": "^2.5.0",
+    "jquery-throttle-debounce-plugin": "https://github.com/cowboy/jquery-throttle-debounce.git",
+    "jstzdetect": "jsTimezoneDetect#^1.0.6",
+    "moment": "^2.13.0",
+    "toastr": "^2.1.2",
+    "underscore": "^1.8.3"
+  }
+}
