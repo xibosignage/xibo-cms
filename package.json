@@ -20,11 +20,11 @@
   },
   "homepage": "https://github.com/xibosignage/xibo-cms#readme",
   "devDependencies": {
+    "del": "^2.2.1",
     "gulp": "^3.9.1",
-    "gulp-bower-files": "^0.2.7",
     "gulp-composer": "^0.4.0",
-    "gulp-concat": "^2.6.0",
-    "gulp-filter": "^4.0.0",
-    "gulp-uglify": "^1.5.3"
+    "gulp-gzip": "^1.4.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-tar": "^1.9.0"
   }
 }

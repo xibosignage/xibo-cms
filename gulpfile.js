@@ -34,8 +34,13 @@
  */
 
 // Include gulp
+var version = '1.8.0-beta';
 var gulp = require("gulp");
+var del = require("del");
 var composer = require("gulp-composer");
+var tar = require('gulp-tar');
+var gzip = require('gulp-gzip');
+var rename = require('gulp-rename');
 
 gulp.task('default-php', function() {
     return composer("install", {
@@ -51,11 +56,52 @@ gulp.task('build-php', function() {
     });
 });
 
+gulp.task('build-php-vendor-clean', ['build-php'], function() {
+    return del([
+       'vendor/**/.git/**',
+       'vendor/**/Test*/**',
+       'vendor/**/test*/**',
+       'vendor/**/benchmarks/**',
+       'vendor/**/smoketests/**',
+       'vendor/**/demo*/**',
+       'vendor/**/doc*/**',
+       'vendor/**/examples/**',
+       'vendor/**/phpunit.xml',
+       'vendor/**/*.md',
+    ]);
+});
+
+gulp.task('build-php-archive', function() {
+    return gulp.src([
+            '**/*',
+            '!composer.*',
+            '!*.json*',
+            '!Vagrantfile',
+            '!phpunit.xml',
+            '!gulpfile.js',
+            '!CONTRIBUTING.md',
+            '!*.tar.gz',
+            '!tests{,/**}',
+            '!node_modules{,/**}',
+            '!cache/**',
+            '!custom/**/!(README.md)',
+            '!library/**',
+            '!web/settings.php'
+        ])
+        .pipe(rename(function (path) {
+                path.dirname = 'xibo-cms-' + version + '/' + path.dirname;
+            })
+        )
+        .pipe(tar('xibo-cms-' + version + '.tar'))
+        .pipe(gzip())
+        .pipe(gulp.dest('./'))
+});
+
 gulp.task('watch', function() {
-    gulp.watch('composer.json', ['build-php'])
+    gulp.watch('composer.json', ['default'])
 });
 
 gulp.task('default', ['default-php']);
-gulp.task('build', ['build-php']);
+gulp.task('build', ['build-php', 'build-php-vendor-clean', 'build-php-archive']);
 
 // Something like this for front-end: https://gist.github.com/ktmud/9384509
