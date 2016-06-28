@@ -9,3 +9,4 @@ web/swagger-ui/
 custom/
 .DS_Store
 node_modules/
+web/theme/custom

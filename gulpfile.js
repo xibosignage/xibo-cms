@@ -86,7 +86,9 @@ gulp.task('build-php-archive', function() {
             '!cache/**',
             '!custom/**/!(README.md)',
             '!library/**',
-            '!web/settings.php'
+            '!web/settings.php',
+            '!web/theme/custom/**/!(README.md)',
+            '!web/swagger-ui{,/**}'
         ])
         .pipe(rename(function (path) {
                 path.dirname = 'xibo-cms-' + version + '/' + path.dirname;
@@ -102,6 +104,6 @@ gulp.task('watch', function() {
 });
 
 gulp.task('default', ['default-php']);
-gulp.task('build', ['build-php', 'build-php-vendor-clean', 'build-php-archive']);
+gulp.task('build', ['build-php', 'build-php-vendor-clean']);
 
 // Something like this for front-end: https://gist.github.com/ktmud/9384509

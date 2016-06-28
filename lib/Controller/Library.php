@@ -983,7 +983,7 @@ class Library extends Base
         $this->getLog()->info('Installing all module files');
 
         // Do this for all enabled modules
-        foreach ($this->moduleFactory->query() as $module) {
+        foreach ($this->moduleFactory->getEnabled() as $module) {
             /* @var \Xibo\Entity\Module $module */
 
             // Install Files for this module

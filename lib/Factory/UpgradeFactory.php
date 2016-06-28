@@ -168,6 +168,11 @@ class UpgradeFactory extends BaseFactory
                     if (isset($step['fixedIn']) && $from >= $step['fixedIn'])
                         continue;
 
+                    // If the step defines a patchedIn version (i.e. 120)
+                    // only run if we haven't run that step during this upgrade
+                    if (isset($step['patchedIn']) && $from < $step['patchedIn'])
+                        continue;
+
                     if (!isset($step['type']))
                         $step['type'] = 'sql';
 
