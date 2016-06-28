@@ -60,7 +60,8 @@ $twig->parserExtensions = array(
     new \Slim\Views\TwigExtension(),
     new \Xibo\Twig\TransExtension(),
     new \Xibo\Twig\ByteFormatterTwigExtension(),
-    new \Xibo\Twig\UrlDecodeTwigExtension()
+    new \Xibo\Twig\UrlDecodeTwigExtension(),
+    new \Xibo\Twig\DateFormatTwigExtension()
 );
 
 // Configure the template folder
