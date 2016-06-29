@@ -51,17 +51,18 @@ class Actions extends Middleware
                 foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                     if (stripos($file, '.zip')) {
                         /** @var \Xibo\Entity\Layout $layout */
-                        $layout = $app->layoutFactory->createFromZip($folder . '/' . $file, null, 1, false, false, true, $app->container->get('\Xibo\Controller\Library')->setApp($app));
+                        $layout = $app->layoutFactory->createFromZip($folder . '/' . $file, null, 1, false, false, true, false, true, $app->container->get('\Xibo\Controller\Library')->setApp($app));
                         $layout->save([
                             'audit' => false
                         ]);
                     }
                 }
 
+                // Layouts imported
+                $app->configService->ChangeSetting('DEFAULTS_IMPORTED', 1);
+
                 // Install files
                 $app->container->get('\Xibo\Controller\Library')->installAllModuleFiles();
-
-                $app->configService->ChangeSetting('DEFAULTS_IMPORTED', 1);
             }
 
             // Handle if we are an upgrade
