@@ -49,13 +49,6 @@ class State extends Middleware
     {
         $app = $this->app;
 
-        // Handle additional Middleware
-        if (isset($app->configService->middleware) && is_array($app->configService->middleware)) {
-            foreach ($app->configService->middleware as $object) {
-                $app->add($object);
-            }
-        }
-
         // Set state
         State::setState($app);
 
@@ -230,6 +223,20 @@ class State extends Middleware
             $app->logService->debug('Configuring %d additional log processors from Config', count($app->configService->logProcessors));
             foreach ($app->configService->logProcessors as $processor) {
                 $app->logWriter->addProcessor($processor);
+            }
+        }
+    }
+
+    /**
+     * Set additional middleware
+     * @param Slim $app
+     */
+    public static function setMiddleWare($app)
+    {
+        // Handle additional Middleware
+        if (isset($app->configService->middleware) && is_array($app->configService->middleware)) {
+            foreach ($app->configService->middleware as $object) {
+                $app->add($object);
             }
         }
     }

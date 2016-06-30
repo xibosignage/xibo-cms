@@ -60,9 +60,6 @@ class Error extends Base
         if (Translate::GetLocale(2) != '')
             $this->getDate()->setLocale(Translate::GetLocale(2));
         
-        // Set up theme
-        \Xibo\Middleware\Theme::setTheme($app);
-
         $this->getLog()->debug('Page Not Found. %s', $app->request()->getResourceUri());
 
         $message = __('Page not found');
@@ -71,6 +68,9 @@ class Error extends Base
         switch ($app->getName()) {
 
             case 'web':
+
+                // Set up theme
+                \Xibo\Middleware\Theme::setTheme($app);
 
                 if ($app->request()->isAjax()) {
                     $this->getState()->hydrate([
@@ -104,6 +104,9 @@ class Error extends Base
 
             case 'console':
             case 'maint':
+
+                // Set up theme
+                \Xibo\Middleware\Theme::setTheme($app);
 
                 // Render the error page.
                 echo $message;
