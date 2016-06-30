@@ -98,6 +98,9 @@ $app->add(new \Xibo\Middleware\CsrfGuard());
 $app->add(new \Xibo\Middleware\State());
 $app->add(new \Xibo\Middleware\Storage());
 $app->add(new \Xibo\Middleware\Xmr());
+
+// Handle additional Middleware
+\Xibo\Middleware\State::setMiddleWare($app);
 //
 // End Middleware
 //

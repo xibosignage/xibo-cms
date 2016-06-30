@@ -88,6 +88,9 @@ $app->configService->loadTheme();
 $app->add(new \Xibo\Middleware\Storage());
 $app->add(new \Xibo\Middleware\Xmr());
 
+// Handle additional Middleware
+\Xibo\Middleware\State::setMiddleWare($app);
+
 // Configure a user
 $app->user = $app->userFactory->getSystemUser();
 

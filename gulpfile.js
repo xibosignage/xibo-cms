@@ -74,6 +74,7 @@ gulp.task('build-php-vendor-clean', ['build-php'], function() {
 gulp.task('build-php-archive', function() {
     return gulp.src([
             '**/*',
+            '*/.htaccess',
             '!composer.*',
             '!*.json*',
             '!Vagrantfile',
