@@ -388,6 +388,7 @@ class Module extends Base
      * Add Widget
      * @param string $type
      * @param int $playlistId
+     * @throws ConfigurationException
      */
     public function addWidget($type, $playlistId)
     {
@@ -395,6 +396,10 @@ class Module extends Base
 
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
+
+        // Check we have a permission factory
+        if ($this->permissionFactory == null)
+            throw new ConfigurationException(__('Sorry there is an error with this request, cannot set inherited permissions'));
 
         // Load some information about this playlist
         $playlist->setChildObjectDependencies($this->regionFactory);

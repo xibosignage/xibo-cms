@@ -670,7 +670,7 @@ class State extends Middleware
                 $container->moduleFactory,
                 $container->playlistFactory,
                 $container->mediaFactory,
-                $container->permissionsFactory,
+                $container->permissionFactory,
                 $container->userGroupFactory,
                 $container->widgetFactory,
                 $container->transitionFactory,

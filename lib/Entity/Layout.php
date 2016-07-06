@@ -378,7 +378,7 @@ class Layout implements \JsonSerializable
 
     /**
      * Get Widgets assigned to this Layout
-     * @return array[Widget]
+     * @return Widget[]
      */
     public function getWidgets()
     {
