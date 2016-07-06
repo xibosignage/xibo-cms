@@ -52,7 +52,8 @@
     },
     {
       "step": "Add Layout status message column",
-      "action": "ALTER TABLE `layout` ADD `statusMessage` TEXT NULL;"
+      "action": "ALTER TABLE `layout` ADD `statusMessage` TEXT NULL;",
+      "patchedIn": 120
     },
     {
       "step": "Add missing constraint to Display/DisplayGroup Link",
