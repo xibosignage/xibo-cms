@@ -167,6 +167,10 @@
       "action": "ALTER TABLE layout MODIFY xml longtext;"
     },
     {
+      "step": "Add Layout status message column",
+      "action": "ALTER TABLE `layout` ADD `statusMessage` TEXT NULL;"
+    },
+    {
       "step": "Upgrade Layouts - Convert existing Layouts",
       "type": "php",
       "action": "Xibo\\Upgrade\\LayoutStructureStep"
