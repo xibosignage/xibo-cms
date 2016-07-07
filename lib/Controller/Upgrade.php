@@ -138,4 +138,26 @@ class Upgrade extends Base
             'message' => __('Complete')
         ]);
     }
+
+    /**
+     * Skips a step
+     * @param $stepId
+     */
+    public function skipStep($stepId)
+    {
+        // Check we are a super admin
+        if (!$this->getUser()->userTypeId == 1)
+            throw new AccessDeniedException();
+
+        // Get upgrade step
+        $upgradeStep = $this->upgradeFactory->getByStepId($stepId);
+
+        if ($upgradeStep->complete == 1)
+            throw new \InvalidArgumentException(__('Upgrade step already complete'));
+
+        $this->getLog()->critical('Upgrade step skipped. id = ' . $stepId);
+
+        $upgradeStep->complete = 2;
+        $upgradeStep->save();
+    }
 }
