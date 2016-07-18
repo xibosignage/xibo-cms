@@ -252,7 +252,7 @@ class Stats extends Base
                 AND `widgetoption`.type = \'attrib\'
                 AND `widgetoption`.option = \'name\'
               LEFT OUTER JOIN `media`
-              ON `media`.mediaId = `media`.mediaId
+              ON `media`.mediaId = `stat`.mediaId
            WHERE stat.type <> \'displaydown\'
                 AND stat.end > :fromDt
                 AND stat.start <= :toDt
@@ -289,7 +289,7 @@ class Stats extends Base
                 $params['mediaId_' . $i] = $mediaId;
             }
 
-            $body .= ' AND widget.widgetId IN (SELECT widgetId FROM `lkwidgetmedia` WHERE mediaId IN (' . trim($mediaSql, ',') . '))';
+            $body .= ' AND `media`.mediaId IN (' . trim($mediaSql, ',') . ')';
         }
 
         if ($displayId != 0) {
