@@ -1,8 +1,8 @@
 {#
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+ * Copyright (C) 2016 Spring Signage Ltd
+ * (statistics-page.twig)
  */
 
 #}
@@ -27,8 +27,8 @@
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="bandwidthFilter">
                         <form class="form-inline">
-                            {{ inline.date("fromDt", "From Date", defaults.fromDate, "", "", "", "") }}
-                            {{ inline.date("toDt", "To Date", defaults.toDate, "", "", "", "") }}
+                            {{ inline.date("bandwidthFromDt", "From Date", defaults.fromDate, "", "", "", "") }}
+                            {{ inline.date("bandwidthToDt", "To Date", defaults.toDate, "", "", "", "") }}
                             {{ inline.dropdown("displayId", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
                         </form>
                     </div>
@@ -234,5 +234,10 @@
                 setAvailabilityChart();
             });
         });
+
+        function statsExportFormSubmit() {
+            $("#statisticsExportForm").submit();
+            XiboDialogClose();
+        }
     </script>
 {% endblock %}
