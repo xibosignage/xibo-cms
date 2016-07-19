@@ -25,6 +25,7 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
@@ -745,13 +746,16 @@ class Display
     {
         if ($this->_config == null) {
 
-            if ($this->displayProfileId == 0) {
+            try {
+                if ($this->displayProfileId == 0) {
+                    throw new NotFoundException('Default Profile');
+                } else {
+                    // Load the specified profile
+                    $displayProfile = $this->displayProfileFactory->getById($this->displayProfileId);
+                }
+            } catch (NotFoundException $e) {
                 // Load the default profile
                 $displayProfile = $this->displayProfileFactory->getDefaultByType($this->clientType);
-            }
-            else {
-                // Load the specified profile
-                $displayProfile = $this->displayProfileFactory->getById($this->displayProfileId);
             }
 
             $this->_config = $displayProfile->getProfileConfig();
