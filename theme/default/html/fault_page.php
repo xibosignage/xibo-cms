@@ -24,16 +24,17 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 ?>
 <div class="row">
 	<div class="col-md-12">
-		<h2><?php echo Theme::Translate('Report a fault with Xibo'); ?></h2>
+		<h2><?php echo Theme::Translate('Report a fault with %s', Theme::ApplicationName()); ?></h2>
 		<p><?php echo Theme::Translate('Before reporting a fault it would be appreciated if you follow the below steps.'); ?></p>
 
 		<?php if (Theme::Get('binLogError')) { ?>
+			<p class="alert alert-info"><?php echo Theme::Translate('The CMS may not be working as expected because MySQL BINLOG format is set to STATEMENT. This can effect sessions and should be set to ROW or MIXED.'); ?></p>
 			<p class="alert alert-info"><?php echo Theme::Translate('The CMS may not be working as expected because MySQL BINLOG format is set to STATEMENT. This can effect sessions and should be set to ROW or MIXED.'); ?></p>
 		<?php } ?>
 
 		<div class="ReportFault">
 		<ol>
-		<li><p><?php echo Theme::Translate('Check that the Environment passes all the Xibo Environment checks.'); ?></p>
+		<li><p><?php echo Theme::Translate('Check that the Environment passes all the %s Environment checks.', Theme::ApplicationName()); ?></p>
 		<?php echo Theme::Get('environment_check'); ?>
 		</li>
 
@@ -59,7 +60,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		</li>
 
 		<li><p><?php echo Theme::Translate('Click on the below link to open the bug report page for this release.'); ?> <?php echo Theme::Translate('Describe the problem and upload the file you obtained earlier.'); ?></p>
-		<a class="btn btn-default" href="https://community.xibo.org.uk/c/support" title="<?php echo Theme::Translate('Ask a question'); ?>" target="_blank"><?php echo Theme::Translate('Ask a question'); ?></a>
+		<a class="btn btn-default" href="<?php echo Theme::GetConfig('product_support_url', 'https://community.xibo.org.uk/c/support') ?>" title="<?php echo Theme::Translate('Ask a question'); ?>" target="_blank"><?php echo Theme::Translate('Ask a question'); ?></a>
 		</li>
 
 		</ol>
@@ -68,7 +69,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<div class="ReportFault">
 		 <h2>Further Action</h2>
 		 <p><?php echo Theme::Translate('We will do our best to use the information collected above to solve your issue.'); ?>
-		 <?php echo Theme::Translate('However sometimes this will not be enough and you will be asked to put your Xibo installation into "Test" mode.'); ?></p>
+		 <?php echo Theme::Translate('However sometimes this will not be enough and you will be asked to put your %s installation into "Test" mode.', Theme::ApplicationName()); ?></p>
 
 		<ol>
 
