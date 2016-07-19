@@ -106,8 +106,9 @@
                             if (type != "display")
                                 return data.display;
 
-                            if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" != "" && data.clientAddress != "") {
-                                return '<a href="{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" title="{% trans "VNC to this Display" %}" target="' + data.clientAddress + '">' + data.display + '</a>';
+                            if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" != "" && data.clientAddress != null && data.clientAddress != "") {
+                                var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', data.clientAddress);
+                                return '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="' + data.clientAddress + '">' + data.display + '</a>';
                             }
                             else {
                                 return data.display;
