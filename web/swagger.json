@@ -90,14 +90,6 @@
             }
         },
         "/campaign/{campaignId}": {
-            "get": {
-                "tags": [
-                    "campaign"
-                ],
-                "summary": "Preview Campaign",
-                "description": "Preview an existing Campaign",
-                "operationId": "campaignPreview"
-            },
             "put": {
                 "tags": [
                     "campaign"
