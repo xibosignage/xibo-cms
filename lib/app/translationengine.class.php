@@ -165,6 +165,9 @@ class TranslationEngine
  */
 function __($string)
 {
+    if ($string == '')
+        return '';
+
 	global $transEngine;
 
     if ($transEngine != '')
