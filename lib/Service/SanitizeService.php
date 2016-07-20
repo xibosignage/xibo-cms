@@ -258,7 +258,7 @@ class SanitizeService implements SanitizerServiceInterface
     {
         $array = $this->getParam($param, $default, $source);
 
-        if ($array == null)
+        if ($array == null || !is_array($array))
             return [];
 
         return array_map('intval', $array);

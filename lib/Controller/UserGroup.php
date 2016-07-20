@@ -31,6 +31,7 @@ use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Form;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -140,6 +141,11 @@ class UserGroup extends Base
 
         foreach ($groups as $group) {
             /* @var \Xibo\Entity\UserGroup $group */
+
+            $group->libraryQuotaFormatted = ByteFormatter::format($group->libraryQuota * 1024);
+
+            if ($this->isApi())
+                break;
 
             // we only want to show certain buttons, depending on the user logged in
             if ($user->getUserTypeId() == 1) {

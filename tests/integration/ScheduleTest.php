@@ -11,6 +11,7 @@ use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboSchedule;
 use Xibo\Tests\LocalWebTestCase;
+
 /**
  * Class ScheduleTest
  * @package Xibo\Tests\Integration

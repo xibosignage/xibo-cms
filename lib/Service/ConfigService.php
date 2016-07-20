@@ -221,12 +221,21 @@ class ConfigService implements ConfigServiceInterface
         $globalTheme = ($themeName == NULL) ? $this->GetSetting('GLOBAL_THEME_NAME', 'default') : $themeName;
 
         // Is this theme valid?
-        if (!is_dir(PROJECT_ROOT . '/web/theme/' . $globalTheme) || !file_exists(PROJECT_ROOT . '/web/theme/' . $globalTheme . '/config.php'))
+        $systemTheme = (is_dir(PROJECT_ROOT . '/web/theme/' . $globalTheme) && file_exists(PROJECT_ROOT . '/web/theme/' . $globalTheme . '/config.php'));
+        $customTheme = (is_dir(PROJECT_ROOT . '/web/theme/custom/' . $globalTheme) && file_exists(PROJECT_ROOT . '/web/theme/custom/' . $globalTheme . '/config.php'));
+
+        if ($systemTheme) {
+            require(PROJECT_ROOT . '/web/theme/' . $globalTheme . '/config.php');
+            $themeFolder = 'theme/' . $globalTheme . '/';
+        } elseif ($customTheme) {
+            require(PROJECT_ROOT . '/web/theme/custom/' . $globalTheme . '/config.php');
+            $themeFolder = 'theme/custom/' . $globalTheme . '/';
+        } else
             throw new ConfigurationException(__('The theme "%s" does not exist', $globalTheme));
 
-        require(PROJECT_ROOT . '/web/theme/' . $globalTheme . '/config.php');
         $this->themeConfig = $config;
         $this->themeConfig['themeCode'] = $globalTheme;
+        $this->themeConfig['themeFolder'] = $themeFolder;
     }
 
     /**
@@ -257,11 +266,11 @@ class ConfigService implements ConfigServiceInterface
         $rootUri = ($local) ? '' : $this->rootUri();
 
         // Serve the appropriate theme file
-        if (is_dir(PROJECT_ROOT . '/web/theme/' . $this->themeConfig['themeCode'] . '/' . $uri)) {
-            return $rootUri . 'theme/' . $this->themeConfig['themeCode'] . '/' . $uri;
+        if (is_dir(PROJECT_ROOT . '/web/' . $this->themeConfig['themeFolder'] . $uri)) {
+            return $rootUri . $this->themeConfig['themeFolder'] . $uri;
         }
-        else if (file_exists(PROJECT_ROOT . '/web/theme/' . $this->themeConfig['themeCode'] . '/' . $uri)) {
-            return $rootUri . 'theme/' . $this->themeConfig['themeCode'] . '/' . $uri;
+        else if (file_exists(PROJECT_ROOT . '/web/' . $this->themeConfig['themeFolder'] . $uri)) {
+            return $rootUri . $this->themeConfig['themeFolder'] . $uri;
         }
         else {
             return $rootUri . 'theme/default/' . $uri;

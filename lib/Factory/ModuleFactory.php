@@ -335,6 +335,15 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
+     * Get Enabled
+     * @return Module[]
+     */
+    public function getEnabled()
+    {
+        return $this->query(null, ['enabled' => 1]);
+    }
+
+    /**
      * Get module by extension
      * @param string $extension
      * @return Module

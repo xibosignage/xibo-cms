@@ -59,6 +59,9 @@ $app->add(new \Xibo\Middleware\Storage());
 $app->add(new \Xibo\Middleware\Xmr());
 $app->view(new \Xibo\Middleware\ApiView());
 
+// Handle additional Middleware
+\Xibo\Middleware\State::setMiddleWare($app);
+
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
     $app->container->get('\Xibo\Controller\Error')->handler($e);

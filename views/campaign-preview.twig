@@ -13,7 +13,7 @@ This is the template for the campaign page
     <div class="widget">
         <div class="widget-title">{% trans "Campaign preview" %}</div>
         <div class="widget-body">
-            <p><b>{% trans "total duration" %}</b> {{ duration|date("H:m:s") }} <i>({% trans "hours:min:sec" %})</i></p>
+            <p><b>{% trans "total duration" %}</b> {{ duration|datehms }} <i>({% trans "hours:min:sec" %})</i></p>
             <p><b>{% trans "number of layouts" %}</b> : {{ campaign.numberLayouts }} </p>
             <div class="row clearfix">
               {% for extendedLayout in extendedLayouts %}
@@ -25,7 +25,7 @@ This is the template for the campaign page
                   </div>
                         <small>{% trans "id" %}:</small> {{ extendedLayout.layout.layoutId }}<br/>
                         <small>{% trans "name" %}:</small> {{ extendedLayout.layout.layout }}<br/>
-                        <small>{% trans "duration" %}:</small> {{ extendedLayout.duration|date("H:m:s") }}</br>
+                        <small>{% trans "duration" %}:</small> {{ extendedLayout.duration|datehms }}<br/>
                 </div>
               {% endfor %}
             </div>

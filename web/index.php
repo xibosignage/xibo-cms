@@ -67,7 +67,8 @@ $twig->parserExtensions = array(
     new \Slim\Views\TwigExtension(),
     new \Xibo\Twig\TransExtension(),
     new \Xibo\Twig\ByteFormatterTwigExtension(),
-    new \Xibo\Twig\UrlDecodeTwigExtension()
+    new \Xibo\Twig\UrlDecodeTwigExtension(),
+    new \Xibo\Twig\DateFormatTwigExtension()
 );
 
 // Configure the template folder
@@ -97,6 +98,9 @@ $app->add(new \Xibo\Middleware\CsrfGuard());
 $app->add(new \Xibo\Middleware\State());
 $app->add(new \Xibo\Middleware\Storage());
 $app->add(new \Xibo\Middleware\Xmr());
+
+// Handle additional Middleware
+\Xibo\Middleware\State::setMiddleWare($app);
 //
 // End Middleware
 //

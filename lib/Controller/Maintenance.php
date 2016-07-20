@@ -135,12 +135,12 @@ class Maintenance extends Base
                 // Check that the magic parameter is set
                 $key = $this->getConfig()->GetSetting("MAINTENANCE_KEY");
 
-                // Get key from POST or from ARGV
+                // Get key from arguments
                 $pKey = $this->getSanitizer()->getString('key');
-                if(isset($argv[1]))
-                {
-                    $aKey = $this->getSanitizer()->string($argv[1]);
-                }
+
+                // If we arrive from the console, then set aKey == key so that we bypass the key check.
+                if ($this->getApp()->getName() == 'console')
+                    $aKey = $key;
             }
 
             if (($aKey == $key) || ($pKey == $key) || ($this->getConfig()->GetSetting("MAINTENANCE_ENABLED")=="On")) {
@@ -384,7 +384,7 @@ class Maintenance extends Base
                                 $this->getLog()->notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);
 
                                 try {
-                                    WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9');
+                                    WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9', $this->getLog());
                                     print $display->display . ':Sent WOL Message. Previous WOL send time: ' . $this->getDate()->getLocalDate($display->lastWakeOnLanCommandSent) . '<br/>\n';
 
                                     $display->lastWakeOnLanCommandSent = time();

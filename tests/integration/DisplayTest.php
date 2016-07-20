@@ -147,12 +147,11 @@ pbBhRgkIdydXoZZdjQIDAQAB
 
     /**
      * Wake On Lan Test
-     * @group broken
      */
     public function testWoL()
     {
         $hardwareId = Random::generateString(12, 'phpunit');
-        $macAddress = '00-16-D9-C9-AB-69';
+        $macAddress = '00-16-D9-C9-AE-69';
         $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 
             'PHPUnit Test Display', 
             'windows', 

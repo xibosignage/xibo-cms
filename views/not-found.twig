@@ -5,7 +5,21 @@
  * (${FILE_NAME})
  */
 #}
+{% extends "non-authed.twig" %}
 
-{# This should be improved to output a nicer not found page #}
-<h1>{{ flash.globalError }} {{ flash.message }}</h1>
-<p>{% trans "Sorry we could not find that page. Please check your URL or press back in your browser" %}</p>
+{% block pageContent %}
+
+    <div class="widget">
+        <div class="widget-title">{% trans "Page not found" %}</div>
+        <div class="widget-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <p>{% trans "Sorry we could not find that page. Please check your URL or press back in your browser" %}</p>
+                    {{ flash.globalError }}
+                    {{ flash.message }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

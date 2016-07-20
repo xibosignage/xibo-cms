@@ -444,7 +444,7 @@ class MediaFactory extends BaseFactory
                     WHERE region.layoutId = :layoutId ';
 
             if ($this->getSanitizer()->getInt('widgetId', $filterBy) !== null) {
-                $body .= ' AND `widget`.wigetId = :widgetId ';
+                $body .= ' AND `widget`.widgetId = :widgetId ';
                 $params['widgetId'] = $this->getSanitizer()->getInt('widgetId', $filterBy);
             }
 

@@ -57,7 +57,7 @@
     {
       "step": "Add missing constraint to Display/DisplayGroup Link",
       "action": "ALTER TABLE `lkdisplaydg` ADD CONSTRAINT `DisplayGroupDisplayId` UNIQUE KEY (DisplayGroupId, DisplayId);",
-      "fixedIn": 120
+      "patchedIn": 120
     },
     {
       "step": "Change display is auditing to be date based",
@@ -70,7 +70,7 @@
     {
       "step": "Allow Events to have an empty to date",
       "action": "ALTER TABLE  `schedule_detail` CHANGE  `ToDT`  `ToDT` BIGINT( 20 ) NULL DEFAULT NULL;",
-      "fixedIn": 121
+      "patchedIn": 121
     }
   ]
 }

@@ -103,6 +103,7 @@ The Xibo CMS now follows MVC and is PSR-4 compliant.
 The folder structure is as follows:
 
  - /bin - CLI entry point
+ - /custom - A location for custom files, such as modules and middleware. Autoloaded as the `\Xibo\Custom` namespace
  - /install - Files related to install/upgrade
  - /lib/Controller - Controllers
  - /lib/Entity - Models
@@ -122,7 +123,9 @@ The folder structure is as follows:
  - /web/api/index.php - Entry point for the API
  - /web/maintenance/index.php - Entry point for Maintenance
  - /web/modules - Web Serviceable Resources for modules
- - /web/theme - GUI theme files
+ - /web/theme/default - Web Portal Default Theme Files
+ - /web/theme/compact - Web Portal Compact Menu Theme Override
+ - /web/theme/custom - User Themes (overrides files in default theme)
  - /web/xmds.php - XMDS SOAP Service
 
 # Contributing

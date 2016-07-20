@@ -24,7 +24,8 @@
 {% import "forms.twig" as forms %}
 
 {% block formTitle %}
-    {% trans "Edit DataSet View" %}
+    {% set dataSetName = module.getExtra().dataSet.dataSet %}
+    {% trans %}Edit DataSet View: DataSet is {{ dataSetName }}{% endtrans %}
 {% endblock %}
 
 {% block formButtons %}

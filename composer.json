@@ -7,7 +7,7 @@
     "spring signage"
   ],
   "homepage": "http://xibo.org.uk",
-  "license": "AGPLv3 or later",
+  "license": "AGPL-3.0",
   "authors": [
     {
       "name": "Daniel Garner",

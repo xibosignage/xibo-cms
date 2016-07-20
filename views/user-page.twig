@@ -1,10 +1,9 @@
 {#
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+ * Copyright (C) 2015-16 Spring Signage Ltd
+ * (user-page.twig)
  */
-
 #}
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
@@ -85,7 +84,11 @@
                     {"data": "userName"},
                     {"data": "homePage"},
                     {"data": "email"},
-                    {"data": "libraryQuota"},
+                    {
+                        "name": "libraryQuota",
+                        "data": null,
+                        "render": {"_": "libraryQuota", "display": "libraryQuotaFormatted", "sort": "libraryQuota"}
+                    },
                     {
                         "data": "retired",
                         "render": dataTableTickCrossColumn
@@ -109,5 +112,39 @@
             table.on('processing.dt', dataTableProcessing)
             dataTableAddButtons(table, $('#users_wrapper').find('.col-sm-6').eq(1));
         });
+
+        function userFormOpen() {
+            // Bind to the add form submit
+            $(".UserForm").validate({
+                submitHandler: function (form) {
+                    // Grab and alter the value in the library quota field
+                    var libraryQuotaField = $(form).find("input[name=libraryQuota]");
+                    var libraryQuotaUnitsField = $(form).find("select[name=libraryQuotaUnits]");
+                    var libraryQuota = libraryQuotaField.val();
+
+                    if (libraryQuotaUnitsField.val() == 'mb') {
+                        libraryQuota = libraryQuota * 1024;
+                    } else if (libraryQuotaUnitsField.val() == 'gb') {
+                        libraryQuota = libraryQuota * 1024 * 1024;
+                    }
+
+                    // Set the field
+                    libraryQuotaField.prop('value', libraryQuota);
+
+                    XiboFormSubmit(form);
+                },
+                errorElement: "span",
+                highlight: function(element) {
+                    $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
+                },
+                success: function(element) {
+                    $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
+                },
+                invalidHandler: function() {
+                    // Remove the spinner
+                    $(this).closest(".modal-dialog").find(".saving").remove();
+                }
+            });
+        }
     </script>
 {% endblock %}

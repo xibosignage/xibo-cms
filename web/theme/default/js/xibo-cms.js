@@ -591,7 +591,10 @@ function XiboFormRender(formUrl, data) {
                                 $.each(fieldAction.actions, function(index, action) {
                                     //console.log("Setting child field on " + index + " to " + JSON.stringify(action));
                                     // Action the field
-                                    $(index).css(action);
+                                    var field = $(index);
+
+                                    if (!field.data("initActioned"))
+                                        field.css(action).data("initActioned", true);
                                 });
                             }
                         }
@@ -880,8 +883,18 @@ function XiboFormSubmit(form, e, callBack) {
         //console.log("Name: " + editor);
         //console.log("Content: " + CKEDITOR.instances[editor].getData());
 
+        // Parse the data for library preview references, and replace those with their original values
+        // /\/library\/download\/(.[0-9]+)\?preview=1/;
+        var regex = new RegExp(CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&").replace(":id", "([0-9]+)"), "g");
+
+        var data = CKEDITOR.instances[editor].getData().replace(regex, function (match, group1) {
+            var replacement = "[" + group1 + "]";
+            //console.log("match = " + match + ". replacement = " + replacement);
+            return replacement;
+        });
+
         // Set the appropriate text editor field with this data.
-        $("#" + editor).val(CKEDITOR.instances[editor].getData());
+        $("#" + editor).val(data);
     }
 
     $.ajax({

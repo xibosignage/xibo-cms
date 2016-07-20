@@ -7,11 +7,11 @@
 
 namespace Xibo\Tests\Integration;
 
+use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboCommand;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\Helper\Random;
 use Xibo\Tests\LocalWebTestCase;
 
 /**

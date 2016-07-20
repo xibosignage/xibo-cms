@@ -43,36 +43,36 @@ class Schedule extends Base
      * @var Session
      */
     private $session;
-   
+
     /**
      * @var ScheduleFactory
      */
     private $scheduleFactory;
-   
+
     /**
      * @var DisplayGroupFactory
      */
     private $displayGroupFactory;
-    
+
     /**
      * @var CampaignFactory
      */
     private $campaignFactory;
-   
+
     /**
      * @var CommandFactory
      */
     private $commandFactory;
-   
+
     /** @var  DisplayFactory */
     private $displayFactory;
-   
+
     /** @var  LayoutFactory */
     private $layoutFactory;
-    
+
     /** @var  MediaFactory */
     private $mediaFactory;
-   
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -91,7 +91,7 @@ class Schedule extends Base
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $mediaFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
-        
+
         $this->session = $session;
         $this->scheduleFactory = $scheduleFactory;
         $this->displayGroupFactory = $displayGroupFactory;
@@ -173,14 +173,14 @@ class Schedule extends Base
     {
         $this->getApp()->response()->header('Content-Type', 'application/json');
         $this->setNoOutput();
-        
+
         $displayGroupIds = $this->getSanitizer()->getIntArray('displayGroupIds');
         $start = $this->getSanitizer()->getString('from', 1000) / 1000;
         $end = $this->getSanitizer()->getString('to', 1000) / 1000;
-        
+
         // if we have some displayGroupIds then add them to the session info so we can default everything else.
         $this->session->set('displayGroupIds', $displayGroupIds);
-        
+
         if (count($displayGroupIds) <= 0) {
             $this->getApp()->response()->body(json_encode(array('success' => 1, 'result' => [])));
             return;
@@ -196,12 +196,12 @@ class Schedule extends Base
 
         foreach ($this->scheduleFactory->query('schedule_detail.FromDT', $filter) as $row) {
             /* @var \Xibo\Entity\Schedule $row */
-            
+
             // Load the display groups
             $row->load();
-            
+
             $displayGroupList = '';
-            
+
             if (count($row->displayGroups) >= 0) {
                 $array = array_map(function ($object) {
                     return $object->displayGroup;
@@ -211,17 +211,21 @@ class Schedule extends Base
 
             // Event Permissions
             $editable = $this->isEventEditable($row->displayGroups);
-            
+
             $this->getLog()->debug('Parsing event dates from %s and %s', $row->fromDt, $row->toDt);
-            
+
+            // Handle command events which do not have a toDt
+            if ($row->eventTypeId == \Xibo\Entity\Schedule::$COMMAND_EVENT)
+                $row->toDt = $row->fromDt;
+
             // Parse our dates into a Date object, so that we convert to local time correctly.
             $fromDt = $this->getDate()->parse($row->fromDt, 'U');
             $toDt = $this->getDate()->parse($row->toDt, 'U');
-            
+
             // Set the row from/to date to be an ISO date for display
             $row->fromDt = $this->getDate()->getLocalDate($row->fromDt);
             $row->toDt = $this->getDate()->getLocalDate($row->toDt);
-            
+
             // Event Title
             $title = sprintf(__('%s scheduled on %s'),
                 ($row->campaign == '') ? $row->command : $row->campaign,
@@ -231,7 +235,7 @@ class Schedule extends Base
             // Event URL
             $editUrl = ($this->isApi()) ? 'schedule.edit' : 'schedule.edit.form';
             $url = ($editable) ? $this->urlFor($editUrl, ['id' => $row->eventId]) : '#';
-            
+
             /**
              * @SWG\Definition(
              *  definition="ScheduleCalendarData",
@@ -279,14 +283,14 @@ class Schedule extends Base
         $groups = array();
         $displays = array();
         $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
-        
+
         foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
             /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */
-            
+
             // Can't schedule with view, but no edit permissions
             if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))
                 continue;
-            
+
             if ($displayGroup->isDisplaySpecific == 1) {
                 $displays[] = $displayGroup;
             } else {
@@ -417,7 +421,7 @@ class Schedule extends Base
     public function add()
     {
         $this->getLog()->debug('Add Schedule');
-        
+
         $schedule = $this->scheduleFactory->createEmpty();
         $schedule->userId = $this->getUser()->userId;
         $schedule->eventTypeId = $this->getSanitizer()->getInt('eventTypeId');
@@ -428,7 +432,7 @@ class Schedule extends Base
         $schedule->dayPartId = $this->getSanitizer()->getCheckbox('dayPartId', 0);
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
-        
+
         foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
         }
@@ -438,27 +442,27 @@ class Schedule extends Base
             $fromDt = $this->getSanitizer()->getDate('fromDt');
             $toDt = $this->getSanitizer()->getDate('toDt');
             $recurrenceRange = $this->getSanitizer()->getDate('recurrenceRange');
-            
+
             if ($fromDt === null)
                 throw new \InvalidArgumentException(__('Please enter a from date'));
-            
+
             $this->getLog()->debug('Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
-            
+
             // In some circumstances we want to trim the seconds from the provided dates.
             // this happens when the date format provided does not include seconds and when the add
             // event comes from the UI.
             if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
                 $this->getLog()->debug('Date format does not include seconds, removing them');
                 $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
-                
+
                 if ($toDt !== null)
                     $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
-                
+
                 if ($recurrenceRange != null)
                     $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
             } else {
                 $schedule->fromDt = $fromDt->format('U');
-                
+
                 if ($toDt !== null)
                     $schedule->toDt = $toDt->format('U');
             }
@@ -467,7 +471,7 @@ class Schedule extends Base
         // Ready to do the add
         $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $schedule->save();
-        
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 201,
@@ -485,28 +489,28 @@ class Schedule extends Base
     {
         $schedule = $this->scheduleFactory->getById($eventId);
         $schedule->load();
-        
+
         if (!$this->isEventEditable($schedule->displayGroups))
             throw new AccessDeniedException();
-       
+
         // Fix the event dates for display
         $schedule->fromDt = $this->getDate()->getLocalDate($schedule->fromDt);
         $schedule->toDt = $this->getDate()->getLocalDate($schedule->toDt);
-        
+
         if ($schedule->recurrenceRange != null)
             $schedule->recurrenceRange = $this->getDate()->getLocalDate($schedule->recurrenceRange);
-        
+
         $groups = array();
         $displays = array();
         $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
-        
+
         foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
             /* @var \Xibo\Entity\DisplayGroup $displayGroup */
-            
+
             // Can't schedule with view, but no edit permissions
             if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))
                 continue;
-            
+
             if ($displayGroup->isDisplaySpecific == 1) {
                 $displays[] = $displayGroup;
             } else {
@@ -645,10 +649,10 @@ class Schedule extends Base
     {
         $schedule = $this->scheduleFactory->getById($eventId);
         $schedule->load();
-        
+
         if (!$this->isEventEditable($schedule->displayGroups))
             throw new AccessDeniedException();
-        
+
         $schedule->eventTypeId = $this->getSanitizer()->getInt('eventTypeId');
         $schedule->campaignId = $this->getSanitizer()->getInt('campaignId');
         $schedule->commandId = $this->getSanitizer()->getInt('commandId');
@@ -658,33 +662,33 @@ class Schedule extends Base
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
         $schedule->displayGroups = [];
-        
+
         foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
         }
-        
+
         if ($schedule->dayPartId == \Xibo\Entity\Schedule::$DAY_PART_CUSTOM) {
             // Handle the dates
             $fromDt = $this->getSanitizer()->getDate('fromDt');
             $toDt = $this->getSanitizer()->getDate('toDt');
             $recurrenceRange = $this->getSanitizer()->getDate('recurrenceRange');
-            
+
             if ($fromDt === null)
                 throw new \InvalidArgumentException(__('Please enter a from date'));
-            
+
             $this->getLog()->debug('Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
-            
+
             // In some circumstances we want to trim the seconds from the provided dates.
             // this happens when the date format provided does not include seconds and when the add
             // event comes from the UI.
             if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
                 $this->getLog()->debug('Date format does not include seconds, removing them');
                 $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
-                
+
                 // If we have a toDt
                 if ($toDt !== null)
                     $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
-                
+
                 if ($recurrenceRange != null)
                     $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
             } else {
@@ -696,7 +700,7 @@ class Schedule extends Base
         // Ready to do the add
         $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $schedule->save();
-        
+
         // Return
         $this->getState()->hydrate([
             'message' => __('Edited Event'),
@@ -713,10 +717,10 @@ class Schedule extends Base
     {
         $schedule = $this->scheduleFactory->getById($eventId);
         $schedule->load();
-        
+
         if (!$this->isEventEditable($schedule->displayGroups))
             throw new AccessDeniedException();
-        
+
         $this->getState()->template = 'schedule-form-delete';
         $this->getState()->setData([
             'event' => $schedule,
@@ -751,13 +755,13 @@ class Schedule extends Base
     {
         $schedule = $this->scheduleFactory->getById($eventId);
         $schedule->load();
-        
+
         if (!$this->isEventEditable($schedule->displayGroups))
             throw new AccessDeniedException();
-        
+
         $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $schedule->delete();
-        
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
@@ -773,16 +777,16 @@ class Schedule extends Base
     private function isEventEditable($displayGroups)
     {
         $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
-        
+
         // Work out if this event is editable or not. To do this we need to compare the permissions
         // of each display group this event is associated with
         foreach ($displayGroups as $displayGroup) {
             /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */
-            
+
             // Can schedule with view, but no view permissions
             if ($scheduleWithView && !$this->getUser()->checkViewable($displayGroup))
                 return false;
-            
+
             // Can't schedule with view, but no edit permissions
             if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))
                 return false;
@@ -801,14 +805,14 @@ class Schedule extends Base
         $groups = array();
         $displays = array();
         $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
-        
+
         foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
             /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */
-            
+
             // Can't schedule with view, but no edit permissions
             if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))
                 continue;
-            
+
             if ($displayGroup->isDisplaySpecific == 1) {
                 $displays[] = $displayGroup;
             } else {

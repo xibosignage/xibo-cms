@@ -72,7 +72,8 @@ $twig->parserExtensions = array(
     new \Slim\Views\TwigExtension(),
     new \Xibo\Twig\TransExtension(),
     new \Xibo\Twig\ByteFormatterTwigExtension(),
-    new \Xibo\Twig\UrlDecodeTwigExtension()
+    new \Xibo\Twig\UrlDecodeTwigExtension(),
+    new \Xibo\Twig\DateFormatTwigExtension()
 );
 
 // Configure the template folder
@@ -86,6 +87,9 @@ $app->configService->loadTheme();
 
 $app->add(new \Xibo\Middleware\Storage());
 $app->add(new \Xibo\Middleware\Xmr());
+
+// Handle additional Middleware
+\Xibo\Middleware\State::setMiddleWare($app);
 
 // Configure a user
 $app->user = $app->userFactory->getSystemUser();

@@ -9,7 +9,7 @@
         <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
 
         <link href="{{ theme.uri("libraries/bootstrap/css/bootstrap.min.css") }}" rel="stylesheet" media="screen">
-        <link href="{{ theme.uri("libraries/bootstrap/css/bootstrap-theme.min.css") }}" rel="stylesheet" media="screen">
+        <!--  <link href="{{ theme.uri("libraries/bootstrap/css/bootstrap-theme.min.css") }}" rel="stylesheet" media="screen">-->
         <link href="{{ theme.uri("libraries/font-awesome/css/font-awesome.min.css") }}" rel="stylesheet">
         <link href="{{ theme.uri("libraries/bootstrap-select/css/bootstrap-select.css") }}" rel="stylesheet">
         <link href="{{ theme.uri("libraries/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css") }}" rel="stylesheet">
@@ -163,8 +163,10 @@
             // CKEditor default config
             var CKEDITOR_DEFAULT_CONFIG = {
                 contentsCss: [ CKEDITOR.getUrl('contents.css'), "{{ urlFor("library.font.css") }}" ],
-                font_names: '{{ ckeditorConfig }}' + CKEDITOR.config.font_names
+                font_names: '{{ ckeditorConfig }}' + CKEDITOR.config.font_names,
+                imageDownloadUrl: "{{ urlFor("library.download") }}?preview=1"
             }
+
         </script>
 
         {% block javaScriptTemplates %}{% endblock %}
