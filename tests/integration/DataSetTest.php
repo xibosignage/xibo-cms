@@ -9,6 +9,7 @@ namespace Xibo\Tests\Integration;
 
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDataSet;
+use Xibo\OAuth2\Client\Entity\XiboDataSetColumn;
 use Xibo\Tests\LocalWebTestCase;
 
 class DataSetTest extends LocalWebTestCase
@@ -349,22 +350,17 @@ class DataSetTest extends LocalWebTestCase
         $dataSet = (new XiboDataSet($this->getEntityProvider()))->create($name, $description);
         // create column
         $nameCol = Random::generateString(8, 'phpunit');
-        $column = $dataSet->createColumn($nameCol,'', 2, 1, 1, '');
-        //$column = (new XiboDataSetColumn($this->getEntityProvider()))->create($dataSet->dataSetId, $nameCol,'', 2, 1, 1, '');
-        // Populate the properties for the dataset column
-        // TODO: it would be better to have separate wrappers for DataSet and DataSetColumn, with a single wrapper
-        // you can only ever operate on 1 column at a time.
-        $dataSet->getByColumnId($column->dataSetColumnId);
+        $column = (new XiboDataSetColumn($this->getEntityProvider()))->create($dataSet->dataSetId, $nameCol,'', 2, 1, 1, '');
         // add new row
         $response = $this->client->post('/dataset/data/' . $dataSet->dataSetId, [
-            'dataSetColumnId_' . $dataSet->dataSetColumnId => 'test',
+            'dataSetColumnId_' . $column->dataSetColumnId => 'test',
             ]);
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         // TODO: This test should verify that the data was added
-        // $this->assertSame('test', $object->data->dataSetColumnId_ . $dataSet->dataSetColumnId);
+        // $this->assertSame('test', $object->data->dataSetColumnId_ . $column->dataSetColumnId);
         // Delete the dataSet we used
         $dataSet->deleteWData();
     }

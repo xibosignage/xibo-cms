@@ -563,21 +563,22 @@ class DisplayGroupTest extends LocalWebTestCase
 
     /**
      * Unassign displays group Test
-     * @param displayGroup $displayGroupId
-     * @param displayGroup2 $displayGroupId
-     * @depends testAssignGroup
      * @group broken
      */
     public function testUnassignGroup()
     {
-        $group = (new XiboDisplayGroup($this->getEntityProvider()))->getById($displayGroupId);
-        $group2 = (new XiboDisplayGroup($this->getEntityProvider()))->getById($displayGroupId);
-		$this->client->post('/displaygroup/' . $group->displayGroupId . '/displayGroup/unassign', [
-        	'displayGroupId' => [$group2->displayGroupId]
+        $name = Random::generateString(8, 'phpunit');
+        $name2 = Random::generateString(8, 'phpunit');
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
+        $displayGroup2 = (new XiboDisplayGroup($this->getEntityProvider()))->create($name2, 'phpunit description', 0, '');
+		
+        $displayGroup->assignDisplayGroup($displayGroup2->displayGroupId);
+
+        $this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/displayGroup/unassign', [
+        	'displayGroupId' => [$displayGroup2->displayGroupId]
         	]);
 
         $this->assertSame(200, $this->client->response->status());
-
         $object = json_decode($this->client->response->body());
     }
 
