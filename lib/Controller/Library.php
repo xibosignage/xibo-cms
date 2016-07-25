@@ -519,6 +519,9 @@ class Library extends Base
         else
             $validExt = $this->moduleFactory->getValidExtensions();
 
+        // Make sure there is room in the library
+        $libraryLimit = $this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+
         $options = array(
             'userId' => $this->getUser()->userId,
             'controller' => $this,
@@ -533,27 +536,18 @@ class Library extends Base
             'script_url' => $this->urlFor('library.add'),
             'upload_url' => $this->urlFor('library.add'),
             'image_versions' => array(),
-            'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i'
+            'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
+            'libraryLimit' => $libraryLimit,
+            'libraryQuotaFull' => ($libraryLimit > 0 && $this->libraryUsage() > $libraryLimit)
         );
 
-        // Make sure there is room in the library
-        $libraryLimit = $this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
-
-        if ($libraryLimit > 0 && $this->libraryUsage() > $libraryLimit)
-            throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
-
-        // Check for a user quota
-        $this->getUser()->isQuotaFullByUser();
+        // Output handled by UploadHandler
         $this->setNoOutput(true);
 
-        try {
-            $this->getLog()->debug('Hand off to Upload Handler with options: %s', json_encode($options));
-            // Hand off to the Upload Handler provided by jquery-file-upload
-            new XiboUploadHandler($options);
-        }
-        catch (\Exception $e) {
-            // We must not issue an error, the file upload return should have the error object already
-        }
+        $this->getLog()->debug('Hand off to Upload Handler with options: %s', json_encode($options));
+
+        // Hand off to the Upload Handler provided by jquery-file-upload
+        new XiboUploadHandler($options);
     }
 
     /**
