@@ -646,6 +646,8 @@ class Ticker extends ModuleWidget
                                     }
                             }
 
+                            $this->getLog()->debug('Resolved link: %s', $link);
+
                             // If we have managed to resolve a link, download it and replace the tag with the downloaded
                             // image url
                             if ($link != NULL) {
