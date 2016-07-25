@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "3f2916c2e66eba5d00ec543f80159b7c",
+    "hash": "0575cf22eb7d7c7aa8bbd73dd09563f2",
     "content-hash": "dc45578b38c9f0fd2a9dfc00b0417c28",
     "packages": [
         {
@@ -4804,12 +4804,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PeterMis/oauth2-xibo-cms.git",
-                "reference": "0bd306cf22d71c7d0c622588bf0da13d76dfd470"
+                "reference": "f36593588a9c5f973d0ba41653fb80e28c8348c0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PeterMis/oauth2-xibo-cms/zipball/0bd306cf22d71c7d0c622588bf0da13d76dfd470",
-                "reference": "0bd306cf22d71c7d0c622588bf0da13d76dfd470",
+                "url": "https://api.github.com/repos/PeterMis/oauth2-xibo-cms/zipball/f36593588a9c5f973d0ba41653fb80e28c8348c0",
+                "reference": "f36593588a9c5f973d0ba41653fb80e28c8348c0",
                 "shasum": ""
             },
             "require": {
@@ -4849,7 +4849,7 @@
             "support": {
                 "source": "https://github.com/PeterMis/oauth2-xibo-cms/tree/master"
             },
-            "time": "2016-06-21 11:46:34"
+            "time": "2016-06-27 10:46:58"
         },
         {
             "name": "zircote/swagger-php",

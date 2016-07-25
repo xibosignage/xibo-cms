@@ -60,6 +60,7 @@ $app->error(function (\Exception $e) use ($app) {
 
 // Configure a not found handler
 $app->notFound(function () use ($app) {
+    Translate::InitLocale($app->configService, 'en_GB');
     $app->render('install-error.twig', ['error' => __('Page not found'), 'trace' => __('Sorry this page cannot be found.')], 500);
 });
 
