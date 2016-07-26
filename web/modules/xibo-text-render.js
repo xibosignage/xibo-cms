@@ -37,6 +37,22 @@ jQuery.fn.extend({
 
         options = $.extend({}, defaults, options);
 
+        // Calculate the dimensions of this item based on the preview/original dimensions
+        var width, height = 0
+        if (options.previewWidth === 0 || options.previewHeight === 0) {
+            width = options.originalWidth;
+            height = options.originalHeight;
+        }
+        else {
+            width = options.previewWidth;
+            height = options.previewHeight;
+        }
+
+        if (options.scaleOverride !== 0) {
+            width = width / options.scaleOverride;
+            height = height / options.scaleOverride;
+        }
+
         // For each matched element
         this.each(function() {
 
@@ -148,8 +164,8 @@ jQuery.fn.extend({
 
                 // Set the width on the cycled slides
                 $(slides, this).css({
-                    width: options.originalWidth,
-                    height: options.originalHeight
+                    width: width,
+                    height: height
                 });
 
                 // Cycle handles this for us
@@ -183,7 +199,6 @@ jQuery.fn.extend({
             }
 
             if (marquee) {
-                
                 // Create a DIV to scroll, and put this inside the body
                 var scroller = $("<div/>")
                     .addClass("scroll")
@@ -192,8 +207,8 @@ jQuery.fn.extend({
                         scaleFactor: options.scaleFactor,
                         behaviour: "scroll",
                         direction: options.direction,
-                        height: options.originalHeight,
-                        width: options.originalWidth
+                        height: height,
+                        width: width
                     });
 
                 $(this).wrapInner(scroller);
