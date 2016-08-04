@@ -75,7 +75,8 @@ class Theme extends Middleware
                 'locale' => Translate::GetLocale(),
                 'jsLocale' => Translate::GetJsLocale(),
                 'jsShortLocale' => ((strlen(Translate::GetJsLocale()) > 2) ? substr(Translate::GetJsLocale(), 0, 2) : Translate::GetJsLocale()),
-                'calendarLanguage' => ((strlen(Translate::GetJsLocale()) <= 2) ? Translate::GetJsLocale() . '-' . strtoupper(Translate::GetJsLocale()) : Translate::GetJsLocale())
+                'calendarLanguage' => ((strlen(Translate::GetJsLocale()) <= 2) ? Translate::GetJsLocale() . '-' . strtoupper(Translate::GetJsLocale()) : Translate::GetJsLocale()),
+                'boostrapSelectLanguage' => ((strlen(Translate::GetJsLocale()) <= 2) ? Translate::GetJsLocale() . '_' . strtoupper(Translate::GetJsLocale()) : Translate::GetJsLocale())
             ],
             'translations' => '{}',
             'libraryUpload' => [

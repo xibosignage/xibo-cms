@@ -1,7 +1,7 @@
 if(!window.calendar_languages) {
 	window.calendar_languages = {};
 }
-window.calendar_languages['sv-SE'] = {
+window.calendar_languages['no-NO'] = {
 	error_noview:     'Kalender: {0} ble ikke funnet',
 	error_dateformat: 'Kalender: Feil datoformat {0}. Må være "now" eller "åååå-mm-dd"',
 	error_loadurl:    'Kalender: urlen for events er ikke satt',
@@ -58,6 +58,7 @@ window.calendar_languages['sv-SE'] = {
 	easterMonday: 'Første påskedag',
 
 	first_day: 1,
+	week_numbers_iso_8601: true,
 
 	holidays: {
 	}

@@ -12,11 +12,11 @@ window.calendar_languages['de-AT'] = {
 
 	title_year:  '{0}',
 	title_month: '{0} {1}',
-	title_week:  'Woche {0} im Jahr {1}',
+	title_week:  '{0}. Kalenderwoche {1}',
 	title_day:   '{0}, der {1}. {2} {3}',
 
-	week:        'Woche {0}',
-	all_day:     'Ganzen Tag',
+	week:        'KW {0}',
+	all_day:     'Ganztägig',
 	time:        'Zeit',
 	events:      'Ereignisse',
 	before_time: 'Endet vor Zeitspanne',
@@ -57,6 +57,7 @@ window.calendar_languages['de-AT'] = {
 	d6: 'Samstag',
 
 	first_day: 1,
+	week_numbers_iso_8601: true,
 
 	holidays: {
 		'01-01':     'Neujahr',
@@ -74,6 +75,6 @@ window.calendar_languages['de-AT'] = {
 		'24-12':     'Heiliger Abend',
 		'25-12':     'Weihnachten',
 		'26-12':     'Stefanitag',
-		'31-12':     'Silvester',
+		'31-12':     'Silvester'
 	}
 };

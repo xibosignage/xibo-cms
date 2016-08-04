@@ -62,6 +62,7 @@ window.calendar_languages['hu-HU'] = {
 
 	// Which is the first day of the week (2 for sunday, 1 for monday)
 	first_day: 1,
+	week_numbers_iso_8601: true,
     holidays: {
 		'01-01':     'Újév',
 		'easter+1':  'Húsvéthétfő',
@@ -72,7 +73,7 @@ window.calendar_languages['hu-HU'] = {
 		'08-20':     'Államalapítás ünnepe',
 		'10-23':     '1956-os forradalom és szabadságharc',
 		'25-12':     'Karácsony',
-		'26-12':     'Karácsony',
+		'26-12':     'Karácsony'
 	}
 
 };
