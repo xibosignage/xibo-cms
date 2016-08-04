@@ -1034,81 +1034,14 @@ if(!String.prototype.formatNum) {
 
 		$('a[data-event-id]', this.context).unbind('click');
 
-		if(!self.options.modal) {
+		if (!$('a[data-event-id]', this.context).attr("data-event-class") == "XiboFormButton")
 			return;
-		}
-
-		var modal = $(self.options.modal);
-
-		if(!modal.length) {
-			return;
-		}
-
-		var ifrm = null;
-		if(self.options.modal_type == "iframe") {
-			ifrm = $(document.createElement("iframe"))
-				.attr({
-					width: "100%",
-					frameborder: "0"
-				});
-		}
 
 		$('a[data-event-id]', this.context).on('click', function(event) {
 			event.preventDefault();
 			event.stopPropagation();
 
-			var url = $(this).attr('href');
-			var id = $(this).data("event-id");
-			var event = _.find(self.options.events, function(event) {
-				return event.id == id
-			});
-
-			if(self.options.modal_type == "iframe") {
-				ifrm.attr('src', url);
-				$('.modal-body', modal).html(ifrm);
-			}
-
-			if(!modal.data('handled.bootstrap-calendar') || (modal.data('handled.bootstrap-calendar') && modal.data('handled.event-id') != event.id)) {
-				modal.off('show.bs.modal')
-					.off('shown.bs.modal')
-					.off('hidden.bs.modal')
-					.on('show.bs.modal', function() {
-						var modal_body = $(this).find('.modal-body');
-						switch(self.options.modal_type) {
-							case "iframe" :
-								var height = modal_body.height() - parseInt(modal_body.css('padding-top'), 10) - parseInt(modal_body.css('padding-bottom'), 10);
-								$(this).find('iframe').height(Math.max(height, 50));
-								break;
-
-							case "ajax":
-								$.ajax({
-									url: url, dataType: "html", async: false, success: function(data) {
-										modal_body.html(data);
-									}
-								});
-								break;
-
-							case "template":
-								self._loadTemplate("modal");
-								//	also serve calendar instance to underscore template to be able to access current language strings
-								modal_body.html(self.options.templates["modal"]({"event": event, "calendar": self}))
-								break;
-						}
-
-						//	set the title of the bootstrap modal
-						if(_.isFunction(self.options.modal_title)) {
-							modal.find(".modal-title").html(self.options.modal_title(event));
-						}
-					})
-					.on('shown.bs.modal', function() {
-						self.options.onAfterModalShown.call(self, self.options.events);
-					})
-					.on('hidden.bs.modal', function() {
-						self.options.onAfterModalHidden.call(self, self.options.events);
-					})
-					.data('handled.bootstrap-calendar', true).data('handled.event-id', event.id);
-			}
-			modal.modal('show');
+			XiboFormRender($(this).attr('href'));
 		});
 	};
 

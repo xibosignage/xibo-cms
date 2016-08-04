@@ -39,9 +39,6 @@ class ScheduleFactory extends BaseFactory
      * @param SanitizerServiceInterface $sanitizerService
      * @param ConfigServiceInterface $config
      * @param DisplayGroupFactory $displayGroupFactory
-     * @param DisplayFactory $displayFactory
-     * @param LayoutFactory $layoutFactory
-     * @param MediaFactory $mediaFactory
      */
     public function __construct($store, $log, $sanitizerService, $config, $displayGroupFactory)
     {
@@ -145,6 +142,7 @@ class ScheduleFactory extends BaseFactory
             `schedule`.recurrence_type AS recurrenceType,
             `schedule`.recurrence_detail AS recurrenceDetail,
             `schedule`.recurrence_range AS recurrenceRange,
+            `schedule`.recurrenceRepeatsOn,
             campaign.campaignId,
             campaign.campaign,
             `command`.commandId,

@@ -1,0 +1,10 @@
+{
+  "dbVersion": 127,
+  "appVersion": "1.8.0-rc1",
+  "steps": [
+    {
+      "step": "Add support for recurrence by week day",
+      "action": "ALTER TABLE `schedule` ADD `recurrenceRepeatsOn` VARCHAR(14) NULL;"
+    }
+  ]
+}

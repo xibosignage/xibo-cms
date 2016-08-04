@@ -465,11 +465,14 @@ class Schedule extends Base
 
                 if ($toDt !== null)
                     $schedule->toDt = $toDt->format('U');
+
+                if ($recurrenceRange != null)
+                    $schedule->recurrenceRange = $recurrenceRange->format('U');
             }
         }
 
         // Ready to do the add
-        $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory)->setDateService($this->getDate());
         $schedule->save();
 
         // Return
@@ -693,12 +696,17 @@ class Schedule extends Base
                     $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
             } else {
                 $schedule->fromDt = $fromDt->format('U');
-                $schedule->toDt = $toDt->format('U');
+
+                if ($toDt !== null)
+                    $schedule->toDt = $toDt->format('U');
+
+                if ($recurrenceRange != null)
+                    $schedule->recurrenceRange = $recurrenceRange->format('U');
             }
         }
 
         // Ready to do the add
-        $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory)->setDateService($this->getDate());
         $schedule->save();
 
         // Return
