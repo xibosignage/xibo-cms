@@ -238,6 +238,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
             // Set the name to the one we have selected
             $file->name = $name;
+            $file->mediaId = $media->mediaId;
 
             // Get the storedAs valid for return
             $file->storedas = $media->storedAs;
