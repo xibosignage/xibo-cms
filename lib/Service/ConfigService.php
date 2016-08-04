@@ -75,6 +75,8 @@ class ConfigService implements ConfigServiceInterface
      * @var array
      */
     public $themeConfig = [];
+    /** @var bool Has a theme been loaded? */
+    private $themeLoaded = false;
 
     /**
      * @inheritdoc
@@ -233,6 +235,7 @@ class ConfigService implements ConfigServiceInterface
         } else
             throw new ConfigurationException(__('The theme "%s" does not exist', $globalTheme));
 
+        $this->themeLoaded = true;
         $this->themeConfig = $config;
         $this->themeConfig['themeCode'] = $globalTheme;
         $this->themeConfig['themeFolder'] = $themeFolder;
@@ -264,6 +267,9 @@ class ConfigService implements ConfigServiceInterface
     public function uri($uri, $local = false)
     {
         $rootUri = ($local) ? '' : $this->rootUri();
+
+        if (!$this->themeLoaded)
+            return $rootUri . 'theme/default/' . $uri;
 
         // Serve the appropriate theme file
         if (is_dir(PROJECT_ROOT . '/web/' . $this->themeConfig['themeFolder'] . $uri)) {
