@@ -623,7 +623,7 @@ class Ticker extends ModuleWidget
 
                             switch ($tag) {
                                 case 'Link':
-                                    if ($item->getEnclosureType() == 'image') {
+                                    if (stripos($item->getEnclosureType(), 'image') > -1) {
                                         // Use the link to get the image
                                         $link = $item->getEnclosureUrl();
                                     }
