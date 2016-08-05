@@ -37,8 +37,9 @@ eventIcon = "fa-bullseye";
 }
 
 if (!event.editable) {
-eventIcon = "fa-wrench";
-eventClass = "event-inverse";
+	event.url = null;
+	eventIcon = "fa-wrench";
+	eventClass = "event-inverse";
 }
 %>
 <div class="cal-row-fluid">

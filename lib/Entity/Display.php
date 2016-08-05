@@ -370,6 +370,7 @@ class Display
     {
         $this->setCommonDependencies($store, $log);
         $this->excludeProperty('mediaInventoryXml');
+        $this->setPermissionsClass('Xibo\Entity\DisplayGroup');
 
         $this->config = $config;
         $this->pool = $pool;

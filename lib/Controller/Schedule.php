@@ -175,6 +175,7 @@ class Schedule extends Base
         $this->setNoOutput();
 
         $displayGroupIds = $this->getSanitizer()->getIntArray('displayGroupIds');
+        $originalDisplayGroupIds = $displayGroupIds;
         $start = $this->getSanitizer()->getString('from', 1000) / 1000;
         $end = $this->getSanitizer()->getString('to', 1000) / 1000;
 
@@ -186,12 +187,37 @@ class Schedule extends Base
             return;
         }
 
+        // Permissions check the list of display groups with the user accessible list of display groups
+        $displayGroupIds = array_diff($displayGroupIds, [-1]);
+
+        if ($this->getUser()->getUserTypeId() != 1) {
+            $userDisplayGroupIds = array_map(function($element) {
+                /** @var \Xibo\Entity\DisplayGroup $element */
+                return $element->displayGroupId;
+            }, $this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]));
+
+            // Reset the list to only those display groups that intersect and if 0 have been provided, only those from
+            // the user list
+            $displayGroupIds = (count($displayGroupIds) > 0) ? array_intersect($displayGroupIds, $userDisplayGroupIds) : $userDisplayGroupIds;
+
+            $this->getLog()->debug('Resolved list of display groups ['
+                . json_encode($displayGroupIds) . '] from provided list ['
+                . json_encode($originalDisplayGroupIds) . '] and user list ['
+                . json_encode($userDisplayGroupIds) . ']');
+
+            // If we have none, then we do not return any events.
+            if (count($displayGroupIds) <= 0) {
+                $this->getApp()->response()->body(json_encode(array('success' => 1, 'result' => [])));
+                return;
+            }
+        }
+
         $events = array();
         $filter = [
             'useDetail' => 1,
             'fromDt' => $start,
             'toDt' => $end,
-            'displayGroupIds' => array_diff($displayGroupIds, [-1])
+            'displayGroupIds' => $displayGroupIds
         ];
 
         foreach ($this->scheduleFactory->query('schedule_detail.FromDT', $filter) as $row) {
@@ -263,7 +289,7 @@ class Schedule extends Base
             $events[] = array(
                 'id' => $row->eventId,
                 'title' => $title,
-                'url' => $url,
+                'url' => ($editable) ? $url : null,
                 'start' => $fromDt->format('U') * 1000,
                 'end' => $toDt->format('U') * 1000,
                 'sameDay' => ($fromDt->day == $toDt->day),
