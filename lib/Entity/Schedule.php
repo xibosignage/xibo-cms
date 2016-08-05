@@ -583,13 +583,18 @@ class Schedule implements \JsonSerializable
                     break;
 
                 case 'Week':
-                    // recurrenceRepeatsOn will contain a bitflag we can use to determine which days it should repeat
+                    // recurrenceRepeatsOn will contain an array we can use to determine which days it should repeat
                     // on. Roll forward 7 days, adding each day we hit
-                    if (empty($this->recurrenceRepeatsOn)) {
-                        $start->addWeeks($this->recurrenceDetail);
-                        $end->addWeeks($this->recurrenceDetail);
-                    } else {
+                    // We start by adding the recurrence detail
+                    $start->addWeeks($this->recurrenceDetail);
+                    $end->addWeeks($this->recurrenceDetail);
+
+                    if (!empty($this->recurrenceRepeatsOn)) {
+                        // Parse days selected and add the necessary events
                         $daysSelected = explode(',', $this->recurrenceRepeatsOn);
+
+                        $this->getLog()->debug('Days selected: ' . json_encode($daysSelected) . ' - ' . $this->recurrenceRepeatsOn);
+
                         for ($i = 0; $i < 7; $i++) {
                             // Is this day set?
                             if (!in_array($i, $daysSelected))
@@ -612,8 +617,16 @@ class Schedule implements \JsonSerializable
                                 $day = 'sunday';
                             }
 
-                            $start->modify('next ' . $day);
-                            $end->modify('next ' . $day);
+                            // Take a clone of the start date, so that we can later work out the difference between the
+                            // new start date and new end date.
+                            $instanceStart = clone $start;
+
+                            // Modify the start day to be the next week day occurence
+                            $start->modify('next ' . $day)->setTime($instanceStart->hour, $instanceStart->minute, $instanceStart->second);
+
+                            // Whats the difference between the start/instance start
+                            // push the end date forward by that amount
+                            $end->addSeconds($start->diffInSeconds($instanceStart));
 
                             if ($start > $range)
                                 break;

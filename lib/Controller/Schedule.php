@@ -406,6 +406,15 @@ class Schedule extends Base
      *      format="date-time",
      *      required=false
      *   ),
+     *   @SWG\Parameter(
+     *      name="recurrenceRepeatsOn",
+     *      in="formData",
+     *      description="The days of the week that this event repeats - weekly only",
+     *      type="string",
+     *      format="array",
+     *      required=false,
+     *      @SWG\Items(type="integer")
+     *   ),
      *   @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -432,6 +441,7 @@ class Schedule extends Base
         $schedule->dayPartId = $this->getSanitizer()->getCheckbox('dayPartId', 0);
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
+        $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
 
         foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
@@ -641,6 +651,15 @@ class Schedule extends Base
      *      format="date-time",
      *      required=false
      *   ),
+     *   @SWG\Parameter(
+     *      name="recurrenceRepeatsOn",
+     *      in="formData",
+     *      description="The days of the week that this event repeats - weekly only",
+     *      type="string",
+     *      format="array",
+     *      required=false,
+     *      @SWG\Items(type="integer")
+     *   ),
      *   @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -664,6 +683,8 @@ class Schedule extends Base
         $schedule->dayPartId = $this->getSanitizer()->getCheckbox('dayPartId');
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
+        $recurrenceRepeatsOn = $this->getSanitizer()->getIntArray('recurrenceRepeatsOn');
+        $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
         $schedule->displayGroups = [];
 
         foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
