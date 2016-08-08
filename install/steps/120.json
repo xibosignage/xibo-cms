@@ -152,7 +152,7 @@
     },
     {
       "step": "Set all Users Home page - Part 1",
-      "action": "UPDATE `user` SET homepage = IFNULL((SELECT pageId FROM `pages` WHERE pages.name = `user`.homepage), 1);"
+      "action": "UPDATE `user` SET homepage = IFNULL((SELECT pageId FROM `pages` WHERE pages.name = `user`.homepage LIMIT 1), 1);"
     },
     {
       "step": "Update Users Home page - Part 2",

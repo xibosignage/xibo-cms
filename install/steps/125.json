@@ -44,7 +44,8 @@
     },
     {
       "step": "Add released and api ref to media table",
-      "action": "ALTER TABLE `media` ADD released tinyint(4) NOT NULL DEFAULT 1, ADD apiRef varchar(254) NULL;"
+      "action": "ALTER TABLE `media` ADD released tinyint(4) NOT NULL DEFAULT 1, ADD apiRef varchar(254) NULL;",
+      "patchedId": 121
     },
     {
       "step": "Add MCAAS Routes to Scope",
