@@ -20,6 +20,9 @@
  */
 namespace Xibo\Entity;
 
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Event\LayoutBuildEvent;
+use Xibo\Event\LayoutBuildRegionEvent;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
@@ -225,6 +228,9 @@ class Layout implements \JsonSerializable
      */
     private $date;
 
+    /** @var  EventDispatcherInterface */
+    private $dispatcher;
+
     /**
      * @var PermissionFactory
      */
@@ -266,6 +272,7 @@ class Layout implements \JsonSerializable
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
      * @param DateServiceInterface $date
+     * @param EventDispatcherInterface $eventDispatcher
      * @param PermissionFactory $permissionFactory
      * @param RegionFactory $regionFactory
      * @param TagFactory $tagFactory
@@ -274,12 +281,13 @@ class Layout implements \JsonSerializable
      * @param MediaFactory $mediaFactory
      * @param ModuleFactory $moduleFactory
      */
-    public function __construct($store, $log, $config, $date, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory)
+    public function __construct($store, $log, $config, $date, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->setPermissionsClass('Xibo\Entity\Campaign');
         $this->config = $config;
         $this->date = $date;
+        $this->dispatcher = $eventDispatcher;
         $this->permissionFactory = $permissionFactory;
         $this->regionFactory = $regionFactory;
         $this->tagFactory = $tagFactory;
@@ -953,6 +961,8 @@ class Layout implements \JsonSerializable
             if ($this->duration < $region->duration)
                 $this->duration = $region->duration;
 
+            $event = new LayoutBuildRegionEvent($region->regionId, $regionNode);
+            $this->dispatcher->dispatch($event::NAME, $event);
             // End of region loop.
         }
 
@@ -973,6 +983,10 @@ class Layout implements \JsonSerializable
             $status = 4;
 
         $this->status = ($status < $this->status) ? $status : $this->status;
+
+        // Fire a layout.build event, passing the layout and the generated document.
+        $event = new LayoutBuildEvent($this, $document);
+        $this->dispatcher->dispatch($event::NAME, $event);
 
         return $document->saveXML();
     }

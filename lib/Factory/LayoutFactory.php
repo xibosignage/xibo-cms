@@ -23,6 +23,7 @@
 namespace Xibo\Factory;
 
 
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Entity\Layout;
@@ -50,6 +51,9 @@ class LayoutFactory extends BaseFactory
      * @var DateServiceInterface
      */
     private $date;
+
+    /** @var  EventDispatcherInterface */
+    private $dispatcher;
 
     /**
      * @var PermissionFactory
@@ -105,6 +109,7 @@ class LayoutFactory extends BaseFactory
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
      * @param DateServiceInterface $date
+     * @param EventDispatcherInterface $dispatcher
      * @param PermissionFactory $permissionFactory
      * @param RegionFactory $regionFactory
      * @param TagFactory $tagFactory
@@ -115,7 +120,7 @@ class LayoutFactory extends BaseFactory
      * @param WidgetFactory $widgetFactory
      * @param WidgetOptionFactory $widgetOptionFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $date, $permissionFactory,
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $date, $dispatcher, $permissionFactory,
                                 $regionFactory, $tagFactory, $campaignFactory, $mediaFactory, $moduleFactory, $resolutionFactory,
                                 $widgetFactory, $widgetOptionFactory)
     {
@@ -123,6 +128,7 @@ class LayoutFactory extends BaseFactory
         $this->setAclDependencies($user, $userFactory);
         $this->config = $config;
         $this->date = $date;
+        $this->dispatcher = $dispatcher;
         $this->permissionFactory = $permissionFactory;
         $this->regionFactory = $regionFactory;
         $this->tagFactory = $tagFactory;
@@ -145,6 +151,7 @@ class LayoutFactory extends BaseFactory
             $this->getLog(),
             $this->config,
             $this->date,
+            $this->dispatcher,
             $this->permissionFactory,
             $this->regionFactory,
             $this->tagFactory,

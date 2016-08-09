@@ -28,6 +28,7 @@ use Stash\Driver\Composite;
 use Stash\Driver\Ephemeral;
 use Stash\Driver\FileSystem;
 use Stash\Pool;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\UpgradePendingException;
 use Xibo\Helper\ApplicationState;
@@ -128,6 +129,11 @@ class State extends Middleware
             return $sanitizer;
         });
 
+        // Register the event dispatcher
+        $app->container->singleton('dispatcher', function($container) {
+            return new EventDispatcher();
+        });
+
         // Register Controllers with DI
         self::registerControllersWithDi($app);
 
@@ -142,7 +148,8 @@ class State extends Middleware
                 $app->logService,
                 $app->configService,
                 $app->dateService,
-                $app->sanitizerService
+                $app->sanitizerService,
+                $app->dispatcher
             );
         });
 
@@ -1097,6 +1104,7 @@ class State extends Middleware
                 $container->userFactory,
                 $container->configService,
                 $container->dateService,
+                $container->dispatcher,
                 $container->permissionFactory,
                 $container->regionFactory,
                 $container->tagFactory,
