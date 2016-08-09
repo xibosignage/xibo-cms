@@ -32,6 +32,78 @@
     {% trans "Save" %}, $("#shellCommandEditForm").submit()
 {% endblock %}
 
+{% block formFieldActions %}
+    [{
+    "field": "duration",
+    "trigger": "init",
+    "value": "0",
+    "operation": "equals",
+    "actions": {
+    ".loop-fields": { "display": "none" }
+    }
+    },{
+    "field": "duration",
+    "trigger": "change",
+    "value": "0",
+    "operation": "equals",
+    "actions": {
+    ".loop-fields": { "display": "none" }
+    }
+    },{
+    "field": "duration",
+    "trigger": "init",
+    "value": "0",
+    "operation": "not",
+    "actions": {
+    ".loop-fields": { "display": "block" }
+    }
+    },{
+    "field": "duration",
+    "trigger": "change",
+    "value": "0",
+    "operation": "not",
+    "actions": {
+    ".loop-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" },
+    ".loop-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" },
+    ".loop-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" },
+    ".loop-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" },
+    ".loop-fields": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -52,6 +124,22 @@
                 {% set title %}{% trans "Android / Linux Command" %}{% endset %}
                 {% set helpText %}{% trans "Enter an Android / Linux Command Line compatible command" %}{% endset %}
                 {{ forms.input("linuxCommand", title, module.getOption("linuxCommand")|url_decode, helpText) }}
+
+                {% set title %}{% trans "Set a duration?" %}{% endset %}
+                {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+
+                {% set title %}{% trans "Duration" %}{% endset %}
+                {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
+                {% set title %}{% trans "Terminate the command once the duration elapses?" %}{% endset %}
+                {% set helpText %}{% trans "Should the player forcefully terminate the command after the duration specified. Leave unchecked to let the command terminate naturally." %}{% endset %}
+                {{ forms.checkbox("terminateCommand", title, module.getOption("terminateCommand"), helpText, "duration-fields") }}
+
+                {% set title %}{% trans "Use taskkill to terminate commands?" %}{% endset %}
+                {% set helpText %}{% trans "On Windows, should the player use taskkill to terminate commands." %}{% endset %}
+                {{ forms.checkbox("useTaskkill", title, module.getOption("useTaskkill"), helpText, "duration-fields") }}
             </form>
         </div>
     </div>
