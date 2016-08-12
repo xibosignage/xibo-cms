@@ -26,7 +26,7 @@ use Xibo\Storage\StorageServiceInterface;
  * Class HelpService
  * @package Xibo\Service
  */
-class HelpService
+class HelpService implements HelpServiceInterface
 {
     /**
      * @var StorageServiceInterface
@@ -73,7 +73,7 @@ class HelpService
 
     /**
      * Get Config
-     * @return ConfigService
+     * @return ConfigServiceInterface
      */
     private function getConfig()
     {
@@ -98,14 +98,29 @@ class HelpService
             $link = $sth->fetchColumn(0);
         }
 
-        return $this->getConfig()->GetSetting('HELP_BASE') . $link;
+        return $this->getBaseUrl() . $link;
     }
 
     /**
      * @inheritdoc
      */
-    public function rawLink($link)
+    public function address($suffix = '')
     {
-        return $this->getConfig()->GetSetting('HELP_BASE') . $link;
+        return $this->getBaseUrl() . $suffix;
+    }
+
+    /**
+     * @return string
+     */
+    private function getBaseUrl()
+    {
+        $helpBase = $this->getConfig()->GetSetting('HELP_BASE');
+
+        if (stripos($helpBase, 'http://') === false && stripos($helpBase, 'https://') === false) {
+            // We need to convert the URL to a full URL
+            $helpBase = $this->getConfig()->rootUri() . $helpBase;
+        }
+
+        return $helpBase;
     }
 }

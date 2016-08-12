@@ -179,7 +179,7 @@ class Login extends Base
                 'display' => $this->getHelp()->link('Display', 'General'),
                 'layout' => $this->getHelp()->link('Layout', 'General'),
                 'schedule' => $this->getHelp()->link('Schedule', 'General'),
-                'windows' => $this->getHelp()->rawLink('install_windows_client')
+                'windows' => $this->getHelp()->address('install_windows_client')
             ]
         ]);
     }

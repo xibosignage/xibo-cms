@@ -71,6 +71,7 @@ class Theme extends Middleware
             'route' => $routeName,
             'theme' => $app->configService,
             'settings' => $settings,
+            'help' => $app->helpService,
             'translate' => [
                 'locale' => Translate::GetLocale(),
                 'jsLocale' => Translate::GetJsLocale(),

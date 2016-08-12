@@ -360,7 +360,7 @@
                         {{ fieldItemsSideBySide }}
 
                         {% set title %}{% trans "Date Format" %}{% endset %}
-                        {% set manualUrl %}{{ settings.HELP_BASE }}advanced_dateFormat.md{% endset %}
+                        {% set manualUrl %}{{ help.address("advanced_dateFormat.html") }}{% endset %}
                         {% set helpText %}{% trans %}The format to apply to all dates returned by the ticker. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}
                         {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText) }}
 
