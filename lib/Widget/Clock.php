@@ -75,7 +75,7 @@ class Clock extends ModuleWidget
     public function edit()
     {
         // You must also provide a duration (all media items must provide this field)
-        $this->setOption('name', $this->getSanitizer()->getString('name', $this->getOption('name')));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setDuration($this->getSanitizer()->getInt('duration'));
         $this->setOption('theme', $this->getSanitizer()->getInt('themeId', 0));

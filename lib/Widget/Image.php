@@ -44,7 +44,7 @@ class Image extends ModuleWidget
         // Set the properties specific to Images
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name', $this->getOption('name')));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'center'));
         $this->setOption('align', $this->getSanitizer()->getString('alignId', 'center'));
         $this->setOption('valign', $this->getSanitizer()->getString('valignId', 'middle'));

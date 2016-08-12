@@ -240,7 +240,7 @@ class DataSetView extends ModuleWidget
             $this->setOption('columns', implode(',', $columns));
 
         // Other properties
-        $this->setOption('name', $this->getSanitizer()->getString('name', $this->getOption('name')));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));

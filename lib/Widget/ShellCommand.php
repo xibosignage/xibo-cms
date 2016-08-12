@@ -63,7 +63,7 @@ class ShellCommand extends ModuleWidget
         // Any Options (we need to encode shell commands, as they sit on the options rather than the raw
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setOption('name', $this->getSanitizer()->getString('name', $this->getOption('name')));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
 
         // Commands
         $windows = $this->getSanitizer()->getString('windowsCommand');
