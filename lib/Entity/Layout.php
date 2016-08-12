@@ -190,7 +190,9 @@ class Layout implements \JsonSerializable
     public $statusMessage;
 
     // Child items
+    /** @var Region[]  */
     public $regions = [];
+
     public $tags = [];
     public $permissions = [];
     public $campaigns = [];
@@ -1003,16 +1005,27 @@ class Layout implements \JsonSerializable
             'includeData' => false
         ], $options);
 
+        // Load the complete layout
+        $this->load();
+
         // We export to a ZIP file
         $zip = new \ZipArchive();
         $result = $zip->open($fileName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
         if ($result !== true)
             throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: ' . $result));
 
+        // Add a mapping file for the region names
+        $regionMapping = [];
+        foreach ($this->regions as $region) {
+            /** @var Region $region */
+            $regionMapping[$region->regionId] = $region->name;
+        }
+
         // Add layout information to the ZIP
         $zip->addFromString('layout.json', json_encode([
             'layout' => $this->layout,
-            'description' => $this->description
+            'description' => $this->description,
+            'regions' => $regionMapping
         ]));
 
         // Add the layout XLF

@@ -501,6 +501,16 @@ class LayoutFactory extends BaseFactory
         $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);
         $layout->description = (isset($layoutDetails['description']) ? $layoutDetails['description'] : '');
 
+        // Update region names
+        if (isset($layoutDetails['regions']) && count($layoutDetails['regions']) > 0) {
+            $this->getLog()->debug('Updating region names according to layout.json');
+            foreach ($layout->regions as $region) {
+                if (array_key_exists($region->tempId, $layoutDetails['regions'])) {
+                    $region->name = $layoutDetails['regions'][$region->tempId];
+                }
+            }
+        }
+
         // Remove the tags if necessary
         if (!$importTags) {
             $this->getLog()->debug('Removing tags from imported layout');
