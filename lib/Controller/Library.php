@@ -304,6 +304,20 @@ class Library extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="Filter by Duration - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="fileSize",
+     *      in="formData",
+     *      description="Filter by File Size - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -325,7 +339,9 @@ class Library extends Base
             'type' => $this->getSanitizer()->getString('type'),
             'tags' => $this->getSanitizer()->getString('tags'),
             'ownerId' => $this->getSanitizer()->getInt('ownerId'),
-            'retired' => $this->getSanitizer()->getInt('retired')
+            'retired' => $this->getSanitizer()->getInt('retired'),
+            'duration' => $this->getSanitizer()->getString('duration'),
+            'fileSize' => $this->getSanitizer()->getString('fileSize')
         ]));
 
         // Add some additional row content

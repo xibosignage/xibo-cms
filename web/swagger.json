@@ -2423,6 +2423,20 @@
                         "description": "Filter by Retired",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "Filter by Duration - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "fileSize",
+                        "in": "formData",
+                        "description": "Filter by File Size - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -3375,6 +3389,7 @@
                 "tags": [
                     "schedule"
                 ],
+                "summary": "Generates the calendar that we draw events on",
                 "operationId": "scheduleCalendarData",
                 "parameters": [
                     {
@@ -3521,6 +3536,17 @@
                         "required": false,
                         "type": "string",
                         "format": "date-time"
+                    },
+                    {
+                        "name": "recurrenceRepeatsOn",
+                        "in": "formData",
+                        "description": "The days of the week that this event repeats - weekly only",
+                        "required": false,
+                        "type": "string",
+                        "format": "array",
+                        "items": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "responses": {
@@ -3653,6 +3679,17 @@
                         "required": false,
                         "type": "string",
                         "format": "date-time"
+                    },
+                    {
+                        "name": "recurrenceRepeatsOn",
+                        "in": "formData",
+                        "description": "The days of the week that this event repeats - weekly only",
+                        "required": false,
+                        "type": "string",
+                        "format": "array",
+                        "items": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "responses": {
@@ -5452,6 +5489,10 @@
                 "recurrenceRange": {
                     "description": "A Unix timestamp indicating the end time of the recurring events.",
                     "type": "integer"
+                },
+                "recurrenceRepeatsOn": {
+                    "description": "Recurrence repeats on days - 0 to 7 where 0 is a monday",
+                    "type": "string"
                 },
                 "campaign": {
                     "description": "The Campaign/Layout Name",
