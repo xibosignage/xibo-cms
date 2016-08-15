@@ -301,7 +301,6 @@ class LayoutTest extends LocalWebTestCase
 
     /**
      * Test delete
-     * @depends testAddSuccess
      * @group minimal
      */
     public function testDelete()
@@ -452,7 +451,6 @@ class LayoutTest extends LocalWebTestCase
 
     /**
      * Edit known region
-     * @depends testAddRegionSuccess
      */
     public function testEditRegion()
     {
@@ -482,12 +480,11 @@ class LayoutTest extends LocalWebTestCase
         $this->assertSame(400, $object->data->left);
     }
   
-   /**
-    *  delete region test
-    *  @depends testEditRegion
-    */
-   public function testDeleteRegion()
-   {
+    /**
+     *  delete region test
+     */
+    public function testDeleteRegion()
+    {
         # Create layout and add region to it
         $name = Random::generateString(8, 'phpunit');
         $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
@@ -497,7 +494,36 @@ class LayoutTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
         # Clean up
         $layout->delete();
-   }
+    }
+
+    /**
+     * Add tag to a layout
+     * @group broken
+     */
+    public function testAddTag()
+    {
+        # Create layout 
+        $name = Random::generateString(8, 'phpunit');
+        $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
+        # Assign new tag to our layout 
+        $this->client->post('/layout/' . $layout->layoutId . '/tag' , [
+            'tag' => ['API']
+            ]);
+        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+    }
+
+    /**
+     * Calculate layout status
+     */
+    public function testStatus()
+    {
+        # Create layout 
+        $name = Random::generateString(8, 'phpunit');
+        $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
+        # Calculate layou's status
+        $this->client->get('/layout/status/' . $layout->layoutId);
+        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+    }
 
     /**
      * Copy Layout Test

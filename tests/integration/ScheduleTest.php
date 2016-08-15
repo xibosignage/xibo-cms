@@ -251,7 +251,52 @@ class ScheduleTest extends LocalWebTestCase
             'Command no priority, no recurrence' => [time()+3600, 0, NULL, NULL, NULL, 0, 0],
         ];
     }
+
+        /**
+     * @group add
+     * @dataProvider provideSuccessCasesOverlay
+     */
+    public function testAddEventOverlay($scheduleFrom, $scheduleTo, $scheduleCampaignId, $scheduleDisplays, $scheduledayPartId, $scheduleRecurrenceType, $scheduleRecurrenceDetail, $scheduleRecurrenceRange, $scheduleOrder, $scheduleIsPriority)
+    {
+        # Create new dispay group
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
+        # Create layout
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', 9);
+        # Create new event with data from provideSuccessCasesOverlay
+            $response = $this->client->post($this->route, [
+                'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
+                'toDt' => date('Y-m-d H:i:s', $scheduleTo),
+                'eventTypeId' => 3,
+                'campaignId' => $layout->campaignId,
+                'displayGroupIds' => [$displayGroup->displayGroupId],
+                'displayOrder' => $scheduleOrder,
+                'isPriority' => $scheduleIsPriority,
+                'scheduleRecurrenceType' => $scheduleRecurrenceType,
+                'scheduleRecurrenceDetail' => $scheduleRecurrenceDetail,
+                'scheduleRecurrenceRange' => $scheduleRecurrenceRange
+            ]);
+        # Check if call was successful
+        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
+        $object = json_decode($this->client->response->body());
+        $this->assertObjectHasAttribute('data', $object);
+        $this->assertObjectHasAttribute('id', $object);
+        # Clean up
+        $displayGroup->delete();
+        if ($layout != null)
+            $layout->delete();
+    }
     
+    /**
+     * Each array is a test run
+     * Format ($scheduleFrom, $scheduleTo, $scheduledayPartId, $scheduleRecurrenceType, $scheduleRecurrenceDetail, $scheduleRecurrenceRange, $scheduleOrder, $scheduleIsPriority)
+     * @return array
+     */
+    public function provideSuccessCasesOverlay()
+    {
+        return [
+             'Overlay, no recurrence' => [time()+3600, time()+7200, 0, NULL, NULL, NULL, 0, 0, 0, 0],
+        ];
+    }
     /**
      * @group add
      */

@@ -522,7 +522,6 @@ class DisplayGroupTest extends LocalWebTestCase
 
     /**
      * Unassign displays Test
-     * @group broken
      */
     public function testUnassignDisplay()
     {
@@ -549,7 +548,7 @@ class DisplayGroupTest extends LocalWebTestCase
         # Assign display to display group
         $displayGroup->assignDisplay([$display->displayId]);
         # Unassign display from display group
-        $this->client->post('/displaygroup/' . $group->displayGroupId . '/display/unassign', [
+        $this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/display/unassign', [
         'displayId' => [$display->displayId]
         ]);
 
@@ -588,7 +587,6 @@ class DisplayGroupTest extends LocalWebTestCase
 
     /**
      * Unassign displays group Test
-     * @group broken
      */
     public function testUnassignGroup()
     {
@@ -599,6 +597,7 @@ class DisplayGroupTest extends LocalWebTestCase
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
         $displayGroup2 = (new XiboDisplayGroup($this->getEntityProvider()))->create($name2, 'phpunit description', 0, '');
 		# Assign second display group to the first one
+
         $displayGroup->assignDisplayGroup([$displayGroup2->displayGroupId]);
         # Unassign second display group from the first one
         $this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/displayGroup/unassign', [
@@ -618,16 +617,25 @@ class DisplayGroupTest extends LocalWebTestCase
      */
     public function testAssignMedia()
     {
-
-		$this->client->post('/displaygroup/' . 7 . '/media/assign', [
-        	'mediaId' => [13, 17],
-        	'unassignMediaId' => [13]
+        # Generate new random name
+        $name = Random::generateString(8, 'phpunit');
+        # Create new display group
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
+        # Upload a known files
+        $media = (new XiboLibrary($this->getEntityProvider()))->create('API video', PROJECT_ROOT . '/tests/resources/HLH264.mp4');
+        $media2 = (new XiboLibrary($this->getEntityProvider()))->create('API image', PROJECT_ROOT . '/tests/resources/xts-night-001.jpg');
+        # Assign two files o the display group and unassign one of them
+		$this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/media/assign', [
+        	'mediaId' => [$media->mediaId, $media2->mediaId],
+        	'unassignMediaId' => [$media2->mediaId]
         	]);
 
         $this->assertSame(200, $this->client->response->status());
-
         $object = json_decode($this->client->response->body());
-//        fwrite(STDERR, $this->client->response->body());
+        # Clean up
+        $displayGroup->delete();
+        $media->delete();
+        $media2->delete();
     }
 
     /**
@@ -636,15 +644,24 @@ class DisplayGroupTest extends LocalWebTestCase
      */
     public function testUnassignMedia()
     {
-
-        $this->client->post('/displaygroup/' . 7 . '/media/unassign', [
-        	'mediaId' => [17]
+        # Generate new random name
+        $name = Random::generateString(8, 'phpunit');
+        # Create new display group
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
+        # Upload a known file
+        $media = (new XiboLibrary($this->getEntityProvider()))->create('API image', PROJECT_ROOT . '/tests/resources/xts-night-001.jpg');
+        # Assign media to display Group
+        $displayGroup->assignMedia([$media->mediaId]);
+        # Unassign the media from the display group
+        $this->client->post('/displaygroup/' . $DisplayGroup->displayGroupId . '/media/unassign', [
+        	'mediaId' => [$media->mediaId]
         	]);
 
         $this->assertSame(200, $this->client->response->status());
-
         $object = json_decode($this->client->response->body());
-//        fwrite(STDERR, $this->client->response->body());
+        # Clean up
+        $displayGroup->delete();
+        $media->delete();
     }
 
     /**
@@ -675,7 +692,6 @@ class DisplayGroupTest extends LocalWebTestCase
 
     /**
      * Unassign layouts from a group Test
-     * @group broken
      */
     public function testUnassignLayout()
     {
@@ -700,20 +716,27 @@ class DisplayGroupTest extends LocalWebTestCase
     }
 
     /**
-     * Assign apk version to a group Test
+     * Assign apk version to a group
      * @group broken
      */
     public function testVersion()
     {
-
-        $this->client->post('/displaygroup/' . 7 . '/version', [
-        	'mediaId' => 18
+        # Create new random name
+        $name = Random::generateString(8, 'phpunit');
+        # Create new display group
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
+        # Upload a known apk file
+        $media = (new XiboLibrary($this->getEntityProvider()))->create('API image', PROJECT_ROOT . '/tests/resources/Xibo_for_Android_v1.7_R61.apk');
+        # Asign apk to the display group
+        $this->client->post('/displaygroup/' . $DisplayGroup->displayGroupId . '/version', [
+        	'mediaId' => $media->mediaId
         	]);
 
         $this->assertSame(200, $this->client->response->status());
-
         $object = json_decode($this->client->response->body());
-//        fwrite(STDERR, $this->client->response->body());
+        # Clean up
+        $displayGroup->delete();
+        $media->delete();
     }
 
     /**
