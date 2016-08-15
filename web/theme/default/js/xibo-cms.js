@@ -802,6 +802,11 @@ function XiboMultiSelectFormRender(button) {
         // Do our thing
         dialog.modal('hide');
 
+        // Bring other modals back to focus
+        if ($('.modal').hasClass('in')) {
+            $('body').addClass('modal-open');
+        }
+
         // Keep the modal window open!
         return false;
     });
