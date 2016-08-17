@@ -1162,7 +1162,15 @@ class Layout implements \JsonSerializable
             $this->duration = 0;
 
             // Save the resulting XLF
-            file_put_contents($path, $this->toXlf());
+            try {
+                file_put_contents($path, $this->toXlf());
+            } catch (\Exception $e) {
+                $this->getLog()->error('Cannot build Layout. Unexpected error: ' . $e->getMessage());
+
+                // Will continue and save the status as 4
+                $this->status = 4;
+                $this->statusMessage = 'Unexpected Error';
+            }
 
             $this->save([
                 'saveRegions' => true,
