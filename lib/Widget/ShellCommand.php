@@ -44,6 +44,7 @@ class ShellCommand extends ModuleWidget
         $windows = $this->getSanitizer()->getString('windowsCommand');
         $linux = $this->getSanitizer()->getString('linuxCommand');
 
+        $this->setOption('launchThroughCmd', $this->getSanitizer()->getCheckbox('launchThroughCmd'));
         $this->setOption('terminateCommand', $this->getSanitizer()->getCheckbox('terminateCommand'));
         $this->setOption('useTaskkill', $this->getSanitizer()->getCheckbox('useTaskkill'));
         $this->setOption('commandCode', $this->getSanitizer()->getString('commandCode'));
@@ -69,6 +70,7 @@ class ShellCommand extends ModuleWidget
         $windows = $this->getSanitizer()->getString('windowsCommand');
         $linux = $this->getSanitizer()->getString('linuxCommand');
 
+        $this->setOption('launchThroughCmd', $this->getSanitizer()->getCheckbox('launchThroughCmd'));
         $this->setOption('terminateCommand', $this->getSanitizer()->getCheckbox('terminateCommand'));
         $this->setOption('useTaskkill', $this->getSanitizer()->getCheckbox('useTaskkill'));
         $this->setOption('commandCode', $this->getSanitizer()->getString('commandCode'));
