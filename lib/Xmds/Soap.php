@@ -37,7 +37,6 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Random;
-use Xibo\Service\ConfigService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogService;
@@ -207,7 +206,7 @@ class Soap
 
     /**
      * Get Config
-     * @return ConfigService
+     * @return ConfigServiceInterface
      */
     protected function getConfig()
     {
@@ -312,6 +311,8 @@ class Soap
                     ON `lkdgdg`.parentId = `lklayoutdisplaygroup`.displayGroupId
                     INNER JOIN `lkdisplaydg`
                     ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
+                    INNER JOIN `layout`
+                    ON `layout`.layoutID = `lklayoutdisplaygroup`.layoutId
                  WHERE lkdisplaydg.DisplayID = :displayId
                 ORDER BY DisplayOrder, LayoutDisplayOrder, eventId
             ';
@@ -1387,7 +1388,9 @@ class Soap
         catch (NotFoundException $notEx) {
             throw new \SoapFault('Receiver', 'Requested an invalid file.');
         }
-        catch (ControllerNotImplemented $e) {
+        catch (\Exception $e) {
+            $this->getLog()->error('Unknown error during getResource. E = ' . $e->getMessage());
+            $this->getLog()->debug($e->getTraceAsString());
             throw new \SoapFault('Receiver', 'Unable to get the media resource');
         }
 

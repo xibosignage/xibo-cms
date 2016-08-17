@@ -25,6 +25,7 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -525,7 +526,8 @@ class Display
         $options = array_merge([
             'validate' => true,
             'audit' => true,
-            'triggerDynamicDisplayGroupAssessment' => false
+            'triggerDynamicDisplayGroupAssessment' => false,
+            'enableActions' => true
         ], $options);
 
         if ($options['validate'])
@@ -539,10 +541,13 @@ class Display
         if ($options['audit'])
             $this->getLog()->audit('Display', $this->displayId, 'Display Saved', $this->jsonSerialize());
 
-        if ($this->collectRequired) {
+        if ($this->collectRequired && $options['enableActions']) {
             $this->getLog()->debug('Collect Now Action for Display %s', $this->display);
 
             try {
+                if ($this->playerAction == null)
+                    throw new ConfigurationException('Player Actions not configured');
+
                 $this->playerAction->sendAction($this, new CollectNowAction());
             } catch (\Exception $e) {
                 $this->getLog()->notice('Display Save would have triggered Player Action, but the action failed with message: %s', $e->getMessage());
