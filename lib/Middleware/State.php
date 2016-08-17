@@ -201,16 +201,17 @@ class State extends Middleware
 
             // Log level
             $level = \Xibo\Service\LogService::resolveLogLevel($app->configService->GetSetting('audit'));
+            $restingLevel = \Xibo\Service\LogService::resolveLogLevel($app->configService->GetSetting('RESTING_LOG_LEVEL'));
 
-            if ($level > \Slim\Log::ERROR) {
+            if ($level > $restingLevel) {
                 // Do we allow the log level to be this high
                 $elevateUntil = $app->configService->GetSetting('ELEVATE_LOG_UNTIL');
 
                 if (intval($elevateUntil) < time()) {
                     // Elevation has expired, revery log level
-                    $app->configService->ChangeSetting('audit', 'Error');
+                    $app->configService->ChangeSetting('audit', $app->configService->GetSetting('RESTING_LOG_LEVEL'));
 
-                    $level = \Slim\Log::ERROR;
+                    $level = $restingLevel;
                 }
             }
 

@@ -147,6 +147,8 @@ echo __('CDN Address');
 echo __('Content Delivery Network Address for serving file requests to Players');
 echo __('Elevate Log Until');
 echo __('Elevate the log level until this date.');
+echo __('Resting Log Level');
+echo __('Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems "error" is recommended.');
 
 // Transitions
 echo __('Fade In');
