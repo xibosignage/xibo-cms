@@ -480,7 +480,7 @@ class Layout implements \JsonSerializable
         $this->hash = $this->hash();
         $this->loaded = true;
 
-        $this->getLog()->debug('Loaded %s' . $this->layoutId);
+        $this->getLog()->debug('Loaded %s', $this->layoutId);
     }
 
     /**
