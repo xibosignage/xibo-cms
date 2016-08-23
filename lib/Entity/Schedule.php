@@ -585,9 +585,8 @@ class Schedule implements \JsonSerializable
                 case 'Week':
                     // recurrenceRepeatsOn will contain an array we can use to determine which days it should repeat
                     // on. Roll forward 7 days, adding each day we hit
-                    // We start by adding the recurrence detail
-                    $start->addWeeks($this->recurrenceDetail);
-                    $end->addWeeks($this->recurrenceDetail);
+                    $originalStart = clone $start;
+                    $originalEnd = clone $end;
 
                     if (!empty($this->recurrenceRepeatsOn)) {
                         // Parse days selected and add the necessary events
@@ -595,23 +594,23 @@ class Schedule implements \JsonSerializable
 
                         $this->getLog()->debug('Days selected: ' . json_encode($daysSelected) . ' - ' . $this->recurrenceRepeatsOn);
 
-                        for ($i = 0; $i < 7; $i++) {
+                        for ($i = 1; $i <= 7; $i++) {
                             // Is this day set?
                             if (!in_array($i, $daysSelected))
                                 continue;
 
                             // Set the textual representation of this day
-                            if ($i == 0) {
+                            if ($i == 1) {
                                 $day = 'monday';
-                            } else if ($i == 1) {
-                                $day = 'tuesday';
                             } else if ($i == 2) {
-                                $day = 'wednesday';
+                                $day = 'tuesday';
                             } else if ($i == 3) {
-                                $day = 'thursday';
+                                $day = 'wednesday';
                             } else if ($i == 4) {
-                                $day = 'friday';
+                                $day = 'thursday';
                             } else if ($i == 5) {
+                                $day = 'friday';
+                            } else if ($i == 6) {
                                 $day = 'saturday';
                             } else {
                                 $day = 'sunday';
@@ -644,6 +643,14 @@ class Schedule implements \JsonSerializable
                             }
                         }
                     }
+
+                    // Jump forward a week from the original start date (when we entered this loop)
+                    $start = $originalStart;
+                    $end = $originalEnd;
+
+                    $start->addWeeks($this->recurrenceDetail);
+                    $end->addWeeks($this->recurrenceDetail);
+
                     break;
 
                 case 'Month':

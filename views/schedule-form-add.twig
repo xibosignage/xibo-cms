@@ -291,14 +291,14 @@
                         {% set saturday %}{% trans "Saturday" %}{% endset %}
                         {% set sunday %}{% trans "Sunday" %}{% endset %}
                         {% set options = [
-                        { id: "", name: noneOption },
-                        { id: 0, name: monday },
-                        { id: 1, name: tuesday },
-                        { id: 2, name: wednesday },
-                        { id: 3, name: thursday },
-                        { id: 4, name: friday },
-                        { id: 5, name: saturday },
-                        { id: 6, name: sunday },
+                        { id: 0, name: noneOption },
+                        { id: 1, name: monday },
+                        { id: 2, name: tuesday },
+                        { id: 3, name: wednesday },
+                        { id: 4, name: thursday },
+                        { id: 5, name: friday },
+                        { id: 6, name: saturday },
+                        { id: 7, name: sunday },
                         ] %}
                         {{ forms.dropdown("recurrenceRepeatsOn[]", "dropdownmulti", "", event.recurrenceRepeatsOn, options, "id", "name", helpText, "repeat-weekly-control-group") }}
 
