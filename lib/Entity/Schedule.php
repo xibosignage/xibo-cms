@@ -561,6 +561,8 @@ class Schedule implements \JsonSerializable
         $end = $this->getDate()->parse($this->toDt, 'U');
         $range = $this->getDate()->parse($this->recurrenceRange, 'U');
 
+        $weekRecurred = false;
+
         // loop until we have added the recurring events for the schedule
         while ($start < $range)
         {
@@ -583,52 +585,44 @@ class Schedule implements \JsonSerializable
                     break;
 
                 case 'Week':
+                    // dayOfWeek is 0 for Sunday to 6 for Saturday
+                    // daysSelected is 1 for Monday to 7 for Sunday
+                    $dayOfWeekLookup = [7,1,2,3,4,5,6];
+
                     // recurrenceRepeatsOn will contain an array we can use to determine which days it should repeat
                     // on. Roll forward 7 days, adding each day we hit
-                    $originalStart = clone $start;
-                    $originalEnd = clone $end;
-
+                    // if we go over the start of the week, then jump forward by the recurrence range
                     if (!empty($this->recurrenceRepeatsOn)) {
                         // Parse days selected and add the necessary events
                         $daysSelected = explode(',', $this->recurrenceRepeatsOn);
 
-                        $this->getLog()->debug('Days selected: ' . json_encode($daysSelected) . ' - ' . $this->recurrenceRepeatsOn);
+                        // Are we on the start day of this week already?
+                        $onStartOfWeek = ($start->copy()->setTime(0,0,0) == $start->copy()->startOfWeek()->setTime(0,0,0));
+
+                        // What is the end of this week
+                        $endOfWeek = $start->copy()->endOfWeek();
+
+                        $this->getLog()->debug('Days selected: ' . $this->recurrenceRepeatsOn . '. End of week = ' . $endOfWeek . ' start date ' . $start);
 
                         for ($i = 1; $i <= 7; $i++) {
-                            // Is this day set?
-                            if (!in_array($i, $daysSelected))
-                                continue;
-
-                            // Set the textual representation of this day
-                            if ($i == 1) {
-                                $day = 'monday';
-                            } else if ($i == 2) {
-                                $day = 'tuesday';
-                            } else if ($i == 3) {
-                                $day = 'wednesday';
-                            } else if ($i == 4) {
-                                $day = 'thursday';
-                            } else if ($i == 5) {
-                                $day = 'friday';
-                            } else if ($i == 6) {
-                                $day = 'saturday';
-                            } else {
-                                $day = 'sunday';
+                            // Add a day to the start dates
+                            // after the first pass, we will already be on the first day of the week
+                            if ($i > 1 || !$onStartOfWeek) {
+                                $start->addDay(1);
+                                $end->addDay(1);
                             }
 
-                            // Take a clone of the start date, so that we can later work out the difference between the
-                            // new start date and new end date.
-                            $instanceStart = clone $start;
+                            $this->getLog()->debug('End of week = ' . $endOfWeek . ' assessing start date ' . $start);
 
-                            // Modify the start day to be the next week day occurence
-                            $start->modify('next ' . $day)->setTime($instanceStart->hour, $instanceStart->minute, $instanceStart->second);
-
-                            // Whats the difference between the start/instance start
-                            // push the end date forward by that amount
-                            $end->addSeconds($start->diffInSeconds($instanceStart));
-
-                            if ($start > $range)
+                            // If we go over the recurrence range, stop
+                            // if we go over the start of the week, stop
+                            if ($start > $range || $start > $endOfWeek) {
                                 break;
+                            }
+
+                            // Is this day set?
+                            if (!in_array($dayOfWeekLookup[$start->dayOfWeek], $daysSelected))
+                                continue;
 
                             if ($this->toDt == null)
                                 $this->addDetail($start->format('U'), null);
@@ -644,12 +638,19 @@ class Schedule implements \JsonSerializable
                         }
                     }
 
-                    // Jump forward a week from the original start date (when we entered this loop)
-                    $start = $originalStart;
-                    $end = $originalEnd;
+                    $this->getLog()->debug('Finished 7 day roll forward, start date is ' . $start);
 
+                    // Wind back a week and then add our recurrence detail
+                    $start->addWeek(-1);
+                    $end->addWeek(-1);
+
+                    $this->getLog()->debug('Resetting start date to ' . $start);
+
+                    // Jump forward a week from the original start date (when we entered this loop)
                     $start->addWeeks($this->recurrenceDetail);
                     $end->addWeeks($this->recurrenceDetail);
+
+                    $weekRecurred = true;
 
                     break;
 

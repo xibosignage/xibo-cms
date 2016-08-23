@@ -467,6 +467,7 @@ class Schedule extends Base
         $schedule->dayPartId = $this->getSanitizer()->getCheckbox('dayPartId', 0);
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
+        $recurrenceRepeatsOn = $this->getSanitizer()->getIntArray('recurrenceRepeatsOn');
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
 
         foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
