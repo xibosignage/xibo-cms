@@ -636,21 +636,25 @@ class Schedule implements \JsonSerializable
                                 $this->addDetail($start->format('U'), $end->format('U'));
                             }
                         }
+
+                        $this->getLog()->debug('Finished 7 day roll forward, start date is ' . $start);
+
+                        // If we haven't passed the end of the week, roll forward
+                        if ($start < $endOfWeek) {
+                            $start->addDay(1);
+                            $end->addDay(1);
+                        }
+
+                        // Wind back a week and then add our recurrence detail
+                        $start->addWeek(-1);
+                        $end->addWeek(-1);
+
+                        $this->getLog()->debug('Resetting start date to ' . $start);
                     }
-
-                    $this->getLog()->debug('Finished 7 day roll forward, start date is ' . $start);
-
-                    // Wind back a week and then add our recurrence detail
-                    $start->addWeek(-1);
-                    $end->addWeek(-1);
-
-                    $this->getLog()->debug('Resetting start date to ' . $start);
 
                     // Jump forward a week from the original start date (when we entered this loop)
                     $start->addWeeks($this->recurrenceDetail);
                     $end->addWeeks($this->recurrenceDetail);
-
-                    $weekRecurred = true;
 
                     break;
 
