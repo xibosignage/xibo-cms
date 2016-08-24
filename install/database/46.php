@@ -13,7 +13,7 @@ class Step46 extends UpgradeStep
         
         $campaign = new Campaign($db);
 
-        $SQL = "SELECT LayoutID, Layout, UserID FROM layout WHERE layout <> 'Default Layout'";
+        $SQL = "SELECT LayoutID, Layout, UserID FROM `layout` WHERE layout <> 'Default Layout'";
 
         $layouts = $db->GetArray($SQL);
 
@@ -25,16 +25,16 @@ class Step46 extends UpgradeStep
             $campaign->Link($campaignId, $layoutId, 1);
             
             // Update Security
-            $SQL  = "INSERT INTO lkcampaigngroup (CampaignID, GroupID, View, Edit, Del) ";
-            $SQL .= " SELECT '$campaignId', GroupID, View, Edit, Del ";
+            $SQL  = "INSERT INTO `lkcampaigngroup` (CampaignID, GroupID, View, Edit, Del) ";
+            $SQL .= sprintf(" SELECT '%d', GroupID, View, Edit, Del ", $campaignId);
             $SQL .= "  FROM lklayoutgroup ";
-            $SQL .= " WHERE lklayoutgroup.LayoutID = $layoutId";
+            $SQL .= sprintf(" WHERE lklayoutgroup.LayoutID = %d", $layoutId);
 
             $db->query($SQL);
 
             // Update Events
-            $db->query("UPDATE schedule SET layoutid = '$campaignId' WHERE layoutid = '$layoutId'");
-            $db->query("UPDATE schedule_detail SET layoutid = '$campaignId' WHERE layoutid = '$layoutId'");
+            $db->query(sprintf("UPDATE `schedule` SET layoutid = '%d' WHERE layoutid = '%d'", $campaignId, $layoutId));
+            $db->query(sprintf("UPDATE `schedule_detail` SET layoutid = '%d' WHERE layoutid = '%d'", $campaignId, $layoutId));
         }
 
         // Also run a script to tidy up orphaned media in the library
