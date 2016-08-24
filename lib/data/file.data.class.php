@@ -260,7 +260,9 @@ class File extends Data
         curl_setopt_array($curl, $httpOptions);
 
         // Exec saves the file
-        curl_exec($curl);
+        if (!curl_exec($curl)) {
+            Debug::Error('Error downloading file from URL: ' . $url . '. E = ' . curl_error($curl));
+        }
 
         // Close the curl connection
         curl_close($curl);
