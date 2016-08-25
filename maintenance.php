@@ -290,7 +290,7 @@ else
                         if ($difference == 0)
                             break;
 
-                        echo sprintf(__('Disabling %s'), $display['display']) . '<br/>' . PHP_EOL;
+                        echo sprintf(__('Disabling %s'), Kit::ValidateParam($display['display'], _STRING)) . '<br/>' . PHP_EOL;
                         $update->execute(array('displayId' => $display['displayId']));
 
                         $difference--;

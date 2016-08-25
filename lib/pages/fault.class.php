@@ -110,13 +110,13 @@ SQL;
 
 		while($aRow = $db->get_row($results)) 
 		{
-			$displayid 		= $aRow[0];
-			$display 		= $aRow[1];
-			$defaultlayoutid = $aRow[2];
-			$loggedin 		= $aRow[3];
-			$lastaccessed 	= $aRow[4];
-			$inc_schedule 	= $aRow[5];
-			$licensed 		= $aRow[6];
+			$displayid 		= Kit::ValidateParam($aRow[0], _INT);
+			$display 		= Kit::ValidateParam($aRow[1], _STRING);
+			$defaultlayoutid = Kit::ValidateParam($aRow[2], _INT);
+			$loggedin 		= Kit::ValidateParam($aRow[3], _INT);
+			$lastaccessed 	= Kit::ValidateParam($aRow[4], _STRING);
+			$inc_schedule 	= Kit::ValidateParam($aRow[5], _INT);
+			$licensed 		= Kit::ValidateParam($aRow[6], _INT);
 			
 			$output = <<<END
 DisplayID: $displayid
@@ -150,8 +150,8 @@ SQL;
 
 		while($row = $db->get_assoc_row($results)) 
 		{
-			$setting	= $row['setting'];
-			$value		= $row['value'];
+			$setting	= Kit::ValidateParam($row['setting'], _STRING);
+			$value		= Kit::ValidateParam($row['value'], _STRING);
 			
 			$output = <<<END
 Setting: $setting - Value:   $value
@@ -179,9 +179,9 @@ SQL;
 
 		while($row = $db->get_assoc_row($results)) 
 		{
-			$userAgent		= $row['UserAgent'];
-			$remoteAddress	= $row['RemoteAddr'];
-			$sessionData 	= $row['session_data'];
+			$userAgent		= Kit::ValidateParam($row['UserAgent'], _STRING);
+			$remoteAddress	= Kit::ValidateParam($row['RemoteAddr'], _STRING);
+			$sessionData 	= Kit::ValidateParam($row['session_data'], _STRING);
 			
 			$output = <<<END
 UserAgent: $userAgent
