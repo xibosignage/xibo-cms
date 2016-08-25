@@ -682,12 +682,12 @@ END;
 		$groupid = Kit::GetParam('groupid', _POST, _INT);
 
 		$pageids = $_POST['pageids'];
-		
+
 		foreach ($pageids as $menuItemId) 
 		{
 			$row = explode(",", $menuItemId);
 			
-			$menuItemId = $row[1];
+			$menuItemId = Kit::ValidateParam($row[1], _INT);
 			
 			// If the ID is 0 then this menu item is not currently assigned
 			if ($row[0]=="0") 
