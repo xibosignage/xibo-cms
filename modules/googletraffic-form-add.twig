@@ -92,7 +92,7 @@
             <form id="googleTrafficForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
-                {{ forms.input("name", title, module.getOption("name"), helpText) }}
+                {{ forms.input("name", title, "", helpText) }}
 
                 {% set title %}{% trans "Set a duration?" %}{% endset %}
                 {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
@@ -100,28 +100,32 @@
 
                 {% set title %}{% trans "Duration" %}{% endset %}
                 {% set helpText %}{% trans "The duration in seconds this item should be displayed." %}{% endset %}
-                {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+                {{ forms.number("duration", title, module.getModule().defaultDuration, helpText, "duration-fields", "required") }}
 
                 {% set title %}{% trans "Use the Display Location" %}{% endset %}
                 {% set helpText %}{% trans "Use the location configured on the display" %}{% endset %}
-                {{ forms.checkbox("useDisplayLocation", title, module.getOption("useDisplayLocation"), helpText) }}
+                {{ forms.checkbox("useDisplayLocation", title, 1, helpText) }}
 
                 {% set title %}{% trans "Latitude" %}{% endset %}
                 {% set helpText %}{% trans "The Latitude for this weather module" %}{% endset %}
-                {{ forms.number("latitude", title, module.getOption("latitude"), helpText, "locationControls") }}
+                {{ forms.number("latitude", title, "", helpText, "locationControls") }}
 
                 {% set title %}{% trans "Longitude" %}{% endset %}
                 {% set helpText %}{% trans "The Longitude for this weather module" %}{% endset %}
-                {{ forms.number("longitude", title, module.getOption("longitude"), helpText, "locationControls") }}
+                {{ forms.number("longitude", title, "", helpText, "locationControls") }}
 
                 {% set title %}{% trans "Zoom" %}{% endset %}
                 {% set helpText %}{% trans "How far should the map be zoomed in? The higher the number the closer, 1 represents the entire globe." %}{% endset %}
                 {{ forms.number("zoom", title, 12, helpText) }}
 
-                <div class="well">
-                    {% set message %}{% trans "This module is rendered on the Player which means the Player must have an internet connection." %}{% endset %}
-                    {{ forms.message(message) }}
-                </div>
+
+                {% set message %}{% trans "This module is rendered on the Player which means the Player must have an internet connection." %}{% endset %}
+                {{ forms.message(message, "alert alert-info") }}
+
+                {% if module.getSetting("apiKey") == "" %}
+                    {% set message %}{% trans "The Traffic Widget has not been configured yet, please ask your CMS Administrator to look at it for you." %}{% endset %}
+                    {{ forms.message(message, "alert alert-danger") }}
+                {% endif %}
             </form>
         </div>
     </div>

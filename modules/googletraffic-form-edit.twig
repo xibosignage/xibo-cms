@@ -123,7 +123,12 @@
                 {{ forms.number("zoom", title, module.getOption("zoom"), helpText) }}
 
                 {% set message %}{% trans "This module is rendered on the Player which means the Player must have an internet connection." %}{% endset %}
-                {{ forms.message(message) }}
+                {{ forms.message(message, "alert alert-info") }}
+
+                {% if module.getSetting("apiKey") == "" %}
+                    {% set message %}{% trans "The Traffic Widget has not been configured yet, please ask your CMS Administrator to look at it for you." %}{% endset %}
+                    {{ forms.message(message, "alert alert-danger") }}
+                {% endif %}
             </form>
         </div>
     </div>
