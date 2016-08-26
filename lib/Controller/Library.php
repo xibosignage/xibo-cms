@@ -938,7 +938,7 @@ class Library extends Base
 
                     // Separate out the display name and the referenced name (referenced name cannot contain any odd characters or numbers)
                     $displayName = $font->name;
-                    $familyName = preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $font->name));
+                    $familyName = strtolower(preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $font->name)));
 
                     // Css for the client contains the actual stored as location of the font.
                     $css .= str_replace('[url]', $font->storedAs, str_replace('[family]', $familyName, $fontTemplate));
