@@ -182,7 +182,7 @@ class GoogleTraffic extends ModuleWidget
         $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
 
         return $this->renderTemplate([
-            ($isPreview) ? $this->region->width : '[[ViewPortWidth]]',
+            'viewPortWidth' => ($isPreview) ? $this->region->width : '[[ViewPortWidth]]',
             'apiKey' => $this->getSetting('apiKey'),
             'javaScript' => $javaScriptContent,
             'lat' => $defaultLat,
