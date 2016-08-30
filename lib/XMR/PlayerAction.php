@@ -130,6 +130,9 @@ abstract class PlayerAction implements PlayerActionInterface
                     // Try and receive
                     $reply = $socket->recv(\ZMQ::MODE_DONTWAIT);
 
+                    // Disconnect socket
+                    $socket->disconnect($connection);
+
                     return $reply;
 
                 } catch (\ZMQSocketException $sockEx) {
@@ -143,12 +146,12 @@ abstract class PlayerAction implements PlayerActionInterface
 
             // Disconnect socket
             $socket->disconnect($connection);
+
+            // We didn't get a response
+            throw new PlayerActionException('Could not make a connection after 5 retries.');
         }
         catch (\ZMQSocketException $ex) {
             throw new PlayerActionException('XMR connection failed.');
         }
-
-        // We didn't get a response
-        return false;
     }
 }
