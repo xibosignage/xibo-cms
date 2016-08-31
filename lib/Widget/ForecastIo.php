@@ -208,7 +208,7 @@ class ForecastIo extends ModuleWidget
         $icons = array();
 
         foreach (array_diff(scandir($this->resourceFolder), array('..', '.')) as $file) {
-            if (stripos($file, '.png'))
+            if (stripos($file, '-icons.png'))
                 $icons[] = array('id' => $file, 'value' => ucfirst(str_replace('-', ' ', str_replace('.png', '', $file))));
         }
 
