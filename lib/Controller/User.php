@@ -409,19 +409,27 @@ class User extends Base
      */
     public function add()
     {
+        // Only group admins or super admins can create Users.
+        if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin())
+            throw new AccessDeniedException(__('Only super and group admins can create users'));
+
         // Build a user entity and save it
         $user = $this->userFactory->create();
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
 
         $user->userName = $this->getSanitizer()->getString('userName');
         $user->email = $this->getSanitizer()->getString('email');
-        $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
         $user->homePageId = $this->getSanitizer()->getInt('homePageId');
-        $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
+        $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota', 0);
         $user->setNewPassword($this->getSanitizer()->getString('password'));
 
-        if ($this->getUser()->userTypeId == 1)
+        if ($this->getUser()->isSuperAdmin()) {
+            $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
             $user->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
+        } else {
+            $user->userTypeId = 3;
+            $user->isSystemNotification = 0;
+        }
 
         $user->firstName = $this->getSanitizer()->getString('firstName');
         $user->lastName = $this->getSanitizer()->getString('lastName');
@@ -470,13 +478,14 @@ class User extends Base
         $user->load();
         $user->userName = $this->getSanitizer()->getString('userName');
         $user->email = $this->getSanitizer()->getString('email');
-        $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
         $user->homePageId = $this->getSanitizer()->getInt('homePageId');
         $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
         $user->retired = $this->getSanitizer()->getCheckbox('retired');
 
-        if ($this->getUser()->userTypeId == 1)
+        if ($this->getUser()->isSuperAdmin()) {
+            $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
             $user->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
+        }
 
         $user->firstName = $this->getSanitizer()->getString('firstName');
         $user->lastName = $this->getSanitizer()->getString('lastName');
@@ -564,12 +573,16 @@ class User extends Base
      */
     public function addForm()
     {
+        // Only group admins or super admins can create Users.
+        if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin())
+            throw new AccessDeniedException(__('Only super and group admins can create users'));
+
         $this->getState()->template = 'user-form-add';
         $this->getState()->setData([
             'options' => [
                 'homepage' => $this->pageFactory->query(null, ['asHome' => 1]),
                 'groups' => $this->userGroupFactory->query(),
-                'userTypes' => $this->userTypeFactory->query()
+                'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles()
             ],
             'help' => [
                 'add' => $this->getHelp()->link('User', 'Add')

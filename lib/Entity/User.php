@@ -1143,6 +1143,24 @@ class User implements \JsonSerializable
     }
 
     /**
+     * Is a super admin
+     * @return bool
+     */
+    public function isSuperAdmin()
+    {
+        return ($this->getUserTypeId() == 1);
+    }
+
+    /**
+     * Is Group Admin
+     * @return bool
+     */
+    public function isGroupAdmin()
+    {
+       return ($this->getUserTypeId() == 2);
+    }
+
+    /**
      * Is this users library quota full
      * @throws LibraryFullException when the library is full or cannot be determined
      */
