@@ -39,6 +39,7 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\XMR\RekeyAction;
 use Xibo\XMR\ScreenShotAction;
 
 /**
@@ -718,6 +719,13 @@ class Display extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="rekeyXmr",
+     *      in="formData",
+     *      description="Clear the cached XMR configuration and send a rekey",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -763,6 +771,16 @@ class Display extends Base
         } else if ($this->getSanitizer()->getCheckbox('clearCachedData', 1) == 1) {
             // Remove the cache if the display licenced state has changed
             $this->pool->deleteItem($display->getCacheKey());
+        }
+
+        // Should we rekey?
+        if ($this->getSanitizer()->getCheckbox('rekeyXmr', 0) == 1) {
+            // Queue the rekey action first (before we clear the channel and key)
+            $this->playerAction->sendAction($display, new RekeyAction());
+
+            // Clear the config.
+            $display->xmrChannel = null;
+            $display->xmrPubKey = null;
         }
 
         $display->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
