@@ -62,6 +62,14 @@ class RegionOption
         $this->setCommonDependencies($store, $log);
     }
 
+    /**
+     * Clone
+     */
+    public function __clone()
+    {
+        $this->regionId = null;
+    }
+
     public function save()
     {
         $sql = 'INSERT INTO `regionoption` (`regionId`, `option`, `value`) VALUES (:regionId, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2';
