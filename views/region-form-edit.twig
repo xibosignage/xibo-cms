@@ -85,7 +85,7 @@
                 {{ forms.dropdown("transitionDirection", "single", title, region.transitionsDirection, compassPoints, "id", "name", helpText, "transition-group transition-direction") }}
 
                 {% set title %}{% trans "Loop?" %}{% endset %}
-                {% set helpText %}{% trans "If there is only one item in this region should it loop? Not currently available for Windows Players" %}{% endset %}
+                {% set helpText %}{% trans "If there is only one item in this region should it loop?" %}{% endset %}
                 {{ forms.checkbox("loop", title, region.getOptionValue("loop", 0), helpText) }}
 
                 {{ forms.number("zIndex", "Layer", region.zIndex, "The layering order of this region (z-index). Advanced use only.") }}
