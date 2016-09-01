@@ -27,6 +27,7 @@ use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
@@ -763,6 +764,8 @@ class User extends Base
             'entity' => $requestEntity,
             'objectId' => $objectId,
             'permissions' => $currentPermissions,
+            'canSetOwner' => method_exists($object, 'setOwner'),
+            'owners' => $this->userFactory->query(),
             'help' => [
                 'permissions' => $this->getHelp()->link('Campaign', 'Permissions')
             ]
@@ -801,6 +804,13 @@ class User extends Base
      *      required=true,
      *      @SWG\Items(type="string")
      *   ),
+     *  @SWG\Parameter(
+     *      name="ownerId",
+     *      in="formData",
+     *      description="Change the owner of this item. Leave empty to keep the current owner",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -809,6 +819,7 @@ class User extends Base
      *
      * @param string $entity
      * @param int $objectId
+     * @throws ConfigurationException
      */
     public function permissions($entity, $objectId)
     {
@@ -831,11 +842,27 @@ class User extends Base
         // Run the update
         $this->updatePermissions($permissions, $groupIds);
 
+        // Should we update the owner?
+        if ($this->getSanitizer()->getInt('ownerId') != 0) {
+
+            $ownerId = $this->getSanitizer()->getInt('ownerId');
+
+            $this->getLog()->debug('Requesting update to a new Owner - id = ' . $ownerId);
+
+            if (method_exists($object, 'setOwner')) {
+                $object->setOwner($ownerId);
+                $object->save();
+            } else {
+                throw new ConfigurationException(__('Cannot change owner on this Object'));
+            }
+        }
+
         // Cascade permissions
         if ($requestEntity == 'Campaign' && $this->getSanitizer()->getCheckbox('cascade') == 1) {
             /* @var Campaign $object */
             $this->getLog()->debug('Cascade permissions down');
 
+            // Define a function that can be called for each layout we find
             $updatePermissionsOnLayout = function($layout) use ($object, $groupIds) {
 
                 // Regions
