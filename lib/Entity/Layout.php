@@ -217,7 +217,8 @@ class Layout implements \JsonSerializable
         'saveTags' => false,
         'setBuildRequired' => true,
         'validate' => false,
-        'audit' => false
+        'audit' => false,
+        'notify' => false
     ];
 
     /**
@@ -364,7 +365,7 @@ class Layout implements \JsonSerializable
     /**
      * Set the status of this layout to indicate a build is required
      */
-    public function setBuildRequired()
+    private function setBuildRequired()
     {
         $this->status = 3;
     }
@@ -522,7 +523,7 @@ class Layout implements \JsonSerializable
         // New or existing layout
         if ($this->layoutId == null || $this->layoutId == 0) {
             $this->add();
-        } else if ($this->hash() != $this->hash && $options['saveLayout']) {
+        } else if (($this->hash() != $this->hash && $options['saveLayout']) || $options['setBuildRequired']) {
             $this->update($options);
         }
 
@@ -819,7 +820,17 @@ class Layout implements \JsonSerializable
             // Region Duration
             $region->duration = 0;
 
-            // Region Loop
+            // Region Options
+            $regionOptionsNode = $document->createElement('options');
+
+            foreach ($region->regionOptions as $regionOption) {
+                $regionOptionNode = $document->createElement($regionOption->option, $regionOption->value);
+                $regionOptionsNode->appendChild($regionOptionNode);
+            }
+
+            $regionNode->appendChild($regionOptionsNode);
+
+            // Store region look to work out duration calc
             $regionLoop = $region->getOptionValue('loop', 0);
 
             // Get a count of widgets in this region

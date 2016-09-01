@@ -936,6 +936,8 @@ class Display extends Base
      */
     public function screenShot($displayId)
     {
+        $this->setNoOutput(true);
+
         // Output an image if present, otherwise not found image.
         $file = 'screenshots/' . $displayId . '_screenshot.jpg';
 
