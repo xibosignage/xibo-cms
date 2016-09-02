@@ -145,7 +145,8 @@ INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (34, 'maintenance', 'Maintenance', 0),
   (35, 'command', 'Commands', 1),
   (36, 'notification', 'Notifications', 0),
-  (37, 'drawer', 'Notification Drawer', 0);
+  (37, 'drawer', 'Notification Drawer', 0),
+  (87, 'daypart', 'Dayparting', 0);
 
 
 INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES
