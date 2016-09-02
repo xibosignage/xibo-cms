@@ -45,7 +45,7 @@ use Xibo\XMR\CollectNowAction;
  *
  * @SWG\Definition()
  */
-class Display
+class Display implements \JsonSerializable
 {
     private $_config;
     use EntityTrait;

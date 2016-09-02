@@ -322,6 +322,13 @@ class Display extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="embed",
+     *      in="formData",
+     *      description="Embed related data, namely displaygroups. A comma separated list of child objects to embed.",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -334,6 +341,9 @@ class Display extends Base
      */
     function grid()
     {
+        // Embed?
+        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+
         $filter = [
             'displayId' => $this->getSanitizer()->getInt('displayId'),
             'display' => $this->getSanitizer()->getString('display'),
@@ -350,11 +360,16 @@ class Display extends Base
         $this->validateDisplays($displays);
 
         foreach ($displays as $display) {
+            /* @var \Xibo\Entity\Display $display */
+            if (in_array('displaygroups', $embed)) {
+                $display->load();
+            } else {
+                $display->excludeProperty('displayGroups');
+            }
 
             if ($this->isApi())
                 break;
 
-            /* @var \Xibo\Entity\Display $display */
             $display->storageAvailableSpaceFormatted = ByteFormatter::format($display->storageAvailableSpace);
             $display->storageTotalSpaceFormatted = ByteFormatter::format($display->storageTotalSpace);
 

@@ -462,7 +462,23 @@ class DisplayFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['auditingUntil']]);
+            $entries[] = $this->createEmpty()->hydrate($row, [
+                'intProperties' => [
+                    'auditingUntil',
+                    'wakeOnLanEnabled',
+                    'numberOfMacAddressChanges',
+                    'loggedIn',
+                    'incSchedule',
+                    'licensed',
+                    'lastAccessed',
+                    'emailAlert',
+                    'alertTimeout',
+                    'mediaInventoryStatus',
+                    'clientCode',
+                    'screenShotRequested',
+                    'lastCommandSuccess'
+                ]
+            ]);
         }
 
         // Paging
