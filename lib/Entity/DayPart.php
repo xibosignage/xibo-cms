@@ -34,20 +34,9 @@ class DayPart implements \JsonSerializable
     public $isRetired;
     public $userId;
 
-    public $monStart;
-    public $monEnd;
-    public $tueStart;
-    public $tueEnd;
-    public $wedStart;
-    public $wedEnd;
-    public $thuStart;
-    public $thuEnd;
-    public $friStart;
-    public $friEnd;
-    public $satStart;
-    public $satEnd;
-    public $sunStart;
-    public $sunEnd;
+    public $startTime;
+    public $endTime;
+    public $exceptions;
 
     /** @var  DateServiceInterface */
     private $dateService;
@@ -139,31 +128,16 @@ class DayPart implements \JsonSerializable
     private function add()
     {
         $this->dayPartId = $this->getStore()->insert('
-            INSERT INTO `daypart` (`name`, `description`, `isRetired`, `userId`, `monStart`, `monEnd`, `tueStart`, 
-                `tueEnd`, `wedStart`, `wedEnd`, `thuStart`, `thuEnd`, `friStart`, `friEnd`, `satStart`, `satEnd`, 
-                `sunStart`, `sunEnd`)
-              VALUES (:name, :description, :isRetired, :userId, :monStart, :monEnd, :tueStart, 
-                :tueEnd, :wedStart, :wedEnd, :thuStart, :thuEnd, :friStart, :friEnd, :satStart, :satEnd, 
-                :sunStart, :sunEnd)
+            INSERT INTO `daypart` (`name`, `description`, `isRetired`, `userId`, `startTime`, `endTime`, `exceptions`)
+              VALUES (:name, :description, :isRetired, :userId, :startTime, :endTime, :exceptions)
         ', [
             'name' => $this->name,
             'description' => $this->description,
             'isRetired' => $this->isRetired,
             'userId' => $this->userId,
-            'monStart' => $this->monStart,
-            'monEnd' => $this->monEnd,
-            'tueStart' => $this->tueStart,
-            'tueEnd' => $this->tueEnd,
-            'wedStart' => $this->wedStart,
-            'wedEnd' => $this->wedEnd,
-            'thuStart' => $this->thuStart,
-            'thuEnd' => $this->thuEnd,
-            'friStart' => $this->friStart,
-            'friEnd' => $this->friEnd,
-            'satStart' => $this->satStart,
-            'satEnd' => $this->satEnd,
-            'sunStart' => $this->sunStart,
-            'sunEnd' => $this->sunEnd
+            'startTime' => $this->startTime,
+            'endTime' => $this->endTime,
+            'exceptions' => json_encode(is_array($this->exceptions) ? $this->exceptions : [])
         ]);
     }
 
@@ -178,20 +152,9 @@ class DayPart implements \JsonSerializable
                     `description` = :description,
                     `isRetired` = :isRetired,
                     `userId` = :userId,
-                    `monStart` = :monStart,
-                    `monEnd` = :monEnd,
-                    `tueStart` = :tueStart,
-                    `tueEnd` = :tueEnd,
-                    `wedStart` = :wedStart,
-                    `wedEnd` = :wedEnd,
-                    `thuStart` = :thuStart,
-                    `thuEnd` = :thuEnd,
-                    `friStart` = :friStart,
-                    `friEnd` = :friEnd,
-                    `satStart` = :satStart,
-                    `satEnd` = :satEnd,
-                    `sunStart` = :sunStart,
-                    `sunEnd` = :sunEnd
+                    `startTime` = :startTime,
+                    `endTime` = :endTime,
+                    `exceptions` = :exceptions
              WHERE `daypart`.dayPartId = :dayPartId
         ', [
             'dayPartId' => $this->dayPartId,
@@ -199,20 +162,9 @@ class DayPart implements \JsonSerializable
             'description' => $this->description,
             'isRetired' => $this->isRetired,
             'userId' => $this->userId,
-            'monStart' => $this->monStart,
-            'monEnd' => $this->monEnd,
-            'tueStart' => $this->tueStart,
-            'tueEnd' => $this->tueEnd,
-            'wedStart' => $this->wedStart,
-            'wedEnd' => $this->wedEnd,
-            'thuStart' => $this->thuStart,
-            'thuEnd' => $this->thuEnd,
-            'friStart' => $this->friStart,
-            'friEnd' => $this->friEnd,
-            'satStart' => $this->satStart,
-            'satEnd' => $this->satEnd,
-            'sunStart' => $this->sunStart,
-            'sunEnd' => $this->sunEnd
+            'startTime' => $this->startTime,
+            'endTime' => $this->endTime,
+            'exceptions' => json_encode(is_array($this->exceptions) ? $this->exceptions : [])
         ]);
     }
 }

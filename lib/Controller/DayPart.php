@@ -1,13 +1,26 @@
 <?php
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (DayPart.php)
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2012-2016 Spring Signage Ltd - http://www.springsignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Controller;
 
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -96,5 +109,182 @@ class DayPart extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->dayPartFactory->countLast();
         $this->getState()->setData($dayParts);
+    }
+
+    /**
+     * Add Daypart Form
+     */
+    public function addForm()
+    {
+        $this->getState()->template = 'daypart-form-add';
+        $this->getState()->setData([
+            'extra' => [
+                'exceptions' => []
+            ]
+        ]);
+    }
+
+    /**
+     * Edit Daypart
+     * @param int $dayPartId
+     */
+    public function editForm($dayPartId)
+    {
+        $dayPart = $this->dayPartFactory->getById($dayPartId);
+
+        if ($dayPart->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
+            throw new AccessDeniedException();
+
+        $this->getState()->template = 'daypart-form-edit';
+        $this->getState()->setData([
+            'dayPart' => $dayPart
+        ]);
+    }
+
+    /**
+     * Delete Daypart
+     * @param int $dayPartId
+     */
+    public function deleteForm($dayPartId)
+    {
+        $dayPart = $this->dayPartFactory->getById($dayPartId);
+
+        if ($dayPart->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
+            throw new AccessDeniedException();
+
+        $this->getState()->template = 'daypart-form-delete';
+        $this->getState()->setData([
+            'dayPart' => $dayPart
+        ]);
+    }
+
+    /**
+     * Add
+     * @SWG\Post(
+     *  path="/daypart",
+     *  operationId="dayPartAdd",
+     *  tags={"dayPart"},
+     *  summary="Daypart Add",
+     *  description="Add a Daypart",
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="The Daypart Name",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="A description for the dayPart",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="startTime",
+     *      in="formData",
+     *      description="The start time for this day part",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="endTime",
+     *      in="formData",
+     *      description="The end time for this day part",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="exceptionDays",
+     *      in="formData",
+     *      description="String array of exception days",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="exceptionStartTimes",
+     *      in="formData",
+     *      description="String array of exception start times to match the exception days",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="exceptionEndTimes",
+     *      in="formData",
+     *      description="String array of exception end times to match the exception days",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DayPart"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     */
+    public function add()
+    {
+        $dayPart = $this->dayPartFactory->createEmpty();
+        $dayPart->name = $this->getSanitizer()->getString('name');
+        $dayPart->userId = $this->getUser()->userId;
+        $dayPart->isRetired = $this->getSanitizer()->getCheckbox('isRetired');
+        $dayPart->startTime = $this->getSanitizer()->getString('startTime');
+        $dayPart->endTime = $this->getSanitizer()->getString('endTime');
+
+        // Exceptions
+        $exceptionDays = $this->getSanitizer()->getStringArray('exceptionDays');
+        $exceptionStartTimes = $this->getSanitizer()->getStringArray('exceptionStartTimes');
+        $exceptionEndTimes = $this->getSanitizer()->getStringArray('exceptionEndTimes');
+
+        $i = -1;
+        foreach ($exceptionDays as $exceptionDay) {
+            // Pull the corrisponding start/end time out of the same position in the array
+            $i++;
+
+            $exceptionDayStartTime = isset($exceptionStartTimes[$i]) ? $exceptionStartTimes[$i] : '';
+            $exceptionDayEndTime = isset($exceptionEndTimes[$i]) ? $exceptionEndTimes[$i] : '';
+
+            if ($exceptionDay == '' || $exceptionDayStartTime == '' || $exceptionDayEndTime == '')
+                continue;
+
+            $dayPart->exceptions[] = [
+                'day' => $exceptionDay,
+                'start' => $exceptionDayStartTime,
+                'end' => $exceptionDayEndTime
+            ];
+        }
+
+        $dayPart->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Added %s'), $dayPart->name),
+            'id' => $dayPart->dayPartId,
+            'data' => $dayPart
+        ]);
+    }
+
+    /**
+     * Edit
+     * @param int $dayPartId
+     */
+    public function edit($dayPartId)
+    {
+
+    }
+
+    /**
+     * Delete
+     * @param int $dayPartId
+     */
+    public function delete($dayPartId)
+    {
+
     }
 }

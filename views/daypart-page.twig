@@ -47,6 +47,13 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+        Handlebars.registerHelper('if_eq', function(a, b, opts) {
+            if(a == b) // Or === depending on your needs
+                return opts.fn(this);
+            else
+                return opts.inverse(this);
+        });
+
         var table = $("#dayparts").DataTable({ "language": dataTablesLanguage,
             serverSide: true, stateSave: true,
             filter: false,
@@ -70,5 +77,56 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
+
+        function dayPartFormOpen(dialog) {
+            // Render a set of exceptions
+            $exceptions = $(dialog).find("#dayPartExceptions");
+
+            // Days of the week translations
+            var daysOfTheWeek = [
+                { day: "{% trans "Monday" %}" },
+                { day: "{% trans "Tuesday" %}" },
+                { day: "{% trans "Wednesday" %}" },
+                { day: "{% trans "Thursday" %}" },
+                { day: "{% trans "Friday" %}" },
+                { day: "{% trans "Saturday" %}" },
+                { day: "{% trans "Sunday" %}" }
+            ]
+
+            // Compile the handlebars template
+            var exceptionsTemplate = Handlebars.compile($("#dayPartExceptionsTemplate").html());
+
+            if (dialog.data().extra.exceptions.length == 0) {
+                // Contexts for template
+                var context = {daysOfWeek: daysOfTheWeek, buttonGlyph: "fa-plus", exceptionDay: ""};
+
+                // Append
+                $exceptions.append(exceptionsTemplate(context));
+            } else {
+                // For each of the existing exceptions, create form components
+                var i = 0;
+                $.each(dialog.data().extra.exceptions, function (index, field) {
+                    i++;
+                    // call the template
+                });
+            }
+        }
     </script>
+    {% raw %}
+    <script type="text/x-handlebars-template" id="dayPartExceptionsTemplate">
+        <div class="form-group">
+            <div class="col-sm-3">
+                <select class="form-control" name="exceptionDay[]">
+                    <option value=""></option>
+                    {{#each daysOfWeek}}
+                    <option value="{{ day }}" {{#if_eq heading ../exceptionDay}}selected{{/if_eq}}>{{ day }}</option>
+                    {{/each}}
+                </select>
+            </div>
+            <div class="col-sm-1">
+                <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+            </div>
+        </div>
+    </script>
+    {% endraw %}
 {% endblock %}
