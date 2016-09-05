@@ -1,13 +1,26 @@
 <?php
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (DayPart.php)
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2012-2016 Spring Signage Ltd - http://www.springsignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Entity;
 
+use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\DateServiceInterface;
@@ -103,15 +116,30 @@ class DayPart implements \JsonSerializable
         $this->userId = $ownerId;
     }
 
+    public function validate()
+    {
+        if (!v::string()->notEmpty()->validate($this->name))
+            throw new \InvalidArgumentException(__('Name cannot be empty'));
+    }
+
     /**
      * Save
+     * @param array $options
      */
-    public function save()
+    public function save($options = [])
     {
+        $options = array_merge([
+            'validate' => true
+        ], $options);
+
+        if ($options['validate'])
+            $this->validate();
+
         if ($this->dayPartId == 0)
             $this->add();
         else
             $this->update();
+
     }
 
     /**

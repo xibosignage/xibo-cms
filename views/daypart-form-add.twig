@@ -27,9 +27,8 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#dayPartEditForm").submit()
+    {% trans "Save" %}, $("#dayPartAddForm").submit()
 {% endblock %}
 
 {% block extra %}{{ extra|json_encode|raw }}{% endblock %}
@@ -44,12 +43,12 @@
                 <li><a href="#description" role="tab" data-toggle="tab"><span>{% trans "Description" %}</span></a></li>
                 <li><a href="#exceptions" role="tab" data-toggle="tab"><span>{% trans "Exceptions" %}</span></a></li>
             </ul>
-            <form id="dayPartEditForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("daypart.add") }}">
+            <form id="dayPartAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("daypart.add") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "The Name for this Daypart" %}{% endset %}
-                        {{ forms.input("dayPart", title, "", helpText, "", "required") }}
+                        {{ forms.input("name", title, "", helpText, "", "required") }}
 
                         {% set title %}{% trans "Retired" %}{% endset %}
                         {% set helpText %}{% trans "Retire? It will no longer be visible when scheduling" %}{% endset %}

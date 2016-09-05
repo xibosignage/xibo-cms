@@ -123,7 +123,7 @@ class DayPartFactory extends BaseFactory
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $dayPart = $this->createEmpty()->hydrate($row);
-            $dayPart->exceptions = json_decode($dayPart->exceptions);
+            $dayPart->exceptions = json_decode($dayPart->exceptions, true);
 
             $entries[] = $dayPart;
         }

@@ -137,7 +137,10 @@ class DayPart extends Base
 
         $this->getState()->template = 'daypart-form-edit';
         $this->getState()->setData([
-            'dayPart' => $dayPart
+            'dayPart' => $dayPart,
+            'extra' => [
+                'exceptions' => $dayPart->exceptions
+            ]
         ]);
     }
 
@@ -230,34 +233,7 @@ class DayPart extends Base
     public function add()
     {
         $dayPart = $this->dayPartFactory->createEmpty();
-        $dayPart->name = $this->getSanitizer()->getString('name');
-        $dayPart->userId = $this->getUser()->userId;
-        $dayPart->isRetired = $this->getSanitizer()->getCheckbox('isRetired');
-        $dayPart->startTime = $this->getSanitizer()->getString('startTime');
-        $dayPart->endTime = $this->getSanitizer()->getString('endTime');
-
-        // Exceptions
-        $exceptionDays = $this->getSanitizer()->getStringArray('exceptionDays');
-        $exceptionStartTimes = $this->getSanitizer()->getStringArray('exceptionStartTimes');
-        $exceptionEndTimes = $this->getSanitizer()->getStringArray('exceptionEndTimes');
-
-        $i = -1;
-        foreach ($exceptionDays as $exceptionDay) {
-            // Pull the corrisponding start/end time out of the same position in the array
-            $i++;
-
-            $exceptionDayStartTime = isset($exceptionStartTimes[$i]) ? $exceptionStartTimes[$i] : '';
-            $exceptionDayEndTime = isset($exceptionEndTimes[$i]) ? $exceptionEndTimes[$i] : '';
-
-            if ($exceptionDay == '' || $exceptionDayStartTime == '' || $exceptionDayEndTime == '')
-                continue;
-
-            $dayPart->exceptions[] = [
-                'day' => $exceptionDay,
-                'start' => $exceptionDayStartTime,
-                'end' => $exceptionDayEndTime
-            ];
-        }
+        $this->handleCommonInputs($dayPart);
 
         $dayPart->save();
 
@@ -276,7 +252,77 @@ class DayPart extends Base
      */
     public function edit($dayPartId)
     {
+        $dayPart = $this->dayPartFactory->getById($dayPartId);
 
+        if (!$this->getUser()->checkEditable($dayPart))
+            throw new AccessDeniedException();
+
+        $this->handleCommonInputs($dayPart);
+        $dayPart->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 200,
+            'message' => sprintf(__('Edited %s'), $dayPart->name),
+            'id' => $dayPart->dayPartId,
+            'data' => $dayPart
+        ]);
+    }
+
+    /**
+     * Handle common inputs
+     * @param $dayPart
+     */
+    private function handleCommonInputs($dayPart)
+    {
+        $dayPart->userId = $this->getUser()->userId;
+        $dayPart->name = $this->getSanitizer()->getString('name');
+        $dayPart->description = $this->getSanitizer()->getString('description');
+        $dayPart->isRetired = $this->getSanitizer()->getCheckbox('isRetired');
+        $dayPart->startTime = $this->getSanitizer()->getString('startTime');
+        $dayPart->endTime = $this->getSanitizer()->getString('endTime');
+
+        // Exceptions
+        $exceptionDays = $this->getSanitizer()->getStringArray('exceptionDay');
+        $exceptionStartTimes = $this->getSanitizer()->getStringArray('exceptionStartTimes');
+        $exceptionEndTimes = $this->getSanitizer()->getStringArray('exceptionEndTimes');
+
+        // Clear down existing exceptions
+        $dayPart->exceptions = [];
+
+        $i = -1;
+        foreach ($exceptionDays as $exceptionDay) {
+            // Pull the corrisponding start/end time out of the same position in the array
+            $i++;
+
+            $exceptionDayStartTime = isset($exceptionStartTimes[$i]) ? $exceptionStartTimes[$i] : '';
+            $exceptionDayEndTime = isset($exceptionEndTimes[$i]) ? $exceptionEndTimes[$i] : '';
+
+            if ($exceptionDay == '' || $exceptionDayStartTime == '' || $exceptionDayEndTime == '')
+                continue;
+
+            // Is this already set?
+            $found = false;
+            foreach ($dayPart->exceptions as $exception) {
+
+                if ($exception['day'] == $exceptionDay) {
+                    $exception['start'] = $exceptionDayStartTime;
+                    $exception['end'] = $exceptionDayEndTime;
+
+                    $found = true;
+                    break;
+                }
+            }
+
+            // Otherwise add it
+            if (!$found) {
+                $dayPart->exceptions[] = [
+                    'day' => $exceptionDay,
+                    'start' => $exceptionDayStartTime,
+                    'end' => $exceptionDayEndTime
+                ];
+            }
+        }
     }
 
     /**
@@ -285,6 +331,17 @@ class DayPart extends Base
      */
     public function delete($dayPartId)
     {
+        $dayPart = $this->dayPartFactory->getById($dayPartId);
 
+        if (!$this->getUser()->checkDeleteable($dayPart))
+            throw new AccessDeniedException();
+
+        $dayPart->delete();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Deleted %s'), $dayPart->name)
+        ]);
     }
 }
