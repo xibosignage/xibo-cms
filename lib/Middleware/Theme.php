@@ -62,6 +62,7 @@ class Theme extends Middleware
         // Date format
         $settings['DATE_FORMAT_JS'] = $app->dateService->convertPhpToMomentFormat($settings['DATE_FORMAT']);
         $settings['DATE_FORMAT_BOOTSTRAP'] = $app->dateService->convertPhpToBootstrapFormat($settings['DATE_FORMAT']);
+        $settings['DATE_FORMAT_BOOTSTRAP_DATEONLY'] = $app->dateService->convertPhpToBootstrapFormat($settings['DATE_FORMAT'], false);
 
         // Resolve the current route name
         $routeName = ($app->router()->getCurrentRoute() == null) ? 'notfound' : $app->router()->getCurrentRoute()->getName();

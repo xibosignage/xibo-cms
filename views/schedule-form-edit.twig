@@ -130,30 +130,35 @@
     }
     },{
     "field": "dayPartId",
-    "trigger": "change",
-    "value": false,
-    "operation": "is:checked",
+    "trigger": "init",
+    "value": 1,
+    "operation": "not",
     "actions": {
-    ".starttime-control": { "display": "block" },
-    ".endtime-control": { "display": "block" }
+    ".starttime-control": { "display": "block" }
+    }
+    },{
+    "field": "dayPartId",
+    "trigger": "change",
+    "value": 1,
+    "operation": "not",
+    "actions": {
+    ".starttime-control": { "display": "block" }
     }
     },{
     "field": "dayPartId",
     "trigger": "init",
-    "value": true,
-    "operation": "is:checked",
+    "value": 1,
+    "operation": "equals",
     "actions": {
-    ".starttime-control": { "display": "none" },
-    ".endtime-control": { "display": "none" }
+    ".starttime-control": { "display": "none" }
     }
     },{
     "field": "dayPartId",
     "trigger": "change",
-    "value": true,
-    "operation": "is:checked",
+    "value": 1,
+    "operation": "equals",
     "actions": {
-    ".starttime-control": { "display": "none" },
-    ".endtime-control": { "display": "none" }
+    ".starttime-control": { "display": "none" }
     }
     }]
 {% endblock %}
@@ -194,9 +199,9 @@
                         ] %}
                         {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, {group: displayGroups, display: displays}, "displayGroupId", "displayGroup", helpText, "", "", "", "", attributes, optionGroups) }}
 
-                        {% set title %}{% trans "Always" %}{% endset %}
-                        {% set helpText %}{% trans "Put into the schedule rotation and never remove. Layouts will be cycled if there is more than one scheduled." %}{% endset %}
-                        {{ forms.checkbox("dayPartId", title, event.dayPartId, helpText, "day-part-control") }}
+                        {% set title %}{% trans "Dayparting" %}{% endset %}
+                        {% set helpText %}{% trans "Select the dayparting information for this event. To set your own times select custom and to have the event run constantly select Always." %}{% endset %}
+                        {{ forms.dropdown("dayPartId", "single", title, event.dayPartId, dayParts, "dayPartId", "name", helpText, "day-part-control") }}
 
                         {% set title %}{% trans "Start Time" %}{% endset %}
                         {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}

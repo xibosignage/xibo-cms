@@ -1109,6 +1109,7 @@ CREATE TABLE IF NOT EXISTS `displayevent` (
   KEY `displayId` (`displayID`,`end`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+-- Auto increment 2 on purpose - 1 is reserved
 CREATE TABLE `daypart` (
   `dayPartId` INT(11) NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(50) NOT NULL,
@@ -1119,4 +1120,4 @@ CREATE TABLE `daypart` (
   `endTime` VARCHAR(8) DEFAULT '00:00:00',
   `exceptions` TEXT NULL,
   PRIMARY KEY (`dayPartId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=2;

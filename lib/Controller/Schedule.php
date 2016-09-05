@@ -22,6 +22,7 @@ namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
+use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -73,6 +74,9 @@ class Schedule extends Base
     /** @var  MediaFactory */
     private $mediaFactory;
 
+    /** @var  DayPartFactory */
+    private $dayPartFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -87,8 +91,12 @@ class Schedule extends Base
      * @param DisplayGroupFactory $displayGroupFactory
      * @param CampaignFactory $campaignFactory
      * @param CommandFactory $commandFactory
+     * @param DisplayFactory $displayFactory
+     * @param LayoutFactory $layoutFactory
+     * @param MediaFactory $mediaFactory
+     * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $mediaFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $mediaFactory, $dayPartFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -100,6 +108,7 @@ class Schedule extends Base
         $this->displayFactory = $displayFactory;
         $this->layoutFactory = $layoutFactory;
         $this->mediaFactory = $mediaFactory;
+        $this->dayPartFactory = $dayPartFactory;
     }
 
     function displayPage()
@@ -252,6 +261,9 @@ class Schedule extends Base
             $row->fromDt = $this->getDate()->getLocalDate($row->fromDt);
             $row->toDt = $this->getDate()->getLocalDate($row->toDt);
 
+            $this->getLog()->debug('Start date is ' . $fromDt->toRssString() . ' ' . $row->fromDt);
+            $this->getLog()->debug('End date is ' . $toDt->toRssString() . ' ' . $row->toDt);
+
             // Event Title
             $title = sprintf(__('%s scheduled on %s'),
                 ($row->campaign == '') ? $row->command : $row->campaign,
@@ -330,6 +342,7 @@ class Schedule extends Base
             'displayGroups' => $groups,
             'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1]),
             'commands' => $this->commandFactory->query(),
+            'dayParts' => $this->dayPartFactory->allWithSystem(),
             'displayGroupIds' => $this->session->get('displayGroupIds'),
             'help' => $this->getHelp()->link('Schedule', 'Add')
         ]);
@@ -389,7 +402,7 @@ class Schedule extends Base
      *   @SWG\Parameter(
      *      name="dayPartId",
      *      in="formData",
-     *      description="The Day Part for this event. Currently supported are 0(custom) and 1(always). Defaulted to 0.",
+     *      description="The Day Part for this event. Overrides supported are 0(custom) and 1(always). Defaulted to 0.",
      *      type="integer",
      *      required=false
      *   ),
@@ -464,7 +477,7 @@ class Schedule extends Base
         $schedule->commandId = $this->getSanitizer()->getInt('commandId');
         $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder', 0);
         $schedule->isPriority = $this->getSanitizer()->getInt('isPriority', 0);
-        $schedule->dayPartId = $this->getSanitizer()->getCheckbox('dayPartId', 0);
+        $schedule->dayPartId = $this->getSanitizer()->getInt('dayPartId', 0);
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $this->getSanitizer()->getIntArray('recurrenceRepeatsOn');
@@ -474,7 +487,7 @@ class Schedule extends Base
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
         }
 
-        if ($schedule->dayPartId == \Xibo\Entity\Schedule::$DAY_PART_CUSTOM) {
+        if ($schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
             // Handle the dates
             $fromDt = $this->getSanitizer()->getDate('fromDt');
             $toDt = $this->getSanitizer()->getDate('toDt');
@@ -506,10 +519,12 @@ class Schedule extends Base
                 if ($recurrenceRange != null)
                     $schedule->recurrenceRange = $recurrenceRange->format('U');
             }
+
+            $this->getLog()->debug('Processed times are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
         }
 
         // Ready to do the add
-        $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory)->setDateService($this->getDate());
+        $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory)->setDateService($this->getDate());
         $schedule->save();
 
         // Return
@@ -565,6 +580,7 @@ class Schedule extends Base
             'displayGroups' => $groups,
             'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1]),
             'commands' => $this->commandFactory->query(),
+            'dayParts' => $this->dayPartFactory->allWithSystem(),
             'displayGroupIds' => array_map(function($element) {
                 return $element->displayGroupId;
             }, $schedule->displayGroups),
@@ -635,7 +651,7 @@ class Schedule extends Base
      *   @SWG\Parameter(
      *      name="dayPartId",
      *      in="formData",
-     *      description="The Day Part for this event. Currently supported are 0(custom) and 1(always). Defaulted to 0.",
+     *      description="The Day Part for this event. Overrides supported are 0(custom) and 1(always). Defaulted to 0.",
      *      type="integer",
      *      required=false
      *   ),
@@ -707,7 +723,7 @@ class Schedule extends Base
         $schedule->commandId = $this->getSanitizer()->getInt('commandId');
         $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder');
         $schedule->isPriority = $this->getSanitizer()->getInt('isPriority');
-        $schedule->dayPartId = $this->getSanitizer()->getCheckbox('dayPartId');
+        $schedule->dayPartId = $this->getSanitizer()->getInt('dayPartId');
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $this->getSanitizer()->getIntArray('recurrenceRepeatsOn');
@@ -718,7 +734,7 @@ class Schedule extends Base
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
         }
 
-        if ($schedule->dayPartId == \Xibo\Entity\Schedule::$DAY_PART_CUSTOM) {
+        if ($schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
             // Handle the dates
             $fromDt = $this->getSanitizer()->getDate('fromDt');
             $toDt = $this->getSanitizer()->getDate('toDt');
@@ -751,10 +767,12 @@ class Schedule extends Base
                 if ($recurrenceRange != null)
                     $schedule->recurrenceRange = $recurrenceRange->format('U');
             }
+
+            $this->getLog()->debug('Processed start is: FromDt=' . $fromDt->toRssString());
         }
 
         // Ready to do the add
-        $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory)->setDateService($this->getDate());
+        $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory)->setDateService($this->getDate());
         $schedule->save();
 
         // Return
@@ -815,7 +833,7 @@ class Schedule extends Base
         if (!$this->isEventEditable($schedule->displayGroups))
             throw new AccessDeniedException();
 
-        $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory);
         $schedule->delete();
 
         // Return

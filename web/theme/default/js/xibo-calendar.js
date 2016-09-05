@@ -147,6 +147,12 @@ var setupScheduleForm = function(dialog) {
     });
     postProcessLayoutList($("select#eventTypeId").val());
 
+    // Bind to the dayParting dropdown
+    $("select#dayPartId").on("change", function() {
+        postProcessDaypartList($(this).val());
+    });
+    postProcessDaypartList($("select#dayPartId").val());
+
     // Bind to the dialog submit
     $("#scheduleAddForm, #scheduleEditForm, #scheduleDeleteForm").submit(function(e) {
         e.preventDefault();
@@ -190,6 +196,39 @@ function postProcessLayoutList(eventTypeId) {
                 $(this).css("display", "none");
         }
     });
+}
+
+function postProcessDaypartList(dayPartId) {
+
+    // The time controls
+    var $start = $("input[name=fromDtLink]");
+    var $end = $("input[name=toDtLink]");
+
+    // Is this a full control?
+    var fullStart = $start.hasClass("dateTimePicker");
+
+    if (dayPartId != 0)
+        $end.closest(".form-group").hide();
+    else
+        $end.closest(".form-group").show();
+
+    if (dayPartId != 0 && dayPartId != 1) {
+        // We need to update the date/time controls to only accept the date element
+        if (fullStart) {
+            // we are not currently a date only control
+            $start.removeClass("dateTimePicker").addClass("datePicker").datetimepicker("remove");
+
+            XiboInitialise("#" + $start.closest("form").prop("id"));
+        }
+    } else {
+        // Datetime controls should be full date/time
+        if (!fullStart) {
+            // we are not currently a full date control
+            $start.removeClass("datePicker").addClass("dateTimePicker").datetimepicker("remove");
+
+            XiboInitialise("#" + $start.closest("form").prop("id"));
+        }
+    }
 }
 
 /**

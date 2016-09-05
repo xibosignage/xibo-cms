@@ -8,8 +8,10 @@
 
 namespace Xibo\Entity;
 
+use Jenssegers\Date\Date;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -208,6 +210,9 @@ class Schedule implements \JsonSerializable
     /** @var  ScheduleFactory */
     private $scheduleFactory;
 
+    /** @var  DayPartFactory */
+    private $dayPartFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -227,14 +232,16 @@ class Schedule implements \JsonSerializable
      * @param LayoutFactory $layoutFactory
      * @param MediaFactory $mediaFactory
      * @param ScheduleFactory $scheduleFactory
+     * @param DayPartFactory $dayPartFactory
      * @return $this
      */
-    public function setChildObjectDependencies($displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory)
+    public function setChildObjectDependencies($displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $dayPartFactory = null)
     {
         $this->displayFactory = $displayFactory;
         $this->layoutFactory = $layoutFactory;
         $this->mediaFactory = $mediaFactory;
         $this->scheduleFactory = $scheduleFactory;
+        $this->dayPartFactory = $dayPartFactory;
         return $this;
     }
 
@@ -360,7 +367,7 @@ class Schedule implements \JsonSerializable
         if (count($this->displayGroups) <= 0)
             throw new \InvalidArgumentException(__('No display groups selected'));
 
-        $this->getLog()->debug('EventTypeId: %d. CampaignId: %d, CommandId: %d', $this->eventTypeId, $this->campaignId, $this->commandId);
+        $this->getLog()->debug('EventTypeId: %d. DayPartId: %d, CampaignId: %d, CommandId: %d', $this->eventTypeId, $this->dayPartId, $this->campaignId, $this->commandId);
 
         if ($this->eventTypeId == Schedule::$LAYOUT_EVENT || $this->eventTypeId == Schedule::$OVERLAY_EVENT) {
             // Validate layout
@@ -549,19 +556,22 @@ class Schedule implements \JsonSerializable
             return;
         }
 
+        // Load the dates into a date object for parsing
+        $start = $this->getDate()->parse($this->fromDt, 'U');
+        $end = $this->getDate()->parse($this->toDt, 'U');
+
+        // If we are a daypart event, look up the start/end times for the event
+        $this->calculateDayPartTimes($start, $end);
+
         // Add the detail for the main event (this is the event that originally triggered the generation)
-        $this->addDetail($this->fromDt, $this->toDt);
+        $this->addDetail($start->format('U'), $end->format('U'));
 
         // If we don't have any recurrence, we are done
         if (empty($this->recurrenceType))
             return;
 
         // Set the temp starts
-        $start = $this->getDate()->parse($this->fromDt, 'U');
-        $end = $this->getDate()->parse($this->toDt, 'U');
         $range = $this->getDate()->parse($this->recurrenceRange, 'U');
-
-        $weekRecurred = false;
 
         // loop until we have added the recurring events for the schedule
         while ($start < $range)
@@ -633,6 +643,9 @@ class Schedule implements \JsonSerializable
                                     throw new \InvalidArgumentException(__('The first event repeat is inside the event from/to dates.'));
                                 }
 
+                                // If we are a daypart event, look up the start/end times for the event
+                                $this->calculateDayPartTimes($start, $end);
+
                                 $this->addDetail($start->format('U'), $end->format('U'));
                             }
                         }
@@ -684,12 +697,54 @@ class Schedule implements \JsonSerializable
                 if ($start->format('U') < $this->toDt)
                     throw new \InvalidArgumentException(__('The first event repeat is inside the event from/to dates.'));
 
+                // If we are a daypart event, look up the start/end times for the event
+                $this->calculateDayPartTimes($start, $end);
+
                 $this->addDetail($start->format('U'), $end->format('U'));
             }
 
             // Check these dates
             if (!$this->isInScheduleLookAhead)
                 $this->isInScheduleLookAhead = $this->datesInScheduleLookAhead($start->format('U'), $end->format('U'));
+        }
+    }
+
+    /**
+     * Calculate the DayPart times
+     * @param Date $start
+     * @param Date $end
+     */
+    private function calculateDayPartTimes($start, $end)
+    {
+        $dayOfWeekLookup = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        if ($this->dayPartId != Schedule::$DAY_PART_ALWAYS && $this->dayPartId != Schedule::$DAY_PART_CUSTOM) {
+
+            // End is always based on Start
+            $end->setTimestamp($start->format('U'));
+
+            $dayPart = $this->dayPartFactory->getById($this->dayPartId);
+
+            $this->getLog()->debug('Start and end time for dayPart is ' . $dayPart->startTime . ' - ' . $dayPart->endTime);
+
+            // What day of the week does this start date represent?
+            // dayOfWeek is 0 for Sunday to 6 for Saturday
+            $found = false;
+            foreach ($dayPart->exceptions as $exception) {
+                // Is there an exception for this day of the week?
+                if ($exception['day'] == $dayOfWeekLookup[$start->dayOfWeek]) {
+                    $start->setTimeFromTimeString($exception['start']);
+                    $end->setTimeFromTimeString($exception['end']);
+                    $this->getLog()->debug('Found exception Start and end time for dayPart exception is ' . $exception['start'] . ' - ' . $exception['end']);
+                    $found = true;
+                    break;
+                }
+            }
+
+            if (!$found) {
+                $start->setTimeFromTimeString($dayPart->startTime);
+                $end->setTimeFromTimeString($dayPart->endTime);
+            }
         }
     }
 

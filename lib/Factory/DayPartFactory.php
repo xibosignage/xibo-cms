@@ -23,6 +23,7 @@
 namespace Xibo\Factory;
 
 use Xibo\Entity\DayPart;
+use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -42,11 +43,14 @@ class DayPartFactory extends BaseFactory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param User $user
+     * @param UserFactory $userFactory
      * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($store, $log, $sanitizerService, $scheduleFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $scheduleFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->setAclDependencies($user, $userFactory);
         $this->scheduleFactory = $scheduleFactory;
     }
 
@@ -80,6 +84,21 @@ class DayPartFactory extends BaseFactory
     }
 
     /**
+     * Get all dayparts with the system entries (always and custom)
+     * @return DayPart[]
+     */
+    public function allWithSystem()
+    {
+        $dayParts = $this->query();
+
+        // Add system and custom
+        array_unshift($dayParts, ['dayPartId' => 1, 'name' => __('Always')]);
+        array_unshift($dayParts, ['dayPartId' => 0, 'name' => __('Custom')]);
+
+        return $dayParts;
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[Schedule]
@@ -97,6 +116,9 @@ class DayPartFactory extends BaseFactory
         $body = ' FROM `daypart` ';
 
         $body .= ' WHERE 1 = 1 ';
+
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\DayPart', $body, $params, '`daypart`.dayPartId');
 
         if ($this->getSanitizer()->getInt('dayPartId', $filterBy) !== null) {
             $body .= ' AND `daypart`.dayPartId = :dayPartId ';

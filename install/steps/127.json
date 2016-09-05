@@ -16,7 +16,11 @@
     },
     {
       "step": "Add Daypart database structure",
-      "action": "CREATE TABLE `daypart` (`dayPartId` INT(11) NOT NULL AUTO_INCREMENT,`name` VARCHAR(50) NOT NULL,`description` VARCHAR(1000),`isRetired` TINYINT(4) DEFAULT 0,`userid` INT(11) NOT NULL,`startTime` VARCHAR(8) DEFAULT '00:00:00',`endTime` VARCHAR(8) DEFAULT '00:00:00',`exceptions` TEXT NULL,PRIMARY KEY (`dayPartId`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;"
+      "action": "CREATE TABLE `daypart` (`dayPartId` INT(11) NOT NULL AUTO_INCREMENT,`name` VARCHAR(50) NOT NULL,`description` VARCHAR(1000),`isRetired` TINYINT(4) DEFAULT 0,`userid` INT(11) NOT NULL,`startTime` VARCHAR(8) DEFAULT '00:00:00',`endTime` VARCHAR(8) DEFAULT '00:00:00',`exceptions` TEXT NULL,PRIMARY KEY (`dayPartId`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=2;"
+    },
+    {
+      "step": "Add Daypart Permission Entity",
+      "action": "INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES (NULL, 'Xibo\\Entity\\DayPart');"
     }
   ]
 }

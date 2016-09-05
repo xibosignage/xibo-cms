@@ -201,22 +201,25 @@ class DayPart extends Base
      *      name="exceptionDays",
      *      in="formData",
      *      description="String array of exception days",
-     *      type="string",
-     *      required=false
+     *      type="array",
+     *      required=false,
+     *      @SWG\Items(type="string")
      *   ),
      *  @SWG\Parameter(
      *      name="exceptionStartTimes",
      *      in="formData",
      *      description="String array of exception start times to match the exception days",
-     *      type="string",
-     *      required=false
+     *      type="array",
+     *      required=false,
+     *      @SWG\Items(type="string")
      *   ),
      *  @SWG\Parameter(
      *      name="exceptionEndTimes",
      *      in="formData",
      *      description="String array of exception end times to match the exception days",
-     *      type="string",
-     *      required=false
+     *      type="array",
+     *      required=false,
+     *      @SWG\Items(type="string")
      *   ),
      *  @SWG\Response(
      *      response=201,
@@ -249,6 +252,78 @@ class DayPart extends Base
     /**
      * Edit
      * @param int $dayPartId
+     *
+     * @SWG\Put(
+     *  path="/daypart/{dayPartId}",
+     *  operationId="dayPartAdd",
+     *  tags={"dayPart"},
+     *  summary="Daypart Add",
+     *  description="Add a Daypart",
+     *  @SWG\Parameter(
+     *      name="dayPartId",
+     *      in="path",
+     *      description="The Daypart Id",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="The Daypart Name",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="A description for the dayPart",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="startTime",
+     *      in="formData",
+     *      description="The start time for this day part",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="endTime",
+     *      in="formData",
+     *      description="The end time for this day part",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="exceptionDays",
+     *      in="formData",
+     *      description="String array of exception days",
+     *      type="array",
+     *      required=false,
+     *      @SWG\Items(type="string")
+     *   ),
+     *  @SWG\Parameter(
+     *      name="exceptionStartTimes",
+     *      in="formData",
+     *      description="String array of exception start times to match the exception days",
+     *      type="array",
+     *      required=false,
+     *      @SWG\Items(type="string")
+     *   ),
+     *  @SWG\Parameter(
+     *      name="exceptionEndTimes",
+     *      in="formData",
+     *      description="String array of exception end times to match the exception days",
+     *      type="array",
+     *      required=false,
+     *      @SWG\Items(type="string")
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DayPart")
+     *  )
+     * )
      */
     public function edit($dayPartId)
     {
@@ -328,6 +403,25 @@ class DayPart extends Base
     /**
      * Delete
      * @param int $dayPartId
+     *
+     * @SWG\Delete(
+     *  path="/daypart/{dayPartId}",
+     *  operationId="dayPartDelete",
+     *  tags={"daypart"},
+     *  summary="Delete DayPart",
+     *  description="Delete the provided dayPart",
+     *  @SWG\Parameter(
+     *      name="dayPartId",
+     *      in="path",
+     *      description="The Daypart Id to Delete",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function delete($dayPartId)
     {
