@@ -370,6 +370,8 @@ class Display extends Base
             if ($this->isApi())
                 break;
 
+            $display->includeProperty('buttons');
+
             $display->storageAvailableSpaceFormatted = ByteFormatter::format($display->storageAvailableSpace);
             $display->storageTotalSpaceFormatted = ByteFormatter::format($display->storageTotalSpace);
 
