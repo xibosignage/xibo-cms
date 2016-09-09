@@ -598,7 +598,7 @@ class Display extends Data {
                  WHERE `lkcampaignlayout`.layoutId IN (
                   SELECT layoutId
                     FROM `lkcampaignlayout`
-                   WHERE campaignId = 3
+                   WHERE campaignId = :campaignid
                   )
              ';
 
