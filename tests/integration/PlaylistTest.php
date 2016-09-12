@@ -18,7 +18,7 @@ use Xibo\Tests\LocalWebTestCase;
 class PlaylistTest extends LocalWebTestCase
 {
 	/**
-     * List all file in library
+     * List all items in playlist
      * @group broken
      */
     public function testGetPlaylist()

@@ -4804,12 +4804,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PeterMis/oauth2-xibo-cms.git",
-                "reference": "158930b75c3ffc03a2458289a84509b5447acdd3"
+                "reference": "d376974c4cd1480ef1b4de7818cba39657d99c37"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PeterMis/oauth2-xibo-cms/zipball/158930b75c3ffc03a2458289a84509b5447acdd3",
-                "reference": "158930b75c3ffc03a2458289a84509b5447acdd3",
+                "url": "https://api.github.com/repos/PeterMis/oauth2-xibo-cms/zipball/d376974c4cd1480ef1b4de7818cba39657d99c37",
+                "reference": "d376974c4cd1480ef1b4de7818cba39657d99c37",
                 "shasum": ""
             },
             "require": {
@@ -4849,7 +4849,7 @@
             "support": {
                 "source": "https://github.com/PeterMis/oauth2-xibo-cms/tree/master"
             },
-            "time": "2016-08-15 12:16:51"
+            "time": "2016-09-12 09:56:53"
         },
         {
             "name": "zircote/swagger-php",
