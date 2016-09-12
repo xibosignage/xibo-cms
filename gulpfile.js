@@ -41,6 +41,7 @@ var composer = require("gulp-composer");
 var tar = require('gulp-tar');
 var gzip = require('gulp-gzip');
 var rename = require('gulp-rename');
+var exec = require('child_process').exec;
 
 gulp.task('default-php', function() {
     return composer("install", {
@@ -98,6 +99,13 @@ gulp.task('build-php-archive', function() {
         .pipe(tar('xibo-cms-' + version + '.tar'))
         .pipe(gzip())
         .pipe(gulp.dest('./'))
+});
+
+gulp.task('swagger', function () {
+     exec('./vendor/bin/swagger lib -o web/swagger.json', function (err, stdout, stderr) {
+         console.log(stdout);
+         console.log(stderr);
+     });
 });
 
 gulp.task('watch', function() {

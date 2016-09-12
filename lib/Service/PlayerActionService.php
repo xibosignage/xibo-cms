@@ -106,12 +106,12 @@ class PlayerActionService implements PlayerActionServiceInterface
             try {
                 // Send each action
                 if (!$action->send($this->xmrAddress)) {
-                    $this->log->error('Player action refused.');
+                    $this->log->error('Player action refused by XMR (connected but XMR returned false).');
                     $failures++;
                 }
 
             } catch (PlayerActionException $sockEx) {
-                $this->log->error('Player action connection failed.');
+                $this->log->error('Player action connection failed. E = ' . $sockEx->getMessage());
                 $failures++;
             }
         }

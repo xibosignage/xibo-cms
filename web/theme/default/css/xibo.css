@@ -894,3 +894,6 @@ ul li.active.tab-design:hover a {
     display: none;
 }
 
+.selectPickerWithImage .form-control {
+    height: inherit;
+}

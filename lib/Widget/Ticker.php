@@ -192,7 +192,7 @@ class Ticker extends ModuleWidget
             if (!v::numeric()->validate($this->getOption('numItems', 0)))
                 throw new \InvalidArgumentException(__('The value in Number of Items must be numeric.'));
 
-            if (!v::numeric()->notEmpty()->min(0)->validate($this->getOption('updateInterval')))
+            if (!v::int()->min(0)->validate($this->getOption('updateInterval')))
                 throw new \InvalidArgumentException(__('Update Interval must be greater than or equal to 0'));
         }
     }
@@ -233,8 +233,8 @@ class Ticker extends ModuleWidget
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('xmds', true);
-        $this->setOption('uri', $this->getSanitizer()->getString('uri'));
-        $this->setOption('updateInterval', urlencode($this->getSanitizer()->getInt('updateInterval', 120)));
+        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
+        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
         $this->setOption('speed', $this->getSanitizer()->getInt('speed', 2));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('effect', $this->getSanitizer()->getString('effect'));
@@ -623,7 +623,7 @@ class Ticker extends ModuleWidget
 
                             switch ($tag) {
                                 case 'Link':
-                                    if ($item->getEnclosureType() == 'image') {
+                                    if (stripos($item->getEnclosureType(), 'image') > -1) {
                                         // Use the link to get the image
                                         $link = $item->getEnclosureUrl();
                                     }
@@ -645,6 +645,8 @@ class Ticker extends ModuleWidget
                                         $link = $tags[0];
                                     }
                             }
+
+                            $this->getLog()->debug('Resolved link: %s', $link);
 
                             // If we have managed to resolve a link, download it and replace the tag with the downloaded
                             // image url

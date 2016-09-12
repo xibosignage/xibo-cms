@@ -294,7 +294,7 @@
 
                         {% set title %}{% trans "Template" %}{% endset %}
                         {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
-                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId", "title-only"), module.templatesAvailable(), "id", "value", helptext, "template-selector-control") }}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId", "title-only"), module.templatesAvailable(), "id", "value", helptext, "template-selector-control selectPicker selectPickerWithImage", null, null, null, null, null, baseUrl, "image") }}
 
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
@@ -360,7 +360,7 @@
                         {{ fieldItemsSideBySide }}
 
                         {% set title %}{% trans "Date Format" %}{% endset %}
-                        {% set manualUrl %}{{ settings.HELP_BASE }}advanced_dateFormat.md{% endset %}
+                        {% set manualUrl %}{{ helpService.address("advanced_dateFormat.html") }}{% endset %}
                         {% set helpText %}{% trans %}The format to apply to all dates returned by the ticker. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}
                         {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText) }}
 

@@ -1,23 +1,9 @@
 {#
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+ * Copyright (C) 2016 Spring Signage Ltd
+ * (statistics-form-export.twig)
  */
-$formFields = array();
-$formFields[] = Form::AddText('fromdt', __('From Date'), Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
-$formFields[] = Form::AddText('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
-
-// List of Displays this user has permission for
-$formFields[] = Form::AddCombo(
-    'displayid',
-    __('Display'),
-    NULL,
-    DisplayFactory::query(),
-    'displayid',
-    'displaygroup',
-    NULL,
-    'd');
 #}
 
 {% extends "form-base.twig" %}
@@ -30,21 +16,21 @@ $formFields[] = Form::AddCombo(
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#statisticsExportForm").submit()    
+    {% trans "Save" %}, statsExportFormSubmit()
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
             <form id="statisticsExportForm" class="XiboManualForm form-horizontal" method="get" action="{{ urlFor("stats.export") }}">
-                    {% set title %}{% trans "From Date" %}{% endset %}
-                    {{ forms.input("fromDt", title) }}
+                {% set title %}{% trans "From Date" %}{% endset %}
+                {{ forms.date("fromDt", title) }}
 
-                    {% set title %}{% trans "To Date" %}{% endset %}
-                    {{ forms.input("toDt", title) }}
+                {% set title %}{% trans "To Date" %}{% endset %}
+                {{ forms.date("toDt", title) }}
 
-                    {% set title %}{% trans "Display" %}{% endset %}
-                    {{ forms.dropdown("displayid", "single", title, "", module.dataSets(), "displayid", "displaygroup") }}
+                {% set title %}{% trans "Display" %}{% endset %}
+                {{ forms.dropdown("displayid", "single", title, "", [{"displayId": null, "display": ""}]|merge(displays), "displayId", "display") }}
             </form>
         </div>
     </div>

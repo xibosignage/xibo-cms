@@ -39,6 +39,7 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\XMR\RekeyAction;
 use Xibo\XMR\ScreenShotAction;
 
 /**
@@ -321,6 +322,13 @@ class Display extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="embed",
+     *      in="formData",
+     *      description="Embed related data, namely displaygroups. A comma separated list of child objects to embed.",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -333,6 +341,9 @@ class Display extends Base
      */
     function grid()
     {
+        // Embed?
+        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+
         $filter = [
             'displayId' => $this->getSanitizer()->getInt('displayId'),
             'display' => $this->getSanitizer()->getString('display'),
@@ -349,11 +360,18 @@ class Display extends Base
         $this->validateDisplays($displays);
 
         foreach ($displays as $display) {
+            /* @var \Xibo\Entity\Display $display */
+            if (in_array('displaygroups', $embed)) {
+                $display->load();
+            } else {
+                $display->excludeProperty('displayGroups');
+            }
 
             if ($this->isApi())
                 break;
 
-            /* @var \Xibo\Entity\Display $display */
+            $display->includeProperty('buttons');
+
             $display->storageAvailableSpaceFormatted = ByteFormatter::format($display->storageAvailableSpace);
             $display->storageTotalSpaceFormatted = ByteFormatter::format($display->storageTotalSpace);
 
@@ -718,6 +736,13 @@ class Display extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="rekeyXmr",
+     *      in="formData",
+     *      description="Clear the cached XMR configuration and send a rekey",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -763,6 +788,16 @@ class Display extends Base
         } else if ($this->getSanitizer()->getCheckbox('clearCachedData', 1) == 1) {
             // Remove the cache if the display licenced state has changed
             $this->pool->deleteItem($display->getCacheKey());
+        }
+
+        // Should we rekey?
+        if ($this->getSanitizer()->getCheckbox('rekeyXmr', 0) == 1) {
+            // Queue the rekey action first (before we clear the channel and key)
+            $this->playerAction->sendAction($display, new RekeyAction());
+
+            // Clear the config.
+            $display->xmrChannel = null;
+            $display->xmrPubKey = null;
         }
 
         $display->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
@@ -883,6 +918,7 @@ class Display extends Base
         // Go through each ID to assign
         foreach ($this->getSanitizer()->getIntArray('displayGroupId') as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
             if (!$this->getUser()->checkEditable($displayGroup))
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
@@ -894,6 +930,7 @@ class Display extends Base
         // Have we been provided with unassign id's as well?
         foreach ($this->getSanitizer()->getIntArray('unassignDisplayGroupId') as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
             if (!$this->getUser()->checkEditable($displayGroup))
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
@@ -916,6 +953,8 @@ class Display extends Base
      */
     public function screenShot($displayId)
     {
+        $this->setNoOutput(true);
+
         // Output an image if present, otherwise not found image.
         $file = 'screenshots/' . $displayId . '_screenshot.jpg';
 

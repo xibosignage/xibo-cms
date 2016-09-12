@@ -37,13 +37,16 @@ class ShellCommand extends ModuleWidget
     {
         // Any Options (we need to encode shell commands, as they sit on the options rather than the raw
         $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setDuration(1);
-        $this->setUseDuration(0);
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
 
         // Commands
         $windows = $this->getSanitizer()->getString('windowsCommand');
         $linux = $this->getSanitizer()->getString('linuxCommand');
 
+        $this->setOption('launchThroughCmd', $this->getSanitizer()->getCheckbox('launchThroughCmd'));
+        $this->setOption('terminateCommand', $this->getSanitizer()->getCheckbox('terminateCommand'));
+        $this->setOption('useTaskkill', $this->getSanitizer()->getCheckbox('useTaskkill'));
         $this->setOption('commandCode', $this->getSanitizer()->getString('commandCode'));
         $this->setOption('windowsCommand', urlencode($windows));
         $this->setOption('linuxCommand', urlencode($linux));
@@ -59,14 +62,17 @@ class ShellCommand extends ModuleWidget
     public function edit()
     {
         // Any Options (we need to encode shell commands, as they sit on the options rather than the raw
-        $this->setDuration(1);
-        $this->setUseDuration(0);
-        $this->setOption('name', $this->getSanitizer()->getString('name', $this->getOption('name')));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
 
         // Commands
         $windows = $this->getSanitizer()->getString('windowsCommand');
         $linux = $this->getSanitizer()->getString('linuxCommand');
 
+        $this->setOption('launchThroughCmd', $this->getSanitizer()->getCheckbox('launchThroughCmd'));
+        $this->setOption('terminateCommand', $this->getSanitizer()->getCheckbox('terminateCommand'));
+        $this->setOption('useTaskkill', $this->getSanitizer()->getCheckbox('useTaskkill'));
         $this->setOption('commandCode', $this->getSanitizer()->getString('commandCode'));
         $this->setOption('windowsCommand', urlencode($windows));
         $this->setOption('linuxCommand', urlencode($linux));

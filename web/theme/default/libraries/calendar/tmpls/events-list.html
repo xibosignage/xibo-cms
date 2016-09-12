@@ -8,46 +8,47 @@
         var eventClass = "event-warning";
 
         if (event.event.dayPartId == 0) {
-                if (event.event.eventTypeId == 2) {
+            if (event.event.eventTypeId == 2) {
                 title = "[" + moment(event.event.fromDt).format("HH:mm") + "] " + event.title;
-                } else if (event.sameDay) {
+            } else if (event.sameDay) {
                 title = "[" + moment(event.event.fromDt).format("HH:mm") + " - " + moment(event.event.toDt).format("HH:mm") + "] " + event.title;
-                } else {
+            } else {
                 title = "[" + moment(event.event.fromDt).format(jsDateFormat) + " - " + moment(event.event.toDt).format(jsDateFormat) + "] " + event.title;
-                }
+            }
         }
 
         if (event.event.displayOrder > 0)
-        title = title + " (" + event.event.displayOrder + ")";
+            title = title + " (" + event.event.displayOrder + ")";
 
         if (event.event.displayGroups.length <= 1) {
-        eventClass = "event-info";
+            eventClass = "event-info";
         }
         else {
-        eventClass = "event-success";
+            eventClass = "event-success";
         }
 
         if (event.event.dayPartId == 1) {
-        eventIcon = "fa-retweet";
+            eventIcon = "fa-retweet";
         }
 
         if (event.event.recurrenceType != null && event.event.recurrenceType != "") {
-        eventClass = "event-special";
-        eventIcon = "fa-repeat";
+            eventClass = "event-special";
+            eventIcon = "fa-repeat";
         }
 
         if (event.event.isPriority >= 1) {
-        eventClass = "event-important";
-        eventIcon = "fa-bullseye";
+            eventClass = "event-important";
+            eventIcon = "fa-bullseye";
         }
 
-            if (event.event.eventTypeId == 2)
+        if (event.event.eventTypeId == 2)
             eventIcon = "fa-wrench";
 
-            if (!event.editable) {
+        if (!event.editable) {
+            event.url = null;
             eventIcon = "fa-lock";
             eventClass = "event-inverse";
-            }
+        }
         %>
 			<li>
 				<span class="pull-left event <%= event['class'] %>"></span>&nbsp;

@@ -10,7 +10,9 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
+        {% if currentUser.isSuperAdmin() or currentUser.isGroupAdmin() %}
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new User" %}" href="{{ urlFor("user.add.form") }}"><i class="fa fa-user-plus" aria-hidden="true"></i> {% trans "Add User" %}</a></li>
+        {% endif %}
         <li class="btn btn-info btn-xs"><a class="XiboFormButton btns" title="{% trans "View my authenticated applications" %}" href="{{ urlFor("user.applications") }}"><i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "My Applications" %}</a></li>
     </ul>
 {% endblock %}

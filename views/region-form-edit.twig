@@ -76,16 +76,16 @@
                 {# Transitions #}
                 {% set title %}{% trans "Exit Transition" %}{% endset %}
                 {% set helpText %}{% trans "What transition should be applied when this region is finished?" %}{% endset %}
-                {{ forms.dropdown("transitionType", "single", title, region.transitionType, transitions.out|merge({code: null, transition: ""}), "code", "transition", helpText) }}
+                {{ forms.dropdown("transitionType", "single", title, region.getOptionValue("transitionType"), [{code: null, transition: ""}]|merge(transitions.out), "code", "transition", helpText) }}
 
-                {{ forms.number("transitionDuration", "Duration", region.transitionDuration, "The duration for this transition, in milliseconds.", "transition-group") }}
+                {{ forms.number("transitionDuration", "Duration", region.getOptionValue("transitionDuration"), "The duration for this transition, in milliseconds.", "transition-group") }}
 
                 {% set title %}{% trans "Direction" %}{% endset %}
                 {% set helpText %}{% trans "The direction for this transition. Only appropriate for transitions that move, such as Fly." %}{% endset %}
-                {{ forms.dropdown("transitionDirection", "single", title, region.transitionsDirection, compassPoints, "id", "name", helpText, "transition-group transition-direction") }}
+                {{ forms.dropdown("transitionDirection", "single", title, region.getOptionValue("transitionDirection"), transitions.compassPoints, "id", "name", helpText, "transition-group transition-direction") }}
 
                 {% set title %}{% trans "Loop?" %}{% endset %}
-                {% set helpText %}{% trans "If there is only one item in this region should it loop? Not currently available for Windows Players" %}{% endset %}
+                {% set helpText %}{% trans "If there is only one item in this region should it loop?" %}{% endset %}
                 {{ forms.checkbox("loop", title, region.getOptionValue("loop", 0), helpText) }}
 
                 {{ forms.number("zIndex", "Layer", region.zIndex, "The layering order of this region (z-index). Advanced use only.") }}

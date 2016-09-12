@@ -27,7 +27,6 @@ use Xibo\Entity\Region;
 use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\LibraryFullException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
@@ -1256,38 +1255,29 @@ class Layout extends Base
         // Make sure the library exists
         Library::ensureLibraryExists($this->getConfig()->GetSetting('LIBRARY_LOCATION'));
 
+        // Make sure there is room in the library
+        /** @var Library $libraryController */
+        $libraryController = $this->getApp()->container->get('\Xibo\Controller\Library')->setApp($this->getApp());
+        $libraryLimit = $this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+
         $options = array(
             'userId' => $this->getUser()->userId,
             'controller' => $this,
-            'libraryController' => $this->getApp()->container->get('\Xibo\Controller\Library')->setApp($this->getApp()),
+            'libraryController' => $libraryController,
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
             'script_url' => $this->urlFor('layout.import'),
             'upload_url' => $this->urlFor('layout.import'),
             'image_versions' => array(),
-            'accept_file_types' => '/\.zip$/i'
+            'accept_file_types' => '/\.zip$/i',
+            'libraryLimit' => $libraryLimit,
+            'libraryQuotaFull' => ($libraryLimit > 0 && $libraryController->libraryUsage() > $libraryLimit)
         );
 
-        // Make sure there is room in the library
-        $libraryLimit = $this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
-
-        if ($libraryLimit > 0 && $this->getApp()->container->get('\Xibo\Controller\Library')->libraryUsage() > $libraryLimit)
-            throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
-
-        // Check for a user quota
-        $this->getUser()->isQuotaFullByUser();
-
-        try {
-            // Hand off to the Upload Handler provided by jquery-file-upload
-            new LayoutUploadHandler($options);
-
-        } catch (\Exception $e) {
-            // We must not issue an error, the file upload return should have the error object already
-            //TODO: for some reason this commits... it shouldn't
-            $this->getApp()->container->commit = false;
-        }
-
         $this->setNoOutput(true);
+
+        // Hand off to the Upload Handler provided by jquery-file-upload
+        new LayoutUploadHandler($options);
     }
 
     /**

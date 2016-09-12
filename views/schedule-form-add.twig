@@ -56,6 +56,38 @@
     ".repeat-control-group": { "display": "block" }
     }
     },{
+    "field": "recurrenceType",
+    "trigger": "init",
+    "value": "Week",
+    "operation": "equals",
+    "actions": {
+    ".repeat-weekly-control-group": { "display": "block" }
+    }
+    },{
+    "field": "recurrenceType",
+    "trigger": "change",
+    "value": "Week",
+    "operation": "equals",
+    "actions": {
+    ".repeat-weekly-control-group": { "display": "block" }
+    }
+    },{
+    "field": "recurrenceType",
+    "trigger": "init",
+    "value": "Week",
+    "operation": "not",
+    "actions": {
+    ".repeat-weekly-control-group": { "display": "none" }
+    }
+    },{
+    "field": "recurrenceType",
+    "trigger": "change",
+    "value": "Week",
+    "operation": "not",
+    "actions": {
+    ".repeat-weekly-control-group": { "display": "none" }
+    }
+    },{
     "field": "eventTypeId",
     "trigger": "init",
     "value": "2",
@@ -248,7 +280,28 @@
                         { id: "Year", name: yearly}
                         ] %}
                         {{ forms.dropdown("recurrenceType", "single", title, "", options, "id", "name", helpText) }}
-                    
+
+                        {% set helpText %}{% trans "Which days of the week does this even repeat?" %}{% endset %}
+                        {% set noneOption %}{% trans "" %}{% endset %}
+                        {% set monday %}{% trans "Monday" %}{% endset %}
+                        {% set tuesday %}{% trans "Tuesday" %}{% endset %}
+                        {% set wednesday %}{% trans "Wednesday" %}{% endset %}
+                        {% set thursday %}{% trans "Thursday" %}{% endset %}
+                        {% set friday %}{% trans "Friday" %}{% endset %}
+                        {% set saturday %}{% trans "Saturday" %}{% endset %}
+                        {% set sunday %}{% trans "Sunday" %}{% endset %}
+                        {% set options = [
+                        { id: 0, name: noneOption },
+                        { id: 1, name: monday },
+                        { id: 2, name: tuesday },
+                        { id: 3, name: wednesday },
+                        { id: 4, name: thursday },
+                        { id: 5, name: friday },
+                        { id: 6, name: saturday },
+                        { id: 7, name: sunday },
+                        ] %}
+                        {{ forms.dropdown("recurrenceRepeatsOn[]", "dropdownmulti", "", event.recurrenceRepeatsOn, options, "id", "name", helpText, "repeat-weekly-control-group") }}
+
                         {% set title %}{% trans "Repeat every" %}{% endset %}
                         {% set helpText %}{% trans "How often does this event repeat?" %}{% endset %}
                         {{ forms.number("recurrenceDetail", title, recurrenceDetail, helpText, "repeat-control-group") }}

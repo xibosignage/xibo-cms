@@ -203,7 +203,7 @@ class DataSetView extends ModuleWidget
             if ($this->getOption('upperLimit') < $this->getOption('lowerLimit'))
                 throw new \InvalidArgumentException(__('Upper limit must be higher than lower limit'));
 
-            if (!v::int()->notEmpty()->min(0)->validate($this->getOption('updateInterval')))
+            if (!v::int()->min(0)->validate($this->getOption('updateInterval')))
                 throw new InvalidArgumentException(__('Update Interval must be greater than or equal to 0'));
 
             // Make sure we haven't entered a silly value in the filter
@@ -240,7 +240,7 @@ class DataSetView extends ModuleWidget
             $this->setOption('columns', implode(',', $columns));
 
         // Other properties
-        $this->setOption('name', $this->getSanitizer()->getString('name', $this->getOption('name')));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));

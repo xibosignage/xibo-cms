@@ -25,8 +25,8 @@ DEFINE('XIBO', true);
 DEFINE('MAX_EXECUTION', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/../..'));
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
 require PROJECT_ROOT . '/vendor/autoload.php';
 
@@ -60,6 +60,7 @@ $app->error(function (\Exception $e) use ($app) {
 
 // Configure a not found handler
 $app->notFound(function () use ($app) {
+    Translate::InitLocale($app->configService, 'en_GB');
     $app->render('install-error.twig', ['error' => __('Page not found'), 'trace' => __('Sorry this page cannot be found.')], 500);
 });
 

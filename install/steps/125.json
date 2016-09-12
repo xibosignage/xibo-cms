@@ -44,7 +44,8 @@
     },
     {
       "step": "Add released and api ref to media table",
-      "action": "ALTER TABLE `media` ADD released tinyint(4) NOT NULL DEFAULT 1, ADD apiRef varchar(254) NULL;"
+      "action": "ALTER TABLE `media` ADD released tinyint(4) NOT NULL DEFAULT 1, ADD apiRef varchar(254) NULL;",
+      "patchedId": 121
     },
     {
       "step": "Add MCAAS Routes to Scope",
@@ -52,7 +53,8 @@
     },
     {
       "step": "Add Layout status message column",
-      "action": "ALTER TABLE `layout` ADD `statusMessage` TEXT NULL;"
+      "action": "ALTER TABLE `layout` ADD `statusMessage` TEXT NULL;",
+      "patchedIn": 120
     },
     {
       "step": "Add missing constraint to Display/DisplayGroup Link",

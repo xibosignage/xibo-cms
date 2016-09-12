@@ -255,13 +255,15 @@ class Playlist extends Base
         $widgets = $this->widgetFactory->query($this->gridRenderSort(), $this->gridRenderFilter(['playlistId' => $this->getSanitizer()->getInt('playlistId')]));
 
         foreach ($widgets as $widget) {
-
             /* @var Widget $widget */
+            $widget->load();
+
             $widget->module = $this->moduleFactory->createWithWidget($widget);
 
-            // Naughty dynamic assignment, but I am not sure how to get
-            // the name to be available to DataTables otherwise
+            // Add property for name
             $widget->name = $widget->module->getName();
+
+            // Add property for transition
             $widget->transition = sprintf('%s / %s', $widget->module->getTransition('in'), $widget->module->getTransition('out'));
 
             if ($this->isApi())
@@ -285,7 +287,7 @@ class Playlist extends Base
                     'multi-select' => true,
                     'dataAttributes' => array(
                         array('name' => 'commit-url', 'value' => $this->urlFor('module.widget.delete', ['id' => $widget->widgetId])),
-                        array('name' => 'commit-method', 'value' => 'put'),
+                        array('name' => 'commit-method', 'value' => 'delete'),
                         array('name' => 'id', 'value' => 'timeline_button_delete'),
                         array('name' => 'text', 'value' => __('Delete')),
                         array('name' => 'rowtitle', 'value' => $widget->module->getName()),

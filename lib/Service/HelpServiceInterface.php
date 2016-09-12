@@ -34,8 +34,8 @@ interface HelpServiceInterface
 
     /**
      * Raw Link
-     * @param $link
+     * @param string $suffix Suffix to append to the end of the manual page URL
      * @return string
      */
-    public function rawLink($link);
+    public function address($suffix = '');
 }

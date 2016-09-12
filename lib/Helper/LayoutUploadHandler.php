@@ -4,6 +4,7 @@ namespace Xibo\Helper;
 
 use Exception;
 use Xibo\Entity\Layout;
+use Xibo\Exception\LibraryFullException;
 
 /**
  * Class LayoutUploadHandler
@@ -28,6 +29,14 @@ class LayoutUploadHandler extends BlueImpUploadHandler
 
         // Upload and Save
         try {
+            // Check Library
+            if ($this->options['libraryQuotaFull'])
+                throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $this->options['libraryLimit']));
+
+            // Check for a user quota
+            $controller->getUser()->isQuotaFullByUser();
+
+            // Parse parameters
             $name = isset($_REQUEST['name']) ? $_REQUEST['name'][$index] : '';
             $template = isset($_REQUEST['template']) ? $_REQUEST['template'][$index] : 0;
             $replaceExisting = isset($_REQUEST['replaceExisting']) ? $_REQUEST['replaceExisting'][$index] : 0;

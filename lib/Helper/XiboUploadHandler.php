@@ -7,6 +7,7 @@ use Xibo\Entity\Layout;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\LibraryFullException;
 use Xibo\Exception\NotFoundException;
 
 /**
@@ -34,6 +35,14 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
         // Upload and Save
         try {
+
+            // Check Library
+            if ($this->options['libraryQuotaFull'])
+                throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $this->options['libraryLimit']));
+
+            // Check for a user quota
+            $controller->getUser()->isQuotaFullByUser();
+
             // Get some parameters
             if ($index === null) {
                 if (!isset($_REQUEST['name']))
@@ -229,6 +238,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
             // Set the name to the one we have selected
             $file->name = $name;
+            $file->mediaId = $media->mediaId;
 
             // Get the storedAs valid for return
             $file->storedas = $media->storedAs;

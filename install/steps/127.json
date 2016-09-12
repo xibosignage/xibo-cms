@@ -1,0 +1,14 @@
+{
+  "dbVersion": 127,
+  "appVersion": "1.8.0-rc1",
+  "steps": [
+    {
+      "step": "Add support for recurrence by week day",
+      "action": "ALTER TABLE `schedule` ADD `recurrenceRepeatsOn` VARCHAR(14) NULL;"
+    },
+    {
+      "step": "Add setting for resting log level",
+      "action": "INSERT INTO `setting` (`setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES ('RESTING_LOG_LEVEL', 'Error', 'dropdown', 'Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems \"error\" is recommended.', 'Emergency|Alert|Critical|Error', 'troubleshooting', 1, 'Resting Log Level', '', 19, 'error', 1, 'word');"
+    }
+  ]
+}

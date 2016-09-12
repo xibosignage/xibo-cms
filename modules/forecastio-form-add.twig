@@ -208,7 +208,7 @@
 
                         {% set title %}{% trans "Weather Template" %}{% endset %}
                         {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
-                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.templatesAvailable(), "id", "value", helpText, "template-selector-control") }}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.templatesAvailable(), "id", "value", helpText, "template-selector-control selectPicker selectPickerWithImage", null, null, null, null, null, baseUrl, "image") }}
 
                         {% set title %}{% trans "Icons" %}{% endset %}
                         {% set helpText %}{% trans "Select the icon set you would like to use." %}{% endset %}
@@ -242,7 +242,7 @@
 
                         {% set title %}{% trans "Language" %}{% endset %}
                         {% set helpText %}{% trans "Select the language you would like to use." %}{% endset %}
-                        {{ forms.dropdown("lang", "single", title, translate.jsLocale, module.supportedLanguages(), "id", "value", helpText) }}
+                        {{ forms.dropdown("lang", "single", title, translate.jsShortLocale, module.supportedLanguages(), "id", "value", helpText) }}
 
                         {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}

@@ -139,6 +139,7 @@ var setupScheduleForm = function(dialog) {
     // Select lists
     $('#campaignId', dialog).selectpicker();
     $('select[name="displayGroupIds[]"]', dialog).selectpicker();
+    $('select[name="recurrenceRepeatsOn[]"]', dialog).selectpicker();
 
     // Bind to the event type dropdown
     $("select#eventTypeId").on("change", function() {
