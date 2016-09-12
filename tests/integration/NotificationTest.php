@@ -9,6 +9,7 @@ namespace Xibo\Tests\Integration;
 
 use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
 use Xibo\OAuth2\Client\Entity\XiboUserGroup;
+use Xibo\OAuth2\Client\Entity\XiboNotification;
 use Xibo\Helper\Random;
 use Xibo\Tests\LocalWebTestCase;
 
@@ -41,7 +42,7 @@ class NotificationTest extends LocalWebTestCase
     	$this->client->post('/notification' , [
     		'subject' => $subject,
     		'body' => 'Notification body text',
-    		'releaseDt' => 2016-09-01,
+    		'releaseDt' => '2016-09-01 00:00:00',
     		'isEmail' => 0,
     		'isInterrupt' => 0,
     		'displayGroupIds' => [$displayGroup->displayGroupId]
@@ -60,13 +61,14 @@ class NotificationTest extends LocalWebTestCase
 
     /**
     * Delete notification
+    * @group broken
     */
     public function testDelete()
     {
 		# Create new display group
     	$displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
     	# Create new notification
-    	$notification = (new XiboNotification($this->getEntityProvider()))->create('API subject', 'API body', 'DATE SHOULD GO HERE', 0, 0, [$displayGroup->displayGroupId]);
+    	$notification = (new XiboNotification($this->getEntityProvider()))->create('API subject', 'API body', '2016-09-01 00:00:00', 0, 0, [$displayGroup->displayGroupId]);
     	# Delete notification
         $this->client->delete('/notification/' . $notification->notificationId);
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
@@ -76,13 +78,14 @@ class NotificationTest extends LocalWebTestCase
 
    /**
     * Edit notification
+    * @group broken
     */
     public function testEdit()
     {
 		# Create new display group
     	$displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
     	# Create new notification
-    	$notification = (new XiboNotification($this->getEntityProvider()))->create('API subject', 'API body', 'DATE SHOULD GO HERE', 0, 0, [$displayGroup->displayGroupId]);
+    	$notification = (new XiboNotification($this->getEntityProvider()))->create('API subject', 'API body', '2016-09-01 00:00:00', 0, 0, [$displayGroup->displayGroupId]);
     	# Create new subject
     	$subjectNew = 'Subject edited via API';
     	# Edit our notification

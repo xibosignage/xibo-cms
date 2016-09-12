@@ -12,6 +12,7 @@ use Xibo\OAuth2\Client\Entity\XiboCommand;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
+use Xibo\OAuth2\Client\Entity\XiboLibrary;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
@@ -613,7 +614,6 @@ class DisplayGroupTest extends LocalWebTestCase
 
     /**
      * Assign new media file to a group Test
-     * @group broken
      */
     public function testAssignMedia()
     {
@@ -622,8 +622,8 @@ class DisplayGroupTest extends LocalWebTestCase
         # Create new display group
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
         # Upload a known files
-        $media = (new XiboLibrary($this->getEntityProvider()))->create('API video', PROJECT_ROOT . '/tests/resources/HLH264.mp4');
-        $media2 = (new XiboLibrary($this->getEntityProvider()))->create('API image', PROJECT_ROOT . '/tests/resources/xts-night-001.jpg');
+        $media = (new XiboLibrary($this->getEntityProvider()))->create('API video 12', PROJECT_ROOT . '/tests/resources/HLH264.mp4');
+        $media2 = (new XiboLibrary($this->getEntityProvider()))->create('API image 12', PROJECT_ROOT . '/tests/resources/xts-night-001.jpg');
         # Assign two files o the display group and unassign one of them
 		$this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/media/assign', [
         	'mediaId' => [$media->mediaId, $media2->mediaId],
@@ -640,7 +640,6 @@ class DisplayGroupTest extends LocalWebTestCase
 
     /**
      * Unassign media files from a group Test
-     * @group broken
      */
     public function testUnassignMedia()
     {
@@ -649,11 +648,11 @@ class DisplayGroupTest extends LocalWebTestCase
         # Create new display group
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
         # Upload a known file
-        $media = (new XiboLibrary($this->getEntityProvider()))->create('API image', PROJECT_ROOT . '/tests/resources/xts-night-001.jpg');
+        $media = (new XiboLibrary($this->getEntityProvider()))->create('API image 29', PROJECT_ROOT . '/tests/resources/xts-night-001.jpg');
         # Assign media to display Group
         $displayGroup->assignMedia([$media->mediaId]);
         # Unassign the media from the display group
-        $this->client->post('/displaygroup/' . $DisplayGroup->displayGroupId . '/media/unassign', [
+        $this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/media/unassign', [
         	'mediaId' => [$media->mediaId]
         	]);
 
@@ -717,7 +716,6 @@ class DisplayGroupTest extends LocalWebTestCase
 
     /**
      * Assign apk version to a group
-     * @group broken
      */
     public function testVersion()
     {
@@ -726,9 +724,9 @@ class DisplayGroupTest extends LocalWebTestCase
         # Create new display group
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
         # Upload a known apk file
-        $media = (new XiboLibrary($this->getEntityProvider()))->create('API image', PROJECT_ROOT . '/tests/resources/Xibo_for_Android_v1.7_R61.apk');
+        $media = (new XiboLibrary($this->getEntityProvider()))->create('API imagee', PROJECT_ROOT . '/tests/resources/Xibo_for_Android_v1.7_R61.apk');
         # Asign apk to the display group
-        $this->client->post('/displaygroup/' . $DisplayGroup->displayGroupId . '/version', [
+        $this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/version', [
         	'mediaId' => $media->mediaId
         	]);
 

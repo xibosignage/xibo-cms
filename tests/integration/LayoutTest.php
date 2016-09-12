@@ -498,7 +498,6 @@ class LayoutTest extends LocalWebTestCase
 
     /**
      * Add tag to a layout
-     * @group broken
      */
     public function testAddTag()
     {

@@ -227,7 +227,6 @@ class CommandTest extends LocalWebTestCase
 
      /**
      * Test delete
-     * @depends testAddSuccess
      * @group minimal
      */
     public function testDelete()

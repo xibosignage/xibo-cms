@@ -376,7 +376,6 @@ class DataSetTest extends LocalWebTestCase
     }
     /**
      * Test edit row
-     * @group broken
      */
     public function testRowEdit()
     {
@@ -391,12 +390,11 @@ class DataSetTest extends LocalWebTestCase
         $column = (new XiboDataSetColumn($this->getEntityProvider()))->create($dataSet->dataSetId, $nameCol,'', 2, 1, 1, '');
         # Add new row with data to our dataset
         $row = $dataSet->createRow($column->dataSetColumnId, 'test');
-        $rowCheck = $dataSet->getDataByRowId($row->id);
-        //$row = (new XiboDataSetRow($this->getEntityProvider()))->create($dataSet->dataSetId, $column->dataSetColumnId, 'test');
+        $rowCheck = $dataSet->getDataByRowId($row['id']);
         # Edit row data
-        $response = $this->client->put('/dataset/data/' . $dataSet->dataSetId . '/' . $row->rowId, [
-            'dataSetColumnId_' . $column->dataSetColumnId =>  'API EDITED'
-            ]);
+        $response = $this->client->put('/dataset/data/' . $dataSet->dataSetId . '/' . $row['id'], [
+            'dataSetColumnId_' . $column->dataSetColumnId => 'API EDITED'
+            ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object);
@@ -404,16 +402,16 @@ class DataSetTest extends LocalWebTestCase
         # get the row id
         $rowCheck = $dataSet->getDataByRowId($object->id);
         # Check if data was correctly added to the row
-        $this->assertArrayHasKey($nameCol, $row);
-        $this->assertSame($row[$nameCol], 'API EDITED');
+        $this->assertArrayHasKey($nameCol, $rowCheck);
+        $this->assertSame($rowCheck[$nameCol], 'API EDITED');
         # Clean up as we no longer need it, deleteWData will delete dataset even if it has data assigned to it
         $dataSet -> deleteWData();
     }
+
     /*
     * delete row data
-    * @group broken
     */
-    public function RowDelete()
+    public function testRowDelete()
     {
         # Create a new dataset to use
         /** @var XiboDataSet $dataSet */
@@ -425,11 +423,10 @@ class DataSetTest extends LocalWebTestCase
         # Create new column and add it to our dataset
         $column = (new XiboDataSetColumn($this->getEntityProvider()))->create($dataSet->dataSetId, $nameCol,'', 2, 1, 1, '');
         # Add new row data
-        //$row = $dataSet->createRow($column->dataSetColumnId, 'test');
-        //$rowCheck = $dataSet->getByRowId($row->rowId);
-        $row = (new XiboDataSetRow($this->getEntityProvider()))->create($dataSet->dataSetId, $column->dataSetColumnId, 'test');
+        $row = $dataSet->createRow($column->dataSetColumnId, 'test');
+        $rowCheck = $dataSet->getDataByRowId($row['id']);
         # Delete row
-        $this->client->delete('/dataset/data/' . $dataSet->dataSetId . '/' . $row->rowId);
+        $this->client->delete('/dataset/data/' . $dataSet->dataSetId . '/' . $row['id']);
         $response = json_decode($this->client->response->body());
         $this->assertSame(204, $response->status, $this->client->response->body());
         # Clean up as we no longer need it, deleteWData will delete dataset even if it has data assigned to it

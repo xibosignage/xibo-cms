@@ -43,39 +43,22 @@ class LibraryTest extends LocalWebTestCase
     public function testAddEmpty()
     {
         # Using XiboLibrary wrapper to upload new file to the CMS, need to provide (name, file location)
-        $media = (new XiboLibrary($this->getEntityProvider()))->create('API incorrect file', PROJECT_ROOT . '/tests/resources/empty.txt');
+        $this->setExpectedException('\Xibo\OAuth2\Client\Exception\XiboApiException');
+
+        $media = (new XiboLibrary($this->getEntityProvider()))->create('API incorrect file 2', PROJECT_ROOT . '/tests/resources/empty.txt');
     }
 
     /**
      * Add tags to media
-     * @group broken
+     * @group broken 
      */
     public function testAddTag()
     {
         # Using XiboLibrary wrapper to upload new file to the CMS, need to provide (name, file location)
-        $media = (new XiboLibrary($this->getEntityProvider()))->create('API incorrect file', PROJECT_ROOT . '/tests/resources/xts-flowers-001.jpg');
+        $media = (new XiboLibrary($this->getEntityProvider()))->create('flowers', PROJECT_ROOT . '/tests/resources/xts-flowers-001.jpg');
 
         $this->client->post('/media/' . $media->mediaId . '/tag', [
-            'tag' => 'API'
-            ]);
-
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object);
-        $this->assertSame('API', $object->tags->tag);
-    }
-
-    /**
-     * Delete tags to media
-     * @group broken
-     */
-    public function testDeleteTag()
-    {
-        # Using XiboLibrary wrapper to upload new file to the CMS, need to provide (name, file location)
-        $media = (new XiboLibrary($this->getEntityProvider()))->create('API incorrect file', PROJECT_ROOT . '/tests/resources/xts-flowers-001.jpg');
-
-        $this->client->delete('/media/' . $media->mediaId . '/tag', [
-            'tag' => 'API'
+            'tag' => ['API']
             ]);
 
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
@@ -84,41 +67,53 @@ class LibraryTest extends LocalWebTestCase
         $this->assertSame('', $object->tags->tag);
     }
 
+    /**
+     * Delete tags to media
+     * @group broken 
+     */
+    public function testDeleteTag()
+    {
+        # Using XiboLibrary wrapper to upload new file to the CMS, need to provide (name, file location)
+        $media = (new XiboLibrary($this->getEntityProvider()))->create('flowers', PROJECT_ROOT . '/tests/resources/xts-flowers-001.jpg');
 
+        $this->client->delete('/media/' . $media->mediaId . '/tag', [
+            'tag' => ['API']
+            ]);
+
+        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
+    }
 
     /**
      * Edit media file
-     * @group broken
      */
     public function testEdit()
     {
         # Using XiboLibrary wrapper to upload new file to the CMS, need to provide (name, file location)
-        $media = (new XiboLibrary($this->getEntityProvider()))->create('API video', PROJECT_ROOT . '/tests/resources/HLH264.mp4');
+        $media = (new XiboLibrary($this->getEntityProvider()))->create('API video 4', PROJECT_ROOT . '/tests/resources/HLH264.mp4');
         # Generate new random name
         $name = Random::generateString(8, 'phpunit');
         # Edit media file, change the name
         $this->client->put('/library/' . $media->mediaId, [
             'name' => $name,
             'duration' => 50,
-            'retired' => $media->retired,
-            'tags' => $media->tags,
+            //'retired' => $media->retired,
+            //'tags' => $media->tags,
             'updateInLayouts' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object);
-        $this->assertSame($name, $object->name);
+        $this->assertSame($name, $object->data->name);
     }
 
     /**
      * Test delete added media
-     * @group broken
      */
     public function testDelete()
     {
         # Using XiboLibrary wrapper to upload new file to the CMS, need to provide (name, file location)
-        $media = (new XiboLibrary($this->getEntityProvider()))->create('API video', PROJECT_ROOT . '/tests/resources/HLH264.mp4');
+        $media = (new XiboLibrary($this->getEntityProvider()))->create('API video 4', PROJECT_ROOT . '/tests/resources/HLH264.mp4');
         # Delete added media file
         $this->client->delete('/library/' . $media->mediaId);
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
