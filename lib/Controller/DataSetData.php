@@ -223,7 +223,10 @@ class DataSetData extends Base
         $this->getState()->hydrate([
             'httpStatus' => 201,
             'message' => __('Added Row'),
-            'id' => $rowId
+            'id' => $rowId,
+            'data' => [
+                'id' => $rowId
+            ]
         ]);
     }
 
@@ -336,7 +339,10 @@ class DataSetData extends Base
         // Return
         $this->getState()->hydrate([
             'message' => __('Edited Row'),
-            'id' => $rowId
+            'id' => $rowId,
+            'data' => [
+                'id' => $rowId
+            ]
         ]);
     }
 
