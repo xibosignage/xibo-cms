@@ -471,8 +471,9 @@ function XiboFormRender(formUrl, data) {
     if( formUrl == undefined )
       return false;
     
-    // Remove the link from the button
-    data.removeAttr('href');
+    // Remove the link from the button if data exists
+    if(data)
+      data.removeAttr('href');
     
     // Currently only support one of these at once.
     bootbox.hideAll();
@@ -510,8 +511,9 @@ function XiboFormRender(formUrl, data) {
 
                 var id = new Date().getTime();
                 
-                // Restore the link to the button
-                data.attr("href", lastForm);
+                // Restore the link to the button if data exists
+                if (data)
+                  data.attr("href", lastForm);
 
                 // Create the dialog with our parameters
                 var dialog = bootbox.dialog({
