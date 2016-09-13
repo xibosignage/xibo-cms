@@ -735,6 +735,10 @@ class Schedule implements \JsonSerializable
                 if ($exception['day'] == $dayOfWeekLookup[$start->dayOfWeek]) {
                     $start->setTimeFromTimeString($exception['start']);
                     $end->setTimeFromTimeString($exception['end']);
+
+                    if ($start > $end)
+                        $end->addDay();
+
                     $this->getLog()->debug('Found exception Start and end time for dayPart exception is ' . $exception['start'] . ' - ' . $exception['end']);
                     $found = true;
                     break;
@@ -742,6 +746,9 @@ class Schedule implements \JsonSerializable
             }
 
             if (!$found) {
+                if ($start > $end)
+                    $end->addDay();
+
                 $start->setTimeFromTimeString($dayPart->startTime);
                 $end->setTimeFromTimeString($dayPart->endTime);
             }
