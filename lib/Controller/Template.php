@@ -94,15 +94,28 @@ class Template extends Base
      */
     function grid()
     {
+        // Embed?
+        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+
         $templates = $this->layoutFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'excludeTemplates' => 0,
             'tags' => $this->getSanitizer()->getString('tags'),
-            'templateId' => $this->getSanitizer()->getInt('templateId'),
+            'layoutId' => $this->getSanitizer()->getInt('templateId'),
             'layout' => $this->getSanitizer()->getString('template')
         ]));
 
         foreach ($templates as $template) {
             /* @var \Xibo\Entity\Layout $template */
+
+            if (in_array('regions', $embed)) {
+                $template->load([
+                    'loadPlaylists' => in_array('playlists', $embed),
+                    'loadCampaigns' => in_array('campaigns', $embed),
+                    'loadPermissions' => in_array('permissions', $embed),
+                    'loadTags' => in_array('tags', $embed),
+                    'loadWidgets' => in_array('widgets', $embed)
+                ]);
+            }
 
             if ($this->isApi())
                 break;

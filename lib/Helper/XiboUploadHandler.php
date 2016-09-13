@@ -128,7 +128,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                     foreach ($controller->getWidgetFactory()->getByMediaId($oldMedia->mediaId) as $widget) {
                         /* @var Widget $widget */
-                        if ($controller->getUser()->checkEditable($widget)) {
+                        if (!$controller->getUser()->checkEditable($widget)) {
                             // Widget that we cannot update, this means we can't delete the original mediaId when it comes time to do so.
                             $deleteOldRevisions = false;
 
@@ -158,7 +158,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                         foreach ($controller->getLayoutFactory()->query(null, ['disableUserCheck' => 1, 'backgroundImageId' => $oldMedia->mediaId]) as $layout) {
                             /* @var Layout $layout */
 
-                            if ($controller->getUser()->checkEditable($layout)) {
+                            if (!$controller->getUser()->checkEditable($layout)) {
                                 // Widget that we cannot update, this means we can't delete the original mediaId when it comes time to do so.
                                 $deleteOldRevisions = false;
 
@@ -187,6 +187,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 // We either want to Link the old record to this one, or delete it
                 if ($updateInLayouts && $deleteOldRevisions) {
 
+                    $controller->getLog()->debug('Delete old revisions of ' . $oldMedia->mediaId);
+
                     // Check we have permission to delete this media
                     if (!$controller->getUser()->checkDeleteable($oldMedia))
                         throw new AccessDeniedException();
@@ -194,11 +196,15 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     try {
                         // Join the prior revision up with the new media.
                         $priorMedia = $controller->getMediaFactory()->getParentById($oldMedia->mediaId);
+
+                        $controller->getLog()->debug('Prior media found, joining ' . $priorMedia->mediaId . ' with ' . $media->mediaId);
+
                         $priorMedia->parentId = $media->mediaId;
                         $priorMedia->save(['validate' => false]);
                     }
                     catch (NotFoundException $e) {
                         // Nothing to do then
+                        $controller->getLog()->debug('No prior media found');
                     }
 
                     $oldMedia->setChildObjectDependencies($controller->getLayoutFactory(), $controller->getWidgetFactory(), $controller->getDisplayGroupFactory());
@@ -236,12 +242,14 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 }
             }
 
-            // Set the name to the one we have selected
+            // Configure the return values according to the media item we've added
             $file->name = $name;
             $file->mediaId = $media->mediaId;
-
-            // Get the storedAs valid for return
             $file->storedas = $media->storedAs;
+            $file->duration = $media->duration;
+            $file->retired = $media->retired;
+            $file->fileSize = $media->fileSize;
+            $file->md5 = $media->md5;
 
             // Fonts, then install
             if ($module->getModuleType() == 'font') {

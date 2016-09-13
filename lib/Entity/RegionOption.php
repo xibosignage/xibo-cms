@@ -30,7 +30,7 @@ use Xibo\Storage\StorageServiceInterface;
  *
  * @SWG\Definition()
  */
-class RegionOption
+class RegionOption implements \JsonSerializable
 {
     use EntityTrait;
 
