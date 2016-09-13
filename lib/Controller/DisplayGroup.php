@@ -352,6 +352,11 @@ class DisplayGroup extends Base
                 'type' => 'display',
                 'id' => $display->displayId,
                 'name' => $display->display,
+                'status' => $display->mediaInventoryStatus,
+                'clientVersion' => $display->clientVersion,
+                'clientType' => $display->clientType,
+                'clientCode' => $display->clientCode,
+                'loggedIn' => $display->loggedIn,
                 'value_checked' => (($exists) ? 'checked' : '')
             );
 
