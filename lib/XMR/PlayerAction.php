@@ -123,7 +123,7 @@ abstract class PlayerAction implements PlayerActionInterface
             $socket->send(json_encode($message));
 
             // Need to replace this with a non-blocking recv() with a retry loop
-            $retries = 5;
+            $retries = 15;
             $reply = false;
 
             do {
@@ -137,11 +137,11 @@ abstract class PlayerAction implements PlayerActionInterface
                         break;
 
                 } catch (\ZMQSocketException $sockEx) {
-                    if ($sockEx->getCode() != \ZMQ::ERR_EAGAIN)
+                    if ($sockEx->getCode() !== \ZMQ::ERR_EAGAIN)
                         throw $sockEx;
                 }
 
-                usleep(15);
+                usleep(100);
 
             } while (--$retries);
 
