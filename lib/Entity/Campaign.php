@@ -274,7 +274,12 @@ class Campaign implements \JsonSerializable
              * @var Layout $a
              * @var Layout $b
              */
-            $return = ($a->getId() - $b->getId()) + ($a->displayOrder - $b->displayOrder);
+            // Are we a layout that has been configured with a display order, or are we a complete layout removal?
+            if ($a->displayOrder === null || $b->displayOrder === null)
+                $return = ($a->getId() - $b->getId());
+            else
+                $return = ($a->getId() - $b->getId()) + ($a->displayOrder - $b->displayOrder);
+
             $this->getLog()->debug('Comparing a [%d, %d] with b [%d, %d]. Return = %d', $a->layoutId, $a->displayOrder, $b->layoutId, $b->displayOrder, $return);
             return $return;
         });
