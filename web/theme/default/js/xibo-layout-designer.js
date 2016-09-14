@@ -146,8 +146,7 @@ $(document).ready(function(){
         };
 
         var url = $(this).prop("href");
-
-        XiboFormRender(url, data);
+        XiboFormRender($(this), data);
     });
 
     // Bind to the save/revert buttons

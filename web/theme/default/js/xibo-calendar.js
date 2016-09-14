@@ -90,7 +90,7 @@ $(document).ready(function() {
 
                     $("#" + popover + " a").click(function(e) {
                         e.preventDefault();
-                        XiboFormRender($(this).attr('href'));
+                        XiboFormRender($(this));
                         source.popover("hide");
                     });
                 });

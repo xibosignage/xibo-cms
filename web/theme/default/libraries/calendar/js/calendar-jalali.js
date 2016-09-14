@@ -1223,7 +1223,7 @@ if(!String.prototype.formatNum) {
 			event.preventDefault();
 			event.stopPropagation();
 
-			XiboFormRender($(this).attr('href'));
+			XiboFormRender($(this));
 		});
 	};
 
