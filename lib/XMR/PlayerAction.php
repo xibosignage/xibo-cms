@@ -124,16 +124,17 @@ abstract class PlayerAction implements PlayerActionInterface
 
             // Need to replace this with a non-blocking recv() with a retry loop
             $retries = 5;
+            $reply = false;
 
             do {
                 try {
                     // Try and receive
+                    // if ZMQ::MODE_NOBLOCK/MODE_DONTWAIT is used and the operation would block boolean false
+                    // shall be returned.
                     $reply = $socket->recv(\ZMQ::MODE_DONTWAIT);
 
-                    // Disconnect socket
-                    $socket->disconnect($connection);
-
-                    return $reply;
+                    if ($reply !== false)
+                        break;
 
                 } catch (\ZMQSocketException $sockEx) {
                     if ($sockEx->getCode() != \ZMQ::ERR_EAGAIN)
@@ -147,11 +148,11 @@ abstract class PlayerAction implements PlayerActionInterface
             // Disconnect socket
             $socket->disconnect($connection);
 
-            // We didn't get a response
-            throw new PlayerActionException('Could not make a connection after 5 retries.');
+            // Return the reply, if we couldn't connect then the reply will be false
+            return $reply;
         }
         catch (\ZMQSocketException $ex) {
-            throw new PlayerActionException('XMR connection failed.');
+            throw new PlayerActionException('XMR connection failed. Error = ' . $ex->getMessage());
         }
     }
 }
