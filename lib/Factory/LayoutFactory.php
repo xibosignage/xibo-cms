@@ -255,6 +255,9 @@ class LayoutFactory extends BaseFactory
      */
     public function getById($layoutId)
     {
+        if ($layoutId == 0)
+            throw new NotFoundException();
+
         $layouts = $this->query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
 
         if (count($layouts) <= 0) {
