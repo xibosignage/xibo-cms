@@ -208,7 +208,8 @@ class DataSet implements \JsonSerializable
         $displayId = $this->sanitizer->getInt('displayId', 0, $filterBy);
 
         $options = array_merge([
-            'includeFormulaColumns' => true
+            'includeFormulaColumns' => true,
+            'requireTotal' => true
         ], $options);
 
         // Params
@@ -319,8 +320,10 @@ class DataSet implements \JsonSerializable
         $data = $this->getStore()->select($sql, $params);
 
         // If there are limits run some SQL to work out the full payload of rows
-        $results = $this->getStore()->select('SELECT COUNT(*) AS total FROM (' . $body, $params);
-        $this->countLast = intval($results[0]['total']);
+        if ($options['requireTotal']) {
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total FROM (' . $body, $params);
+            $this->countLast = intval($results[0]['total']);
+        }
 
         return $data;
     }
@@ -566,8 +569,6 @@ class DataSet implements \JsonSerializable
         $values[] = NULL;
 
         $sql = 'INSERT INTO `dataset_' . $this->dataSetId . '` (`' . implode('`, `', $keys) . '`) VALUES (' . implode(',', array_fill(0, count($values), '?')) . ')';
-
-        $this->getLog()->sql($sql, $values);
 
         return $this->getStore()->insert($sql, $values);
     }

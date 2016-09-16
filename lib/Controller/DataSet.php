@@ -538,8 +538,12 @@ class DataSet extends Base
         if (!isset($data['rows']) || !isset($data['uniqueKeys']))
             throw new \InvalidArgumentException(__('Malformed JSON body, rows and uniqueKeys are required'));
 
-
         $this->getLog()->debug('Import JSON into DataSet with ' . count($data['rows']) . ' and unique keys ' . json_encode($data['uniqueKeys']));
+
+        // Should we truncate?
+        if (isset($data['truncate']) && $data['truncate']) {
+            $dataSet->deleteData();
+        }
 
         // Get the columns for this dataset
         $columns = [];
@@ -598,7 +602,7 @@ class DataSet extends Base
                     $filter = trim($filter, 'AND');
 
                     // Use the unique keys to look up this row and see if it exists
-                    $existingRows = $dataSet->getData(['filter' => $filter], ['includeFormulaColumns' => false]);
+                    $existingRows = $dataSet->getData(['filter' => $filter], ['includeFormulaColumns' => false, 'requireTotal' => false]);
 
                     if (count($existingRows) > 0) {
                         foreach ($existingRows as $existingRow) {
