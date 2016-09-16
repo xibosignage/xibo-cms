@@ -147,7 +147,9 @@ class DataSet extends Base
 
             $dataSet->includeProperty('buttons');
             $dataSet->buttons = [];
-            $dataSet->importColumns = [];
+
+            // Load the dataSet to get the columns
+            $dataSet->load();
 
             if ($user->checkEditable($dataSet)) {
 
