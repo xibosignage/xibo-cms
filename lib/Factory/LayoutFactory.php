@@ -658,13 +658,17 @@ class LayoutFactory extends BaseFactory
                 // Do we want to try and use a dataset that already exists?
                 if ($useExistingDataSets) {
                     // Check to see if we already have a dataset with the same code/name, prefer code.
-                    try {
-                        // try and get by name
-                        $existingDataSet = $libraryController->getDataSetFactory()->getByCode($dataSet->code);
+                    if ($dataSet->code != '') {
+                        try {
+                            // try and get by code
+                            $existingDataSet = $libraryController->getDataSetFactory()->getByCode($dataSet->code);
+                        } catch (NotFoundException $e) {
+                            $this->getLog()->debug('Existing dataset not found with code %s', $dataSet->code);
 
-                        $this->getLog()->debug('Existing dataset not found with code %s', $dataSet->code);
+                        }
+                    }
 
-                    } catch (NotFoundException $e) {
+                    if ($existingDataSet === null) {
                         // try by name
                         try {
                             $existingDataSet = $libraryController->getDataSetFactory()->getByName($dataSet->dataSet);

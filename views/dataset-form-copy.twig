@@ -10,19 +10,19 @@
 {% import "forms.twig" as forms %}
 
 {% block formTitle %}
-    {% trans "Add DataSet" %}
+    {% set dataSetName = dataSet.dataSet %}
+    {% trans %}Copy {{ dataSetName }}{% endtrans %}
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#dataSetAddForm").submit()    
+    {% trans "Save" %}, $("#dataSetCopyForm").submit()
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="dataSetAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("dataSet.add") }}">
+            <form id="dataSetCopyForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("dataSet.copy", {"id": dataSet.dataSetId}) }}">
                     {% set title %}{% trans "Name" %}{% endset %}
                     {% set helpText %}{% trans "A name for this DataSet" %}{% endset %}
                     {{ forms.input("dataSet", title, "", helpText, "", "required") }}

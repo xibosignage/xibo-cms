@@ -105,8 +105,20 @@ class DataSetData extends Base
         if ($sorting != null)
             $sorting = implode(',', $sorting);
 
+        // Filter criteria
+        $filter = '';
+        foreach ($dataSet->getColumn() as $column) {
+            /* @var \Xibo\Entity\DataSetColumn $column */
+            if ($column->dataSetColumnTypeId == 1) {
+                if ($this->getSanitizer()->getString($column->heading) != null) {
+                    $filter .= 'AND ' . $column->heading . ' LIKE \'%' . $this->getSanitizer()->getString($column->heading) . '%\' ';
+                }
+            }
+        }
+        $filter = trim($filter, 'AND');
+
         // Work out the limits
-        $filter = $this->gridRenderFilter(['filter' => $this->getSanitizer()->getParam('filter', null)]);
+        $filter = $this->gridRenderFilter(['filter' => $this->getSanitizer()->getParam('filter', $filter)]);
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($dataSet->getData([
