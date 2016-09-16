@@ -272,6 +272,7 @@ $app->put('/dataset/:id', '\Xibo\Controller\DataSet:edit')->name('dataSet.edit')
 $app->delete('/dataset/:id', '\Xibo\Controller\DataSet:delete')->name('dataSet.delete');
 $app->map('/dataset/import/:id', '\Xibo\Controller\DataSet:import')->via('HEAD');
 $app->post('/dataset/import/:id', '\Xibo\Controller\DataSet:import')->name('dataSet.import');
+$app->post('/dataset/importjson/:id', '\Xibo\Controller\DataSet:importJson')->name('dataSet.import.json');
 // Columns
 $app->get('/dataset/:id/column', '\Xibo\Controller\DataSetColumn:grid')->name('dataSet.column.search');
 $app->post('/dataset/:id/column', '\Xibo\Controller\DataSetColumn:add')->name('dataSet.column.add');

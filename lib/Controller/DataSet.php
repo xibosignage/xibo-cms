@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Helper\DataSetUploadHandler;
@@ -486,5 +487,140 @@ class DataSet extends Base
         }
 
         $this->setNoOutput(true);
+    }
+
+    /**
+     * Import JSON
+     * @param int $dataSetId
+     * @throws \Exception
+     *
+     * @SWG\Post(
+     *  path="/dataset/importjson/{dataSetId}",
+     *  operationId="dataSetImportJson",
+     *  tags={"dataset"},
+     *  summary="Import JSON",
+     *  description="Import JSON into a DataSet",
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="path",
+     *      description="The DataSet ID to import into.",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="data",
+     *      in="body",
+     *      description="The row data, field name vs field data format. e.g. { "uniqueKeys: ["col1"], "rows": [{"col1": "value1"}]}",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function importJson($dataSetId)
+    {
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
+
+        if (!$this->getUser()->checkEditable($dataSet))
+            throw new AccessDeniedException();
+
+        $body = $this->getApp()->request()->getBody();
+
+        if (empty($body))
+            throw new \InvalidArgumentException(__('Missing JSON Body'));
+
+        // Expect 2 parameters
+        $data = json_decode($body, true);
+
+        if (!isset($data['rows']) || !isset($data['uniqueKeys']))
+            throw new \InvalidArgumentException(__('Malformed JSON body, rows and uniqueKeys are required'));
+
+
+        $this->getLog()->debug('Import JSON into DataSet with ' . count($data['rows']) . ' and unique keys ' . json_encode($data['uniqueKeys']));
+
+        // Get the columns for this dataset
+        $columns = [];
+        foreach ($dataSet->getColumn() as $column) {
+            /* @var \Xibo\Entity\DataSetColumn $column */
+            if ($column->dataSetColumnTypeId == 1) {
+                $columns[$column->heading] = $column->dataTypeId;
+            }
+        }
+
+        $takenSomeAction = false;
+
+        // Parse and validate each data row we've been provided
+        foreach ($data['rows'] as $row) {
+            // Parse each property
+            $sanitizedRow = null;
+            foreach ($row as $key => $value) {
+                // Does the property in the provided row exist as a column?
+                if (isset($columns[$key])) {
+                    // Sanitize accordingly
+                    if ($columns[$key] == 2) {
+                        // Number
+                        $value = $this->getSanitizer()->double($value);
+                    }
+                    else if ($columns[$key] == 3) {
+                        // Date
+                        $value = $this->getDate()->getLocalDate($this->getDate()->parse($value));
+                    }
+                    else if ($columns[$key] == 5) {
+                        // Media Id
+                        $value = $this->getSanitizer()->int($value);
+                    }
+                    else {
+                        // String
+                        $value = $this->getSanitizer()->string($value);
+                    }
+
+                    // Data is sanitized, add to the sanitized row
+                    $sanitizedRow[$key] = $value;
+                }
+            }
+
+            if (count($sanitizedRow) > 0) {
+                $takenSomeAction = true;
+
+                // Check unique keys to see if this is an update
+                if (!empty($data['uniqueKeys']) && is_array($data['uniqueKeys'])) {
+
+                    // Build a filter to select existing records
+                    $filter = '';
+                    foreach ($data['uniqueKeys'] as $uniqueKey) {
+                        if (isset($sanitizedRow[$uniqueKey])) {
+                            $filter .= 'AND ' . $uniqueKey . '= \'' . $sanitizedRow[$uniqueKey] . '\' ';
+                        }
+                    }
+                    $filter = trim($filter, 'AND');
+
+                    // Use the unique keys to look up this row and see if it exists
+                    $existingRows = $dataSet->getData(['filter' => $filter], ['includeFormulaColumns' => false]);
+
+                    if (count($existingRows) > 0) {
+                        foreach ($existingRows as $existingRow) {
+                            $dataSet->editRow($existingRow['id'], array_merge($existingRow, $sanitizedRow));
+                        }
+                    }
+                    else {
+                        $dataSet->addRow($sanitizedRow);
+                    }
+
+                } else {
+                    $dataSet->addRow($sanitizedRow);
+                }
+            }
+        }
+
+        if (!$takenSomeAction)
+            throw new NotFoundException(__('No data found in request body'));
+
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Imported JSON into %s'), $dataSet->dataSet)
+        ]);
     }
 }
