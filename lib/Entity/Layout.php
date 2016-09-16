@@ -20,6 +20,9 @@
  */
 namespace Xibo\Entity;
 
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Event\LayoutBuildEvent;
+use Xibo\Event\LayoutBuildRegionEvent;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
@@ -187,7 +190,9 @@ class Layout implements \JsonSerializable
     public $statusMessage;
 
     // Child items
+    /** @var Region[]  */
     public $regions = [];
+
     public $tags = [];
     public $permissions = [];
     public $campaigns = [];
@@ -212,7 +217,8 @@ class Layout implements \JsonSerializable
         'saveTags' => false,
         'setBuildRequired' => true,
         'validate' => false,
-        'audit' => false
+        'audit' => false,
+        'notify' => false
     ];
 
     /**
@@ -224,6 +230,9 @@ class Layout implements \JsonSerializable
      * @var DateServiceInterface
      */
     private $date;
+
+    /** @var  EventDispatcherInterface */
+    private $dispatcher;
 
     /**
      * @var PermissionFactory
@@ -266,6 +275,7 @@ class Layout implements \JsonSerializable
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
      * @param DateServiceInterface $date
+     * @param EventDispatcherInterface $eventDispatcher
      * @param PermissionFactory $permissionFactory
      * @param RegionFactory $regionFactory
      * @param TagFactory $tagFactory
@@ -274,12 +284,13 @@ class Layout implements \JsonSerializable
      * @param MediaFactory $mediaFactory
      * @param ModuleFactory $moduleFactory
      */
-    public function __construct($store, $log, $config, $date, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory)
+    public function __construct($store, $log, $config, $date, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->setPermissionsClass('Xibo\Entity\Campaign');
         $this->config = $config;
         $this->date = $date;
+        $this->dispatcher = $eventDispatcher;
         $this->permissionFactory = $permissionFactory;
         $this->regionFactory = $regionFactory;
         $this->tagFactory = $tagFactory;
@@ -354,7 +365,7 @@ class Layout implements \JsonSerializable
     /**
      * Set the status of this layout to indicate a build is required
      */
-    public function setBuildRequired()
+    private function setBuildRequired()
     {
         $this->status = 3;
     }
@@ -378,7 +389,7 @@ class Layout implements \JsonSerializable
 
     /**
      * Get Widgets assigned to this Layout
-     * @return array[Widget]
+     * @return Widget[]
      */
     public function getWidgets()
     {
@@ -470,7 +481,7 @@ class Layout implements \JsonSerializable
         $this->hash = $this->hash();
         $this->loaded = true;
 
-        $this->getLog()->debug('Loaded %s' . $this->layoutId);
+        $this->getLog()->debug('Loaded %s', $this->layoutId);
     }
 
     /**
@@ -512,7 +523,7 @@ class Layout implements \JsonSerializable
         // New or existing layout
         if ($this->layoutId == null || $this->layoutId == 0) {
             $this->add();
-        } else if ($this->hash() != $this->hash && $options['saveLayout']) {
+        } else if (($this->hash() != $this->hash && $options['saveLayout']) || $options['setBuildRequired']) {
             $this->update($options);
         }
 
@@ -809,7 +820,17 @@ class Layout implements \JsonSerializable
             // Region Duration
             $region->duration = 0;
 
-            // Region Loop
+            // Region Options
+            $regionOptionsNode = $document->createElement('options');
+
+            foreach ($region->regionOptions as $regionOption) {
+                $regionOptionNode = $document->createElement($regionOption->option, $regionOption->value);
+                $regionOptionsNode->appendChild($regionOptionNode);
+            }
+
+            $regionNode->appendChild($regionOptionsNode);
+
+            // Store region look to work out duration calc
             $regionLoop = $region->getOptionValue('loop', 0);
 
             // Get a count of widgets in this region
@@ -953,6 +974,8 @@ class Layout implements \JsonSerializable
             if ($this->duration < $region->duration)
                 $this->duration = $region->duration;
 
+            $event = new LayoutBuildRegionEvent($region->regionId, $regionNode);
+            $this->dispatcher->dispatch($event::NAME, $event);
             // End of region loop.
         }
 
@@ -974,6 +997,10 @@ class Layout implements \JsonSerializable
 
         $this->status = ($status < $this->status) ? $status : $this->status;
 
+        // Fire a layout.build event, passing the layout and the generated document.
+        $event = new LayoutBuildEvent($this, $document);
+        $this->dispatcher->dispatch($event::NAME, $event);
+
         return $document->saveXML();
     }
 
@@ -989,16 +1016,27 @@ class Layout implements \JsonSerializable
             'includeData' => false
         ], $options);
 
+        // Load the complete layout
+        $this->load();
+
         // We export to a ZIP file
         $zip = new \ZipArchive();
         $result = $zip->open($fileName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
         if ($result !== true)
             throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: ' . $result));
 
+        // Add a mapping file for the region names
+        $regionMapping = [];
+        foreach ($this->regions as $region) {
+            /** @var Region $region */
+            $regionMapping[$region->regionId] = $region->name;
+        }
+
         // Add layout information to the ZIP
         $zip->addFromString('layout.json', json_encode([
             'layout' => $this->layout,
-            'description' => $this->description
+            'description' => $this->description,
+            'regions' => $regionMapping
         ]));
 
         // Add the layout XLF
@@ -1135,7 +1173,15 @@ class Layout implements \JsonSerializable
             $this->duration = 0;
 
             // Save the resulting XLF
-            file_put_contents($path, $this->toXlf());
+            try {
+                file_put_contents($path, $this->toXlf());
+            } catch (\Exception $e) {
+                $this->getLog()->error('Cannot build Layout. Unexpected error: ' . $e->getMessage());
+
+                // Will continue and save the status as 4
+                $this->status = 4;
+                $this->statusMessage = 'Unexpected Error';
+            }
 
             $this->save([
                 'saveRegions' => true,

@@ -250,7 +250,7 @@ class Region implements \JsonSerializable
      * @param mixed $default
      * @return mixed
      */
-    public function getOptionValue($option, $default)
+    public function getOptionValue($option, $default = null)
     {
         $this->load();
 
@@ -376,6 +376,8 @@ class Region implements \JsonSerializable
             // Save all Options
             foreach ($this->regionOptions as $regionOption) {
                 /* @var RegionOption $regionOption */
+                // Assert the regionId
+                $regionOption->regionId = $this->regionId;
                 $regionOption->save();
             }
         }

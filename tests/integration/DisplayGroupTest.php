@@ -191,7 +191,7 @@ class DisplayGroupTest extends LocalWebTestCase
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->getById($object->id);
         $this->assertSame($groupName, $displayGroup->displayGroup);
         $this->assertSame($groupDescription, $displayGroup->description);
-        $this->assertSame(strval($expectedDynamic), $displayGroup->isDynamic);
+        $this->assertSame($expectedDynamic, $displayGroup->isDynamic);
         $this->assertSame($expectedDynamicCriteria, $displayGroup->dynamicCriteria);
         # Clean up the DisplayGroup as we no longer need it
         $this->assertTrue($displayGroup->delete(), 'Unable to delete ' . $displayGroup->displayGroupId);
@@ -439,7 +439,7 @@ class DisplayGroupTest extends LocalWebTestCase
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->getById($object->id);
         $this->assertSame($name, $displayGroup->displayGroup);
         $this->assertSame($description, $displayGroup->description);
-        $this->assertSame('1', $displayGroup->isDynamic);
+        $this->assertSame(1, $displayGroup->isDynamic);
         $this->assertSame($criteria, $displayGroup->dynamicCriteria);
         # Clean up the DisplayGroup as we no longer need it
         $displayGroup->delete();

@@ -82,4 +82,40 @@ class Page implements \JsonSerializable
     {
         return $this->name;
     }
+
+    /**
+     * Save
+     */
+    public function save()
+    {
+        if ($this->pageId == 0)
+            $this->add();
+        else
+            $this->update();
+    }
+
+    private function add()
+    {
+        $this->pageId = $this->getStore()->insert('
+            INSERT INTO `pages` (`name`, `title`, `asHome`)
+              VALUES (:name, :title, :asHome)
+        ', [
+            'name' => $this->name,
+            'title' => $this->title,
+            'asHome' => $this->asHome
+        ]);
+    }
+
+    private function update()
+    {
+        $this->getStore()->update('
+            UPDATE `pages` SET `name` = :name, `title` = :title, `asHome` = :asHome
+             WHERE `pageId` = :pageId
+        ', [
+            'pageId' => $this->pageId,
+            'name' => $this->name,
+            'title' => $this->title,
+            'asHome' => $this->asHome
+        ]);
+    }
 }

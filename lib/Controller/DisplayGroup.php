@@ -147,6 +147,13 @@ class DisplayGroup extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="formData",
+     *      description="Filter by DisplayGroups containing a specific display",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="a successful response",
@@ -166,7 +173,8 @@ class DisplayGroup extends Base
     {
         $filter = [
             'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
-            'displayGroup' => $this->getSanitizer()->getString('displayGroup')
+            'displayGroup' => $this->getSanitizer()->getString('displayGroup'),
+            'displayId' => $this->getSanitizer()->getInt('displayId')
         ];
 
         $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));

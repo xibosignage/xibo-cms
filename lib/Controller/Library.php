@@ -304,6 +304,27 @@ class Library extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="Filter by Tags - comma seperated",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="Filter by Duration - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="fileSize",
+     *      in="formData",
+     *      description="Filter by File Size - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -325,7 +346,9 @@ class Library extends Base
             'type' => $this->getSanitizer()->getString('type'),
             'tags' => $this->getSanitizer()->getString('tags'),
             'ownerId' => $this->getSanitizer()->getInt('ownerId'),
-            'retired' => $this->getSanitizer()->getInt('retired')
+            'retired' => $this->getSanitizer()->getInt('retired'),
+            'duration' => $this->getSanitizer()->getString('duration'),
+            'fileSize' => $this->getSanitizer()->getString('fileSize')
         ]));
 
         // Add some additional row content
@@ -519,6 +542,9 @@ class Library extends Base
         else
             $validExt = $this->moduleFactory->getValidExtensions();
 
+        // Make sure there is room in the library
+        $libraryLimit = $this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+
         $options = array(
             'userId' => $this->getUser()->userId,
             'controller' => $this,
@@ -533,27 +559,18 @@ class Library extends Base
             'script_url' => $this->urlFor('library.add'),
             'upload_url' => $this->urlFor('library.add'),
             'image_versions' => array(),
-            'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i'
+            'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
+            'libraryLimit' => $libraryLimit,
+            'libraryQuotaFull' => ($libraryLimit > 0 && $this->libraryUsage() > $libraryLimit)
         );
 
-        // Make sure there is room in the library
-        $libraryLimit = $this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
-
-        if ($libraryLimit > 0 && $this->libraryUsage() > $libraryLimit)
-            throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
-
-        // Check for a user quota
-        $this->getUser()->isQuotaFullByUser();
+        // Output handled by UploadHandler
         $this->setNoOutput(true);
 
-        try {
-            $this->getLog()->debug('Hand off to Upload Handler with options: %s', json_encode($options));
-            // Hand off to the Upload Handler provided by jquery-file-upload
-            new XiboUploadHandler($options);
-        }
-        catch (\Exception $e) {
-            // We must not issue an error, the file upload return should have the error object already
-        }
+        $this->getLog()->debug('Hand off to Upload Handler with options: %s', json_encode($options));
+
+        // Hand off to the Upload Handler provided by jquery-file-upload
+        new XiboUploadHandler($options);
     }
 
     /**
@@ -928,7 +945,7 @@ class Library extends Base
 
                     // Separate out the display name and the referenced name (referenced name cannot contain any odd characters or numbers)
                     $displayName = $font->name;
-                    $familyName = preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $font->name));
+                    $familyName = strtolower(preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $font->name)));
 
                     // Css for the client contains the actual stored as location of the font.
                     $css .= str_replace('[url]', $font->storedAs, str_replace('[family]', $familyName, $fontTemplate));
@@ -1106,7 +1123,7 @@ class Library extends Base
             $media->assignTag($this->tagFactory->tagFromString($tag));
         }
 
-        $media->save();
+        $media->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -1167,7 +1184,7 @@ class Library extends Base
             $media->unassignTag($this->tagFactory->tagFromString($tag));
         }
 
-        $media->save();
+        $media->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([

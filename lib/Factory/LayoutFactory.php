@@ -23,6 +23,7 @@
 namespace Xibo\Factory;
 
 
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Entity\Layout;
@@ -50,6 +51,9 @@ class LayoutFactory extends BaseFactory
      * @var DateServiceInterface
      */
     private $date;
+
+    /** @var  EventDispatcherInterface */
+    private $dispatcher;
 
     /**
      * @var PermissionFactory
@@ -105,6 +109,7 @@ class LayoutFactory extends BaseFactory
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
      * @param DateServiceInterface $date
+     * @param EventDispatcherInterface $dispatcher
      * @param PermissionFactory $permissionFactory
      * @param RegionFactory $regionFactory
      * @param TagFactory $tagFactory
@@ -115,7 +120,7 @@ class LayoutFactory extends BaseFactory
      * @param WidgetFactory $widgetFactory
      * @param WidgetOptionFactory $widgetOptionFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $date, $permissionFactory,
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $date, $dispatcher, $permissionFactory,
                                 $regionFactory, $tagFactory, $campaignFactory, $mediaFactory, $moduleFactory, $resolutionFactory,
                                 $widgetFactory, $widgetOptionFactory)
     {
@@ -123,6 +128,7 @@ class LayoutFactory extends BaseFactory
         $this->setAclDependencies($user, $userFactory);
         $this->config = $config;
         $this->date = $date;
+        $this->dispatcher = $dispatcher;
         $this->permissionFactory = $permissionFactory;
         $this->regionFactory = $regionFactory;
         $this->tagFactory = $tagFactory;
@@ -145,6 +151,7 @@ class LayoutFactory extends BaseFactory
             $this->getLog(),
             $this->config,
             $this->date,
+            $this->dispatcher,
             $this->permissionFactory,
             $this->regionFactory,
             $this->tagFactory,
@@ -248,6 +255,9 @@ class LayoutFactory extends BaseFactory
      */
     public function getById($layoutId)
     {
+        if ($layoutId == 0)
+            throw new NotFoundException();
+
         $layouts = $this->query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
 
         if (count($layouts) <= 0) {
@@ -493,6 +503,16 @@ class LayoutFactory extends BaseFactory
         // Override the name/description
         $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);
         $layout->description = (isset($layoutDetails['description']) ? $layoutDetails['description'] : '');
+
+        // Update region names
+        if (isset($layoutDetails['regions']) && count($layoutDetails['regions']) > 0) {
+            $this->getLog()->debug('Updating region names according to layout.json');
+            foreach ($layout->regions as $region) {
+                if (array_key_exists($region->tempId, $layoutDetails['regions'])) {
+                    $region->name = $layoutDetails['regions'][$region->tempId];
+                }
+            }
+        }
 
         // Remove the tags if necessary
         if (!$importTags) {

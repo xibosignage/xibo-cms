@@ -43,9 +43,19 @@
         <script src="{{ theme.uri("libraries/bootstrap/js/bootstrap.min.js") }}"></script>
         <script src="{{ theme.uri("libraries/bootstrap/js/bootbox.min.js") }}"></script>
         <script src="{{ theme.uri("libraries/bootstrap-switch/bootstrap-switch.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/jalali-date.js") }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js") }}"></script>
 
+        {# Dates #}
+        {% if settings.CALENDAR_TYPE == "Jalali" %}
+        <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/jalali-date.js") }}"></script>
+        <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker-jalali.min.js") }}"></script>
+        <script src="{{ theme.uri("libraries/calendar/js/calendar-jalali.js") }}"></script>
+        {% else %}
+        <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js") }}"></script>
+        <script src="{{ theme.uri("libraries/calendar/js/calendar.js") }}"></script>
+        <script src="{{ theme.uri("libraries/calendar/js/language/en_GB.js") }}"></script>
+        {% endif %}
+
+        {# Datatables #}
         <script src="{{ theme.uri("libraries/datatables/jquery.dataTables.min.js") }}"></script>
         <script src="{{ theme.uri("libraries/datatables/dataTables.bootstrap.js") }}"></script>
         <script src="{{ theme.uri("libraries/datatables/dataTables.buttons.min.js") }}"></script>
@@ -60,7 +70,6 @@
         <script src="{{ theme.uri("libraries/bootstrap-ekko-lightbox/ekko-lightbox.min.js") }}"></script>
         <script src="{{ theme.uri("libraries/underscore/underscore-min.js") }}"></script>
         <script src="{{ theme.uri("libraries/jstimezonedetect/jstz.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/calendar/js/calendar.js") }}"></script>
         <script src="{{ theme.uri("libraries/ckeditor/ckeditor.js") }}"></script>
         <script src="{{ theme.uri("libraries/bootstrap/js/bootstrap-ckeditor-fix.js") }}"></script>
         <script src="{{ theme.uri("libraries/jquery-file-upload/js/tmpl.min.js") }}"></script>
@@ -96,7 +105,7 @@
             <script src="{{ theme.uri(calendarTranslation) }}"></script>
             {% set datePickerTranslation %}libraries/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.{{ translate.jsShortLocale }}.js{% endset %}
             <script src="{{ theme.uri(datePickerTranslation) }}"></script>
-            {% set selectPickerTranslation %}libraries/bootstrap-select/js/i18n/defaults-{{ translate.locale }}.min.js{% endset %}
+            {% set selectPickerTranslation %}libraries/bootstrap-select/js/i18n/defaults-{{ translate.boostrapSelectLanguage }}.min.js{% endset %}
             <script src="{{ theme.uri(selectPickerTranslation) }}"></script>
         {% endif %}
 

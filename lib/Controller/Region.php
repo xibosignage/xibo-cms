@@ -418,8 +418,11 @@ class Region extends Base
         // Mark the layout as needing rebuild
         $layout = $this->layoutFactory->getById($region->layoutId);
         $layout->load(\Xibo\Entity\Layout::$loadOptionsMinimum);
-        $layout->setBuildRequired();
-        $layout->save(\Xibo\Entity\Layout::$saveOptionsMinimum);
+
+        $saveOptions = \Xibo\Entity\Layout::$saveOptionsMinimum;
+        $saveOptions['setBuildRequired'] = true;
+
+        $layout->save($saveOptions);
 
         // Return
         $this->getState()->hydrate([

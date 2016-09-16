@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2014 Daniel Garner
+ * Copyright (C) 2009-2016 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -252,7 +252,7 @@ class Stats extends Base
                 AND `widgetoption`.type = \'attrib\'
                 AND `widgetoption`.option = \'name\'
               LEFT OUTER JOIN `media`
-              ON `media`.mediaId = `media`.mediaId
+              ON `media`.mediaId = `stat`.mediaId
            WHERE stat.type <> \'displaydown\'
                 AND stat.end > :fromDt
                 AND stat.start <= :toDt
@@ -289,7 +289,7 @@ class Stats extends Base
                 $params['mediaId_' . $i] = $mediaId;
             }
 
-            $body .= ' AND widget.widgetId IN (SELECT widgetId FROM `lkwidgetmedia` WHERE mediaId IN (' . trim($mediaSql, ',') . '))';
+            $body .= ' AND `media`.mediaId IN (' . trim($mediaSql, ',') . ')';
         }
 
         if ($displayId != 0) {
@@ -429,8 +429,8 @@ class Stats extends Base
      */
     public function bandwidthData()
     {
-        $fromDt = $this->getSanitizer()->getDate('fromDt');
-        $toDt = $this->getSanitizer()->getDate('toDt');
+        $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getSanitizer()->getDate('bandwidthFromDt'));
+        $toDt = $this->getSanitizer()->getDate('toDt', $this->getSanitizer()->getDate('bandwidthToDt'));
 
         // Get an array of display id this user has access to.
         $displayIds = array();
@@ -531,6 +531,9 @@ class Stats extends Base
     public function exportForm()
     {
         $this->getState()->template = 'statistics-form-export';
+        $this->getState()->setData([
+            'displays' => $this->displayFactory->query()
+        ]);
     }
 
     /**

@@ -69,6 +69,11 @@ class WidgetOption implements \JsonSerializable
         $this->setCommonDependencies($store, $log);
     }
 
+    public function __clone()
+    {
+        $this->widgetId = null;
+    }
+
     public function __toString()
     {
         if ($this->type == 'cdata') {

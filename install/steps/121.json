@@ -55,6 +55,10 @@
       "action": "ALTER TABLE  `schedule_detail` CHANGE  `ToDT`  `ToDT` BIGINT( 20 ) NULL DEFAULT NULL;"
     },
     {
+      "step": "Add released and api ref to media table",
+      "action": "ALTER TABLE `media` ADD released tinyint(4) NOT NULL DEFAULT 1, ADD apiRef varchar(254) NULL;"
+    },
+    {
       "step": "Update all Videos with their real duration",
       "type": "php",
       "action": "Xibo\\Upgrade\\VideoDurationStep"

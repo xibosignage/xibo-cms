@@ -1,0 +1,16 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "module-form-settings.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block moduleFormFields %}
+    {% set title %}{% trans "API Key" %}{% endset %}
+    {% set helpText %}{% trans "Enter your API Key from Google Maps." %}{% endset %}
+    {{ forms.input("apiKey", title, module.getSetting("apiKey"), helpText, "", "required") }}
+{% endblock %}

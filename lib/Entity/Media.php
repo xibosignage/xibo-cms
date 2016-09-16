@@ -538,7 +538,7 @@ class Media implements \JsonSerializable
 
                 // Swap any audio nodes over to this new widget media assignment.
                 $this->getStore()->update('
-                  UPDATE `lkwidgetaudio` SET mediaId = :mediaId WHERE widgetId = :widgetId AND oldMediaId = :oldMediaId
+                  UPDATE `lkwidgetaudio` SET mediaId = :mediaId WHERE widgetId = :widgetId AND mediaId = :oldMediaId
                 ' , [
                     'mediaId' => $parentMedia->mediaId,
                     'widgetId' => $widget->widgetId,

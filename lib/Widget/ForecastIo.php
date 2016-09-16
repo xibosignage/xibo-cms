@@ -155,7 +155,7 @@ class ForecastIo extends ModuleWidget
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('icons', $this->getSanitizer()->getString('icons'));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
-        $this->setOption('size', $this->getSanitizer()->getInt('size'));
+        $this->setOption('size', $this->getSanitizer()->getDouble('size', 1));
         $this->setOption('units', $this->getSanitizer()->getString('units'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('lang', $this->getSanitizer()->getString('lang'));
@@ -186,7 +186,7 @@ class ForecastIo extends ModuleWidget
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('icons', $this->getSanitizer()->getString('icons'));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
-        $this->setOption('size', $this->getSanitizer()->getInt('size'));
+        $this->setOption('size', $this->getSanitizer()->getDouble('size'));
         $this->setOption('units', $this->getSanitizer()->getString('units'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('lang', $this->getSanitizer()->getString('lang'));
@@ -208,7 +208,7 @@ class ForecastIo extends ModuleWidget
         $icons = array();
 
         foreach (array_diff(scandir($this->resourceFolder), array('..', '.')) as $file) {
-            if (stripos($file, '.png'))
+            if (stripos($file, '-icons.png'))
                 $icons[] = array('id' => $file, 'value' => ucfirst(str_replace('-', ' ', str_replace('.png', '', $file))));
         }
 
@@ -237,19 +237,36 @@ class ForecastIo extends ModuleWidget
     public function supportedLanguages()
     {
         return array(
-            array('id' => 'en', 'value' => __('English')),
+            array('id' => 'ar', 'value' => __('Arabic')),
+            array('id' => 'az', 'value' => __('Azerbaijani')),
+            array('id' => 'be', 'value' => __('Belarusian')),
             array('id' => 'bs', 'value' => __('Bosnian')),
+            array('id' => 'cs', 'value' => __('Czech')),
             array('id' => 'de', 'value' => __('German')),
+            array('id' => 'en', 'value' => __('English')),
+            array('id' => 'el', 'value' => __('Greek')),
             array('id' => 'es', 'value' => __('Spanish')),
             array('id' => 'fr', 'value' => __('French')),
+            array('id' => 'hr', 'value' => __('Croatian')),
+            array('id' => 'hu', 'value' => __('Hungarian')),
+            array('id' => 'id', 'value' => __('Indonesian')),
             array('id' => 'it', 'value' => __('Italian')),
+            array('id' => 'is', 'value' => __('Icelandic')),
+            array('id' => 'kw', 'value' => __('Cornish')),
+            array('id' => 'nb', 'value' => __('Norwegian Bokmål')),
             array('id' => 'nl', 'value' => __('Dutch')),
             array('id' => 'pl', 'value' => __('Polish')),
             array('id' => 'pt', 'value' => __('Portuguese')),
             array('id' => 'ru', 'value' => __('Russian')),
+            array('id' => 'sk', 'value' => __('Slovak')),
+            array('id' => 'sr', 'value' => __('Serbian')),
+            array('id' => 'sv', 'value' => __('Swedish')),
             array('id' => 'tet', 'value' => __('Tetum')),
             array('id' => 'tr', 'value' => __('Turkish')),
-            array('id' => 'x-pig-latin', 'value' => __('lgpay Atinlay'))
+            array('id' => 'uk', 'value' => __('Ukrainian')),
+            array('id' => 'x-pig-latin', 'value' => __('lgpay Atinlay')),
+            array('id' => 'zh', 'value' => __('Simplified Chinese')),
+            array('id' => 'zh-tw', 'value' => __('Traditional Chinese'))
         );
     }
 
@@ -445,7 +462,6 @@ class ForecastIo extends ModuleWidget
             <link href="' . $this->getResourceUrl('forecastio/weather-icons.min.css') . '" rel="stylesheet" media="screen">
             <style type="text/css">
                 .container { color: ' . $this->getOption('color', '000') . '; }
-                #content { zoom: ' . $this->getOption('size', 1) . '; }
                 ' . $this->parseLibraryReferences($isPreview, $this->getRawNode('styleSheet', null)) . '
             </style>
         ';
@@ -463,6 +479,27 @@ class ForecastIo extends ModuleWidget
 
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
+
+        // Do we need to scale the inner content? Size provided?
+        $size = $this->getOption('size', 1);
+
+        if ($size != 1) {
+            $javaScript .= '
+                <script type="text/javascript">
+                    if ($("body").hasClass("ie7") || $("body").hasClass("ie8")) {
+                        $("#content").css({
+                            "filter": "progid:DXImageTransform.Microsoft.Matrix(M11=' . $size . ', M12=0, M21=0, M22=' . $size . ', SizingMethod=\'auto expand\'"
+                        });
+                    }
+                    else {
+                        $("#content").css({
+                            "transform": "scale(' . $size . ')",
+                            "transform-origin": "top center"
+                        });
+                    }
+                </script>
+            ';
+        }
 
         // Handle the daily template (if its here)
         if (stripos($body, '[dailyForecast]')) {

@@ -28,6 +28,7 @@ use Stash\Driver\Composite;
 use Stash\Driver\Ephemeral;
 use Stash\Driver\FileSystem;
 use Stash\Pool;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\UpgradePendingException;
 use Xibo\Helper\ApplicationState;
@@ -128,6 +129,11 @@ class State extends Middleware
             return $sanitizer;
         });
 
+        // Register the event dispatcher
+        $app->container->singleton('dispatcher', function($container) {
+            return new EventDispatcher();
+        });
+
         // Register Controllers with DI
         self::registerControllersWithDi($app);
 
@@ -142,7 +148,8 @@ class State extends Middleware
                 $app->logService,
                 $app->configService,
                 $app->dateService,
-                $app->sanitizerService
+                $app->sanitizerService,
+                $app->dispatcher
             );
         });
 
@@ -194,16 +201,17 @@ class State extends Middleware
 
             // Log level
             $level = \Xibo\Service\LogService::resolveLogLevel($app->configService->GetSetting('audit'));
+            $restingLevel = \Xibo\Service\LogService::resolveLogLevel($app->configService->GetSetting('RESTING_LOG_LEVEL'));
 
-            if ($level > \Slim\Log::ERROR) {
+            if ($level > $restingLevel) {
                 // Do we allow the log level to be this high
                 $elevateUntil = $app->configService->GetSetting('ELEVATE_LOG_UNTIL');
 
                 if (intval($elevateUntil) < time()) {
                     // Elevation has expired, revery log level
-                    $app->configService->ChangeSetting('audit', 'Error');
+                    $app->configService->ChangeSetting('audit', $app->configService->GetSetting('RESTING_LOG_LEVEL'));
 
-                    $level = \Slim\Log::ERROR;
+                    $level = $restingLevel;
                 }
             }
 
@@ -670,7 +678,7 @@ class State extends Middleware
                 $container->moduleFactory,
                 $container->playlistFactory,
                 $container->mediaFactory,
-                $container->permissionsFactory,
+                $container->permissionFactory,
                 $container->userGroupFactory,
                 $container->widgetFactory,
                 $container->transitionFactory,
@@ -709,7 +717,7 @@ class State extends Middleware
                 $container->playlistFactory,
                 $container->regionFactory,
                 $container->mediaFactory,
-                $container->permissionsFactory,
+                $container->permissionFactory,
                 $container->transitionFactory,
                 $container->widgetFactory,
                 $container->moduleFactory,
@@ -1097,6 +1105,7 @@ class State extends Middleware
                 $container->userFactory,
                 $container->configService,
                 $container->dateService,
+                $container->dispatcher,
                 $container->permissionFactory,
                 $container->regionFactory,
                 $container->tagFactory,

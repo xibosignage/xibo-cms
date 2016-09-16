@@ -44,6 +44,7 @@
                                 <th>{% trans "User Name" %}</th>
                                 <th>{% trans "IP Address" %}</th>
                                 <th>{% trans "Browser" %}</th>
+                                <th>{% trans "Expires At" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -78,6 +79,7 @@
                     {"data": "userName"},
                     {"data": "remoteAddress"},
                     {"data": "userAgent"},
+                    {"data": "expiresAt", "render": dataTableDateFromUnix},
                     {
                         "orderable": false,
                         "data": dataTableButtonsColumn

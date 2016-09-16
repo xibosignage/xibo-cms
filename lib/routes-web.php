@@ -75,6 +75,7 @@ $app->get('/login/ping', '\Xibo\Controller\Login:PingPong')->name('ping');
 //
 $app->get('/update', '\Xibo\Controller\Upgrade:displayPage')->name('upgrade.view');
 $app->post('/update/step/:id', '\Xibo\Controller\Upgrade:doStep')->name('upgrade.doStep');
+$app->delete('/update/step/:id', '\Xibo\Controller\Upgrade:skipStep')->name('upgrade.skipStep');
 
 //
 // schedule
@@ -293,7 +294,7 @@ $app->get('/transition/form/edit/:id', '\Xibo\Controller\Transition:editForm')->
 // sessions
 //
 $app->get('/sessions/view', '\Xibo\Controller\Sessions:displayPage')->name('sessions.view');
-$app->get('/sessions/form/logout', '\Xibo\Controller\Sessions:confirmLogoutForm')->name('sessions.confirm.logout.form');
+$app->get('/sessions/form/logout/:id', '\Xibo\Controller\Sessions:confirmLogoutForm')->name('sessions.confirm.logout.form');
 
 //
 // fault

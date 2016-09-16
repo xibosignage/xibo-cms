@@ -1087,22 +1087,6 @@ class DisplayProfile
                         'groupClass' => NULL
                     ),
                     array(
-                        'name' => 'hardwareAccelerateWebViewMode',
-                        'tabId' => 'advanced',
-                        'title' => __('Hardware Accelerate Web Content?'),
-                        'type' => 'string',
-                        'fieldType' => 'dropdown',
-                        'options' => array(
-                            array('id' => '0', 'value' => __('Off')),
-                            array('id' => '2', 'value' => __('Off when transparent')),
-                            array('id' => '1', 'value' => __('On'))
-                        ),
-                        'default' => '1',
-                        'helpText' => __('Mode for hardware acceleration of web based content.'),
-                        'enabled' => true,
-                        'groupClass' => NULL
-                    ),
-                    array(
                         'name' => 'serverPort',
                         'tabId' => 'advanced',
                         'title' => __('Embedded Web Server Port'),

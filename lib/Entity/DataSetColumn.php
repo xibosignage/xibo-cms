@@ -185,7 +185,7 @@ class DataSetColumn implements \JsonSerializable
                 'datasetcolumnid' => $this->dataSetColumnId
             ));
 
-            if ($row = $sth->fetch())
+            if ($sth->fetch())
                 throw new \InvalidArgumentException(__('New list content value is invalid as it does not include values for existing data'));
         }
     }

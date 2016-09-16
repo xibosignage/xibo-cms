@@ -141,6 +141,10 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                         {% set helpText %}{% trans "Remove any cached data for this display." %}{% endset %}
                         {{ forms.checkbox("clearCachedData", title, 1, helpText) }}
 
+                        {% set title %}{% trans "Reconfigure XMR" %}{% endset %}
+                        {% set helpText %}{% trans "Remove the XMR configuration for this Player and send a rekey action." %}{% endset %}
+                        {{ forms.checkbox("rekeyXmr", title, 0, helpText) }}
+
                         {% set message %}{% trans "The settings for this display are shown below. They are taken from the active Display Profile for this Display, which can be changed in Display Settings. If you have altered the Settings Profile above, you will need to save and re-show the form." %}{% endset %}
                         {{ forms.message(message) }}
 

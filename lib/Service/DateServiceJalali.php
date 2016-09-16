@@ -56,7 +56,11 @@ class DateServiceJalali implements DateServiceInterface
         if ($string == null)
             $string = $this->getLocalDate();
 
-        if ($format == null)
+        if ($format == 'U') {
+            // We are a timestamp, create a date out of the time stamp directly
+            return \Jenssegers\Date\Date::createFromFormat($format, $string);
+        }
+        else if($format == null)
             $format = $this->getSystemFormat();
 
         // If we are Jalali, then we want to convert from Jalali back to Gregorian.

@@ -30,7 +30,7 @@ use Xibo\Storage\StorageServiceInterface;
  *
  * @SWG\Definition()
  */
-class RegionOption
+class RegionOption implements \JsonSerializable
 {
     use EntityTrait;
 
@@ -60,6 +60,14 @@ class RegionOption
     public function __construct($store, $log)
     {
         $this->setCommonDependencies($store, $log);
+    }
+
+    /**
+     * Clone
+     */
+    public function __clone()
+    {
+        $this->regionId = null;
     }
 
     public function save()

@@ -23,8 +23,8 @@ use Xibo\Service\ConfigService;
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
 require PROJECT_ROOT . '/vendor/autoload.php';
 

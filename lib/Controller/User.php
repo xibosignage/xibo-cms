@@ -27,6 +27,7 @@ use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
@@ -409,19 +410,27 @@ class User extends Base
      */
     public function add()
     {
+        // Only group admins or super admins can create Users.
+        if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin())
+            throw new AccessDeniedException(__('Only super and group admins can create users'));
+
         // Build a user entity and save it
         $user = $this->userFactory->create();
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
 
         $user->userName = $this->getSanitizer()->getString('userName');
         $user->email = $this->getSanitizer()->getString('email');
-        $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
         $user->homePageId = $this->getSanitizer()->getInt('homePageId');
-        $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
+        $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota', 0);
         $user->setNewPassword($this->getSanitizer()->getString('password'));
 
-        if ($this->getUser()->userTypeId == 1)
+        if ($this->getUser()->isSuperAdmin()) {
+            $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
             $user->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
+        } else {
+            $user->userTypeId = 3;
+            $user->isSystemNotification = 0;
+        }
 
         $user->firstName = $this->getSanitizer()->getString('firstName');
         $user->lastName = $this->getSanitizer()->getString('lastName');
@@ -470,13 +479,14 @@ class User extends Base
         $user->load();
         $user->userName = $this->getSanitizer()->getString('userName');
         $user->email = $this->getSanitizer()->getString('email');
-        $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
         $user->homePageId = $this->getSanitizer()->getInt('homePageId');
         $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
         $user->retired = $this->getSanitizer()->getCheckbox('retired');
 
-        if ($this->getUser()->userTypeId == 1)
+        if ($this->getUser()->isSuperAdmin()) {
+            $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
             $user->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
+        }
 
         $user->firstName = $this->getSanitizer()->getString('firstName');
         $user->lastName = $this->getSanitizer()->getString('lastName');
@@ -564,12 +574,16 @@ class User extends Base
      */
     public function addForm()
     {
+        // Only group admins or super admins can create Users.
+        if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin())
+            throw new AccessDeniedException(__('Only super and group admins can create users'));
+
         $this->getState()->template = 'user-form-add';
         $this->getState()->setData([
             'options' => [
                 'homepage' => $this->pageFactory->query(null, ['asHome' => 1]),
                 'groups' => $this->userGroupFactory->query(),
-                'userTypes' => $this->userTypeFactory->query()
+                'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles()
             ],
             'help' => [
                 'add' => $this->getHelp()->link('User', 'Add')
@@ -750,6 +764,8 @@ class User extends Base
             'entity' => $requestEntity,
             'objectId' => $objectId,
             'permissions' => $currentPermissions,
+            'canSetOwner' => method_exists($object, 'setOwner'),
+            'owners' => $this->userFactory->query(),
             'help' => [
                 'permissions' => $this->getHelp()->link('Campaign', 'Permissions')
             ]
@@ -788,6 +804,13 @@ class User extends Base
      *      required=true,
      *      @SWG\Items(type="string")
      *   ),
+     *  @SWG\Parameter(
+     *      name="ownerId",
+     *      in="formData",
+     *      description="Change the owner of this item. Leave empty to keep the current owner",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -796,6 +819,7 @@ class User extends Base
      *
      * @param string $entity
      * @param int $objectId
+     * @throws ConfigurationException
      */
     public function permissions($entity, $objectId)
     {
@@ -818,11 +842,27 @@ class User extends Base
         // Run the update
         $this->updatePermissions($permissions, $groupIds);
 
+        // Should we update the owner?
+        if ($this->getSanitizer()->getInt('ownerId') != 0) {
+
+            $ownerId = $this->getSanitizer()->getInt('ownerId');
+
+            $this->getLog()->debug('Requesting update to a new Owner - id = ' . $ownerId);
+
+            if (method_exists($object, 'setOwner')) {
+                $object->setOwner($ownerId);
+                $object->save();
+            } else {
+                throw new ConfigurationException(__('Cannot change owner on this Object'));
+            }
+        }
+
         // Cascade permissions
         if ($requestEntity == 'Campaign' && $this->getSanitizer()->getCheckbox('cascade') == 1) {
             /* @var Campaign $object */
             $this->getLog()->debug('Cascade permissions down');
 
+            // Define a function that can be called for each layout we find
             $updatePermissionsOnLayout = function($layout) use ($object, $groupIds) {
 
                 // Regions
