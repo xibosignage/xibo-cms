@@ -50,9 +50,24 @@ class SessionFactory extends BaseFactory
     }
 
     /**
+     * @param $sessionId
+     * @return Session
+     * @throws NotFoundException
+     */
+    public function getById($sessionId)
+    {
+        $session = $this->query(null, ['sessionId' => $sessionId]);
+
+        if (count($session) <= 0)
+            throw new NotFoundException();
+
+        return $session[0];
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
-     * @return array[Session]
+     * @return Session[]
      * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = null)
@@ -62,13 +77,18 @@ class SessionFactory extends BaseFactory
 
         try {
             $select = '
-            SELECT session.userId, user.userName, isExpired, session.lastAccessed, remoteAddr AS remoteAddress, userAgent ';
+            SELECT `session`.session_id AS sessionId, session.userId, user.userName, isExpired, session.lastAccessed, remoteAddr AS remoteAddress, userAgent, `session`.session_expiration AS expiresAt ';
 
             $body = '
               FROM `session`
                 LEFT OUTER JOIN user ON user.userID = session.userID
              WHERE 1 = 1
             ';
+
+            if ($this->getSanitizer()->getString('sessionId', $filterBy) != '') {
+                $body .= ' AND session.session_id = :sessionId ';
+                $params['sessionId'] = $this->getSanitizer()->getString('sessionId', $filterBy);
+            }
 
             if ($this->getSanitizer()->getString('fromDt', $filterBy) != '') {
                 $body .= ' AND session.LastAccessed < :lastAccessed ';
@@ -103,7 +123,7 @@ class SessionFactory extends BaseFactory
 
 
             foreach ($this->getStore()->select($sql, $params) as $row) {
-                $entries[] = $this->createEmpty()->hydrate($row);
+                $entries[] = $this->createEmpty()->hydrate($row, ['stringProperties' => ['sessionId']]);
             }
 
             // Paging

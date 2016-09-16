@@ -294,7 +294,7 @@ $app->get('/transition/form/edit/:id', '\Xibo\Controller\Transition:editForm')->
 // sessions
 //
 $app->get('/sessions/view', '\Xibo\Controller\Sessions:displayPage')->name('sessions.view');
-$app->get('/sessions/form/logout', '\Xibo\Controller\Sessions:confirmLogoutForm')->name('sessions.confirm.logout.form');
+$app->get('/sessions/form/logout/:id', '\Xibo\Controller\Sessions:confirmLogoutForm')->name('sessions.confirm.logout.form');
 
 //
 // fault

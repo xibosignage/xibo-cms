@@ -18,12 +18,14 @@ class Session implements \JsonSerializable
 {
     use EntityTrait;
 
+    public $sessionId;
     public $userId;
     public $userName;
     public $isExpired;
     public $lastAccessed;
     public $remoteAddress;
     public $userAgent;
+    public $expiresAt;
 
     /**
      * Entity constructor.
