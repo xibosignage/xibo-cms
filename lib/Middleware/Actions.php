@@ -119,7 +119,7 @@ class Actions extends Middleware
                     foreach ($notifications as $notification) {
                         /** @var UserNotification $notification */
                         if ($notification->isInterrupt == 1 && $notification->read == 0) {
-                            $app->flash('interrxuptedUrl', $app->request()->getResourceUri());
+                            $app->flash('interruptedUrl', $app->request()->getResourceUri());
                             $app->redirectTo('notification.interrupt', ['id' => $notification->notificationId]);
                         }
                     }
