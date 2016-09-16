@@ -43,6 +43,26 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     inline: "docker restart cms-web",
     run: "always"
 
+  # Install Dependencies
+    $script = <<SCRIPT
+      echo PHP5-CLI and CURL
+      apt-get install -y php5-cli php5-curl
+      echo Composer
+      wget -q https://getcomposer.org/composer.phar
+      mv composer.phar /usr/local/bin/composer
+      chmod 755 /usr/local/bin/composer
+      cd /data/web && composer install
+      echo Provisioning Build System
+      echo NodeJs
+      curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
+      apt-get install -y nodejs
+      echo Gulp
+      npm install --global gulp-cli
+  SCRIPT
+
+  config.vm.provision "shell",
+    inline: $script
+
   # Output the IP address for easy access to the VM
   config.vm.provision "shell",
     inline: "/sbin/ifconfig eth1 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'",
