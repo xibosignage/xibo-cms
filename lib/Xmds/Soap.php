@@ -813,6 +813,13 @@ class Soap
                 $is_priority = $this->getSanitizer()->int($row['is_priority']);
 
                 if ($eventTypeId == Schedule::$LAYOUT_EVENT) {
+                    // Ensure we have a layoutId (we may not if an empty campaign is assigned)
+                    // https://github.com/xibosignage/xibo/issues/894
+                    if ($layoutId == 0 || empty($layoutId)) {
+                        $this->getLog()->error('Player has empty event scheduled. Display = %s, EventId = %d', $this->display->display, $scheduleId);
+                        continue;
+                    }
+
                     // Check the layout status
                     // https://github.com/xibosignage/xibo/issues/743
                     if (intval($row['status']) > 3) {
@@ -854,6 +861,12 @@ class Soap
                     $command->setAttribute('code', $commandCode);
                     $layoutElements->appendChild($command);
                 } else if ($eventTypeId == Schedule::$OVERLAY_EVENT && $options['includeOverlays']) {
+                    // Ensure we have a layoutId (we may not if an empty campaign is assigned)
+                    // https://github.com/xibosignage/xibo/issues/894
+                    if ($layoutId == 0 || empty($layoutId)) {
+                        $this->getLog()->error('Player has empty event scheduled. Display = %s, EventId = %d', $this->display->display, $scheduleId);
+                        continue;
+                    }
 
                     // Check the layout status
                     // https://github.com/xibosignage/xibo/issues/743
