@@ -110,6 +110,13 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="code",
+     *      in="formData",
+     *      description="Filter by DataSet Code",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -126,7 +133,8 @@ class DataSet extends Base
 
         $filter = [
             'dataSetId' => $this->getSanitizer()->getInt('dataSetId'),
-            'dataSet' => $this->getSanitizer()->getString('dataSet')
+            'dataSet' => $this->getSanitizer()->getString('dataSet'),
+            'code' => $this->getSanitizer()->getString('code'),
         ];
 
         $dataSets = $this->dataSetFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
@@ -168,6 +176,13 @@ class DataSet extends Base
                     'class' => 'dataSetImportForm',
                     'url' => $this->urlFor('dataSet.import.form', ['id' => $dataSet->dataSetId]),
                     'text' => __('Import CSV')
+                );
+
+                // Copy
+                $dataSet->buttons[] = array(
+                    'id' => 'dataset_button_copy',
+                    'url' => $this->urlFor('dataSet.copy.form', ['id' => $dataSet->dataSetId]),
+                    'text' => __('Copy')
                 );
 
                 // Divider
@@ -242,6 +257,13 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="code",
+     *      in="formData",
+     *      description="A code for this DataSet",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -259,6 +281,7 @@ class DataSet extends Base
         $dataSet = $this->dataSetFactory->createEmpty();
         $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
         $dataSet->description = $this->getSanitizer()->getString('description');
+        $dataSet->code = $this->getSanitizer()->getString('code');
         $dataSet->userId = $this->getUser()->userId;
 
         // Also add one column
@@ -334,6 +357,13 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="code",
+     *      in="formData",
+     *      description="A code for this DataSet",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -350,6 +380,7 @@ class DataSet extends Base
 
         $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
         $dataSet->description = $this->getSanitizer()->getString('description');
+        $dataSet->code = $this->getSanitizer()->getString('code');
         $dataSet->save();
 
         // Return
@@ -423,6 +454,97 @@ class DataSet extends Base
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $dataSet->dataSet)
+        ]);
+    }
+
+    /**
+     * Copy DataSet Form
+     * @param int $dataSetId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function copyForm($dataSetId)
+    {
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
+
+        if (!$this->getUser()->checkEditable($dataSet))
+            throw new AccessDeniedException();
+
+        // Set the form
+        $this->getState()->template = 'dataset-form-copy';
+        $this->getState()->setData([
+            'dataSet' => $dataSet,
+            'help' => $this->getHelp()->link('DataSet', 'Edit')
+        ]);
+    }
+
+    /**
+     * Copy DataSet
+     * @param int $dataSetId
+     *
+     * @SWG\Post(
+     *  path="/dataset/copy/{dataSetId}",
+     *  operationId="dataSetCopy",
+     *  tags={"dataset"},
+     *  summary="Copy DataSet",
+     *  description="Copy a DataSet",
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="path",
+     *      description="The DataSet ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataSet",
+     *      in="formData",
+     *      description="The DataSet Name",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="A description of this DataSet",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="code",
+     *      in="formData",
+     *      description="A code for this DataSet",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DataSet")
+     *  )
+     * )
+     */
+    public function copy($dataSetId)
+    {
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
+
+        if (!$this->getUser()->checkEditable($dataSet))
+            throw new AccessDeniedException();
+
+        // Load for the Copy
+        $dataSet->load();
+        $oldName = $dataSet->dataSet;
+
+        // Clone and reset parameters
+        $dataSet = clone $dataSet;
+        $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
+        $dataSet->description = $this->getSanitizer()->getString('description');
+        $dataSet->code = $this->getSanitizer()->getString('code');
+        $dataSet->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Copied %s as %s'), $oldName, $dataSet->dataSet),
+            'id' => $dataSet->dataSetId,
+            'data' => $dataSet
         ]);
     }
 

@@ -30,6 +30,10 @@
                 {% set title %}{% trans "Description" %}{% endset %}
                 {% set helpText %}{% trans "An optional description" %}{% endset %}
                 {{ forms.input("description", title, dataSet.description, helpText) }}
+
+                {% set title %}{% trans "Code" %}{% endset %}
+                {% set helpText %}{% trans "A code which can be used to lookup this DataSet - usually for an API application" %}{% endset %}
+                {{ forms.input("code", title, dataSet.code, helpText) }}
             </form>
         </div>
     </div>
