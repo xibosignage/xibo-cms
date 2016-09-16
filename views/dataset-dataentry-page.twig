@@ -27,12 +27,16 @@
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-
+                            {% for col in dataSet.getColumn() %}
+                                {% if col.dataSetColumnTypeId == 1 and (col.dataTypeId == 1 or col.dataTypeId == 2) %}
+                                    {{ inline.input(col.heading, col.heading) }}
+                                {% endif %}
+                            {% endfor %}
                         </form>
                     </div>
                 </div>
                 <div class="XiboData">
-                    <table id="datasets" class="table table-striped">
+                    <table id="datasets" class="table table-striped" data-image-url="{{ urlFor("library.download") }}?preview=1&width=150&height=150">
                         <thead>
                         <tr>
                             <th>{% trans "ID" %}</th>
@@ -54,11 +58,24 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+
+        var imageUrl = $("#datasets").data("imageUrl");
         var cols = [];
         cols.push({ "name": "id", "data": "id" });
         {% for col in dataSet.getColumn() %}
             {% if col.dataTypeId == 3 %}
                 cols.push({ "data": "{{ col.heading }}", "render": dataTableDateFromIso });
+            {% elseif col.dataTypeId == 5 %}
+                cols.push({ "data": "{{ col.heading }}", "render": function(data, type, row) {
+                        if (type != "display")
+                            return data;
+
+                        if (data == null)
+                            return "";
+
+                        return '<img src="' + imageUrl.replace(":id", data) + '"/>';
+                    }
+                });
             {% else %}
                 cols.push({ "data": "{{ col.heading }}" });
             {% endif %}
