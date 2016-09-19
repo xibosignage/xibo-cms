@@ -241,6 +241,12 @@
 
             // Callback for the media form
             function mediaFormCallBack() {
+                // prevent filter form submit
+                $("#libraryAssignFilterOptions").find("form").on("submit", function(e) {
+                    e.preventDefault();
+                    return false;
+                });
+
                 var mediaTable = $("#mediaAssignments").DataTable({
                     "language": dataTablesLanguage,
                     serverSide: true, stateSave: true,
