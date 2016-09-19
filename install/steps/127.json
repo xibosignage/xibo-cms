@@ -9,6 +9,10 @@
     {
       "step": "Add setting for resting log level",
       "action": "INSERT INTO `setting` (`setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES ('RESTING_LOG_LEVEL', 'Error', 'dropdown', 'Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems \"error\" is recommended.', 'Emergency|Alert|Critical|Error', 'troubleshooting', 1, 'Resting Log Level', '', 19, 'error', 1, 'word');"
+    },
+    {
+      "step": "Fix DataSet Code field type",
+      "action": "ALTER TABLE `dataset` MODIFY code VARCHAR(50) NULL;"
     }
   ]
 }
