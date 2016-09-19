@@ -44,7 +44,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     run: "always"
 
   # Install Dependencies
-    $script = <<SCRIPT
+  $script = <<SCRIPT
       echo PHP5-CLI and CURL
       apt-get install -y php5-cli php5-curl
       echo Composer
@@ -58,7 +58,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       apt-get install -y nodejs
       echo Gulp
       npm install --global gulp-cli
-  SCRIPT
+SCRIPT
 
   config.vm.provision "shell",
     inline: $script
