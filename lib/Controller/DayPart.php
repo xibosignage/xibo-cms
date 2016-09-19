@@ -22,6 +22,11 @@ namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DayPartFactory;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -36,6 +41,21 @@ class DayPart extends Base
     /** @var  DayPartFactory */
     private $dayPartFactory;
 
+    /** @var DisplayGroupFactory */
+    private $displayGroupFactory;
+
+    /** @var  DisplayFactory */
+    private $displayFactory;
+
+    /** @var  LayoutFactory */
+    private $layoutFactory;
+
+    /** @var  MediaFactory */
+    private $mediaFactory;
+
+    /** @var  ScheduleFactory */
+    private $scheduleFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -46,12 +66,22 @@ class DayPart extends Base
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param DayPartFactory $dayPartFactory
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param DisplayFactory $displayFactory
+     * @param LayoutFactory $layoutFactory
+     * @param MediaFactory $mediaFactory
+     * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dayPartFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dayPartFactory, $displayGroupFactory, $displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->dayPartFactory = $dayPartFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
+        $this->displayFactory = $displayFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->mediaFactory = $mediaFactory;
+        $this->scheduleFactory = $scheduleFactory;
     }
 
     /**
@@ -327,7 +357,10 @@ class DayPart extends Base
      */
     public function edit($dayPartId)
     {
-        $dayPart = $this->dayPartFactory->getById($dayPartId);
+        $dayPart = $this->dayPartFactory->getById($dayPartId)
+            ->setDateService($this->getDate())
+            ->setChildObjectDependencies($this->displayGroupFactory, $this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory)
+            ->load();
 
         if (!$this->getUser()->checkEditable($dayPart))
             throw new AccessDeniedException();

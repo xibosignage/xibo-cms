@@ -227,6 +227,11 @@ class Schedule implements \JsonSerializable
         $this->displayGroupFactory = $displayGroupFactory;
     }
 
+    public function __clone()
+    {
+        $this->eventId = null;
+    }
+
     /**
      * @param DisplayFactory $displayFactory
      * @param LayoutFactory $layoutFactory
@@ -404,7 +409,8 @@ class Schedule implements \JsonSerializable
     {
         $options = array_merge([
             'validate' => true,
-            'generate' => true
+            'generate' => true,
+            'deleteDetailFrom' => null
         ], $options);
 
         if ($options['validate'])
@@ -426,9 +432,14 @@ class Schedule implements \JsonSerializable
         // Check the main event dates to see if we are in the schedule look ahead
         $this->isInScheduleLookAhead = $this->datesInScheduleLookAhead($this->fromDt, $this->toDt);
 
+        if (!$options['generate'] && $options['deleteDetailFrom'] !== null)
+            $this->deleteDetail($options['deleteDetailFrom']);
+
         // Generate the event instances
-        if ($options['generate'])
+        if ($options['generate']) {
+            $this->deleteDetail();
             $this->generate();
+        }
 
         // Notify
         // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
@@ -539,9 +550,6 @@ class Schedule implements \JsonSerializable
             'dayPartId' => $this->dayPartId,
             'eventId' => $this->eventId
         ]);
-
-        // Delete detail and regenerate
-        $this->deleteDetail();
     }
 
     /**
@@ -772,9 +780,12 @@ class Schedule implements \JsonSerializable
     /**
      * Delete Detail
      */
-    private function deleteDetail()
+    private function deleteDetail($from = null)
     {
-        $this->getStore()->update('DELETE FROM `schedule_detail` WHERE eventId = :eventId', ['eventId' => $this->eventId]);
+        if ($from === null)
+            $this->getStore()->update('DELETE FROM `schedule_detail` WHERE eventId = :eventId', ['eventId' => $this->eventId]);
+        else
+            $this->getStore()->update('DELETE FROM `schedule_detail` WHERE eventId = :eventId AND fromDt >= :fromDt ', ['eventId' => $this->eventId, 'fromDt' => $from]);
     }
 
     /**

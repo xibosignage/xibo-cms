@@ -449,7 +449,12 @@ class State extends Middleware
                 $container->helpService,
                 $container->dateService,
                 $container->configService,
-                $container->dayPartFactory
+                $container->dayPartFactory,
+                $container->displayGroupFactory,
+                $container->displayFactory,
+                $container->layoutFactory,
+                $container->mediaFactory,
+                $container->scheduleFactory
             );
         });
 

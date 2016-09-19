@@ -22,6 +22,11 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Factory\DayPartFactory;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -51,11 +56,28 @@ class DayPart implements \JsonSerializable
     public $endTime;
     public $exceptions;
 
+    private $timeHash;
+
     /** @var  DateServiceInterface */
     private $dateService;
 
     /** @var  ScheduleFactory */
     private $scheduleFactory;
+
+    /** @var DisplayGroupFactory */
+    private $displayGroupFactory;
+
+    /** @var  DisplayFactory */
+    private $displayFactory;
+
+    /** @var  LayoutFactory */
+    private $layoutFactory;
+
+    /** @var  MediaFactory */
+    private $mediaFactory;
+
+    /** @var  DayPartFactory */
+    private $dayPartFactory;
 
     /**
      * Entity constructor.
@@ -92,6 +114,41 @@ class DayPart implements \JsonSerializable
     }
 
     /**
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param DisplayFactory $displayFactory
+     * @param LayoutFactory $layoutFactory
+     * @param MediaFactory $mediaFactory
+     * @param ScheduleFactory $scheduleFactory
+     * @param DayPartFactory $dayPartFactory
+     * @return $this
+     */
+    public function setChildObjectDependencies($displayGroupFactory, $displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $dayPartFactory)
+    {
+        $this->displayGroupFactory = $displayGroupFactory;
+        $this->displayFactory = $displayFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->mediaFactory = $mediaFactory;
+        $this->scheduleFactory = $scheduleFactory;
+        $this->dayPartFactory = $dayPartFactory;
+        return $this;
+    }
+
+    /**
+     * Calculate time hash
+     * @return string
+     */
+    private function calculateTimeHash()
+    {
+        $hash = $this->startTime . $this->endTime;
+
+        foreach ($this->exceptions as $exception) {
+            $hash .= $exception['day'] . $exception['start'] . $exception['end'];
+        }
+
+        return md5($hash);
+    }
+
+    /**
      * @return int
      */
     public function getId()
@@ -123,6 +180,17 @@ class DayPart implements \JsonSerializable
     }
 
     /**
+     * Load
+     * @return $this
+     */
+    public function load()
+    {
+        $this->timeHash = $this->calculateTimeHash();
+
+        return $this;
+    }
+
+    /**
      * Save
      * @param array $options
      */
@@ -137,9 +205,16 @@ class DayPart implements \JsonSerializable
 
         if ($this->dayPartId == 0)
             $this->add();
-        else
+        else {
+            // Update
             $this->update();
 
+            // Compare the time hash with a new time hash to see if we need to update associated schedules
+            if ($this->timeHash != $this->calculateTimeHash())
+                $this->handleEffectedSchedules();
+            else
+                $this->getLog()->debug('Daypart hash identical, no need to update schedules. ' . $this->timeHash . ' vs ' . $this->calculateTimeHash());
+        }
     }
 
     /**
@@ -194,5 +269,45 @@ class DayPart implements \JsonSerializable
             'endTime' => $this->endTime,
             'exceptions' => json_encode(is_array($this->exceptions) ? $this->exceptions : [])
         ]);
+    }
+
+    /**
+     * Handles schedules effected by an update
+     */
+    private function handleEffectedSchedules()
+    {
+        $now = time();
+
+        // Get all schedules that use this dayPart and exist after the current time.
+        $schedules = $this->scheduleFactory->query(null, ['dayPartId' => $this->dayPartId, 'futureSchedulesFrom' => $now]);
+
+        $this->getLog()->debug('Daypart update effects ' . count($schedules) . ' schedules.');
+
+        foreach ($schedules as $schedule) {
+            /** @var Schedule $schedule */
+            $schedule
+                ->setDateService($this->getDate())
+                ->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory)
+                ->load();
+
+            // Is this schedule a recurring event?
+            if ($schedule->recurrenceType != '' && $schedule->fromDt < $now) {
+                $this->getLog()->debug('Schedule is for a recurring event which has already recurred');
+
+                // Split the scheduled event, adjusting only the recurring end date on the original event
+                $newSchedule = clone $schedule;
+                $schedule->recurrenceRange = $now;
+                $schedule->save(['generate' => false, 'deleteDetailFrom' => $now]);
+
+                // Adjusting the fromdt on the new event
+                $newSchedule->fromDt = $now;
+                $newSchedule->save();
+            } else {
+                $this->getLog()->debug('Schedule is for a single event');
+
+                // Update just this single event to have the new date/time
+                $schedule->save();
+            }
+        }
     }
 }
