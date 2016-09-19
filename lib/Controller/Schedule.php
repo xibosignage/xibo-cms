@@ -721,9 +721,9 @@ class Schedule extends Base
         $schedule->eventTypeId = $this->getSanitizer()->getInt('eventTypeId');
         $schedule->campaignId = $this->getSanitizer()->getInt('campaignId');
         $schedule->commandId = $this->getSanitizer()->getInt('commandId');
-        $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder');
-        $schedule->isPriority = $this->getSanitizer()->getInt('isPriority');
-        $schedule->dayPartId = $this->getSanitizer()->getInt('dayPartId');
+        $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder', $schedule->displayOrder);
+        $schedule->isPriority = $this->getSanitizer()->getInt('isPriority', $schedule->isPriority);
+        $schedule->dayPartId = $this->getSanitizer()->getInt('dayPartId', $schedule->dayPartId);
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $this->getSanitizer()->getIntArray('recurrenceRepeatsOn');
