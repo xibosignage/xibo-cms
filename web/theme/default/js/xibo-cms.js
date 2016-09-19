@@ -330,9 +330,12 @@ function dataTableDraw(e, settings) {
         };
 
         // Bind a click event to our table
-        target.find("tbody").on("click", "tr", function() {
-            $(this).toggleClass("selected");
-        });
+        if (target.data().initialised == undefined) {
+            target.find("tbody").on("click", "tr", function () {
+                $(this).toggleClass("selected");
+                target.data().initialised = true;
+            });
+        }
 
         // Add a button set to the table
         var template = Handlebars.compile($("#multiselect-button-template").html());
