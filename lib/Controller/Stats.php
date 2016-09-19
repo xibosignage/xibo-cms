@@ -246,7 +246,7 @@ class Stats extends Base
               INNER JOIN layout
               ON layout.LayoutID = stat.LayoutID
               LEFT OUTER JOIN `widget`
-              ON `widget`.widgetId = stat.MediaID
+              ON `widget`.widgetId = stat.widgetId
               LEFT OUTER JOIN `widgetoption`
               ON `widgetoption`.widgetId = `widget`.widgetId
                 AND `widgetoption`.type = \'attrib\'
@@ -319,8 +319,10 @@ class Stats extends Base
         foreach ($this->store->select($sql, $params) as $row) {
             $entry = [];
 
+            $widgetId = $this->getSanitizer()->int($row['widgetId']);
             $widgetName = $this->getSanitizer()->string($row['Media']);
-            $widgetName = ($widgetName == '' && $row['widgetId'] != '') ? __('Deleted from Layout') : $widgetName;
+            // If the media name is empty, and the widgetid is not, then we can assume it has been deleted.
+            $widgetName = ($widgetName == '' &&  $widgetId != 0) ? __('Deleted from Layout') : $widgetName;
 
             $entry['type'] = $this->getSanitizer()->string($row['type']);
             $entry['display'] = $this->getSanitizer()->string($row['Display']);
