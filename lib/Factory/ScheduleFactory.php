@@ -181,6 +181,11 @@ class ScheduleFactory extends BaseFactory
             $params['ownerId'] = $this->getSanitizer()->getInt('ownerId', $filterBy);
         }
 
+        if ($this->getSanitizer()->getInt('dayPartId', $filterBy) !== null) {
+            $sql .= ' AND `schedule`.dayPartId = :dayPartId ';
+            $params['dayPartId'] = $this->getSanitizer()->getInt('dayPartId', $filterBy);
+        }
+
         // Only 1 date
         if (!$useDetail && $this->getSanitizer()->getInt('fromDt', $filterBy) !== null && $this->getSanitizer()->getInt('toDt', $filterBy) === null) {
             $sql .= ' AND schedule.fromDt > :fromDt ';
@@ -221,6 +226,13 @@ class ScheduleFactory extends BaseFactory
 
         if ($this->getSanitizer()->getIntArray('displayGroupIds', $filterBy) != null) {
             $sql .= ' AND `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup` WHERE displayGroupId IN (' . implode(',', $this->getSanitizer()->getIntArray('displayGroupIds', $filterBy)) . ')) ';
+        }
+
+        // Future schedules?
+        if ($this->getSanitizer()->getInt('futureSchedulesFrom', $filterBy) !== null) {
+            // Get schedules that end after this date, or that recur after this date
+            $sql .= ' AND (IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom OR `schedule`.recurrence_range >= :futureSchedulesFrom ) ';
+            $params['futureSchedulesFrom'] = $this->getSanitizer()->getInt('futureSchedulesFrom', $filterBy);
         }
 
         // Sorting?

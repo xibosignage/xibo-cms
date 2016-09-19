@@ -11,6 +11,10 @@
                     <li class="sidebar-list"><a href="{{ urlFor("schedule.view") }}">{% trans "Schedule" %}</a></li>
                     {% endif %}
 
+                    {% if currentUser.routeViewable("/daypart") %}
+                    <li class="sidebar-list"><a href="{{ urlFor("daypart.view") }}">{% trans "Dayparting" %}</a></li>
+                    {% endif %}
+
                     {% if currentUser.routeViewable("/campaign") or currentUser.routeViewable("/layout") or currentUser.routeViewable("/template") or currentUser.routeViewable("/resolution") %}
                         <li class="sidebar-title"><a>{% trans "Design" %}</a></li>
                         {% if currentUser.routeViewable("/campaign") %}

@@ -419,3 +419,15 @@ $app->get('/command', '\Xibo\Controller\Command:grid')->name('command.search');
 $app->post('/command', '\Xibo\Controller\Command:add')->name('command.add');
 $app->put('/command/:id', '\Xibo\Controller\Command:edit')->name('command.edit');
 $app->delete('/command/:id', '\Xibo\Controller\Command:delete')->name('command.delete');
+
+/**
+ * Dayparts
+ * @SWG\Tag(
+ *  name="daypart",
+ *  description="Dayparting"
+ * )
+ */
+$app->get('/daypart', '\Xibo\Controller\DayPart:grid')->name('daypart.search');
+$app->post('/daypart', '\Xibo\Controller\DayPart:add')->name('daypart.add');
+$app->put('/daypart/:id', '\Xibo\Controller\DayPart:edit')->name('daypart.edit');
+$app->delete('/daypart/:id', '\Xibo\Controller\DayPart:delete')->name('daypart.delete');

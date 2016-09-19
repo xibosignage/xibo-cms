@@ -63,6 +63,7 @@ echo __('Update');
 echo __('Commands');
 echo __('Notification Drawer');
 echo __('Notifications');
+echo __('Dayparting');
 
 // Settings translations
 echo __('Media Permissions');

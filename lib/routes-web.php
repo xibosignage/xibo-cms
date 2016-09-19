@@ -334,3 +334,11 @@ $app->get('/command/view', '\Xibo\Controller\Command:displayPage')->name('comman
 $app->get('/command/form/add', '\Xibo\Controller\Command:addForm')->name('command.add.form');
 $app->get('/command/form/edit/:id', '\Xibo\Controller\Command:editForm')->name('command.edit.form');
 $app->get('/command/form/delete/:id', '\Xibo\Controller\Command:deleteForm')->name('command.delete.form');
+
+//
+// Daypart
+//
+$app->get('/daypart/view', '\Xibo\Controller\DayPart:displayPage')->name('daypart.view');
+$app->get('/daypart/form/add', '\Xibo\Controller\DayPart:addForm')->name('daypart.add.form');
+$app->get('/daypart/form/edit/:id', '\Xibo\Controller\DayPart:editForm')->name('daypart.edit.form');
+$app->get('/daypart/form/delete/:id', '\Xibo\Controller\DayPart:deleteForm')->name('daypart.delete.form');

@@ -74,7 +74,7 @@ class DateServiceGregorian implements DateServiceInterface
         if ($format == null)
             $format = $this->getSystemFormat();
 
-        return \Jenssegers\Date\Date::createFromFormat($format, $string);
+        return ($format == 'U') ? \Jenssegers\Date\Date::createFromTimestamp($string) : \Jenssegers\Date\Date::createFromFormat($format, $string);
     }
 
     /**
@@ -137,12 +137,9 @@ class DateServiceGregorian implements DateServiceInterface
     }
 
     /**
-     * Converts a format to bootstrap date picker
-     *  inspired by http://stackoverflow.com/questions/30186611/php-dateformat-to-moment-js-format
-     * @param $format
-     * @return string
+     * @inheritdoc
      */
-    public function convertPhpToBootstrapFormat($format)
+    public function convertPhpToBootstrapFormat($format, $includeTime = true)
     {
         $replacements = [
             'd' => 'dd',
@@ -166,12 +163,12 @@ class DateServiceGregorian implements DateServiceInterface
             'a' => 'p',
             'A' => 'P',
             'B' => '', // no equivalent
-            'g' => 'H',
-            'G' => 'h',
-            'h' => 'HH',
-            'H' => 'hh',
-            'i' => 'ii',
-            's' => 'ss',
+            'g' => '',
+            'G' => '',
+            'h' => '',
+            'H' => '',
+            'i' => '',
+            's' => '',
             'u' => '',
             'e' => '', // deprecated since version 1.6.0 of moment.js
             'I' => '', // no equivalent
@@ -183,8 +180,18 @@ class DateServiceGregorian implements DateServiceInterface
             'r' => '', // no equivalent
             'U' => '',
         ];
+
+        if ($includeTime) {
+            $replacements['g'] = 'H';
+            $replacements['G'] = 'h';
+            $replacements['h'] = 'HH';
+            $replacements['H'] = 'hh';
+            $replacements['i'] = 'ii';
+            $replacements['s'] = 'ss';
+        }
+
         $momentFormat = strtr($format, $replacements);
-        return $momentFormat;
+        return trim($momentFormat, ' :');
     }
 
     /**

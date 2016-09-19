@@ -9,6 +9,18 @@
     {
       "step": "Add setting for resting log level",
       "action": "INSERT INTO `setting` (`setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES ('RESTING_LOG_LEVEL', 'Error', 'dropdown', 'Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems \"error\" is recommended.', 'Emergency|Alert|Critical|Error', 'troubleshooting', 1, 'Resting Log Level', '', 19, 'error', 1, 'word');"
+    },
+    {
+      "step": "Add Daypart Page",
+      "action": "INSERT INTO `pages` (`name`, `Title`, `asHome`) VALUES ('daypart', 'Dayparting', 0);"
+    },
+    {
+      "step": "Add Daypart database structure",
+      "action": "CREATE TABLE `daypart` (`dayPartId` INT(11) NOT NULL AUTO_INCREMENT,`name` VARCHAR(50) NOT NULL,`description` VARCHAR(1000),`isRetired` TINYINT(4) DEFAULT 0,`userid` INT(11) NOT NULL,`startTime` VARCHAR(8) DEFAULT '00:00:00',`endTime` VARCHAR(8) DEFAULT '00:00:00',`exceptions` TEXT NULL,PRIMARY KEY (`dayPartId`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=2;"
+    },
+    {
+      "step": "Add Daypart Permission Entity",
+      "action": "INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES (NULL, 'Xibo\\Entity\\DayPart');"
     }
   ]
 }

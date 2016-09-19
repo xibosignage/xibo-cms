@@ -4,7 +4,7 @@ var title = event.title;
 var eventIcon = "fa-desktop";
 var eventClass = "event-warning";
 
-if (event.event.dayPartId == 0) {
+if (event.event.dayPartId != 1) {
 if (event.sameDay) {
 title = "[" + moment(event.event.fromDt, "X").format("HH:mm") + " - " + moment(event.event.toDt, "X").format("HH:mm") + "] " + event.title;
 } else {

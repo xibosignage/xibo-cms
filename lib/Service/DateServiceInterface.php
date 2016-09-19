@@ -53,7 +53,8 @@ interface DateServiceInterface
      * Converts a format to bootstrap date picker
      *  inspired by http://stackoverflow.com/questions/30186611/php-dateformat-to-moment-js-format
      * @param $format
+     * @param $includeTime
      * @return string
      */
-    public function convertPhpToBootstrapFormat($format);
+    public function convertPhpToBootstrapFormat($format, $includeTime = true);
 }
