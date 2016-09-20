@@ -34,7 +34,9 @@ class LibraryTest extends LocalWebTestCase
     public function testAdd()
     {
         # Using XiboLibrary wrapper to upload new file to the CMS, need to provide (name, file location)
-        $media = (new XiboLibrary($this->getEntityProvider()))->create('API video', PROJECT_ROOT . '/tests/resources/HLH264.mp4');
+        $media = (new XiboLibrary($this->getEntityProvider()))->create('API video test', PROJECT_ROOT . '/tests/resources/HLH264.mp4');
+
+        $media->delete();
     }
 
     /**
@@ -105,6 +107,8 @@ class LibraryTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertSame($name, $object->data->name);
+
+        $media->delete();
     }
 
     /**

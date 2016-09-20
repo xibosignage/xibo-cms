@@ -36,7 +36,7 @@ class NotificationTest extends LocalWebTestCase
     public function testAdd()
     {
     	# Create new display group
-    	$displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
+    	$displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'notification description', 0, '');
     	# Add new notification and assign it to our display group
     	$subject = 'API Notification';
     	$this->client->post('/notification' , [

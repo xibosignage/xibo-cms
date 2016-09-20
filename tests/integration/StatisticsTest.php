@@ -70,11 +70,27 @@ class StatisticsTest extends LocalWebTestCase
         $media2 = (new XiboLibrary($this->getEntityProvider()))->create('API image', PROJECT_ROOT . '/tests/resources/xts-flowers-001jpg');
         $media3 = (new XiboLibrary($this->getEntityProvider()))->create('API image', PROJECT_ROOT . '/tests/resources/xts-layout-003-background.jpg');
         # Assign media to a playlists
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId, $media2->mediaId], $region->playlistId);
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media3->mediaId], $region2->playlistId);
-        # Add stats to the DB
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId, $media2->mediaId], $region->playlists[0]->playlistId);
+        $playlist2 = (new XiboPlaylist($this->getEntityProvider()))->assign([$media3->mediaId], $region2->playlists[0]->playlistId);
+        # Add stats to the DB -  known set
+        self::$container->insert('
+            INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag, `widgetId`)
+              VALUES (:type, :statDate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag, :widgetId)
+        ', [
+            'type' => $this->type, // layout|media
+            'statDate' => date("Y-m-d H:i:s"),
+            'start' => $this->fromDt,
+            'end' => $this->toDt,
+            'scheduleId' => 0,
+            'displayId' => $display->displayId,
+            'layoutId' => $layout->layoutId,
+            'mediaId' => $media->mediaId,
+            'tag' => null,
+            'widgetId' => $playlist->widgetId
+        ]);
+
         // TO DO
-        # get stats and see if they match with what we epect
+        # get stats and see if they match with what we expect
         $this->client->get('/stats' , [
         //    'fromDt' =>
         //    'toDt' =>

@@ -192,8 +192,6 @@ class CampaignTest extends LocalWebTestCase
         $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
         // Assaign layout to campaign
         $campaign->assignLayout($layout->layoutId);
-        # Get this campaign and check it has 1 layout assigned
-        $campaignCheck = (new XiboCampaign($this->getEntityProvider()))->getById($campaign->campaignId);
         # Call unassign on the created layout
         $this->client->post('/campaign/layout/unassign/' . $campaign->campaignId, ['layoutId' => [['layoutId' => $layout->layoutId, 'displayOrder' => 1]]]);
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
@@ -205,5 +203,4 @@ class CampaignTest extends LocalWebTestCase
         $campaign->delete();
         $layout->delete();
     }
-
 }
