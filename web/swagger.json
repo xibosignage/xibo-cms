@@ -341,6 +341,13 @@
                         "description": "Filter by DataSet Name",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "Filter by DataSet Code",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -374,6 +381,13 @@
                         "name": "description",
                         "in": "formData",
                         "description": "A description of this DataSet",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "A code for this DataSet",
                         "required": false,
                         "type": "string"
                     }
@@ -423,6 +437,13 @@
                         "description": "A description of this DataSet",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "A code for this DataSet",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -453,6 +474,54 @@
                 "responses": {
                     "204": {
                         "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/dataset/copy/{dataSetId}": {
+            "post": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Copy DataSet",
+                "description": "Copy a DataSet",
+                "operationId": "dataSetCopy",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataSet",
+                        "in": "formData",
+                        "description": "The DataSet Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "A description of this DataSet",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "A code for this DataSet",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DataSet"
+                        }
                     }
                 }
             }
@@ -835,6 +904,197 @@
                 }
             }
         },
+        "/daypart": {
+            "post": {
+                "tags": [
+                    "dayPart"
+                ],
+                "summary": "Daypart Add",
+                "description": "Add a Daypart",
+                "operationId": "dayPartAdd",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "The Daypart Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "A description for the dayPart",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "startTime",
+                        "in": "formData",
+                        "description": "The start time for this day part",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "endTime",
+                        "in": "formData",
+                        "description": "The end time for this day part",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "exceptionDays",
+                        "in": "formData",
+                        "description": "String array of exception days",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "exceptionStartTimes",
+                        "in": "formData",
+                        "description": "String array of exception start times to match the exception days",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "exceptionEndTimes",
+                        "in": "formData",
+                        "description": "String array of exception end times to match the exception days",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DayPart"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/daypart/{dayPartId}": {
+            "put": {
+                "tags": [
+                    "dayPart"
+                ],
+                "summary": "Daypart Add",
+                "description": "Add a Daypart",
+                "operationId": "dayPartAdd",
+                "parameters": [
+                    {
+                        "name": "dayPartId",
+                        "in": "path",
+                        "description": "The Daypart Id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "The Daypart Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "A description for the dayPart",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "startTime",
+                        "in": "formData",
+                        "description": "The start time for this day part",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "endTime",
+                        "in": "formData",
+                        "description": "The end time for this day part",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "exceptionDays",
+                        "in": "formData",
+                        "description": "String array of exception days",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "exceptionStartTimes",
+                        "in": "formData",
+                        "description": "String array of exception start times to match the exception days",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "exceptionEndTimes",
+                        "in": "formData",
+                        "description": "String array of exception end times to match the exception days",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DayPart"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "daypart"
+                ],
+                "summary": "Delete DayPart",
+                "description": "Delete the provided dayPart",
+                "operationId": "dayPartDelete",
+                "parameters": [
+                    {
+                        "name": "dayPartId",
+                        "in": "path",
+                        "description": "The Daypart Id to Delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/display": {
             "get": {
                 "tags": [
@@ -883,6 +1143,13 @@
                         "name": "clientVersion",
                         "in": "formData",
                         "description": "Filter by Client Version",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "embed",
+                        "in": "formData",
+                        "description": "Embed related data, namely displaygroups. A comma separated list of child objects to embed.",
                         "required": false,
                         "type": "string"
                     }
@@ -1042,6 +1309,13 @@
                         "description": "Clear all Cached data for this display",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "rekeyXmr",
+                        "in": "formData",
+                        "description": "Clear the cached XMR configuration and send a rekey",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -1148,6 +1422,13 @@
                         "description": "Filter by DisplayGroup Name",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "displayId",
+                        "in": "formData",
+                        "description": "Filter by DisplayGroups containing a specific display",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -2425,6 +2706,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "tags",
+                        "in": "formData",
+                        "description": "Filter by Tags - comma seperated",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "duration",
                         "in": "formData",
                         "description": "Filter by Duration - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
@@ -2784,7 +3072,7 @@
                         "in": "formData",
                         "description": "ISO date representing the release date for this notification",
                         "required": true,
-                        "type": "integer"
+                        "type": "string"
                     },
                     {
                         "name": "isEmail",
@@ -2838,7 +3126,7 @@
             }
         },
         "/notification/{notificationId}": {
-            "post": {
+            "put": {
                 "tags": [
                     "notification"
                 ],
@@ -2872,7 +3160,7 @@
                         "in": "formData",
                         "description": "ISO date representing the release date for this notification",
                         "required": true,
-                        "type": "integer"
+                        "type": "string"
                     },
                     {
                         "name": "isEmail",
@@ -3486,7 +3774,7 @@
                     {
                         "name": "dayPartId",
                         "in": "formData",
-                        "description": "The Day Part for this event. Currently supported are 0(custom) and 1(always). Defaulted to 0.",
+                        "description": "The Day Part for this event. Overrides supported are 0(custom) and 1(always). Defaulted to 0.",
                         "required": false,
                         "type": "integer"
                     },
@@ -3629,7 +3917,7 @@
                     {
                         "name": "dayPartId",
                         "in": "formData",
-                        "description": "The Day Part for this event. Currently supported are 0(custom) and 1(always). Defaulted to 0.",
+                        "description": "The Day Part for this event. Overrides supported are 0(custom) and 1(always). Defaulted to 0.",
                         "required": false,
                         "type": "integer"
                     },
@@ -4133,6 +4421,13 @@
                         "items": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "ownerId",
+                        "in": "formData",
+                        "description": "Change the owner of this item. Leave empty to keep the current owner",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -4564,6 +4859,14 @@
                 "dataType": {
                     "description": "The Name for this DataType",
                     "type": "string"
+                }
+            }
+        },
+        "DayPart": {
+            "properties": {
+                "dayPartId": {
+                    "description": "The ID of this Daypart",
+                    "type": "integer"
                 }
             }
         },
@@ -6008,6 +6311,10 @@
         {
             "name": "command",
             "description": "Commands"
+        },
+        {
+            "name": "daypart",
+            "description": "Dayparting"
         }
     ],
     "externalDocs": {
