@@ -64,7 +64,7 @@ class ForecastIo extends Module
         
         if ($this->schemaVersion <= 1) {
             // Install
-            $this->InstallModule('Forecast IO', 'Weather forecasting from Forecast IO', 'forms/library.gif', 1, 1, array());
+            $this->InstallModule('Weather', 'Weather Powered by DarkSky', 'forms/library.gif', 1, 1, array());
         }
         else {
             // Update
