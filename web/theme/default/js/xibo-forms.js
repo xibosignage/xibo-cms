@@ -368,7 +368,7 @@ var settingsUpdated = function(response) {
     }
 };
 
-var backGroundFormSetup = function() {
+var backGroundFormSetup = function(dialog) {
     $('#backgroundColor').colorpicker({format: "hex"});
 
     var backgroundImageList = $('#backgroundImageId');
@@ -396,6 +396,13 @@ var backGroundFormSetup = function() {
 
     backgroundImageChange();
 
+    // Bind to the background add button click
+    $("#backgroundAddButton").on("click", function(e) {
+        $(this).addClass("disabled");
+        layoutEditBackgroundButtonClicked(e, dialog)
+    });
+
+    // Bind to the layout form submit
     $("#layoutEditForm").submit(function(e) {
         e.preventDefault();
 
@@ -435,6 +442,96 @@ var backGroundFormSetup = function() {
         });
     })
 };
+
+/**
+ * Layout edit background add image button
+ * @param e the event
+ * @param dialog the dialog
+ */
+function layoutEditBackgroundButtonClicked(e, dialog) {
+    e.preventDefault();
+
+    // Append a background upload button to the dialog footer.
+    var template = Handlebars.compile($("#layout-background-image-upload-template").html());
+    var footer = dialog.find(".modal-footer");
+
+    footer.append(template());
+
+    var form = footer.find("form");
+    var url = form.prop("action");
+    var refreshSessionInterval;
+
+    // Initialize the jQuery File Upload widget:
+    form.fileupload({
+        url: url,
+        disableImageResize: true,
+        previewMaxWidth: 100,
+        previewMaxHeight: 100,
+        previewCrop: true
+    });
+
+    // Upload server status check for browsers with CORS support:
+    if ($.support.cors) {
+        $.ajax({
+            url: url,
+            type: 'HEAD'
+        }).fail(function () {
+            $('<span class="alert alert-error"/>')
+                .text('Upload server currently unavailable - ' + new Date())
+                .appendTo(form);
+        });
+    }
+
+    // Enable iframe cross-domain access via redirect option:
+    form.fileupload(
+        'option',
+        'redirect',
+        window.location.href.replace(
+            /\/[^\/]*$/,
+            '/cors/result.html?%s'
+        )
+    );
+
+    form.bind('fileuploadsubmit', function (e, data) {
+
+        // Disable the buttons on the form
+        footer.find("button").addClass("disabled");
+
+    }).bind('fileuploadstart', function (e, data) {
+
+        if (form.fileupload("active") <= 0)
+            refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
+
+        return true;
+
+    }).bind('fileuploaddone', function (e, data) {
+
+        // Enable the buttons on the form
+        footer.find("button").removeClass("disabled");
+
+        if (refreshSessionInterval != null && form.fileupload("active") <= 0)
+            clearInterval(refreshSessionInterval);
+
+        if (data.result.files[0].error != null && data.result.files[0].error != "") {
+            return;
+        }
+
+        // Take the image URL from the response, and use it to replace the background image fields
+        dialog.find(".background-image-fields").slideUp();
+
+        // Get the mediaId
+        var mediaId = data.result.files[0].mediaId;
+
+        // Create a hidden field with the mediaId
+        $("#layoutEditForm").append($("<input type='hidden' name='backgroundImageId' value='" + mediaId + "'/>"));
+
+        var bgImagePreview = dialog.find("#bg_image_image");
+        bgImagePreview.prop("src", bgImagePreview.data().url.replace(":id", mediaId));
+
+        // Hide the stuff we've added
+        form.slideUp();
+    });
+}
 
 function permissionsFormOpen(dialog) {
 
