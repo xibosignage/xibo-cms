@@ -401,7 +401,7 @@ class Twitter extends ModuleWidget
 
             // Cache it
             $cache->set($data);
-            $cache->expiresAfter($this->getSetting('cachePeriod'));
+            $cache->expiresAfter($this->getSetting('cachePeriod', 3600));
             $this->getPool()->saveDeferred($cache);
         }
 
