@@ -52,7 +52,7 @@ class ForecastIo extends ModuleWidget
         if ($this->module == null) {
             // Install
             $module = $moduleFactory->createEmpty();
-            $module->name = 'Forecast IO';
+            $module->name = 'Weather';
             $module->type = 'forecastio';
             $module->class = 'Xibo\Widget\ForecastIo';
             $module->description = 'Weather Powered by DarkSky';
