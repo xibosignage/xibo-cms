@@ -674,6 +674,9 @@ class Display extends Data {
                     'version_instructions' => json_encode($version_instructions)
                 ));
 
+            // Flag as incomplete
+            $this->FlagIncomplete($displayId);
+
             return true;
         }
         catch (Exception $e) {
