@@ -988,7 +988,7 @@ function XiboSubmitResponse(response, form) {
 
         // Do we need to fire a callback function?
         if (response.callBack != null && response.callBack != "") {
-            if (response.callBack.indexOf("()") == -1)
+            if (response.callBack.indexOf("(") == -1)
                 response.callBack = response.callBack + "()";
 
             eval(response.callBack);
@@ -1217,6 +1217,13 @@ function SystemMessage(messageText, success) {
         // Close after 1 second
         setTimeout(function() {
             dialog.modal('hide');
+
+
+            dialog.on('hidden.bs.modal', function (e) {
+                if($('.modal').hasClass('in')) {
+                    $('body').addClass('modal-open');
+                }
+            });
         }, 2000);
     }
 }
