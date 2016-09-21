@@ -31,7 +31,8 @@ jQuery.fn.extend({
             "speed": "2",
             "previewWidth": 0,
             "previewHeight": 0,
-            "scaleOverride": 0
+            "scaleOverride": 0,
+            "copyright": ""
         };
 
         options = $.extend({}, defaults, options);
@@ -125,6 +126,14 @@ jQuery.fn.extend({
                     .html(items[i]).appendTo(appendTo);
 
                 itemsThisPage++;
+            }
+
+            // Add copyright?
+            if (options.copyright != "") {
+                $("<div />")
+                    .addClass("item")
+                    .html("<div id='copyright'>" + options.copyright + "</div>")
+                    .appendTo(appendTo);
             }
             
             // 4th objective - move the items around, start the timer
