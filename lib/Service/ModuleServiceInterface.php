@@ -11,6 +11,7 @@ namespace Xibo\Service;
 
 use Slim\Slim;
 use Stash\Interfaces\PoolInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Module;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DataSetColumnFactory;
@@ -36,8 +37,9 @@ interface ModuleServiceInterface
      * @param ConfigServiceInterface $config
      * @param DateServiceInterface $date
      * @param SanitizerServiceInterface $sanitizer
+     * @param EventDispatcherInterface $dispatcher
      */
-    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer);
+    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $dispatcher);
 
     /**
      * @param Module $module

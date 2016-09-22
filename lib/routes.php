@@ -270,8 +270,10 @@ $app->get('/dataset', '\Xibo\Controller\DataSet:grid')->name('dataSet.search');
 $app->post('/dataset', '\Xibo\Controller\DataSet:add')->name('dataSet.add');
 $app->put('/dataset/:id', '\Xibo\Controller\DataSet:edit')->name('dataSet.edit');
 $app->delete('/dataset/:id', '\Xibo\Controller\DataSet:delete')->name('dataSet.delete');
+$app->post('/dataset/copy/:id', '\Xibo\Controller\DataSet:copy')->name('dataSet.copy');
 $app->map('/dataset/import/:id', '\Xibo\Controller\DataSet:import')->via('HEAD');
 $app->post('/dataset/import/:id', '\Xibo\Controller\DataSet:import')->name('dataSet.import');
+$app->post('/dataset/importjson/:id', '\Xibo\Controller\DataSet:importJson')->name('dataSet.import.json');
 // Columns
 $app->get('/dataset/:id/column', '\Xibo\Controller\DataSetColumn:grid')->name('dataSet.column.search');
 $app->post('/dataset/:id/column', '\Xibo\Controller\DataSetColumn:add')->name('dataSet.column.add');
@@ -417,3 +419,15 @@ $app->get('/command', '\Xibo\Controller\Command:grid')->name('command.search');
 $app->post('/command', '\Xibo\Controller\Command:add')->name('command.add');
 $app->put('/command/:id', '\Xibo\Controller\Command:edit')->name('command.edit');
 $app->delete('/command/:id', '\Xibo\Controller\Command:delete')->name('command.delete');
+
+/**
+ * Dayparts
+ * @SWG\Tag(
+ *  name="daypart",
+ *  description="Dayparting"
+ * )
+ */
+$app->get('/daypart', '\Xibo\Controller\DayPart:grid')->name('daypart.search');
+$app->post('/daypart', '\Xibo\Controller\DayPart:add')->name('daypart.add');
+$app->put('/daypart/:id', '\Xibo\Controller\DayPart:edit')->name('daypart.edit');
+$app->delete('/daypart/:id', '\Xibo\Controller\DayPart:delete')->name('daypart.delete');

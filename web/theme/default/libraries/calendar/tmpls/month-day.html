@@ -8,7 +8,7 @@
             var eventIcon = "fa-desktop";
             var eventClass = "event-warning";
 
-            if (event.event.dayPartId == 0) {
+            if (event.event.dayPartId != 1) {
                 if (event.event.eventTypeId == 2) {
                     title = "[" + moment(event.event.fromDt).format("HH:mm") + "] " + event.title;
                 } else if (event.sameDay) {
@@ -46,6 +46,7 @@
                 eventIcon = "fa-wrench";
 
             if (!event.editable) {
+                event.url = null;
                 eventIcon = "fa-lock";
                 eventClass = "event-inverse";
             }

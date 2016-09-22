@@ -604,7 +604,7 @@ class User implements \JsonSerializable
             /* @var Schedule $event */
             $event->setOwner($user->getOwnerId());
             $event->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-            $event->save();
+            $event->save(['generate' => false]);
         }
         foreach ($this->layouts as $layout) {
             /* @var Layout $layout */
@@ -1140,6 +1140,24 @@ class User implements \JsonSerializable
     public function getUserTypeId()
     {
         return $this->userTypeId;
+    }
+
+    /**
+     * Is a super admin
+     * @return bool
+     */
+    public function isSuperAdmin()
+    {
+        return ($this->getUserTypeId() == 1);
+    }
+
+    /**
+     * Is Group Admin
+     * @return bool
+     */
+    public function isGroupAdmin()
+    {
+       return ($this->getUserTypeId() == 2);
     }
 
     /**

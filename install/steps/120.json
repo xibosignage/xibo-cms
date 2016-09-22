@@ -152,7 +152,7 @@
     },
     {
       "step": "Set all Users Home page - Part 1",
-      "action": "UPDATE `user` SET homepage = IFNULL((SELECT pageId FROM `pages` WHERE pages.name = `user`.homepage), 1);"
+      "action": "UPDATE `user` SET homepage = IFNULL((SELECT pageId FROM `pages` WHERE pages.name = `user`.homepage LIMIT 1), 1);"
     },
     {
       "step": "Update Users Home page - Part 2",
@@ -165,6 +165,10 @@
     {
       "step": "Upgrade Layouts - Ensure Layout XML field is nullable",
       "action": "ALTER TABLE layout MODIFY xml longtext;"
+    },
+    {
+      "step": "Add Layout status message column",
+      "action": "ALTER TABLE `layout` ADD `statusMessage` TEXT NULL;"
     },
     {
       "step": "Upgrade Layouts - Convert existing Layouts",

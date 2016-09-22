@@ -39,9 +39,6 @@ class ScheduleFactory extends BaseFactory
      * @param SanitizerServiceInterface $sanitizerService
      * @param ConfigServiceInterface $config
      * @param DisplayGroupFactory $displayGroupFactory
-     * @param DisplayFactory $displayFactory
-     * @param LayoutFactory $layoutFactory
-     * @param MediaFactory $mediaFactory
      */
     public function __construct($store, $log, $sanitizerService, $config, $displayGroupFactory)
     {
@@ -145,6 +142,7 @@ class ScheduleFactory extends BaseFactory
             `schedule`.recurrence_type AS recurrenceType,
             `schedule`.recurrence_detail AS recurrenceDetail,
             `schedule`.recurrence_range AS recurrenceRange,
+            `schedule`.recurrenceRepeatsOn,
             campaign.campaignId,
             campaign.campaign,
             `command`.commandId,
@@ -181,6 +179,11 @@ class ScheduleFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('ownerId', $filterBy) !== null) {
             $sql .= ' AND `schedule`.userId = :ownerId ';
             $params['ownerId'] = $this->getSanitizer()->getInt('ownerId', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('dayPartId', $filterBy) !== null) {
+            $sql .= ' AND `schedule`.dayPartId = :dayPartId ';
+            $params['dayPartId'] = $this->getSanitizer()->getInt('dayPartId', $filterBy);
         }
 
         // Only 1 date
@@ -223,6 +226,13 @@ class ScheduleFactory extends BaseFactory
 
         if ($this->getSanitizer()->getIntArray('displayGroupIds', $filterBy) != null) {
             $sql .= ' AND `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup` WHERE displayGroupId IN (' . implode(',', $this->getSanitizer()->getIntArray('displayGroupIds', $filterBy)) . ')) ';
+        }
+
+        // Future schedules?
+        if ($this->getSanitizer()->getInt('futureSchedulesFrom', $filterBy) !== null) {
+            // Get schedules that end after this date, or that recur after this date
+            $sql .= ' AND (IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom OR `schedule`.recurrence_range >= :futureSchedulesFrom ) ';
+            $params['futureSchedulesFrom'] = $this->getSanitizer()->getInt('futureSchedulesFrom', $filterBy);
         }
 
         // Sorting?

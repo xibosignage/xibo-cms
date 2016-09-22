@@ -1,7 +1,7 @@
 if(!window.calendar_languages) {
 	window.calendar_languages = {};
 }
-window.calendar_languages['de'] = {
+window.calendar_languages['de-DE'] = {
 	error_noview:     'Kalender: Ansicht {0} nicht gefunden',
 	error_dateformat: 'Kalender: Falsches Datumsformat {0}. Sollte entweder "now" oder "yyyy-mm-dd" sein',
 	error_loadurl:    'Kalender: Event-URL nicht gesetzt.',
@@ -57,17 +57,23 @@ window.calendar_languages['de'] = {
 	d6: 'Samstag',
 
 	first_day: 1,
+	week_numbers_iso_8601: true,
 
 	holidays: {
 		'01-01':     'Neujahr',
+		'06-01':     'Heilige Drei Könige',
+		'easter-3':  'Gründonnerstag',
 		'easter-2':  'Karfreitag',
+		'easter':    'Ostersonntag',
 		'easter+1':  'Ostermontag',
-		'01-05':     'Erster Mai',
+		'01-05':     'Tag der Arbeit',
 		'easter+39': 'Himmelfahrt',
 		'easter+49': 'Pfingstsonntag',
 		'easter+50': 'Pfingstmontag',
+		'15-08':     'Mariä Himmelfahrt',
 		'03-10':     'Tag der Deutschen Einheit',
+		'01-11':     'Allerheiligen',
 		'25-12':     'Erster Weihnachtsfeiertag',
-		'26-12':     'Zweiter Weihnachtsfeiertag',
+		'26-12':     'Zweiter Weihnachtsfeiertag'
 	}
 };

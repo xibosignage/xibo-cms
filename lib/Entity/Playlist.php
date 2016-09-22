@@ -92,7 +92,7 @@ class Playlist implements \JsonSerializable
     /**
      * @var DateServiceInterface
      */
-    public $dateService;
+    private $dateService;
 
     /**
      * @var PermissionFactory

@@ -249,7 +249,7 @@ class DisplayFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'display.displayId', null, $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'displaygroup.displaygroupid', null, $filterBy);
 
         // Filter by Display ID?
         if ($this->getSanitizer()->getInt('displayId', $filterBy) !== null) {
@@ -462,7 +462,23 @@ class DisplayFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['auditingUntil']]);
+            $entries[] = $this->createEmpty()->hydrate($row, [
+                'intProperties' => [
+                    'auditingUntil',
+                    'wakeOnLanEnabled',
+                    'numberOfMacAddressChanges',
+                    'loggedIn',
+                    'incSchedule',
+                    'licensed',
+                    'lastAccessed',
+                    'emailAlert',
+                    'alertTimeout',
+                    'mediaInventoryStatus',
+                    'clientCode',
+                    'screenShotRequested',
+                    'lastCommandSuccess'
+                ]
+            ]);
         }
 
         // Paging

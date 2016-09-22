@@ -595,14 +595,6 @@ class Campaign extends Base
     /**
      * Returns a Campaign's preview
      * @param int $campaignId
-     *
-     * @SWG\Get(
-     *  path="/campaign/{campaignId}",
-     *  operationId="campaignPreview",
-     *  tags={"campaign"},
-     *  summary="Preview Campaign",
-     *  description="Preview an existing Campaign"
-     * )
      */
     public function preview($campaignId)
     {

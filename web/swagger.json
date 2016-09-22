@@ -503,6 +503,13 @@
                         "description": "The DataSet ID",
                         "required": true,
                         "type": "integer"
+                    },
+                    {
+                        "name": "dataSetColumnId",
+                        "in": "formData",
+                        "description": "Filter by DataSet ColumnID",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -866,6 +873,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "hardwareKey",
+                        "in": "formData",
+                        "description": "Filter by Hardware Key",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "clientVersion",
                         "in": "formData",
                         "description": "Filter by Client Version",
@@ -1090,7 +1104,7 @@
             }
         },
         "/display/wol/{displayId}": {
-            "get": {
+            "post": {
                 "tags": [
                     "display"
                 ],
@@ -2339,6 +2353,33 @@
                 }
             }
         },
+        "/layout/status/{layoutId}": {
+            "get": {
+                "tags": [
+                    "layout"
+                ],
+                "summary": "Layout Status",
+                "description": "Calculate the Layout status and return a Layout",
+                "operationId": "layoutStatus",
+                "parameters": [
+                    {
+                        "name": "layoutId",
+                        "in": "path",
+                        "description": "The Layout Id to Untag",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Layout"
+                        }
+                    }
+                }
+            }
+        },
         "/library": {
             "get": {
                 "tags": [
@@ -2382,6 +2423,20 @@
                         "description": "Filter by Retired",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "Filter by Duration - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "fileSize",
+                        "in": "formData",
+                        "description": "Filter by File Size - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -3334,6 +3389,7 @@
                 "tags": [
                     "schedule"
                 ],
+                "summary": "Generates the calendar that we draw events on",
                 "operationId": "scheduleCalendarData",
                 "parameters": [
                     {
@@ -3480,6 +3536,17 @@
                         "required": false,
                         "type": "string",
                         "format": "date-time"
+                    },
+                    {
+                        "name": "recurrenceRepeatsOn",
+                        "in": "formData",
+                        "description": "The days of the week that this event repeats - weekly only",
+                        "required": false,
+                        "type": "string",
+                        "format": "array",
+                        "items": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "responses": {
@@ -3599,7 +3666,7 @@
                         ]
                     },
                     {
-                        "name": "recurrentDetail",
+                        "name": "recurrenceDetail",
                         "in": "formData",
                         "description": "The interval for the recurrence.",
                         "required": false,
@@ -3612,6 +3679,17 @@
                         "required": false,
                         "type": "string",
                         "format": "date-time"
+                    },
+                    {
+                        "name": "recurrenceRepeatsOn",
+                        "in": "formData",
+                        "description": "The days of the week that this event repeats - weekly only",
+                        "required": false,
+                        "type": "string",
+                        "format": "array",
+                        "items": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "responses": {
@@ -4341,6 +4419,10 @@
                 },
                 "numberLayouts": {
                     "description": "The number of Layouts associated with this Campaign",
+                    "type": "integer"
+                },
+                "totalDuration": {
+                    "description": "The total duration of the campaign (sum of layout's durations)",
                     "type": "integer"
                 }
             }
@@ -5407,6 +5489,10 @@
                 "recurrenceRange": {
                     "description": "A Unix timestamp indicating the end time of the recurring events.",
                     "type": "integer"
+                },
+                "recurrenceRepeatsOn": {
+                    "description": "Recurrence repeats on days - 0 to 7 where 0 is a monday",
+                    "type": "string"
                 },
                 "campaign": {
                     "description": "The Campaign/Layout Name",

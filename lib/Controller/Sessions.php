@@ -76,15 +76,19 @@ class Sessions extends Base
             'fromDt' => $this->getSanitizer()->getString('fromDt')
         ]));
 
-        foreach ($sessions as $row) {
-            /* @var \Xibo\Entity\Session $row */
+        if (!$this->isApi() && $this->getUser()->isSuperAdmin()) {
+            foreach ($sessions as $row) {
+                /* @var \Xibo\Entity\Session $row */
 
-            // Edit
-            $row->buttons[] = array(
-                'id' => 'sessions_button_logout',
-                'url' => $this->urlFor('sessions.confirm.logout.form', ['id' => $row->userId]),
-                'text' => __('Logout')
-            );
+                $row->includeProperty('buttons');
+
+                // Edit
+                $row->buttons[] = array(
+                    'id' => 'sessions_button_logout',
+                    'url' => $this->urlFor('sessions.confirm.logout.form', ['id' => $row->sessionId]),
+                    'text' => __('Logout')
+                );
+            }
         }
 
         $this->getState()->template = 'grid';
@@ -94,30 +98,35 @@ class Sessions extends Base
 
     /**
      * Confirm Logout Form
-     * @param int $userId
+     * @param int $sessionId
      */
-    function confirmLogoutForm($userId)
+    function confirmLogoutForm($sessionId)
     {
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
         $this->getState()->template = 'sessions-form-confirm-logout';
         $this->getState()->setData([
-            'userId' => $userId,
+            'sessionId' => $sessionId,
             'help' => $this->getHelp()->link('Sessions', 'Logout')
         ]);
     }
 
     /**
      * Logout
-     * @param int $userId
+     * @param int $sessionId
      */
-    function logout($userId)
+    function logout($sessionId)
     {
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $this->store->update('UPDATE `session` SET IsExpired = 1 WHERE userID = :userId ', ['userId' => $userId]);
+        $session = $this->sessionFactory->getById($sessionId);
+
+        if ($session->userId != 0)
+            $this->store->update('UPDATE `session` SET IsExpired = 1 WHERE userID = :userId ', ['userId' => $session->userId]);
+        else
+            $this->store->update('UPDATE `session` SET IsExpired = 1 WHERE session_id = :session_id ', ['session_id' => $sessionId]);
 
         // Return
         $this->getState()->hydrate([

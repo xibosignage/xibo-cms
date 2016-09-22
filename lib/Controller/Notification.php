@@ -308,7 +308,7 @@ class Notification extends Base
      *      name="releaseDt",
      *      in="formData",
      *      description="ISO date representing the release date for this notification",
-     *      type="integer",
+     *      type="string",
      *      required=true
      *   ),
      *  @SWG\Parameter(
@@ -388,7 +388,7 @@ class Notification extends Base
      * Edit Notification
      * @param int $notificationId
      *
-     * @SWG\Post(
+     * @SWG\Put(
      *  path="/notification/{notificationId}",
      *  operationId="notificationEdit",
      *  tags={"notification"},
@@ -419,7 +419,7 @@ class Notification extends Base
      *      name="releaseDt",
      *      in="formData",
      *      description="ISO date representing the release date for this notification",
-     *      type="integer",
+     *      type="string",
      *      required=true
      *   ),
      *  @SWG\Parameter(

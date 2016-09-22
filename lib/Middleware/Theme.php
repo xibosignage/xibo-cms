@@ -62,6 +62,7 @@ class Theme extends Middleware
         // Date format
         $settings['DATE_FORMAT_JS'] = $app->dateService->convertPhpToMomentFormat($settings['DATE_FORMAT']);
         $settings['DATE_FORMAT_BOOTSTRAP'] = $app->dateService->convertPhpToBootstrapFormat($settings['DATE_FORMAT']);
+        $settings['DATE_FORMAT_BOOTSTRAP_DATEONLY'] = $app->dateService->convertPhpToBootstrapFormat($settings['DATE_FORMAT'], false);
 
         // Resolve the current route name
         $routeName = ($app->router()->getCurrentRoute() == null) ? 'notfound' : $app->router()->getCurrentRoute()->getName();
@@ -71,11 +72,13 @@ class Theme extends Middleware
             'route' => $routeName,
             'theme' => $app->configService,
             'settings' => $settings,
+            'helpService' => $app->helpService,
             'translate' => [
                 'locale' => Translate::GetLocale(),
                 'jsLocale' => Translate::GetJsLocale(),
                 'jsShortLocale' => ((strlen(Translate::GetJsLocale()) > 2) ? substr(Translate::GetJsLocale(), 0, 2) : Translate::GetJsLocale()),
-                'calendarLanguage' => ((strlen(Translate::GetJsLocale()) <= 2) ? Translate::GetJsLocale() . '-' . strtoupper(Translate::GetJsLocale()) : Translate::GetJsLocale())
+                'calendarLanguage' => ((strlen(Translate::GetJsLocale()) <= 2) ? Translate::GetJsLocale() . '-' . strtoupper(Translate::GetJsLocale()) : Translate::GetJsLocale()),
+                'boostrapSelectLanguage' => ((strlen(Translate::GetJsLocale()) <= 2) ? Translate::GetJsLocale() . '_' . strtoupper(Translate::GetJsLocale()) : Translate::GetJsLocale())
             ],
             'translations' => '{}',
             'libraryUpload' => [

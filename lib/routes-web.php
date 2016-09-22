@@ -75,6 +75,7 @@ $app->get('/login/ping', '\Xibo\Controller\Login:PingPong')->name('ping');
 //
 $app->get('/update', '\Xibo\Controller\Upgrade:displayPage')->name('upgrade.view');
 $app->post('/update/step/:id', '\Xibo\Controller\Upgrade:doStep')->name('upgrade.doStep');
+$app->delete('/update/step/:id', '\Xibo\Controller\Upgrade:skipStep')->name('upgrade.skipStep');
 
 //
 // schedule
@@ -206,6 +207,7 @@ $app->get('/dataset/view', '\Xibo\Controller\DataSet:displayPage')->name('dataSe
 $app->get('/dataset/data/view/:id', '\Xibo\Controller\DataSetData:displayPage')->name('dataSet.view.data');
 $app->get('/dataset/form/add', '\Xibo\Controller\DataSet:addForm')->name('dataSet.add.form');
 $app->get('/dataset/form/edit/:id', '\Xibo\Controller\DataSet:editForm')->name('dataSet.edit.form');
+$app->get('/dataset/form/copy/:id', '\Xibo\Controller\DataSet:copyForm')->name('dataSet.copy.form');
 $app->get('/dataset/form/delete/:id', '\Xibo\Controller\DataSet:deleteForm')->name('dataSet.delete.form');
 $app->get('/dataset/form/import/:id', '\Xibo\Controller\DataSet:importForm')->name('dataSet.import.form');
 // columns
@@ -293,7 +295,7 @@ $app->get('/transition/form/edit/:id', '\Xibo\Controller\Transition:editForm')->
 // sessions
 //
 $app->get('/sessions/view', '\Xibo\Controller\Sessions:displayPage')->name('sessions.view');
-$app->get('/sessions/form/logout', '\Xibo\Controller\Sessions:confirmLogoutForm')->name('sessions.confirm.logout.form');
+$app->get('/sessions/form/logout/:id', '\Xibo\Controller\Sessions:confirmLogoutForm')->name('sessions.confirm.logout.form');
 
 //
 // fault
@@ -332,3 +334,11 @@ $app->get('/command/view', '\Xibo\Controller\Command:displayPage')->name('comman
 $app->get('/command/form/add', '\Xibo\Controller\Command:addForm')->name('command.add.form');
 $app->get('/command/form/edit/:id', '\Xibo\Controller\Command:editForm')->name('command.edit.form');
 $app->get('/command/form/delete/:id', '\Xibo\Controller\Command:deleteForm')->name('command.delete.form');
+
+//
+// Daypart
+//
+$app->get('/daypart/view', '\Xibo\Controller\DayPart:displayPage')->name('daypart.view');
+$app->get('/daypart/form/add', '\Xibo\Controller\DayPart:addForm')->name('daypart.add.form');
+$app->get('/daypart/form/edit/:id', '\Xibo\Controller\DayPart:editForm')->name('daypart.edit.form');
+$app->get('/daypart/form/delete/:id', '\Xibo\Controller\DayPart:deleteForm')->name('daypart.delete.form');

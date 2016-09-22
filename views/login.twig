@@ -71,20 +71,6 @@
         </p>
     </div> <!-- /container -->
     <script src="{{ theme.uri("libraries/jquery/jquery-1.11.1.min.js") }}"></script>
-    <script src="{{ theme.uri("libraries/jquery/jquery.validate.min.js") }}"></script>
     <script src="{{ theme.uri("libraries/bootstrap/js/bootstrap.min.js") }}"></script>
-    <script src="{{ theme.uri("libraries/bootstrap/js/bootbox.min.js") }}"></script>
-    <script src="{{ theme.uri("js/xibo-cms.js") }}"></script>
-    <script src="{{ theme.uri("js/xibo-forms.js") }}"></script>
-    <script type="text/javascript">
-        var language = "{{ translate.jsLocale }}";
-        var dateFormat = "{{ settings.DATE_FORMAT }}";
-        var jsDateFormat = "{{ settings.DATE_FORMAT_JS }}";
-        var bootstrapDateFormat = "{{ settings.DATE_FORMAT_BOOTSTRAP }}";
-        var calendarType = "{{ settings.CALENDAR_TYPE }}";
-        var clockUrl = "{{ urlFor("clock") }}";
-        var calendarLanguage = "{{ translate.calendarLanguage }}";
-        var pingUrl = "{{ urlFor("ping") }}";
-    </script>
 </body>
 </html>

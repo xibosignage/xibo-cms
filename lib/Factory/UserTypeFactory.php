@@ -9,6 +9,7 @@
 namespace Xibo\Factory;
 
 
+use Xibo\Entity\User;
 use Xibo\Entity\UserType;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
@@ -41,6 +42,22 @@ class UserTypeFactory extends BaseFactory
     }
 
     /**
+     * @return User[]
+     */
+    public function getAllRoles()
+    {
+        return $this->query();
+    }
+
+    /**
+     * @return User[]
+     */
+    public function getNonAdminRoles()
+    {
+        return $this->query(null, ['userOnly' => 1]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[Transition]
@@ -53,8 +70,14 @@ class UserTypeFactory extends BaseFactory
 
         try {
             $sql = '
-            SELECT userTypeId, userType FROM `usertype`
+            SELECT userTypeId, userType 
+              FROM `usertype`
+             WHERE 1 = 1
             ';
+
+            if ($this->getSanitizer()->getInt('userOnly', $filterBy) !== null) {
+                $sql .= ' AND `userTypeId` = 3 ';
+            }
 
             // Sorting?
             if (is_array($sortOrder))

@@ -477,6 +477,22 @@ class MediaFactory extends BaseFactory
             $body .= " ) ";
         }
 
+        // File size
+        if ($this->getSanitizer()->getString('fileSize') != null) {
+            $fileSize = $this->parseComparisonOperator($this->getSanitizer()->getString('fileSize'));
+
+            $body .= ' AND `media`.fileSize ' . $fileSize['operator'] . ' :fileSize ';
+            $params['fileSize'] = $fileSize['variable'];
+        }
+
+        // Duration
+        if ($this->getSanitizer()->getString('duration') != null) {
+            $duration = $this->parseComparisonOperator($this->getSanitizer()->getString('duration'));
+
+            $body .= ' AND `media`.duration ' . $duration['operator'] . ' :duration ';
+            $params['duration'] = $duration['variable'];
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))

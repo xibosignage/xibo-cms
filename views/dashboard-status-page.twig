@@ -138,7 +138,7 @@
                                 {% endif %}
                                 <tr class="{{ class }}">
                                     <td>{{ row.display }}</td>
-                                    <td><span class="glyphicon {% if row.loggedin == 1 %}glyphicon-ok{% else %}glyphicon-remove{% endif %}"></span></td>
+                                    <td><span class="glyphicon {% if row.loggedIn == 1 %}glyphicon-ok{% else %}glyphicon-remove{% endif %}"></span></td>
                                     <td><span class="glyphicon {% if row.licensed == 1 %}glyphicon-ok{% else %}glyphicon-remove{% endif %}"></span></td>
                                 </tr>
                             {% endfor %}

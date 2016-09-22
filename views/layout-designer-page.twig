@@ -70,17 +70,20 @@
                             </div>
 
                             <div class="col-md-2 text-center">
-
-                               <div class="designer-control-panel-checkbox override-layout">
+                                {% if currentUser.routeViewable("/user") %}
+                                <div class="designer-control-panel-checkbox override-layout">
                                     <input type="checkbox" class="switch-check-box" name="lockPosition"  data-size="small" data-off-color="danger" data-on-color="success" data-label-width="100" data-label-text="{% trans "Lock Positions" %}" {% if currentUser.getOptionValue("lockPosition", "false") == "true" %}checked="checked"{% endif %}
                                            data-on-text="{% trans "On" %}" data-off-text="{% trans "Off" %}"/>
                                 </div>
+                                {% endif %}
                             </div>
                             <div class="col-md-2 text-center">
+                                {% if currentUser.routeViewable("/user") %}
                                 <div class="designer-control-panel-checkbox override-layout">
                                     <input type="checkbox"  data-size="small" data-off-color="danger" data-on-color="success" class="switch-check-box" data-label-text="{% trans "Hide Controls" %}" data-label-width="100" name="hideControls" {% if currentUser.getOptionValue("hideControls", "false") == "true" %}checked="checked"{% endif %}
                                            data-on-text="{% trans "On" %}" data-off-text="{% trans "Off" %}"/>
                                 </div>
+                                {% endif %}
                             </div>
                             <div class="col-md-2 text-center">
                                 <div class="btn-group btn-group-justified" role="group" aria-label="...">

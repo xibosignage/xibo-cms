@@ -25,11 +25,9 @@ use Slim\Slim;
 use Xibo\Entity\User;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
-use Xibo\Service\ConfigService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\FactoryServiceInterface;
-use Xibo\Service\LogService;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 
@@ -178,7 +176,7 @@ class Base
 
     /**
      * Get Log
-     * @return LogService
+     * @return LogServiceInterface
      */
     public function getLog()
     {
@@ -196,7 +194,7 @@ class Base
 
     /**
      * Get Help
-     * @return \Xibo\Service\HelpService
+     * @return \Xibo\Service\HelpServiceInterface
      */
     protected function getHelp()
     {
@@ -214,7 +212,7 @@ class Base
 
     /**
      * Get Config
-     * @return ConfigService
+     * @return ConfigServiceInterface
      */
     public function getConfig()
     {

@@ -514,9 +514,11 @@ function permissionsFormOpen(dialog) {
 function permissionsFormSubmit(id) {
 
     var form = $("#" + id);
+    var $formContainer = form.closest(".permissions-form");
     var permissions = {
         "groupIds": $(form).data().permissions,
-        "cascade": $("#cascade").is(":checked")
+        "ownerId": $formContainer.find("select[name=ownerId]").val(),
+        "cascade": $formContainer.find("#cascade").is(":checked")
     };
     var data = $.param(permissions);
 

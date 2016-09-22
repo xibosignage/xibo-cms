@@ -25,6 +25,7 @@ namespace Xibo\Entity;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\WidgetAudioFactory;
 use Xibo\Factory\WidgetMediaFactory;
 use Xibo\Factory\WidgetOptionFactory;
@@ -175,6 +176,9 @@ class Widget implements \JsonSerializable
     /** @var  DisplayFactory */
     private $displayFactory;
 
+    /** @var  PlaylistFactory */
+    private $playlistFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -199,7 +203,7 @@ class Widget implements \JsonSerializable
     }
 
     /**
-     * @param $playlistFactory
+     * @param PlaylistFactory $playlistFactory
      * @return $this
      */
     public function setChildObjectDepencencies($playlistFactory)
@@ -215,7 +219,9 @@ class Widget implements \JsonSerializable
         $this->widgetOptions = array_map(function ($object) { return clone $object; }, $this->widgetOptions);
         $this->permissions = [];
 
-        // No need to clone the media
+        // No need to clone the media, but we should empty the original arrays of ids
+        $this->originalMediaIds = [];
+        $this->originalAudio = [];
     }
 
     /**

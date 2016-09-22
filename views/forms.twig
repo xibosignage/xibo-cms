@@ -116,7 +116,7 @@
     </div>
 {% endmacro %}
 
-{% macro dropdown(name, type, title, value, options, optionId, optionValue, helpText, groupClass, validation, accessKey, callBack, dataAttributes, optionGroups) %}
+{% macro dropdown(name, type, title, value, options, optionId, optionValue, helpText, groupClass, validation, accessKey, callBack, dataAttributes, optionGroups, baseUrl, optionImageValue) %}
     <div class="form-group {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
@@ -145,9 +145,15 @@
                     {% if optionId == "" %}
                         {% set itemOptionId = option %}
                         {% set itemOptionValue = option %}
+                        {% if optionImageValue %}
+                            {% set itemOptionImageValue = option %}
+                        {% endif %}
                     {% else %}
                         {% set itemOptionId = attribute(option, optionId) %}
                         {% set itemOptionValue = attribute(option, optionValue) %}
+                        {% if optionImageValue %}
+                            {% set itemOptionImageValue = attribute(option, optionImageValue) %}
+                        {% endif %}
                     {% endif %}
 
                     {% if type == "dropdownmulti" %}
@@ -156,7 +162,11 @@
                         {% set selected = (itemOptionId == value) %}
                     {% endif %}
 
-                    <option value="{{ itemOptionId }}" {% if selected %}selected{% endif %}>{{ itemOptionValue }}</option>
+                    <option value="{{ itemOptionId }}" {% if selected %}selected{% endif %}
+                            {% if itemOptionImageValue %}
+                                data-content="<span class='media'><span class='media-left'><img style='max-width: 100px' src='{{ baseUrl }}{{ itemOptionImageValue }}' /></span> <span class='media-body'>{{ itemOptionValue }}</span></span>"
+                            {% endif %}
+                    >{{ itemOptionValue }}</option>
                 {% endfor %}
 
                 {% if hasGroups %}

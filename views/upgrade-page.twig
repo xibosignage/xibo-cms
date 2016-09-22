@@ -81,12 +81,14 @@
             finishedTemplate = Handlebars.compile($("#upgrade-finished").html());
         });
 
+        var row, stepId, url;
+
         function clickStep(e) {
             e.preventDefault();
 
-            var row = $(this).closest("tr");
-            var stepId = row.data().stepId;
-            var url = row.data().stepUrl;
+            row = $(this).closest("tr");
+            stepId = row.data().stepId;
+            url = row.data().stepUrl;
 
             // Add a spinner
             row.find("span.stepResult").addClass("fa-cog fa-spin").removeClass("fa-times fa-check");
@@ -96,50 +98,63 @@
                 method: "POST",
                 url: url.replace(":id", stepId),
                 dataType: "json",
-                success: function (response) {
-
-                    row.find("span.stepResult").removeClass("fa-cog fa-spin");
-
-                    if (response.success) {
-
-                        // Update the status
-                        row.find("button.doStep").parent().html(stepId);
-                        row.find("span.stepResult").removeClass("fa-times").addClass("fa-check").parent().next().html(moment().format(jsDateFormat));
-                        row.find("td.stepDescription div.error").remove();
-
-                        // We want to move down (see if there is another step)
-                        var subsequentStep = row.next();
-
-                        if (subsequentStep.length == 0) {
-                            // Replace the whole page with the "finished" template and bomb out
-                            $(".widget-body").html(finishedTemplate());
-                            return;
-                        }
-
-                        var button = $("<button/>").addClass("doStep").addClass("btn").addClass("btn-sm").click(clickStep).html(subsequentStep.data().stepId);
-
-                        subsequentStep.children().eq(0).html(button);
-
-                        // Do the next one
-                        if (startButtonUsed)
-                            button.click();
-                    }
-                    else {
-                        startButtonUsed = false;
-
-                        row.find("span.stepResult").addClass("fa-times").removeClass("fa-check");
-
-                        toastr.error(response.message);
-
-                        // Append the error message under the step description
-                        var error = $("<div/>").addClass("error").html(response.message);
-                        row.find("td.stepDescription").append(error);
-                    }
-                },
+                success: stepResponse,
                 error: function (response) {
                     SystemMessage(response.responseText);
                 }
             });
+        }
+
+        function stepResponse(response) {
+
+            row.find("span.stepResult").removeClass("fa-cog fa-spin");
+
+            if (response.success) {
+
+                // Update the status
+                row.find("button.doStep").parent().html(stepId);
+                row.find("span.stepResult").removeClass("fa-times").addClass("fa-check").parent().next().html(moment().format(jsDateFormat));
+                row.find("td.stepDescription div.error").remove();
+
+                // We want to move down (see if there is another step)
+                var subsequentStep = row.next();
+
+                if (subsequentStep.length == 0) {
+                    // Replace the whole page with the "finished" template and bomb out
+                    $(".widget-body").html(finishedTemplate());
+                    return;
+                }
+
+                var button = $("<button/>").addClass("doStep").addClass("btn").addClass("btn-sm").click(clickStep).html(subsequentStep.data().stepId);
+
+                subsequentStep.children().eq(0).html(button);
+
+                // Do the next one
+                if (startButtonUsed)
+                    button.click();
+            }
+            else {
+                startButtonUsed = false;
+
+                row.find("span.stepResult").addClass("fa-times").removeClass("fa-check");
+
+                toastr.error(response.message);
+
+                // Append the error message under the step description
+                var skipButton = $("<span class=\"badge\">{%  trans "Skip this step" %} <i class=\"fa fa-times\"></i></span>").on("click", function() {
+                    $.ajax({
+                        method: "DELETE",
+                        url: url.replace(":id", stepId),
+                        success: stepResponse,
+                        error: function(response) {
+                            SystemMessage(response.responseText);
+                        }
+                    })
+                });
+
+                var error = $("<div/>").addClass("error").html(response.message).append(skipButton);
+                row.find("td.stepDescription").append(error);
+            }
         }
     </script>
 

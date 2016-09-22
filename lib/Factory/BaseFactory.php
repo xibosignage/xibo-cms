@@ -215,4 +215,34 @@ class BaseFactory
         // Set out params
         $sql = $sql . $permissionSql;
     }
+
+    /**
+     * @param $variable
+     * @return array
+     */
+    protected function parseComparisonOperator($variable)
+    {
+        $operator = '=';
+        $allowedOperators = [
+            'less-than' => '<',
+            'greater-than' => '>',
+            'less-than-equal' => '<=',
+            'greater-than-equal' => '>='
+        ];
+
+        if (stripos($variable, '|') !== false) {
+            $variable = explode('|', $variable);
+
+            if (array_key_exists($variable[0], $allowedOperators)) {
+                $operator = $allowedOperators[$variable[0]];
+            }
+
+            $variable = $variable[1];
+        }
+
+        return [
+            'operator' => $operator,
+            'variable' => $variable
+        ];
+    }
 }

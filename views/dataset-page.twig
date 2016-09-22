@@ -31,8 +31,10 @@
                     <table id="datasets" class="table table-striped">
                         <thead>
                             <tr>
+                                <th>{% trans "ID" %}</th>
                                 <th>{% trans "Name" %}</th>
                                 <th>{% trans "Description" %}</th>
+                                <th>{% trans "Code" %}</th>
                                 <th>{% trans "Owner" %}</th>
                                 <th>{% trans "Permissions" %}</th>
                                 <th></th>
@@ -62,8 +64,10 @@
                 }
             },
             "columns": [
+                { "data": "dataSetId" },
                 { "data": "dataSet" },
                 { "data": "description" },
+                { "data": "code" },
                 { "data": "owner" },
                 { "data": "groupsWithPermissions" },
                 {
@@ -95,7 +99,7 @@
                             maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
                             validExt: "{{ libraryUpload.validExt }}"
                         },
-                        columns: data.importColumns
+                        columns: data.columns
                     }),
                     title: "{% trans "CSV Import" %}",
                     buttons: {
