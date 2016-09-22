@@ -21,7 +21,6 @@
 namespace Xibo\Controller;
 
 use Stash\Interfaces\PoolInterface;
-use Xibo\Entity\Display;
 use Xibo\Entity\Media;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
@@ -1019,7 +1018,7 @@ class Library extends Base
         foreach ($this->displayFactory->query() as $display) {
             /** @var \Xibo\Entity\Display $display */
             $display->setMediaIncomplete();
-            $display->save(Display::$saveOptionsMinimum);
+            $display->save(\Xibo\Entity\Display::$saveOptionsMinimum);
         }
     }
 
