@@ -30,7 +30,7 @@ use Xibo\Factory\ModuleFactory;
 
 class ForecastIo extends ModuleWidget
 {
-    const API_ENDPOINT = 'https://api.forecast.io/forecast/';
+    const API_ENDPOINT = 'https://api.darksky.net/forecast/';
 
     private $resourceFolder;
     protected $codeSchemaVersion = 1;
@@ -52,10 +52,10 @@ class ForecastIo extends ModuleWidget
         if ($this->module == null) {
             // Install
             $module = $moduleFactory->createEmpty();
-            $module->name = 'Forecast IO';
+            $module->name = 'Weather';
             $module->type = 'forecastio';
             $module->class = 'Xibo\Widget\ForecastIo';
-            $module->description = 'Weather forecasting from Forecast IO';
+            $module->description = 'Weather Powered by DarkSky';
             $module->imageUri = 'forms/library.gif';
             $module->enabled = 1;
             $module->previewEnabled = 1;
@@ -301,7 +301,7 @@ class ForecastIo extends ModuleWidget
     /**
      * Get the forecast data for the provided display id
      * @param int $displayId
-     * @return array
+     * @return array|boolean
      */
     private function getForecastData($displayId)
     {
@@ -344,8 +344,10 @@ class ForecastIo extends ModuleWidget
 
             // Cache
             $cache->set($data);
-            $cache->expiresAfter($this->getSetting('cachePeriod'));
+            $cache->expiresAfter($this->getSetting('cachePeriod', 14400));
             $this->getPool()->saveDeferred($cache);
+        } else {
+            $this->getLog()->debug('Getting Forecast from cache');
         }
 
         // Icon Mappings

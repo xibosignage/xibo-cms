@@ -7,7 +7,7 @@
 
 
 namespace Xibo\Controller;
-use Xibo\Entity\DisplayGroup;
+// use Xibo\Entity\DisplayGroup;
 use Xibo\Entity\UserGroup;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayGroupFactory;
@@ -179,7 +179,7 @@ class Notification extends Base
         $users = [];
 
         foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var DisplayGroup $displayGroup */
+            /* @var Xibo\Entity\DisplayGroup $displayGroup */
 
             if ($displayGroup->isDisplaySpecific == 1) {
                 $displays[] = $displayGroup;
@@ -229,7 +229,7 @@ class Notification extends Base
         $users = [];
 
         foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var DisplayGroup $displayGroup */
+            /* @var Xibo\Entity\DisplayGroup $displayGroup */
 
             if ($displayGroup->isDisplaySpecific == 1) {
                 $displays[] = $displayGroup;

@@ -274,6 +274,9 @@ function refreshPreview(regionId) {
     // Refresh the preview
     var preview = Preview.instances[regionId];
     preview.SetSequence(preview.seq);
+
+    // Clear the layout status
+    $("#layout-status").removeClass("alert-success alert-danger").addClass("alert-info").html("<span class='fa fa-cog fa-spin'></span> " + translations.statusPending);
 }
 
 var loadTimeLineCallback = function(dialog) {
@@ -397,44 +400,44 @@ function layoutStatus(url) {
                 var element = $("<span>").addClass("fa");
 
                 if (response.extra.status == 1) {
-                    status.addClass("alert-success");
-                    element.addClass("fa-check");
+                    status.removeClass("alert-warning alert-info alert-danger").addClass("alert-success");
+                    element.removeClass("fa-question fa-cogs fa-times").addClass("fa-check");
                 }
                 else if (response.extra.status == 2) {
-                    status.addClass("alert-warning");
-                    element.addClass("fa-question");
+                    status.removeClass("alert-success alert-info alert-danger").addClass("alert-warning");
+                    element.removeClass("fa-check fa-cogs fa-times").addClass("fa-question");
                 }
                 else if (response.extra.status == 3) {
-                    status.addClass("alert-info");
-                    element.addClass("fa-cogs");
+                    status.removeClass("alert-success alert-warning alert-danger").addClass("alert-info");
+                    element.removeClass("fa-question fa-check fa-times").addClass("fa-cogs");
                 }
                 else {
-                    status.addClass("alert-danger");
-                    element.addClass("fa-times");
+                    status.removeClass("alert-success alert-info alert-warning").addClass("alert-danger");
+                    element.removeClass("fa-question fa-cogs fa-check").addClass("fa-times");
                 }
 
                 if (response.extra.status == 1) {
-                    $("#action-tab").find("i").removeClass('fa-bell').addClass('fa-bell');
+                    $("#action-tab").find("i").removeClass('fa-bell fa-check fa-times').addClass('fa-check');
                 }
                 else if (response.extra.status == 2) {
-                    $("#action-tab").find("i").removeClass('fa-bell').addClass('fa-bell');
+                    $("#action-tab").find("i").removeClass('fa-check fa-times').addClass('fa-bell');
                 }
                 else if (response.extra.status == 3) {
-                    $("#action-tab").find("i").removeClass('fa-bell').addClass('fa-bell');
+                    $("#action-tab").find("i").removeClass('fa-check fa-times').addClass('fa-bell');
                 }
                 else  {
-                    $("#action-tab").find("i").removeClass('fa-bell').addClass('fa-times');
+                    $("#action-tab").find("i").removeClass('fa-bell fa-check fa-times').addClass('fa-times');
                 }
 
 
                 if (response.extra.status == 1) {
-                    $("#schedule-btn").find("i").removeClass('fa-clock-o').addClass('fa-clock-o');
+                    $("#schedule-btn").find("i").removeClass('fa-times').addClass('fa-clock-o');
                 }
                 else if (response.extra.status == 2) {
-                    $("#schedule-btn").find("i").removeClass('fa-clock-o').addClass('fa-clock-o');
+                    $("#schedule-btn").find("i").removeClass('fa-times').addClass('fa-clock-o');
                 }
                 else if (response.extra.status == 3) {
-                    $("#schedule-btn").find("i").removeClass('fa-clock-o').addClass('fa-clock-o');
+                    $("#schedule-btn").find("i").removeClass('fa-times').addClass('fa-clock-o');
                 }
                 else  {
                     $("#schedule-btn").find("i").removeClass('fa-clock-o').addClass('fa-times');

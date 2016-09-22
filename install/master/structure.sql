@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS `dataset` (
   `Description` varchar(254) DEFAULT NULL,
   `UserID` int(11) NOT NULL,
   `LastDataEdit` int(11) NOT NULL DEFAULT '0',
-  `code` year(4) DEFAULT NULL,
+  `code` varchar(50) DEFAULT NULL,
   `isLookup` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`DataSetID`),
   KEY `UserID` (`UserID`)
@@ -896,7 +896,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   `UserID` int(11) NOT NULL AUTO_INCREMENT,
   `usertypeid` int(8) NOT NULL,
   `UserName` varchar(50) NOT NULL,
-  `UserPassword` varchar(128) NOT NULL,
+  `UserPassword` varchar(255) NOT NULL,
   `loggedin` tinyint(1) NOT NULL DEFAULT '0',
   `lastaccessed` datetime DEFAULT NULL,
   `email` varchar(50) DEFAULT NULL COMMENT 'The users email address',

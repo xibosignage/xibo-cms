@@ -73,15 +73,15 @@ class ResolutionTest extends LocalWebTestCase
     public function testAddSuccess($resolutionName, $resolutionWidth, $resolutionHeight)
     {
 
-        // Loop through any pre-existing resolutions to make sure we're not
-        // going to get a clash
+        # Loop through any pre-existing resolutions to make sure we're not
+        # going to get a clash
         foreach ($this->startResolutions as $tmpRes) {
             if ($tmpRes->resolution == $resolutionName) {
                 $this->skipTest("There is a pre-existing resolution with this name");
                 return;
             }
         }
-
+        # Create new resolutions with data from provideSuccessCases
         $response = $this->client->post('/resolution', [
             'resolution' => $resolutionName,
             'width' => $resolutionWidth,
@@ -111,6 +111,7 @@ class ResolutionTest extends LocalWebTestCase
 
         public function provideSuccessCases()
     {
+        # Sets of correct data, which should be successfuly added
         return [
             'resolution 1' => ['test resolution', 800, 200],
             'resolution 2' => ['different test resolution', 1069, 1699]
@@ -123,12 +124,13 @@ class ResolutionTest extends LocalWebTestCase
      */
     public function testAddFailure($resolutionName, $resolutionWidth, $resolutionHeight)
     {
+        # create new resolution with data from provideFailureCases
         $response = $this->client->post('/resolution', [
             'resolution' => $resolutionName,
             'width' => $resolutionWidth,
             'height' => $resolutionHeight
         ]);
-
+        # Check if it fails as expected
         $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
     }
 
@@ -139,6 +141,7 @@ class ResolutionTest extends LocalWebTestCase
      */
     public function provideFailureCases()
     {
+        # Sets of incorrect data, which should lead to a failure
         return [
             'incorrect width and height' => ['wrong parameters', 'abc', NULL],
             'incorrect width' => [12, 'width', 1699]
@@ -147,8 +150,7 @@ class ResolutionTest extends LocalWebTestCase
 
     /**
      * Edit an existing resolution
-     * @depends testAddSuccess
-     *  @group minimal
+     * @group minimal
      */
     public function testEdit()
     {
@@ -177,18 +179,17 @@ class ResolutionTest extends LocalWebTestCase
         $resolution = (new XiboResolution($this->getEntityProvider()))->getById($object->id);
         $this->assertSame($name, $resolution->resolution);
         $this->assertSame($newWidth, $resolution->width);
-
         # Clean up the resolution as we no longer need it
         $resolution->delete();
     }
 
     /**
      * Test delete
-     * @depends testAddSuccess
      * @group minimal
      */
     public function testDelete()
     {
+        # Generate two random names
         $name1 = Random::generateString(8, 'phpunit');
         $name2 = Random::generateString(8, 'phpunit');
         # Load in a couple of known resolutions
@@ -209,6 +210,7 @@ class ResolutionTest extends LocalWebTestCase
             }
         }
         $this->assertTrue($flag, 'Resolution ID ' . $res1->resolutionId . ' was not found after deleting a different Resolution');
+        # Clean up
         $res1->delete();
     }
 }

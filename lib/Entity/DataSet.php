@@ -93,6 +93,9 @@ class DataSet implements \JsonSerializable
 
     private $countLast = 0;
 
+    /** @var array Blacklist for SQL */
+    private $blackList = array(';', 'INSERT', 'UPDATE', 'SELECT', 'DELETE', 'TRUNCATE', 'TABLE', 'FROM', 'WHERE');
+
     /** @var  SanitizerServiceInterface */
     private $sanitizer;
 
@@ -171,7 +174,7 @@ class DataSet implements \JsonSerializable
     /**
      * Get Column
      * @param int[Optional] $dataSetColumnId
-     * @return array[DataSetColumn]|DataSetColumn
+     * @return DataSetColumn[]|DataSetColumn
      * @throws NotFoundException when the heading is provided and the column cannot be found
      */
     public function getColumn($dataSetColumnId = 0)
@@ -191,6 +194,60 @@ class DataSet implements \JsonSerializable
         } else {
             return $this->columns;
         }
+    }
+
+    /**
+     * Get Column
+     * @param string $dataSetColumn
+     * @return DataSetColumn[]|DataSetColumn
+     * @throws NotFoundException when the heading is provided and the column cannot be found
+     */
+    public function getColumnByName($dataSetColumn)
+    {
+        $this->load();
+
+        foreach ($this->columns as $column) {
+            /* @var DataSetColumn $column */
+            if ($column->heading == $dataSetColumn)
+                return $column;
+        }
+
+        throw new NotFoundException(sprintf(__('Column %s not found'), $dataSetColumn));
+    }
+
+    /**
+     * @param string[] $columns Column Names to select
+     * @return array
+     */
+    public function getUniqueColumnValues($columns)
+    {
+        $this->load();
+
+        $select = '';
+        foreach ($columns as $heading) {
+            // Check this exists
+            $found = false;
+            foreach ($this->columns as $column) {
+                if ($column->heading == $heading) {
+                    // Formula column?
+                    if ($column->dataSetColumnTypeId == 2) {
+                        $select .= str_replace($this->blackList, '', htmlspecialchars_decode($column->formula, ENT_QUOTES)) . ' AS `' . $column->heading . '`,';
+                    }
+                    else {
+                        $select .= '`' . $column->heading . '`,';
+                    }
+                    $found = true;
+                    break;
+                }
+            }
+
+            if (!$found)
+                throw new \InvalidArgumentException(__('Unknown Column ' . $heading));
+        }
+        $select = rtrim($select, ',');
+        // $select is safe
+
+        return $this->getStore()->select('SELECT DISTINCT ' . $select . ' FROM `dataset_' . $this->dataSetId . '`', []);
     }
 
     /**
@@ -216,8 +273,6 @@ class DataSet implements \JsonSerializable
         $params = [];
 
         // Sanitize the filter options provided
-        $blackList = array(';', 'INSERT', 'UPDATE', 'SELECT', 'DELETE', 'TRUNCATE', 'TABLE', 'FROM', 'WHERE');
-
         // Get the Latitude and Longitude ( might be used in a formula )
         if ($displayId == 0) {
             $displayGeoLocation = "GEOMFROMTEXT('POINT(" . $this->config->GetSetting('DEFAULT_LAT') . " " . $this->config->GetSetting('DEFAULT_LONG') . ")')";
@@ -246,7 +301,7 @@ class DataSet implements \JsonSerializable
 
             // Formula column?
             if ($column->dataSetColumnTypeId == 2) {
-                $formula = str_replace($blackList, '', htmlspecialchars_decode($column->formula, ENT_QUOTES));
+                $formula = str_replace($this->blackList, '', htmlspecialchars_decode($column->formula, ENT_QUOTES));
 
                 $heading = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula) . ' AS `' . $column->heading . '`';
             }
@@ -261,7 +316,7 @@ class DataSet implements \JsonSerializable
 
         // Filtering
         if ($filter != '') {
-            $body .= ' AND ' . str_replace($blackList, '', $filter);
+            $body .= ' AND ' . str_replace($this->blackList, '', $filter);
         }
 
         // Filter by ID

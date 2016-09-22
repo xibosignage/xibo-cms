@@ -288,3 +288,16 @@ INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES
 (11, 'Xibo\\Entity\\DayPart');
 
 INSERT INTO `oauth_scopes` (id, description) VALUES ('all', 'All access'),('mcaas', 'Media Conversion as a Service');
+
+INSERT INTO permission (entityId, groupId, objectId, view, edit, `delete`) VALUES
+  (1, 1, 1, 1, 0, 0),
+  (1, 1, 13, 1, 0, 0),
+  (1, 1, 4, 1, 0, 0),
+  (1, 1, 5, 1, 0, 0),
+  (1, 1, 3, 1, 0, 0),
+  (1, 1, 33, 1, 0, 0),
+  (1, 1, 28, 1, 0, 0),
+  (1, 1, 32, 1, 0, 0),
+  (1, 1, 2, 1, 0, 0),
+  (1, 1, 29, 1, 0, 0),
+  (1, 1, 11, 1, 0, 0);

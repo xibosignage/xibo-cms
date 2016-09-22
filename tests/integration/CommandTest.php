@@ -57,8 +57,9 @@ class CommandTest extends LocalWebTestCase
      */
     public function testListAll()
     {
+        # Get the list of all commands
         $this->client->get('/command');
-        
+        # Check if call was successful
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
@@ -81,7 +82,7 @@ class CommandTest extends LocalWebTestCase
                 return;
             }
         }
-
+        # Add new comands with arguments from provideSuccessCases
         $response = $this->client->post('/command', [
             'command' => $commandName,
             'description' => $commandDescription,
@@ -89,14 +90,14 @@ class CommandTest extends LocalWebTestCase
         ]);
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
         $object = json_decode($this->client->response->body());
-       
+        # Check if commands were added successfully and have correct parameters
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($commandName, $object->data->command);
         $this->assertSame($commandDescription, $object->data->description);
         $this->assertSame($commandCode, $object->data->code);
 
-        # Check that the command was added correctly
+        # Check again that the command was added correctly
         $command = (new XiboCommand($this->getEntityProvider()))->getById($object->id);
         $this->assertSame($commandName, $command->command);
         $this->assertSame($commandDescription, $command->description);
@@ -113,6 +114,7 @@ class CommandTest extends LocalWebTestCase
 
         public function provideSuccessCases()
     {
+        # Cases we provide to testAddSuccess, you can extend it by simply adding new case here
         return [
             'reboot' => ['test command', 'test description', '-reboot'],
             'binary' => ['test command 2', 'aaa', '|01100100|01100001|01101110|00001101'],
@@ -127,13 +129,13 @@ class CommandTest extends LocalWebTestCase
      */
     public function testAddFailure($commandName, $commandDescription, $commandCode)
     {
-
+        # Add new comands with arguments from provideFailureCases
         $response = $this->client->post('/command', [
             'command' => $commandName,
             'description' => $commandDescription,
             'code' => $commandCode
         ]);
-
+        # Check if commands are failing as expected
         $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
     }
 
@@ -145,6 +147,7 @@ class CommandTest extends LocalWebTestCase
 
     public function provideFailureCases()
     {
+        # Cases we provide to testAddFailure, you can extend it by simply adding new case here
         return [
             'No code' => ['No code', 'aa', NULL],
             'No description' => ['no description', NULL, 'code'], 
@@ -190,49 +193,45 @@ class CommandTest extends LocalWebTestCase
     }
 
     /**
-     * Edit an existing comand
-     * @depends testAddSuccess
+     * Edit an existing command
      */
     public function testEdit()
     {
         # Load in a known command
         /** @var XiboCommand $command */
         $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunit code');
-        # Change the comand name, description
+        # Generate new name and desciption
         $name = Random::generateString(8, 'command');
         $description = Random::generateString(8, 'description');
-
+        # Change name and description of earlier created command
         $this->client->put('/command/' . $command->commandId, [
             'command' => $name,
             'description' => $description,
             'code' => $command->code
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        
+        # Check if call was successful
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
         $object = json_decode($this->client->response->body());
-        
         # Examine the returned object and check that it's what we expect
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($name, $object->data->command);
         $this->assertSame($description, $object->data->description);
-
-        # Check that the command was actually renamed
+        # Check that the command name and description were actually renamed
         $command = (new XiboCommand($this->getEntityProvider()))->getById($object->id);
         $this->assertSame($name, $command->command);
         $this->assertSame($description, $command->description);
-
         # Clean up the Layout as we no longer need it
         $command->delete();
     }
 
      /**
      * Test delete
-     * @depends testAddSuccess
      * @group minimal
      */
     public function testDelete()
     {
+        # Generate random names
         $name1 = Random::generateString(8, 'phpunit');
         $name2 = Random::generateString(8, 'phpunit');
         # Load in a couple of known commands
@@ -253,6 +252,7 @@ class CommandTest extends LocalWebTestCase
             }
         }
         $this->assertTrue($flag, 'Command ID ' . $command1->commandId . ' was not found after deleting a different command');
+        # Clean up the first command as we no longer need it
         $command1->delete();
     }
 }

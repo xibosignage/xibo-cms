@@ -97,22 +97,15 @@ class Login extends Base
                 /* @var User $user */
                 $user = $this->userFactory->getByName($username);
 
-                // $this->getLog()->debug($user);
-
                 // Check password
                 $user->checkPassword($password);
-
-                // We are authenticated, so upgrade the user to the salted mechanism if necessary
-                if (!$user->isSalted()) {
-                    $user->setNewPassword($password);
-                    $user->save(['validate' => false, 'passwordUpdate' => true]);
-                }
 
                 // We are logged in!
                 $user->loggedIn = 1;
 
                 $this->getLog()->info('%s user logged in.', $user->userName);
 
+                // Set the userId on the log object
                 $this->getLog()->setUserId($user->userId);
 
                 // Overwrite our stored user with this new object.
