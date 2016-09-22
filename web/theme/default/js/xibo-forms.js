@@ -323,6 +323,8 @@ var forecastIoFormSetup = function() {
 
         $.each($('.bootbox').data().extra, function(index, value) {
             if (value.id == templateId) {
+                $("#widgetOriginalWidth").val(value.widgetOriginalWidth);
+                $("#widgetOriginalHeight").val(value.widgetOriginalHeight);
                 $("#currentTemplate").val(value.main);
                 $("#dailyTemplate").val(value.daily);
                 $("#styleSheet").val(value.css);
@@ -338,6 +340,8 @@ var forecastIoFormSetup = function() {
 
             $.each($('.bootbox').data().extra, function(index, value) {
                 if (value.id == templateId) {
+                    $("#widgetOriginalWidth").val(value.widgetOriginalWidth);
+                    $("#widgetOriginalHeight").val(value.widgetOriginalHeight);
                     $("#currentTemplate").val(value.main);
                     $("#dailyTemplate").val(value.daily);
                     $("#styleSheet").val(value.css);

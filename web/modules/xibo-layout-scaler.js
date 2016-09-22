@@ -1,6 +1,6 @@
 /**
 * Xibo - Digital Signage - http://www.xibo.org.uk
-* Copyright (C) 2009-2014 Daniel Garner
+* Copyright (C) 2009-2016 Daniel Garner
 *
 * This file is part of Xibo.
 *
@@ -19,8 +19,9 @@
 */
 jQuery.fn.extend({
     xiboLayoutScaler: function(options) {
-        var width; var height;
+        var width; var height; var newWidth; var newHeight;
 
+        // Region original width and height
         var originalWidth = options.originalWidth;
         var originalHeight = options.originalHeight;
 
@@ -33,20 +34,39 @@ jQuery.fn.extend({
             height = options.previewHeight;
         }
 
+        // Calculate the ratio to apply as a scale transform
         var ratio = Math.min(width / options.originalWidth, height / options.originalHeight);
 
+        // The layout designer might provide a scale override, which we need to use because we cannot tell whether
+        // the region has been resized or not. If it has been resized in the designer, but not saved, the original
+        // width and height will be incorrect (the old saved values). Scale override provides the correct
+        // scale in that case.
         if (options.scaleOverride !== 0) {
-            //console.log("Scale Override is set, meaning we want to scale according to the provided scale of " + options.scaleOverride + ". Provided Width is " + width + ". Provided Height is " + height + ".");
             ratio = options.scaleOverride;
-            originalWidth = width / ratio;
-            originalHeight = height / ratio;
         }
 
+        newWidth = width / ratio;
+        newHeight = height / ratio;
+
+        // The widget is scaled according to the layout dimensions
+
+        // Does the widget have an original design width/height
+        // if so, we need to further scale the widget
+        if ((options.widgetDesignWidth !== undefined && options.widgetDesignWidth !== null) || (options.widgetDesignHeight !== undefined && options.widgetDesignHeight !== null)) {
+            // Calculate the ratio between the new
+            var widgetRatio = Math.min(newWidth / options.widgetDesignWidth, newHeight / options.widgetDesignHeight);
+
+            ratio = ratio * widgetRatio;
+            newWidth = width / ratio;
+            newHeight = height / ratio;
+        }
+
+        // Apply these details
         $(this).each(function() {
 
             $(this).css({
-                width: originalWidth,
-                height: originalHeight
+                width: newWidth,
+                height: newHeight
             });
             
             // Handle the scaling
