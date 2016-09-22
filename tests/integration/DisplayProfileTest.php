@@ -54,6 +54,7 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
      */
     public function testListAll()
     {
+        # Get list of all isplay profiles
         $this->client->get('/displayprofile');
 
         $this->assertSame(200, $this->client->response->status());
@@ -109,6 +110,7 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
 
         public function provideSuccessCases()
     {
+        # Cases we provide to testAddSuccess, you can extend it by simply adding new case here
         return [
             'Android notDefault' => ['test profile', 'android', 0],
             'Windows notDefault' => ['different test profile', 'windows', 0],
@@ -122,12 +124,13 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
      */
     public function testAddFailure($profileName, $profileType, $profileIsDefault)
     {
+        # Add new display profile with argumets from provideFailureCases
         $response = $this->client->post('/displayprofile', [
             'name' => $profileName,
             'type' => $profileType,
             'isDefault' => $profileIsDefault
         ]);
-
+        # Check if it fails as expected
         $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
     }
 
@@ -139,6 +142,7 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
 
     public function provideFailureCases()
     {
+        # Cases we provide to testAddFailure, you can extend it by simply adding new case here
         return [
             'NULL Type' => ['no type', NULL, 0],
             'NULL name' => [NULL, 'android', 1],
@@ -173,7 +177,6 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
         # Check that the profile was actually renamed
         $displayProfile = (new XiboDisplayProfile($this->getEntityProvider()))->getById($object->id);
         $this->assertSame($name, $displayProfile->name);
-
         # Clean up the profile as we no longer need it
         $displayProfile->delete();
     }

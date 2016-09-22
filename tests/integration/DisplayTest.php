@@ -52,7 +52,9 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
      */
     public function testListAll()
     {
+        # Get all displays
         $this->client->get('/display');
+        # Check if successful
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
@@ -64,10 +66,10 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
      */
     public function testDelete()
     {
-        // Create a Display in the system
+        # Create a Display in the system
         $hardwareId = Random::generateString(12, 'phpunit');
         $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 'PHPUnit Test Display');
-        // Now find the Id of that Display
+        # Now find the Id of that Display
         $displays = (new XiboDisplay($this->getEntityProvider()))->get(['hardwareKey' => $hardwareId]);
         if (count($displays) != 1)
             $this->fail('Display was not added correctly');
@@ -82,15 +84,16 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
      */
     public function testEdit()
     {
-        // Create a Display in the system
+        # Create a Display in the system
         $hardwareId = Random::generateString(12, 'phpunit');
         $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 'PHPUnit Test Display');
-        // Now find the Id of that Display
+        # Now find the Id of that Display
         $displays = (new XiboDisplay($this->getEntityProvider()))->get(['hardwareKey' => $hardwareId]);
         if (count($displays) != 1)
             $this->fail('Display was not added correctly');
         /** @var XiboDisplay $display */
         $display = $displays[0];
+        # Edit display and change its name
         $this->client->put('/display/' . $display->displayId, [
             'display' => 'API EDITED',
             'isAuditing' => $display->isAuditing,
@@ -101,8 +104,10 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
             'emailAlert' => $display->emailAlert,
             'wakeOnLanEnabled' => $display->wakeOnLanEnabled,
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+        # Check if call was successful
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
         $object = json_decode($this->client->response->body());
+        # Check if display has new edited name
         $this->assertSame('API EDITED', $object->data->display);
     }
 
@@ -111,16 +116,17 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
      */
     public function testScreenshot()
     {
-        // Create a Display in the system
+        # Generate names for display and xmr channel
         $hardwareId = Random::generateString(12, 'phpunit');
         $xmrChannel = Random::generateString(50);
-        // This is a dummy pubKey and isn't used by anything important
+        # This is a dummy pubKey and isn't used by anything important
         $xmrPubkey = '-----BEGIN PUBLIC KEY-----
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDmdnXL4gGg3yJfmqVkU1xsGSQI
 3b6YaeAKtWuuknIF1XAHAHtl3vNhQN+SmqcNPOydhK38OOfrdb09gX7OxyDh4+JZ
 inxW8YFkqU0zTqWaD+WcOM68wTQ9FCOEqIrbwWxLQzdjSS1euizKy+2GcFXRKoGM
 pbBhRgkIdydXoZZdjQIDAQAB
 -----END PUBLIC KEY-----';
+        # Register our display
         $this->getXmdsWrapper()->RegisterDisplay($hardwareId,
             'PHPUnit Test Display',
             'windows',
@@ -132,15 +138,18 @@ pbBhRgkIdydXoZZdjQIDAQAB
             $xmrPubkey
         );
 
-        // Now find the Id of that Display
+        # Now find the Id of that Display
         $displays = (new XiboDisplay($this->getEntityProvider()))->get(['hardwareKey' => $hardwareId]);
         if (count($displays) != 1)
             $this->fail('Display was not added correctly');
         /** @var XiboDisplay $display */
         $display = $displays[0];
+        # Check if xmr channerl and pubkey were registered correctly
         $this->assertSame($xmrChannel, $display->xmrChannel, 'XMR Channel not set correctly by XMDS Register Display');
         $this->assertSame($xmrPubkey, $display->xmrPubKey, 'XMR PubKey not set correctly by XMDS Register Display');
+        # Call request screenshot
         $this->client->put('/display/requestscreenshot/' . $display->displayId);
+        # Check if successful
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
         $object = json_decode($this->client->response->body());
     }
@@ -150,8 +159,10 @@ pbBhRgkIdydXoZZdjQIDAQAB
      */
     public function testWoL()
     {
+        # Create dummy hardware key and mac address
         $hardwareId = Random::generateString(12, 'phpunit');
         $macAddress = '00-16-D9-C9-AE-69';
+        # Register our display
         $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 
             'PHPUnit Test Display', 
             'windows', 
@@ -162,14 +173,15 @@ pbBhRgkIdydXoZZdjQIDAQAB
             Random::generateString(50), 
             Random::generateString(50)
         );
-        // Now find the Id of that Display
+        # Now find the Id of that Display
         $displays = (new XiboDisplay($this->getEntityProvider()))->get(['hardwareKey' => $hardwareId]);
         if (count($displays) != 1)
             $this->fail('Display was not added correctly');
         /** @var XiboDisplay $display */
         $display = $displays[0];
+        # Check if mac address was added correctly
         $this->assertSame($macAddress, $display->macAddress, 'Mac Address not set correctly by XMDS Register Display');
-        
+        # Edit display and add broadcast channel
         $display->edit($display->display,
         $display->description, 
         $display->isAuditing, 
@@ -180,7 +192,7 @@ pbBhRgkIdydXoZZdjQIDAQAB
         $display->emailAlert, 
         $display->wakeOnLanEnabled, 
         '127.0.0.1');
-        // Call WOL
+        # Call WOL
         $this->client->post('/display/wol/' . $display->displayId);
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
     }

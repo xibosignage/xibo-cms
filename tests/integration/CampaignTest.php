@@ -62,8 +62,9 @@ class CampaignTest extends LocalWebTestCase
      */
     public function testListAll()
     {
+        # Get list of all campaigns
         $this->client->get('/campaign');
-
+        # Check if call was successful
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
@@ -76,16 +77,18 @@ class CampaignTest extends LocalWebTestCase
      */
     public function testAdd()
     {
+        # Generate random name
         $name = Random::generateString(8, 'phpunit');
-
+        # Add campaign
         $this->client->post('/campaign', [
             'name' => $name
         ]);
-
+        # Check if call was successful
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
+        # Check if campaign has he name we want it to have
         $this->assertSame($name, $object->data->campaign);
     }
 
@@ -94,17 +97,20 @@ class CampaignTest extends LocalWebTestCase
      */
     public function testEdit()
     {
+        # Generate name and add campaign
         $name = Random::generateString(8, 'phpunit');
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create($name);
+        # Generate new random name
         $newName = Random::generateString(8, 'phpunit');
-        
+        # Edit the campaign we added and change the name
         $this->client->put('/campaign/' . $campaign->campaignId, [
             'name' => $newName
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-
+        # check if cal was successful
         $this->assertSame(200, $this->client->response->status());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object);
+        # Check if campaign has the new name now
         $this->assertSame($newName, $object->data->campaign);
     }
 
@@ -113,6 +119,7 @@ class CampaignTest extends LocalWebTestCase
      */
     public function testDelete()
     {
+        # generate two random names
         $name1 = Random::generateString(8, 'phpunit');
         $name2 = Random::generateString(8, 'phpunit');
         # Load in a couple of known campaigns
@@ -132,7 +139,9 @@ class CampaignTest extends LocalWebTestCase
                 $flag = true;
             }
         }
+        # Check if everything is in order
         $this->assertTrue($flag, 'Campaign ID ' . $camp1->campaignId . ' was not found after deleting a different campaign');
+        # Cleanup
         $camp1->delete();
     }
 
@@ -140,7 +149,7 @@ class CampaignTest extends LocalWebTestCase
      * Assign Layout
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function testAssignUnassignLayout()
+    public function testAssignLayout()
     {
         // Make a campaign with a known name
         $name = Random::generateString(8, 'phpunit');
@@ -149,7 +158,6 @@ class CampaignTest extends LocalWebTestCase
         // Get a layout for the test
         $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit description', '', 9);
         $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
-
         // Call assign on the default layout
         $this->client->post('/campaign/layout/assign/' . $campaign->campaignId, [
             'layoutId' => [
@@ -165,6 +173,25 @@ class CampaignTest extends LocalWebTestCase
         $campaignCheck = (new XiboCampaign($this->getEntityProvider()))->getById($campaign->campaignId);
         $this->assertSame($campaign->campaignId, $campaignCheck->campaignId, $this->client->response->body());
         $this->assertSame(1, $campaignCheck->numberLayouts, $this->client->response->body());
+        # Delete layout as we no longer need it
+        $campaign->delete();
+        $layout->delete();
+    }
+    /**
+     * Unassign Layout
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function testUnassignLayout()
+    {
+        // Make a campaign with a known name
+        $name = Random::generateString(8, 'phpunit');
+        /* @var XiboCampaign $campaign */
+        $campaign = (new XiboCampaign($this->getEntityProvider()))->create($name);
+        // Get a layout for the test
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit description', '', 9);
+        $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
+        // Assaign layout to campaign
+        $campaign->assignLayout($layout->layoutId);
         # Call unassign on the created layout
         $this->client->post('/campaign/layout/unassign/' . $campaign->campaignId, ['layoutId' => [['layoutId' => $layout->layoutId, 'displayOrder' => 1]]]);
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
@@ -172,7 +199,8 @@ class CampaignTest extends LocalWebTestCase
         $campaignCheck2 = (new XiboCampaign($this->getEntityProvider()))->getById($campaign->campaignId);
         $this->assertSame($campaign->campaignId, $campaignCheck2->campaignId, $this->client->response->body());
         $this->assertSame(0, $campaignCheck2->numberLayouts, $this->client->response->body());
-        # delete layout as we no longer need it
+        # Delete layout as we no longer need it
+        $campaign->delete();
         $layout->delete();
     }
 }
