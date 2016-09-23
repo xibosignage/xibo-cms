@@ -17,6 +17,7 @@ class FaultTest extends \Xibo\Tests\LocalWebTestCase
      * Collect data
      * This test modifies headers and we therefore need to run in a separate process
      * @runInSeparateProcess
+     * @preserveGlobalState disabled
      */
     public function testCollect()
     {

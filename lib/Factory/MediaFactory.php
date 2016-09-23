@@ -478,16 +478,16 @@ class MediaFactory extends BaseFactory
         }
 
         // File size
-        if ($this->getSanitizer()->getString('fileSize') != null) {
-            $fileSize = $this->parseComparisonOperator($this->getSanitizer()->getString('fileSize'));
+        if ($this->getSanitizer()->getString('fileSize', $filterBy) != null) {
+            $fileSize = $this->parseComparisonOperator($this->getSanitizer()->getString('fileSize', $filterBy));
 
             $body .= ' AND `media`.fileSize ' . $fileSize['operator'] . ' :fileSize ';
             $params['fileSize'] = $fileSize['variable'];
         }
 
         // Duration
-        if ($this->getSanitizer()->getString('duration') != null) {
-            $duration = $this->parseComparisonOperator($this->getSanitizer()->getString('duration'));
+        if ($this->getSanitizer()->getInt('duration', $filterBy) != null) {
+            $duration = $this->parseComparisonOperator($this->getSanitizer()->getInt('duration', $filterBy));
 
             $body .= ' AND `media`.duration ' . $duration['operator'] . ' :duration ';
             $params['duration'] = $duration['variable'];
