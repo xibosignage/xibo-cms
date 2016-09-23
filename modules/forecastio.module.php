@@ -483,6 +483,15 @@ class ForecastIo extends Module
             <currentTemplate><![CDATA[' . Kit::GetParam('currentTemplate', _POST, _HTMLSTRING) . ']]></currentTemplate>
             <dailyTemplate><![CDATA[' . Kit::GetParam('dailyTemplate', _POST, _HTMLSTRING) . ']]></dailyTemplate>');
 
+        if ($this->GetOption('useDisplayLocation') == 0) {
+            // Validate Lat/Long
+            if (!$this->isValidLatitude($this->GetOption('latitude')))
+                throw new \InvalidArgumentException(__('The latitude entered is not valid.'));
+
+            if (!$this->isValidLongitude($this->GetOption('longitude')))
+                throw new \InvalidArgumentException(__('The longitude entered is not valid.'));
+        }
+
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
         $this->UpdateRegion();
@@ -894,6 +903,22 @@ class ForecastIo extends Module
         // 1 = Valid
         // 2 = Unknown
         return 1;
+    }
+
+    private function isValidLatitude($latitude){
+        if (preg_match("/^-?([1-8]?[1-9]|[1-9]0)\.{1}\d{1,6}$/", $latitude)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private function isValidLongitude($longitude){
+        if (preg_match("/^-?([1]?[1-7][1-9]|[1]?[1-8][0]|[1-9]?[0-9])\.{1}\d{1,6}$/", $longitude)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
 ?>
