@@ -19,10 +19,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\SettingsFactory;
-use Xibo\Helper\Form;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -62,6 +62,9 @@ class Settings extends Base
 
         $this->pool = $pool;
         $this->settingsFactory = $settingsFactory;
+
+        // Initialise extra validation rules
+        v::with('Xibo\\Validation\\Rules\\');
     }
 
     /**
@@ -234,7 +237,14 @@ class Settings extends Base
                     mkdir($value . 'temp', 0777, true);
 
                 if (!is_writable($value . 'temp'))
-                    trigger_error(__('The Library Location you have picked is not writeable'), E_USER_ERROR);
+                    throw new \InvalidArgumentException(__('The Library Location you have picked is not writeable'));
+
+            } else if ($setting['setting'] == 'DEFAULT_LAT') {
+                if (!v::latitude()->validate($value))
+                    throw new \InvalidArgumentException(__('The latitude entered is not valid.'));
+            } else if ($setting['setting'] == 'DEFAULT_LONG') {
+                if (!v::longitude()->validate($value))
+                    throw new \InvalidArgumentException(__('The longitude entered is not valid.'));
             }
 
             $this->getConfig()->ChangeSetting($setting['setting'], $value);
