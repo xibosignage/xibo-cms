@@ -142,11 +142,14 @@ class ForecastIo extends ModuleWidget
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('Please enter a duration'));
 
-        if (!v::latitude()->validate($this->getOption('latitude')))
-            throw new \InvalidArgumentException(__('The latitude entered is not valid.'));
+        if ($this->getOption('useDisplayLocation') == 0) {
+            // Validate lat/long
+            if (!v::latitude()->validate($this->getOption('latitude')))
+                throw new \InvalidArgumentException(__('The latitude entered is not valid.'));
 
-        if (!v::longitude()->validate($this->getOption('longitude')))
-            throw new \InvalidArgumentException(__('The longitude entered is not valid.'));
+            if (!v::longitude()->validate($this->getOption('longitude')))
+                throw new \InvalidArgumentException(__('The longitude entered is not valid.'));
+        }
     }
 
     /**
