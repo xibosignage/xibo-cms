@@ -40,11 +40,35 @@
                 <table class="table table-bordered membersTable">
                     <tr>
                         <th>{% trans "Display" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Logged In" %}</th>
+                        <th>{% trans "Version" %}</th>
                         <th>{% trans "Member" %}</th>
                     </tr>
                     {% for item in checkboxes if item.type == "display" %}
                         <tr>
                             <td>{{ item.name }}</td>
+                            <td>
+                              <span class=
+                                {% if item.mediaInventoryStatus is same as(1) %}
+                                  "fa fa-check"
+                                {% elseif item.mediaInventoryStatus is same as(0)%}
+                                  "fa fa-times"
+                                {% else %}
+                                  "fa fa-cloud-download"
+                                {% endif %}
+                              ></span>
+                            </td>
+                            <td>
+                              <span class=
+                                {% if item.loggedIn is same as(1) %}
+                                  "fa fa-check"
+                                {% elseif item.loggedIn is same as(0)%}
+                                  "fa fa-times"
+                                {% endif %}
+                              ></span>
+                            </td>
+                            <td>{{ item.clientType }} {{item.clientVersion }}-{{ item.clientCode }}</td>
                             <td><input type="checkbox" data-member-id="{{ item.id }}" data-member-type="display" {{ item.value_checked }}></td>
                         </tr>
                     {% endfor %}
