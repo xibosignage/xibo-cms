@@ -390,7 +390,7 @@ class ModuleFactory extends BaseFactory
         $modules = $this->query();
         $paths = array_map(function ($module) {
             /* @var Module $module */
-            return $module->viewPath;
+            return str_replace_first('..', PROJECT_ROOT, $module->viewPath);
         }, $modules);
 
         $paths = array_unique($paths);

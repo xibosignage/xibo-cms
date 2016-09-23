@@ -51,7 +51,7 @@ class Theme extends Middleware
 
         // Does this theme provide an alternative view path?
         if ($app->configService->getThemeConfig('view_path') != '') {
-            $twig->prependPath($app->configService->getThemeConfig('view_path'));
+            $twig->prependPath(str_replace_first('..', PROJECT_ROOT, $app->configService->getThemeConfig('view_path')));
         }
 
         $settings = [];
