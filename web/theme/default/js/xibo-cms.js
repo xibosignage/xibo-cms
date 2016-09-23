@@ -1195,9 +1195,15 @@ function SystemMessageInline(messageText, modal) {
     if (messageText == '' || messageText == null) 
         return;
 
-    // TODO: if modal is null (or not a form), then pick the nearest .text error instead.
+    // if modal is null (or not a form), then pick the nearest .text error instead.
     if (modal == undefined || modal == null || modal.length == 0)
         modal = $(".modal");
+
+    // popup if no form
+    if (modal.length <= 0) {
+        toastr.error(messageText);
+        return;
+    }
 
     // Remove existing errors
     $(".form-error", modal).remove();
