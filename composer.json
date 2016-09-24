@@ -37,7 +37,7 @@
     }
   ],
   "require": {
-    "php": ">=5.5",
+    "php": ">=5.5.9",
     "slim/slim": "~2.6",
     "erusev/parsedown": "~1.5",
     "league/oauth2-server": "~4.1",
@@ -62,7 +62,9 @@
     "akrabat/rka-slim-controller": "^2.0",
     "phenx/php-font-lib": "^0.4.0",
     "abraham/twitteroauth": "^0.6.4",
-    "symfony/event-dispatcher": "^3.1"
+    "symfony/event-dispatcher": "^3.1",
+    "illuminate/database": "5.2.*",
+    "illuminate/cache": "5.2.*"
   },
   "require-dev": {
     "phpunit/phpunit": "~4.0",
