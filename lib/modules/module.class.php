@@ -1063,7 +1063,7 @@ END;
         Theme::Set('form_fields', $formFields);
 
         $this->response->html = Theme::RenderReturn('form_render');
-        $this->response->dialogTitle = 'Edit ' . $this->displayType;
+        $this->response->dialogTitle = __(sprintf('Edit %s', $this->displayType));
         $this->response->dialogSize = true;
         $this->response->dialogWidth = '450px';
         $this->response->dialogHeight = '280px';

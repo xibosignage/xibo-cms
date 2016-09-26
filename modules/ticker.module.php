@@ -780,7 +780,8 @@ class ticker extends Module
             'originalHeight' => $this->height,
             'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
             'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
-            'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+            'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0),
+            'copyright' => $this->GetOption('copyright')
         );
 
         // Generate a JSON string of substituted items.
@@ -1074,11 +1075,6 @@ class ticker extends Module
             }
 
             $items[] = $rowString;
-        }
-
-        // Copyright information?
-        if ($this->GetOption('copyright', '') != '') {
-            $items[] = '<span id="copyright">' . $this->GetOption('copyright') . '</span>';
         }
 
         // Return the formatted items

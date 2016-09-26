@@ -598,7 +598,7 @@ class Display extends Data {
                  WHERE `lkcampaignlayout`.layoutId IN (
                   SELECT layoutId
                     FROM `lkcampaignlayout`
-                   WHERE campaignId = 3
+                   WHERE campaignId = :campaignid
                   )
              ';
 
@@ -673,6 +673,9 @@ class Display extends Data {
                     'displayid' => $displayId,
                     'version_instructions' => json_encode($version_instructions)
                 ));
+
+            // Flag as incomplete
+            $this->FlagIncomplete($displayId);
 
             return true;
         }
