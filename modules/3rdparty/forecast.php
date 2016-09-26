@@ -4,7 +4,7 @@ namespace Forecast;
 
 class Forecast
 {
-    const API_ENDPOINT = 'https://api.forecast.io/forecast/';
+    const API_ENDPOINT = 'https://api.darksky.net/forecast/';
     private $api_key;
 
     public function __construct($api_key)

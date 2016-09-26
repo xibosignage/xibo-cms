@@ -31,10 +31,27 @@ jQuery.fn.extend({
             "speed": "2",
             "previewWidth": 0,
             "previewHeight": 0,
-            "scaleOverride": 0
+            "scaleOverride": 0,
+            "copyright": ""
         };
 
         options = $.extend({}, defaults, options);
+
+        // Calculate the dimensions of this item based on the preview/original dimensions
+        var width, height = 0;
+        if (options.previewWidth === 0 || options.previewHeight === 0) {
+            width = options.originalWidth;
+            height = options.originalHeight;
+        }
+        else {
+            width = options.previewWidth;
+            height = options.previewHeight;
+        }
+
+        if (options.scaleOverride !== 0) {
+            width = width / options.scaleOverride;
+            height = height / options.scaleOverride;
+        }
 
         // For each matched element
         this.each(function() {
@@ -110,6 +127,14 @@ jQuery.fn.extend({
 
                 itemsThisPage++;
             }
+
+            // Add copyright?
+            if (options.copyright != "") {
+                $("<div />")
+                    .addClass("item")
+                    .html("<div id='copyright'>" + options.copyright + "</div>")
+                    .appendTo(appendTo);
+            }
             
             // 4th objective - move the items around, start the timer
             // settings involved:
@@ -147,8 +172,8 @@ jQuery.fn.extend({
 
                 // Set the width on the cycled slides
                 $(slides, this).css({
-                    width: options.originalWidth,
-                    height: options.originalHeight
+                    width: width,
+                    height: height
                 });
 
                 // Cycle handles this for us
@@ -191,8 +216,8 @@ jQuery.fn.extend({
                         scaleFactor: options.scaleFactor,
                         behaviour: "scroll",
                         direction: options.direction,
-                        height: options.originalHeight,
-                        width: options.originalWidth
+                        height: height,
+                        width: width
                     });
 
                 $(this).wrapInner(scroller);

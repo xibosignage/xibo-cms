@@ -308,6 +308,11 @@ class timelineDAO extends baseDAO {
 
         $regions = json_decode($regions);
 
+        // Reusable region object
+        Kit::ClassLoader('region');
+        $regionObject = new region($db);
+        $regionObject->delayFinalise = true;
+
         foreach ($regions as $region) {
 
             $regionid = Kit::ValidateParam($region->regionid, _STRING);
@@ -317,10 +322,6 @@ class timelineDAO extends baseDAO {
             $height = Kit::ValidateParam($region->height, _DOUBLE);
 
             Debug::LogEntry('audit', 'Editing Region ' . $regionid);
-            
-            Kit::ClassLoader('region');
-            $regionObject = new region($db);
-            $regionObject->delayFinalise = true;
             $ownerId = $regionObject->GetOwnerId($layoutid, $regionid);
 
             $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
@@ -334,7 +335,10 @@ class timelineDAO extends baseDAO {
         // Set the layout status
         Kit::ClassLoader('Layout');
         $layout = new Layout($this->db);
-        $layout->SetValid($layoutid, true);
+        $layout->SetValid($layoutid);
+
+        // Notify once completed
+        $layout->notify($layoutid);
 		
 		$response->SetFormSubmitResponse('');
 		$response->hideMessage = true;

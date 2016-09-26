@@ -803,14 +803,9 @@ class Layout extends Data
                     'xml' => $xml
                 ));
 
-            // Get the Campaign ID
-            $campaign = new Campaign($this->db);
-            $campaignId = $campaign->GetCampaignId($layoutid);
-
             // Notify (dont error)
             if (!$this->delayFinalise) {
-                $displayObject = new Display($this->db);
-                $displayObject->NotifyDisplays($campaignId);
+                $this->notify($layoutid);
             }
         
             Debug::LogEntry('audit', 'OUT', 'Layout', 'SetLayoutXml');
@@ -826,6 +821,20 @@ class Layout extends Data
         
             return false;
         }
+    }
+
+    /**
+     * Notify layout of change
+     * @param int $layoutId
+     */
+    public function notify($layoutId)
+    {
+        // Get the Campaign ID
+        $campaign = new Campaign($this->db);
+        $campaignId = $campaign->GetCampaignId($layoutId);
+
+        $displayObject = new Display($this->db);
+        $displayObject->NotifyDisplays($campaignId);
     }
 
     /**
