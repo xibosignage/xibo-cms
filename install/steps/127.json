@@ -27,10 +27,6 @@
       "action": "INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES (NULL, 'Xibo\\Entity\\DayPart');"
     },
     {
-      "step": "Fix DataSet Code field type",
-      "action": "ALTER TABLE `dataset` MODIFY code VARCHAR(50) NULL;"
-    },
-    {
       "step": "Increase user password hash field size",
       "action": "ALTER TABLE `user` MODIFY `UserPassword` VARCHAR(255) NOT NULL;"
     }

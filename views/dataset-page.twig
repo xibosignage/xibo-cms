@@ -85,6 +85,12 @@
 
                 var template = Handlebars.compile($("#template-dataset-upload").html());
                 var data = table.row($(this).closest("tr")).data();
+                var columns = [];
+
+                $.each(data.columns, function (index, element) {
+                    if (element.dataSetColumnTypeId == 1)
+                        columns.push(element);
+                });
 
                 // Handle bars and open a dialog
                 bootbox.dialog({
@@ -99,7 +105,7 @@
                             maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
                             validExt: "{{ libraryUpload.validExt }}"
                         },
-                        columns: data.columns
+                        columns: columns
                     }),
                     title: "{% trans "CSV Import" %}",
                     buttons: {
