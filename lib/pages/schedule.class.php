@@ -154,7 +154,7 @@ class scheduleDAO extends baseDAO {
                 );
 
                 // Event URL
-                $url = ($editable) ? sprintf('index.php?p=schedule&q=EditEventForm&EventID=%d', $row['EventID']) : '#';
+                $url = ($editable) ? sprintf('index.php?p=schedule&q=EditEventForm&EventID=%d', Kit::ValidateParam($row['EventID'], _INT)) : '#';
 
                 // Classes used to distinguish between events
                 //$class = 'event-warning';
