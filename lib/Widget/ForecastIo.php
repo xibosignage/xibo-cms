@@ -450,6 +450,11 @@ class ForecastIo extends ModuleWidget
         // Convert a stdObject to an array
         $data = json_decode(json_encode($data), true);
 
+        //Today Daily values
+        $data['currently']['temperatureMaxFloor'] = (isset($data['daily']['data'][0]['temperatureMax'])) ? floor($data['daily']['data'][0]['temperatureMax']) : '--';
+        $data['currently']['temperatureMinFloor'] = (isset($data['daily']['data'][0]['temperatureMin'])) ? floor($data['daily']['data'][0]['temperatureMin']) : '--';
+        $data['currently']['temperatureMeanFloor'] = ($data['currently']['temperatureMaxFloor'] != '--' && $data['currently']['temperatureMinFloor'] != '--') ? floor((($data['currently']['temperatureMinFloor'] + $data['currently']['temperatureMaxFloor']) / 2)) : '--';
+
         // Process the icon for each day
         for ($i = 0; $i < 7; $i++) {
             // Are we set to only show daytime weather conditions?
