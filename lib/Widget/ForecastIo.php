@@ -23,10 +23,10 @@ namespace Xibo\Widget;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use Respect\Validation\Validator as v;
 use Xibo\Entity\Media;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\ModuleFactory;
-
 
 class ForecastIo extends ModuleWidget
 {
@@ -41,6 +41,9 @@ class ForecastIo extends ModuleWidget
     public function init()
     {
         $this->resourceFolder = PROJECT_ROOT . '/web/modules/forecastio';
+
+        // Initialise extra validation rules
+        v::with('Xibo\\Validation\\Rules\\');
     }
 
     /**
@@ -138,6 +141,15 @@ class ForecastIo extends ModuleWidget
     {
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('Please enter a duration'));
+
+        if ($this->getOption('useDisplayLocation') == 0) {
+            // Validate lat/long
+            if (!v::latitude()->validate($this->getOption('latitude')))
+                throw new \InvalidArgumentException(__('The latitude entered is not valid.'));
+
+            if (!v::longitude()->validate($this->getOption('longitude')))
+                throw new \InvalidArgumentException(__('The longitude entered is not valid.'));
+        }
     }
 
     /**
@@ -314,16 +326,21 @@ class ForecastIo extends ModuleWidget
 
                 $display = $this->displayFactory->getById($displayId);
 
-                if ($display->latitude != '' && $display->longitude != '') {
+                if ($display->latitude != '' && $display->longitude != '' && v::latitude()->validate($display->latitude) && v::longitude()->validate($display->longitude)) {
                     $defaultLat = $display->latitude;
                     $defaultLong = $display->longitude;
                 } else {
-                    $this->getLog()->error('Warning, display %s does not have a lat/long and yet a forecast widget is set to use display location.', $display->display);
+                    $this->getLog()->error('Warning, display %s does not have a lat/long or they are invalid, and yet a forecast widget is set to use display location.', $display->display);
                 }
             }
         } else {
             $defaultLat = $this->getOption('latitude', $defaultLat);
             $defaultLong = $this->getOption('longitude', $defaultLong);
+        }
+
+        if (!v::longitude()->validate($defaultLong) || !v::latitude()->validate($defaultLat)) {
+            $this->getLog()->error('Weather widget configured with incorrect lat/long. WidgetId is ' . $this->getWidgetId() . ', Lat is ' . $defaultLat . ', Lng is ' . $defaultLong);
+            return false;
         }
 
         $apiKey = $this->getSetting('apiKey');
