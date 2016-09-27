@@ -679,6 +679,12 @@ class ForecastIo extends Module
             $defaultLong = $this->GetOption('longitude', $defaultLong);
         }
 
+        // Validate lat/long
+        if (!$this->isValidLatitude($defaultLat) || !$this->isValidLongitude($defaultLong)) {
+            Debug::LogEntry('audit', 'Invalid lat/long');
+            return false;
+        }
+
         $apiKey = $this->GetSetting('apiKey');
         if ($apiKey == '')
             die(__('Incorrectly configured module'));
@@ -905,20 +911,22 @@ class ForecastIo extends Module
         return 1;
     }
 
-    private function isValidLatitude($latitude){
-        if (preg_match("/^-?([1-8]?[1-9]|[1-9]0)\.{1}\d{1,6}$/", $latitude)) {
-            return true;
-        } else {
+    private function isValidLatitude($latitude) {
+        if (!is_numeric($latitude))
             return false;
-        }
+
+        $latitude = doubleval($latitude);
+
+        return ($latitude >= -90 && $latitude <= 90);
     }
 
-    private function isValidLongitude($longitude){
-        if (preg_match("/^-?([1]?[1-7][1-9]|[1]?[1-8][0]|[1-9]?[0-9])\.{1}\d{1,6}$/", $longitude)) {
-            return true;
-        } else {
+    private function isValidLongitude($longitude) {
+        if (!is_numeric($longitude))
             return false;
-        }
+
+        $longitude = doubleval($longitude);
+
+        return ($longitude >= -180 && $longitude <= 180);
     }
 }
 ?>
