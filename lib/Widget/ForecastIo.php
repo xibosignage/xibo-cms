@@ -339,7 +339,7 @@ class ForecastIo extends ModuleWidget
         }
 
         if (!v::longitude()->validate($defaultLong) || !v::latitude()->validate($defaultLat)) {
-            $this->getLog()->error('Weather widget configured with incorrect lat/long. WidgetId is ' . $this->getWidgetId());
+            $this->getLog()->error('Weather widget configured with incorrect lat/long. WidgetId is ' . $this->getWidgetId() . ', Lat is ' . $defaultLat . ', Lng is ' . $defaultLong);
             return false;
         }
 
