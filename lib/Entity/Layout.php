@@ -744,7 +744,10 @@ class Layout implements \JsonSerializable
         $layoutNode->setAttribute('height', $this->height);
         $layoutNode->setAttribute('bgcolor', $this->backgroundColor);
         $layoutNode->setAttribute('schemaVersion', $this->schemaVersion);
-        $layoutNode->setAttribute('zindex', $this->backgroundzIndex);
+
+        // Only set the z-index if present
+        if ($this->backgroundzIndex != 0)
+            $layoutNode->setAttribute('zindex', $this->backgroundzIndex);
 
         if ($this->backgroundImageId != 0) {
             // Get stored as
@@ -813,7 +816,10 @@ class Layout implements \JsonSerializable
             $regionNode->setAttribute('height', $region->height);
             $regionNode->setAttribute('top', $region->top);
             $regionNode->setAttribute('left', $region->left);
-            $regionNode->setAttribute('zindex', $region->zIndex);
+
+            // Only set the zIndex if present
+            if ($region->zIndex != 0)
+                $regionNode->setAttribute('zindex', $region->zIndex);
 
             $layoutNode->appendChild($regionNode);
 

@@ -9,6 +9,7 @@
 namespace Xibo\Widget;
 
 
+use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\ModuleFactory;
 
@@ -19,6 +20,13 @@ use Xibo\Factory\ModuleFactory;
 class GoogleTraffic extends ModuleWidget
 {
     public $codeSchemaVersion = 1;
+
+    /** @inheritdoc */
+    public function init()
+    {
+        // Initialise extra validation rules
+        v::with('Xibo\\Validation\\Rules\\');
+    }
 
     /**
      * Install or Update this module
@@ -115,6 +123,15 @@ class GoogleTraffic extends ModuleWidget
 
         if ($this->getOption('zoom') == '')
             throw new \InvalidArgumentException(__('Please enter a zoom level'));
+
+        if ($this->getOption('useDisplayLocation') == 0) {
+            // Validate lat/long
+            if (!v::latitude()->validate($this->getOption('latitude')))
+                throw new \InvalidArgumentException(__('The latitude entered is not valid.'));
+
+            if (!v::longitude()->validate($this->getOption('longitude')))
+                throw new \InvalidArgumentException(__('The longitude entered is not valid.'));
+        }
     }
 
     /**
@@ -166,7 +183,7 @@ class GoogleTraffic extends ModuleWidget
 
                 $display = $this->displayFactory->getById($displayId);
 
-                if ($display->latitude != '' && $display->longitude != '') {
+                if ($display->latitude != '' && $display->longitude != '' && v::latitude()->validate($display->latitude) && v::longitude()->validate($display->longitude)) {
                     $defaultLat = $display->latitude;
                     $defaultLong = $display->longitude;
                 } else {
@@ -176,6 +193,11 @@ class GoogleTraffic extends ModuleWidget
         } else {
             $defaultLat = $this->getOption('latitude', $defaultLat);
             $defaultLong = $this->getOption('longitude', $defaultLong);
+        }
+
+        if (!v::longitude()->validate($defaultLong) || !v::latitude()->validate($defaultLat)) {
+            $this->getLog()->error('Traffic widget configured with incorrect lat/long. WidgetId is ' . $this->getWidgetId() . ', Lat is ' . $defaultLat . ', Lng is ' . $defaultLong);
+            return false;
         }
 
         // Include some vendor items
