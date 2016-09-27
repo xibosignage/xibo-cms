@@ -20,10 +20,11 @@ class Latitude extends AbstractRule
     /** @inheritdoc */
     public function validate($input)
     {
-        if (preg_match("/^-?([1-8]?[1-9]|[1-9]0)\.{1}\d{1,6}$/", $input)) {
-            return true;
-        } else {
+        if (!is_double($input))
             return false;
-        }
+
+        $latitude = doubleval($input);
+
+        return ($latitude >= -90 && $latitude <= 90);
     }
 }

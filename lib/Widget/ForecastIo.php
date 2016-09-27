@@ -326,7 +326,7 @@ class ForecastIo extends ModuleWidget
 
                 $display = $this->displayFactory->getById($displayId);
 
-                if ($display->latitude != '' && $display->longitude != '' && !v::latitude()->validate($display->latitude) && !v::longitude()->validate($display->longitude)) {
+                if ($display->latitude != '' && $display->longitude != '' && v::latitude()->validate($display->latitude) && v::longitude()->validate($display->longitude)) {
                     $defaultLat = $display->latitude;
                     $defaultLong = $display->longitude;
                 } else {

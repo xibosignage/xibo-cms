@@ -23,10 +23,11 @@ class Longitude extends AbstractRule
      */
     public function validate($input)
     {
-        if (preg_match("/^-?([1]?[1-7][1-9]|[1]?[1-8][0]|[1-9]?[0-9])\.{1}\d{1,6}$/", $input)) {
-            return true;
-        } else {
+        if (!is_double($input))
             return false;
-        }
+
+        $longitude = doubleval($input);
+
+        return ($longitude >= -180 && $longitude <= 180);
     }
 }
