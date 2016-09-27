@@ -23,7 +23,7 @@ class Longitude extends AbstractRule
      */
     public function validate($input)
     {
-        if (!is_double($input))
+        if (!is_numeric($input))
             return false;
 
         $longitude = doubleval($input);

@@ -20,7 +20,7 @@ class Latitude extends AbstractRule
     /** @inheritdoc */
     public function validate($input)
     {
-        if (!is_double($input))
+        if (!is_numeric($input))
             return false;
 
         $latitude = doubleval($input);
