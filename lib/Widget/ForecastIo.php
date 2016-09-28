@@ -168,7 +168,6 @@ class ForecastIo extends ModuleWidget
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('icons', $this->getSanitizer()->getString('icons'));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
-        $this->setOption('size', $this->getSanitizer()->getDouble('size', 1));
         $this->setOption('units', $this->getSanitizer()->getString('units'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('lang', $this->getSanitizer()->getString('lang'));
@@ -201,7 +200,6 @@ class ForecastIo extends ModuleWidget
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('icons', $this->getSanitizer()->getString('icons'));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
-        $this->setOption('size', $this->getSanitizer()->getDouble('size'));
         $this->setOption('units', $this->getSanitizer()->getString('units'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('lang', $this->getSanitizer()->getString('lang'));
@@ -578,27 +576,6 @@ class ForecastIo extends ModuleWidget
 
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
-
-        // Do we need to scale the inner content? Size provided?
-        $size = $this->getOption('size', 1);
-
-        if ($size != 1) {
-            $javaScript .= '
-                <script type="text/javascript">
-                    if ($("body").hasClass("ie7") || $("body").hasClass("ie8")) {
-                        $("#content").css({
-                            "filter": "progid:DXImageTransform.Microsoft.Matrix(M11=' . $size . ', M12=0, M21=0, M22=' . $size . ', SizingMethod=\'auto expand\'"
-                        });
-                    }
-                    else {
-                        $("#content").css({
-                            "transform": "scale(' . $size . ')",
-                            "transform-origin": "top center"
-                        });
-                    }
-                </script>
-            ';
-        }
 
         // Handle the daily template (if its here)
         $dailySubs = '';

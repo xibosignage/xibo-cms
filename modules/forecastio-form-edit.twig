@@ -217,10 +217,6 @@
                         {% set helpText %}{% trans "Select the icon set you would like to use." %}{% endset %}
                         {{ forms.dropdown("icons", "single", title, module.getOption("icons"), module.iconsAvailable(), "id", "value", helpText, "icon-controls") }}
 
-                        {% set title %}{% trans "Size" %}{% endset %}
-                        {% set helpText %}{% trans "Set the size. Start at 1 and work up until the widget fits your region appropriately." %}{% endset %}
-                        {{ forms.number("size", title, module.getOption("size"), helpText, "template-selector-control", "number") }}
-
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
                         {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate"), helpText) }}
