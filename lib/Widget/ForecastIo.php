@@ -81,6 +81,7 @@ class ForecastIo extends ModuleWidget
     {
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/bootstrap.min.css')->save();
 
         foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
             /* @var Media $media */
@@ -167,12 +168,13 @@ class ForecastIo extends ModuleWidget
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('icons', $this->getSanitizer()->getString('icons'));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
-        $this->setOption('size', $this->getSanitizer()->getDouble('size', 1));
         $this->setOption('units', $this->getSanitizer()->getString('units'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('lang', $this->getSanitizer()->getString('lang'));
         $this->setOption('dayConditionsOnly', $this->getSanitizer()->getCheckbox('dayConditionsOnly'));
-
+        
+        $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
+        $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
         $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
         $this->setRawNode('currentTemplate', $this->getSanitizer()->getParam('currentTemplate', null));
         $this->setRawNode('dailyTemplate', $this->getSanitizer()->getParam('dailyTemplate', null));
@@ -198,12 +200,13 @@ class ForecastIo extends ModuleWidget
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('icons', $this->getSanitizer()->getString('icons'));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
-        $this->setOption('size', $this->getSanitizer()->getDouble('size'));
         $this->setOption('units', $this->getSanitizer()->getString('units'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('lang', $this->getSanitizer()->getString('lang'));
         $this->setOption('dayConditionsOnly', $this->getSanitizer()->getCheckbox('dayConditionsOnly'));
 
+        $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
+        $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
         $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
         $this->setRawNode('currentTemplate', $this->getSanitizer()->getParam('currentTemplate', null));
         $this->setRawNode('dailyTemplate', $this->getSanitizer()->getParam('dailyTemplate', null));
@@ -229,16 +232,16 @@ class ForecastIo extends ModuleWidget
 
     /**
      * Units supported by Forecast.IO API
-     * @return array The Units Available
+     * @return array The Units Available (temperature and wind speed)
      */
     public function unitsAvailable()
     {
         return array(
-            array('id' => 'auto', 'value' => 'Automatically select based on geographic location', 'tempUnit' => ''),
-            array('id' => 'ca', 'value' => 'Canada', 'tempUnit' => 'F'),
-            array('id' => 'si', 'value' => 'Standard International Units', 'tempUnit' => 'C'),
-            array('id' => 'uk', 'value' => 'United Kingdom', 'tempUnit' => 'C'),
-            array('id' => 'us', 'value' => 'United States', 'tempUnit' => 'F'),
+            array('id' => 'auto', 'value' => 'Automatically select based on geographic location', 'tempUnit' => '', 'windUnit' => ''),
+            array('id' => 'ca', 'value' => 'Canada', 'tempUnit' => 'F', 'windUnit' => 'KPH'),
+            array('id' => 'si', 'value' => 'Standard International Units', 'tempUnit' => 'C', 'windUnit' => 'MPS'),
+            array('id' => 'uk2', 'value' => 'United Kingdom', 'tempUnit' => 'C', 'windUnit' => 'MPH'),
+            array('id' => 'us', 'value' => 'United States', 'tempUnit' => 'F', 'windUnit' => 'MPH'),
         );
     }
 
@@ -285,30 +288,44 @@ class ForecastIo extends ModuleWidget
     /**
      * Get Tab
      */
-    public function getTab($tab)
-    {
-        if (!$data = $this->getForecastData(0))
-            throw new NotFoundException(__('No data returned, please check error log.'));
-
-        $rows = array();
-        foreach ($data['currently'] as $key => $value) {
-            if (stripos($key, 'time')) {
-                $value = $this->getDate()->getLocalDate($value);
-            }
-
-            $rows[] = array('forecast' => __('Current'), 'key' => $key, 'value' => $value);
-        }
-
-        foreach ($data['daily']['data'][0] as $key => $value) {
-            if (stripos($key, 'time')) {
-                $value = $this->getDate()->getLocalDate($value);
-            }
-
-            $rows[] = array('forecast' => __('Daily'), 'key' => $key, 'value' => $value);
-        }
-
-        return ['forecast' => $rows];
-    }
+     public function getTab($tab)
+     {
+         if ($tab == 'forecast') {
+             if (!$data = $this->getForecastData(0))
+                 throw new NotFoundException(__('No data returned, please check error log.'));
+             $rows = array();
+             foreach ($data['currently'] as $key => $value) {
+                 if (stripos($key, 'time')) {
+                     $value = $this->getDate()->getLocalDate($value);
+                 }
+                 $rows[] = array('forecast' => __('Current'), 'key' => $key, 'value' => $value);
+             }
+             foreach ($data['daily']['data'][0] as $key => $value) {
+                 if (stripos($key, 'time')) {
+                     $value = $this->getDate()->getLocalDate($value);
+                 }
+                 $rows[] = array('forecast' => __('Daily'), 'key' => $key, 'value' => $value);
+             }
+             return ['forecast' => $rows];
+         } else if ($tab == 'exporttemplate') {
+             return [
+                 'template' => json_encode([
+                     'id' => 'uniqueId',
+                     'value' => 'title',
+                     'designWidth' => $this->getOption('designWidth'),
+                     'designHeight' => $this->getOption('designHeight'),
+                     'main' => $this->getRawNode('currentTemplate'),
+                     'daily' => $this->getRawNode('dailyTemplate'),
+                     'css' => $this->getRawNode('styleSheet'),                     
+                     'widgetOriginalWidth' => intval($this->getOption('widgetOriginalWidth')),
+                     'widgetOriginalHeight' => intval($this->getOption('widgetOriginalHeight')),
+                     'image' => 'preview-image'
+                 ])
+             ];
+         } else {
+             return [];
+         }
+     }
 
     /**
      * Get the forecast data for the provided display id
@@ -348,7 +365,7 @@ class ForecastIo extends ModuleWidget
             die(__('Incorrectly configured module'));
 
         // Query the API and Dump the Results.
-        $apiOptions = array('units' => $this->getOption('units', 'auto'), 'lang' => $this->getOption('lang', 'en'), 'exclude' => 'flags,minutely,hourly');
+        $apiOptions = array('units' => $this->getOption('units', 'auto'), 'lang' => $this->getOption('lang', 'en'), 'exclude' => 'minutely,hourly');
 
         $cache = $this->getPool()->getItem('forecast/' . md5($defaultLat . $defaultLong . implode('.', $apiOptions)));
         $data = $cache->get();
@@ -382,11 +399,13 @@ class ForecastIo extends ModuleWidget
             'partly-cloudy-night' => 'wi-night-partly-cloudy',
         );
 
-        // Temperature Unit Mappings
+        // Temperature and wind Speed Unit Mappings
         $temperatureUnit = '';
+        $windSpeedUnit = '';
         foreach ($this->unitsAvailable() as $unit) {
-            if ($unit['id'] == $this->getOption('units', 'auto')) {
+            if ($unit['id'] == $data->flags->units) {
                 $temperatureUnit = $unit['tempUnit'];
+                $windSpeedUnit = $unit['windUnit'];
                 break;
             }
         }
@@ -396,15 +415,43 @@ class ForecastIo extends ModuleWidget
             if ($data->currently->icon == 'partly-cloudy-night')
                 $data->currently->icon = 'clear-day';
         }
+        
+        // Wind Direction Mappings
+        $cardinalDirections = array(
+          'N' => array(337.5, 22.5),
+          'NE' => array(22.5, 67.5),
+          'E' => array(67.5, 112.5),
+          'SE' => array(112.5, 157.5),
+          'S' => array(157.5, 202.5),
+          'SW' => array(202.5, 247.5),
+          'W' => array(247.5, 292.5),
+          'NW' => array(292.5, 337.5)
+        );
+        
+        $windDirection = '';
+        foreach ($cardinalDirections as $dir => $angles) {
+          if ($data->currently->windBearing >= $angles[0] && $data->currently->windBearing < $angles[1]) {
+            $windDirection = $dir;
+            break;
+          }
+        }
 
         $data->currently->wicon = (isset($icons[$data->currently->icon]) ? $icons[$data->currently->icon] : $icons['unmapped']);
         $data->currently->temperatureFloor = (isset($data->currently->temperature) ? floor($data->currently->temperature) : '--');
         $data->currently->summary = (isset($data->currently->summary) ? $data->currently->summary : '--');
         $data->currently->weekSummary = (isset($data->daily->summary) ? $data->daily->summary : '--');
         $data->currently->temperatureUnit = $temperatureUnit;
+        $data->currently->windSpeedUnit = $windSpeedUnit;
+        $data->currently->windDirection = $windDirection;
+        $data->currently->humidityPercent = (isset($data->currently->humidity)) ? ($data->currently->humidity * 100) : '--';
 
         // Convert a stdObject to an array
         $data = json_decode(json_encode($data), true);
+
+        //Today Daily values
+        $data['currently']['temperatureMaxFloor'] = (isset($data['daily']['data'][0]['temperatureMax'])) ? floor($data['daily']['data'][0]['temperatureMax']) : '--';
+        $data['currently']['temperatureMinFloor'] = (isset($data['daily']['data'][0]['temperatureMin'])) ? floor($data['daily']['data'][0]['temperatureMin']) : '--';
+        $data['currently']['temperatureMeanFloor'] = ($data['currently']['temperatureMaxFloor'] != '--' && $data['currently']['temperatureMinFloor'] != '--') ? floor((($data['currently']['temperatureMinFloor'] + $data['currently']['temperatureMaxFloor']) / 2)) : '--';
 
         // Process the icon for each day
         for ($i = 0; $i < 7; $i++) {
@@ -413,12 +460,24 @@ class ForecastIo extends ModuleWidget
                 if ($data['daily']['data'][$i]['icon'] == 'partly-cloudy-night')
                     $data['daily']['data'][$i]['icon'] = 'clear-day';
             }
+            
+            // Wind Direction bearing to code
+            $windDirectionDaily = '';
+            foreach ($cardinalDirections as $dir => $angles) {
+              if ($data['daily']['data'][$i]['windBearing'] >= $angles[0] && $data['daily']['data'][$i]['windBearing'] < $angles[1]) {
+                $windDirectionDaily = $dir;
+                break;
+              }
+            }
 
             $data['daily']['data'][$i]['wicon'] = (isset($icons[$data['daily']['data'][$i]['icon']]) ? $icons[$data['daily']['data'][$i]['icon']] : $icons['unmapped']);
             $data['daily']['data'][$i]['temperatureMaxFloor'] = (isset($data['daily']['data'][$i]['temperatureMax'])) ? floor($data['daily']['data'][$i]['temperatureMax']) : '--';
             $data['daily']['data'][$i]['temperatureMinFloor'] = (isset($data['daily']['data'][$i]['temperatureMin'])) ? floor($data['daily']['data'][$i]['temperatureMin']) : '--';
             $data['daily']['data'][$i]['temperatureFloor'] = ($data['daily']['data'][$i]['temperatureMinFloor'] != '--' && $data['daily']['data'][$i]['temperatureMaxFloor'] != '--') ? floor((($data['daily']['data'][$i]['temperatureMinFloor'] + $data['daily']['data'][$i]['temperatureMaxFloor']) / 2)) : '--';
             $data['daily']['data'][$i]['temperatureUnit'] = $temperatureUnit;
+            $data['daily']['data'][$i]['windSpeedUnit'] = $windSpeedUnit;
+            $data['daily']['data'][$i]['humidityPercent'] = (isset($data['daily']['data'][$i]['humidity'])) ? ($data['daily']['data'][$i]['humidity'] * 100) : '--';
+            $data['daily']['data'][$i]['windDirection'] = $windDirectionDaily;
         }
 
         return $data;
@@ -477,11 +536,30 @@ class ForecastIo extends ModuleWidget
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
+        // Provide the background images to the templates styleSheet
+        $styleSheet = $this->makeSubstitutions([
+            'cloudy-image' => $this->getResourceUrl('forecastio/wi-cloudy.jpg'),
+            'day-cloudy-image' => $this->getResourceUrl('forecastio/wi-day-cloudy.jpg'),
+            'day-sunny-image' => $this->getResourceUrl('forecastio/wi-day-sunny.jpg'),
+            'fog-image' => $this->getResourceUrl('forecastio/wi-fog.jpg'),
+            'hail-image' => $this->getResourceUrl('forecastio/wi-hail.jpg'),
+            'night-clear-image' => $this->getResourceUrl('forecastio/wi-night-clear.jpg'),
+            'night-partly-cloudy-image' => $this->getResourceUrl('forecastio/wi-night-partly-cloudy.jpg'),            
+            'rain-image' => $this->getResourceUrl('forecastio/wi-rain.jpg'),
+            'snow-image' => $this->getResourceUrl('forecastio/wi-snow.jpg'),
+            'windy' => $this->getResourceUrl('forecastio/wi-windy.jpg'),
+          ], $this->getRawNode('styleSheet', null)
+        );
+
         $headContent = '
+            <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">
             <link href="' . $this->getResourceUrl('forecastio/weather-icons.min.css') . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('forecastio/font-awesome.min.css')  . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('forecastio/animate.css')  . '" rel="stylesheet" media="screen">
+            
             <style type="text/css">
                 .container { color: ' . $this->getOption('color', '000') . '; }
-                ' . $this->parseLibraryReferences($isPreview, $this->getRawNode('styleSheet', null)) . '
+                ' . $this->parseLibraryReferences($isPreview, $styleSheet) . '
             </style>
         ';
 
@@ -499,43 +577,35 @@ class ForecastIo extends ModuleWidget
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
 
-        // Do we need to scale the inner content? Size provided?
-        $size = $this->getOption('size', 1);
-
-        if ($size != 1) {
-            $javaScript .= '
-                <script type="text/javascript">
-                    if ($("body").hasClass("ie7") || $("body").hasClass("ie8")) {
-                        $("#content").css({
-                            "filter": "progid:DXImageTransform.Microsoft.Matrix(M11=' . $size . ', M12=0, M21=0, M22=' . $size . ', SizingMethod=\'auto expand\'"
-                        });
-                    }
-                    else {
-                        $("#content").css({
-                            "transform": "scale(' . $size . ')",
-                            "transform-origin": "top center"
-                        });
-                    }
-                </script>
-            ';
-        }
-
         // Handle the daily template (if its here)
-        if (stripos($body, '[dailyForecast]')) {
-            // Pull it out, and run substitute over it for each day
-            $dailySubs = '';
-            // Substitute for every day (i.e. 7 times).
-            for ($i = 0; $i < 7; $i++) {
-                $dailySubs .= $this->makeSubstitutions($foreCast['daily']['data'][$i], $dailyTemplate);
+        $dailySubs = '';
+        $matches = '';
+        preg_match_all('/\[dailyForecast.*?\]/', $body, $matches);
+        // Substitute
+        foreach ($matches[0] as $sub) {
+            $replace = str_replace('[', '', str_replace(']', '', $sub));
+            // Handling for date/time
+            $itterations = 7;
+            $offset = 0;
+            if (stripos($replace, '|') > -1) {
+                $quantity = explode('|', $replace);
+                $itterations = $quantity[1];
+                
+                if (count($quantity) > 1)
+                  $offset = $quantity[2];
             }
 
+            // Pull it out, and run substitute over it for each day
+            // Substitute for every day (i.e. 7 times).
+            for ($i = $offset; $i < $itterations + $offset; $i++) {
+                $dailySubs .= $this->makeSubstitutions($foreCast['daily']['data'][$i], $dailyTemplate);
+            }
             // Substitute the completed template
-            $body = str_replace('[dailyForecast]', $dailySubs, $body);
+            $body = str_replace($sub, $dailySubs, $body);
         }
 
         // Run replace over the main template
         $data['body'] = $this->makeSubstitutions($foreCast['currently'], $body);
-
 
         // JavaScript to control the size (override the original width and height so that the widget gets blown up )
         $options = array(
@@ -543,7 +613,9 @@ class ForecastIo extends ModuleWidget
             'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
+            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
+            'widgetDesignWidth' => $this->getOption('widgetOriginalWidth'),
+            'widgetDesignHeight' => $this->getOption('widgetOriginalHeight')
         );
 
         $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';

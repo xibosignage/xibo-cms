@@ -173,7 +173,8 @@ class MediaFactory extends BaseFactory
             throw new \InvalidArgumentException(__('Not a folder'));
 
         foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
-
+            if (is_dir($folder . DIRECTORY_SEPARATOR . $file)) continue;
+            
             $file = $this->createModuleSystemFile($file, $folder . DIRECTORY_SEPARATOR . $file);
             $file->moduleSystemFile = true;
 
