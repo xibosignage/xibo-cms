@@ -443,7 +443,12 @@ class XMDSSoap4
                     $cdnUrl = Config::GetSetting('CDN_URL');
                     if ($cdnUrl != '') {
                         // Serve a link instead (standard HTTP link)
-                        $file->setAttribute("path", 'http' . ((isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ? 's' : '') . '://' . $cdnUrl . urlencode($saveAsPath));
+                        $file->setAttribute("path", 'http' . (
+                            (
+                                (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ||
+                                (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) == 'https')
+                            ) ? 's' : ''
+                        ) . '://' . $cdnUrl . urlencode($saveAsPath));
                     } else {
                         // Serve a link instead (standard HTTP link)
                         $file->setAttribute("path", $saveAsPath);
