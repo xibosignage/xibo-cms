@@ -198,10 +198,6 @@
                         {% set title %}{% trans "Longitude" %}{% endset %}
                         {% set helpText %}{% trans "The Longitude for this weather module" %}{% endset %}
                         {{ forms.number("longitude", title, module.getOption("longitude"), helpText, "locationControls") }}
-
-                        {% set title %}{% trans "Colour" %}{% endset %}
-                        {% set helpText %}{% trans "Please select a colour for the foreground text." %}{% endset %}
-                        {{ forms.input("color", title, "#000", helpText, "", "required") }}
                     </div>
 
                     <div class="tab-pane" id="appearence">
