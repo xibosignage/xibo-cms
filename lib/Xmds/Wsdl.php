@@ -70,8 +70,10 @@ class Wsdl
 
         $fullUrl = 'http';
 
-        if(isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on')
-        {
+        if (
+            (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ||
+            (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) == 'https')
+        ) {
             $fullUrl .=  's';
         }
 
