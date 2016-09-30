@@ -1630,7 +1630,12 @@ class Soap
         $cdnUrl = $this->configService->GetSetting('CDN_URL');
         if ($cdnUrl != '') {
             // Serve a link to the CDN
-            return 'http' . ((isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ? 's' : '') . '://' . $cdnUrl . urlencode($saveAsPath);
+            return 'http' . (
+                (
+                    (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ||
+                    (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) == 'https')
+                ) ? 's' : '')
+                . '://' . $cdnUrl . urlencode($saveAsPath);
         } else {
             // Serve a HTTP link to XMDS
             return $saveAsPath;
