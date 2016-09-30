@@ -22,7 +22,7 @@ class DateServiceJalali implements DateServiceInterface
      * @param string $format
      * @return string
      */
-    public function getLocalDate($timestamp = NULL, $format = NULL)
+    public function getLocalDate($timestamp = NULL, $format = NULL, $timezone = NULL)
     {
         if ($format == NULL)
             $format = $this->getSystemFormat();
@@ -33,7 +33,7 @@ class DateServiceJalali implements DateServiceInterface
         if ($timestamp == NULL)
             $timestamp = time();
 
-        return \jDateTime::date($format, $timestamp, false);
+        return \jDateTime::date($format, $timestamp, null, null, $timezone);
     }
 
     /**

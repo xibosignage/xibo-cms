@@ -35,7 +35,7 @@ class DateServiceGregorian implements DateServiceInterface
      * @param string $format
      * @return string
      */
-    public function getLocalDate($timestamp = NULL, $format = NULL)
+    public function getLocalDate($timestamp = NULL, $format = NULL, $timezone = NULL)
     {
         if ($format == NULL)
             $format = $this->getSystemFormat();
@@ -46,7 +46,7 @@ class DateServiceGregorian implements DateServiceInterface
         if ($timestamp == NULL)
             $timestamp = time();
 
-        return \Jenssegers\Date\Date::createFromTimestamp($timestamp)->format($format);
+        return \Jenssegers\Date\Date::createFromTimestamp($timestamp, $timezone)->format($format);
     }
 
     /**

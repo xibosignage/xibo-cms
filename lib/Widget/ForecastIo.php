@@ -162,7 +162,6 @@ class ForecastIo extends ModuleWidget
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('useDisplayLocation', $this->getSanitizer()->getCheckbox('useDisplayLocation'));
-        $this->setOption('color', $this->getSanitizer()->getString('color'));
         $this->setOption('longitude', $this->getSanitizer()->getDouble('longitude'));
         $this->setOption('latitude', $this->getSanitizer()->getDouble('latitude'));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
@@ -194,7 +193,6 @@ class ForecastIo extends ModuleWidget
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('useDisplayLocation', $this->getSanitizer()->getCheckbox('useDisplayLocation'));
-        $this->setOption('color', $this->getSanitizer()->getString('color'));
         $this->setOption('longitude', $this->getSanitizer()->getDouble('longitude'));
         $this->setOption('latitude', $this->getSanitizer()->getDouble('latitude'));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
@@ -232,16 +230,16 @@ class ForecastIo extends ModuleWidget
 
     /**
      * Units supported by Forecast.IO API
-     * @return array The Units Available (temperature and wind speed)
+     * @return array The Units Available (temperature, wind speed and visible distance)
      */
     public function unitsAvailable()
     {
         return array(
-            array('id' => 'auto', 'value' => 'Automatically select based on geographic location', 'tempUnit' => '', 'windUnit' => ''),
-            array('id' => 'ca', 'value' => 'Canada', 'tempUnit' => 'F', 'windUnit' => 'KPH'),
-            array('id' => 'si', 'value' => 'Standard International Units', 'tempUnit' => 'C', 'windUnit' => 'MPS'),
-            array('id' => 'uk2', 'value' => 'United Kingdom', 'tempUnit' => 'C', 'windUnit' => 'MPH'),
-            array('id' => 'us', 'value' => 'United States', 'tempUnit' => 'F', 'windUnit' => 'MPH'),
+            array('id' => 'auto', 'value' => 'Automatically select based on geographic location', 'tempUnit' => '', 'windUnit' => '', 'visibilityUnit' => ''),
+            array('id' => 'ca', 'value' => 'Canada', 'tempUnit' => 'F', 'windUnit' => 'KPH', 'visibilityUnit' => 'km'),
+            array('id' => 'si', 'value' => 'Standard International Units', 'tempUnit' => 'C', 'windUnit' => 'MPS', 'visibilityUnit' => 'km'),
+            array('id' => 'uk2', 'value' => 'United Kingdom', 'tempUnit' => 'C', 'windUnit' => 'MPH', 'visibilityUnit' => 'mi'),
+            array('id' => 'us', 'value' => 'United States', 'tempUnit' => 'F', 'windUnit' => 'MPH', 'visibilityUnit' => 'km'),
         );
     }
 
@@ -402,10 +400,12 @@ class ForecastIo extends ModuleWidget
         // Temperature and wind Speed Unit Mappings
         $temperatureUnit = '';
         $windSpeedUnit = '';
+        $visibilityDistanceUnit = '';
         foreach ($this->unitsAvailable() as $unit) {
             if ($unit['id'] == $data->flags->units) {
                 $temperatureUnit = $unit['tempUnit'];
                 $windSpeedUnit = $unit['windUnit'];
+                $visibilityDistanceUnit = $unit['visibilityUnit'];
                 break;
             }
         }
@@ -438,11 +438,15 @@ class ForecastIo extends ModuleWidget
 
         $data->currently->wicon = (isset($icons[$data->currently->icon]) ? $icons[$data->currently->icon] : $icons['unmapped']);
         $data->currently->temperatureFloor = (isset($data->currently->temperature) ? floor($data->currently->temperature) : '--');
+        $data->currently->apparentTemperatureFloor = (isset($data->currently->apparentTemperature) ? floor($data->currently->apparentTemperature) : '--');
+        $data->currently->temperatureRound = (isset($data->currently->temperature) ? round($data->currently->temperature, 0) : '--');
+        $data->currently->apparentTemperatureRound = (isset($data->currently->apparentTemperature) ? round($data->currently->apparentTemperature, 0) : '--');
         $data->currently->summary = (isset($data->currently->summary) ? $data->currently->summary : '--');
         $data->currently->weekSummary = (isset($data->daily->summary) ? $data->daily->summary : '--');
         $data->currently->temperatureUnit = $temperatureUnit;
         $data->currently->windSpeedUnit = $windSpeedUnit;
         $data->currently->windDirection = $windDirection;
+        $data->currently->visibilityDistanceUnit = $visibilityDistanceUnit;
         $data->currently->humidityPercent = (isset($data->currently->humidity)) ? ($data->currently->humidity * 100) : '--';
 
         // Convert a stdObject to an array
@@ -452,6 +456,10 @@ class ForecastIo extends ModuleWidget
         $data['currently']['temperatureMaxFloor'] = (isset($data['daily']['data'][0]['temperatureMax'])) ? floor($data['daily']['data'][0]['temperatureMax']) : '--';
         $data['currently']['temperatureMinFloor'] = (isset($data['daily']['data'][0]['temperatureMin'])) ? floor($data['daily']['data'][0]['temperatureMin']) : '--';
         $data['currently']['temperatureMeanFloor'] = ($data['currently']['temperatureMaxFloor'] != '--' && $data['currently']['temperatureMinFloor'] != '--') ? floor((($data['currently']['temperatureMinFloor'] + $data['currently']['temperatureMaxFloor']) / 2)) : '--';
+      
+        $data['currently']['temperatureMaxRound'] = (isset($data['daily']['data'][0]['temperatureMax'])) ? round($data['daily']['data'][0]['temperatureMax'], 0) : '--';
+        $data['currently']['temperatureMinRound'] = (isset($data['daily']['data'][0]['temperatureMin'])) ? round($data['daily']['data'][0]['temperatureMin'], 0) : '--';
+        $data['currently']['temperatureMeanRound'] = ($data['currently']['temperatureMaxRound'] != '--' && $data['currently']['temperatureMinRound'] != '--') ? round((($data['currently']['temperatureMinRound'] + $data['currently']['temperatureMaxRound']) / 2), 0) : '--';
 
         // Process the icon for each day
         for ($i = 0; $i < 7; $i++) {
@@ -474,8 +482,12 @@ class ForecastIo extends ModuleWidget
             $data['daily']['data'][$i]['temperatureMaxFloor'] = (isset($data['daily']['data'][$i]['temperatureMax'])) ? floor($data['daily']['data'][$i]['temperatureMax']) : '--';
             $data['daily']['data'][$i]['temperatureMinFloor'] = (isset($data['daily']['data'][$i]['temperatureMin'])) ? floor($data['daily']['data'][$i]['temperatureMin']) : '--';
             $data['daily']['data'][$i]['temperatureFloor'] = ($data['daily']['data'][$i]['temperatureMinFloor'] != '--' && $data['daily']['data'][$i]['temperatureMaxFloor'] != '--') ? floor((($data['daily']['data'][$i]['temperatureMinFloor'] + $data['daily']['data'][$i]['temperatureMaxFloor']) / 2)) : '--';
+            $data['daily']['data'][$i]['temperatureMaxRound'] = (isset($data['daily']['data'][$i]['temperatureMax'])) ? round($data['daily']['data'][$i]['temperatureMax'], 0) : '--';
+            $data['daily']['data'][$i]['temperatureMinRound'] = (isset($data['daily']['data'][$i]['temperatureMin'])) ? round($data['daily']['data'][$i]['temperatureMin'], 0) : '--';
+            $data['daily']['data'][$i]['temperatureRound'] = ($data['daily']['data'][$i]['temperatureMinRound'] != '--' && $data['daily']['data'][$i]['temperatureMaxRound'] != '--') ? round((($data['daily']['data'][$i]['temperatureMinRound'] + $data['daily']['data'][$i]['temperatureMaxRound']) / 2), 0) : '--';
             $data['daily']['data'][$i]['temperatureUnit'] = $temperatureUnit;
             $data['daily']['data'][$i]['windSpeedUnit'] = $windSpeedUnit;
+            $data['daily']['data'][$i]['visibilityDistanceUnit'] = $visibilityDistanceUnit;
             $data['daily']['data'][$i]['humidityPercent'] = (isset($data['daily']['data'][$i]['humidity'])) ? ($data['daily']['data'][$i]['humidity'] * 100) : '--';
             $data['daily']['data'][$i]['windDirection'] = $windDirectionDaily;
         }
@@ -483,7 +495,7 @@ class ForecastIo extends ModuleWidget
         return $data;
     }
 
-    private function makeSubstitutions($data, $source)
+    private function makeSubstitutions($data, $source, $timezone = NULL)
     {
         // Replace all matches.
         $matches = '';
@@ -497,7 +509,7 @@ class ForecastIo extends ModuleWidget
             if (stripos($replace, 'time|') > -1) {
                 $timeSplit = explode('|', $replace);
 
-                $time = $this->getDate()->getLocalDate($data['time'], $timeSplit[1]);
+                $time = $this->getDate()->getLocalDate($data['time'], $timeSplit[1], $timezone);
 
                 $this->getLog()->info('Time: ' . $time);
 
@@ -558,7 +570,6 @@ class ForecastIo extends ModuleWidget
             <link href="' . $this->getResourceUrl('forecastio/animate.css')  . '" rel="stylesheet" media="screen">
             
             <style type="text/css">
-                .container { color: ' . $this->getOption('color', '000') . '; }
                 ' . $this->parseLibraryReferences($isPreview, $styleSheet) . '
             </style>
         ';
@@ -586,6 +597,7 @@ class ForecastIo extends ModuleWidget
             $replace = str_replace('[', '', str_replace(']', '', $sub));
             // Handling for date/time
             $itterations = 7;
+            $stopPosition = $itterations;
             $offset = 0;
             if (stripos($replace, '|') > -1) {
                 $quantity = explode('|', $replace);
@@ -593,19 +605,23 @@ class ForecastIo extends ModuleWidget
                 
                 if (count($quantity) > 1)
                   $offset = $quantity[2];
+
+                  $stopPosition = (($itterations+$offset) > 7) ? 7 : $itterations+$offset;
+            
             }
 
             // Pull it out, and run substitute over it for each day
             // Substitute for every day (i.e. 7 times).
-            for ($i = $offset; $i < $itterations + $offset; $i++) {
-                $dailySubs .= $this->makeSubstitutions($foreCast['daily']['data'][$i], $dailyTemplate);
+            for ($i = $offset; $i < $stopPosition; $i++) {
+                $dailySubs .= $this->makeSubstitutions($foreCast['daily']['data'][$i], $dailyTemplate, $foreCast['timezone']);
             }
             // Substitute the completed template
             $body = str_replace($sub, $dailySubs, $body);
         }
 
+
         // Run replace over the main template
-        $data['body'] = $this->makeSubstitutions($foreCast['currently'], $body);
+        $data['body'] = $this->makeSubstitutions($foreCast['currently'], $body, $foreCast['timezone']);
 
         // JavaScript to control the size (override the original width and height so that the widget gets blown up )
         $options = array(
@@ -614,8 +630,8 @@ class ForecastIo extends ModuleWidget
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
             'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
-            'widgetDesignWidth' => $this->getOption('widgetOriginalWidth'),
-            'widgetDesignHeight' => $this->getOption('widgetOriginalHeight')
+            'widgetDesignWidth' => $this->getSanitizer()->int($this->getOption('widgetOriginalWidth')),
+            'widgetDesignHeight'=> $this->getSanitizer()->int($this->getOption('widgetOriginalHeight'))
         );
 
         $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';

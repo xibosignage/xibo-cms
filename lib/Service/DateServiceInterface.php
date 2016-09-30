@@ -19,7 +19,7 @@ interface DateServiceInterface
      * @param string $format
      * @return string
      */
-    public function getLocalDate($timestamp = NULL, $format = NULL);
+    public function getLocalDate($timestamp = NULL, $format = NULL, $timezone = NULL);
 
     /**
      * Get Date from String
