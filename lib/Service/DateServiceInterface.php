@@ -17,6 +17,7 @@ interface DateServiceInterface
      * Get a local date
      * @param int|\Jenssegers\Date\Date $timestamp
      * @param string $format
+     * @param string $timezone
      * @return string
      */
     public function getLocalDate($timestamp = NULL, $format = NULL, $timezone = NULL);
