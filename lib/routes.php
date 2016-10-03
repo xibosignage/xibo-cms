@@ -431,3 +431,16 @@ $app->get('/daypart', '\Xibo\Controller\DayPart:grid')->name('daypart.search');
 $app->post('/daypart', '\Xibo\Controller\DayPart:add')->name('daypart.add');
 $app->put('/daypart/:id', '\Xibo\Controller\DayPart:edit')->name('daypart.edit');
 $app->delete('/daypart/:id', '\Xibo\Controller\DayPart:delete')->name('daypart.delete');
+
+/**
+ * Tasks
+ * @SWG\Tag(
+ *  name="task",
+ *  description="Tasks"
+ * )
+ */
+$app->get('/task', '\Xibo\Controller\Task:grid')->name('task.search');
+$app->post('/task', '\Xibo\Controller\Task:add')->name('task.add');
+$app->put('/task/:id', '\Xibo\Controller\Task:edit')->name('task.edit');
+$app->delete('/task/:id', '\Xibo\Controller\Task:delete')->name('task.delete');
+

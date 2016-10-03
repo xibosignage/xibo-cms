@@ -872,6 +872,19 @@ class State extends Middleware
             );
         });
 
+        $app->container->singleton('\Xibo\Controller\Task', function($container) {
+            return new \Xibo\Controller\Task(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->taskFactory
+            );
+        });
+
         $app->container->singleton('\Xibo\Controller\Template', function($container) {
             return new \Xibo\Controller\Template(
                 $container->logService,
@@ -1294,6 +1307,14 @@ class State extends Middleware
 
         $container->singleton('tagFactory', function($container) {
             return new \Xibo\Factory\TagFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
+            );
+        });
+
+        $container->singleton('taskFactory', function($container) {
+            return new \Xibo\Factory\TaskFactory(
                 $container->store,
                 $container->logService,
                 $container->sanitizerService

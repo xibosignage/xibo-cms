@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "0528f13e55b10bc4a48888fb6d901ca3",
-    "content-hash": "3af2b71c0ea75f5b9c0537a31b8dd884",
+    "hash": "882cc247adb7fe5bbb55c2e6abb79d67",
+    "content-hash": "61af47e1c9358115dba464add1ec74d1",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -1653,6 +1653,50 @@
             "time": "2016-07-29 03:23:52"
         },
         {
+            "name": "mtdowling/cron-expression",
+            "version": "v1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/mtdowling/cron-expression.git",
+                "reference": "c9ee7886f5a12902b225a1a12f36bb45f9ab89e5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/mtdowling/cron-expression/zipball/c9ee7886f5a12902b225a1a12f36bb45f9ab89e5",
+                "reference": "c9ee7886f5a12902b225a1a12f36bb45f9ab89e5",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.2"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.0|~5.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Cron": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Dowling",
+                    "email": "mtdowling@gmail.com",
+                    "homepage": "https://github.com/mtdowling"
+                }
+            ],
+            "description": "CRON for PHP: Calculate the next or previous run date and determine if a CRON expression is due",
+            "keywords": [
+                "cron",
+                "schedule"
+            ],
+            "time": "2016-01-26 21:23:30"
+        },
+        {
             "name": "nesbot/carbon",
             "version": "1.21.0",
             "source": {
@@ -2723,6 +2767,55 @@
             "time": "2016-05-18 14:26:46"
         },
         {
+            "name": "symfony/process",
+            "version": "v3.1.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/process.git",
+                "reference": "e64e93041c80e77197ace5ab9385dedb5a143697"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/process/zipball/e64e93041c80e77197ace5ab9385dedb5a143697",
+                "reference": "e64e93041c80e77197ace5ab9385dedb5a143697",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5.9"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "3.1-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\Process\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony Process Component",
+            "homepage": "https://symfony.com",
+            "time": "2016-08-16 14:58:24"
+        },
+        {
             "name": "symfony/translation",
             "version": "v3.1.4",
             "source": {
@@ -2906,6 +2999,59 @@
                 "templating"
             ],
             "time": "2016-09-21 23:05:12"
+        },
+        {
+            "name": "xibosignage/oauth2-xibo-cms",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/PeterMis/oauth2-xibo-cms.git",
+                "reference": "4eeed7c39cd242848d39f2d74c135fed1e7fb54b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/PeterMis/oauth2-xibo-cms/zipball/4eeed7c39cd242848d39f2d74c135fed1e7fb54b",
+                "reference": "4eeed7c39cd242848d39f2d74c135fed1e7fb54b",
+                "shasum": ""
+            },
+            "require": {
+                "league/oauth2-client": "~1",
+                "php": ">=5.4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Xibo\\OAuth2\\Client\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Spring Signage Ltd",
+                    "homepage": "https://springsignage.com"
+                }
+            ],
+            "description": "A Xibo CMS provider for league/oauth2-client",
+            "homepage": "http://xibo.org.uk",
+            "keywords": [
+                "authentication",
+                "authorization",
+                "client",
+                "identity",
+                "idp",
+                "oauth",
+                "oauth2",
+                "single sign on",
+                "sso",
+                "xibo",
+                "xibo cms"
+            ],
+            "support": {
+                "source": "https://github.com/PeterMis/oauth2-xibo-cms/tree/master"
+            },
+            "time": "2016-09-20 12:32:11"
         },
         {
             "name": "xibosignage/xibo-xmr",
@@ -5085,59 +5231,6 @@
             "time": "2016-08-09 15:02:57"
         },
         {
-            "name": "xibosignage/oauth2-xibo-cms",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/PeterMis/oauth2-xibo-cms.git",
-                "reference": "4eeed7c39cd242848d39f2d74c135fed1e7fb54b"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/PeterMis/oauth2-xibo-cms/zipball/4eeed7c39cd242848d39f2d74c135fed1e7fb54b",
-                "reference": "4eeed7c39cd242848d39f2d74c135fed1e7fb54b",
-                "shasum": ""
-            },
-            "require": {
-                "league/oauth2-client": "~1",
-                "php": ">=5.4.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Xibo\\OAuth2\\Client\\": "src/"
-                }
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Spring Signage Ltd",
-                    "homepage": "https://springsignage.com"
-                }
-            ],
-            "description": "A Xibo CMS provider for league/oauth2-client",
-            "homepage": "http://xibo.org.uk",
-            "keywords": [
-                "authentication",
-                "authorization",
-                "client",
-                "identity",
-                "idp",
-                "oauth",
-                "oauth2",
-                "single sign on",
-                "sso",
-                "xibo",
-                "xibo cms"
-            ],
-            "support": {
-                "source": "https://github.com/PeterMis/oauth2-xibo-cms/tree/master"
-            },
-            "time": "2016-09-20 12:32:11"
-        },
-        {
             "name": "zircote/swagger-php",
             "version": "2.0.7",
             "source": {
@@ -5206,8 +5299,8 @@
         "sallar/jdatetime": 20,
         "phpmailer/phpmailer": 20,
         "fguillot/picofeed": 0,
-        "umpirsky/twig-gettext-extractor": 20,
-        "xibosignage/oauth2-xibo-cms": 20
+        "xibosignage/oauth2-xibo-cms": 20,
+        "umpirsky/twig-gettext-extractor": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

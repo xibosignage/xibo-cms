@@ -64,6 +64,7 @@ echo __('Commands');
 echo __('Notification Drawer');
 echo __('Notifications');
 echo __('Dayparting');
+echo __('Tasks');
 
 // Settings translations
 echo __('Media Permissions');

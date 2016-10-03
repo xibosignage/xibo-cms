@@ -29,6 +29,10 @@
     {
       "step": "Increase user password hash field size",
       "action": "ALTER TABLE `user` MODIFY `UserPassword` VARCHAR(255) NOT NULL;"
+    },
+    {
+      "step": "Tasks page",
+      "action": "INSERT INTO pages (name, title, asHome) VALUES ('task', 'Task', 1);"
     }
   ]
 }
