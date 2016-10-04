@@ -13,7 +13,6 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\FormExpiredException;
 use Xibo\Exception\InstanceSuspendedException;
-use Xibo\Exception\NotFoundException;
 use Xibo\Exception\TokenExpiredException;
 use Xibo\Exception\UpgradePendingException;
 use Xibo\Helper\Translate;
@@ -127,7 +126,6 @@ class Error extends Base
 
         if ($handled) {
             $this->getLog()->debug($e->getMessage() . $e->getTraceAsString());
-            $this->getLog()->debug($e->getMessage());
         }
         else {
             // Log the full error
@@ -192,7 +190,8 @@ class Error extends Base
                 $this->getState()->hydrate([
                     'httpStatus' => $status,
                     'success' => false,
-                    'message' => (($handled) ? __($e->getMessage()) : __('Unexpected Error, please contact support.'))
+                    'message' => (($handled) ? __($e->getMessage()) : __('Unexpected Error, please contact support.')),
+                    'data' => (method_exists($e, 'getErrorData')) ? $e->getErrorData() : []
                 ]);
 
                 $this->render();
@@ -214,15 +213,21 @@ class Error extends Base
         }
     }
 
+    /**
+     * Determine if we are a handled exception
+     * @param $e
+     * @return bool
+     */
     private function handledError($e)
     {
+        if (method_exists($e, 'handledException'))
+            return $e->handledException();
+
         return ($e instanceof \InvalidArgumentException
             || $e instanceof OAuthException
             || $e instanceof FormExpiredException
             || $e instanceof AccessDeniedException
-            || $e instanceof NotFoundException
             || $e instanceof InstanceSuspendedException
-            || $e instanceof ConfigurationException
             || $e instanceof UpgradePendingException
             || $e instanceof TokenExpiredException
         );

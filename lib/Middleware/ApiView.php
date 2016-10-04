@@ -54,12 +54,15 @@ class ApiView extends View
             // Are we successful?
             if (!$this->has('success') || !$this->get('success')) {
                 // Error condition
-                $response = [];
-                $app->response()->body($this->get('message'));
-                $app->stop();
+                $response = [
+                    'error' => [
+                        'message' => $this->get('message'),
+                        'code' => intval($this->get('status')),
+                        'data' => $this->get('data')
+                    ]
+                ];
             }
             else {
-
                 // Are we a grid?
                 if ($this->get('grid') == true) {
                     // Set the response to our data['data'] object

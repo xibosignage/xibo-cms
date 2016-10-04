@@ -8,8 +8,12 @@
 
 namespace Xibo\Exception;
 
-
-class ConfigurationException extends \Exception
+/**
+ * Class ConfigurationException
+ * @package Xibo\Exception
+ */
+class ConfigurationException extends XiboException
 {
-
+    public $httpStatusCode = 500;
+    public $handledException = true;
 }

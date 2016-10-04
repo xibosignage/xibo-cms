@@ -23,6 +23,8 @@ namespace Xibo\Entity;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\LayoutBuildEvent;
 use Xibo\Event\LayoutBuildRegionEvent;
+use Xibo\Exception\DuplicateEntityException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
@@ -641,20 +643,20 @@ class Layout implements \JsonSerializable
     {
         // We must provide either a template or a resolution
         if ($this->width == 0 || $this->height == 0)
-            throw new \InvalidArgumentException(__('The layout dimensions cannot be empty'));
+            throw new InvalidArgumentException(__('The layout dimensions cannot be empty'), 'width/height');
 
         // Validation
         if (strlen($this->layout) > 50 || strlen($this->layout) < 1)
-            throw new \InvalidArgumentException(__("Layout Name must be between 1 and 50 characters"));
+            throw new InvalidArgumentException(__("Layout Name must be between 1 and 50 characters"), 'name');
 
         if (strlen($this->description) > 254)
-            throw new \InvalidArgumentException(__("Description can not be longer than 254 characters"));
+            throw new InvalidArgumentException(__("Description can not be longer than 254 characters"), 'description');
 
         // Check for duplicates
         $duplicates = $this->layoutFactory->query(null, array('userId' => $this->ownerId, 'layoutExact' => $this->layout, 'notLayoutId' => $this->layoutId));
 
         if (count($duplicates) > 0)
-            throw new \InvalidArgumentException(sprintf(__("You already own a layout called '%s'. Please choose another name."), $this->layout));
+            throw new DuplicateEntityException(sprintf(__("You already own a layout called '%s'. Please choose another name."), $this->layout));
     }
 
     /**
