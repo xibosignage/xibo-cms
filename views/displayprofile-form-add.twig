@@ -25,7 +25,8 @@ In theory it is fine, although  it may be better to user clientTypes from contro
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="displayProfileAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayProfile.add") }}">
+            <form id="displayProfileAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayProfile.add") }}"
+                  data-next-form-url="{{ urlFor("displayProfile.edit.form") }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Display Profile" %}{% endset %}
                 {{ forms.input("name", title, "", helpText,"","required") }}

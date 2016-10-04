@@ -123,11 +123,100 @@ class Task extends Base
 
             if ($this->isApi())
                 continue;
+
+            $task->includeProperty('buttons');
+
+            // Default Layout
+            $task->buttons[] = array(
+                'id' => 'task_button_edit',
+                'url' => $this->urlFor('task.edit.form', ['id' => $task->taskId]),
+                'text' => __('Edit')
+            );
         }
 
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->taskFactory->countLast();
         $this->getState()->setData($tasks);
+    }
+
+    /**
+     * Add form
+     */
+    public function addForm()
+    {
+        // Provide a list of possible task classes by searching for .task file in /tasks and /custom
+        $data = ['tasksAvailable' => []];
+
+        // Do we have any modules to install?!
+        if ($this->getConfig()->GetSetting('TASK_CONFIG_LOCKED_CHECKB') != 'Checked') {
+            // Get a list of matching files in the modules folder
+            $files = array_merge(glob(PROJECT_ROOT . '/tasks/*.task'), glob(PROJECT_ROOT . '/custom/*.task'));
+
+            // Add to the list of available tasks
+            foreach ($files as $file) {
+                $data['tasksAvailable'][] = json_decode(file_get_contents($file));
+            }
+        }
+
+        $this->getState()->template = 'task-form-add';
+        $this->getState()->setData($data);
+    }
+
+    /**
+     * Add
+     */
+    public function add()
+    {
+        $task = $this->taskFactory->create();
+        $task->name = $this->getSanitizer()->getString('name');
+        $task->class = $this->getSanitizer()->getString('class');
+        $task->schedule = $this->getSanitizer()->getString('schedule');
+        $task->status = \Xibo\Entity\Task::$STATUS_IDLE;
+        $task->lastRunStatus = 0;
+        $task->isActive = 0;
+        $task->runNow = 0;
+        $task->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Added %s'), $task->name),
+            'id' => $task->taskId,
+            'data' => $task
+        ]);
+    }
+
+    /**
+     * Edit Form
+     * @param $taskId
+     */
+    public function editForm($taskId)
+    {
+        $task = $this->taskFactory->getById($taskId);
+
+        $this->getState()->template = 'task-form-edit';
+        $this->getState()->setData([
+            'task' => $task
+        ]);
+    }
+
+    /**
+     * @param $taskId
+     */
+    public function edit($taskId)
+    {
+        $task = $this->taskFactory->getById($taskId);
+        $task->name = $this->getSanitizer()->getString('name');
+        $task->schedule = $this->getSanitizer()->getString('schedule');
+        $task->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 200,
+            'message' => sprintf(__('Edited %s'), $task->name),
+            'id' => $task->taskId,
+            'data' => $task
+        ]);
     }
 
     /**

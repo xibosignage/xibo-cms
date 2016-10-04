@@ -1,0 +1,38 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2016 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Task" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#taskEdit").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="taskEdit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("task.edit", {id: task.taskId}) }}">
+
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name for this Task" %}{% endset %}
+                {{ forms.input("name", title, task.name, helpText, "", "required") }}
+
+                {% set title %}{% trans "Schedule" %}{% endset %}
+                {% set helpText %}{% trans "The schedule for this task in CRON syntax" %}{% endset %}
+                {{ forms.input("schedule", title, task.schedule, helpText, "", "required") }}
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

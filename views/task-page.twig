@@ -26,7 +26,9 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
+        {% if settings.TASK_CONFIG_LOCKED_CHECKB == "Unchecked" %}
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ urlFor("task.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Task" %}</a></li>
+        {% endif %}
     </ul>
 {% endblock %}
 
@@ -48,6 +50,7 @@
                             <tr>
                                 <th>{% trans "ID" %}</th>
                                 <th>{% trans "Name" %}</th>
+                                <th>{% trans "Active" %}</th>
                                 <th>{% trans "Status" %}</th>
                                 <th>{% trans "Next Run" %}</th>
                                 <th>{% trans "Run Now" %}</th>
@@ -83,7 +86,25 @@
             "columns": [
                 { "data": "taskId" },
                 { "data": "name" },
-                { "data": "status" },
+                {
+                    "data": "isActive",
+                    "render": dataTableTickCrossColumn
+                },
+                {
+                    "data": "status",
+                    "render": function (data, type) {
+                        if (type != "display")
+                            return data;
+
+                        var icon = "";
+                        if (data == 1)
+                            icon = "fa-cogs";
+                        else
+                            icon = "fa-power-off";
+
+                        return "<span class='fa " + icon + "'></span>";
+                    }
+                },
                 {
                     "data": "nextRunDt",
                     "render": dataTableDateFromUnix

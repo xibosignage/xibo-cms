@@ -33,6 +33,10 @@
     {
       "step": "Tasks page",
       "action": "INSERT INTO pages (name, title, asHome) VALUES ('task', 'Task', 1);"
+    },
+    {
+      "step": "Setting to lock task config",
+      "action": "INSERT INTO setting (setting, value, fieldType, helptext, options, cat, userChange, title, validation, ordering, `default`, userSee, type) VALUES ('TASK_CONFIG_LOCKED_CHECKB', 'Unchecked', 'dropdown', 'Is the task config locked? Useful for Service providers.', 'Checked|Unchecked', 'defaults', 0, 'Lock Task Config', '', 30, 'Unchecked', 0, 'word');"
     }
   ]
 }
