@@ -22,13 +22,36 @@
 
 namespace Xibo\Exception;
 
-
-class NotFoundException extends \Exception
+/**
+ * Class NotFoundException
+ * @package Xibo\Exception
+ */
+class NotFoundException extends XiboException
 {
-    public function __construct($message = "", $code = 0, \Exception $previous = null) {
-        if ($message === "")
+    public $httpStatusCode = 404;
+    public $handledException = true;
+    public $entity = null;
+
+    /**
+     * NotFoundException constructor.
+     * @param string $message
+     * @param string $entity
+     */
+    public function __construct($message = null, $entity = null)
+    {
+        $this->entity = $entity;
+
+        if ($message === null)
             $message = __('Not Found');
 
-        parent::__construct($message, $code, $previous);
+        parent::__construct($message);
+    }
+
+    /**
+     * @return array
+     */
+    public function getErrorData()
+    {
+        return ['entity' => $this->entity];
     }
 }

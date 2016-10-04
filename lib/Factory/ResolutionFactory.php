@@ -83,7 +83,7 @@ class ResolutionFactory extends BaseFactory
         $resolutions = $this->query(null, array('disableUserCheck' => 1, 'resolutionId' => $resolutionId));
 
         if (count($resolutions) <= 0)
-            throw new NotFoundException;
+            throw new NotFoundException(null, 'Resolution');
 
         return $resolutions[0];
     }
