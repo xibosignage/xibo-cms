@@ -55,16 +55,36 @@ $log->debug('XTR started');
 $db = (new \Xibo\Storage\PdoStorageService())->setConnection();
 
 // Query for a list of tasks to run.
-$tasks = $db->select('SELECT taskId, schedule, runNow FROM `tasks` WHERE isActive = 1 AND status <> :status', [
+$tasks = $db->select('SELECT taskId, schedule, runNow FROM `task` WHERE isActive = 1 AND status <> :status', [
     'status' => \Xibo\Entity\Task::$STATUS_RUNNING
 ]);
 
 $log->debug('Found ' . count($tasks) . ' to analyse.');
 
 foreach ($tasks as $task) {
-    // Spawn a process for each one
+    /** @var \Xibo\Entity\Task $task */
+    $cron = \Cron\CronExpression::factory($task['schedule']);
 
+    if ($task['runNow'] == 1 || $cron->isDue()) {
+        $log->debug($task['taskId'] . ' due');
+        $builder = new Symfony\Component\Process\ProcessBuilder();
+        $builder
+            ->setPrefix('php')
+            ->disableOutput();
+
+        // Spawn a process for each one
+        $builder
+            ->setArguments(['bin/run.php', $task['taskId']])
+            ->getProcess()
+            ->start();
+
+    } else {
+        $log->debug($task['taskId'] . ' not due');
+    }
 }
+
+// A short nap is required to give the processes time to fork
+sleep(5);
 
 // Finish - children are still running
 $log->debug('Exiting');

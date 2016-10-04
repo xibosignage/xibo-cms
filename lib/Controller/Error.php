@@ -105,9 +105,6 @@ class Error extends Base
             case 'console':
             case 'maint':
 
-                // Set up theme
-                \Xibo\Middleware\Theme::setTheme($app);
-
                 // Render the error page.
                 echo $message;
 

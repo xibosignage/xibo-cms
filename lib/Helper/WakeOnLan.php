@@ -9,7 +9,7 @@
 namespace Xibo\Helper;
 
 
-use Xibo\Service\LogService;
+use Xibo\Service\LogServiceInterface;
 
 class WakeOnLan
 {
@@ -20,7 +20,7 @@ class WakeOnLan
      * @param string $address
      * @param int $cidr
      * @param int $port
-     * @param LogService $logger
+     * @param LogServiceInterface $logger
      * @version 2
      * @author DS508_customer (http://www.synology.com/enu/forum/memberlist.php?mode=viewprofile&u=12636)
      * Please inform the author of any suggestions on (the functionality, graphical design, ... of) this application.

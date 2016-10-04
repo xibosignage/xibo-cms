@@ -50,14 +50,14 @@ class TaskFactory extends BaseFactory
         $tasks = $this->query(null, array('taskId' => $taskId));
 
         if (count($tasks) <= 0)
-            throw new NotFoundException('Unknown Route');
+            throw new NotFoundException();
 
         return $tasks[0];
     }
 
     /**
      * Get by Name
-     * @param int $task
+     * @param string $task
      * @return Task
      * @throws NotFoundException if the task cannot be resolved from the provided route
      */
@@ -66,7 +66,23 @@ class TaskFactory extends BaseFactory
         $tasks = $this->query(null, array('name' => $task));
 
         if (count($tasks) <= 0)
-            throw new NotFoundException('Unknown Route');
+            throw new NotFoundException();
+
+        return $tasks[0];
+    }
+
+    /**
+     * Get by Class
+     * @param string $class
+     * @return Task
+     * @throws NotFoundException if the task cannot be resolved from the provided route
+     */
+    public function getByClass($class)
+    {
+        $tasks = $this->query(null, array('class' => $class));
+
+        if (count($tasks) <= 0)
+            throw new NotFoundException();
 
         return $tasks[0];
     }
@@ -85,7 +101,7 @@ class TaskFactory extends BaseFactory
         $params = array();
         $sql = '
           SELECT `taskId`, `name`, `status`, `class`, `options`, `schedule`, 
-              `lastRunDt`, `lastRunMessage`, `lastRunStatus`,
+              `lastRunDt`, `lastRunMessage`, `lastRunStatus`, `lastRunDuration`,
               `isActive`, `runNow`
             FROM `task` 
            WHERE 1 = 1 
@@ -94,6 +110,11 @@ class TaskFactory extends BaseFactory
         if ($this->getSanitizer()->getString('name', $filterBy) != null) {
             $params['name'] = $this->getSanitizer()->getString('name', $filterBy);
             $sql .= ' AND `name` = :name ';
+        }
+
+        if ($this->getSanitizer()->getString('class', $filterBy) != null) {
+            $params['class'] = $this->getSanitizer()->getString('class', $filterBy);
+            $sql .= ' AND `class` = :class ';
         }
 
         if ($this->getSanitizer()->getInt('taskId', $filterBy) !== null) {
@@ -106,7 +127,16 @@ class TaskFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->create()->hydrate($row);
+            $task = $this->create()->hydrate($row, [
+                'intProperties' => ['status', 'lastRunStatus', 'lastRunDt', 'runNow', 'isActive']
+            ]);
+
+            if ($task->options != null)
+                $task->options = json_decode($task->options, true);
+            else
+                $task->options = [];
+
+            $entries[] = $task;
         }
 
         return $entries;

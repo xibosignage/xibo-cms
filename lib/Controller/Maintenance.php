@@ -9,23 +9,11 @@
 namespace Xibo\Controller;
 
 
-use Stash\Interfaces\PoolInterface;
-use Xibo\Entity\Layout;
-use Xibo\Entity\UserGroup;
-use Xibo\Entity\UserNotification;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Factory\NotificationFactory;
-use Xibo\Factory\UpgradeFactory;
-use Xibo\Factory\UserFactory;
-use Xibo\Factory\UserGroupFactory;
-use Xibo\Factory\UserNotificationFactory;
-use Xibo\Helper\WakeOnLan;
-use Xibo\Service\ConfigService;
+use Xibo\Factory\TaskFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -38,35 +26,14 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class Maintenance extends Base
 {
+    /** @var TaskFactory */
+    private $taskFactory;
+
     /** @var  StorageServiceInterface */
     private $store;
 
-    /** @var  PoolInterface */
-    private $pool;
-
-    /** @var  UserFactory */
-    private $userFactory;
-
-    /** @var  UserGroupFactory */
-    private $userGroupFactory;
-
-    /** @var  LayoutFactory */
-    private $layoutFactory;
-
-    /** @var  DisplayFactory */
-    private $displayFactory;
-
-    /** @var  UpgradeFactory */
-    private $upgradeFactory;
-
     /** @var  MediaFactory */
     private $mediaFactory;
-
-    /** @var  NotificationFactory */
-    private $notificationFactory;
-
-    /** @var  UserNotificationFactory */
-    private $userNotificationFactory;
 
     /**
      * Set common dependencies.
@@ -78,38 +45,22 @@ class Maintenance extends Base
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
-     * @param PoolInterface $pool
-     * @param UserFactory $userFactory
-     * @param UserGroupFactory $userGroupFactory
-     * @param LayoutFactory $layoutFactory
-     * @param DisplayFactory $displayFactory
-     * @param UpgradeFactory $upgradeFactory
+     * @param TaskFactory $taskFactory
      * @param MediaFactory $mediaFactory
-     * @param NotificationFactory $notificationFactory
-     * @param UserNotificationFactory $userNotificationFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $upgradeFactory, $mediaFactory, $notificationFactory, $userNotificationFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $taskFactory, $mediaFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
-
+        $this->taskFactory = $taskFactory;
         $this->store = $store;
-        $this->userGroupFactory = $userGroupFactory;
-        $this->pool = $pool;
-        $this->userFactory = $userFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->displayFactory = $displayFactory;
-        $this->upgradeFactory = $upgradeFactory;
         $this->mediaFactory = $mediaFactory;
-        $this->notificationFactory = $notificationFactory;
-        $this->userNotificationFactory = $userNotificationFactory;
     }
 
-
+    /**
+     * Run Maintenance through the WEB portal
+     */
     public function run()
     {
-        // Always start a transaction
-        $this->store->getConnection()->beginTransaction();
-
         // Output HTML Headers
         print '<html>';
         print '  <head>';
@@ -137,377 +88,17 @@ class Maintenance extends Base
 
                 // Get key from arguments
                 $pKey = $this->getSanitizer()->getString('key');
-
-                // If we arrive from the console, then set aKey == key so that we bypass the key check.
-                if ($this->getApp()->getName() == 'console')
-                    $aKey = $key;
             }
 
             if (($aKey == $key) || ($pKey == $key) || ($this->getConfig()->GetSetting("MAINTENANCE_ENABLED")=="On")) {
 
-                // Upgrade
-                // Is there a pending upgrade (i.e. are there any pending upgrade steps).
-                if ($this->getConfig()->isUpgradePending()) {
-                    $steps = $this->upgradeFactory->getIncomplete();
-
-                    if (count($steps) <= 0) {
-
-                        // Insert pending upgrade steps.
-                        $steps = $this->upgradeFactory->createSteps(DBVERSION, ConfigService::$WEBSITE_VERSION);
-
-                        foreach ($steps as $step) {
-                            /* @var \Xibo\Entity\Upgrade $step */
-                            $step->save();
-                        }
-                    }
-
-                    // Cycle through the steps until done
-                    set_time_limit(0);
-
-                    foreach ($steps as $upgradeStep) {
-                        /* @var \Xibo\Entity\Upgrade $upgradeStep */
-                        try {
-                            $upgradeStep->doStep();
-                            $upgradeStep->complete = 1;
-                            $upgradeStep->lastTryDate = $this->getDate()->parse()->format('U');
-                            $upgradeStep->save();
-                        }
-                        catch (\Exception $e) {
-                            $upgradeStep->lastTryDate = $this->getDate()->parse()->format('U');
-                            $upgradeStep->save();
-                            $this->getLog()->error('Unable to run upgrade step. Message = %s', $e->getMessage());
-                            $this->getLog()->error($e->getTraceAsString());
-
-                            throw new ConfigurationException($e->getMessage());
-                        }
-                    }
+                // Are we quick maintenance?
+                if ($quick) {
+                    $this->runTask('MaintenanceRegularTask');
+                    $this->runTask('EmailNotificationsTask');
                 }
 
-                // Email Alerts
-                // Note that email alerts for displays coming back online are triggered directly from
-                // the XMDS service.
-
-                print "<h1>" . __("Email Alerts") . "</h1>";
-
-                $emailAlerts = ($this->getConfig()->GetSetting("MAINTENANCE_EMAIL_ALERTS") == 'On');
-                $alwaysAlert = ($this->getConfig()->GetSetting("MAINTENANCE_ALWAYS_ALERT") == 'On');
-                $alertForViewUsers = ($this->getConfig()->GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1);
-
-                foreach ($this->getApp()->container->get('\Xibo\Controller\Display')->setApp($this->getApp())->validateDisplays($this->displayFactory->query()) as $display) {
-                    /* @var \Xibo\Entity\Display $display */
-                    // Is this the first time this display has gone "off-line"
-                    $displayGoneOffline = ($display->loggedIn == 1);
-
-                    // Should we send an email?
-                    if ($emailAlerts) {
-                        // Alerts enabled for this display
-                        if ($display->emailAlert == 1) {
-                            // Display just gone offline, or always alert
-                            if ($displayGoneOffline || $alwaysAlert) {
-                                // Fields for email
-                                $subject = sprintf(__("Email Alert for Display %s"), $display->display);
-                                $body = sprintf(__("Display %s with ID %d was last seen at %s."), $display->display, $display->displayId, $this->getDate()->getLocalDate($display->lastAccessed));
-
-                                // Add to system
-                                $notification = $this->notificationFactory->createEmpty();
-                                $notification->subject = $subject;
-                                $notification->body = $body;
-                                $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
-                                $notification->releaseDt = $this->getDate()->getLocalDate(null, 'U');
-                                $notification->isEmail = 1;
-                                $notification->isInterrupt = 0;
-                                $notification->userId = $this->getUser()->userId;
-                                $notification->isSystem = 1;
-
-                                // Add the system notifications group - if there is one.
-                                foreach ($this->userGroupFactory->getSystemNotificationGroups() as $group) {
-                                    /* @var UserGroup $group */
-                                    $notification->assignUserGroup($group);
-                                }
-
-                                // Get a list of people that have view access to the display?
-                                if ($alertForViewUsers) {
-
-                                    foreach ($this->userGroupFactory->getByDisplayGroupId($display->displayGroupId) as $group) {
-                                        /* @var UserGroup $group */
-                                        $notification->assignUserGroup($group);
-                                    }
-                                }
-
-                                $notification->save();
-
-                                echo 'A';
-                            } else {
-                                echo 'U';
-                            }
-                        }
-                        else {
-                            // Alert disabled for this display
-                            print "D";
-                        }
-                    }
-                    else {
-                        // Email alerts disabled globally
-                        print "X";
-                    }
-                }
-
-                // Log Tidy
-                print "<h1>" . __("Tidy Logs") . "</h1>";
-                if (!$quick && $this->getConfig()->GetSetting("MAINTENANCE_LOG_MAXAGE") != 0) {
-
-                    $maxage = date("Y-m-d H:i:s", time() - (86400 * $this->getSanitizer()->int($this->getConfig()->GetSetting("MAINTENANCE_LOG_MAXAGE"))));
-
-                    try {
-                        $dbh = $this->store->getConnection();
-
-                        $sth = $dbh->prepare('DELETE FROM `log` WHERE logdate < :maxage');
-                        $sth->execute(array(
-                            'maxage' => $maxage
-                        ));
-
-                        print __('Done.');
-                    }
-                    catch (\PDOException $e) {
-                        $this->getLog()->error($e->getMessage());
-                    }
-                }
-                else {
-                    print "-&gt;" . __("Disabled") . "<br/>\n";
-                }
-
-                //
-                // Stats Tidy
-                //
-                print "<h1>" . __("Tidy Stats") . "</h1>";
-                if (!$quick &&  $this->getConfig()->GetSetting("MAINTENANCE_STAT_MAXAGE") != 0) {
-
-                    $maxage = date("Y-m-d H:i:s",time() - (86400 * $this->getSanitizer()->int($this->getConfig()->GetSetting("MAINTENANCE_STAT_MAXAGE"))));
-
-                    try {
-                        $dbh = $this->store->getConnection();
-
-                        $sth = $dbh->prepare('DELETE FROM `stat` WHERE statDate < :maxage');
-                        $sth->execute(array(
-                            'maxage' => $maxage
-                        ));
-
-                        print __('Done.');
-                    }
-                    catch (\PDOException $e) {
-                        $this->getLog()->error($e->getMessage());
-                    }
-                }
-                else {
-                    print "-&gt;" . __("Disabled") . "<br/>\n";
-                }
-
-                //
-                // Tidy the Cache
-                //
-                echo '<h1>' . __('Tidy Cache') . '</h1>';
-                if (!$quick) {
-                    $this->pool->purge();
-                } else {
-                    echo '-&gt;' . __('Disabled') . '<br/>\n';
-                }
-                echo __('Done.');
-
-                //
-                // Validate Display Licence Slots
-                //
-                $maxDisplays = $this->getConfig()->GetSetting('MAX_LICENSED_DISPLAYS');
-
-                if ($maxDisplays > 0) {
-                    print '<h1>' . __('Licence Slot Validation') . '</h1>';
-
-                    // Get a list of all displays
-                    try {
-                        $dbh = $this->store->getConnection();
-                        $sth = $dbh->prepare('SELECT displayId, display FROM `display` WHERE licensed = 1 ORDER BY lastAccessed');
-                        $sth->execute();
-
-                        $displays = $sth->fetchAll(\PDO::FETCH_ASSOC);
-
-                        if (count($displays) > $maxDisplays) {
-                            // :(
-                            // We need to un-licence some displays
-                            $difference = count($displays) - $maxDisplays;
-
-                            $update = $dbh->prepare('UPDATE `display` SET licensed = 0 WHERE displayId = :displayId');
-
-                            foreach ($displays as $display) {
-
-                                // If we are down to 0 difference, then stop
-                                if ($difference == 0)
-                                    break;
-
-                                echo sprintf(__('Disabling %s'), $this->getSanitizer()->string($display['display'])) . '<br/>' . PHP_EOL;
-                                $update->execute(['displayId' => $display['displayId']]);
-
-                                $difference--;
-                            }
-                        }
-                        else {
-                            echo __('Done.');
-                        }
-                    }
-                    catch (\Exception $e) {
-                        $this->getLog()->error($e);
-                    }
-                }
-
-                // Wake On LAN
-                print '<h1>' . __('Wake On LAN') . '</h1>';
-
-                try {
-                    $dbh = $this->store->getConnection();
-
-                    // Get a list of all displays which have WOL enabled
-                    $sth = $dbh->prepare('SELECT DisplayID, Display, WakeOnLanTime, LastWakeOnLanCommandSent FROM `display` WHERE WakeOnLan = 1');
-                    $sth->execute(array());
-
-                    foreach($this->displayFactory->query(null, ['wakeOnLan' => 1]) as $display) {
-
-                        // Time to WOL (with respect to today)
-                        $timeToWake = strtotime(date('Y-m-d') . ' ' . $display->wakeOnLanTime);
-                        $timeNow = time();
-
-                        // Should the display be awake?
-                        if ($timeNow >= $timeToWake) {
-                            // Client should be awake, so has this displays WOL time been passed
-                            if ($display->lastWakeOnLanCommandSent < $timeToWake) {
-                                // Call the Wake On Lan method of the display object
-                                if ($display->macAddress == '' || $display->broadCastAddress == '')
-                                    throw new \InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
-
-                                $this->getLog()->notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);
-
-                                try {
-                                    WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9', $this->getLog());
-                                    print $display->display . ':Sent WOL Message. Previous WOL send time: ' . $this->getDate()->getLocalDate($display->lastWakeOnLanCommandSent) . '<br/>\n';
-
-                                    $display->lastWakeOnLanCommandSent = time();
-                                    $display->save(['validate' => false, 'audit' => true]);
-                                }
-                                catch (\Exception $e) {
-                                    print $display->display . ':Error=' . $e->getMessage() . '<br/>\n';
-                                }
-                            }
-                            else
-                                print $display->display . ':Display already awake. Previous WOL send time: ' . $this->getDate()->getLocalDate($display->lastWakeOnLanCommandSent) . '<br/>\n';
-                        }
-                        else
-                            print $display->display . ':Sleeping<br/>\n';
-                        print $display->display . ':N/A<br/>\n';
-                    }
-
-                    print __('Done.');
-                }
-                catch (\PDOException $e) {
-                    $this->getLog()->error($e->getMessage());
-                }
-
-                echo '<h1>' . __('Import Layouts') . '</h1>';
-
-                if (!$this->getConfig()->isUpgradePending() && $this->getConfig()->GetSetting('DEFAULTS_IMPORTED') == 0) {
-
-                    $folder = PROJECT_ROOT . '/web/' . $this->getConfig()->uri('layouts', true);
-
-                    foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
-                        if (stripos($file, '.zip')) {
-                            $layout = $this->layoutFactory->createFromZip($folder . '/' . $file, null, 1, false, false, true, false, true, $this->getApp()->container->get('\Xibo\Controller\Library')->setApp($this->getApp()));
-                            $layout->save([
-                                'audit' => false
-                            ]);
-                        }
-                    }
-
-                    // Install files
-                    $this->getApp()->container->get('\Xibo\Controller\Library')->installAllModuleFiles();
-
-                    $this->getConfig()->ChangeSetting('DEFAULTS_IMPORTED', 1);
-
-                    print __('Done.');
-                } else {
-                    print __('Not Required.');
-                }
-
-                print '<h1>' . __('Build Layouts') . '</h1>';
-
-                // Build Layouts
-                foreach ($this->layoutFactory->query(null, ['status' => 3]) as $layout) {
-                    /* @var Layout $layout */
-                    try {
-                        $layout->xlfToDisk(['notify' => false]);
-                    } catch (\Exception $e) {
-                        $this->getLog()->error('Maintenance cannot build Layout %d, %s.', $layout->layoutId, $e->getMessage());
-                    }
-                }
-                print __('Done.');
-
-                print '<h1>' . __('Tidy Library') . '</h1>';
-                // Keep tidy
-                /** @var Library $libraryController */
-                $libraryController = $this->getApp()->container->get('\Xibo\Controller\Library');
-                $libraryController->removeExpiredFiles();
-                $libraryController->removeTempFiles();
-
-                // Install module files
-                if (!$quick) {
-                    $this->getLog()->debug('Installing Module Files');
-                    $libraryController->installAllModuleFiles();
-                }
-                print __('Done.');
-
-                // Handle queue of notifications to email.
-                print '<h1>' . __('Email Notifications') . '</h1>';
-
-                $msgFrom = $this->getConfig()->GetSetting("mail_from");
-
-                $this->getLog()->debug('Notification Queue sending from %s', $msgFrom);
-
-                foreach ($this->userNotificationFactory->getEmailQueue() as $notification) {
-                    /** @var UserNotification $notification */
-
-                    $this->getLog()->debug('Notification found: %d', $notification->notificationId);
-
-                    if ($notification->isSystem == 1)
-                        $notification->email = $this->getUser()->email;
-
-                    if ($notification->email != '') {
-
-                        $this->getLog()->debug('Sending Notification email to %s.', $notification->email);
-
-                        // Send them an email
-                        $mail = new \PHPMailer();
-                        $mail->From = $msgFrom;
-                        $mail->FromName = $this->getConfig()->getThemeConfig('theme_name');
-                        $mail->Subject = $notification->subject;
-                        $mail->addAddress($notification->email);
-
-                        // Body
-                        $mail->isHTML(true);
-                        $mail->AltBody = $notification->body;
-                        $mail->Body = $this->generateEmailBody($notification->subject, $notification->body);
-
-                        if (!$mail->send()) {
-                            $this->getLog()->error('Unable to send email notification mail to %s', $notification->email);
-                            echo 'E';
-                        } else {
-                            echo 'A';
-                        }
-
-                        $this->getLog()->debug('Marking notification as sent');
-                    } else {
-                        $this->getLog()->error('Discarding NotificationId %d as no email address could be resolved.', $notification->notificationId);
-                    }
-
-                    // Mark as sent
-                    $notification->setEmailed($this->getDate()->getLocalDate(null, 'U'));
-                    $notification->save();
-                }
-                print __('Done.');
+                $this->runTask('MaintenanceDailyTask');
             }
             else {
                 print __("Maintenance key invalid.");
@@ -525,26 +116,23 @@ class Maintenance extends Base
     }
 
     /**
-     * Generate an email body
-     * @param $subject
-     * @param $body
-     * @return string
-     * @throws ConfigurationException
+     * Run task
+     * @param $class
      */
-    private function generateEmailBody($subject, $body)
+    private function runTask($class)
     {
-        // Generate Body
-        // Start an object buffer
-        ob_start();
+        /** @var Task $taskController */
+        $taskController = $this->getApp()->container->get('\Xibo\Controller\Task');
+        $taskController->setApp($this->getApp());
 
-        // Render the template
-        $this->getApp()->render('email-template.twig', ['config' => $this->getConfig(), 'subject' => $subject, 'body' => $body]);
+        $task = $this->taskFactory->getByClass('\Xibo\XTR\\' . $class);
 
-        $body = ob_get_contents();
+        // Hand off to the task controller
+        $taskController->run($task->taskId);
 
-        ob_end_clean();
-
-        return $body;
+        // Echo the task output
+        $task = $this->taskFactory->getById($task->taskId);
+        echo \Parsedown::instance()->text($task->lastRunMessage);
     }
 
     /**

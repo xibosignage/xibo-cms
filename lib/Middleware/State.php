@@ -658,15 +658,8 @@ class State extends Middleware
                 $container->dateService,
                 $container->configService,
                 $container->store,
-                $container->pool,
-                $container->userFactory,
-                $container->userGroupFactory,
-                $container->layoutFactory,
-                $container->displayFactory,
-                $container->upgradeFactory,
-                $container->mediaFactory,
-                $container->notificationFactory,
-                $container->userNotificationFactory
+                $container->taskFactory,
+                $container->mediaFactory
             );
         });
 
@@ -881,7 +874,17 @@ class State extends Middleware
                 $container->helpService,
                 $container->dateService,
                 $container->configService,
-                $container->taskFactory
+                $container->store,
+                $container->pool,
+                $container->taskFactory,
+                $container->userFactory,
+                $container->userGroupFactory,
+                $container->layoutFactory,
+                $container->displayFactory,
+                $container->upgradeFactory,
+                $container->mediaFactory,
+                $container->notificationFactory,
+                $container->userNotificationFactory
             );
         });
 
