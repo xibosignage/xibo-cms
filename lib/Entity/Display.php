@@ -26,6 +26,7 @@ namespace Xibo\Entity;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -465,10 +466,10 @@ class Display implements \JsonSerializable
     public function validate()
     {
         if (!v::string()->notEmpty()->validate($this->display))
-            throw new \InvalidArgumentException(__('Can not have a display without a name'));
+            throw new InvalidArgumentException(__('Can not have a display without a name'), 'name');
 
         if ($this->wakeOnLanEnabled == 1 && $this->wakeOnLanTime == '')
-            throw new \InvalidArgumentException(__('Wake on Lan is enabled, but you have not specified a time to wake the display'));
+            throw new InvalidArgumentException(__('Wake on Lan is enabled, but you have not specified a time to wake the display'), 'wakeonlan');
 
         // Check the number of licensed displays
         $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
@@ -482,17 +483,17 @@ class Display implements \JsonSerializable
                 $this->getLog()->debug('There are %d licenced displays and we the maximum is %d', $countLicensed[0]['CountLicensed'], $maxDisplays);
 
                 if (intval($countLicensed[0]['CountLicensed']) + 1 > $maxDisplays)
-                    throw new \InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays));
+                    throw new InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays), 'maxDisplays');
             }
         }
 
         // Broadcast Address
         if ($this->broadCastAddress != '' && !v::ip()->validate($this->broadCastAddress))
-            throw new \InvalidArgumentException(__('BroadCast Address is not a valid IP Address'));
+            throw new InvalidArgumentException(__('BroadCast Address is not a valid IP Address'), 'broadCastAddress');
 
         // CIDR
         if (!empty($this->cidr) && !v::numeric()->between(0, 32)->validate($this->cidr))
-            throw new \InvalidArgumentException(__('CIDR subnet mask is not a number within the range of 0 to 32.'));
+            throw new InvalidArgumentException(__('CIDR subnet mask is not a number within the range of 0 to 32.'), 'cidr');
 
         // secureOn
         if ($this->secureOn != '') {
@@ -500,7 +501,7 @@ class Display implements \JsonSerializable
             $this->secureOn = str_replace(":", "-", $this->secureOn);
 
             if ((!preg_match("/([A-F0-9]{2}[-]){5}([0-9A-F]){2}/", $this->secureOn)) || (strlen($this->secureOn) != 17))
-                throw new \InvalidArgumentException(__('Pattern of secureOn-password is not "xx-xx-xx-xx-xx-xx" (x = digit or CAPITAL letter)'));
+                throw new InvalidArgumentException(__('Pattern of secureOn-password is not "xx-xx-xx-xx-xx-xx" (x = digit or CAPITAL letter)'), 'secureOn');
         }
 
         // Mac Address Changes
@@ -512,10 +513,10 @@ class Display implements \JsonSerializable
 
         // Lat/Long
         if (!empty($this->longitude) && !v::longitude()->validate($this->longitude))
-            throw new \InvalidArgumentException(__('The longitude entered is not valid.'));
+            throw new InvalidArgumentException(__('The longitude entered is not valid.'), 'longitude');
 
         if (!empty($this->latitude) && !v::latitude()->validate($this->latitude))
-            throw new \InvalidArgumentException(__('The latitude entered is not valid.'));
+            throw new InvalidArgumentException(__('The latitude entered is not valid.'), 'latitude');
     }
 
     /**

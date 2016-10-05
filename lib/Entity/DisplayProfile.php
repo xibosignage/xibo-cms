@@ -9,6 +9,7 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -208,10 +209,10 @@ class DisplayProfile
     public function validate()
     {
         if (!v::string()->notEmpty()->validate($this->name))
-            throw new \InvalidArgumentException(__('Missing name'));
+            throw new InvalidArgumentException(__('Missing name'), 'name');
 
         if (!v::string()->notEmpty()->validate($this->type))
-            throw new \InvalidArgumentException(__('Missing type'));
+            throw new InvalidArgumentException(__('Missing type'), 'type');
 
         // Check there is only 1 default (including this one)
         $sql = '
@@ -231,7 +232,7 @@ class DisplayProfile
         $count = $this->getStore()->select($sql, $params);
 
         if ($count[0]['cnt'] + $this->isDefault > 1)
-            throw new \InvalidArgumentException(__('Only 1 default per display type is allowed.'));
+            throw new InvalidArgumentException(__('Only 1 default per display type is allowed.'), 'isDefault');
     }
 
     /**

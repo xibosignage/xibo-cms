@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
@@ -187,7 +188,7 @@ class Campaign implements \JsonSerializable
     public function validate()
     {
         if (!v::string()->notEmpty()->validate($this->campaign))
-            throw new \InvalidArgumentException(__('Name cannot be empty'));
+            throw new InvalidArgumentException(__('Name cannot be empty'), 'name');
     }
 
     /**
