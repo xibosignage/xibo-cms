@@ -100,8 +100,8 @@ class TaskFactory extends BaseFactory
         $entries = array();
         $params = array();
         $sql = '
-          SELECT `taskId`, `name`, `status`, `class`, `options`, `schedule`, 
-              `lastRunDt`, `lastRunMessage`, `lastRunStatus`, `lastRunDuration`,
+          SELECT `taskId`, `name`, `status`, `pid`, `class`, `options`, `schedule`, 
+              `lastRunDt`, `lastRunMessage`, `lastRunStatus`, `lastRunDuration`, `lastRunExitCode`,
               `isActive`, `runNow`
             FROM `task` 
            WHERE 1 = 1 
@@ -128,7 +128,9 @@ class TaskFactory extends BaseFactory
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $task = $this->create()->hydrate($row, [
-                'intProperties' => ['status', 'lastRunStatus', 'lastRunDt', 'runNow', 'isActive']
+                'intProperties' => [
+                    'status', 'lastRunStatus', 'lastRunDt', 'lastRunExitCode', 'runNow', 'isActive', 'pid'
+                ]
             ]);
 
             if ($task->options != null)

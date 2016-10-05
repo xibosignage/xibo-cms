@@ -237,15 +237,10 @@ class Task extends Base
 
         // Set to running
         $this->getLog()->debug('Running Task ' . $task->name . ' [' . $task->taskId . ']');
-        $task->status = \Xibo\Entity\Task::$STATUS_RUNNING;
-        $task->save();
-
-        $this->store->commitIfNecessary();
 
         // Run
         try {
             $start = time();
-            sleep(10);
 
             $taskClass
                 ->setApp($this->getApp())
@@ -273,7 +268,6 @@ class Task extends Base
             $task->lastRunStatus = \Xibo\Entity\Task::$STATUS_ERROR;
         }
 
-        $task->status = \Xibo\Entity\Task::$STATUS_IDLE;
         $task->lastRunDt = $this->getDate()->parse()->format('U');
         $task->runNow = 0;
 

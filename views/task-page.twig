@@ -92,17 +92,26 @@
                 },
                 {
                     "data": "status",
-                    "render": function (data, type) {
+                    "render": function (data, type, row) {
                         if (type != "display")
                             return data;
 
                         var icon = "";
-                        if (data == 1)
+                        var title = "";
+                        if (data == 1) {
+                            title = "PID: " + row.pid;
                             icon = "fa-cogs";
-                        else
+                        }
+                        else if (data == 3) {
+                            title = "Exit: " + row.lastRunExitCode;
+                            icon = "fa-bug";
+                        }
+                        else {
+                            title = "";
                             icon = "fa-power-off";
+                        }
 
-                        return "<span class='fa " + icon + "'></span>";
+                        return "<span class='fa " + icon + "' title='" + title + "'></span>";
                     }
                 },
                 {

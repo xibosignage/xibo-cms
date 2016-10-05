@@ -46,7 +46,7 @@ if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
 $config = \Xibo\Service\ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
 
 // Set up logging to file
-$log = new \Monolog\Logger('importer');
+$log = new \Monolog\Logger('XTR');
 $log->pushHandler(new \Monolog\Handler\StreamHandler(STDOUT, \Monolog\Logger::DEBUG));
 
 $log->debug('XTR started');
@@ -61,18 +61,49 @@ $tasks = $db->select('SELECT taskId, schedule, runNow FROM `task` WHERE isActive
 
 $log->debug('Found ' . count($tasks) . ' to analyse.');
 
-foreach ($tasks as $task) {
-    /** @var \Xibo\Entity\Task $task */
-    $cron = \Cron\CronExpression::factory($task['schedule']);
+if (count($tasks) > 0) {
 
-    if ($task['runNow'] == 1 || $cron->isDue()) {
-        $log->debug($task['taskId'] . ' due');
+    // Create a stored SQL statement to update tasks
+    $updateStartSth = $db->getConnection()->prepare('UPDATE `task` SET status = :status, `pid` = :pid WHERE taskId = :taskId');
+    $updateEndSth = $db->getConnection()->prepare('UPDATE `task` SET status = :status, `pid` = 0, `lastRunExitCode` = :lastRunExitCode WHERE taskId = :taskId');
 
-        exec('nohup php bin/run.php ' . $task['taskId'] . ' > /dev/null & > /dev/null');
+    // Create a react event loop to handle the process forking and closure
+    $loop = \React\EventLoop\Factory::create();
 
-    } else {
-        $log->debug($task['taskId'] . ' not due');
+    foreach ($tasks as $task) {
+        /** @var \Xibo\Entity\Task $task */
+        $cron = \Cron\CronExpression::factory($task['schedule']);
+        $taskId = $task['taskId'];
+
+        if ($task['runNow'] == 1 || $cron->isDue()) {
+            $log->debug($taskId . ' due');
+
+            $process = new \React\ChildProcess\Process('php bin/run.php ' . $taskId);
+            $process->on('exit', function ($exitCode, $termSignal) use ($log, $updateStartSth, $updateEndSth, $taskId) {
+                $log->debug('Process finished with ' . $exitCode . ' - ' . $termSignal);
+
+                $updateEndSth->execute([
+                    'status' => (intval($exitCode) > 0) ? \Xibo\Entity\Task::$STATUS_ERROR : \Xibo\Entity\Task::$STATUS_IDLE,
+                    'lastRunExitCode' => $exitCode,
+                    'taskId' => $taskId
+                ]);
+            });
+            $process->start($loop);
+            $pid = $process->getPid();
+            $log->debug('Process Started for TaskId: ' . $taskId . '. PID = ' . $pid);
+
+            $updateStartSth->execute([
+                'status' => \Xibo\Entity\Task::$STATUS_RUNNING,
+                'pid' => $pid,
+                'taskId' => $taskId
+            ]);
+
+        } else {
+            $log->debug($taskId . ' not due');
+        }
     }
+
+    $loop->run();
 }
 
 // Finish - children are still running

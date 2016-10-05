@@ -26,14 +26,16 @@ class Task implements \JsonSerializable
 
     public $taskId;
     public $name;
-    public $status;
     public $class;
+    public $status;
+    public $pid;
     public $options = [];
     public $schedule;
     public $lastRunDt;
     public $lastRunMessage;
     public $lastRunStatus;
     public $lastRunDuration;
+    public $lastRunExitCode;
     public $isActive;
     public $runNow;
 
@@ -73,15 +75,16 @@ class Task implements \JsonSerializable
     private function add()
     {
         $this->taskId = $this->getStore()->insert('
-            INSERT INTO `task` (`name`, `status`, `class`, `options`, `schedule`, 
-              `lastRunDt`, `lastRunMessage`, `lastRunStatus`, `lastRunDuration`,
+            INSERT INTO `task` (`name`, `status`, `class`, `pid`, `options`, `schedule`, 
+              `lastRunDt`, `lastRunMessage`, `lastRunStatus`, `lastRunDuration`, `lastRunExitCode`,
               `isActive`, `runNow`) VALUES
-             (:name, :status, :class, :options, :schedule, 
-              :lastRunDt, :lastRunMessage, :lastRunStatus, :lastRunDuration,
+             (:name, :status, :class, :pid, :options, :schedule, 
+              :lastRunDt, :lastRunMessage, :lastRunStatus, :lastRunDuration, :lastRunExitCode,
               :isActive, :runNow)
         ', [
             'name' => $this->name,
             'status' => $this->status,
+            'pid' => $this->pid,
             'class' => $this->class,
             'options' => json_encode($this->options),
             'schedule' => $this->schedule,
@@ -89,6 +92,7 @@ class Task implements \JsonSerializable
             'lastRunMessage' => $this->lastRunMessage,
             'lastRunStatus' => $this->lastRunStatus,
             'lastRunDuration' => $this->lastRunDuration,
+            'lastRunExitCode' => $this->lastRunExitCode,
             'isActive' => $this->isActive,
             'runNow' => $this->runNow
         ]);
@@ -100,6 +104,7 @@ class Task implements \JsonSerializable
             UPDATE `task` SET 
               `name` = :name, 
               `status` = :status, 
+              `pid` = :pid,
               `class` = :class,
               `options` = :options, 
               `schedule` = :schedule, 
@@ -107,6 +112,7 @@ class Task implements \JsonSerializable
               `lastRunMessage` = :lastRunMessage,
               `lastRunStatus` = :lastRunStatus,
               `lastRunDuration` = :lastRunDuration,
+              `lastRunExitCode` = :lastRunExitCode,
               `isActive` = :isActive,
               `runNow` = :runNow
              WHERE `taskId` = :taskId
@@ -114,6 +120,7 @@ class Task implements \JsonSerializable
             'taskId' => $this->taskId,
             'name' => $this->name,
             'status' => $this->status,
+            'pid' => $this->pid,
             'class' => $this->class,
             'options' => json_encode($this->options),
             'schedule' => $this->schedule,
@@ -121,6 +128,7 @@ class Task implements \JsonSerializable
             'lastRunMessage' => $this->lastRunMessage,
             'lastRunStatus' => $this->lastRunStatus,
             'lastRunDuration' => $this->lastRunDuration,
+            'lastRunExitCode' => $this->lastRunExitCode,
             'isActive' => $this->isActive,
             'runNow' => $this->runNow
         ]);
