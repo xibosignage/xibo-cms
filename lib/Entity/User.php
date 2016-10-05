@@ -24,6 +24,8 @@ use League\OAuth2\Server\Entity\ScopeEntity;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\DuplicateEntityException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\LibraryFullException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\ApplicationScopeFactory;
@@ -629,22 +631,22 @@ class User implements \JsonSerializable
     public function validate()
     {
         if (!v::alnum('_')->length(1, 50)->validate($this->userName))
-            throw new \InvalidArgumentException(__('User name must be between 1 and 50 characters.'));
+            throw new InvalidArgumentException(__('User name must be between 1 and 50 characters.'), 'userName');
 
         if (!v::string()->notEmpty()->validate($this->password))
-            throw new \InvalidArgumentException(__('Please enter a Password.'));
+            throw new InvalidArgumentException(__('Please enter a Password.'), 'password');
 
         if (!v::int()->validate($this->libraryQuota))
-            throw new \InvalidArgumentException(__('Library Quota must be a whole number.'));
+            throw new InvalidArgumentException(__('Library Quota must be a whole number.'), 'libraryQuota');
 
         if (!empty($this->email) && !v::email()->validate($this->email))
-            throw new \InvalidArgumentException(__('Please enter a valid email address or leave it empty.'));
+            throw new InvalidArgumentException(__('Please enter a valid email address or leave it empty.'), 'email');
 
         try {
             $user = $this->userFactory->getByName($this->userName);
 
             if ($this->userId == null || $this->userId != $user->userId)
-                throw new \InvalidArgumentException(__('There is already a user with this name. Please choose another.'));
+                throw new DuplicateEntityException(__('There is already a user with this name. Please choose another.'));
         }
         catch (NotFoundException $e) {
 
@@ -654,7 +656,7 @@ class User implements \JsonSerializable
             $this->pageFactory->getById($this->homePageId);
         }
         catch (NotFoundException $e) {
-            throw new \InvalidArgumentException(__('Selected home page does not exist'));
+            throw new InvalidArgumentException(__('Selected home page does not exist'), 'homePageId');
         }
     }
 

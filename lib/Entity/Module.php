@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -159,10 +160,10 @@ class Module implements \JsonSerializable
     public function validate()
     {
         if (!v::string()->notEmpty()->validate($this->imageUri))
-            throw new \InvalidArgumentException(__('Image Uri is a required field.'));
+            throw new InvalidArgumentException(__('Image Uri is a required field.'), 'imageUri');
 
         if (!v::int()->validate($this->defaultDuration))
-            throw new \InvalidArgumentException(__('Default Duration is a required field.'));
+            throw new InvalidArgumentException(__('Default Duration is a required field.'), 'defaultDuration');
     }
 
     public function save()

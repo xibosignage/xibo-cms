@@ -7,6 +7,7 @@
 
 
 namespace Xibo\Entity;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DataSetColumnTypeFactory;
 use Xibo\Factory\DataTypeFactory;
@@ -137,28 +138,28 @@ class DataSetColumn implements \JsonSerializable
     public function validate()
     {
         if ($this->dataSetId == 0 || $this->dataSetId == '')
-            throw new \InvalidArgumentException(__('Missing dataSetId'));
+            throw new InvalidArgumentException(__('Missing dataSetId'), 'dataSetId');
 
         if ($this->dataTypeId == 0 || $this->dataTypeId == '')
-            throw new \InvalidArgumentException(__('Missing dataTypeId'));
+            throw new InvalidArgumentException(__('Missing dataTypeId'), 'dataTypeId');
 
         if ($this->dataSetColumnTypeId == 0 || $this->dataSetColumnTypeId == '')
-            throw new \InvalidArgumentException(__('Missing dataSetColumnTypeId'));
+            throw new InvalidArgumentException(__('Missing dataSetColumnTypeId'), 'dataSetColumnTypeId');
 
         if ($this->heading == '')
-            throw new \InvalidArgumentException(__('Please provide a column heading.'));
+            throw new InvalidArgumentException(__('Please provide a column heading.'), 'heading');
 
         // Check the actual values
         try {
             $this->dataTypeFactory->getById($this->dataTypeId);
         } catch (NotFoundException $e) {
-            throw new \InvalidArgumentException(__('Provided Data Type doesn\'t exist'));
+            throw new InvalidArgumentException(__('Provided Data Type doesn\'t exist'), 'datatype');
         }
 
         try {
             $this->dataSetColumnTypeFactory->getById($this->dataTypeId);
         } catch (NotFoundException $e) {
-            throw new \InvalidArgumentException(__('Provided DataSet Column Type doesn\'t exist'));
+            throw new InvalidArgumentException(__('Provided DataSet Column Type doesn\'t exist'), 'dataSetColumnTypeId');
         }
 
         // Validation
@@ -186,7 +187,7 @@ class DataSetColumn implements \JsonSerializable
             ));
 
             if ($sth->fetch())
-                throw new \InvalidArgumentException(__('New list content value is invalid as it does not include values for existing data'));
+                throw new InvalidArgumentException(__('New list content value is invalid as it does not include values for existing data'), 'listcontent');
         }
     }
 

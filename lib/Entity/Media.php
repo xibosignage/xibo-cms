@@ -27,7 +27,10 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\DuplicateEntityException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
@@ -382,14 +385,15 @@ class Media implements \JsonSerializable
     /**
      * Validate
      * @param array $options
+     * @throws XiboException
      */
     public function validate($options)
     {
         if (!v::string()->notEmpty()->validate($this->mediaType))
-            throw new \InvalidArgumentException(__('Unknown Module Type'));
+            throw new InvalidArgumentException(__('Unknown Module Type'), 'type');
 
         if (!v::string()->notEmpty()->length(1, 100)->validate($this->name))
-            throw new \InvalidArgumentException(__('The name must be between 1 and 100 characters'));
+            throw new InvalidArgumentException(__('The name must be between 1 and 100 characters'), 'name');
 
         // Check the naming of this item to ensure it doesn't conflict
         $params = array();
@@ -409,7 +413,7 @@ class Media implements \JsonSerializable
         $result = $this->getStore()->select($checkSQL, $params);
 
         if (count($result) > 0)
-            throw new \InvalidArgumentException(__('Media you own already has this name. Please choose another.'));
+            throw new DuplicateEntityException(__('Media you own already has this name. Please choose another.'));
     }
 
     /**

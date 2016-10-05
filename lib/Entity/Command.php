@@ -9,6 +9,7 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -132,13 +133,13 @@ class Command implements \JsonSerializable
     public function validate()
     {
         if (!v::string()->notEmpty()->length(1, 254)->validate($this->command))
-            throw new \InvalidArgumentException(__('Please enter a command name between 1 and 254 characters'));
+            throw new InvalidArgumentException(__('Please enter a command name between 1 and 254 characters'), 'command');
 
         if (!v::string()->notEmpty()->length(1, 50)->validate($this->code))
-            throw new \InvalidArgumentException(__('Please enter a code between 1 and 50 characters'));
+            throw new InvalidArgumentException(__('Please enter a code between 1 and 50 characters'), 'code');
 
         if (!v::string()->notEmpty()->length(1, 1000)->validate($this->description))
-            throw new \InvalidArgumentException(__('Please enter a description between 1 and 1000 characters'));
+            throw new InvalidArgumentException(__('Please enter a description between 1 and 1000 characters'), 'description');
     }
 
     /**

@@ -7,6 +7,7 @@
 
 
 namespace Xibo\Entity;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Service\LogServiceInterface;
@@ -178,10 +179,10 @@ class Notification implements \JsonSerializable
     public function validate()
     {
         if (empty($this->subject))
-            throw new \InvalidArgumentException(__('Please provide a subject'));
+            throw new InvalidArgumentException(__('Please provide a subject'), 'subject');
 
         if (empty($this->body))
-            throw new \InvalidArgumentException(__('Please provide a body'));
+            throw new InvalidArgumentException(__('Please provide a body'), 'body');
     }
 
     /**
