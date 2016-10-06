@@ -8,6 +8,7 @@
 
 namespace Xibo\Entity;
 use Cron\CronExpression;
+use Xibo\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -26,6 +27,7 @@ class Task implements \JsonSerializable
 
     public $taskId;
     public $name;
+    public $configFile;
     public $class;
     public $status;
     public $pid;
@@ -59,6 +61,24 @@ class Task implements \JsonSerializable
         return $cron->getNextRunDate()->format('U');
     }
 
+    /**
+     * Set class and options
+     * @throws NotFoundException
+     */
+    public function setClassAndOptions()
+    {
+        // Get the class and default set of options from the config file.
+        if (!file_exists(PROJECT_ROOT . $this->configFile))
+            throw new NotFoundException(__('Config file not found for Task'));
+
+        $config = json_decode(file_get_contents(PROJECT_ROOT . $this->configFile), true);
+        $this->class = $config['class'];
+        $this->options = array_merge($config['options'], $this->options);
+    }
+
+    /**
+     * Save
+     */
     public function save()
     {
         if ($this->taskId == null)
@@ -67,6 +87,9 @@ class Task implements \JsonSerializable
             $this->edit();
     }
 
+    /**
+     * Delete
+     */
     public function delete()
     {
         $this->getStore()->update('DELETE FROM `task` WHERE `taskId` = :taskId', ['taskId' => $this->taskId]);
@@ -75,16 +98,17 @@ class Task implements \JsonSerializable
     private function add()
     {
         $this->taskId = $this->getStore()->insert('
-            INSERT INTO `task` (`name`, `status`, `class`, `pid`, `options`, `schedule`, 
+            INSERT INTO `task` (`name`, `status`, `configFile`, `class`, `pid`, `options`, `schedule`, 
               `lastRunDt`, `lastRunMessage`, `lastRunStatus`, `lastRunDuration`, `lastRunExitCode`,
               `isActive`, `runNow`) VALUES
-             (:name, :status, :class, :pid, :options, :schedule, 
+             (:name, :status, :configFile, :class, :pid, :options, :schedule, 
               :lastRunDt, :lastRunMessage, :lastRunStatus, :lastRunDuration, :lastRunExitCode,
               :isActive, :runNow)
         ', [
             'name' => $this->name,
             'status' => $this->status,
             'pid' => $this->pid,
+            'configFile' => $this->configFile,
             'class' => $this->class,
             'options' => json_encode($this->options),
             'schedule' => $this->schedule,
@@ -105,6 +129,7 @@ class Task implements \JsonSerializable
               `name` = :name, 
               `status` = :status, 
               `pid` = :pid,
+              `configFile` = :configFile,
               `class` = :class,
               `options` = :options, 
               `schedule` = :schedule, 
@@ -121,6 +146,7 @@ class Task implements \JsonSerializable
             'name' => $this->name,
             'status' => $this->status,
             'pid' => $this->pid,
+            'configFile' => $this->configFile,
             'class' => $this->class,
             'options' => json_encode($this->options),
             'schedule' => $this->schedule,

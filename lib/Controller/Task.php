@@ -154,7 +154,10 @@ class Task extends Base
 
             // Add to the list of available tasks
             foreach ($files as $file) {
-                $data['tasksAvailable'][] = json_decode(file_get_contents($file));
+                $config = json_decode(file_get_contents($file));
+                $config->file = str_replace_first(PROJECT_ROOT, '', $file);
+
+                $data['tasksAvailable'][] = $config;
             }
         }
 
@@ -169,12 +172,13 @@ class Task extends Base
     {
         $task = $this->taskFactory->create();
         $task->name = $this->getSanitizer()->getString('name');
-        $task->class = $this->getSanitizer()->getString('class');
+        $task->configFile = $this->getSanitizer()->getString('file');
         $task->schedule = $this->getSanitizer()->getString('schedule');
         $task->status = \Xibo\Entity\Task::$STATUS_IDLE;
         $task->lastRunStatus = 0;
         $task->isActive = 0;
         $task->runNow = 0;
+        $task->setClassAndOptions();
         $task->save();
 
         // Return
@@ -193,6 +197,7 @@ class Task extends Base
     public function editForm($taskId)
     {
         $task = $this->taskFactory->getById($taskId);
+        $task->setClassAndOptions();
 
         $this->getState()->template = 'task-form-edit';
         $this->getState()->setData([
@@ -206,8 +211,22 @@ class Task extends Base
     public function edit($taskId)
     {
         $task = $this->taskFactory->getById($taskId);
+        $task->setClassAndOptions();
         $task->name = $this->getSanitizer()->getString('name');
         $task->schedule = $this->getSanitizer()->getString('schedule');
+
+        // Loop through each option and see if a new value is provided
+        foreach ($task->options as $option => $value) {
+            $provided = $this->getSanitizer()->getString($option);
+
+            if ($provided !== null) {
+                $this->getLog()->debug('Setting ' . $option . ' to ' . $provided);
+                $task->options[$option] = $provided;
+            }
+        }
+
+        $this->getLog()->debug('New options = ' . var_export($task->options, true));
+
         $task->save();
 
         // Return

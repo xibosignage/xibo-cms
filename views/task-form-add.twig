@@ -27,7 +27,7 @@
 
                 {% set title %}{% trans "Task" %}{% endset %}
                 {% set helpText %}{% trans "Select the task you would like to run" %}{% endset %}
-                {{ forms.dropdown("class", "single", title, "", tasksAvailable, "class", "name", helpText) }}
+                {{ forms.dropdown("file", "single", title, "", tasksAvailable, "file", "name", helpText) }}
 
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Task" %}{% endset %}

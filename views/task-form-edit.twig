@@ -32,6 +32,9 @@
                 {% set helpText %}{% trans "The schedule for this task in CRON syntax" %}{% endset %}
                 {{ forms.input("schedule", title, task.schedule, helpText, "", "required") }}
 
+                {% for option,value in task.options %}
+                    {{ forms.input(option, option, value) }}
+                {% endfor %}
             </form>
         </div>
     </div>

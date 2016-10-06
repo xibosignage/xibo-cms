@@ -100,7 +100,7 @@ class TaskFactory extends BaseFactory
         $entries = array();
         $params = array();
         $sql = '
-          SELECT `taskId`, `name`, `status`, `pid`, `class`, `options`, `schedule`, 
+          SELECT `taskId`, `name`, `status`, `pid`, `configFile`, `class`, `options`, `schedule`, 
               `lastRunDt`, `lastRunMessage`, `lastRunStatus`, `lastRunDuration`, `lastRunExitCode`,
               `isActive`, `runNow`
             FROM `task` 
