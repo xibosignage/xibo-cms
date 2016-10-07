@@ -67,6 +67,9 @@ class Task implements \JsonSerializable
      */
     public function setClassAndOptions()
     {
+        if ($this->configFile == null)
+            throw new NotFoundException(__('No config file recorded for task. Please recreate.'));
+
         // Get the class and default set of options from the config file.
         if (!file_exists(PROJECT_ROOT . $this->configFile))
             throw new NotFoundException(__('Config file not found for Task'));

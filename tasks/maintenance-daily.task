@@ -1,7 +1,5 @@
 {
   "name": "Maintenance Daily",
   "class": "\\Xibo\\XTR\\MaintenanceDailyTask",
-  "options": {
-    "quick": 0
-  }
+  "options": []
 }

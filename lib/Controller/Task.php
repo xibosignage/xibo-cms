@@ -231,6 +231,7 @@ class Task extends Base
         $task->setClassAndOptions();
         $task->name = $this->getSanitizer()->getString('name');
         $task->schedule = $this->getSanitizer()->getString('schedule');
+        $task->isActive = $this->getSanitizer()->getCheckbox('isActive');
 
         // Loop through each option and see if a new value is provided
         foreach ($task->options as $option => $value) {
