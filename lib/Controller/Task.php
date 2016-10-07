@@ -126,11 +126,28 @@ class Task extends Base
 
             $task->includeProperty('buttons');
 
-            // Default Layout
+            $task->buttons[] = array(
+                'id' => 'task_button_run.now',
+                'url' => $this->urlFor('task.runNow.form', ['id' => $task->taskId]),
+                'text' => __('Run Now')
+            );
+
+            // Don't show any edit buttons if the config is locked.
+            if ($this->getConfig()->GetSetting('TASK_CONFIG_LOCKED_CHECKB') == 'Checked')
+                continue;
+
+            // Edit Button
             $task->buttons[] = array(
                 'id' => 'task_button_edit',
                 'url' => $this->urlFor('task.edit.form', ['id' => $task->taskId]),
                 'text' => __('Edit')
+            );
+
+            // Delete Button
+            $task->buttons[] = array(
+                'id' => 'task_button_delete',
+                'url' => $this->urlFor('task.delete.form', ['id' => $task->taskId]),
+                'text' => __('Delete')
             );
         }
 
@@ -235,6 +252,65 @@ class Task extends Base
             'message' => sprintf(__('Edited %s'), $task->name),
             'id' => $task->taskId,
             'data' => $task
+        ]);
+    }
+
+    /**
+     * Delete Form
+     * @param $taskId
+     */
+    public function deleteForm($taskId)
+    {
+        $task = $this->taskFactory->getById($taskId);
+
+        $this->getState()->template = 'task-form-delete';
+        $this->getState()->setData([
+            'task' => $task
+        ]);
+    }
+
+    /**
+     * @param $taskId
+     */
+    public function delete($taskId)
+    {
+        $task = $this->taskFactory->getById($taskId);
+        $task->delete();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Deleted %s'), $task->name)
+        ]);
+    }
+
+    /**
+     * Delete Form
+     * @param $taskId
+     */
+    public function runNowForm($taskId)
+    {
+        $task = $this->taskFactory->getById($taskId);
+
+        $this->getState()->template = 'task-form-run-now';
+        $this->getState()->setData([
+            'task' => $task
+        ]);
+    }
+
+    /**
+     * @param $taskId
+     */
+    public function runNow($taskId)
+    {
+        $task = $this->taskFactory->getById($taskId);
+        $task->runNow = 1;
+        $task->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Run Now set on %s'), $task->name)
         ]);
     }
 

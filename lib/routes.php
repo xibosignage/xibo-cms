@@ -443,4 +443,4 @@ $app->get('/task', '\Xibo\Controller\Task:grid')->name('task.search');
 $app->post('/task', '\Xibo\Controller\Task:add')->name('task.add');
 $app->put('/task/:id', '\Xibo\Controller\Task:edit')->name('task.edit');
 $app->delete('/task/:id', '\Xibo\Controller\Task:delete')->name('task.delete');
-
+$app->post('/task/:id/run', '\Xibo\Controller\Task:runNow')->name('task.runNow');
