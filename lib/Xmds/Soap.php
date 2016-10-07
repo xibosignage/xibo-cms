@@ -1222,18 +1222,28 @@ class Soap
             // xmds v=5.
             // MediaId is actually the widgetId (since 1.8) and the mediaId is looked up by this service
             $widgetId = $node->getAttribute('mediaid');
-            
-            // Lookup the mediaId
-            $media = $this->mediaFactory->getByLayoutAndWidget($layoutID, $widgetId);
+            $mediaId = 0;
 
-            if (count($media) <= 0) {
-                // Non-media widget
-                $mediaId = 0;
-            } else {
-                $mediaId = $media[0]->mediaId;
+            // The mediaId (really widgetId) might well be null
+            if ($widgetId == 'null' || $widgetId == '')
+                $widgetId = 0;
+
+            if ($widgetId > 0) {
+                // Lookup the mediaId
+                $media = $this->mediaFactory->getByLayoutAndWidget($layoutID, $widgetId);
+
+                if (count($media) <= 0) {
+                    // Non-media widget
+                    $mediaId = 0;
+                } else {
+                    $mediaId = $media[0]->mediaId;
+                }
             }
             
             $tag = $node->getAttribute('tag');
+
+            if ($tag == 'null')
+                $tag = null;
 
             // Write the stat record with the information we have available to us.
             try {
