@@ -556,6 +556,7 @@ class XMDSSoap3
                 $layout->setAttribute("todt", $todt);
                 $layout->setAttribute("scheduleid", $scheduleid);
                 $layout->setAttribute("priority", $is_priority);
+                $layout->setAttribute("dependents", $dependents);
     
                 $layoutElements->appendChild($layout);
             }
@@ -563,6 +564,24 @@ class XMDSSoap3
         catch (Exception $e) {
             Debug::Error($e->getMessage(), $this->displayId);
             return new SoapFault('Receiver', 'Unable to get A list of layouts for the schedule');
+        }
+
+        // Get dependents for the default layout
+        $sth = $dbh->prepare('
+          SELECT DISTINCT StoredAs 
+            FROM media 
+              INNER JOIN lklayoutmedia 
+              ON lklayoutmedia.MediaID = media.MediaID 
+           WHERE lklayoutmedia.LayoutID = :layoutId 
+            AND lklayoutmedia.regionID <> \'module\'
+        ');
+
+        $sth->execute(array('layoutId' => $this->defaultLayoutId));
+
+        $defaultDependents = array();
+
+        foreach ($sth->fetchAll(PDO::FETCH_ASSOC) as $defaultDependent) {
+            $defaultDependents[] = $defaultDependent['StoredAs'];
         }
 
         // Are we interleaving the default?
@@ -575,7 +594,7 @@ class XMDSSoap3
             $layout->setAttribute("todt", '2030-01-19 00:00:00');
             $layout->setAttribute("scheduleid", 0);
             $layout->setAttribute("priority", 0);
-            $layout->setAttribute("dependents", implode(',', $moduleDependents));
+            $layout->setAttribute("dependents", (count($defaultDependents) > 0) ? implode(',', $defaultDependents) : '');
 
             $layoutElements->appendChild($layout);
         }
@@ -583,6 +602,7 @@ class XMDSSoap3
         // Add on the default layout node
         $default = $scheduleXml->createElement("default");
         $default->setAttribute("file", $this->defaultLayoutId);
+        $default->setAttribute("dependents", (count($defaultDependents) > 0) ? implode(',', $defaultDependents) : '');
         $layoutElements->appendChild($default);
 
         // Add on a list of global dependants
