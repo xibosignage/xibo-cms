@@ -167,6 +167,15 @@ class UserFactory extends BaseFactory
     }
 
     /**
+     * Get Super Admins
+     * @return User[]
+     */
+    public function getSuperAdmins()
+    {
+        return $this->query(null, array('disableUserCheck' => 1, 'userTypeId' => 1));
+    }
+
+    /**
      * Get system user
      * @return User
      */

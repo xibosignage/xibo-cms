@@ -347,7 +347,16 @@ class Task extends Base
                 ->setDate($this->getDate())
                 ->setPool($this->pool)
                 ->setStore($this->store)
-                ->setFactories($this->userFactory, $this->userGroupFactory, $this->layoutFactory, $this->displayFactory, $this->upgradeFactory, $this->mediaFactory, $this->notificationFactory, $this->userNotificationFactory)
+                ->setFactories(
+                    $this->userFactory,
+                    $this->userGroupFactory,
+                    $this->layoutFactory,
+                    $this->displayFactory,
+                    $this->upgradeFactory,
+                    $this->mediaFactory,
+                    $this->notificationFactory,
+                    $this->userNotificationFactory
+                )
                 ->setOptions($task->options)
                 ->run();
 
