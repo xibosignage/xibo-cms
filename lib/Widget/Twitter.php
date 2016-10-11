@@ -31,7 +31,19 @@ use Xibo\Factory\ModuleFactory;
 class Twitter extends ModuleWidget
 {
     public $codeSchemaVersion = 1;
+    private $resourceFolder;
 
+    /**
+     * Twitter constructor.
+     */
+    public function init()
+    {
+        $this->resourceFolder = PROJECT_ROOT . '/web/modules/twitter';
+
+        // Initialise extra validation rules
+        v::with('Xibo\\Validation\\Rules\\');
+    }
+    
     /**
      * Install or Update this module
      * @param ModuleFactory $moduleFactory
@@ -72,6 +84,12 @@ class Twitter extends ModuleWidget
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/emojione/emojione.sprites.svg')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/bootstrap.min.css')->save();
+        
+        foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
+            /* @var Media $media */
+            $media->save();
+        }
     }
 
     /**
@@ -193,6 +211,11 @@ class Twitter extends ModuleWidget
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
+        $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage'), 1);
+        $this->setOption('widgetOriginalPadding', $this->getSanitizer()->getInt('widgetOriginalPadding'));
+        $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
+        $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
+        $this->setOption('resultContent', $this->getSanitizer()->getString('resultContent'));
         $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
         $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
@@ -292,11 +315,35 @@ class Twitter extends ModuleWidget
         return $body->access_token;
     }
 
-    protected function searchApi($token, $term, $resultType = 'mixed', $geoCode = '', $count = 15)
+    protected function searchApi($token, $term, $resultType = 'mixed', $resultContent = 'Default', $geoCode = '', $count = 15)
     {
+      
+        // Search content filtered by type of tweets  
+        $resultContentQuery = '';
+        switch ($resultContent) {
+          case 'Default':
+            $resultContentQuery = '';
+            break;
+            
+          case 'Just Text':
+            // Remove media and links
+            $resultContentQuery = ' -filter:media -filter:links';
+            break;
+            
+          case 'With Images':
+            // Remove media and links
+            $resultContentQuery = ' filter:twimg';
+            break; 
+               
+          default:
+            $resultContentQuery = '';
+            break;
+        }
+        
+        
         // Construct the URL to call
         $url = 'https://api.twitter.com/1.1/search/tweets.json';
-        $queryString = '?q=' . urlencode(trim($term)) .
+        $queryString = '?q=' . urlencode(trim($term . $resultContentQuery)) .
             '&result_type=' . $resultType .
             '&count=' . $count .
             '&include_entities=true';
@@ -383,7 +430,7 @@ class Twitter extends ModuleWidget
         }
 
         // Connect to twitter and get the twitter feed.
-        $cache = $this->getPool()->getItem(md5($this->getOption('searchTerm') . $this->getOption('resultType') . $this->getOption('tweetCount', 15) . $geoCode));
+        $cache = $this->getPool()->getItem(md5($this->getOption('searchTerm') . $this->getOption('resultType') . $this->getOption('resultContent') . $this->getOption('tweetCount', 15) . $geoCode));
 
         $data = $cache->get();
 
@@ -396,7 +443,7 @@ class Twitter extends ModuleWidget
                 return false;
 
             // We have the token, make a tweet
-            if (!$data = $this->searchApi($token, $this->getOption('searchTerm'), $this->getOption('resultType'), $geoCode, $this->getOption('tweetCount', 15)))
+            if (!$data = $this->searchApi($token, $this->getOption('searchTerm'), $this->getOption('resultType'), $this->getOption('resultContent'), $geoCode, $this->getOption('tweetCount', 15)))
                 return false;
 
             // Cache it
@@ -430,6 +477,7 @@ class Twitter extends ModuleWidget
             $user->name = '';
             $user->screen_name = '';
             $user->profile_image_url = '';
+            $user->location = '';
 
             $tweet = new \stdClass();
             $tweet->text = $this->getOption('noTweetsMessage', __('There are no tweets to display'));
@@ -457,10 +505,23 @@ class Twitter extends ModuleWidget
             foreach ($matches[0] as $sub) {
                 // Always clear the stored template replacement
                 $replace = '';
-
+                $tagOptions = array();
+                
+                // Get the options from the tag and create an array
+                $subClean = str_replace('[', '', str_replace(']', '', $sub));
+                if (stripos($subClean, '|') > -1) {
+                    $tagOptions = explode('|', $subClean);
+                    
+                    // Save the main tag 
+                    $subClean = $tagOptions[0];
+                    
+                    // Remove the tag from the first position
+                    array_shift($tagOptions);
+                }
+                
                 // Maybe make this more generic?
-                switch ($sub) {
-                    case '[Tweet]':
+                switch ($subClean) {
+                    case 'Tweet':
                         // Get the tweet text to operate on
                         $tweetText = $tweet->text;
 
@@ -488,21 +549,36 @@ class Twitter extends ModuleWidget
                         $replace = $emoji->toImage($tweetText);
                         break;
 
-                    case '[User]':
+                    case 'User':
                         $replace = $tweet->user->name;
                         break;
 
-                    case '[ScreenName]':
+                    case 'ScreenName':
                         $replace = $tweet->user->screen_name;
                         break;
 
-                    case '[Date]':
+                    case 'Date':
                         $replace = $this->getDate()->getLocalDate(strtotime($tweet->created_at), $dateFormat);
                         break;
+  
+                    case 'Location':
+                        $replace = $tweet->user->location;
+                        break;
 
-                    case '[ProfileImage]':
+                    case 'ProfileImage':
                         // Grab the profile image
                         if ($tweet->user->profile_image_url != '') {
+                            
+                            // Original Default Image
+                            $imageSizeType = "";
+                            if( count($tagOptions) > 0 ) {
+                              // Image options ( normal, bigger, mini )
+                              $imageSizeType = '_' . $tagOptions[0];
+                            }
+                            
+                            // Twitter image size
+                            $tweet->user->profile_image_url = str_replace('_normal', $imageSizeType, $tweet->user->profile_image_url);
+                            
                             // Grab the profile image
                             $file = $this->mediaFactory->createModuleFile('twitter_' . $tweet->user->id, $tweet->user->profile_image_url);
                             $file->isRemote = true;
@@ -513,12 +589,12 @@ class Twitter extends ModuleWidget
                             $this->assignMedia($file->mediaId);
 
                             $replace = ($isPreview)
-                                ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=170&height=150" />'
+                                ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                                 : '<img src="' . $file->storedAs . '"  />';
                         }
                         break;
 
-                    case '[Photo]':
+                    case 'Photo':
                         // See if there are any photos associated with this tweet.
                         if (isset($tweet->entities->media) && count($tweet->entities->media) > 0) {
                             // Only take the first one
@@ -534,11 +610,20 @@ class Twitter extends ModuleWidget
                                 $this->assignMedia($file->mediaId);
 
                                 $replace = ($isPreview)
-                                    ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
+                                    ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                                     : '<img src="' . $file->storedAs . '"  />';
                             }
                         }
-
+                        break;
+                        
+                    case 'TwitterLogoWhite':
+                        //Get the Twitter logo image file path
+                        $replace = $this->getResourceUrl('twitter/twitter_white.png');
+                        break;
+                        
+                    case 'TwitterLogoBlue':
+                        //Get the Twitter logo image file path
+                        $replace = $this->getResourceUrl('twitter/twitter_blue.png');
                         break;
 
                     default:
@@ -585,21 +670,23 @@ class Twitter extends ModuleWidget
         if (count($items) == 0)
             return '';
 
-        $marqueeEffect = (stripos($this->getOption('effect'), 'marquee') !== false);
-
         $options = array(
             'type' => $this->getModuleType(),
             'fx' => $this->getOption('effect', 'none'),
-            'speed' => $this->getOption('speed', (($marqueeEffect) ? 1 : 500)),
+            'speed' => $this->getOption('speed', 500),
             'duration' => $duration,
             'durationIsPerItem' => ($this->getOption('durationIsPerItem', 0) == 1),
             'numItems' => count($items),
-            'itemsPerPage' => 1,
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
             'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
             'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
+            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
+            'widgetDesignPadding' => $this->getSanitizer()->int($this->getOption('widgetOriginalPadding')),
+            'widgetDesignWidth' => $this->getSanitizer()->int($this->getOption('widgetOriginalWidth')),
+            'widgetDesignHeight'=> $this->getSanitizer()->int($this->getOption('widgetOriginalHeight')),
+            'resultContent'=> $this->getSanitizer()->string($this->getOption('resultContent')),
+            'itemsPerPage' => $this->getSanitizer()->int($this->getOption('itemsPerPage'), 1)
         );
 
         // Replace the control meta with our data from twitter
@@ -623,7 +710,8 @@ class Twitter extends ModuleWidget
         }
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
+        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         // Replace the Head Content with our generated javascript
@@ -635,10 +723,6 @@ class Twitter extends ModuleWidget
         // Need the cycle plugin?
         if ($this->getOption('effect') != 'none')
             $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
-
-        // Need the marquee plugin?
-        if ($marqueeEffect)
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.marquee.min.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';

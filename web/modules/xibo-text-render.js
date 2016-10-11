@@ -53,6 +53,24 @@ jQuery.fn.extend({
             height = height / options.scaleOverride;
         }
 
+        if (options.widgetDesignWidth > 0 && options.widgetDesignHeight > 0) {
+          if(options.itemsPerPage > 0){
+            if($(window).width() > $(window).height()){
+              //Landscape or square size plus padding
+              options.widgetDesignWidth = (options.itemsPerPage * options.widgetDesignWidth) + (options.widgetDesignPadding * options.itemsPerPage);
+              options.widgetDesignHeight = options.widgetDesignHeight + options.widgetDesignPadding;
+              width = options.widgetDesignWidth;
+              height = options.widgetDesignHeight;
+            } else {
+              //Portrait size plus padding
+              options.widgetDesignHeight = (options.itemsPerPage * options.widgetDesignHeight) + (options.widgetDesignPadding * options.itemsPerPage);
+              options.widgetDesignWidth = options.widgetDesignWidth + options.widgetDesignPadding;
+              width = options.widgetDesignWidth;
+              height = options.widgetDesignHeight;
+            }
+          }
+        }
+
         // For each matched element
         this.each(function() {
 
@@ -160,7 +178,7 @@ jQuery.fn.extend({
                 //console.log("[Xibo] initialising the cycle2 plugin with " + numberOfSlides + " slides and selector " + slides + ". Duration per slide is " + duration + " seconds.");
 
                 // Set the content div to the height of the original window
-                $(this).css("height", options.originalHeight);
+                $(this).css("height", height);
 
                 // Set the width on the cycled slides
                 $(slides, this).css({

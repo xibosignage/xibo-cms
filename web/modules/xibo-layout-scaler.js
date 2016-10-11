@@ -20,6 +20,21 @@
 jQuery.fn.extend({
     xiboLayoutScaler: function(options) {
         var width; var height; var newWidth; var newHeight;
+        
+        // Default options
+        var defaults = {
+          "originalWidth": 0,
+          "originalHeight": 0,
+          "previewWidth": 0,
+          "previewHeight": 0,
+          "scaleOverride": 0,
+          "widgetDesignWidth": 0,
+          "widgetDesignHeight": 0,
+          "widgetDesignPadding": 0,
+          "itemsPerPage": 0
+        };
+
+        options = $.extend({}, defaults, options);
 
         // Region original width and height
         var originalWidth = options.originalWidth;
@@ -51,8 +66,21 @@ jQuery.fn.extend({
         // The widget is scaled according to the layout dimensions
 
         // Does the widget have an original design width/height
-        // if so, we need to further scale the widget
-        if ((options.widgetDesignWidth !== undefined && options.widgetDesignWidth !== null) || (options.widgetDesignHeight !== undefined && options.widgetDesignHeight !== null)) {
+        // if so, we need to further scale the widget        
+        if (options.widgetDesignWidth > 0 && options.widgetDesignHeight > 0) {
+            
+            if(options.itemsPerPage > 0){
+              if(newWidth > newHeight){
+                //Landscape or square size plus padding
+                options.widgetDesignWidth = (options.itemsPerPage * options.widgetDesignWidth) + (options.widgetDesignPadding * options.itemsPerPage);
+                options.widgetDesignHeight = options.widgetDesignHeight + options.widgetDesignPadding;
+              } else {
+                //Portrait size plus padding
+                options.widgetDesignHeight = (options.itemsPerPage * options.widgetDesignHeight) + (options.widgetDesignPadding * options.itemsPerPage);
+                options.widgetDesignWidth = options.widgetDesignWidth + options.widgetDesignPadding;
+              }
+            }
+            
             // Calculate the ratio between the new
             var widgetRatio = Math.min(newWidth / options.widgetDesignWidth, newHeight / options.widgetDesignHeight);
 
