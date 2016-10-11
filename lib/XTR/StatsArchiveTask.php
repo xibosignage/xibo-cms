@@ -136,7 +136,7 @@ class StatsArchiveTask implements TaskInterface
         $media->save();
 
         // Delete the stats
-        $this->store->update('DELETE FROM `stat` WHERE stat.end > :fromDt AND stat.start <= :toDt', $params);
+        $this->store->update('DELETE FROM `stat` WHERE stat.start >= :fromDt AND stat.start < :toDt', $params);
     }
 
     /**
