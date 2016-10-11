@@ -624,12 +624,12 @@ class Display extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="isAuditing",
+     *      name="auditingUntil",
      *      in="formData",
-     *      description="Flag indicating whether this Display records auditing information.",
+     *      description="A date this Display records auditing information until.",
      *      type="string",
      *      format="date-time",
-     *      required=true
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="defaultLayoutId",
