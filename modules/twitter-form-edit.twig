@@ -175,11 +175,11 @@
                         {{ forms.number("tweetDistance", title, module.getOption("tweetDistance"), helpText) }}
 
                         {% set title %}{% trans "Count" %}{% endset %}
-                        {% set helpText %}{% trans "The number of Tweets to return." %}{% endset %}
+                        {% set helpText %}{% trans "The number of Tweets to return (default = 15)." %}{% endset %}
                         {{ forms.number("tweetCount", title, module.getOption("tweetCount"), helpText) }}
                         
                         {% set title %}{% trans "Tweets Per Page" %}{% endset %}
-                        {% set helpText %}{% trans "The number of Tweets to show per page." %}{% endset %}
+                        {% set helpText %}{% trans "The number of Tweets to show per page (default = 5)." %}{% endset %}
                         {{ forms.number("itemsPerPage", title, module.getOption("itemsPerPage"), helpText) }}
                     </div>
 
@@ -205,10 +205,10 @@
                         {{ forms.number("widgetOriginalPadding", title, module.getOption("widgetOriginalPadding", undefined), helpText, "template-override-controls", "", "number") }}
 
                         {% set title %}{% trans "Content Type" %}{% endset %}
-                        {% set helpText %}{% trans "Default shows tweets with all types of content, Just Text shows with text only and With Images shows tweets containing images." %}{% endset %}
-                        {% set allTweets %}{% trans "Default" %}{% endset %}
-                        {% set justText %}{% trans "Just Text" %}{% endset %}
-                        {% set withImages %}{% trans "With Images" %}{% endset %}
+                        {% set helpText %}{% trans "This is the intended tweet content type." %}{% endset %}
+                        {% set allTweets %}{% trans "All Tweets" %}{% endset %}
+                        {% set justText %}{% trans "Tweets with text only content" %}{% endset %}
+                        {% set withImages %}{% trans "Tweets with text and image content" %}{% endset %}
                         {% set options = [
                         { contenttypeid: 0, type: allTweets },
                         { contenttypeid: 1, type: justText },
@@ -226,7 +226,7 @@
 
                     <div class="tab-pane" id="effectTab">
                         {% set title %}{% trans "Effect" %}{% endset %}
-                        {% set helpText %}{% trans "Please select the effect that will be used to transition between items. If all items should be output, select None." %}{% endset %}
+                        {% set helpText %}{% trans "Please select the effect that will be used to transition between items." %}{% endset %}
                         {% set noneOption %}{% trans "None" %}{% endset %}
                         {% set fade %}{% trans "Fade" %}{% endset %}
                         {% set fadeout %}{% trans "Fade Out" %}{% endset %}
@@ -238,7 +238,7 @@
                         {% set tileSlide %}{% trans "Tile Slide" %}{% endset %}
                         {% set tileBlind %}{% trans "Tile Blind" %}{% endset %}
                         {% set options = [
-                        { effectid: "none", effect: noneOption },
+                        { effectid: "noAnim", effect: noneOption },
                         { effectid: "fade", effect: fade },
                         { effectid: "fadeout", effect: fadeout},
                         { effectid: "scrollHorz", effect: scrollHorz},

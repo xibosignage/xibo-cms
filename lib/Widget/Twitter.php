@@ -211,7 +211,7 @@ class Twitter extends ModuleWidget
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
-        $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage'), 1);
+        $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage'), 5);
         $this->setOption('widgetOriginalPadding', $this->getSanitizer()->getInt('widgetOriginalPadding'));
         $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
         $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
@@ -315,36 +315,12 @@ class Twitter extends ModuleWidget
         return $body->access_token;
     }
 
-    protected function searchApi($token, $term, $resultType = 'mixed', $geoCode = '', $count = 15, $resultContent = 'Default')
+    protected function searchApi($token, $term, $resultType = 'mixed', $geoCode = '', $count = 15)
     {
-      
-        // Search content filtered by type of tweets  
-        $resultContentQuery = '';
-        switch ($resultContent) {
-          case 0:
-          //Default
-            $resultContentQuery = '';
-            break;
-            
-          case 1:
-            // Remove media
-            $resultContentQuery = ' -filter:media';
-            break;
-            
-          case 2:
-            // Only tweets with native images
-            $resultContentQuery = ' filter:twimg';
-            break; 
-               
-          default:
-            $resultContentQuery = '';
-            break;
-        }
-        
         
         // Construct the URL to call
         $url = 'https://api.twitter.com/1.1/search/tweets.json';
-        $queryString = '?q=' . urlencode(trim($term . $resultContentQuery)) .
+        $queryString = '?q=' . urlencode(trim($term)) .
             '&result_type=' . $resultType .
             '&count=' . $count .
             '&include_entities=true';
@@ -429,22 +405,48 @@ class Twitter extends ModuleWidget
             // Built the geoCode string.
             $geoCode = implode(',', array($defaultLat, $defaultLong, $distance)) . 'mi';
         }
-
+        
+        
+        // Search content filtered by type of tweets  
+        $searchTerm = $this->getOption('searchTerm');
+        $resultContent = $this->getOption('resultContent');
+        
+        switch ($resultContent) {
+          case 0:
+            //Default
+            $searchTerm .= '';
+            break;
+            
+          case 1:
+            // Remove media
+            $searchTerm .= ' -filter:media';
+            break;
+            
+          case 2:
+            // Only tweets with native images
+            $searchTerm .= ' filter:twimg';
+            break; 
+               
+          default:
+            $searchTerm .= '';
+            break;
+        }
+        
         // Connect to twitter and get the twitter feed.
-        $cache = $this->getPool()->getItem(md5($this->getOption('searchTerm') . $this->getOption('resultType') . $this->getOption('resultContent') . $this->getOption('tweetCount', 15) . $geoCode));
+        $cache = $this->getPool()->getItem(md5($searchTerm . $this->getOption('resultType') . $this->getOption('tweetCount', 15) . $geoCode));
 
         $data = $cache->get();
 
         if ($cache->isMiss()) {
 
-            $this->getLog()->debug('Querying API for ' . $this->getOption('searchTerm'));
+            $this->getLog()->debug('Querying API for ' . $searchTerm);
 
             // We need to search for it
             if (!$token = $this->getToken())
                 return false;
 
             // We have the token, make a tweet
-            if (!$data = $this->searchApi($token, $this->getOption('searchTerm'), $this->getOption('resultType'), $geoCode, $this->getOption('tweetCount', 15), $this->getOption('resultContent')))
+            if (!$data = $this->searchApi($token, $searchTerm, $this->getOption('resultType'), $geoCode, $this->getOption('tweetCount', 15)))
                 return false;
 
             // Cache it
@@ -673,7 +675,7 @@ class Twitter extends ModuleWidget
 
         $options = array(
             'type' => $this->getModuleType(),
-            'fx' => $this->getOption('effect', 'none'),
+            'fx' => $this->getOption('effect', 'noAnim'),
             'speed' => $this->getOption('speed', 500),
             'duration' => $duration,
             'durationIsPerItem' => ($this->getOption('durationIsPerItem', 0) == 1),
@@ -687,7 +689,7 @@ class Twitter extends ModuleWidget
             'widgetDesignWidth' => $this->getSanitizer()->int($this->getOption('widgetOriginalWidth')),
             'widgetDesignHeight'=> $this->getSanitizer()->int($this->getOption('widgetOriginalHeight')),
             'resultContent'=> $this->getSanitizer()->string($this->getOption('resultContent')),
-            'itemsPerPage' => $this->getSanitizer()->int($this->getOption('itemsPerPage'), 1)
+            'itemsPerPage' => $this->getSanitizer()->int($this->getOption('itemsPerPage', 5))
         );
 
         // Replace the control meta with our data from twitter
