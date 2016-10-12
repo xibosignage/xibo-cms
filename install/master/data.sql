@@ -303,3 +303,11 @@ INSERT INTO permission (entityId, groupId, objectId, view, edit, `delete`) VALUE
   (1, 1, 2, 1, 0, 0),
   (1, 1, 29, 1, 0, 0),
   (1, 1, 11, 1, 0, 0);
+
+
+INSERT INTO task (taskId, name, class, status, options, schedule, isActive, configFile) VALUES
+  (1, 'Daily Maintenance', '\\Xibo\\XTR\\MaintenanceDailyTask', 2, '[]', '0 0 * * * *', 1, '/tasks/maintenance-daily.task'),
+  (2, 'Regular Maintenance', '\\Xibo\\XTR\\MaintenanceRegularTask', 2, '[]', '*/5 * * * * *', 1, '/tasks/maintenance-regular.task'),
+  (3, 'Email Notifications', '\\Xibo\\XTR\\EmailNotificationsTask', 2, '[]', '*/5 * * * * *', 1, '/tasks/email-notifications.task'),
+  (4, 'Stats Archive', '\\Xibo\\XTR\\StatsArchiveTask', 2, '{"periodSizeInDays":"7","maxPeriods":"4"}', '0 0 * * Mon', 0, '/tasks/stats-archiver.task'),
+  (5, 'Remove old Notifications', '\\Xibo\\XTR\\NotificationTidyTask', 2, '{"maxAgeDays":"7","systemOnly":"1","readOnly":"0"}', '15 0 * * Mon', 0, '/tasks/notification-tidy.task');
