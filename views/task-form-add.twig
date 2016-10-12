@@ -1,0 +1,43 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2016 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Task" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#taskAdd").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="taskAdd" class="XiboForm form-horizontal" method="post" action="{{ urlFor("task.add") }}"
+                    data-next-form-url="{{ urlFor("task.edit.form") }}">
+
+                {% set title %}{% trans "Task" %}{% endset %}
+                {% set helpText %}{% trans "Select the task you would like to run" %}{% endset %}
+                {{ forms.dropdown("file", "single", title, "", tasksAvailable, "file", "name", helpText) }}
+
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name for this Task" %}{% endset %}
+                {{ forms.input("name", title, "", helpText, "", "required") }}
+
+                {% set title %}{% trans "Schedule" %}{% endset %}
+                {% set helpText %}{% trans "The schedule for this task in CRON syntax" %}{% endset %}
+                {{ forms.input("schedule", title, "* * * * *", helpText, "", "required") }}
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

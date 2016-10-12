@@ -342,3 +342,12 @@ $app->get('/daypart/view', '\Xibo\Controller\DayPart:displayPage')->name('daypar
 $app->get('/daypart/form/add', '\Xibo\Controller\DayPart:addForm')->name('daypart.add.form');
 $app->get('/daypart/form/edit/:id', '\Xibo\Controller\DayPart:editForm')->name('daypart.edit.form');
 $app->get('/daypart/form/delete/:id', '\Xibo\Controller\DayPart:deleteForm')->name('daypart.delete.form');
+
+//
+// Tasks
+//
+$app->get('/task/view', '\Xibo\Controller\Task:displayPage')->name('task.view');
+$app->get('/task/form/add', '\Xibo\Controller\Task:addForm')->name('task.add.form');
+$app->get('/task/form/edit/:id', '\Xibo\Controller\Task:editForm')->name('task.edit.form');
+$app->get('/task/form/delete/:id', '\Xibo\Controller\Task:deleteForm')->name('task.delete.form');
+$app->get('/task/form/runNow/:id', '\Xibo\Controller\Task:runNowForm')->name('task.runNow.form');

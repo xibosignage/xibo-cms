@@ -105,7 +105,7 @@ $app->notFound(function () use ($app) {
 });
 
 // All routes
-$app->get('/', '\Xibo\Controller\Maintenance:run');
+$app->get('/:id', '\Xibo\Controller\Task:run');
 
 // Run app
 $app->run();

@@ -94,6 +94,10 @@
                         {% if currentUser.routeViewable("/transition") %}
                         <li class="sidebar-list"><a href="{{ urlFor("transition.view") }}">{% trans "Transitions" %}</a></li>
                         {% endif %}
+
+                        {% if currentUser.routeViewable("/task") %}
+                        <li class="sidebar-list"><a href="{{ urlFor("task.view") }}">{% trans "Tasks" %}</a></li>
+                        {% endif %}
                     {% endif %}
 
                     {% if currentUser.routeViewable("/log") or currentUser.routeViewable("/sessions") or currentUser.routeViewable("/auditlog") or currentUser.routeViewable("/fault") or currentUser.routeViewable("/help") %}

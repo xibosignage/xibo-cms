@@ -146,7 +146,8 @@ INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (35, 'command', 'Commands', 1),
   (36, 'notification', 'Notifications', 0),
   (37, 'drawer', 'Notification Drawer', 0),
-  (87, 'daypart', 'Dayparting', 0);
+  (38, 'daypart', 'Dayparting', 0),
+  (39, 'task', 'Tasks', 1);
 
 
 INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES
@@ -224,7 +225,8 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (88, 'XMR_PUB_ADDRESS', '', 'text', 'Please enter the public address for XMR.', NULL, 'displays', 1, 'XMR Public Address', '', 6, '', 1, 'string'),
 (89, 'CDN_URL', '', 'text', 'Content Delivery Network Address for serving file requests to Players', '', 'network', 0, 'CDN Address', '', 33, '', 0, 'string'),
 (90, 'ELEVATE_LOG_UNTIL', '1463396415', 'datetime', 'Elevate the log level until this date.', null, 'troubleshooting', 1, 'Elevate Log Until', ' ', 25, '', 1, 'datetime'),
-(91, 'RESTING_LOG_LEVEL', 'Error', 'dropdown', 'Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems "error" is recommended.', 'Emergency|Alert|Critical|Error', 'troubleshooting', 1, 'Resting Log Level', '', 19, 'error', 1, 'word');
+(91, 'RESTING_LOG_LEVEL', 'Error', 'dropdown', 'Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems "error" is recommended.', 'Emergency|Alert|Critical|Error', 'troubleshooting', 1, 'Resting Log Level', '', 19, 'error', 1, 'word'),
+(92, 'TASK_CONFIG_LOCKED_CHECKB', 'Unchecked', 'dropdown', 'Is the task config locked? Useful for Service providers.', 'Checked|Unchecked', 'defaults', 0, 'Lock Task Config', '', 30, 'Unchecked', 0, 'word');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),
@@ -301,3 +303,11 @@ INSERT INTO permission (entityId, groupId, objectId, view, edit, `delete`) VALUE
   (1, 1, 2, 1, 0, 0),
   (1, 1, 29, 1, 0, 0),
   (1, 1, 11, 1, 0, 0);
+
+
+INSERT INTO task (taskId, name, class, status, options, schedule, isActive, configFile) VALUES
+  (1, 'Daily Maintenance', '\\Xibo\\XTR\\MaintenanceDailyTask', 2, '[]', '0 0 * * * *', 1, '/tasks/maintenance-daily.task'),
+  (2, 'Regular Maintenance', '\\Xibo\\XTR\\MaintenanceRegularTask', 2, '[]', '*/5 * * * * *', 1, '/tasks/maintenance-regular.task'),
+  (3, 'Email Notifications', '\\Xibo\\XTR\\EmailNotificationsTask', 2, '[]', '*/5 * * * * *', 1, '/tasks/email-notifications.task'),
+  (4, 'Stats Archive', '\\Xibo\\XTR\\StatsArchiveTask', 2, '{"periodSizeInDays":"7","maxPeriods":"4"}', '0 0 * * Mon', 0, '/tasks/stats-archiver.task'),
+  (5, 'Remove old Notifications', '\\Xibo\\XTR\\NotificationTidyTask', 2, '{"maxAgeDays":"7","systemOnly":"1","readOnly":"0"}', '15 0 * * Mon', 0, '/tasks/notification-tidy.task');
