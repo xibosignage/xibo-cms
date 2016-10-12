@@ -315,23 +315,24 @@ class Twitter extends ModuleWidget
         return $body->access_token;
     }
 
-    protected function searchApi($token, $term, $resultType = 'mixed', $resultContent = 'Default', $geoCode = '', $count = 15)
+    protected function searchApi($token, $term, $resultType = 'mixed', $geoCode = '', $count = 15, $resultContent = 'Default')
     {
       
         // Search content filtered by type of tweets  
         $resultContentQuery = '';
         switch ($resultContent) {
-          case 'Default':
+          case 0:
+          //Default
             $resultContentQuery = '';
             break;
             
-          case 'Just Text':
-            // Remove media and links
-            $resultContentQuery = ' -filter:media -filter:links';
+          case 1:
+            // Remove media
+            $resultContentQuery = ' -filter:media';
             break;
             
-          case 'With Images':
-            // Remove media and links
+          case 2:
+            // Only tweets with native images
             $resultContentQuery = ' filter:twimg';
             break; 
                
@@ -443,7 +444,7 @@ class Twitter extends ModuleWidget
                 return false;
 
             // We have the token, make a tweet
-            if (!$data = $this->searchApi($token, $this->getOption('searchTerm'), $this->getOption('resultType'), $this->getOption('resultContent'), $geoCode, $this->getOption('tweetCount', 15)))
+            if (!$data = $this->searchApi($token, $this->getOption('searchTerm'), $this->getOption('resultType'), $geoCode, $this->getOption('tweetCount', 15), $this->getOption('resultContent')))
                 return false;
 
             // Cache it
@@ -554,7 +555,7 @@ class Twitter extends ModuleWidget
                         break;
 
                     case 'ScreenName':
-                        $replace = $tweet->user->screen_name;
+                        $replace = ($tweet->user->screen_name != '') ? ('@' . $tweet->user->screen_name) : '';
                         break;
 
                     case 'Date':

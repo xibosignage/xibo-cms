@@ -192,7 +192,7 @@
 
                         {% set title %}{% trans "Template" %}{% endset %}
                         {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
-                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId", "tweet-only"), module.templatesAvailable(),"id", "value", helptext, "template-selector-control") }}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId", "tweet-only"), module.templatesAvailable(),"id", "value", helptext, "template-selector-control selectPicker selectPickerWithImage", null, null, null, null, null, baseUrl, "image") }}
 
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
@@ -210,17 +210,17 @@
                         {% set helpText %}{% trans "This is the intended padding of the template and is used to position the Widget within its region when the template is applied." %}{% endset %}
                         {{ forms.number("widgetOriginalPadding", title, module.getOption("widgetOriginalPadding", undefined), helpText, "template-override-controls", "", "number") }}
 
-                        {% set title %}{% trans "ContentType" %}{% endset %}
+                        {% set title %}{% trans "Content Type" %}{% endset %}
                         {% set helpText %}{% trans "Default shows tweets with all types of content, Just Text shows with text only and With Images shows tweets containing images." %}{% endset %}
                         {% set allTweets %}{% trans "Default" %}{% endset %}
                         {% set justText %}{% trans "Just Text" %}{% endset %}
                         {% set withImages %}{% trans "With Images" %}{% endset %}
                         {% set options = [
-                        { contenttypeid: allTweets, type: allTweets },
-                        { contenttypeid: justText, type: justText },
-                        { contenttypeid: withImages, type: withImages }
+                        { contenttypeid: 0, type: allTweets },
+                        { contenttypeid: 1, type: justText },
+                        { contenttypeid: 2, type: withImages }
                         ] %}
-                        {{ forms.dropdown("resultContent", "single", title, module.getOption("resultContent", "allTweets"), options, "contenttypeid", "type", helpText,"template-override-controls", "required") }}
+                        {{ forms.dropdown("resultContent", "single", title, module.getOption("resultContent", 0), options, "contenttypeid", "type", helpText,"template-override-controls", "required") }}
 
                         {% set helpText %}{% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
                         {{ forms.textarea("ta_text", "", "", helpText, "template-override-controls", "", 10) }}

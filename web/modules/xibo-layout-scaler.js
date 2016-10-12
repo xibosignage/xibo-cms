@@ -72,12 +72,12 @@ jQuery.fn.extend({
             if(options.itemsPerPage > 0){
               if(newWidth > newHeight){
                 //Landscape or square size plus padding
-                options.widgetDesignWidth = (options.itemsPerPage * options.widgetDesignWidth) + (options.widgetDesignPadding * options.itemsPerPage);
-                options.widgetDesignHeight = options.widgetDesignHeight + options.widgetDesignPadding;
+                options.widgetDesignWidth = (options.itemsPerPage * options.widgetDesignWidth) + (options.widgetDesignPadding * (options.itemsPerPage - 1));
+                options.widgetDesignHeight = options.widgetDesignHeight;
               } else {
                 //Portrait size plus padding
-                options.widgetDesignHeight = (options.itemsPerPage * options.widgetDesignHeight) + (options.widgetDesignPadding * options.itemsPerPage);
-                options.widgetDesignWidth = options.widgetDesignWidth + options.widgetDesignPadding;
+                options.widgetDesignHeight = (options.itemsPerPage * options.widgetDesignHeight) + (options.widgetDesignPadding * (options.itemsPerPage - 1));
+                options.widgetDesignWidth = options.widgetDesignWidth;
               }
             }
             
