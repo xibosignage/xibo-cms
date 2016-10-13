@@ -6,7 +6,11 @@ if(!window.calendar_languages) {
 // Here you define the language and Country code. Replace en-US with your own.
 // First letters: the language code (lower case). See http://www.loc.gov/standards/iso639-2/php/code_list.php
 // Last letters: the Country code (upper case). See http://www.iso.org/iso/home/standards/country_codes/country_names_and_code_elements.htm
+<<<<<<< HEAD
 window.calendar_languages['en-US'] = {
+=======
+window.calendar_languages['en-GB'] = {
+>>>>>>> bd93088372a8d6c95ef285bd5cc17d5a6b574ae3
 	error_noview: 'Calendar: View {0} not found',
 	error_dateformat: 'Calendar: Wrong date format {0}. Should be either "now" or "yyyy-mm-dd"',
 	error_loadurl: 'Calendar: Event URL is not set',
