@@ -226,7 +226,8 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (89, 'CDN_URL', '', 'text', 'Content Delivery Network Address for serving file requests to Players', '', 'network', 0, 'CDN Address', '', 33, '', 0, 'string'),
 (90, 'ELEVATE_LOG_UNTIL', '1463396415', 'datetime', 'Elevate the log level until this date.', null, 'troubleshooting', 1, 'Elevate Log Until', ' ', 25, '', 1, 'datetime'),
 (91, 'RESTING_LOG_LEVEL', 'Error', 'dropdown', 'Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems "error" is recommended.', 'Emergency|Alert|Critical|Error', 'troubleshooting', 1, 'Resting Log Level', '', 19, 'error', 1, 'word'),
-(92, 'TASK_CONFIG_LOCKED_CHECKB', 'Unchecked', 'dropdown', 'Is the task config locked? Useful for Service providers.', 'Checked|Unchecked', 'defaults', 0, 'Lock Task Config', '', 30, 'Unchecked', 0, 'word');
+(92, 'TASK_CONFIG_LOCKED_CHECKB', 'Unchecked', 'dropdown', 'Is the task config locked? Useful for Service providers.', 'Checked|Unchecked', 'defaults', 0, 'Lock Task Config', '', 30, 'Unchecked', 0, 'word'),
+(93, 'WHITELIST_LOAD_BALANCERS', '', 'text', 'If the CMS is behind a load balancer, what are the load balancer IP addresses, comma delimited.', '', 'network', 1, 'Whitelist Load Balancers', '', 100, 'Unchecked', 1, 'string');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),

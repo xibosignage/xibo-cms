@@ -153,6 +153,8 @@ echo __('Resting Log Level');
 echo __('Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems "error" is recommended.');
 echo __('Lock Task Config');
 echo __('Is the task config locked? Useful for Service providers.');
+echo __('Whitelist Load Balancers');
+echo __('If the CMS is behind a load balancer, what are the load balancer IP addresses, comma delimited.');
 
 // Transitions
 echo __('Fade In');
