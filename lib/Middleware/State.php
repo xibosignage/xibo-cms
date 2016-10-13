@@ -63,9 +63,10 @@ class State extends Middleware
             // If we are behind a load balancer we should look at HTTP_X_FORWARDED_PROTO
             // if a whitelist of IP address is provided, we should check it, otherwise trust
             $whiteListLoadBalancers = $app->configService->GetSetting('WHITELIST_LOAD_BALANCERS');
-            $originIp = $_SERVER['REMOTE_ADDR'];
+            $originIp = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
             $forwardedProtoHttps = (
                 strtolower($app->request()->headers('HTTP_X_FORWARDED_PROTO', 'http')) === 'https'
+                && $originIp != ''
                 && (
                     $whiteListLoadBalancers === '' || in_array($originIp, explode(',', $whiteListLoadBalancers))
                 )
