@@ -52,7 +52,7 @@
     },
     {
       "step": "Default Layout Setting",
-      "action": "INSERT INTO `setting` (setting, value, fieldType, helptext, options, cat, userChange, title, validation, ordering, `default`, userSee, type) VALUES('DEFAULT_LAYOUT', '4', 'text', 'The default layout to assign for new displays and displays which have their current default deleted.', '4', 'displays', 1, 'Default Layout', '', 4, '', 1, 'int');"
+      "action": "INSERT INTO `setting` (setting, value, fieldType, helptext, options, cat, userChange, title, validation, ordering, `default`, userSee, type) VALUES('DEFAULT_LAYOUT', '1', 'text', 'The default layout to assign for new displays and displays which have their current default deleted.', '1', 'displays', 1, 'Default Layout', '', 4, '', 1, 'int');"
     }
   ]
 }
