@@ -9,6 +9,7 @@
 namespace Xibo\XTR;
 use Slim\Slim;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Entity\Task;
 use Xibo\Entity\User;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
@@ -78,6 +79,9 @@ trait TaskTrait
     /** @var  UserNotificationFactory */
     private $userNotificationFactory;
 
+    /** @var  Task */
+    private $task;
+
     /** @var  array */
     private $options;
 
@@ -120,11 +124,14 @@ trait TaskTrait
     }
 
     /** @inheritdoc */
-    public function setOptions($options)
+    public function setTask($task)
     {
+        $options = $task->options;
+
         if (property_exists($this, 'defaultConfig'))
             $options = array_merge($this->defaultConfig, $options);
 
+        $this->task = $task;
         $this->options = $options;
         return $this;
     }
@@ -171,6 +178,15 @@ trait TaskTrait
     }
 
     /**
+     * Get task
+     * @return Task
+     */
+    private function getTask()
+    {
+        return $this->task;
+    }
+
+    /**
      * @param $option
      * @param $default
      * @return mixed
@@ -178,5 +194,17 @@ trait TaskTrait
     private function getOption($option, $default)
     {
         return isset($this->options[$option]) ? $this->options[$option] : $default;
+    }
+
+    /**
+     * Append Run Message
+     * @param $message
+     */
+    private function appendRunMessage($message)
+    {
+        if ($this->runMessage === null)
+            $this->runMessage = '';
+
+        $this->runMessage .= $message . PHP_EOL;
     }
 }

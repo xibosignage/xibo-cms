@@ -9,6 +9,7 @@
 namespace Xibo\XTR;
 use Slim\Slim;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Entity\Task;
 use Xibo\Entity\User;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
@@ -56,11 +57,11 @@ interface TaskInterface
     public function setDate($date);
 
     /**
-     * Set the task config options
-     * @param array $options
+     * Set the task
+     * @param Task $task
      * @return $this
      */
-    public function setOptions($options);
+    public function setTask($task);
 
     /**
      * @param StorageServiceInterface $store

@@ -357,7 +357,7 @@ class Task extends Base
                     $this->notificationFactory,
                     $this->userNotificationFactory
                 )
-                ->setOptions($task->options)
+                ->setTask($task)
                 ->run();
 
             // Collect results
