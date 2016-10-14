@@ -228,7 +228,7 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (91, 'RESTING_LOG_LEVEL', 'Error', 'dropdown', 'Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems "error" is recommended.', 'Emergency|Alert|Critical|Error', 'troubleshooting', 1, 'Resting Log Level', '', 19, 'error', 1, 'word'),
 (92, 'TASK_CONFIG_LOCKED_CHECKB', 'Unchecked', 'dropdown', 'Is the task config locked? Useful for Service providers.', 'Checked|Unchecked', 'defaults', 0, 'Lock Task Config', '', 30, 'Unchecked', 0, 'word'),
 (93, 'WHITELIST_LOAD_BALANCERS', '', 'text', 'If the CMS is behind a load balancer, what are the load balancer IP addresses, comma delimited.', '', 'network', 1, 'Whitelist Load Balancers', '', 100, 'Unchecked', 1, 'string'),
-(94, 'DEFAULT_LAYOUT', '4', 'text', 'The default layout to assign for new displays and displays which have their current default deleted.', '4', 'displays', 1, 'Default Layout', '', 4, '', 1, 'int');
+(94, 'DEFAULT_LAYOUT', '1', 'text', 'The default layout to assign for new displays and displays which have their current default deleted.', '1', 'displays', 1, 'Default Layout', '', 4, '', 1, 'int');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),
