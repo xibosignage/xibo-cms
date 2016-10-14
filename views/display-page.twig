@@ -45,6 +45,7 @@
                                 <th>{% trans "Logged In" %}</th>
                                 <th>{% trans "Last Accessed" %}</th>
                                 <th>{% trans "Version" %}</th>
+                                <th>{% trans "Device Name" %}</th>
                                 <th>{% trans "IP Address" %}</th>
                                 <th>{% trans "Mac Address" %}</th>
                                 <th>{% trans "Screen shot?" %}</th>
@@ -171,6 +172,7 @@
                         },
                         "visible": false
                     },
+                    {"data": "deviceName", "visible": false},
                     {"data": "clientAddress", "visible": false},
                     {"data": "macAddress"},
                     {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false},

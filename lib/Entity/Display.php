@@ -300,6 +300,12 @@ class Display implements \JsonSerializable
     public $lastCommandSuccess = 0;
 
     /**
+     * @SWG\Property(description="The Device Name for the device hardware associated with this Display")
+     * @var string
+     */
+    public $deviceName;
+
+    /**
      * Collect required on save?
      * @var bool
      */
@@ -665,7 +671,8 @@ class Display implements \JsonSerializable
                     xmrChannel = :xmrChannel,
                     xmrPubKey = :xmrPubKey,
                     `lastCommandSuccess` = :lastCommandSuccess,
-                    `version_instructions` = :versionInstructions
+                    `version_instructions` = :versionInstructions,
+                    `deviceName` = :deviceName
              WHERE displayid = :displayId
         ', [
             'display' => $this->display,
@@ -702,6 +709,7 @@ class Display implements \JsonSerializable
             'xmrPubKey' => $this->xmrPubKey,
             'lastCommandSuccess' => $this->lastCommandSuccess,
             'versionInstructions' => $this->versionInstructions,
+            'deviceName' => $this->deviceName,
             'displayId' => $this->displayId
         ]);
 

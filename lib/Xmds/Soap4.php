@@ -408,6 +408,7 @@ class Soap4 extends Soap
         $this->display->storageAvailableSpace = $this->getSanitizer()->getInt('availableSpace', $this->display->storageAvailableSpace, $status);
         $this->display->storageTotalSpace = $this->getSanitizer()->getInt('totalSpace', $this->display->storageTotalSpace, $status);
         $this->display->lastCommandSuccess = $this->getSanitizer()->getCheckbox('lastCommandSuccess', $this->display->lastCommandSuccess, $status);
+        $this->display->deviceName = $this->getSanitizer()->getString('deviceName', $this->display->deviceName, $status);
 
         // Touch the display record
         $this->display->save(Display::$saveOptionsMinimum);
