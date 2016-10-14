@@ -155,6 +155,8 @@ echo __('Lock Task Config');
 echo __('Is the task config locked? Useful for Service providers.');
 echo __('Whitelist Load Balancers');
 echo __('If the CMS is behind a load balancer, what are the load balancer IP addresses, comma delimited.');
+echo __('Default Layout');
+echo __('The default layout to assign for new displays and displays which have their current default deleted.');
 
 // Transitions
 echo __('Fade In');
