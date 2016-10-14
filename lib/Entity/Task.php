@@ -52,13 +52,16 @@ class Task implements \JsonSerializable
     }
 
     /**
-     * @return \DateTime
+     * @return \DateTime|string
      */
     public function nextRunDate()
     {
         $cron = CronExpression::factory($this->schedule);
 
-        return $cron->getNextRunDate()->format('U');
+        if ($this->lastRunDt == 0)
+            return (new \DateTime())->format('U');
+
+        return $cron->getNextRunDate(\DateTime::createFromFormat('U', $this->lastRunDt))->format('U');
     }
 
     /**

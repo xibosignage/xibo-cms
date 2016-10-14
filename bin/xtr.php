@@ -55,7 +55,7 @@ $log->debug('XTR started');
 $db = (new \Xibo\Storage\PdoStorageService())->setConnection();
 
 // Query for a list of tasks to run.
-$tasks = $db->select('SELECT taskId, schedule, runNow FROM `task` WHERE isActive = 1 AND status <> :status', [
+$tasks = $db->select('SELECT taskId, schedule, runNow, lastRunDt FROM `task` WHERE isActive = 1 AND status <> :status', [
     'status' => \Xibo\Entity\Task::$STATUS_RUNNING
 ]);
 
@@ -75,7 +75,10 @@ if (count($tasks) > 0) {
         $cron = \Cron\CronExpression::factory($task['schedule']);
         $taskId = $task['taskId'];
 
-        if ($task['runNow'] == 1 || $cron->isDue()) {
+        // Is the next run date of this event earlier than now, or is the task set to runNow
+        $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $task['lastRunDt']))->format('U');
+
+        if ($task['runNow'] == 1 || $nextRunDt < time()) {
             $log->debug($taskId . ' due');
 
             $process = new \React\ChildProcess\Process('php bin/run.php ' . $taskId);
