@@ -470,8 +470,13 @@ class Soap
                 continue;
 
             // Load this layout
-            $layout = $this->layoutFactory->loadById($layoutId);
-            $layout->loadPlaylists();
+            try {
+                $layout = $this->layoutFactory->loadById($layoutId);
+                $layout->loadPlaylists();
+            } catch (NotFoundException $e) {
+                $this->getLog()->error('Layout not found - ID: ' . $layoutId . ', skipping.');
+                continue;
+            }
 
             // Make sure its XLF is up to date
             $path = $layout->xlfToDisk(['notify' => false]);
