@@ -470,8 +470,13 @@ class Soap
                 continue;
 
             // Load this layout
-            $layout = $this->layoutFactory->loadById($layoutId);
-            $layout->loadPlaylists();
+            try {
+                $layout = $this->layoutFactory->loadById($layoutId);
+                $layout->loadPlaylists();
+            } catch (NotFoundException $e) {
+                $this->getLog()->error('Layout not found - ID: ' . $layoutId . ', skipping.');
+                continue;
+            }
 
             // Make sure its XLF is up to date
             $path = $layout->xlfToDisk(['notify' => false]);
@@ -1222,18 +1227,28 @@ class Soap
             // xmds v=5.
             // MediaId is actually the widgetId (since 1.8) and the mediaId is looked up by this service
             $widgetId = $node->getAttribute('mediaid');
-            
-            // Lookup the mediaId
-            $media = $this->mediaFactory->getByLayoutAndWidget($layoutID, $widgetId);
+            $mediaId = 0;
 
-            if (count($media) <= 0) {
-                // Non-media widget
-                $mediaId = 0;
-            } else {
-                $mediaId = $media[0]->mediaId;
+            // The mediaId (really widgetId) might well be null
+            if ($widgetId == 'null' || $widgetId == '')
+                $widgetId = 0;
+
+            if ($widgetId > 0) {
+                // Lookup the mediaId
+                $media = $this->mediaFactory->getByLayoutAndWidget($layoutID, $widgetId);
+
+                if (count($media) <= 0) {
+                    // Non-media widget
+                    $mediaId = 0;
+                } else {
+                    $mediaId = $media[0]->mediaId;
+                }
             }
             
             $tag = $node->getAttribute('tag');
+
+            if ($tag == 'null')
+                $tag = null;
 
             // Write the stat record with the information we have available to us.
             try {
@@ -1630,7 +1645,12 @@ class Soap
         $cdnUrl = $this->configService->GetSetting('CDN_URL');
         if ($cdnUrl != '') {
             // Serve a link to the CDN
-            return 'http' . ((isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ? 's' : '') . '://' . $cdnUrl . urlencode($saveAsPath);
+            return 'http' . (
+                (
+                    (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ||
+                    (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) == 'https')
+                ) ? 's' : '')
+                . '://' . $cdnUrl . urlencode($saveAsPath);
         } else {
             // Serve a HTTP link to XMDS
             return $saveAsPath;

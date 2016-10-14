@@ -587,6 +587,10 @@ class Ticker extends ModuleWidget
             // Set an expiry time for the media
             $expires = time() + ($this->getOption('updateInterval', 3600) * 60);
 
+            // We might download some resources during the course of
+            // this feed rendering. If we do then we should do this async at the end (and concurrently).
+            $promises = [];
+
             // Render the content now
             foreach ($feedItems as $item) {
                 /* @var Item $item */
@@ -655,7 +659,7 @@ class Ticker extends ModuleWidget
                                 $file = $this->mediaFactory->createModuleFile('ticker_' . md5($this->getOption('url') . $link), $link);
                                 $file->isRemote = true;
                                 $file->expires = $expires;
-                                $file->save();
+                                $promises[] = $file->saveAsync();
 
                                 // Tag this layout with this file
                                 $this->assignMedia($file->mediaId);
@@ -735,6 +739,12 @@ class Ticker extends ModuleWidget
                 }
 
                 $items[] = $rowString;
+            }
+
+            if (count($promises) > 0) {
+                $this->getLog()->debug('There are ' . count($promises) . ' promises to resolve. Doing that now.');
+                $promise = \GuzzleHttp\Promise\each_limit($promises, 5);
+                $promise->wait();
             }
 
             // Copyright information?

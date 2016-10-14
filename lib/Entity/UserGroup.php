@@ -10,6 +10,8 @@ namespace Xibo\Entity;
 
 
 use Respect\Validation\Validator as v;
+use Xibo\Exception\DuplicateEntityException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
@@ -179,16 +181,16 @@ class UserGroup
     public function validate()
     {
         if (!v::string()->length(1, 50)->validate($this->group))
-            throw new \InvalidArgumentException(__('User Group Name cannot be empty.') . $this);
+            throw new InvalidArgumentException(__('User Group Name cannot be empty.') . $this, 'name');
 
         if ($this->libraryQuota !== null && !v::int()->validate($this->libraryQuota))
-            throw new \InvalidArgumentException(__('Library Quota must be a whole number.'));
+            throw new InvalidArgumentException(__('Library Quota must be a whole number.'), 'libraryQuota');
 
         try {
             $group = $this->userGroupFactory->getByName($this->group, $this->isUserSpecific);
 
             if ($this->groupId == null || $this->groupId != $group->groupId)
-                throw new \InvalidArgumentException(__('There is already a group with this name. Please choose another.'));
+                throw new DuplicateEntityException(__('There is already a group with this name. Please choose another.'));
         }
         catch (NotFoundException $e) {
 

@@ -187,7 +187,7 @@ class GoogleTraffic extends ModuleWidget
                     $defaultLat = $display->latitude;
                     $defaultLong = $display->longitude;
                 } else {
-                    $this->getLog()->error('Warning, display %s does not have a lat/long and yet a forecast widget is set to use display location.', $display->display);
+                    $this->getLog()->info('Warning, display %s does not have a lat/long and yet a forecast widget is set to use display location.', $display->display);
                 }
             }
         } else {

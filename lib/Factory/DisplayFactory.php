@@ -221,7 +221,9 @@ class DisplayFactory extends BaseFactory
                   displaygroup.description,
                   `display`.xmrChannel,
                   `display`.xmrPubKey,
-                  `display`.lastCommandSuccess ';
+                  `display`.lastCommandSuccess, 
+                  `display`.deviceName 
+              ';
 
         $body = '
                 FROM `display`

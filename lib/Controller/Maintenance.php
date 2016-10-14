@@ -92,13 +92,14 @@ class Maintenance extends Base
 
             if (($aKey == $key) || ($pKey == $key) || ($this->getConfig()->GetSetting("MAINTENANCE_ENABLED")=="On")) {
 
-                // Are we quick maintenance?
-                if ($quick) {
-                    $this->runTask('MaintenanceRegularTask');
-                    $this->runTask('EmailNotificationsTask');
+                // Are we full maintenance?
+                if (!$quick) {
+                    $this->runTask('MaintenanceDailyTask');
                 }
 
-                $this->runTask('MaintenanceDailyTask');
+                // Always run quick tasks
+                $this->runTask('MaintenanceRegularTask');
+                $this->runTask('EmailNotificationsTask');
             }
             else {
                 print __("Maintenance key invalid.");

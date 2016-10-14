@@ -11,6 +11,7 @@ namespace Xibo\Entity;
 use Jenssegers\Date\Date;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -370,19 +371,19 @@ class Schedule implements \JsonSerializable
     public function validate()
     {
         if (count($this->displayGroups) <= 0)
-            throw new \InvalidArgumentException(__('No display groups selected'));
+            throw new InvalidArgumentException(__('No display groups selected'), 'displayGroups');
 
         $this->getLog()->debug('EventTypeId: %d. DayPartId: %d, CampaignId: %d, CommandId: %d', $this->eventTypeId, $this->dayPartId, $this->campaignId, $this->commandId);
 
         if ($this->eventTypeId == Schedule::$LAYOUT_EVENT || $this->eventTypeId == Schedule::$OVERLAY_EVENT) {
             // Validate layout
             if (!v::int()->notEmpty()->validate($this->campaignId))
-                throw new \InvalidArgumentException(__('Please select a Campaign/Layout for this event.'));
+                throw new InvalidArgumentException(__('Please select a Campaign/Layout for this event.'), 'campaignId');
 
             if ($this->dayPartId == Schedule::$DAY_PART_CUSTOM) {
                 // validate the dates
                 if ($this->toDt < $this->fromDt)
-                    throw new \InvalidArgumentException(__('Can not have an end time earlier than your start time'));
+                    throw new InvalidArgumentException(__('Can not have an end time earlier than your start time'), 'start/end');
             }
 
             $this->commandId = null;
@@ -390,14 +391,14 @@ class Schedule implements \JsonSerializable
         } else if ($this->eventTypeId == Schedule::$COMMAND_EVENT) {
             // Validate command
             if (!v::int()->notEmpty()->validate($this->commandId))
-                throw new \InvalidArgumentException(__('Please select a Command for this event.'));
+                throw new InvalidArgumentException(__('Please select a Command for this event.'), 'command');
 
             $this->campaignId = null;
             $this->toDt = null;
 
         } else {
             // No event type selected
-            throw new \InvalidArgumentException(__('Please select the Event Type'));
+            throw new InvalidArgumentException(__('Please select the Event Type'), 'eventTypeId');
         }
     }
 

@@ -372,8 +372,10 @@ class Display extends Base
 
             $display->includeProperty('buttons');
 
+            // Format the storage available / total space
             $display->storageAvailableSpaceFormatted = ByteFormatter::format($display->storageAvailableSpace);
             $display->storageTotalSpaceFormatted = ByteFormatter::format($display->storageTotalSpace);
+            $display->storagePercentage = ($display->storageTotalSpace == 0) ? 0 : round($display->storageAvailableSpace / $display->storageTotalSpace * 100.0, 2);
 
             // Set some text for the display status
             switch ($display->mediaInventoryStatus) {
@@ -401,9 +403,6 @@ class Display extends Base
             if (file_exists($this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
                 $display->thumbnail = $this->urlFor('display.screenShot', ['id' => $display->displayId]);
             }
-
-            // Format the storage available / total space
-            $display->storagePercentage = ($display->storageTotalSpace == 0) ? 100 : round($display->storageAvailableSpace / $display->storageTotalSpace * 100.0, 2);
 
             // Edit and Delete buttons first
             if ($this->getUser()->checkEditable($display)) {
@@ -624,12 +623,12 @@ class Display extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="isAuditing",
+     *      name="auditingUntil",
      *      in="formData",
-     *      description="Flag indicating whether this Display records auditing information.",
+     *      description="A date this Display records auditing information until.",
      *      type="string",
      *      format="date-time",
-     *      required=true
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="defaultLayoutId",
