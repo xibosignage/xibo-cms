@@ -706,10 +706,14 @@ class Display implements \JsonSerializable
         ]);
 
         // Maintain the Display Group
-        $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
-        $displayGroup->displayGroup = $this->display;
-        $displayGroup->description = $this->description;
-        $displayGroup->save(['validate' => false, 'manageDisplayLinks' => false]);
+        if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('description')) {
+            $this->getLog()->debug('Display specific DisplayGroup properties need updating');
+
+            $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
+            $displayGroup->displayGroup = $this->display;
+            $displayGroup->description = $this->description;
+            $displayGroup->save(DisplayGroup::$saveOptionsMinimum);
+        }
     }
 
     /**
