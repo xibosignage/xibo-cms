@@ -1,0 +1,11 @@
+{
+    "id": "tweet-7",
+    "value": "Template 11 - text, twitter logo",
+    "template": "<div class=\"twit\">\r\n<div class=\"header\">\r\n<div class=\"col-xs-7 col-xs-offset-1 user\">[User]<\/div>\r\n\r\n<div class=\"col-xs-2 pull-right icon\"><img class=\"img-responsive\" src=\"[TwitterLogoWhite]\" \/><\/div>\r\n<\/div>\r\n\r\n<div class=\"arrow_box\">&nbsp;<\/div>\r\n\r\n<div class=\"main-tweet \">[Tweet]<\/div>\r\n<\/div>\r\n",
+    "css": ".item {\r\n    float: left;\r\n}\r\n\r\n.emojione {\r\n    width: 10px;\r\n    height: 10px\r\n}\r\n\r\nbody {\r\n    font-family: \"Helvetica\", \"Arial\", sans-serif;\r\n    line-height: 1;\r\n}\r\n\r\n.twit {\r\n    height: 160px !important;\r\n    width: 400px !important;\r\n    float: left;\r\n    border: 1px solid #ddd;\r\n    background: #FFF;\r\n}\r\n\r\n.icon {\r\n  margin-top: 4px;\r\n}\r\n\r\n.main-tweet {\r\n    font-size: 14px;\r\n    padding: 25px;\r\n    line-height: 140%;\r\n    color: #434343;\r\n    text-align: justify;\r\n}\r\n\r\n.header {\r\n    background: #1da1f2;\r\n    width: 100%;\r\n    height: 41px;\r\n    margin-bottom: -2px;\r\n}\r\n\r\n.user {\r\n    font-size: 14px;\r\n    font-weight: bold;\r\n    color: #fff;\r\n    margin-top: 12px;\r\n    letter-spacing: 1px;\r\n    padding-left: 0px;\r\n}\r\n\r\n.arrow_box {\r\n    position: relative;\r\n    background: #1da1f2;\r\n}\r\n\r\n.arrow_box:after, .arrow_box:before {\r\n    top: 96%;\r\n    left: 50%;\r\n    border: solid;\r\n    content: \" \";\r\n    height: 0;\r\n    width: 0;\r\n    position: absolute;\r\n    pointer-events: none;\r\n}\r\n\r\n.arrow_box:after {\r\n    border-color: rgba(136, 183, 213, 0);\r\n    border-top-color: #1da1f2;\r\n    border-width: 20px;\r\n    margin-left: -20px;\r\n}\r\n\r\n.arrow_box:before {\r\n    border-color: rgba(0, 0, 0, 0);\r\n    border-top-color: #;\r\n    border-width: 26px;\r\n    margin-left: -26px;\r\n}",
+    "widgetOriginalWidth": "400",
+    "widgetOriginalHeight": "160",
+    "widgetOriginalPadding": "10",
+    "resultContent": "1",
+    "image":"modules/twitter/template-thumbs/twitter7.png"
+}

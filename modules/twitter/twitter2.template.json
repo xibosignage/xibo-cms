@@ -1,0 +1,11 @@
+{
+    "id": "tweet-2",
+    "value": "Template 7 - text, profile image",
+    "template": "<div class=\"container twitter-container \">\r\n<div class=\"col-xs-12\">\r\n<div class=\"col-xs-2 img-container\">[ProfileImage|bigger]<\/div>\r\n\r\n<div class=\"col-xs-10\">\r\n<div class=\"name\">[User]<\/div>\r\n\r\n<div class=\"username\">[ScreenName]<\/div>\r\n<\/div>\r\n<\/div>\r\n\r\n<div class=\"col-xs-12 \">\r\n<div class=\"main-tweet\">[Tweet]<\/div>\r\n\r\n<div class=\"col-xs-3 twitter-date\">[Date]<\/div>\r\n\r\n<div class=\"col-xs-9 twitter-location text-right \">[Location]<\/div>\r\n<\/div>\r\n<\/div>\r\n",
+    "css": ".item {\r\n    float: left;\r\n}\r\n\r\nbody {\r\n    font-family: \"Helvetica\", \"Arial\", sans-serif;\r\n    line-height: 1;\r\n    background-repeat: no-repeat;\r\n    background-size: cover;\r\n    background-position: center;\r\n}\r\n\r\n.twitter-container {\r\n    padding-top: 30px;\r\n    width: 600px !important;\r\n    height: 460px !important;\r\n    padding-bottom: 40px;\r\n    background-color: rgba(255, 255, 255, 0.6);\r\n    background: rgba(255, 255, 255, 0.6);\r\n    color: rgba(255, 255, 255, 0.6);\r\n}\r\n\r\n.img-container img {\r\n    width: 80px;\r\n    height: 80px;\r\n    border: 3px solid #fff;\r\n}\r\n\r\n.main-tweet {\r\n    font-size: 35px;\r\n    padding-top: 30px;\r\n    line-height: 130%;\r\n    color: #434343;\r\n    height: 280px;\r\n}\r\n\r\n.emojione {\r\n    width: 30px;\r\n    height: 30px\r\n}\r\n\r\n.twitter-date, .twitter-location {\r\n    margin-top: 30px;\r\n    font-size: 17px;\r\n    color: #434343;\r\n    font-weight: bold;\r\n}\r\n\r\n.name {\r\n    font-size: 25px;\r\n    font-weight: bold;\r\n    color: #434343;\r\n    margin-top: 5px;\r\n}\r\n\r\n.username {\r\n    margin-top: 5px;\r\n    color: #434343;\r\n}\r\n\r\n.avatar {\r\n    border: 3px solid #fff;\r\n}",
+    "widgetOriginalWidth": "600",
+    "widgetOriginalHeight": "460",
+    "widgetOriginalPadding": "20",
+    "resultContent": "1",
+    "image":"modules/twitter/template-thumbs/twitter2.png"
+}
