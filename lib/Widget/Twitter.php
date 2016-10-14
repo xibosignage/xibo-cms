@@ -323,7 +323,8 @@ class Twitter extends ModuleWidget
         $queryString = '?q=' . urlencode(trim($term)) .
             '&result_type=' . $resultType .
             '&count=' . $count .
-            '&include_entities=true';
+            '&include_entities=true' . 
+            '&tweet_mode=extended';
 
         if ($geoCode != '')
             $queryString .= '&geocode=' . $geoCode;
@@ -483,7 +484,7 @@ class Twitter extends ModuleWidget
             $user->location = '';
 
             $tweet = new \stdClass();
-            $tweet->text = $this->getOption('noTweetsMessage', __('There are no tweets to display'));
+            $tweet->full_text = $this->getOption('noTweetsMessage', __('There are no tweets to display'));
             $tweet->created_at = date("Y-m-d H:i:s");
             $tweet->user = $user;
 
@@ -526,7 +527,7 @@ class Twitter extends ModuleWidget
                 switch ($subClean) {
                     case 'Tweet':
                         // Get the tweet text to operate on
-                        $tweetText = $tweet->text;
+                        $tweetText = $tweet->full_text;
 
                         // Replace URLs with their display_url before removal
                         if (isset($tweet->entities->urls)) {
@@ -599,12 +600,17 @@ class Twitter extends ModuleWidget
 
                     case 'Photo':
                         // See if there are any photos associated with this tweet.
-                        if (isset($tweet->entities->media) && count($tweet->entities->media) > 0) {
-                            // Only take the first one
-                            $photoUrl = $tweet->entities->media[0]->media_url;
-
+                        if ((isset($tweet->entities->media) && count($tweet->entities->media) > 0) || (isset($tweet->retweeted_status->entities->media) && count($tweet->retweeted_status->entities->media) > 0)) {
+                            
+                            // See if it's an image from a tweet or RT, and only take the first one
+                            $mediaObject = (isset($tweet->entities->media))
+                                ? $tweet->entities->media[0]
+                                : $tweet->retweeted_status->entities->media[0];
+                            
+                            $photoUrl = $mediaObject->media_url;
+                            
                             if ($photoUrl != '') {
-                                $file = $this->mediaFactory->createModuleFile('twitter_photo_' . $tweet->user->id . '_' . $tweet->entities->media[0]->id_str, $photoUrl);
+                                $file = $this->mediaFactory->createModuleFile('twitter_photo_' . $tweet->user->id . '_' . $mediaObject->id_str, $photoUrl);
                                 $file->isRemote = true;
                                 $file->expires = $expires;
                                 $file->save();
@@ -698,12 +704,6 @@ class Twitter extends ModuleWidget
         // Replace the head content
         $headContent = '';
 
-        // Add the CSS if it isn't empty
-        $css = $this->getRawNode('styleSheet', null);
-        if ($css != '') {
-            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css) . '</style>';
-        }
-
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
 
@@ -715,6 +715,12 @@ class Twitter extends ModuleWidget
         // Add our fonts.css file
         $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
         <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
+        
+        // Add the CSS if it isn't empty
+        $css = $this->getRawNode('styleSheet', null);
+        if ($css != '') {
+            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css) . '</style>';
+        }
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         // Replace the Head Content with our generated javascript
