@@ -840,7 +840,8 @@ class State extends Middleware
                 $container->dateService,
                 $container->configService,
                 $container->pool,
-                $container->settingsFactory
+                $container->settingsFactory,
+                $container->layoutFactory
             );
         });
 

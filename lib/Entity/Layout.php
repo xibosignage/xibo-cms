@@ -592,6 +592,10 @@ class Layout implements \JsonSerializable
 
         $this->getLog()->debug('Deleting %s', $this);
 
+        // We cannot delete the default default
+        if ($this->layoutId == $this->config->GetSetting('DEFAULT_LAYOUT'))
+            throw new InvalidArgumentException(__('This layout is used as the global default and cannot be deleted'), 'layoutId');
+
         // Delete Permissions
         foreach ($this->permissions as $permission) {
             /* @var Permission $permission */
@@ -625,7 +629,10 @@ class Layout implements \JsonSerializable
         $campaign->delete();
 
         // Remove the Layout from any display defaults
-        $this->getStore()->update('UPDATE `display` SET defaultlayoutid = 4 WHERE defaultlayoutid = :layoutId', array('layoutId' => $this->layoutId));
+        $this->getStore()->update('UPDATE `display` SET defaultlayoutid = :defaultLayoutId WHERE defaultlayoutid = :layoutId', [
+            'layoutId' => $this->layoutId,
+            'defaultLayoutId' => $this->config->GetSetting('DEFAULT_LAYOUT')
+        ]);
 
         // Remove the Layout (now it is orphaned it can be deleted safely)
         $this->getStore()->update('DELETE FROM `layout` WHERE layoutid = :layoutId', array('layoutId' => $this->layoutId));

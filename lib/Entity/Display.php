@@ -311,7 +311,7 @@ class Display implements \JsonSerializable
      */
     private $commands = null;
 
-    public static $saveOptionsMinimum = ['validate' => false, 'audit' => false, 'triggerDynamicDisplayGroupAssessment' => false];
+    public static $saveOptionsMinimum = ['validate' => false, 'audit' => false, 'triggerDynamicDisplayGroupAssessment' => false, 'enableActions' => false];
 
     /**
      * @var ConfigServiceInterface

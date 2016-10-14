@@ -22,6 +22,7 @@ namespace Xibo\Controller;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\SettingsFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -44,6 +45,9 @@ class Settings extends Base
      */
     private $settingsFactory;
 
+    /** @var  LayoutFactory */
+    private $layoutFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -55,13 +59,15 @@ class Settings extends Base
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
      * @param SettingsFactory $settingsFactory
+     * @param LayoutFactory $layoutFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $settingsFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $settingsFactory, $layoutFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->pool = $pool;
         $this->settingsFactory = $settingsFactory;
+        $this->layoutFactory = $layoutFactory;
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
@@ -84,6 +90,8 @@ class Settings extends Base
 
         // Go through each setting, validate it and add it to the array
         foreach ($settings as $setting) {
+
+            $options = [];
 
             if ($currentCategory != $setting['cat']) {
                 $currentCategory = $setting['cat'];
@@ -126,6 +134,17 @@ class Settings extends Base
                     $setting['value'] = $this->getDate()->getLocalDate($setting['value']);
                 } else {
                     $setting['value'] = null;
+                }
+
+            }  else if ($setting['setting'] == 'DEFAULT_LAYOUT') {
+
+                // Show a list of all layouts in the system
+                // convert to a dropdown
+                $setting['fieldType'] = 'dropdown';
+
+                foreach ($this->layoutFactory->query(null, ['disableUserCheck' => 1]) as $layout) {
+                    /** @var \Xibo\Entity\Layout $layout */
+                    $options[] = ['id' => $layout->layoutId, 'value' => $layout->layout];
                 }
 
             } else {

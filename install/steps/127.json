@@ -48,7 +48,11 @@
     },
     {
       "step": "Load Balancer White List Setting",
-      "action": "INSERT INTO setting (setting, value, fieldType, helptext, options, cat, userChange, title, validation, ordering, `default`, userSee, type) VALUES('WHITELIST_LOAD_BALANCERS', '', 'text', 'If the CMS is behind a load balancer, what are the load balancer IP addresses, comma delimited.', '', 'network', 1, 'Whitelist Load Balancers', '', 100, 'Unchecked', 1, 'string');"
+      "action": "INSERT INTO `setting` (setting, value, fieldType, helptext, options, cat, userChange, title, validation, ordering, `default`, userSee, type) VALUES('WHITELIST_LOAD_BALANCERS', '', 'text', 'If the CMS is behind a load balancer, what are the load balancer IP addresses, comma delimited.', '', 'network', 1, 'Whitelist Load Balancers', '', 100, 'Unchecked', 1, 'string');"
+    },
+    {
+      "step": "Default Layout Setting",
+      "action": "INSERT INTO `setting` (setting, value, fieldType, helptext, options, cat, userChange, title, validation, ordering, `default`, userSee, type) VALUES('DEFAULT_LAYOUT', '4', 'text', 'The default layout to assign for new displays and displays which have their current default deleted.', '4', 'displays', 1, 'Default Layout', '', 4, '', 1, 'int');"
     }
   ]
 }
