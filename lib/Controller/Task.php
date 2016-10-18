@@ -328,6 +328,11 @@ class Task extends Base
         if (!class_exists($task->class))
             throw new NotFoundException();
 
+        if ($task->status == \Xibo\Entity\Task::$STATUS_RUNNING) {
+            $this->getLog()->debug('Task already running: ' . $task->name . ' [' . $task->taskId . ']');
+            return;
+        }
+
         /** @var TaskInterface $taskClass */
         $taskClass = new $task->class();
 

@@ -9,6 +9,7 @@
 namespace Xibo\Controller;
 
 
+use Xibo\Entity\Task;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
@@ -128,12 +129,18 @@ class Maintenance extends Base
 
         $task = $this->taskFactory->getByClass('\Xibo\XTR\\' . $class);
 
-        // Hand off to the task controller
-        $taskController->run($task->taskId);
+        // Check we aren't already running
+        if ($task->status == Task::$STATUS_RUNNING) {
+            echo __('Task already running');
 
-        // Echo the task output
-        $task = $this->taskFactory->getById($task->taskId);
-        echo \Parsedown::instance()->text($task->lastRunMessage);
+        } else {
+            // Hand off to the task controller
+            $taskController->run($task->taskId);
+
+            // Echo the task output
+            $task = $this->taskFactory->getById($task->taskId);
+            echo \Parsedown::instance()->text($task->lastRunMessage);
+        }
     }
 
     /**
