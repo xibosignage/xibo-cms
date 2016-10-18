@@ -88,6 +88,7 @@
         <script src="{{ theme.uri("libraries/toastr/toastr.min.js") }}"></script>
         <script src="{{ theme.uri("libraries/date-time-format.js") }}"></script>
         <script src="{{ theme.uri("libraries/momentjs/moment.js") }}"></script>
+        <script src="{{ theme.uri("libraries/momentjs/moment-timezone.js") }}"></script>
         <script src="{{ theme.uri("libraries/morrisjs/raphael.min.js") }}"></script>
         <script src="{{ theme.uri("libraries/morrisjs/morris.min.js") }}"></script>
         <script src="{{ theme.uri("libraries/colors/colors.min.js") }}"></script>
@@ -125,6 +126,7 @@
             translations.statusPending = "{% trans "Status Pending" %}";
 
             var language = "{{ translate.jsLocale }}";
+            var timezone = "{{ settings.defaultTimezone }}";
             var dateFormat = "{{ settings.DATE_FORMAT }}";
             var jsDateFormat = "{{ settings.DATE_FORMAT_JS }}";
             var bootstrapDateFormat = "{{ settings.DATE_FORMAT_BOOTSTRAP }}";

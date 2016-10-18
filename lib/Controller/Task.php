@@ -373,13 +373,13 @@ class Task extends Base
             $task->lastRunStatus = \Xibo\Entity\Task::$STATUS_ERROR;
         }
 
-        $task->lastRunDt = $this->getDate()->parse()->format('U');
+        $task->lastRunDt = $this->getDate()->getLocalDate(null, 'U');
         $task->runNow = 0;
 
         // Save
         $task->save();
 
-        $this->getLog()->debug('Finished Task ' . $task->name . ' [' . $task->taskId . ']');
+        $this->getLog()->debug('Finished Task ' . $task->name . ' [' . $task->taskId . '] Run Dt: ' . $this->getDate()->getLocalDate());
 
         // No output
         $this->setNoOutput(true);

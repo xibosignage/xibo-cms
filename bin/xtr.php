@@ -64,8 +64,8 @@ $log->debug('Found ' . count($tasks) . ' to analyse.');
 if (count($tasks) > 0) {
 
     // Create a stored SQL statement to update tasks
-    $updateStartSth = $db->getConnection()->prepare('UPDATE `task` SET status = :status, `pid` = :pid, `lastRunDt` = :lastRunDt WHERE taskId = :taskId');
-    $updateEndSth = $db->getConnection()->prepare('UPDATE `task` SET status = :status, `pid` = 0, `lastRunDt` = :lastRunDt, `lastRunExitCode` = :lastRunExitCode WHERE taskId = :taskId');
+    $updateStartSth = $db->getConnection()->prepare('UPDATE `task` SET status = :status, `pid` = :pid WHERE taskId = :taskId');
+    $updateEndSth = $db->getConnection()->prepare('UPDATE `task` SET status = :status, `pid` = 0, `lastRunExitCode` = :lastRunExitCode WHERE taskId = :taskId');
 
     // Create a react event loop to handle the process forking and closure
     $loop = \React\EventLoop\Factory::create();
@@ -88,8 +88,7 @@ if (count($tasks) > 0) {
                 $updateEndSth->execute([
                     'status' => (intval($exitCode) > 0) ? \Xibo\Entity\Task::$STATUS_ERROR : \Xibo\Entity\Task::$STATUS_IDLE,
                     'lastRunExitCode' => $exitCode,
-                    'taskId' => $taskId,
-                    'lastRunDt' => time()
+                    'taskId' => $taskId
                 ]);
             });
             $process->start($loop);
@@ -99,8 +98,7 @@ if (count($tasks) > 0) {
             $updateStartSth->execute([
                 'status' => \Xibo\Entity\Task::$STATUS_RUNNING,
                 'pid' => $pid,
-                'taskId' => $taskId,
-                'lastRunDt' => time()
+                'taskId' => $taskId
             ]);
 
         } else {
