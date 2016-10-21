@@ -723,7 +723,7 @@ class Library extends Base
     /**
      * Tidies up the library
      *
-     * @SWG\Post(
+     * @SWG\Delete(
      *  path="/library/tidy",
      *  operationId="libraryTidy",
      *  tags={"library"},
@@ -747,6 +747,7 @@ class Library extends Base
         foreach ($media as $item) {
             /* @var Media $item */
             $i++;
+            $item->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
             $item->load();
             $item->delete();
         }
@@ -1087,9 +1088,9 @@ class Library extends Base
 
     /**
      * @SWG\Post(
-     *  path="/media/{mediaId}/tag",
+     *  path="/library/{mediaId}/tag",
      *  operationId="mediaTag",
-     *  tags={"media"},
+     *  tags={"library"},
      *  summary="Tag Media",
      *  description="Tag a Media with one or more tags",
      * @SWG\Parameter(
@@ -1148,9 +1149,9 @@ class Library extends Base
 
     /**
      * @SWG\Delete(
-     *  path="/media/{mediaId}/tag",
+     *  path="/library/{mediaId}/untag",
      *  operationId="mediaUntag",
-     *  tags={"media"},
+     *  tags={"library"},
      *  summary="Untag Media",
      *  description="Untag a Media with one or more tags",
      * @SWG\Parameter(
@@ -1191,7 +1192,7 @@ class Library extends Base
         $tags = $this->getSanitizer()->getStringArray('tag');
 
         if (count($tags) <= 0)
-            throw new \InvalidArgumentException(__('No tags to assign'));
+            throw new \InvalidArgumentException(__('No tags to unassign'));
 
         foreach ($tags as $tag) {
             $media->unassignTag($this->tagFactory->tagFromString($tag));
