@@ -1,0 +1,11 @@
+{
+  "dbVersion": 128,
+  "appVersion": "1.8.0-rc1",
+  "steps": [
+    {
+      "step": "Fix database contraints and indexes",
+      "type": "php",
+      "action": "Xibo\\Upgrade\\FixDatabaseIndexesAndContraints"
+    }
+  ]
+}

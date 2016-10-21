@@ -241,7 +241,15 @@ class DisplayGroup implements \JsonSerializable
     {
         $this->load();
 
-        if (!in_array($display, $this->displays))
+        $found = false;
+        foreach ($this->displays as $existingDisplay) {
+            if ($existingDisplay->getId() === $display->getId()) {
+                $found = true;
+                break;
+            }
+        }
+
+        if (!$found)
             $this->displays[] = $display;
     }
 
