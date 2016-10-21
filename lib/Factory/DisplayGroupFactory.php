@@ -202,9 +202,27 @@ class DisplayGroupFactory extends BaseFactory
             $params['isDynamic'] = $this->getSanitizer()->getInt('isDynamic', $filterBy);
         }
 
+        if ($this->getSanitizer()->getString('dynamicCriteria', $filterBy) !== null) {
+            $body .= ' AND `displaygroup`.dynamicCriteria = :dynamicCriteria ';
+            $params['dynamicCriteria'] = $this->getSanitizer()->getString('dynamicCriteria', $filterBy);
+        }
+
         if ($this->getSanitizer()->getInt('displayId', $filterBy) !== null) {
             $body .= ' AND displaygroup.displayGroupId IN (SELECT displayGroupId FROM lkdisplaydg WHERE displayId = :displayId) ';
             $params['displayId'] = $this->getSanitizer()->getInt('displayId', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('nestedDisplayId', $filterBy) !== null) {
+            $body .= ' 
+                AND displaygroup.displayGroupId IN (
+                    SELECT DISTINCT childId
+                      FROM `lkdgdg`
+                        INNER JOIN `lkdisplaydg`
+                        ON `lkdisplaydg`.displayGroupId = `lkdgdg`.parentId 
+                     WHERE displayId = :nestedDisplayId
+                ) 
+            ';
+            $params['nestedDisplayId'] = $this->getSanitizer()->getInt('nestedDisplayId', $filterBy);
         }
 
         if ($this->getSanitizer()->getInt('notificationId', $filterBy) !== null) {

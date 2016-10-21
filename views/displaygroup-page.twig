@@ -20,10 +20,26 @@
         <div class="widget-title">{% trans "Display Groups" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter">
+                <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input("displayGroup", title) }}
 
+                            {% set attributes = [
+                            { name: "data-live-search", value: "true" },
+                            { name: "data-selected-text-format", value: "count > 4" }
+                            ] %}
+                            {% set title %}{% trans "Display" %}{% endset %}
+                            {% set helpText %}{% trans "Return Display Groups that directly contain the selected Display." %}{% endset %}
+                            {{ inline.dropdown("displayId", "single", title, "", [{displayId:null, display: null}]|merge(displays), "displayId", "display", helpText, "selectPicker", "", "", "", attributes) }}
+
+                            {% set title %}{% trans "Nested Display" %}{% endset %}
+                            {% set helpText %}{% trans "Return Display Groups that contain the selected Display somewhere in the nested Display Group relationship tree." %}{% endset %}
+                            {{ inline.dropdown("nestedDisplayId", "single", title, "", [{displayId:null, display: null}]|merge(displays), "displayId", "display", helpText, "selectPicker", "", "", "", attributes) }}
+
+                            {% set title %}{% trans "Dynamic Criteria" %}{% endset %}
+                            {{ inline.input("dynamicCriteria", title) }}
                         </form>
                     </div>
                 </div>
@@ -31,6 +47,7 @@
                     <table id="displaygroups" class="table table-striped">
                         <thead>
                             <tr>
+                                <th>{% trans "ID" %}</th>
                                 <th>{% trans "Name" %}</th>
                                 <th>{% trans "Description" %}</th>
                                 <th>{% trans "Is Dynamic?" %}</th>
@@ -62,6 +79,7 @@
                 }
             },
             "columns": [
+                { "data": "displayGroupId" },
                 { "data": "displayGroup" },
                 { "data": "description" },
                 { "data": "isDynamic", "render": dataTableTickCrossColumn },

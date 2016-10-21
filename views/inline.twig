@@ -1,10 +1,9 @@
 
 {% macro disabled(name, title, value, helpText, groupClass) %}
     <div class="form-group {{ groupClass }}">
-        <label class="control-label">{{ title }}</label>
+        <label class="control-label" title="{{ helpText }}">{{ title }}</label>
         <div class="">
             <p class="form-control-static">{{ value }}</p>
-            <span class="help-block">{{ helpText }}</span>
         </div>
     </div>
 {% endmacro %}
@@ -41,40 +40,36 @@
 
 {% macro input(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
-        <label class="control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="">
             <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} />
-            <span class="help-block">{{ helpText }}</span>
         </div>
     </div>
 {% endmacro %}
 
 {% macro number(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
-        <label class="control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="">
             <input class="form-control" name="{{ name }}" type="number" id="{{ name }}" value="{{ value }}" {{ validation }} />
-            <span class="help-block">{{ helpText }}</span>
         </div>
     </div>
 {% endmacro %}
 
 {% macro email(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
-        <label class="control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="">
             <input class="form-control" name="{{ name }}" type="email" id="{{ name }}" value="{{ value }}" {{ validation }} />
-            <span class="help-block">{{ helpText }}</span>
         </div>
     </div>
 {% endmacro %}
 
 {% macro password(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
-        <label class="control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <label class="control-label" for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="">
             <input class="form-control" name="{{ name }}" type="password" id="{{ name }}" value="{{ value }}" {{ validation }} />
-            <span class="help-block">{{ helpText }}</span>
         </div>
     </div>
 {% endmacro %}
@@ -99,7 +94,6 @@
                     {{ title }}
                 </label>
             </div>
-            <span class="help-block">{{ helpText }}</span>
         </div>
     </div>
 {% endmacro %}
@@ -146,7 +140,6 @@
             {% endfor %}
 
             </select>
-            <span class="help-block">{{ helpText }}</span>
         </div>
     </div>
 {% endmacro %}
@@ -172,24 +165,22 @@
 
 {% macro date(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
-        <label class="control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="">
             <input type="hidden" name="{{ name }}" id="{{ name }}" value="{{ value }}" />
             {% set linkedName %}{{ name }}Link{% endset %}
             <input class="form-control datePicker dateControl" name="{{ linkedName }}" type="text" id="{{ linkedName }}" {{ validation }} data-link-field="{{ name }}" data-link-format="yyyy-mm-dd hh:ii:ss" readonly/>
-            <span class="help-block">{{ helpText }}</span>
         </div>
     </div>
 {% endmacro %}
 
 {% macro time(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
-        <label class="control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="">
             <input type="hidden" name="{{ name }}" id="{{ name }}" value="{{ value }}" />
             {% set linkedName %}{{ name }}Link{% endset %}
             <input class="form-control timePicker dateControl" name="{{ linkedName }}" type="text" id="{{ linkedName }}" {{ validation }} data-link-field="{{ name }}" data-link-format="hh:ii" readonly/>
-            <span class="help-block">{{ helpText }}</span>
         </div>
     </div>
 {% endmacro %}

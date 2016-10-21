@@ -125,6 +125,9 @@ class DisplayGroup extends Base
     public function displayPage()
     {
         $this->getState()->template = 'displaygroup-page';
+        $this->getState()->setData([
+            'displays' => $this->displayFactory->query()
+        ]);
     }
 
     /**
@@ -154,6 +157,27 @@ class DisplayGroup extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="nestedDisplayId",
+     *      in="formData",
+     *      description="Filter by DisplayGroups containing a specific display in there nesting",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isDynamic",
+     *      in="formData",
+     *      description="Filter by DisplayGroups that are dynamic",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dynamicCriteria",
+     *      in="formData",
+     *      description="Filter by DisplayGroups containing a specific dynamic criteria",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="a successful response",
@@ -174,7 +198,10 @@ class DisplayGroup extends Base
         $filter = [
             'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
             'displayGroup' => $this->getSanitizer()->getString('displayGroup'),
-            'displayId' => $this->getSanitizer()->getInt('displayId')
+            'displayId' => $this->getSanitizer()->getInt('displayId'),
+            'nestedDisplayId' => $this->getSanitizer()->getInt('nestedDisplayId'),
+            'dynamicCriteria' => $this->getSanitizer()->getString('dynamicCriteria'),
+            'isDynamic' => $this->getSanitizer()->getCheckbox('isDynamic')
         ];
 
         $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
