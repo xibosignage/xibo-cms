@@ -948,25 +948,38 @@ class LayoutFactory extends BaseFactory
 
         // Tags
         if ($this->getSanitizer()->getString('tags', $filterBy) != '') {
-            $body .= " AND layout.layoutID IN (
+
+            $tagFilter = $this->getSanitizer()->getString('tags', $filterBy);
+
+            if (trim($tagFilter) === '--no-tag') {
+                $body .= ' AND `layout`.layoutID NOT IN (
+                    SELECT `lktaglayout`.layoutId
+                     FROM `tag`
+                        INNER JOIN `lktaglayout`
+                        ON `lktaglayout`.tagId = `tag`.tagId
+                    )
+                ';
+            } else {
+                $body .= " AND layout.layoutID IN (
                 SELECT lktaglayout.layoutId
                   FROM tag
                     INNER JOIN lktaglayout
                     ON lktaglayout.tagId = tag.tagId
                 ";
-            $i = 0;
-            foreach (explode(',', $this->getSanitizer()->getString('tags', $filterBy)) as $tag) {
-                $i++;
+                $i = 0;
+                foreach (explode(',', $tagFilter) as $tag) {
+                    $i++;
 
-                if ($i == 1)
-                    $body .= " WHERE tag LIKE :tags$i ";
-                else
-                    $body .= " OR tag LIKE :tags$i ";
+                    if ($i == 1)
+                        $body .= " WHERE tag LIKE :tags$i ";
+                    else
+                        $body .= " OR tag LIKE :tags$i ";
 
-                $params['tags' . $i] =  '%' . $tag . '%';
+                    $params['tags' . $i] = '%' . $tag . '%';
+                }
+
+                $body .= " ) ";
             }
-
-            $body .= " ) ";
         }
 
         // Exclude templates by default

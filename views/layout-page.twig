@@ -20,7 +20,8 @@
                             {{ inline.input("layout", title) }}
 
                             {% set title %}{% trans "Tags" %}{% endset %}
-                            {{ inline.input("tags", title) }}
+                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                            {{ inline.input("tags", title, null, helpText) }}
 
                             {% set title %}{% trans "Owner" %}{% endset %}
                             {{ inline.dropdown("userId", "single", title, "", [{userId:null, userName:""}]|merge(users), "userId", "userName") }}

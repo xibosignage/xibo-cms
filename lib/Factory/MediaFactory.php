@@ -457,25 +457,38 @@ class MediaFactory extends BaseFactory
 
         // Tags
         if ($this->getSanitizer()->getString('tags', $filterBy) != '') {
-            $body .= " AND `media`.mediaId IN (
+
+            $tagFilter = $this->getSanitizer()->getString('tags', $filterBy);
+
+            if (trim($tagFilter) === '--no-tag') {
+                $body .= ' AND `media`.mediaId NOT IN (
+                    SELECT `lktagmedia`.mediaId
+                     FROM tag
+                        INNER JOIN `lktagmedia`
+                        ON `lktagmedia`.tagId = tag.tagId
+                    )
+                ';
+            } else {
+                $body .= " AND `media`.mediaId IN (
                 SELECT `lktagmedia`.mediaId
                   FROM tag
                     INNER JOIN `lktagmedia`
                     ON `lktagmedia`.tagId = tag.tagId
                 ";
-            $i = 0;
-            foreach (explode(',', $this->getSanitizer()->getString('tags', $filterBy)) as $tag) {
-                $i++;
+                $i = 0;
+                foreach (explode(',', $tagFilter) as $tag) {
+                    $i++;
 
-                if ($i == 1)
-                    $body .= " WHERE tag LIKE :tags$i ";
-                else
-                    $body .= " OR tag LIKE :tags$i ";
+                    if ($i == 1)
+                        $body .= " WHERE tag LIKE :tags$i ";
+                    else
+                        $body .= " OR tag LIKE :tags$i ";
 
-                $params['tags' . $i] =  '%' . $tag . '%';
+                    $params['tags' . $i] = '%' . $tag . '%';
+                }
+
+                $body .= " ) ";
             }
-
-            $body .= " ) ";
         }
 
         // File size
