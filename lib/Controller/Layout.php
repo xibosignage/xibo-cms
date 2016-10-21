@@ -156,7 +156,10 @@ class Layout extends Base
     {
         // Call to render the template
         $this->getState()->template = 'layout-page';
-        $this->getState()->setData(['users' => $this->userFactory->query()]);
+        $this->getState()->setData([
+            'users' => $this->userFactory->query(),
+            'groups' => $this->userGroupFactory->query()
+        ]);
     }
 
     /**
@@ -592,6 +595,13 @@ class Layout extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="ownerUserGroupId",
+     *      in="formData",
+     *      description="Filter by users in this UserGroupId",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="embed",
      *      in="formData",
      *      description="Embed related data such as regions, playlists, tags, etc",
@@ -625,7 +635,8 @@ class Layout extends Base
             'retired' => $this->getSanitizer()->getInt('retired'),
             'tags' => $this->getSanitizer()->getString('tags'),
             'filterLayoutStatusId' => $this->getSanitizer()->getInt('layoutStatusId'),
-            'layoutId' => $this->getSanitizer()->getInt('layoutId')
+            'layoutId' => $this->getSanitizer()->getInt('layoutId'),
+            'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId')
         ]));
 
         foreach ($layouts as $layout) {

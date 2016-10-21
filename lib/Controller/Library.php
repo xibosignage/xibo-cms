@@ -262,7 +262,8 @@ class Library extends Base
         $this->getState()->template = 'library-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
-            'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1])
+            'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1]),
+            'groups' => $this->userGroupFactory->query()
         ]);
     }
 
@@ -331,6 +332,13 @@ class Library extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="ownerUserGroupId",
+     *      in="formData",
+     *      description="Filter by users in this UserGroupId",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -354,7 +362,8 @@ class Library extends Base
             'ownerId' => $this->getSanitizer()->getInt('ownerId'),
             'retired' => $this->getSanitizer()->getInt('retired'),
             'duration' => $this->getSanitizer()->getString('duration'),
-            'fileSize' => $this->getSanitizer()->getString('fileSize')
+            'fileSize' => $this->getSanitizer()->getString('fileSize'),
+            'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId')
         ]));
 
         // Add some additional row content

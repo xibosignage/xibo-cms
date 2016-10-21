@@ -419,6 +419,12 @@ class MediaFactory extends BaseFactory
             $params['ownerId'] = $this->getSanitizer()->getInt('ownerId', $filterBy);
         }
 
+        // User Group filter
+        if ($this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy) != 0) {
+            $body .= ' AND media.userid IN (SELECT DISTINCT userId FROM `lkusergroup` WHERE groupId =  :ownerUserGroupId) ';
+            $params['ownerUserGroupId'] = $this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy);
+        }
+
         if ($this->getSanitizer()->getInt('retired', -1, $filterBy) == 1)
             $body .= " AND media.retired = 1 ";
 

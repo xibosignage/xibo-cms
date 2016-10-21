@@ -111,7 +111,7 @@ class UserGroupFactory extends BaseFactory
 
     /**
      * Get isSystemNotification Group
-     * @return UserGroup
+     * @return UserGroup[]
      */
     public function getSystemNotificationGroups()
     {

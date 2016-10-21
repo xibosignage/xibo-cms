@@ -940,6 +940,12 @@ class LayoutFactory extends BaseFactory
             $params['userId'] = $this->getSanitizer()->getInt('userId', 0, $filterBy);
         }
 
+        // User Group filter
+        if ($this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy) != 0) {
+            $body .= ' AND layout.userid IN (SELECT DISTINCT userId FROM `lkusergroup` WHERE groupId =  :ownerUserGroupId) ';
+            $params['ownerUserGroupId'] = $this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy);
+        }
+
         // Retired options (default to 0 - provide -1 to return all
         if ($this->getSanitizer()->getInt('retired', 0, $filterBy) != -1) {
             $body .= " AND layout.retired = :retired ";
