@@ -783,7 +783,7 @@ class Display extends Base
 
         // Should we invalidate this display?
         if ($defaultLayoutId != $display->defaultLayoutId) {
-            $display->setMediaIncomplete();
+            $display->notify();
         } else if ($this->getSanitizer()->getCheckbox('clearCachedData', 1) == 1) {
             // Remove the cache if the display licenced state has changed
             $this->pool->deleteItem($display->getCacheKey());
@@ -799,7 +799,7 @@ class Display extends Base
             $display->xmrPubKey = null;
         }
 
-        $display->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $display->save();
 
         // Return
@@ -840,7 +840,7 @@ class Display extends Base
         if (!$this->getUser()->checkDeleteable($display))
             throw new AccessDeniedException();
 
-        $display->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $display->delete();
 
         // Return

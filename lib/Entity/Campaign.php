@@ -411,8 +411,6 @@ class Campaign implements \JsonSerializable
             $params = ['campaignId' => $this->campaignId];
         }
 
-
-
         $this->getStore()->update($sql, $params);
     }
 
@@ -421,15 +419,8 @@ class Campaign implements \JsonSerializable
      */
     private function notify()
     {
-        $this->getLog()->debug('Checking for Displays to refresh on Campaign %d', $this->campaignId);
+        $this->getLog()->debug('CampaignId ' . $this->campaignId . ' wants to notify.');
 
-        $displays = array_merge($this->displayFactory->getByActiveCampaignId($this->campaignId), $this->displayFactory->getByAssignedCampaignId($this->campaignId));
-
-        foreach ($displays as $display) {
-            /* @var \Xibo\Entity\Display $display */
-            $display->setMediaIncomplete();
-            $display->setCollectRequired(true);
-            $display->save(['validate' => false, 'audit' => false]);
-        }
+        $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByCampaignId($this->campaignId);
     }
 }

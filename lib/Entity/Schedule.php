@@ -15,9 +15,6 @@ use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -202,15 +199,6 @@ class Schedule implements \JsonSerializable
     /** @var  DisplayFactory */
     private $displayFactory;
 
-    /** @var  LayoutFactory */
-    private $layoutFactory;
-
-    /** @var  MediaFactory */
-    private $mediaFactory;
-
-    /** @var  ScheduleFactory */
-    private $scheduleFactory;
-
     /** @var  DayPartFactory */
     private $dayPartFactory;
 
@@ -235,18 +223,12 @@ class Schedule implements \JsonSerializable
 
     /**
      * @param DisplayFactory $displayFactory
-     * @param LayoutFactory $layoutFactory
-     * @param MediaFactory $mediaFactory
-     * @param ScheduleFactory $scheduleFactory
      * @param DayPartFactory $dayPartFactory
      * @return $this
      */
-    public function setChildObjectDependencies($displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $dayPartFactory = null)
+    public function setChildObjectDependencies($displayFactory, $dayPartFactory = null)
     {
         $this->displayFactory = $displayFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->scheduleFactory = $scheduleFactory;
         $this->dayPartFactory = $dayPartFactory;
         return $this;
     }
@@ -448,9 +430,7 @@ class Schedule implements \JsonSerializable
             $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify %d display groups', $this->displayGroups);
             foreach ($this->displayGroups as $displayGroup) {
                 /* @var DisplayGroup $displayGroup */
-                $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-                $displayGroup->setCollectRequired();
-                $displayGroup->setMediaIncomplete();
+                $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
             }
         }
     }
@@ -479,12 +459,10 @@ class Schedule implements \JsonSerializable
         // Notify
         // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
         if ($this->isInScheduleLookAhead) {
-            $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify %d display groups', $this->displayGroups);
+            $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . $this->displayGroups . ' display groups');
             foreach ($notify as $displayGroup) {
                 /* @var DisplayGroup $displayGroup */
-                $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-                $displayGroup->setCollectRequired();
-                $displayGroup->setMediaIncomplete();
+                $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
             }
         }
     }

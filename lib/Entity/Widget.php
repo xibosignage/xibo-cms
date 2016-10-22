@@ -628,40 +628,7 @@ class Widget implements \JsonSerializable
 
         // Notify any displays (clearing their cache)
         if ($options['notifyDisplays']) {
-            // Get a list of these layouts campaignIds
-            $campaignIds = array_map(function ($element) {
-                return $element['campaignId'];
-            }, $this->getStore()->select('
-                SELECT DISTINCT `lkcampaignlayout`.campaignId
-                 FROM `lkregionplaylist`
-                  INNER JOIN `region`
-                  ON region.regionId = `lkregionplaylist`.regionId
-                  INNER JOIN `lkcampaignlayout`
-                  ON `lkcampaignlayout`.layoutId = `region`.layoutId
-                 WHERE `lkregionplaylist`.playlistId = :playlistId
-            ', [
-                'playlistId' => $this->playlistId
-            ]));
-
-            // Store a list of displayId's we've already notified so we don't duplicate our work
-            $displayIds = [];
-
-            foreach ($campaignIds as $campaignId) {
-                $displays = array_merge($this->displayFactory->getByActiveCampaignId($campaignId), $this->displayFactory->getByAssignedCampaignId($campaignId));
-
-                foreach ($displays as $display) {
-                    /* @var \Xibo\Entity\Display $display */
-
-                    if (in_array($display->displayId, $displayIds))
-                        continue;
-
-                    $display->setMediaIncomplete();
-                    $display->setCollectRequired(true);
-                    $display->save(['validate' => false, 'audit' => false]);
-
-                    $displayIds[] = $display->displayId;
-                }
-            }
+            $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByPlaylistId($this->playlistId);
         }
     }
 

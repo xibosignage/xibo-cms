@@ -1145,10 +1145,6 @@ class Layout extends Base
                 $status = __('This Layout is invalid and should not be scheduled');
         }
 
-        // Keep things tidy
-        // Maintenance should also do this.
-        $this->getApp()->container->get('\Xibo\Controller\Library')->removeExpiredFiles();
-
         // We want a different return depending on whether we are arriving through the API or WEB routes
         if ($this->isApi()) {
 

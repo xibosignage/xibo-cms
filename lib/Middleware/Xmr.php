@@ -10,6 +10,8 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
+use Xibo\Exception\XiboException;
+use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\PlayerActionService;
 
 /**
@@ -30,9 +32,23 @@ class Xmr extends Middleware
             $app->container->singleton('playerActionService', function() use ($app) {
                 return new PlayerActionService($app->configService, $app->logService);
             });
+
+            // Register the display notify service
+            $app->container->singleton('displayNotifyService', function () use ($app) {
+                return new DisplayNotifyService($app->configService, $app->logService, $app->store, $app->pool, $app->playerActionService);
+            });
         });
 
         $this->next->call();
+
+        // Handle display notifications
+        if ($app->displayNotifyService != null) {
+            try {
+                $app->displayNotifyService->processQueue();
+            } catch (XiboException $e) {
+                $app->logService->error('Unable to Process Queue of Display Notifications due to %s', $e->getMessage());
+            }
+        }
 
         // Handle player actions
         if ($app->playerActionService != null) {

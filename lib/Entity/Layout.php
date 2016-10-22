@@ -1204,6 +1204,8 @@ class Layout implements \JsonSerializable
                 'manageRegionAssignments' => false,
                 'saveTags' => false,
                 'setBuildRequired' => false,
+                'audit' => false,
+                'validate' => false,
                 'notify' => $options['notify']
             ]);
         }

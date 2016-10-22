@@ -467,7 +467,7 @@ class Twitter extends ModuleWidget
         $return = array();
 
         // Expiry time for any media that is downloaded
-        $expires = time() + ($this->getSetting('cachePeriodImages') * 60 * 60);
+        $expires = $this->getDate()->parse()->addHours($this->getSetting('cachePeriodImages', 24))->format('U');
 
         // Remove URL setting
         $removeUrls = $this->getOption('removeUrls', 1)  == 1;

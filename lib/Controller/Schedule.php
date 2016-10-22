@@ -524,7 +524,7 @@ class Schedule extends Base
         }
 
         // Ready to do the add
-        $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory)->setDateService($this->getDate());
+        $schedule->setChildObjectDependencies($this->displayFactory, $this->dayPartFactory)->setDateService($this->getDate());
         $schedule->save();
 
         // Return
@@ -772,7 +772,7 @@ class Schedule extends Base
         }
 
         // Ready to do the add
-        $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory)->setDateService($this->getDate());
+        $schedule->setChildObjectDependencies($this->displayFactory, $this->dayPartFactory)->setDateService($this->getDate());
         $schedule->save();
 
         // Return
@@ -833,7 +833,7 @@ class Schedule extends Base
         if (!$this->isEventEditable($schedule->displayGroups))
             throw new AccessDeniedException();
 
-        $schedule->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory);
+        $schedule->setChildObjectDependencies($this->displayFactory, $this->dayPartFactory);
         $schedule->delete();
 
         // Return

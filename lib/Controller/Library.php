@@ -1026,8 +1026,7 @@ class Library extends Base
         // Dump the cache on all displays
         foreach ($this->displayFactory->query() as $display) {
             /** @var \Xibo\Entity\Display $display */
-            $display->setMediaIncomplete();
-            $display->save(\Xibo\Entity\Display::$saveOptionsMinimum);
+            $display->notify();
         }
     }
 

@@ -1112,9 +1112,8 @@ class State extends Middleware
                 $container->sanitizerService,
                 $container->user,
                 $container->userFactory,
+                $container->displayNotifyService,
                 $container->configService,
-                $container->pool,
-                $container->playerActionService,
                 $container->displayGroupFactory,
                 $container->displayProfileFactory
             );

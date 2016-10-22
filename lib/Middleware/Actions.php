@@ -31,6 +31,7 @@ use Xibo\Helper\Translate;
 
 /**
  * Class Actions
+ * Web Actions
  * @package Xibo\Middleware
  */
 class Actions extends Middleware

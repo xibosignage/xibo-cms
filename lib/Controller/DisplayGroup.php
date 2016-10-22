@@ -707,8 +707,7 @@ class DisplayGroup extends Base
         // Save the displays themselves
         foreach ($modifiedDisplays as $display) {
             /** @var Display $display */
-            $display->setMediaIncomplete();
-            $display->save(Display::$saveOptionsMinimum);
+            $display->notify();
         }
 
         // Return

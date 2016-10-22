@@ -604,7 +604,7 @@ class User implements \JsonSerializable
         foreach ($this->events as $event) {
             /* @var Schedule $event */
             $event->setOwner($user->getOwnerId());
-            $event->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+            $event->setChildObjectDependencies($this->displayFactory, $this->scheduleFactory);
             $event->save(['generate' => false]);
         }
         foreach ($this->layouts as $layout) {

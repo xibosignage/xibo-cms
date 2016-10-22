@@ -288,7 +288,7 @@ class DayPart implements \JsonSerializable
             /** @var Schedule $schedule */
             $schedule
                 ->setDateService($this->getDate())
-                ->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory)
+                ->setChildObjectDependencies($this->displayFactory, $this->dayPartFactory)
                 ->load();
 
             // Is this schedule a recurring event?
