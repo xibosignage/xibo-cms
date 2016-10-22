@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LogFactory;
+use Xibo\Factory\UserFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -40,10 +41,16 @@ class Logging extends Base
      */
     private $logFactory;
 
+    /** @var StorageServiceInterface  */
+    private $store;
+
     /**
      * @var DisplayFactory
      */
     private $displayFactory;
+
+    /** @var  UserFactory */
+    private $userFactory;
 
     /**
      * Set common dependencies.
@@ -57,21 +64,24 @@ class Logging extends Base
      * @param StorageServiceInterface $store
      * @param LogFactory $logFactory
      * @param DisplayFactory $displayFactory
+     * @param UserFactory $userFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $logFactory, $displayFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $logFactory, $displayFactory, $userFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->store = $store;
         $this->logFactory = $logFactory;
         $this->displayFactory = $displayFactory;
+        $this->userFactory = $userFactory;
     }
 
     public function displayPage()
     {
         $this->getState()->template = 'log-page';
         $this->getState()->setData([
-            'displays' => $this->displayFactory->query()
+            'displays' => $this->displayFactory->query(),
+            'users' => $this->userFactory->query()
         ]);
     }
 
@@ -90,8 +100,10 @@ class Logging extends Base
             'channel' => $this->getSanitizer()->getString('channel'),
             'function' => $this->getSanitizer()->getString('function'),
             'displayId' => $this->getSanitizer()->getInt('displayId'),
+            'userId' => $this->getSanitizer()->getInt('userId'),
             'excludeLog' => 1,
-            'runNo' => $this->getSanitizer()->getString('runNo')
+            'runNo' => $this->getSanitizer()->getString('runNo'),
+            'message' => $this->getSanitizer()->getString('message')
         ]));
 
         $this->getState()->template = 'grid';

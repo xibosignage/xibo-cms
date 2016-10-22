@@ -643,7 +643,8 @@ class State extends Middleware
                 $container->configService,
                 $container->store,
                 $container->logFactory,
-                $container->displayFactory
+                $container->displayFactory,
+                $container->userFactory
             );
         });
 

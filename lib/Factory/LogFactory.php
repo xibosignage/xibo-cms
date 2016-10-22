@@ -99,9 +99,19 @@ class LogFactory extends BaseFactory
             $params['function'] = '%' . $this->getSanitizer()->getString('function', $filterBy) . '%';
         }
 
+        if ($this->getSanitizer()->getString('message', $filterBy) != null) {
+            $body .= ' AND message LIKE :message ';
+            $params['message'] = '%' . $this->getSanitizer()->getString('message', $filterBy) . '%';
+        }
+
         if ($this->getSanitizer()->getInt('displayId', $filterBy) !== null) {
             $body .= ' AND log.displayId = :displayId ';
             $params['displayId'] = $this->getSanitizer()->getInt('displayId', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+            $body .= ' AND log.userId = :userId ';
+            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
         }
 
         if ($this->getSanitizer()->getCheckbox('excludeLog', $filterBy) == 1) {

@@ -50,6 +50,9 @@
 
                                     {% set title %}{% trans "Run" %}{% endset %}
                                     {{ inline.input("runNo", title) }}
+
+                                    {% set title %}{% trans "User" %}{% endset %}
+                                    {{ inline.dropdown("userId", "single", title, "", [{userId: null, userName: ""}]|merge(users), "userId", "userName") }}
                                 </div>
                                 <div class="tab-pane" id="advanced">
                                     {{ inline.date("fromDt", "From Date") }}
@@ -81,6 +84,9 @@
                                     {% set title %}{% trans "Display" %}{% endset %}
                                     {% set displays = [{displayId: null, display: ""}]|merge(displays) %}
                                     {{ inline.dropdown("displayId", "single", title, "", displays, "displayId", "display") }}
+
+                                    {% set title %}{% trans "Message" %}{% endset %}
+                                    {{ inline.input("message", title) }}
                                 </div>
                             </div>
                         </form>
