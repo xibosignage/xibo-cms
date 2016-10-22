@@ -155,8 +155,10 @@ INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `inte
 (10, '720p HD Landscape', 800, 450, 1280, 720, 2, 1),
 (11, '1080p HD Portrait', 450, 800, 1080, 1920, 2, 1),
 (12, '720p HD Portrait', 450, 800, 720, 1280, 2, 1),
-(13, '4k', 800, 450, 4096, 2304, 2, 1),
-(14, 'Common PC Monitor 4:3', 800, 600, 1024, 768, 2, 1);
+(13, '4k cinema', 800, 450, 4096, 2304, 2, 1),
+(14, 'Common PC Monitor 4:3', 800, 600, 1024, 768, 2, 1),
+(15, '4k UHD Landscape', 450, 800, 3840, 2160, 2, 1),
+(16, '4k UHD Portrait', 800, 450, 2160, 3840, 2, 1);
 
 INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES
 (1, 'MEDIA_DEFAULT', 'private', 'dropdown', 'Media will be created with these settings. If public everyone will be able to view and use this media.', 'private|group|public', 'permissions', 1, 'Media Permissions', '', 20, 'private', 1, 'word'),

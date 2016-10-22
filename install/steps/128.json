@@ -6,6 +6,14 @@
       "step": "Fix database contraints and indexes",
       "type": "php",
       "action": "Xibo\\Upgrade\\FixDatabaseIndexesAndContraints"
+    },
+    {
+      "step": "Update 4k resolution with a better name",
+      "action": "UPDATE `resolution` SET resolution = '4k cinema' WHERE resolution = '4k';"
+    },
+    {
+      "step": "Add 4k UHD",
+      "action": "INSERT INTO `resolution` (`resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES('4k UHD Landscape', 450, 800, 3840, 2160, 2, 1),('4k UHD Portrait', 800, 450, 2160, 3840, 2, 1);"
     }
   ]
 }
