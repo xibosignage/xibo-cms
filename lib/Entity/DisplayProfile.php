@@ -22,7 +22,7 @@ use Xibo\Storage\StorageServiceInterface;
  *
  * @SWG\Definition()
  */
-class DisplayProfile
+class DisplayProfile implements \JsonSerializable
 {
     use EntityTrait;
 
