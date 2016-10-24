@@ -424,11 +424,11 @@ class DisplayGroup extends Base
             $checkboxes[] = $checkbox;
         }
 
-
         $this->getState()->template = 'displaygroup-form-members';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
             'checkboxes' => $checkboxes,
+            'tree' => $this->displayGroupFactory->getRelationShipTree($displayGroupId),
             'help' => $this->getHelp()->link('DisplayGroup', 'Members')
         ]);
     }

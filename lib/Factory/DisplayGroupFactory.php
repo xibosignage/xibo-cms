@@ -123,6 +123,37 @@ class DisplayGroupFactory extends BaseFactory
     }
 
     /**
+     * Get Relationship Tree
+     * @param $displayGroupId
+     * @return DisplayGroup[]
+     */
+    public function getRelationShipTree($displayGroupId)
+    {
+        $tree = [];
+
+        foreach ($this->getStore()->select('
+            SELECT `displaygroup`.displayGroupId, `displaygroup`.displayGroup, depth, 1 AS level
+              FROM `lkdgdg`
+                INNER JOIN `displaygroup`
+                ON `lkdgdg`.childId = `displaygroup`.displayGroupId
+             WHERE `lkdgdg`.parentId = :displayGroupId
+            UNION ALL
+            SELECT `displaygroup`.displayGroupId, `displaygroup`.displayGroup, depth * -1, 0 AS level
+              FROM `lkdgdg`
+                INNER JOIN `displaygroup`
+                ON `lkdgdg`.parentId = `displaygroup`.displayGroupId
+             WHERE `lkdgdg`.childId = :displayGroupId AND `lkdgdg`.parentId <> :displayGroupId
+            ORDER BY level, depth, displayGroup
+        ', [
+            'displayGroupId' => $displayGroupId
+        ]) as $row) {
+            $tree[] = $this->createEmpty()->hydrate($row);
+        }
+
+        return $tree;
+    }
+
+    /**
      * Get Display Groups assigned to Notifications
      * @param int $notificationId
      * @return array[DisplayGroup]
@@ -215,10 +246,10 @@ class DisplayGroupFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('nestedDisplayId', $filterBy) !== null) {
             $body .= ' 
                 AND displaygroup.displayGroupId IN (
-                    SELECT DISTINCT childId
+                    SELECT DISTINCT parentId
                       FROM `lkdgdg`
                         INNER JOIN `lkdisplaydg`
-                        ON `lkdisplaydg`.displayGroupId = `lkdgdg`.parentId 
+                        ON `lkdisplaydg`.displayGroupId = `lkdgdg`.childId 
                      WHERE displayId = :nestedDisplayId
                 ) 
             ';
