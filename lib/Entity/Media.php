@@ -340,8 +340,18 @@ class Media implements \JsonSerializable
     {
         $this->load();
 
-        if (!in_array($tag, $this->tags))
+        $found = false;
+        foreach ($this->tags as $existingTag) {
+            if ($existingTag->tag === $tag->tag) {
+                $found = true;
+                break;
+            }
+        }
+
+        if (!$found) {
+            $this->getLog()->debug('Tag ' . $tag->tag . ' not found - assigning');
             $this->tags[] = $tag;
+        }
 
         return $this;
     }
@@ -353,6 +363,8 @@ class Media implements \JsonSerializable
      */
     public function unassignTag($tag)
     {
+        $this->load();
+
         $this->tags = array_udiff($this->tags, [$tag], function($a, $b) {
             /* @var Tag $a */
             /* @var Tag $b */
@@ -421,9 +433,13 @@ class Media implements \JsonSerializable
     /**
      * Load
      * @param array $options
+     * @throws XiboException
      */
     public function load($options = [])
     {
+        if ($this->loaded || $this->mediaId == null)
+            return;
+
         $options = array_merge([
             'deleting' => false,
             'fullInfo' => false
@@ -504,8 +520,6 @@ class Media implements \JsonSerializable
         if (is_array($this->unassignTags)) {
             foreach ($this->unassignTags as $tag) {
                 /* @var Tag $tag */
-                $this->getLog()->debug('Unassigning tag: %s', $tag->tag);
-
                 $tag->unassignMedia($this->mediaId);
                 $tag->save();
             }
