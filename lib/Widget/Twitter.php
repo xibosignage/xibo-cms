@@ -501,6 +501,9 @@ class Twitter extends ModuleWidget
         // Get the date format to apply
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
 
+        // Store promises for file download
+        $promises = [];
+
         // This should return the formatted items.
         foreach ($data->statuses as $tweet) {
             // Substitute for all matches in the template
@@ -587,7 +590,7 @@ class Twitter extends ModuleWidget
                             $file = $this->mediaFactory->createModuleFile('twitter_' . $tweet->user->id, $tweet->user->profile_image_url);
                             $file->isRemote = true;
                             $file->expires = $expires;
-                            $file->save();
+                            $promises[] = $file->saveAsync();
 
                             // Tag this layout with this file
                             $this->assignMedia($file->mediaId);
@@ -613,7 +616,7 @@ class Twitter extends ModuleWidget
                                 $file = $this->mediaFactory->createModuleFile('twitter_photo_' . $tweet->user->id . '_' . $mediaObject->id_str, $photoUrl);
                                 $file->isRemote = true;
                                 $file->expires = $expires;
-                                $file->save();
+                                $promises[] = $file->saveAsync();
 
                                 // Tag this layout with this file
                                 $this->assignMedia($file->mediaId);
@@ -645,6 +648,13 @@ class Twitter extends ModuleWidget
             // Substitute the replacement we have found (it might be '')
             $return[] = $rowString;
         }
+
+        if (count($promises) > 0) {
+            $this->getLog()->debug('There are ' . count($promises) . ' promises to resolve. Doing that now.');
+            $promise = \GuzzleHttp\Promise\each_limit($promises, 5);
+            $promise->wait();
+        }
+
 
         // Return the data array
         return $return;

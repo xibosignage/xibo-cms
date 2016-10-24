@@ -365,9 +365,6 @@ class Ticker extends ModuleWidget
         $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
-        // Clear all linked media.
-        $this->clearMedia();
-
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
@@ -585,7 +582,7 @@ class Ticker extends ModuleWidget
             $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
 
             // Set an expiry time for the media
-            $expires = time() + ($this->getOption('updateInterval', 3600) * 60);
+            $expires = $this->getDate()->parse()->addMinutes($this->getOption('updateInterval', 3600))->format('U');
 
             // We might download some resources during the course of
             // this feed rendering. If we do then we should do this async at the end (and concurrently).
