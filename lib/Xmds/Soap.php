@@ -1358,7 +1358,7 @@ class Soap
         }
 
         $this->display->mediaInventoryStatus = $mediaInventoryComplete;
-        $this->display->save(['validate' => false, 'audit' => false]);
+        $this->display->save(Display::$saveOptionsMinimum);
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$MEDIAINVENTORY, strlen($inventory));
 

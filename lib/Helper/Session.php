@@ -278,7 +278,6 @@ class Session implements \SessionHandlerInterface
      */
     public function gc($maxLifetime)
     {
-        $this->log->debug('Session GC Called');
         $this->gcCalled = true;
         return true;
     }
