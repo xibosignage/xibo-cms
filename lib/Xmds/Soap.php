@@ -1156,10 +1156,15 @@ class Soap
             if ($message == '')
                 $message = $node->textContent;
 
-            // We should have enough information to log this now.
-            $logType = ($cat == 'error') ? 'error' : 'audit';
+            $message = sprintf('%s,%s,%s,%s,%s,%s,%s', $message, 'Client', $thread . $method . $type, $date, $scheduleId, $layoutId, $mediaId);
 
-            $this->getLog()->notice('%s,%s,%s,%s,%s,%s,%s,%s', $logType, $message, 'Client', $thread . $method . $type, $date, $scheduleId, $layoutId, $mediaId);
+            // We should have enough information to log this now.
+            if ($cat == 'error')
+                $this->getLog()->error($message);
+            else if ($cat == 'audit')
+                $this->getLog()->debug($message);
+            else
+                $this->getLog()->notice($message);
         }
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SUBMITLOG, strlen($logXml));
