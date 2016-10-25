@@ -185,8 +185,8 @@ class Schedule extends Base
 
         $displayGroupIds = $this->getSanitizer()->getIntArray('displayGroupIds');
         $originalDisplayGroupIds = $displayGroupIds;
-        $start = $this->getSanitizer()->getString('from', 1000) / 1000;
-        $end = $this->getSanitizer()->getString('to', 1000) / 1000;
+        $start = $this->getDate()->parse($this->getSanitizer()->getString('from', 1000) / 1000, 'U');
+        $end = $this->getDate()->parse($this->getSanitizer()->getString('to', 1000) / 1000, 'U');
 
         // if we have some displayGroupIds then add them to the session info so we can default everything else.
         $this->session->set('displayGroupIds', $displayGroupIds);
@@ -223,14 +223,22 @@ class Schedule extends Base
 
         $events = array();
         $filter = [
-            'useDetail' => 1,
-            'fromDt' => $start,
-            'toDt' => $end,
+            'futureSchedulesFrom' => $start->format('U'),
+            'futureSchedulesTo' => $end->format('U'),
             'displayGroupIds' => $displayGroupIds
         ];
 
-        foreach ($this->scheduleFactory->query('schedule_detail.FromDT', $filter) as $row) {
+        foreach ($this->scheduleFactory->query('FromDT', $filter) as $row) {
             /* @var \Xibo\Entity\Schedule $row */
+
+            // Generate this event
+            $row->setDateService($this->getDate())->setDayPartFactory($this->dayPartFactory);
+            $scheduleEvents = $row->generate($start, $end);
+
+            if (count($scheduleEvents) <= 0)
+                continue;
+
+            $this->getLog()->debug('EventId ' . $row->eventId . ' as events: ' . json_encode($scheduleEvents));
 
             // Load the display groups
             $row->load();
@@ -247,23 +255,6 @@ class Schedule extends Base
             // Event Permissions
             $editable = $this->isEventEditable($row->displayGroups);
 
-            $this->getLog()->debug('Parsing event dates from %s and %s', $row->fromDt, $row->toDt);
-
-            // Handle command events which do not have a toDt
-            if ($row->eventTypeId == \Xibo\Entity\Schedule::$COMMAND_EVENT)
-                $row->toDt = $row->fromDt;
-
-            // Parse our dates into a Date object, so that we convert to local time correctly.
-            $fromDt = $this->getDate()->parse($row->fromDt, 'U');
-            $toDt = $this->getDate()->parse($row->toDt, 'U');
-
-            // Set the row from/to date to be an ISO date for display
-            $row->fromDt = $this->getDate()->getLocalDate($row->fromDt);
-            $row->toDt = $this->getDate()->getLocalDate($row->toDt);
-
-            $this->getLog()->debug('Start date is ' . $fromDt->toRssString() . ' ' . $row->fromDt);
-            $this->getLog()->debug('End date is ' . $toDt->toRssString() . ' ' . $row->toDt);
-
             // Event Title
             $title = sprintf(__('%s scheduled on %s'),
                 ($row->campaign == '') ? $row->command : $row->campaign,
@@ -274,40 +265,61 @@ class Schedule extends Base
             $editUrl = ($this->isApi()) ? 'schedule.edit' : 'schedule.edit.form';
             $url = ($editable) ? $this->urlFor($editUrl, ['id' => $row->eventId]) : '#';
 
-            /**
-             * @SWG\Definition(
-             *  definition="ScheduleCalendarData",
-             *  @SWG\Property(
-             *      property="id",
-             *      type="integer",
-             *      description="Event ID"
-             *  ),
-             *  @SWG\Property(
-             *      property="title",
-             *      type="string",
-             *      description="Event Title"
-             *  ),
-             *  @SWG\Property(
-             *      property="sameDay",
-             *      type="integer",
-             *      description="Does this event happen only on 1 day"
-             *  ),
-             *  @SWG\Property(
-             *      property="event",
-             *      ref="#/definitions/Schedule"
-             *  )
-             * )
-             */
-            $events[] = array(
-                'id' => $row->eventId,
-                'title' => $title,
-                'url' => ($editable) ? $url : null,
-                'start' => $fromDt->format('U') * 1000,
-                'end' => $toDt->format('U') * 1000,
-                'sameDay' => ($fromDt->day == $toDt->day),
-                'editable' => $editable,
-                'event' => $row
-            );
+            // Event scheduled events
+            foreach ($scheduleEvents as $scheduleEvent) {
+                $this->getLog()->debug('Parsing event dates from %s and %s', $scheduleEvent->fromDt, $scheduleEvent->toDt);
+
+                // Handle command events which do not have a toDt
+                if ($row->eventTypeId == \Xibo\Entity\Schedule::$COMMAND_EVENT)
+                    $scheduleEvent->toDt = $scheduleEvent->fromDt;
+
+                // Parse our dates into a Date object, so that we convert to local time correctly.
+                $fromDt = $this->getDate()->parse($scheduleEvent->fromDt, 'U');
+                $toDt = $this->getDate()->parse($scheduleEvent->toDt, 'U');
+
+                // Set the row from/to date to be an ISO date for display
+                $scheduleEvent->fromDt = $this->getDate()->getLocalDate($scheduleEvent->fromDt);
+                $scheduleEvent->toDt = $this->getDate()->getLocalDate($scheduleEvent->toDt);
+
+                $this->getLog()->debug('Start date is ' . $fromDt->toRssString() . ' ' . $scheduleEvent->fromDt);
+                $this->getLog()->debug('End date is ' . $toDt->toRssString() . ' ' . $scheduleEvent->toDt);
+
+                /**
+                 * @SWG\Definition(
+                 *  definition="ScheduleCalendarData",
+                 *  @SWG\Property(
+                 *      property="id",
+                 *      type="integer",
+                 *      description="Event ID"
+                 *  ),
+                 *  @SWG\Property(
+                 *      property="title",
+                 *      type="string",
+                 *      description="Event Title"
+                 *  ),
+                 *  @SWG\Property(
+                 *      property="sameDay",
+                 *      type="integer",
+                 *      description="Does this event happen only on 1 day"
+                 *  ),
+                 *  @SWG\Property(
+                 *      property="event",
+                 *      ref="#/definitions/Schedule"
+                 *  )
+                 * )
+                 */
+                $events[] = array(
+                    'id' => $row->eventId,
+                    'title' => $title,
+                    'url' => ($editable) ? $url : null,
+                    'start' => $fromDt->format('U') * 1000,
+                    'end' => $toDt->format('U') * 1000,
+                    'sameDay' => ($fromDt->day == $toDt->day),
+                    'editable' => $editable,
+                    'event' => $row,
+                    'scheduleEvent' => $scheduleEvent
+                );
+            }
         }
 
         $this->getApp()->response()->body(json_encode(array('success' => 1, 'result' => $events)));
@@ -524,7 +536,7 @@ class Schedule extends Base
         }
 
         // Ready to do the add
-        $schedule->setChildObjectDependencies($this->displayFactory, $this->dayPartFactory)->setDateService($this->getDate());
+        $schedule->setDisplayFactory($this->displayFactory)->setDateService($this->getDate());
         $schedule->save();
 
         // Return
@@ -772,7 +784,7 @@ class Schedule extends Base
         }
 
         // Ready to do the add
-        $schedule->setChildObjectDependencies($this->displayFactory, $this->dayPartFactory)->setDateService($this->getDate());
+        $schedule->setDisplayFactory($this->displayFactory)->setDateService($this->getDate());
         $schedule->save();
 
         // Return
@@ -833,7 +845,7 @@ class Schedule extends Base
         if (!$this->isEventEditable($schedule->displayGroups))
             throw new AccessDeniedException();
 
-        $schedule->setChildObjectDependencies($this->displayFactory, $this->dayPartFactory);
+        $schedule->setDisplayFactory($this->displayFactory);
         $schedule->delete();
 
         // Return

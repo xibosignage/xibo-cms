@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-DEFINE('XIBO', true);
+define('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
 error_reporting(0);
@@ -203,7 +203,9 @@ try {
         $app->widgetFactory,
         $app->regionFactory,
         $app->notificationFactory,
-        $app->displayEventFactory
+        $app->displayEventFactory,
+        $app->scheduleFactory,
+        $app->dayPartFactory
     );
     $soap->handle();
 

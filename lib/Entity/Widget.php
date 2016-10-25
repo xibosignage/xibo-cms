@@ -610,7 +610,7 @@ class Widget implements \JsonSerializable
      */
     private function notify($options)
     {
-        $this->getLog()->debug('Notifying upstream playlist');
+        $this->getLog()->debug('Notifying upstream playlist. Notify Displays: ' . $options['notifyDisplays']);
 
         // Notify the Layout
         $this->getStore()->update('

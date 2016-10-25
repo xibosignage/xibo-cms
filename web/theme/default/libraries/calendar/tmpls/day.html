@@ -9,7 +9,7 @@
 			<div class="span11 col-xs-11">
 				<% _.each(all_day, function(event){ %>
                     <%
-                    var eventTitle = (event.event.dayPartId == 1) ? event.title : "[" + moment(event.event.fromDt, "X").format(jsDateFormat) + " - " + moment(event.event.toDt, "X").format(jsDateFormat) + "] " + event.title;
+                    var eventTitle = (event.event.dayPartId == 1) ? event.title : "[" + moment(event.scheduleEvent.fromDt, "X").format(jsDateFormat) + " - " + moment(event.scheduleEvent.toDt, "X").format(jsDateFormat) + "] " + event.title;
                     %>
 					<div class="day-highlight dh-<%= event['class'] %>">
 						<a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" class="event-item">

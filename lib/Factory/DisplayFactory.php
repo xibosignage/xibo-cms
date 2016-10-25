@@ -84,7 +84,7 @@ class DisplayFactory extends BaseFactory
      */
     public function getDisplayNotifyService()
     {
-        return $this->displayNotifyService->init($this);
+        return $this->displayNotifyService->init();
     }
 
     /**

@@ -9,7 +9,8 @@
 namespace Xibo\Service;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Display;
-use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DayPartFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\XMR\CollectNowAction;
 
@@ -34,8 +35,14 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     /** @var  PlayerActionServiceInterface */
     private $playerActionService;
 
-    /** @var  DisplayFactory */
-    private $displayFactory;
+    /** @var  DateServiceInterface */
+    private $dateService;
+
+    /** @var  ScheduleFactory */
+    private $scheduleFactory;
+
+    /** @var  DayPartFactory */
+    private $dayPartFactory;
 
     /** @var bool */
     private $collectRequired = false;
@@ -47,20 +54,22 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     private $displayIdsRequiringActions = [];
 
     /** @inheritdoc */
-    public function __construct($config, $log, $store, $pool, $playerActionService)
+    public function __construct($config, $log, $store, $pool, $playerActionService, $dateService, $scheduleFactory, $dayPartFactory)
     {
         $this->config = $config;
         $this->log = $log;
         $this->store = $store;
         $this->pool = $pool;
         $this->playerActionService = $playerActionService;
+        $this->dateService = $dateService;
+        $this->scheduleFactory = $scheduleFactory;
+        $this->dayPartFactory = $dayPartFactory;
     }
 
     /** @inheritdoc */
-    public function init($factory)
+    public function init()
     {
         $this->collectRequired = false;
-        $this->displayFactory = $factory;
         return $this;
     }
 
@@ -140,6 +149,8 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     /** @inheritdoc */
     public function notifyByDisplayId($displayId)
     {
+        $this->log->debug('Notify by DisplayId ' . $displayId);
+
         $this->displayIds[] = $displayId;
 
         if ($this->collectRequired)
@@ -149,6 +160,8 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     /** @inheritdoc */
     public function notifyByDisplayGroupId($displayGroupId)
     {
+        $this->log->debug('Notify by DisplayGroupId ' . $displayGroupId);
+
         $sql = '
           SELECT DISTINCT `lkdisplaydg`.displayId 
             FROM `lkdgdg`
@@ -168,11 +181,19 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     /** @inheritdoc */
     public function notifyByCampaignId($campaignId)
     {
+        $this->log->debug('Notify by CampaignId ' . $campaignId);
+
         $sql = '
-            SELECT DISTINCT display.displayId
+            SELECT DISTINCT display.displayId, 
+                schedule.eventId, 
+                schedule.fromDt, 
+                schedule.toDt, 
+                schedule.recurrence_type AS recurrenceType,
+                schedule.recurrence_detail AS recurrenceDetail,
+                schedule.recurrence_range AS recurrenceRange,
+                schedule.recurrenceRepeatsOn,
+                schedule.dayPartId
              FROM `schedule`
-               INNER JOIN `schedule_detail`
-               ON schedule_detail.eventid = schedule.eventid
                INNER JOIN `lkscheduledisplaygroup`
                ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
                INNER JOIN `lkdgdg`
@@ -182,16 +203,37 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                INNER JOIN `display`
                ON lkdisplaydg.DisplayID = display.displayID
              WHERE `schedule`.CampaignID = :activeCampaignId
-              AND `schedule_detail`.FromDT < :fromDt
-              AND `schedule_detail`.ToDT > :toDt
+              AND (
+                  (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                  OR `schedule`.recurrence_range >= :fromDt 
+                  OR (
+                    IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
+                  )
+              )
             UNION
-            SELECT DISTINCT display.DisplayID
+            SELECT DISTINCT display.DisplayID,
+                0 AS eventId, 
+                0 AS fromDt, 
+                0 AS toDt, 
+                NULL AS recurrenceType, 
+                NULL AS recurrenceDetail,
+                NULL AS recurrenceRange,
+                NULL AS recurrenceRepeatsOn,
+                NULL AS dayPartId
              FROM `display`
                INNER JOIN `lkcampaignlayout`
                ON `lkcampaignlayout`.LayoutID = `display`.DefaultLayoutID
              WHERE `lkcampaignlayout`.CampaignID = :activeCampaignId2
             UNION
-            SELECT `lkdisplaydg`.displayId
+            SELECT `lkdisplaydg`.displayId,
+                0 AS eventId, 
+                0 AS fromDt, 
+                0 AS toDt, 
+                NULL AS recurrenceType, 
+                NULL AS recurrenceDetail,
+                NULL AS recurrenceRange,
+                NULL AS recurrenceRepeatsOn,
+                NULL AS dayPartId
               FROM `lkdisplaydg`
                 INNER JOIN `lklayoutdisplaygroup`
                 ON `lklayoutdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
@@ -200,19 +242,34 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
              WHERE `lkcampaignlayout`.campaignId = :assignedCampaignId
         ';
 
-        $currentDate = time();
-        $rfLookAhead = $this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD');
-        $rfLookAhead = intval($currentDate) + intval($rfLookAhead);
+        $currentDate = $this->dateService->parse();
+        $rfLookAhead = $currentDate->copy()->addSeconds($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         $params = [
-            'fromDt' => $rfLookAhead,
-            'toDt' => $currentDate - 3600,
+            'fromDt' => $rfLookAhead->format('U'),
+            'toDt' => $currentDate->subHour()->format('U'),
             'activeCampaignId' => $campaignId,
             'activeCampaignId2' => $campaignId,
             'assignedCampaignId' => $campaignId
         ];
 
         foreach ($this->store->select($sql, $params) as $row) {
+
+            // Is this schedule active?
+            if ($row['eventId'] != 0) {
+                $scheduleEvents = $this->scheduleFactory
+                    ->createEmpty()
+                    ->setDateService($this->dateService)
+                    ->setDayPartFactory($this->dayPartFactory)
+                    ->hydrate($row)
+                    ->generate($currentDate, $rfLookAhead);
+
+                if (count($scheduleEvents) <= 0) {
+                    $this->log->debug('Skipping eventId ' . $row['eventId'] . ' because it doesnt have any active events in the window');
+                    continue;
+                }
+            }
+
             $this->displayIds[] = $row['displayId'];
 
             if ($this->collectRequired)
@@ -223,11 +280,19 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     /** @inheritdoc */
     public function notifyByDataSetId($dataSetId)
     {
+        $this->log->debug('Notify by DataSetId ' . $dataSetId);
+
         $sql = '
-           SELECT DISTINCT display.displayId
+           SELECT DISTINCT display.displayId, 
+                schedule.eventId, 
+                schedule.fromDt, 
+                schedule.toDt, 
+                schedule.recurrence_type AS recurrenceType,
+                schedule.recurrence_detail AS recurrenceDetail,
+                schedule.recurrence_range AS recurrenceRange,
+                schedule.recurrenceRepeatsOn,
+                schedule.dayPartId
              FROM `schedule`
-               INNER JOIN `schedule_detail`
-               ON schedule_detail.eventid = schedule.eventid
                INNER JOIN `lkscheduledisplaygroup`
                ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
                INNER JOIN `lkdgdg`
@@ -249,10 +314,23 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                     AND `widgetoption`.type = \'attrib\'
                     AND `widgetoption`.option = \'dataSetId\'
                     AND `widgetoption`.value = :activeDataSetId
-            WHERE `schedule_detail`.FromDT < :fromDt
-              AND `schedule_detail`.ToDT > :toDt
+            WHERE (
+               (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                  OR `schedule`.recurrence_range >= :fromDt 
+                  OR (
+                    IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
+                  )
+               )
            UNION
-           SELECT DISTINCT display.displayId
+           SELECT DISTINCT display.displayId,
+                0 AS eventId, 
+                0 AS fromDt, 
+                0 AS toDt, 
+                NULL AS recurrenceType, 
+                NULL AS recurrenceDetail,
+                NULL AS recurrenceRange,
+                NULL AS recurrenceRepeatsOn,
+                NULL AS dayPartId
              FROM `display`
                INNER JOIN `lkcampaignlayout`
                ON `lkcampaignlayout`.LayoutID = `display`.DefaultLayoutID
@@ -268,7 +346,15 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                     AND `widgetoption`.option = \'dataSetId\'
                     AND `widgetoption`.value = :activeDataSetId2
            UNION
-           SELECT DISTINCT `lkdisplaydg`.displayId
+           SELECT DISTINCT `lkdisplaydg`.displayId,
+                0 AS eventId, 
+                0 AS fromDt, 
+                0 AS toDt, 
+                NULL AS recurrenceType, 
+                NULL AS recurrenceDetail,
+                NULL AS recurrenceRange,
+                NULL AS recurrenceRepeatsOn,
+                NULL AS dayPartId
               FROM `lklayoutdisplaygroup`
                 INNER JOIN `lkdgdg`
                 ON `lkdgdg`.parentId = `lklayoutdisplaygroup`.displayGroupId
@@ -289,19 +375,34 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                     AND `widgetoption`.value = :activeDataSetId3
         ';
 
-        $currentDate = time();
-        $rfLookAhead = $this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD');
-        $rfLookAhead = intval($currentDate) + intval($rfLookAhead);
+        $currentDate = $this->dateService->parse();
+        $rfLookAhead = $currentDate->copy()->addSeconds($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         $params = [
-            'fromDt' => $rfLookAhead,
-            'toDt' => $currentDate - 3600,
+            'fromDt' => $rfLookAhead->format('U'),
+            'toDt' => $currentDate->subHour()->format('U'),
             'activeDataSetId' => $dataSetId,
             'activeDataSetId2' => $dataSetId,
             'activeDataSetId3' => $dataSetId
         ];
 
         foreach ($this->store->select($sql, $params) as $row) {
+
+            // Is this schedule active?
+            if ($row['eventId'] != 0) {
+                $scheduleEvents = $this->scheduleFactory
+                    ->createEmpty()
+                    ->setDateService($this->dateService)
+                    ->setDayPartFactory($this->dayPartFactory)
+                    ->hydrate($row)
+                    ->generate($currentDate, $rfLookAhead);
+
+                if (count($scheduleEvents) <= 0) {
+                    $this->log->debug('Skipping eventId ' . $row['eventId'] . ' because it doesnt have any active events in the window');
+                    continue;
+                }
+            }
+
             $this->displayIds[] = $row['displayId'];
 
             if ($this->collectRequired)
@@ -312,11 +413,19 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     /** @inheritdoc */
     public function notifyByPlaylistId($playlistId)
     {
+        $this->log->debug('Notify by PlaylistId ' . $playlistId);
+
         $sql = '
-            SELECT DISTINCT display.displayId
+            SELECT DISTINCT display.displayId, 
+                schedule.eventId, 
+                schedule.fromDt, 
+                schedule.toDt, 
+                schedule.recurrence_type AS recurrenceType,
+                schedule.recurrence_detail AS recurrenceDetail,
+                schedule.recurrence_range AS recurrenceRange,
+                schedule.recurrenceRepeatsOn,
+                schedule.dayPartId
              FROM `schedule`
-               INNER JOIN `schedule_detail`
-               ON schedule_detail.eventid = schedule.eventid
                INNER JOIN `lkscheduledisplaygroup`
                ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
                INNER JOIN `lkdgdg`
@@ -332,10 +441,23 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                INNER JOIN `lkregionplaylist`
                ON `lkregionplaylist`.regionId = `region`.regionId
              WHERE `lkregionplaylist`.playlistId = :playlistId
-              AND `schedule_detail`.FromDT < :fromDt
-              AND `schedule_detail`.ToDT > :toDt
+              AND (
+                  (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                  OR `schedule`.recurrence_range >= :fromDt 
+                  OR (
+                    IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
+                  )
+              )
             UNION
-            SELECT DISTINCT display.DisplayID
+            SELECT DISTINCT display.DisplayID,
+                0 AS eventId, 
+                0 AS fromDt, 
+                0 AS toDt, 
+                NULL AS recurrenceType, 
+                NULL AS recurrenceDetail,
+                NULL AS recurrenceRange,
+                NULL AS recurrenceRepeatsOn,
+                NULL AS dayPartId
              FROM `display`
                INNER JOIN `lkcampaignlayout`
                ON `lkcampaignlayout`.LayoutID = `display`.DefaultLayoutID
@@ -345,7 +467,15 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                ON `lkregionplaylist`.regionId = `region`.regionId
              WHERE `lkregionplaylist`.playlistId = :playlistId
             UNION
-            SELECT `lkdisplaydg`.displayId
+            SELECT `lkdisplaydg`.displayId,
+                0 AS eventId, 
+                0 AS fromDt, 
+                0 AS toDt, 
+                NULL AS recurrenceType, 
+                NULL AS recurrenceDetail,
+                NULL AS recurrenceRange,
+                NULL AS recurrenceRepeatsOn,
+                NULL AS dayPartId
               FROM `lkdisplaydg`
                 INNER JOIN `lklayoutdisplaygroup`
                 ON `lklayoutdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
@@ -358,17 +488,32 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
              WHERE `lkregionplaylist`.playlistId = :playlistId
         ';
 
-        $currentDate = time();
-        $rfLookAhead = $this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD');
-        $rfLookAhead = intval($currentDate) + intval($rfLookAhead);
+        $currentDate = $this->dateService->parse();
+        $rfLookAhead = $currentDate->copy()->addSeconds($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         $params = [
-            'fromDt' => $rfLookAhead,
-            'toDt' => $currentDate - 3600,
+            'fromDt' => $rfLookAhead->format('U'),
+            'toDt' => $currentDate->subHour()->format('U'),
             'playlistId' => $playlistId
         ];
 
         foreach ($this->store->select($sql, $params) as $row) {
+
+            // Is this schedule active?
+            if ($row['eventId'] != 0) {
+                $scheduleEvents = $this->scheduleFactory
+                    ->createEmpty()
+                    ->setDateService($this->dateService)
+                    ->setDayPartFactory($this->dayPartFactory)
+                    ->hydrate($row)
+                    ->generate($currentDate, $rfLookAhead);
+
+                if (count($scheduleEvents) <= 0) {
+                    $this->log->debug('Skipping eventId ' . $row['eventId'] . ' because it doesnt have any active events in the window');
+                    continue;
+                }
+            }
+
             $this->displayIds[] = $row['displayId'];
 
             if ($this->collectRequired)

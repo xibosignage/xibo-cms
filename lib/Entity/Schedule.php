@@ -12,6 +12,7 @@ use Jenssegers\Date\Date;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -178,10 +179,9 @@ class Schedule implements \JsonSerializable
     public $dayPartId;
 
     /**
-     * Is this event (as a whole) inside the schedule look ahead period?
-     * @var bool
+     * @var ScheduleEvent[]
      */
-    private $isInScheduleLookAhead = false;
+    private $scheduleEvents = [];
 
     /**
      * @var ConfigServiceInterface
@@ -223,12 +223,20 @@ class Schedule implements \JsonSerializable
 
     /**
      * @param DisplayFactory $displayFactory
+     * @return $this
+     */
+    public function setDisplayFactory($displayFactory)
+    {
+        $this->displayFactory = $displayFactory;
+        return $this;
+    }
+
+    /**
      * @param DayPartFactory $dayPartFactory
      * @return $this
      */
-    public function setChildObjectDependencies($displayFactory, $dayPartFactory = null)
+    public function setDayPartFactory($dayPartFactory)
     {
-        $this->displayFactory = $displayFactory;
         $this->dayPartFactory = $dayPartFactory;
         return $this;
     }
@@ -282,11 +290,9 @@ class Schedule implements \JsonSerializable
 
     /**
      * Are the provided dates within the schedule look ahead
-     * @param $fromDt
-     * @param $toDt
      * @return bool
      */
-    private function datesInScheduleLookAhead($fromDt, $toDt)
+    private function inScheduleLookAhead()
     {
         if ($this->dayPartId == Schedule::$DAY_PART_ALWAYS)
             return true;
@@ -295,12 +301,12 @@ class Schedule implements \JsonSerializable
         $currentDate = time();
         $rfLookAhead = intval($currentDate) + intval($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
-        if ($toDt == null)
-            $toDt = $fromDt;
+        // If we are a recurring schedule and our recurring date is out after the required files lookahead
+        if ($this->recurrenceType != '')
+            return ($this->fromDt <= $currentDate && ($this->recurrenceRange == 0 || $this->recurrenceRange > $rfLookAhead));
 
-        $this->getLog()->debug('Checking to see if %d and %d are between %d and %d', $fromDt, $toDt, $currentDate, $rfLookAhead);
-
-        return ($fromDt < $rfLookAhead && $toDt > $currentDate);
+        // Compare the event dates
+        return ($this->fromDt < $rfLookAhead && $this->toDt > $currentDate);
     }
 
     /**
@@ -391,13 +397,17 @@ class Schedule implements \JsonSerializable
     public function save($options = [])
     {
         $options = array_merge([
-            'validate' => true,
-            'generate' => true,
-            'deleteDetailFrom' => null
+            'validate' => true
         ], $options);
 
         if ($options['validate'])
             $this->validate();
+
+        // Handle "always" day parts
+        if ($this->dayPartId == \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+            $this->fromDt = self::$DATE_MIN;
+            $this->toDt = self::$DATE_MAX;
+        }
 
         if ($this->eventId == null || $this->eventId == 0) {
             $this->add();
@@ -412,21 +422,9 @@ class Schedule implements \JsonSerializable
             $this->manageAssignments();
         }
 
-        // Check the main event dates to see if we are in the schedule look ahead
-        $this->isInScheduleLookAhead = $this->datesInScheduleLookAhead($this->fromDt, $this->toDt);
-
-        if (!$options['generate'] && $options['deleteDetailFrom'] !== null)
-            $this->deleteDetail($options['deleteDetailFrom']);
-
-        // Generate the event instances
-        if ($options['generate']) {
-            $this->deleteDetail();
-            $this->generate();
-        }
-
         // Notify
         // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
-        if ($this->isInScheduleLookAhead) {
+        if ($this->inScheduleLookAhead()) {
             $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify %d display groups', $this->displayGroups);
             foreach ($this->displayGroups as $displayGroup) {
                 /* @var DisplayGroup $displayGroup */
@@ -447,19 +445,13 @@ class Schedule implements \JsonSerializable
         $this->displayGroups = [];
         $this->unlinkDisplayGroups();
 
-        // Delete all detail records
-        $this->deleteDetail();
-
         // Delete the event itself
         $this->getStore()->update('DELETE FROM `schedule` WHERE eventId = :eventId', ['eventId' => $this->eventId]);
 
-        // Check the main event dates to see if we are in the schedule look ahead
-        $this->isInScheduleLookAhead = $this->datesInScheduleLookAhead($this->fromDt, $this->toDt);
-
         // Notify
         // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
-        if ($this->isInScheduleLookAhead) {
-            $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . $this->displayGroups . ' display groups');
+        if ($this->inScheduleLookAhead()) {
+            $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . count($this->displayGroups) . ' display groups');
             foreach ($notify as $displayGroup) {
                 /* @var DisplayGroup $displayGroup */
                 $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
@@ -533,14 +525,25 @@ class Schedule implements \JsonSerializable
 
     /**
      * Generate Instances
+     * @param Date $generateFromDt
+     * @param Date $generateToDt
+     * @return ScheduleEvent[]
+     * @throws XiboException
      */
-    private function generate()
+    public function generate($generateFromDt, $generateToDt)
     {
-        // Always events only have 1 detail entry
+        $this->getLog()->debug('Request for schedule events on eventId ' . $this->eventId
+            . ' from: ' . $this->getDate()->getLocalDate($generateFromDt)
+            . ' to: ' . $this->getDate()->getLocalDate($generateToDt));
+
+        if ($this->eventId == null)
+            throw new InvalidArgumentException(__('Unable to generate schedule, unknown event'), 'eventId');
+
+        // Events scheduled "always" will return one event
         if ($this->dayPartId == Schedule::$DAY_PART_ALWAYS) {
             // Create events with min/max dates
             $this->addDetail(Schedule::$DATE_MIN, Schedule::$DATE_MAX);
-            return;
+            return $this->scheduleEvents;
         }
 
         // Load the dates into a date object for parsing
@@ -550,19 +553,37 @@ class Schedule implements \JsonSerializable
         // If we are a daypart event, look up the start/end times for the event
         $this->calculateDayPartTimes($start, $end);
 
-        // Add the detail for the main event (this is the event that originally triggered the generation)
-        $this->addDetail($start->format('U'), $end->format('U'));
+        // Does the original event fall into this window?
+        if ($start <= $generateToDt && $end > $generateFromDt) {
+            // Add the detail for the main event (this is the event that originally triggered the generation)
+            $this->addDetail($start->format('U'), $end->format('U'));
+        } else {
+            $this->getLog()->debug('Main event is not in the current generation window. Event dates: ' . $start->toRssString() . ' - ' . $end->toRssString());
+        }
 
         // If we don't have any recurrence, we are done
-        if (empty($this->recurrenceType))
-            return;
+        if (empty($this->recurrenceType) || empty($this->recurrenceDetail))
+            return $this->scheduleEvents;
 
         // Set the temp starts
-        $range = $this->getDate()->parse($this->recurrenceRange, 'U');
+        // range should be the smallest of the recurrence range and the generate window todt
+        // the start/end date should be the the first recurrence in the current window
+        if ($this->recurrenceRange != 0) {
+            $range = $this->getDate()->parse($this->recurrenceRange, 'U');
+
+            // Override the range to be within the period we are looking
+            $range = ($range < $generateToDt) ? $range : $generateToDt;
+        } else {
+            $range = $generateToDt;
+        }
+
+        $this->getLog()->debug('[' . $generateFromDt->toRssString() . ' - ' . $generateToDt->toRssString() . '] Looping from ' . $start->toRssString() . ' to ' . $range->toRssString());
 
         // loop until we have added the recurring events for the schedule
         while ($start < $range)
         {
+            $this->getLog()->debug('Loop: ' . $start->toRssString() . ' to ' . $range->toRssString());
+
             // add the appropriate time to the start and end
             switch ($this->recurrenceType)
             {
@@ -621,19 +642,16 @@ class Schedule implements \JsonSerializable
                             if (!in_array($dayOfWeekLookup[$start->dayOfWeek], $daysSelected))
                                 continue;
 
-                            if ($this->toDt == null)
-                                $this->addDetail($start->format('U'), null);
-                            else {
-                                // Check to make sure that our from/to date isn't longer than the first repeat
-                                if ($start->format('U') < $this->toDt) {
-                                    $this->getLog()->debug($start->toDateTimeString() . ' is before ' . $this->getDate()->parse($this->toDt, 'U')->toDateTimeString());
-                                    throw new \InvalidArgumentException(__('The first event repeat is inside the event from/to dates.'));
+                            if ($start >= $generateFromDt) {
+                                if ($this->toDt == null) {
+                                    $this->addDetail($start->format('U'), null);
                                 }
+                                else {
+                                    // If we are a daypart event, look up the start/end times for the event
+                                    $this->calculateDayPartTimes($start, $end);
 
-                                // If we are a daypart event, look up the start/end times for the event
-                                $this->calculateDayPartTimes($start, $end);
-
-                                $this->addDetail($start->format('U'), $end->format('U'));
+                                    $this->addDetail($start->format('U'), $end->format('U'));
+                                }
                             }
                         }
 
@@ -667,6 +685,9 @@ class Schedule implements \JsonSerializable
                     $start->addYears($this->recurrenceDetail);
                     $end->addYears($this->recurrenceDetail);
                     break;
+
+                default:
+                    throw new InvalidArgumentException('Invalid recurrence type', 'recurrenceType');
             }
 
             // after we have added the appropriate amount, are we still valid
@@ -677,23 +698,19 @@ class Schedule implements \JsonSerializable
             if ($this->recurrenceType == 'Week' && !empty($this->recurrenceRepeatsOn))
                 continue;
 
-            if ($this->toDt == null)
-                $this->addDetail($start->format('U'), null);
-            else {
-                // Check to make sure that our from/to date isn't longer than the first repeat
-                if ($start->format('U') < $this->toDt)
-                    throw new \InvalidArgumentException(__('The first event repeat is inside the event from/to dates.'));
+            if ($start >= $generateFromDt) {
+                if ($this->toDt == null)
+                    $this->addDetail($start->format('U'), null);
+                else {
+                    // If we are a daypart event, look up the start/end times for the event
+                    $this->calculateDayPartTimes($start, $end);
 
-                // If we are a daypart event, look up the start/end times for the event
-                $this->calculateDayPartTimes($start, $end);
-
-                $this->addDetail($start->format('U'), $end->format('U'));
+                    $this->addDetail($start->format('U'), $end->format('U'));
+                }
             }
-
-            // Check these dates
-            if (!$this->isInScheduleLookAhead)
-                $this->isInScheduleLookAhead = $this->datesInScheduleLookAhead($start->format('U'), $end->format('U'));
         }
+
+        return $this->scheduleEvents;
     }
 
     /**
@@ -749,22 +766,7 @@ class Schedule implements \JsonSerializable
      */
     private function addDetail($fromDt, $toDt)
     {
-        $this->getStore()->insert('INSERT INTO `schedule_detail` (eventId, fromDt, toDt) VALUES (:eventId, :fromDt, :toDt)', [
-            'eventId' => $this->eventId,
-            'fromDt' => $fromDt,
-            'toDt' => $toDt
-        ]);
-    }
-
-    /**
-     * Delete Detail
-     */
-    private function deleteDetail($from = null)
-    {
-        if ($from === null)
-            $this->getStore()->update('DELETE FROM `schedule_detail` WHERE eventId = :eventId', ['eventId' => $this->eventId]);
-        else
-            $this->getStore()->update('DELETE FROM `schedule_detail` WHERE eventId = :eventId AND fromDt >= :fromDt ', ['eventId' => $this->eventId, 'fromDt' => $from]);
+        $this->scheduleEvents[] = new ScheduleEvent($fromDt, $toDt);
     }
 
     /**

@@ -8,7 +8,8 @@
 
 namespace Xibo\Service;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DayPartFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
@@ -24,15 +25,17 @@ interface DisplayNotifyServiceInterface
      * @param LogServiceInterface $log
      * @param PoolInterface $pool
      * @param PlayerActionServiceInterface $playerActionService
+     * @param DateServiceInterface $dateService
+     * @param ScheduleFactory $scheduleFactory
+     * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($config, $store, $log, $pool, $playerActionService);
+    public function __construct($config, $store, $log, $pool, $playerActionService, $dateService, $scheduleFactory, $dayPartFactory);
 
     /**
      * Initialise
-     * @param DisplayFactory $factory
      * @return $this
      */
-    public function init($factory);
+    public function init();
 
     /**
      * @return $this

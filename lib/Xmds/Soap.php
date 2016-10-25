@@ -25,6 +25,7 @@ use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\BandwidthFactory;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
@@ -33,13 +34,13 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\RequiredFileFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Random;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
-use Xibo\Service\LogService;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -114,6 +115,12 @@ class Soap
     /** @var  DisplayEventFactory */
     protected $displayEventFactory;
 
+    /** @var  ScheduleFactory */
+    protected $scheduleFactory;
+
+    /** @var  DayPartFactory */
+    protected $dayPartFactory;
+
     /**
      * Soap constructor.
      * @param LogProcessor $logProcessor
@@ -135,8 +142,10 @@ class Soap
      * @param RegionFactory $regionFactory
      * @param NotificationFactory $notificationFactory
      * @param DisplayEventFactory $displayEventFactory
+     * @param ScheduleFactory $scheduleFactory
+     * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory)
+    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory, $scheduleFactory, $dayPartFactory)
     {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
@@ -157,6 +166,8 @@ class Soap
         $this->regionFactory = $regionFactory;
         $this->notificationFactory = $notificationFactory;
         $this->displayEventFactory = $displayEventFactory;
+        $this->scheduleFactory = $scheduleFactory;
+        $this->dayPartFactory = $dayPartFactory;
     }
 
     /**
@@ -179,7 +190,7 @@ class Soap
 
     /**
      * Get Log
-     * @return LogService
+     * @return LogServiceInterface
      */
     protected function getLog()
     {
@@ -268,15 +279,14 @@ class Soap
 
         // Hour to hour time bands for the query
         // Start at the current hour
-        $fromFilter = time();
-        // Move forwards an hour and the rf look ahead
-        $rfLookAhead = $fromFilter + 3600 + $rfLookAhead;
-        // Dial both items back to the top of the hour
-        $fromFilter = $fromFilter - ($fromFilter % 3600);
-        $toFilter = $rfLookAhead - ($rfLookAhead % 3600);
+        $fromFilter = $this->getDate()->parse()->setTime(0, 0, 0);
 
-        if ($this->display->isAuditing())
-            $this->getLog()->debug(sprintf('Required files date criteria. FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)));
+        if ($this->getConfig()->GetSetting('SCHEDULE_LOOKAHEAD') == 'On')
+            $toFilter = $fromFilter->copy()->addSeconds($rfLookAhead);
+        else
+            $toFilter = $fromFilter->copy()->addHour();
+
+        $this->getLog()->debug(sprintf('FromDT = %s. ToDt = %s', $fromFilter->toRssString(), $toFilter->toRssString()));
 
         try {
             $dbh = $this->getStore()->getConnection();
@@ -284,12 +294,20 @@ class Soap
             // Get a list of all layout ids in the schedule right now
             // including any layouts that have been associated to our Display Group
             $SQL = '
-                SELECT layout.layoutID, schedule.DisplayOrder, lkcampaignlayout.DisplayOrder AS LayoutDisplayOrder, schedule_detail.eventId
+                SELECT layout.layoutID, 
+                    schedule.DisplayOrder, 
+                    lkcampaignlayout.DisplayOrder AS LayoutDisplayOrder, 
+                    schedule.eventId, 
+                    schedule.fromDt, 
+                    schedule.toDt, 
+                    schedule.recurrence_type AS recurrenceType,
+                    schedule.recurrence_detail AS recurrenceDetail,
+                    schedule.recurrence_range AS recurrenceRange,
+                    schedule.recurrenceRepeatsOn,
+                    schedule.dayPartId
                   FROM `campaign`
                     INNER JOIN `schedule`
                     ON `schedule`.CampaignID = campaign.CampaignID
-                    INNER JOIN schedule_detail
-                    ON schedule_detail.eventID = `schedule`.eventID
                     INNER JOIN `lkscheduledisplaygroup`
                     ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
                     INNER JOIN `lkcampaignlayout`
@@ -301,11 +319,26 @@ class Soap
                     INNER JOIN `lkdisplaydg`
                     ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
                  WHERE lkdisplaydg.DisplayID = :displayId
-                    AND schedule_detail.FromDT < :fromdt
-                    AND schedule_detail.ToDT > :todt
+                    AND (
+                      (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                      OR `schedule`.recurrence_range >= :fromDt 
+                      OR (
+                        IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
+                      )
+                    )
                     AND layout.retired = 0
                 UNION
-                SELECT `lklayoutdisplaygroup`.layoutId, 0 AS DisplayOrder, 0 AS LayoutDisplayOrder, 0 AS eventId
+                SELECT `lklayoutdisplaygroup`.layoutId, 
+                    0 AS DisplayOrder, 
+                    0 AS LayoutDisplayOrder, 
+                    0 AS eventId, 
+                    0 AS fromDt, 
+                    0 AS toDt, 
+                    NULL AS recurrenceType, 
+                    NULL AS recurrenceDetail,
+                    NULL AS recurrenceRange,
+                    NULL AS recurrenceRepeatsOn,
+                    NULL AS dayPartId
                   FROM `lklayoutdisplaygroup`
                     INNER JOIN `lkdgdg`
                     ON `lkdgdg`.parentId = `lklayoutdisplaygroup`.displayGroupId
@@ -317,20 +350,37 @@ class Soap
                 ORDER BY DisplayOrder, LayoutDisplayOrder, eventId
             ';
 
-            $sth = $dbh->prepare($SQL);
-            $sth->execute(array(
+            $params = array(
                 'displayId' => $this->display->displayId,
-                'fromdt' => $toFilter,
-                'todt' => $fromFilter
-            ));
+                'fromDt' => $fromFilter->format('U'),
+                'toDt' => $toFilter->format('U')
+            );
+
+            if ($this->display->isAuditing())
+                $this->getLog()->sql($SQL, $params);
+
+            $sth = $dbh->prepare($SQL);
+            $sth->execute($params);
 
             // Our layout list will always include the default layout
             $layouts = array();
             $layouts[] = $this->display->defaultLayoutId;
 
             // Build up the other layouts into an array
-            foreach ($sth->fetchAll() as $row)
-                $layouts[] = $this->getSanitizer()->int($row['layoutID']);
+            foreach ($sth->fetchAll() as $row) {
+                $layoutId = $this->getSanitizer()->int($row['layoutID']);
+
+                if ($row['scheduleId'] != 0) {
+                    $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
+                    $schedule->setDateService($this->getDate())->setDayPartFactory($this->dayPartFactory);
+                    $scheduleEvents = $schedule->generate($fromFilter, $toFilter);
+
+                    if (count($scheduleEvents) <= 0)
+                        continue;
+                }
+
+                $layouts[] = $layoutId;
+            }
 
         } catch (\Exception $e) {
             $this->getLog()->error('Unable to get a list of layouts. ' . $e->getMessage());
@@ -674,19 +724,14 @@ class Soap
 
         // Hour to hour time bands for the query
         // Start at the current hour
-        $fromFilter = time();
-        // Move forwards an hour and the rf lookahead
-        $rfLookAhead = $fromFilter + 3600 + $rfLookAhead;
-        // Dial both items back to the top of the hour
-        $fromFilter = $fromFilter - ($fromFilter % 3600);
+        $fromFilter = $this->getDate()->parse()->setTime(0, 0, 0);
 
         if ($this->getConfig()->GetSetting('SCHEDULE_LOOKAHEAD') == 'On')
-            $toFilter = $rfLookAhead - ($rfLookAhead % 3600);
+            $toFilter = $fromFilter->copy()->addSeconds($rfLookAhead);
         else
-            $toFilter = ($fromFilter + 3600) - (($fromFilter + 3600) % 3600);
+            $toFilter = $fromFilter->copy()->addHour();
 
-        if ($this->display->isAuditing())
-            $this->getLog()->debug(sprintf('FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)));
+        $this->getLog()->debug(sprintf('FromDT = %s. ToDt = %s', $fromFilter->toRssString(), $toFilter->toRssString()));
 
         try {
             $dbh = $this->getStore()->getConnection();
@@ -704,7 +749,19 @@ class Soap
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
             $SQL = '
-                SELECT `schedule`.eventTypeId, layout.layoutId, `layout`.status, `command`.code, schedule_detail.fromDt, schedule_detail.toDt, schedule.eventId, schedule.is_priority
+                SELECT `schedule`.eventTypeId, 
+                    layout.layoutId, 
+                    `layout`.status, 
+                    `command`.code, 
+                    schedule.fromDt, 
+                    schedule.toDt,
+                    schedule.recurrence_type AS recurrenceType,
+                    schedule.recurrence_detail AS recurrenceDetail,
+                    schedule.recurrence_range AS recurrenceRange,
+                    schedule.recurrenceRepeatsOn,
+                    schedule.eventId, 
+                    schedule.is_priority,
+                    schedule.dayPartId
             ';
 
             if (!$options['dependentsAsNodes']) {
@@ -730,8 +787,6 @@ class Soap
 
             $SQL .= '
                    FROM `schedule`
-                    INNER JOIN schedule_detail
-                    ON schedule_detail.eventID = `schedule`.eventID
                     INNER JOIN `lkscheduledisplaygroup`
                     ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
                     INNER JOIN `lkdgdg`
@@ -748,15 +803,19 @@ class Soap
                     LEFT OUTER JOIN `command`
                     ON `command`.commandId = `schedule`.commandId
                  WHERE lkdisplaydg.DisplayID = :displayId
-                    AND schedule_detail.FromDT < :todt
-                    AND IFNULL(schedule_detail.ToDT, schedule_detail.FromDT) > :fromdt
-                ORDER BY schedule.DisplayOrder, IFNULL(lkcampaignlayout.DisplayOrder, 0), schedule_detail.FromDT
+                    AND (
+                      (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                      OR `schedule`.recurrence_range >= :fromDt OR (
+                        IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
+                        )
+                    )
+                ORDER BY schedule.DisplayOrder, IFNULL(lkcampaignlayout.DisplayOrder, 0), schedule.FromDT
             ';
 
             $params = array(
                 'displayId' => $this->display->displayId,
-                'todt' => $toFilter,
-                'fromdt' => $fromFilter
+                'toDt' => $toFilter->format('U'),
+                'fromDt' => $fromFilter->format('U')
             );
 
             if ($this->display->isAuditing())
@@ -809,90 +868,99 @@ class Soap
 
             // We must have some results in here by this point
             foreach ($events as $row) {
-                $eventTypeId = $row['eventTypeId'];
-                $layoutId = $row['layoutId'];
-                $commandCode = $row['code'];
-                $fromDt = date('Y-m-d H:i:s', $row['fromDt']);
-                $toDt = date('Y-m-d H:i:s', $row['toDt']);
-                $scheduleId = $row['eventId'];
-                $is_priority = $this->getSanitizer()->int($row['is_priority']);
 
-                if ($eventTypeId == Schedule::$LAYOUT_EVENT) {
-                    // Ensure we have a layoutId (we may not if an empty campaign is assigned)
-                    // https://github.com/xibosignage/xibo/issues/894
-                    if ($layoutId == 0 || empty($layoutId)) {
-                        $this->getLog()->error('Player has empty event scheduled. Display = %s, EventId = %d', $this->display->display, $scheduleId);
-                        continue;
-                    }
+                $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
+                $schedule->setDateService($this->getDate())->setDayPartFactory($this->dayPartFactory);
+                $scheduleEvents = $schedule->generate($fromFilter, $toFilter);
 
-                    // Check the layout status
-                    // https://github.com/xibosignage/xibo/issues/743
-                    if (intval($row['status']) > 3) {
-                        $this->getLog()->error('Player has invalid layout scheduled. Display = %s, LayoutId = %d', $this->display->display, $layoutId);
-                        continue;
-                    }
+                $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
 
-                    // Add a layout node to the schedule
-                    $layout = $scheduleXml->createElement("layout");
-                    $layout->setAttribute("file", $layoutId);
-                    $layout->setAttribute("fromdt", $fromDt);
-                    $layout->setAttribute("todt", $toDt);
-                    $layout->setAttribute("scheduleid", $scheduleId);
-                    $layout->setAttribute("priority", $is_priority);
+                foreach ($scheduleEvents as $scheduleEvent) {
 
-                    if (!$options['dependentsAsNodes']) {
-                        $dependents = $this->getSanitizer()->string($row['Dependents']);
-                        $layout->setAttribute("dependents", $dependents);
-                    }
-                    else if (array_key_exists($layoutId, $layoutDependents)) {
-                        $dependentNode = $scheduleXml->createElement("dependents");
+                    $eventTypeId = $row['eventTypeId'];
+                    $layoutId = $row['layoutId'];
+                    $commandCode = $row['code'];
+                    $fromDt = $this->getDate()->getLocalDate($scheduleEvent->fromDt);
+                    $toDt = $this->getDate()->getLocalDate($scheduleEvent->toDt);
+                    $scheduleId = $row['eventId'];
+                    $is_priority = $this->getSanitizer()->int($row['is_priority']);
 
-                        foreach ($layoutDependents[$layoutId] as $storedAs) {
-                            $fileNode = $scheduleXml->createElement("file", $storedAs);
-
-                            $dependentNode->appendChild($fileNode);
+                    if ($eventTypeId == Schedule::$LAYOUT_EVENT) {
+                        // Ensure we have a layoutId (we may not if an empty campaign is assigned)
+                        // https://github.com/xibosignage/xibo/issues/894
+                        if ($layoutId == 0 || empty($layoutId)) {
+                            $this->getLog()->error('Player has empty event scheduled. Display = %s, EventId = %d', $this->display->display, $scheduleId);
+                            continue;
                         }
 
-                        $layout->appendChild($dependentNode);
+                        // Check the layout status
+                        // https://github.com/xibosignage/xibo/issues/743
+                        if (intval($row['status']) > 3) {
+                            $this->getLog()->error('Player has invalid layout scheduled. Display = %s, LayoutId = %d', $this->display->display, $layoutId);
+                            continue;
+                        }
+
+                        // Add a layout node to the schedule
+                        $layout = $scheduleXml->createElement("layout");
+                        $layout->setAttribute("file", $layoutId);
+                        $layout->setAttribute("fromdt", $fromDt);
+                        $layout->setAttribute("todt", $toDt);
+                        $layout->setAttribute("scheduleid", $scheduleId);
+                        $layout->setAttribute("priority", $is_priority);
+
+                        if (!$options['dependentsAsNodes']) {
+                            $dependents = $this->getSanitizer()->string($row['Dependents']);
+                            $layout->setAttribute("dependents", $dependents);
+                        } else if (array_key_exists($layoutId, $layoutDependents)) {
+                            $dependentNode = $scheduleXml->createElement("dependents");
+
+                            foreach ($layoutDependents[$layoutId] as $storedAs) {
+                                $fileNode = $scheduleXml->createElement("file", $storedAs);
+
+                                $dependentNode->appendChild($fileNode);
+                            }
+
+                            $layout->appendChild($dependentNode);
+                        }
+
+                        $layoutElements->appendChild($layout);
+
+                    } else if ($eventTypeId == Schedule::$COMMAND_EVENT) {
+                        // Add a command node to the schedule
+                        $command = $scheduleXml->createElement("command");
+                        $command->setAttribute("date", $fromDt);
+                        $command->setAttribute("scheduleid", $scheduleId);
+                        $command->setAttribute('code', $commandCode);
+                        $layoutElements->appendChild($command);
+                    } else if ($eventTypeId == Schedule::$OVERLAY_EVENT && $options['includeOverlays']) {
+                        // Ensure we have a layoutId (we may not if an empty campaign is assigned)
+                        // https://github.com/xibosignage/xibo/issues/894
+                        if ($layoutId == 0 || empty($layoutId)) {
+                            $this->getLog()->error('Player has empty event scheduled. Display = %s, EventId = %d', $this->display->display, $scheduleId);
+                            continue;
+                        }
+
+                        // Check the layout status
+                        // https://github.com/xibosignage/xibo/issues/743
+                        if (intval($row['status']) > 3) {
+                            $this->getLog()->error('Player has invalid layout scheduled. Display = %s, LayoutId = %d', $this->display->display, $layoutId);
+                            continue;
+                        }
+
+                        if ($overlayNodes == null) {
+                            $overlayNodes = $scheduleXml->createElement('overlays');
+                        }
+
+                        $overlay = $scheduleXml->createElement('overlay');
+                        $overlay->setAttribute("file", $layoutId);
+                        $overlay->setAttribute("fromdt", $fromDt);
+                        $overlay->setAttribute("todt", $toDt);
+                        $overlay->setAttribute("scheduleid", $scheduleId);
+                        $overlay->setAttribute("priority", $is_priority);
+
+                        // Add to the overlays node list
+                        $overlayNodes->appendChild($overlay);
                     }
-
-                    $layoutElements->appendChild($layout);
-
-                } else if ($eventTypeId == Schedule::$COMMAND_EVENT) {
-                    // Add a command node to the schedule
-                    $command = $scheduleXml->createElement("command");
-                    $command->setAttribute("date", $fromDt);
-                    $command->setAttribute("scheduleid", $scheduleId);
-                    $command->setAttribute('code', $commandCode);
-                    $layoutElements->appendChild($command);
-                } else if ($eventTypeId == Schedule::$OVERLAY_EVENT && $options['includeOverlays']) {
-                    // Ensure we have a layoutId (we may not if an empty campaign is assigned)
-                    // https://github.com/xibosignage/xibo/issues/894
-                    if ($layoutId == 0 || empty($layoutId)) {
-                        $this->getLog()->error('Player has empty event scheduled. Display = %s, EventId = %d', $this->display->display, $scheduleId);
-                        continue;
-                    }
-
-                    // Check the layout status
-                    // https://github.com/xibosignage/xibo/issues/743
-                    if (intval($row['status']) > 3) {
-                        $this->getLog()->error('Player has invalid layout scheduled. Display = %s, LayoutId = %d', $this->display->display, $layoutId);
-                        continue;
-                    }
-
-                    if ($overlayNodes == null) {
-                        $overlayNodes = $scheduleXml->createElement('overlays');
-                    }
-
-                    $overlay = $scheduleXml->createElement('overlay');
-                    $overlay->setAttribute("file", $layoutId);
-                    $overlay->setAttribute("fromdt", $fromDt);
-                    $overlay->setAttribute("todt", $toDt);
-                    $overlay->setAttribute("scheduleid", $scheduleId);
-                    $overlay->setAttribute("priority", $is_priority);
-
-                    // Add to the overlays node list
-                    $overlayNodes->appendChild($overlay);
                 }
             }
 
@@ -901,8 +969,8 @@ class Soap
                 $layoutElements->appendChild($overlayNodes);
 
         } catch (\Exception $e) {
-            $this->getLog()->error('Error getting a list of layouts for the schedule. ' . $e->getMessage());
-            return new \SoapFault('Sender', 'Unable to get A list of layouts for the schedule');
+            $this->getLog()->error('Error getting the schedule. ' . $e->getMessage());
+            return new \SoapFault('Sender', 'Unable to get the schedule');
         }
 
         // Are we interleaving the default?
@@ -968,7 +1036,7 @@ class Soap
 
         // Cache
         $cache->set($output);
-        $cache->expiresAt($this->getDate()->parse($toFilter, 'U'));
+        $cache->expiresAt($toFilter);
         $this->getPool()->saveDeferred($cache);
 
         // Log Bandwidth

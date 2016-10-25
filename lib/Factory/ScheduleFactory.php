@@ -118,24 +118,11 @@ class ScheduleFactory extends BaseFactory
         $entries = [];
         $params = [];
 
-        $useDetail = $this->getSanitizer()->getInt('useDetail', $filterBy) == 1;
-
         $sql = '
-        SELECT `schedule`.eventId, `schedule`.eventTypeId, ';
-
-        if ($useDetail) {
-            $sql .= '
-            `schedule_detail`.fromDt,
-            `schedule_detail`.toDt,
-            ';
-        } else {
-            $sql .= '
+        SELECT `schedule`.eventId, 
+            `schedule`.eventTypeId,
             `schedule`.fromDt,
             `schedule`.toDt,
-            ';
-        }
-
-        $sql .= '
             `schedule`.userId,
             `schedule`.displayOrder,
             `schedule`.is_priority AS isPriority,
@@ -153,16 +140,6 @@ class ScheduleFactory extends BaseFactory
             ON campaign.CampaignID = `schedule`.CampaignID
             LEFT OUTER JOIN `command`
             ON `command`.commandId = `schedule`.commandId
-        ';
-
-        if ($useDetail) {
-            $sql .= '
-            INNER JOIN `schedule_detail`
-            ON schedule_detail.EventID = `schedule`.EventID
-            ';
-        }
-
-        $sql .= '
           WHERE 1 = 1
         ';
 
@@ -187,38 +164,21 @@ class ScheduleFactory extends BaseFactory
         }
 
         // Only 1 date
-        if (!$useDetail && $this->getSanitizer()->getInt('fromDt', $filterBy) !== null && $this->getSanitizer()->getInt('toDt', $filterBy) === null) {
+        if ($this->getSanitizer()->getInt('fromDt', $filterBy) !== null && $this->getSanitizer()->getInt('toDt', $filterBy) === null) {
             $sql .= ' AND schedule.fromDt > :fromDt ';
             $params['fromDt'] = $this->getSanitizer()->getInt('fromDt', $filterBy);
         }
 
-        if (!$useDetail && $this->getSanitizer()->getInt('toDt', $filterBy) !== null && $this->getSanitizer()->getInt('fromDt', $filterBy) === null) {
+        if ($this->getSanitizer()->getInt('toDt', $filterBy) !== null && $this->getSanitizer()->getInt('fromDt', $filterBy) === null) {
             $sql .= ' AND IFNULL(schedule.toDt, schedule.fromDt) <= :toDt ';
-            $params['toDt'] = $this->getSanitizer()->getInt('toDt', $filterBy);
-        }
-
-        if ($useDetail && $this->getSanitizer()->getInt('fromDt', $filterBy) !== null && $this->getSanitizer()->getInt('toDt', $filterBy) === null) {
-            $sql .= ' AND schedule_detail.fromDt > :fromDt ';
-            $params['fromDt'] = $this->getSanitizer()->getInt('fromDt', $filterBy);
-        }
-
-        if ($useDetail && $this->getSanitizer()->getInt('toDt', $filterBy) !== null && $this->getSanitizer()->getInt('fromDt', $filterBy) === null) {
-            $sql .= ' AND IFNULL(schedule_detail.toDt, schedule_detail.fromDt) <= :toDt ';
             $params['toDt'] = $this->getSanitizer()->getInt('toDt', $filterBy);
         }
         // End only 1 date
 
         // Both dates
-        if (!$useDetail && $this->getSanitizer()->getInt('fromDt', $filterBy) !== null && $this->getSanitizer()->getInt('toDt', $filterBy) !== null) {
-            $sql .= ' AND schedule.fromDt > :fromDt ';
-            $sql .= ' AND IFNULL(schedule.toDt, schedule.fromDt) <= :toDt ';
-            $params['fromDt'] = $this->getSanitizer()->getInt('fromDt', $filterBy);
-            $params['toDt'] = $this->getSanitizer()->getInt('toDt', $filterBy);
-        }
-
-        if ($useDetail && $this->getSanitizer()->getInt('fromDt', $filterBy) !== null && $this->getSanitizer()->getInt('toDt', $filterBy) !== null) {
-            $sql .= ' AND schedule_detail.fromDt < :toDt ';
-            $sql .= ' AND IFNULL(schedule_detail.toDt, schedule_detail.fromDt) >= :fromDt ';
+        if ($this->getSanitizer()->getInt('fromDt', $filterBy) !== null && $this->getSanitizer()->getInt('toDt', $filterBy) !== null) {
+            $sql .= ' AND schedule.fromDt < :toDt ';
+            $sql .= ' AND IFNULL(schedule.toDt, schedule.fromDt) >= :fromDt ';
             $params['fromDt'] = $this->getSanitizer()->getInt('fromDt', $filterBy);
             $params['toDt'] = $this->getSanitizer()->getInt('toDt', $filterBy);
         }
@@ -229,10 +189,17 @@ class ScheduleFactory extends BaseFactory
         }
 
         // Future schedules?
-        if ($this->getSanitizer()->getInt('futureSchedulesFrom', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('futureSchedulesFrom', $filterBy) !== null && $this->getSanitizer()->getInt('futureSchedulesTo', $filterBy) === null) {
             // Get schedules that end after this date, or that recur after this date
-            $sql .= ' AND (IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom OR `schedule`.recurrence_range >= :futureSchedulesFrom ) ';
+            $sql .= ' AND (IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom OR `schedule`.recurrence_range >= :futureSchedulesFrom OR (IFNULL(`schedule`.recurrence_range, 0) = 0) AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\') ';
             $params['futureSchedulesFrom'] = $this->getSanitizer()->getInt('futureSchedulesFrom', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('futureSchedulesFrom', $filterBy) !== null && $this->getSanitizer()->getInt('futureSchedulesTo', $filterBy) !== null) {
+            // Get schedules that end after this date, or that recur after this date
+            $sql .= ' AND ((schedule.fromDt < :futureSchedulesTo AND IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom) OR `schedule`.recurrence_range >= :futureSchedulesFrom OR (IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\') ) ';
+            $params['futureSchedulesFrom'] = $this->getSanitizer()->getInt('futureSchedulesFrom', $filterBy);
+            $params['futureSchedulesTo'] = $this->getSanitizer()->getInt('futureSchedulesTo', $filterBy);
         }
 
         // Sorting?

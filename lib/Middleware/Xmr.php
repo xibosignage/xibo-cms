@@ -35,7 +35,16 @@ class Xmr extends Middleware
 
             // Register the display notify service
             $app->container->singleton('displayNotifyService', function () use ($app) {
-                return new DisplayNotifyService($app->configService, $app->logService, $app->store, $app->pool, $app->playerActionService);
+                return new DisplayNotifyService(
+                    $app->configService,
+                    $app->logService,
+                    $app->store,
+                    $app->pool,
+                    $app->playerActionService,
+                    $app->dateService,
+                    $app->scheduleFactory,
+                    $app->dayPartFactory
+                );
             });
         });
 

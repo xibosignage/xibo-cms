@@ -14,6 +14,14 @@
     {
       "step": "Add 4k UHD",
       "action": "INSERT INTO `resolution` (`resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES('4k UHD Landscape', 450, 800, 3840, 2160, 2, 1),('4k UHD Portrait', 800, 450, 2160, 3840, 2, 1);"
+    },
+    {
+      "step": "Update Always schedules",
+      "action": "UPDATE schedule SET fromDt = 0, toDt = 2556057600 WHERE dayPartId = 1"
+    },
+    {
+      "step": "Drop schedule detail",
+      "action": "DROP TABLE schedule_detail;"
     }
   ]
 }
