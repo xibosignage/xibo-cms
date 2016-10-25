@@ -25,7 +25,6 @@ use Slim\Helper\Set;
 use Slim\Middleware;
 use Slim\Slim;
 use Stash\Driver\Composite;
-use Stash\Driver\Ephemeral;
 use Stash\Driver\FileSystem;
 use Stash\Pool;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -314,9 +313,6 @@ class State extends Middleware
 
             $drivers[] = new FileSystem(['path' => $cachePath]);
         }
-
-        // Always add the Ephemeral driver
-        $drivers[] = new Ephemeral();
 
         // Create a composite driver
         $composite = new Composite(['drivers' => $drivers]);
@@ -806,6 +802,7 @@ class State extends Middleware
                 $container->dateService,
                 $container->configService,
                 $container->session,
+                $container->pool,
                 $container->scheduleFactory,
                 $container->displayGroupFactory,
                 $container->campaignFactory,
@@ -1301,6 +1298,7 @@ class State extends Middleware
                 $container->logService,
                 $container->sanitizerService,
                 $container->configService,
+                $container->pool,
                 $container->displayGroupFactory
             );
         });

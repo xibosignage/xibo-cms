@@ -192,6 +192,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 schedule.recurrence_detail AS recurrenceDetail,
                 schedule.recurrence_range AS recurrenceRange,
                 schedule.recurrenceRepeatsOn,
+                schedule.lastRecurrenceWatermark,
                 schedule.dayPartId
              FROM `schedule`
                INNER JOIN `lkscheduledisplaygroup`
@@ -219,6 +220,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 NULL AS recurrenceDetail,
                 NULL AS recurrenceRange,
                 NULL AS recurrenceRepeatsOn,
+                NULL AS lastRecurrenceWatermark,
                 NULL AS dayPartId
              FROM `display`
                INNER JOIN `lkcampaignlayout`
@@ -233,6 +235,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 NULL AS recurrenceDetail,
                 NULL AS recurrenceRange,
                 NULL AS recurrenceRepeatsOn,
+                NULL AS lastRecurrenceWatermark,
                 NULL AS dayPartId
               FROM `lkdisplaydg`
                 INNER JOIN `lklayoutdisplaygroup`
@@ -262,7 +265,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                     ->setDateService($this->dateService)
                     ->setDayPartFactory($this->dayPartFactory)
                     ->hydrate($row)
-                    ->generate($currentDate, $rfLookAhead);
+                    ->getEvents($currentDate, $rfLookAhead);
 
                 if (count($scheduleEvents) <= 0) {
                     $this->log->debug('Skipping eventId ' . $row['eventId'] . ' because it doesnt have any active events in the window');
@@ -291,6 +294,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 schedule.recurrence_detail AS recurrenceDetail,
                 schedule.recurrence_range AS recurrenceRange,
                 schedule.recurrenceRepeatsOn,
+                schedule.lastRecurrenceWatermark,
                 schedule.dayPartId
              FROM `schedule`
                INNER JOIN `lkscheduledisplaygroup`
@@ -330,6 +334,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 NULL AS recurrenceDetail,
                 NULL AS recurrenceRange,
                 NULL AS recurrenceRepeatsOn,
+                NULL AS lastRecurrenceWatermark,
                 NULL AS dayPartId
              FROM `display`
                INNER JOIN `lkcampaignlayout`
@@ -354,6 +359,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 NULL AS recurrenceDetail,
                 NULL AS recurrenceRange,
                 NULL AS recurrenceRepeatsOn,
+                NULL AS lastRecurrenceWatermark,
                 NULL AS dayPartId
               FROM `lklayoutdisplaygroup`
                 INNER JOIN `lkdgdg`
@@ -395,7 +401,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                     ->setDateService($this->dateService)
                     ->setDayPartFactory($this->dayPartFactory)
                     ->hydrate($row)
-                    ->generate($currentDate, $rfLookAhead);
+                    ->getEvents($currentDate, $rfLookAhead);
 
                 if (count($scheduleEvents) <= 0) {
                     $this->log->debug('Skipping eventId ' . $row['eventId'] . ' because it doesnt have any active events in the window');
@@ -424,6 +430,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 schedule.recurrence_detail AS recurrenceDetail,
                 schedule.recurrence_range AS recurrenceRange,
                 schedule.recurrenceRepeatsOn,
+                schedule.lastRecurrenceWatermark,
                 schedule.dayPartId
              FROM `schedule`
                INNER JOIN `lkscheduledisplaygroup`
@@ -457,6 +464,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 NULL AS recurrenceDetail,
                 NULL AS recurrenceRange,
                 NULL AS recurrenceRepeatsOn,
+                NULL AS lastRecurrenceWatermark,
                 NULL AS dayPartId
              FROM `display`
                INNER JOIN `lkcampaignlayout`
@@ -475,6 +483,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 NULL AS recurrenceDetail,
                 NULL AS recurrenceRange,
                 NULL AS recurrenceRepeatsOn,
+                NULL AS lastRecurrenceWatermark,
                 NULL AS dayPartId
               FROM `lkdisplaydg`
                 INNER JOIN `lklayoutdisplaygroup`
@@ -506,7 +515,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                     ->setDateService($this->dateService)
                     ->setDayPartFactory($this->dayPartFactory)
                     ->hydrate($row)
-                    ->generate($currentDate, $rfLookAhead);
+                    ->getEvents($currentDate, $rfLookAhead);
 
                 if (count($scheduleEvents) <= 0) {
                     $this->log->debug('Skipping eventId ' . $row['eventId'] . ' because it doesnt have any active events in the window');

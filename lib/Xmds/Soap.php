@@ -304,6 +304,7 @@ class Soap
                     schedule.recurrence_detail AS recurrenceDetail,
                     schedule.recurrence_range AS recurrenceRange,
                     schedule.recurrenceRepeatsOn,
+                    schedule.lastRecurrenceWatermark,
                     schedule.dayPartId
                   FROM `campaign`
                     INNER JOIN `schedule`
@@ -338,6 +339,7 @@ class Soap
                     NULL AS recurrenceDetail,
                     NULL AS recurrenceRange,
                     NULL AS recurrenceRepeatsOn,
+                    NULL AS lastRecurrenceWatermark,
                     NULL AS dayPartId
                   FROM `lklayoutdisplaygroup`
                     INNER JOIN `lkdgdg`
@@ -372,8 +374,10 @@ class Soap
 
                 if ($row['scheduleId'] != 0) {
                     $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
-                    $schedule->setDateService($this->getDate())->setDayPartFactory($this->dayPartFactory);
-                    $scheduleEvents = $schedule->generate($fromFilter, $toFilter);
+                    $schedule
+                        ->setDateService($this->getDate())
+                        ->setDayPartFactory($this->dayPartFactory);
+                    $scheduleEvents = $schedule->getEvents($fromFilter, $toFilter);
 
                     if (count($scheduleEvents) <= 0)
                         continue;
@@ -759,6 +763,7 @@ class Soap
                     schedule.recurrence_detail AS recurrenceDetail,
                     schedule.recurrence_range AS recurrenceRange,
                     schedule.recurrenceRepeatsOn,
+                    schedule.lastRecurrenceWatermark,
                     schedule.eventId, 
                     schedule.is_priority,
                     schedule.dayPartId
@@ -870,8 +875,10 @@ class Soap
             foreach ($events as $row) {
 
                 $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
-                $schedule->setDateService($this->getDate())->setDayPartFactory($this->dayPartFactory);
-                $scheduleEvents = $schedule->generate($fromFilter, $toFilter);
+                $schedule
+                    ->setDateService($this->getDate())
+                    ->setDayPartFactory($this->dayPartFactory);
+                $scheduleEvents = $schedule->getEvents($fromFilter, $toFilter);
 
                 $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
 

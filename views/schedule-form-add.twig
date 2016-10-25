@@ -303,7 +303,7 @@
                         {{ forms.number("recurrenceDetail", title, recurrenceDetail, helpText, "repeat-control-group") }}
 
                         {% set title %}{% trans "Until" %}{% endset %}
-                        {% set helpText %}{% trans "When should this event stop repeating?" %}{% endset %}
+                        {% set helpText %}{% trans "When should this event stop repeating? Leave empty to repeat forever." %}{% endset %}
                         {{ forms.dateTime("recurrenceRange", title, "", helpText, "repeat-control-group", "", "") }}
                     </div>
                 </div>

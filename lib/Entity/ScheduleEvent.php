@@ -12,10 +12,8 @@ namespace Xibo\Entity;
  * Class ScheduleEvent
  * @package Xibo\Entity
  */
-class ScheduleEvent implements \JsonSerializable
+class ScheduleEvent
 {
-    use EntityTrait;
-
     public $fromDt;
     public $toDt;
 
@@ -28,5 +26,13 @@ class ScheduleEvent implements \JsonSerializable
     {
         $this->fromDt = $fromDt;
         $this->toDt = $toDt;
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->fromDt . $this->toDt;
     }
 }

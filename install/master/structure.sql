@@ -773,6 +773,7 @@ CREATE TABLE IF NOT EXISTS `schedule` (
   `DisplayOrder` int(11) NOT NULL DEFAULT '0',
   `dayPartId` int(11) NOT NULL DEFAULT '0',
   `recurrenceRepeatsOn` VARCHAR(14) NULL,
+  `lastRecurrenceWatermark` BIGINT(20) NULL,
   PRIMARY KEY (`eventID`),
   KEY `layoutID` (`CampaignID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='High level schedule information' AUTO_INCREMENT=1 ;

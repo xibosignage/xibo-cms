@@ -10,6 +10,7 @@ namespace Xibo\Entity;
 
 use Jenssegers\Date\Date;
 use Respect\Validation\Validator as v;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\XiboException;
@@ -179,6 +180,12 @@ class Schedule implements \JsonSerializable
     public $dayPartId;
 
     /**
+     * Last Recurrence Watermark
+     * @var int
+     */
+    public $lastRecurrenceWatermark;
+
+    /**
      * @var ScheduleEvent[]
      */
     private $scheduleEvents = [];
@@ -190,6 +197,9 @@ class Schedule implements \JsonSerializable
 
     /** @var  DateServiceInterface */
     private $dateService;
+
+    /** @var  PoolInterface */
+    private $pool;
 
     /**
      * @var DisplayGroupFactory
@@ -207,13 +217,17 @@ class Schedule implements \JsonSerializable
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
+     * @param PoolInterface $pool
      * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($store, $log, $config, $displayGroupFactory)
+    public function __construct($store, $log, $config, $pool, $displayGroupFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->config = $config;
+        $this->pool = $pool;
         $this->displayGroupFactory = $displayGroupFactory;
+
+        $this->excludeProperty('lastRecurrenceWatermark');
     }
 
     public function __clone()
@@ -431,6 +445,9 @@ class Schedule implements \JsonSerializable
                 $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
             }
         }
+
+        // Drop the cache for this event
+        $this->dropEventCache();
     }
 
     /**
@@ -457,6 +474,9 @@ class Schedule implements \JsonSerializable
                 $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
             }
         }
+
+        // Drop the cache for this event
+        $this->dropEventCache();
     }
 
     /**
@@ -524,31 +544,86 @@ class Schedule implements \JsonSerializable
     }
 
     /**
-     * Generate Instances
-     * @param Date $generateFromDt
-     * @param Date $generateToDt
+     * Get events between the provided dates.
+     * @param Date $fromDt
+     * @param Date $toDt
      * @return ScheduleEvent[]
      * @throws XiboException
      */
-    public function generate($generateFromDt, $generateToDt)
+    public function getEvents($fromDt, $toDt)
     {
-        $this->getLog()->debug('Request for schedule events on eventId ' . $this->eventId
-            . ' from: ' . $this->getDate()->getLocalDate($generateFromDt)
-            . ' to: ' . $this->getDate()->getLocalDate($generateToDt));
+        // Copy the dates as we are going to be operating on them.
+        $fromDt = $fromDt->copy();
+        $toDt = $toDt->copy();
+
+        if ($this->pool == null)
+            throw new ConfigurationException(__('Cache pool not available'));
 
         if ($this->eventId == null)
             throw new InvalidArgumentException(__('Unable to generate schedule, unknown event'), 'eventId');
+
+        $events = [];
+        $fromTimeStamp = $fromDt->format('U');
+        $toTimeStamp = $toDt->format('U');
+
+        // Rewind the from date to the start of the month
+        $fromDt->startOfMonth();
+
+        // Request month cache
+        while ($fromDt < $toDt) {
+            $this->generateMonth($fromDt);
+
+            $this->getLog()->debug('Events: ' . json_encode($this->scheduleEvents, JSON_PRETTY_PRINT));
+
+            foreach ($this->scheduleEvents as $scheduleEvent) {
+
+                if (in_array($scheduleEvent, $events))
+                    continue;
+
+                if ($scheduleEvent->toDt == null) {
+                    if ($scheduleEvent->fromDt >= $fromTimeStamp && $scheduleEvent->toDt < $toTimeStamp)
+                        $events[] = $scheduleEvent;
+                } else {
+                    if ($scheduleEvent->fromDt <= $toTimeStamp && $scheduleEvent->toDt > $fromTimeStamp)
+                        $events[] = $scheduleEvent;
+                }
+            }
+
+            // Move the month forwards
+            $fromDt->addMonth();
+        }
+
+        $this->getLog()->debug('Filtered ' . count($this->scheduleEvents) . ' to ' . count($events));
+
+        return $events;
+    }
+
+    /**
+     * Generate Instances
+     * @param Date $generateFromDt
+     * @throws XiboException
+     */
+    private function generateMonth($generateFromDt)
+    {
+        $generateFromDt->startOfMonth();
+        $generateToDt = $generateFromDt->copy()->addMonth();
+
+        $this->getLog()->debug('Request for schedule events on eventId ' . $this->eventId
+            . ' from: ' . $this->getDate()->getLocalDate($generateFromDt)
+            . ' to: ' . $this->getDate()->getLocalDate($generateToDt)
+            . ' [eventId:' . $this->eventId . ']'
+        );
 
         // Events scheduled "always" will return one event
         if ($this->dayPartId == Schedule::$DAY_PART_ALWAYS) {
             // Create events with min/max dates
             $this->addDetail(Schedule::$DATE_MIN, Schedule::$DATE_MAX);
-            return $this->scheduleEvents;
+            return;
         }
 
         // Load the dates into a date object for parsing
         $start = $this->getDate()->parse($this->fromDt, 'U');
-        $end = $this->getDate()->parse($this->toDt, 'U');
+        $end = ($this->toDt == null) ? $start->copy() : $this->getDate()->parse($this->toDt, 'U');
 
         // If we are a daypart event, look up the start/end times for the event
         $this->calculateDayPartTimes($start, $end);
@@ -558,31 +633,66 @@ class Schedule implements \JsonSerializable
             // Add the detail for the main event (this is the event that originally triggered the generation)
             $this->addDetail($start->format('U'), $end->format('U'));
         } else {
-            $this->getLog()->debug('Main event is not in the current generation window. Event dates: ' . $start->toRssString() . ' - ' . $end->toRssString());
+            $this->getLog()->debug('Main event is not in the current generation window. [eventId:' . $this->eventId . ']');
         }
 
         // If we don't have any recurrence, we are done
         if (empty($this->recurrenceType) || empty($this->recurrenceDetail))
-            return $this->scheduleEvents;
+            return;
+
+        // Check the cache
+        $item = $this->pool->getItem('schedule/' . $this->eventId . '/' . $generateFromDt->format('Y-m'));
+
+        if ($item->isHit()) {
+            $this->scheduleEvents = $item->get();
+            $this->getLog()->debug('Returning from cache! [eventId:' . $this->eventId . ']');
+            return;
+        }
+
+        $this->getLog()->debug('Cache miss! [eventId:' . $this->eventId . ']');
+
+        // vv anything below here means that the event window requested is not in the cache vv
+        // WE ARE NOT IN THE CACHE
+        // this means we need to always walk the tree from the last watermark
+        // if the last watermark is after the from window, then we need to walk from the beginning
+
+        // Handle recurrence
+        $lastWatermark = ($this->lastRecurrenceWatermark != 0) ? $this->getDate()->parse($this->lastRecurrenceWatermark, 'U') : $this->getDate()->parse(self::$DATE_MIN, 'U');
+
+        $this->getLog()->debug('Recurrence calculation required - last water mark is set to: ' . $lastWatermark->toRssString() . '. Event dates: ' . $start->toRssString() . ' - ' . $end->toRssString() . ' [eventId:' . $this->eventId . ']');
 
         // Set the temp starts
+        // the start date should be the latest of the event start date and the last recurrence date
+        if ($lastWatermark > $start && $lastWatermark < $generateFromDt) {
+            $this->getLog()->debug('The last watermark is later than the event start date and the generate from dt, using the watermark for forward population'
+                . ' [eventId:' . $this->eventId . ']');
+
+            // Need to set the toDt based on the original event duration and the watermark start date
+            $eventDuration = $start->diffInSeconds($end, true);
+
+            /** @var Date $start */
+            $start = $lastWatermark->copy();
+            $end = $start->copy()->addSeconds($eventDuration);
+        }
+
         // range should be the smallest of the recurrence range and the generate window todt
         // the start/end date should be the the first recurrence in the current window
         if ($this->recurrenceRange != 0) {
             $range = $this->getDate()->parse($this->recurrenceRange, 'U');
 
             // Override the range to be within the period we are looking
-            $range = ($range < $generateToDt) ? $range : $generateToDt;
+            $range = ($range < $generateToDt) ? $range : $generateToDt->copy();
         } else {
-            $range = $generateToDt;
+            $range = $generateToDt->copy();
         }
 
-        $this->getLog()->debug('[' . $generateFromDt->toRssString() . ' - ' . $generateToDt->toRssString() . '] Looping from ' . $start->toRssString() . ' to ' . $range->toRssString());
+        $this->getLog()->debug('[' . $generateFromDt->toRssString() . ' - ' . $generateToDt->toRssString()
+            . '] Looping from ' . $start->toRssString() . ' to ' . $range->toRssString() . ' [eventId:' . $this->eventId . ']');
 
         // loop until we have added the recurring events for the schedule
         while ($start < $range)
         {
-            $this->getLog()->debug('Loop: ' . $start->toRssString() . ' to ' . $range->toRssString());
+            $this->getLog()->debug('Loop: ' . $start->toRssString() . ' to ' . $range->toRssString() . ' [eventId:' . $this->eventId . ']');
 
             // add the appropriate time to the start and end
             switch ($this->recurrenceType)
@@ -620,7 +730,7 @@ class Schedule implements \JsonSerializable
                         // What is the end of this week
                         $endOfWeek = $start->copy()->endOfWeek();
 
-                        $this->getLog()->debug('Days selected: ' . $this->recurrenceRepeatsOn . '. End of week = ' . $endOfWeek . ' start date ' . $start);
+                        $this->getLog()->debug('Days selected: ' . $this->recurrenceRepeatsOn . '. End of week = ' . $endOfWeek . ' start date ' . $start . ' [eventId:' . $this->eventId . ']');
 
                         for ($i = 1; $i <= 7; $i++) {
                             // Add a day to the start dates
@@ -630,7 +740,7 @@ class Schedule implements \JsonSerializable
                                 $end->addDay(1);
                             }
 
-                            $this->getLog()->debug('End of week = ' . $endOfWeek . ' assessing start date ' . $start);
+                            $this->getLog()->debug('End of week = ' . $endOfWeek . ' assessing start date ' . $start . ' [eventId:' . $this->eventId . ']');
 
                             // If we go over the recurrence range, stop
                             // if we go over the start of the week, stop
@@ -655,7 +765,7 @@ class Schedule implements \JsonSerializable
                             }
                         }
 
-                        $this->getLog()->debug('Finished 7 day roll forward, start date is ' . $start);
+                        $this->getLog()->debug('Finished 7 day roll forward, start date is ' . $start . ' [eventId:' . $this->eventId . ']');
 
                         // If we haven't passed the end of the week, roll forward
                         if ($start < $endOfWeek) {
@@ -667,7 +777,7 @@ class Schedule implements \JsonSerializable
                         $start->addWeek(-1);
                         $end->addWeek(-1);
 
-                        $this->getLog()->debug('Resetting start date to ' . $start);
+                        $this->getLog()->debug('Resetting start date to ' . $start . ' [eventId:' . $this->eventId . ']');
                     }
 
                     // Jump forward a week from the original start date (when we entered this loop)
@@ -691,8 +801,13 @@ class Schedule implements \JsonSerializable
             }
 
             // after we have added the appropriate amount, are we still valid
-            if ($start > $range)
+            if ($start > $range) {
+                $this->getLog()->debug('Breaking mid loop because we\'ve exceeded the range. Start: ' . $start->toRssString() . ', range: ' . $range->toRssString() . ' [eventId:' . $this->eventId . ']');
                 break;
+            }
+
+            // Push the watermark
+            $lastWatermark = $start->copy();
 
             // Don't add if we are weekly recurrency (handles it's own adding)
             if ($this->recurrenceType == 'Week' && !empty($this->recurrenceRepeatsOn))
@@ -710,7 +825,40 @@ class Schedule implements \JsonSerializable
             }
         }
 
-        return $this->scheduleEvents;
+        $this->getLog()->debug('Our last recurrence watermark is: ' . $lastWatermark->toRssString() . '[eventId:' . $this->eventId . ']');
+
+        // Update our schedule with the new last watermark
+        $lastWatermarkTimeStamp = $lastWatermark->format('U');
+
+        if ($lastWatermarkTimeStamp != $this->lastRecurrenceWatermark) {
+            $this->lastRecurrenceWatermark = $lastWatermarkTimeStamp;
+            $this->getStore()->update('UPDATE `schedule` SET lastRecurrenceWatermark = :lastRecurrenceWatermark WHERE eventId = :eventId', [
+                'eventId' => $this->eventId,
+                'lastRecurrenceWatermark' => $this->lastRecurrenceWatermark
+            ]);
+        }
+
+        // Update the cache
+        $item->set($this->scheduleEvents);
+        $item->expiresAt(Date::now()->addMonths(2));
+
+        $this->pool->saveDeferred($item);
+
+        return;
+    }
+
+    /**
+     * Drop the event cache
+     * @param $key
+     */
+    private function dropEventCache($key = null)
+    {
+        $compKey = 'schedule/' . $this->eventId;
+
+        if ($key !== null)
+            $compKey .= '/' . $key;
+
+        $this->pool->deleteItem($compKey);
     }
 
     /**

@@ -22,6 +22,10 @@
     {
       "step": "Drop schedule detail",
       "action": "DROP TABLE schedule_detail;"
+    },
+    {
+      "step": "Add schedule recurrence watermark",
+      "action": "ALTER TABLE schedule ADD lastRecurrenceWatermark BIGINT(20) NULL;"
     }
   ]
 }

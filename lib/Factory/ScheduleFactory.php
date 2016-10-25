@@ -9,6 +9,7 @@
 namespace Xibo\Factory;
 
 
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Schedule;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
@@ -27,6 +28,9 @@ class ScheduleFactory extends BaseFactory
      */
     private $config;
 
+    /** @var PoolInterface  */
+    private $pool;
+
     /**
      * @var DisplayGroupFactory
      */
@@ -38,12 +42,14 @@ class ScheduleFactory extends BaseFactory
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
      * @param ConfigServiceInterface $config
+     * @param PoolInterface $pool
      * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($store, $log, $sanitizerService, $config, $displayGroupFactory)
+    public function __construct($store, $log, $sanitizerService, $config, $pool, $displayGroupFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->config = $config;
+        $this->pool = $pool;
         $this->displayGroupFactory = $displayGroupFactory;
     }
 
@@ -57,6 +63,7 @@ class ScheduleFactory extends BaseFactory
             $this->getStore(),
             $this->getLog(),
             $this->config,
+            $this->pool,
             $this->displayGroupFactory
         );
     }
@@ -130,6 +137,7 @@ class ScheduleFactory extends BaseFactory
             `schedule`.recurrence_detail AS recurrenceDetail,
             `schedule`.recurrence_range AS recurrenceRange,
             `schedule`.recurrenceRepeatsOn,
+            `schedule`.lastRecurrenceWatermark,
             campaign.campaignId,
             campaign.campaign,
             `command`.commandId,

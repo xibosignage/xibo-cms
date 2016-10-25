@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
@@ -44,6 +45,9 @@ class Schedule extends Base
      * @var Session
      */
     private $session;
+
+    /** @var  PoolInterface */
+    private $pool;
 
     /**
      * @var ScheduleFactory
@@ -87,6 +91,7 @@ class Schedule extends Base
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param Session $session
+     * @param PoolInterface $pool
      * @param ScheduleFactory $scheduleFactory
      * @param DisplayGroupFactory $displayGroupFactory
      * @param CampaignFactory $campaignFactory
@@ -96,11 +101,12 @@ class Schedule extends Base
      * @param MediaFactory $mediaFactory
      * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $mediaFactory, $dayPartFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $pool, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $mediaFactory, $dayPartFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->session = $session;
+        $this->pool = $pool;
         $this->scheduleFactory = $scheduleFactory;
         $this->displayGroupFactory = $displayGroupFactory;
         $this->campaignFactory = $campaignFactory;
@@ -232,8 +238,10 @@ class Schedule extends Base
             /* @var \Xibo\Entity\Schedule $row */
 
             // Generate this event
-            $row->setDateService($this->getDate())->setDayPartFactory($this->dayPartFactory);
-            $scheduleEvents = $row->generate($start, $end);
+            $row
+                ->setDateService($this->getDate())
+                ->setDayPartFactory($this->dayPartFactory);
+            $scheduleEvents = $row->getEvents($start, $end);
 
             if (count($scheduleEvents) <= 0)
                 continue;
