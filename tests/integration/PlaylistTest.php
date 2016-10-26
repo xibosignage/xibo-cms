@@ -67,7 +67,7 @@ class PlaylistTest extends LocalWebTestCase
             }
             if ($flag) {
                 try {
-                    $media->delete();
+                    $media->deleteAssigned();
                 } catch (\Exception $e) {
                     fwrite(STDERR, 'Unable to delete ' . $media->mediaId . '. E:' . $e->getMessage());
                 }
@@ -120,6 +120,6 @@ class PlaylistTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
         # Clean up
         $layout->delete();
-        $media->delete();
+        $media->deleteAssigned();
     }
 }

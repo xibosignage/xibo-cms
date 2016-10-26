@@ -40,7 +40,7 @@ class LibraryTest extends LocalWebTestCase
             }
             if ($flag) {
                 try {
-                    $media->delete();
+                    $media->deleteAssigned();
                 } catch (\Exception $e) {
                     fwrite(STDERR, 'Unable to delete ' . $media->mediaId . '. E:' . $e->getMessage());
                 }
@@ -72,6 +72,17 @@ class LibraryTest extends LocalWebTestCase
         $media = (new XiboLibrary($this->getEntityProvider()))->create('API video test', PROJECT_ROOT . '/tests/resources/HLH264.mp4');
 
         $media->delete();
+    }
+
+    /**
+     * Add new file to library and replace old one in all layouts
+     */
+    public function testReplace()
+    {
+        # Using XiboLibrary wrapper to upload new file to the CMS, need to provide (name, file location)
+        $media = (new XiboLibrary($this->getEntityProvider()))->create('flowers', PROJECT_ROOT . '/tests/resources/xts-flowers-001.jpg');
+        # Replace the image and update it in all layouts (name, file location, old media id, replace in all layouts flag, delete old revision flag)
+        $media2 = (new XiboLibrary($this->getEntityProvider()))->create('API replace image', PROJECT_ROOT . '/tests/resources/xts-flowers-002.jpg',  $media->mediaId, 1, 1);
     }
 
     /**
