@@ -165,13 +165,6 @@ class DisplayGroup extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="isDynamic",
-     *      in="formData",
-     *      description="Filter by DisplayGroups that are dynamic",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
      *      name="dynamicCriteria",
      *      in="formData",
      *      description="Filter by DisplayGroups containing a specific dynamic criteria",
@@ -200,8 +193,7 @@ class DisplayGroup extends Base
             'displayGroup' => $this->getSanitizer()->getString('displayGroup'),
             'displayId' => $this->getSanitizer()->getInt('displayId'),
             'nestedDisplayId' => $this->getSanitizer()->getInt('nestedDisplayId'),
-            'dynamicCriteria' => $this->getSanitizer()->getString('dynamicCriteria'),
-            'isDynamic' => $this->getSanitizer()->getCheckbox('isDynamic')
+            'dynamicCriteria' => $this->getSanitizer()->getString('dynamicCriteria')
         ];
 
         $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
