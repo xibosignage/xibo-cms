@@ -384,7 +384,7 @@ class Schedule implements \JsonSerializable
 
             if ($this->dayPartId == Schedule::$DAY_PART_CUSTOM) {
                 // validate the dates
-                if ($this->toDt < $this->fromDt)
+                if ($this->toDt <= $this->fromDt)
                     throw new InvalidArgumentException(__('Can not have an end time earlier than your start time'), 'start/end');
             }
 
@@ -698,18 +698,18 @@ class Schedule implements \JsonSerializable
             switch ($this->recurrenceType)
             {
                 case 'Minute':
-                    $start->addMinutes($this->recurrenceDetail);
-                    $end->addMinutes($this->recurrenceDetail);
+                    $start->minute($start->minute + $this->recurrenceDetail);
+                    $end->minute($end->minute + $this->recurrenceDetail);
                     break;
 
                 case 'Hour':
-                    $start->addHours($this->recurrenceDetail);
-                    $end->addHours($this->recurrenceDetail);
+                    $start->hour($start->hour + $this->recurrenceDetail);
+                    $end->hour($end->hour + $this->recurrenceDetail);
                     break;
 
                 case 'Day':
-                    $start->addDays($this->recurrenceDetail);
-                    $end->addDays($this->recurrenceDetail);
+                    $start->day($start->day + $this->recurrenceDetail);
+                    $end->day($end->day + $this->recurrenceDetail);
                     break;
 
                 case 'Week':
@@ -736,8 +736,8 @@ class Schedule implements \JsonSerializable
                             // Add a day to the start dates
                             // after the first pass, we will already be on the first day of the week
                             if ($i > 1 || !$onStartOfWeek) {
-                                $start->addDay(1);
-                                $end->addDay(1);
+                                $start->day($start->day + 1);
+                                $end->day($end->day + 1);
                             }
 
                             $this->getLog()->debug('End of week = ' . $endOfWeek . ' assessing start date ' . $start . ' [eventId:' . $this->eventId . ']');
@@ -769,31 +769,31 @@ class Schedule implements \JsonSerializable
 
                         // If we haven't passed the end of the week, roll forward
                         if ($start < $endOfWeek) {
-                            $start->addDay(1);
-                            $end->addDay(1);
+                            $start->day($start->day + 1);
+                            $end->day($end->day + 1);
                         }
 
                         // Wind back a week and then add our recurrence detail
-                        $start->addWeek(-1);
-                        $end->addWeek(-1);
+                        $start->day($start->day - 7);
+                        $end->day($end->day - 7);
 
                         $this->getLog()->debug('Resetting start date to ' . $start . ' [eventId:' . $this->eventId . ']');
                     }
 
                     // Jump forward a week from the original start date (when we entered this loop)
-                    $start->addWeeks($this->recurrenceDetail);
-                    $end->addWeeks($this->recurrenceDetail);
+                    $start->day($start->day + ($this->recurrenceDetail * 7));
+                    $end->day($end->day + ($this->recurrenceDetail * 7));
 
                     break;
 
                 case 'Month':
-                    $start->addMonths($this->recurrenceDetail);
-                    $end->addMonths($this->recurrenceDetail);
+                    $start->month($start->month + $this->recurrenceDetail);
+                    $end->month($end->month + $this->recurrenceDetail);
                     break;
 
                 case 'Year':
-                    $start->addYears($this->recurrenceDetail);
-                    $end->addYears($this->recurrenceDetail);
+                    $start->year($start->year + $this->recurrenceDetail);
+                    $end->year($end->year + $this->recurrenceDetail);
                     break;
 
                 default:
