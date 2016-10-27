@@ -262,6 +262,23 @@ class PdoStorageService implements StorageServiceInterface
         return $sth->fetchAll(\PDO::FETCH_ASSOC);
 	}
 
+	/** @inheritdoc */
+	public function isolated($sql, $params)
+    {
+        // Create a new connection
+        $connection = self::newConnection();
+
+        // Should we log?
+        if ($this->log != null)
+            $this->log->sql($sql, $params);
+
+        $sth = $connection->prepare($sql);
+
+        $sth->execute($params);
+
+        self::$countUpdates++;
+    }
+
     /**
      * Commit if necessary
      */

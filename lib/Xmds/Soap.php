@@ -11,6 +11,7 @@ namespace Xibo\Xmds;
 define('BLACKLIST_ALL', "All");
 define('BLACKLIST_SINGLE', "Single");
 
+use Slim\Log;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
@@ -896,14 +897,14 @@ class Soap
                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
                         // https://github.com/xibosignage/xibo/issues/894
                         if ($layoutId == 0 || empty($layoutId)) {
-                            $this->getLog()->error('Player has empty event scheduled. Display = %s, EventId = %d', $this->display->display, $scheduleId);
+                            $this->getLog()->info('Player has empty event scheduled. Display = %s, EventId = %d', $this->display->display, $scheduleId);
                             continue;
                         }
 
                         // Check the layout status
                         // https://github.com/xibosignage/xibo/issues/743
                         if (intval($row['status']) > 3) {
-                            $this->getLog()->error('Player has invalid layout scheduled. Display = %s, LayoutId = %d', $this->display->display, $layoutId);
+                            $this->getLog()->info('Player has invalid layout scheduled. Display = %s, LayoutId = %d', $this->display->display, $layoutId);
                             continue;
                         }
 
@@ -1169,16 +1170,25 @@ class Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Sender', 'This display client is not licensed.');
 
-        if ($this->display->isAuditing())
-            $this->getLog()->debug('XML log: ' . $logXml);
-
         // Load the XML into a DOMDocument
         $document = new \DOMDocument("1.0");
 
         if (!$document->loadXML($logXml)) {
             $this->getLog()->error('Malformed XML from Player, this will be discarded. The Raw XML String provided is: ' . $logXml);
+            $this->getLog()->debug('XML log: ' . $logXml);
             return true;
         }
+
+        // Current log level
+        $logLevel = $this->logProcessor->getLevel();
+        $discardedLogs = 0;
+
+        // Get the display timezone to use when adjusting log dates.
+        $timeZone = $this->display->getSetting('displayTimeZone', '');
+        $timeZone = (empty($timeZone)) ? $this->getConfig()->GetSetting('defaultTimezone') : $timeZone;
+
+        // Store processed logs in an array
+        $logs = [];
 
         foreach ($document->documentElement->childNodes as $node) {
             /* @var \DOMElement $node */
@@ -1206,6 +1216,28 @@ class Soap
                 continue;
             }
 
+            // Does this meet the current log level?
+            if ($cat == 'error') {
+                $recordLogLevel = Log::ERROR;
+                $levelName = 'ERROR';
+            }
+            else if ($cat == 'audit') {
+                $recordLogLevel = Log::DEBUG;
+                $levelName = 'DEBUG';
+            }
+            else {
+                $recordLogLevel = Log::NOTICE;
+                $levelName = 'NOTICE';
+            }
+
+            if ($recordLogLevel > $logLevel) {
+                $discardedLogs++;
+                continue;
+            }
+
+            // Adjust the date according to the display timezone
+            $date = $this->getDate()->getLocalDate($this->getDate()->parse($date, 'Y-m-d H:i:s')->tz($timeZone));
+
             // Get the date and the message (all log types have these)
             foreach ($node->childNodes as $nodeElements) {
 
@@ -1231,16 +1263,42 @@ class Soap
             if ($message == '')
                 $message = $node->textContent;
 
-            $message = sprintf('%s,%s,%s,%s,%s,%s,%s', $message, 'Client', $thread . $method . $type, $date, $scheduleId, $layoutId, $mediaId);
-
-            // We should have enough information to log this now.
-            if ($cat == 'error')
-                $this->getLog()->error($message);
-            else if ($cat == 'audit')
-                $this->getLog()->debug($message);
-            else
-                $this->getLog()->notice($message);
+            $logs[] = [
+                $this->logProcessor->getUid(),
+                $date,
+                'PLAYER',
+                $levelName,
+                $thread . $method . $type,
+                'POST',
+                $message . $scheduleId . $layoutId . $mediaId,
+                0,
+                $this->display->displayId
+            ];
         }
+
+        if (count($logs) > 0) {
+            // Insert
+            $sql = 'INSERT INTO log (runNo, logdate, channel, type, page, function, message, userid, displayid) VALUES ';
+            $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?)';
+
+            $sql = $sql . implode(', ', array_fill(1, count($logs), $placeHolders));
+
+            // Flatten the array
+            $data = [];
+            foreach ($logs as $log) {
+                foreach ($log as $field) {
+                    $data[] = $field;
+                }
+            }
+
+            // Insert
+            $this->getStore()->isolated($sql, $data);
+        } else {
+            $this->getLog()->error('0 logs resolved from log package');
+        }
+
+        if ($discardedLogs > 0)
+            $this->getLog()->error('Discarded ' . $discardedLogs . ' logs. Consider adjusting your display profile log level. Resolved level is ' . $logLevel);
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SUBMITLOG, strlen($logXml));
 

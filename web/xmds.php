@@ -33,14 +33,11 @@ if (!file_exists(PROJECT_ROOT . '/web/settings.php')) {
 
 // We create a Slim Object ONLY for logging
 // Create a logger
+$uidProcessor = new \Monolog\Processor\UidProcessor(7);
 $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'XMDS',
-    'handlers' => array(
-        new \Xibo\Helper\DatabaseLogHandler()
-    ),
-    'processors' => [
-        new \Monolog\Processor\UidProcessor(7)
-    ]
+    'handlers' => [new \Xibo\Helper\DatabaseLogHandler()],
+    'processors' => [$uidProcessor]
 ));
 
 // Slim Application
@@ -49,6 +46,7 @@ $app = new \Slim\Slim(array(
     'log.writer' => $logger
 ));
 $app->setName('api');
+$app->startTime = microtime();
 
 // Load the config
 $app->configService = \Xibo\Service\ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
@@ -178,7 +176,7 @@ try {
         throw new InvalidArgumentException(__('Your client is not the correct version to communicate with this CMS.'));
 
     // Create a log processor
-    $logProcessor = new \Xibo\Xmds\LogProcessor($app->getLog());
+    $logProcessor = new \Xibo\Xmds\LogProcessor($app->getLog(), $uidProcessor->getUid());
     $app->logWriter->addProcessor($logProcessor);
 
     // Create a SoapServer
@@ -209,7 +207,11 @@ try {
     );
     $soap->handle();
 
-    $app->logService->info('PDO stats: %s.', json_encode($app->store->stats()));
+    // Get the stats for this connection
+    $stats = $app->store->stats();
+    $stats['length'] = microtime() - $app->startTime;
+
+    $app->logService->info('PDO stats: %s.', json_encode($stats, JSON_PRETTY_PRINT));
 
     if ($app->store->getConnection()->inTransaction())
         $app->store->getConnection()->commit();
