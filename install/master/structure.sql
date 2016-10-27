@@ -962,28 +962,6 @@ CREATE TABLE IF NOT EXISTS `widgetoption` (
 
 -- --------------------------------------------------------
 
-
---
--- Table structure for table `requiredfile`
---
-
-CREATE TABLE IF NOT EXISTS `requiredfile` (
-  `rfId` bigint(20) NOT NULL AUTO_INCREMENT,
-  `nonce` varchar(100) NOT NULL,
-  `expiry` int(11) NOT NULL,
-  `lastUsed` int(11) DEFAULT NULL,
-  `displayId` int(11) NOT NULL,
-  `size` bigint(20) DEFAULT NULL,
-  `storedAs` varchar(100) DEFAULT NULL,
-  `layoutId` int(11) DEFAULT NULL,
-  `regionId` int(11) DEFAULT NULL,
-  `mediaId` int(11) DEFAULT NULL,
-  `requestKey` varchar(10) NOT NULL,
-  `bytesRequested` bigint(20) NOT NULL,
-  `complete` tinyint(4) NOT NULL,
-  PRIMARY KEY (`rfId`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-
 CREATE TABLE IF NOT EXISTS `command` (
   `commandId` int(11) NOT NULL AUTO_INCREMENT,
   `command` varchar(254) NOT NULL,

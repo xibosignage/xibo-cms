@@ -486,7 +486,8 @@ class State extends Middleware
                 $container->displayProfileFactory,
                 $container->mediaFactory,
                 $container->scheduleFactory,
-                $container->displayEventFactory
+                $container->displayEventFactory,
+                $container->requiredFileFactory
             );
         });
 
@@ -1280,7 +1281,8 @@ class State extends Middleware
             return new \Xibo\Factory\RequiredFileFactory(
                 $container->store,
                 $container->logService,
-                $container->sanitizerService
+                $container->sanitizerService,
+                $container->pool
             );
         });
 

@@ -17,7 +17,6 @@ use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
-use Xibo\Entity\RequiredFile;
 use Xibo\Entity\Schedule;
 use Xibo\Entity\Stat;
 use Xibo\Entity\UserGroup;
@@ -479,7 +478,7 @@ class Soap
                 }
 
                 // Add nonce
-                $mediaNonce = $this->requiredFileFactory->createForMedia($this->display->displayId, $requestKey, $id, $fileSize, $path);
+                $mediaNonce = $this->requiredFileFactory->createForMedia($this->display->displayId, $id, $fileSize, $path);
                 $mediaNonce->save();
 
                 // Add the file node
@@ -546,7 +545,7 @@ class Soap
                 $this->getLog()->debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
 
             // Add nonce
-            $layoutNonce = $this->requiredFileFactory->createForLayout($this->display->displayId, $requestKey, $layoutId, $fileSize, $fileName);
+            $layoutNonce = $this->requiredFileFactory->createForLayout($this->display->displayId, $layoutId, $fileSize, $fileName);
             $layoutNonce->save();
 
             // Add the Layout file element
@@ -589,7 +588,7 @@ class Soap
                             $modules[$widget->type]->renderAs == 'html'
                         ) {
                             // Add nonce
-                            $this->requiredFileFactory->createForGetResource($this->display->displayId, $requestKey, $layoutId, $region->regionId, $widget->widgetId)->save();
+                            $this->requiredFileFactory->createForGetResource($this->display->displayId, $layoutId, $region->regionId, $widget->widgetId)->save();
 
                             // Does the media provide a modified Date?
                             $widgetModifiedDt = $layoutModifiedDt->getTimestamp();
@@ -660,8 +659,8 @@ class Soap
         $requiredFilesXml->formatOutput = true;
         $output = $requiredFilesXml->saveXML();
 
-        // Remove unused required files
-        RequiredFile::removeUnusedForDisplay($this->getStore(), $this->display->displayId, $requestKey);
+        // Persist the required files.
+        $this->requiredFileFactory->persist();
 
         // Cache
         $cache->set($output);
@@ -1461,6 +1460,7 @@ class Soap
 
             // What type of file?
             try {
+                $requiredFile = null;
                 switch ($node->getAttribute('type')) {
 
                     case 'media':
@@ -1479,20 +1479,19 @@ class Soap
                         $this->getLog()->debug('Skipping unknown node in media inventory: %s - %s.', $node->getAttribute('type'), $node->getAttribute('id'));
                         continue;
                 }
+
+                // File complete?
+                $complete = $node->getAttribute('complete');
+                $requiredFile->complete = $complete;
+                $requiredFile->save(['refreshNonce' => false]);
+
+                // If this item is a 0 then set not complete
+                if ($complete == 0)
+                    $mediaInventoryComplete = 2;
             }
             catch (NotFoundException $e) {
                 $this->getLog()->info('Unable to find file in media inventory: %s', $node->getAttribute('type'), $node->getAttribute('id'));
-                continue;
             }
-
-            // File complete?
-            $complete = $node->getAttribute('complete');
-            $requiredFile->complete = $complete;
-            $requiredFile->save(['refreshNonce' => false]);
-
-            // If this item is a 0 then set not complete
-            if ($complete == 0)
-                $mediaInventoryComplete = 2;
         }
 
         $this->display->mediaInventoryStatus = $mediaInventoryComplete;
@@ -1540,7 +1539,7 @@ class Soap
 
         // The MediaId is actually the widgetId
         try {
-            $requiredFile = $this->requiredFileFactory->getByDisplayAndResource($this->display->displayId, $layoutId, $regionId, $mediaId);
+            $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget($this->display->displayId, $mediaId);
 
             $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($mediaId), $this->regionFactory->getById($regionId));
             $resource = $module->getResource($this->display->displayId);
