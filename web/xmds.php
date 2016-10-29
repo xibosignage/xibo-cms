@@ -57,9 +57,6 @@ $app->configService = \Xibo\Service\ConfigService::Load(PROJECT_ROOT . '/web/set
 // Set state
 \Xibo\Middleware\State::setState($app);
 
-// Town down all logging
-$app->getLog()->setLevel(\Xibo\Service\LogService::resolveLogLevel('error'));
-
 // Always have a version defined
 $version = $app->sanitizerService->getInt('v', 3, $_REQUEST);
 
@@ -96,6 +93,7 @@ $app->view($twig);
 
 // Check to see if we have a file attribute set (for HTTP file downloads)
 if (isset($_GET['file'])) {
+
     // Check send file mode is enabled
     $sendFileMode = $app->configService->GetSetting('SENDFILE_MODE');
 
@@ -133,7 +131,7 @@ if (isset($_GET['file'])) {
         } else {
             // Most likely a Get Request
             // Issue magic packet
-            $app->logService->info('HTTP GetFile request redirecting to ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->storedAs, 'services');
+            $app->logService->info('HTTP GetFile request redirecting to ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->storedAs);
 
             // Send via Apache X-Sendfile header?
             if ($sendFileMode == 'Apache') {
@@ -149,12 +147,13 @@ if (isset($_GET['file'])) {
         // Log bandwidth
         if ($logBandwidth) {
             $file->markUsed();
+            $app->requiredFileFactory->persist();
             $app->bandwidthFactory->createAndSave(4, $file->displayId, $file->size);
         }
     }
     catch (\Exception $e) {
         if ($e instanceof \Xibo\Exception\NotFoundException || $e instanceof \Xibo\Exception\FormExpiredException) {
-            $app->logService->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404', 'services');
+            $app->logService->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404. ' . $e->getMessage());
             // 404
             header('HTTP/1.0 404 Not Found');
         }
@@ -168,6 +167,8 @@ if (isset($_GET['file'])) {
     exit;
 }
 
+// Town down all logging
+$app->getLog()->setLevel(\Xibo\Service\LogService::resolveLogLevel('error'));
 
 try {
     $wsdl = PROJECT_ROOT . '/lib/Xmds/service_v' . $version . '.wsdl';

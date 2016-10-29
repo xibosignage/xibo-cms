@@ -80,6 +80,7 @@
                             <th>{% trans "Size" %}</th>
                             <th>{% trans "Complete" %}</th>
                             <th>{% trans "Requested" %}</th>
+                            <th>{% trans "Downloaded" %}</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -90,6 +91,7 @@
                                     <td>{{ item.size|byteFormat }}</td>
                                     <td><span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span></td>
                                     <td>{% if item.lastUsed == 0 %}<span class="fa fa-times"></span>{% else %}<span class="unixDate">{{ item.lastUsed }}</span>{% endif %}</td>
+                                    <td>{{ item.bytesRequested|byteFormat }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -113,6 +115,7 @@
                             <th>{% trans "Size" %}</th>
                             <th>{% trans "Complete" %}</th>
                             <th>{% trans "Requested" %}</th>
+                            <th>{% trans "Downloaded" %}</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -125,6 +128,7 @@
                                     <td>{{ item.size|byteFormat }}</td>
                                     <td><span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span></td>
                                     <td>{% if item.lastUsed == 0 %}<span class="fa fa-times"></span>{% else %}<span class="unixDate">{{ item.lastUsed }}</span>{% endif %}</td>
+                                    <td>{{ item.bytesRequested|byteFormat }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -144,7 +148,7 @@
                             <th>{% trans "Type" %}</th>
                             <th>{% trans "Complete" %}</th>
                             <th>{% trans "Requested" %}</th>
-                            <th>{% trans "Bandwidth Usage" %}</th>
+                            <th>{% trans "Downloaded" %}</th>
                         </tr>
                         </thead>
                         <tbody>

@@ -38,7 +38,6 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\Random;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -263,14 +262,17 @@ class Soap
         if ($cache->isHit()) {
             $this->getLog()->info('Returning required files from Cache for display %s', $this->display->display);
 
+            $this->requiredFileFactory->setDisplay($this->display->displayId);
+            $this->requiredFileFactory->persist();
+
             // Log Bandwidth
             $this->logBandwidth($this->display->displayId, Bandwidth::$RF, strlen($output));
 
             return $output;
         }
 
-        // Generate a new Request Key which we will sign our Required Files with
-        $requestKey = Random::generateString(10);
+        // Expire all nonces
+        $this->requiredFileFactory->expireAll($this->display->displayId);
 
         // Build a new RF
         $requiredFilesXml = new \DOMDocument("1.0");
@@ -1546,6 +1548,7 @@ class Soap
 
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
             $requiredFile->markUsed();
+            $this->requiredFileFactory->persist();
 
             if ($resource == '')
                 throw new ControllerNotImplemented();

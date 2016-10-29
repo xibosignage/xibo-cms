@@ -186,6 +186,8 @@ class Soap3 extends Soap
             } else {
                 throw new NotFoundException('Unknown FileType Requested.');
             }
+
+            $this->requiredFileFactory->persist();
         }
         catch (NotFoundException $e) {
             $this->getLog()->error($e->getMessage());

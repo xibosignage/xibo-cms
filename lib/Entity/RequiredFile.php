@@ -55,7 +55,8 @@ class RequiredFile implements \JsonSerializable
     public function save($options = [])
     {
         $options = array_merge([
-            'refreshNonce' => true
+            'refreshNonce' => true,
+            'refreshExpiry' => false
         ], $options);
 
         // Always update the nonce when we save
@@ -63,19 +64,44 @@ class RequiredFile implements \JsonSerializable
             $this->lastUsed = 0;
             $this->expiry = time() + 86400;
             $this->nonce = md5(Random::generateString() . SECRET_KEY . time() . $this->layoutId . $this->regionId . $this->mediaId);
+        } else if ($options['refreshExpiry']) {
+            $this->lastUsed = 0;
+            $this->expiry = time() + 86400;
         }
 
         $this->requiredFileFactory->addOrReplace($this, ($this->hasPropertyChanged('nonce') ? $this->getOriginalValue('nonce') : $this->nonce));
     }
 
+    public function expireSoon()
+    {
+        if (!$this->isExpired())
+            $this->expiry = time() + 120;
+    }
+
+    /**
+     * Is expired?
+     * @return bool
+     */
+    public function isExpired()
+    {
+        return ($this->expiry < time());
+    }
+
+    /**
+     * Is valid?
+     * @throws FormExpiredException
+     */
     public function isValid()
     {
-        if (($this->lastUsed != 0 && $this->bytesRequested > $this->size) || $this->expiry < time())
-            throw new FormExpiredException();
+        $this->getLog()->debug('Checking validity ' . json_encode($this));
+
+        if (($this->lastUsed != 0 && $this->bytesRequested > $this->size) || $this->isExpired())
+            throw new FormExpiredException('File expired or used');
     }
 
     public function markUsed()
     {
+        $this->getLog()->debug('Marking ' . $this->nonce . ' as used');
         $this->lastUsed = time();
         $this->save(['refreshNonce' => false]);
     }
