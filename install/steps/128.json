@@ -30,6 +30,10 @@
     {
       "step": "Drop required file",
       "action": "DROP TABLE requiredfile;"
+    },
+    {
+      "step": "Alter log channel  datatype",
+      "action": "ALTER TABLE  `log` CHANGE  `channel`  `channel` VARCHAR( 20 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;"
     }
   ]
 }

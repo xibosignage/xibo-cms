@@ -68,6 +68,8 @@
             </div>
         </div>
         {% endif %}
+        {% set nonceUsed %}{% trans "Nonce has been used" %}{% endset %}
+        {% set nonceNotUsed %}{% trans "Nonce has not been used since it was generated" %}{% endset %}
         <div class="col-lg-6">
             <div class="widget">
                 <div class="widget-title">{% trans "Layouts" %}</div>
@@ -79,7 +81,6 @@
                             <th>{% trans "Name" %}</th>
                             <th>{% trans "Size" %}</th>
                             <th>{% trans "Complete" %}</th>
-                            <th>{% trans "Requested" %}</th>
                             <th>{% trans "Downloaded" %}</th>
                         </tr>
                         </thead>
@@ -89,8 +90,9 @@
                                     <td>{{ item.layoutId }}</td>
                                     <td>{{ item.layout }}</td>
                                     <td>{{ item.size|byteFormat }}</td>
-                                    <td><span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span></td>
-                                    <td>{% if item.lastUsed == 0 %}<span class="fa fa-times"></span>{% else %}<span class="unixDate">{{ item.lastUsed }}</span>{% endif %}</td>
+                                    <td title="{% if item.lastUsed == 0 %}{{ nonceNotUsed }}{% else %}{{ nonceUsed }}{% endif %}">
+                                        <span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span>
+                                    </td>
                                     <td>{{ item.bytesRequested|byteFormat }}</td>
                                 </tr>
                             {% endfor %}
@@ -114,7 +116,6 @@
                             <th>{% trans "File Name" %}</th>
                             <th>{% trans "Size" %}</th>
                             <th>{% trans "Complete" %}</th>
-                            <th>{% trans "Requested" %}</th>
                             <th>{% trans "Downloaded" %}</th>
                         </tr>
                         </thead>
@@ -126,8 +127,9 @@
                                     <td>{{ item.type }}</td>
                                     <td>{{ item.storedAs }}</td>
                                     <td>{{ item.size|byteFormat }}</td>
-                                    <td><span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span></td>
-                                    <td>{% if item.lastUsed == 0 %}<span class="fa fa-times"></span>{% else %}<span class="unixDate">{{ item.lastUsed }}</span>{% endif %}</td>
+                                    <td title="{% if item.lastUsed == 0 %}{{ nonceNotUsed }}{% else %}{{ nonceUsed }}{% endif %}">
+                                        <span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span>
+                                    </td>
                                     <td>{{ item.bytesRequested|byteFormat }}</td>
                                 </tr>
                             {% endfor %}
@@ -147,7 +149,6 @@
                             <th>{% trans "Name" %}</th>
                             <th>{% trans "Type" %}</th>
                             <th>{% trans "Complete" %}</th>
-                            <th>{% trans "Requested" %}</th>
                             <th>{% trans "Downloaded" %}</th>
                         </tr>
                         </thead>
@@ -157,8 +158,9 @@
                                     <td>{{ item.mediaId }}</td>
                                     <td>{{ item.widgetName }}</td>
                                     <td>{{ item.type }}</td>
-                                    <td><span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span></td>
-                                    <td>{% if item.lastUsed == 0 %}<span class="fa fa-times"></span>{% else %}<span class="unixDate">{{ item.lastUsed }}</span>{% endif %}</td>
+                                    <td title="{% if item.lastUsed == 0 %}{{ nonceNotUsed }}{% else %}{{ nonceUsed }}{% endif %}">
+                                        <span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span>
+                                    </td>
                                     <td>{{ item.bytesRequested|byteFormat }}</td>
                                 </tr>
                             {% endfor %}
