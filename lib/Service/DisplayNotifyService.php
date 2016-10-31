@@ -129,6 +129,9 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
      */
     private function processPlayerActions()
     {
+        if (count($this->displayIdsRequiringActions) <= 0)
+            return;
+
         $displayIdsRequiringActions = array_unique($this->displayIdsRequiringActions, SORT_NUMERIC);
         $qmarks = str_repeat('?,', count($displayIdsRequiringActions) - 1) . '?';
         $displays = $this->store->select('SELECT displayId, xmrChannel, xmrPubKey FROM `display` WHERE displayId IN (' . $qmarks . ')', $displayIdsRequiringActions);
