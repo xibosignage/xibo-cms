@@ -99,14 +99,17 @@
                         </table>
                     </div>
                     <div class="tab-pane" id="treeTab">
-                        {% set helpText %}{% trans %}Below is the relationship tree for this Display Group. The Display Group being edited is in bold.{% endtrans %}{% endset %}
+                        {% set helpText %}{% trans %}Below is the family tree for this Display Group.{% endtrans %}{% endset %}
+                        {{ forms.message(helpText) }}
+
+                        {% set helpText %}{% trans %}The Display Group being edited is in bold. The list is ordered so that items above the current Display Group are its ancestors and items below are its descendants.{% endtrans %}{% endset %}
                         {{ forms.message(helpText) }}
                         <ul>
                             {% for group in tree %}
                                 {% if group.displayGroup == displayGroup.displayGroup %}
                                     <li><strong>{{ group.displayGroup }}</strong></li>
                                 {% else %}
-                                    <li>{{ group.displayGroup }}</li>
+                                    <li><a class="XiboFormButton" href="{{ urlFor("displayGroup.members.form", {"id": group.displayGroupId}) }}">{{ group.displayGroup }}</a></li>
                                 {% endif %}
                             {% endfor %}
                         </ul>
