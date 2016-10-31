@@ -243,6 +243,7 @@ class TwitterMetro extends ModuleWidget
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('colorTemplateId', $this->getSanitizer()->getString('colorTemplateId'));
         $this->setOption('resultContent', $this->getSanitizer()->getString('resultContent'));
+        $this->setOption('removeRetweets', $this->getSanitizer()->getCheckbox('removeRetweets'));
         
         // Convert the colors array to string to be able to save it
         $stringColor = $this->getSanitizer()->getStringArray('color')[0];
@@ -439,7 +440,6 @@ class TwitterMetro extends ModuleWidget
             $geoCode = implode(',', array($defaultLat, $defaultLong, $distance)) . 'mi';
         }
         
-        
         // Search content filtered by type of tweets  
         $searchTerm = $this->getOption('searchTerm');
         $resultContent = $this->getOption('resultContent');
@@ -464,6 +464,9 @@ class TwitterMetro extends ModuleWidget
             $searchTerm .= '';
             break;
         }
+        
+        // Search term retweets filter
+        $searchTerm .= ($this->getOption('removeRetweets')) ? ' -filter:retweets' : '';
         
         // Connect to twitter and get the twitter feed.
         $cache = $this->getPool()->getItem(md5($searchTerm . $this->getOption('resultType') . $this->getOption('tweetCount', 60) . $geoCode));
@@ -500,7 +503,7 @@ class TwitterMetro extends ModuleWidget
         $return = array();
 
         // Expiry time for any media that is downloaded
-        $expires = time() + ($this->getSetting('cachePeriodImages') * 60 * 60);
+        $expires = $this->getDate()->parse()->addHours($this->getSetting('cachePeriodImages', 24))->format('U');
 
         // Remove URL setting
         $removeUrls = $this->getOption('removeUrls', 1)  == 1;

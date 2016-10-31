@@ -241,6 +241,10 @@
                         ] %}
                         {{ forms.dropdown("resultContent", "single", title, module.getOption("resultContent", 0), options, "contenttypeid", "type", helpText,"", "required") }}
 
+                        {% set title %}{% trans "Remove Retweets?" %}{% endset %}
+                        {% set helpText %}{% trans "Should retweets be filtered?" %}{% endset %}
+                        {{ forms.checkbox("removeRetweets", title, module.GetOption("removeRetweets", 1), helpText) }}
+
                         {% set title %}{% trans "No tweets" %}{% endset %}
                         {% set helpText %}{% trans "A message to display when there are no tweets returned by the search query" %}{% endset %}
                         {{ forms.input("noTweetsMessage", title, module.getOption("noTweetsMessage"), helpText) }}

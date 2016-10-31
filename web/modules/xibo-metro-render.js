@@ -23,7 +23,7 @@ jQuery.fn.extend({
         // Default options
         var defaults = {
             "fx": "none",
-            "duration": "10",
+            "duration": "60",
             "numItems": 0,
             "speed": "2",
             "previewWidth": 0,
@@ -33,6 +33,8 @@ jQuery.fn.extend({
             "cellsPerPage": 18,
             "numberItemsLarge": 1,
             "numberItemsMedium": 2,
+            "maxItemsLarge": 3,
+            "maxItemsMedium": 4,
             "smallItemSize": 1,
             "mediumItemSize": 2,
             "largeItemSize": 3,
@@ -112,6 +114,13 @@ jQuery.fn.extend({
 
                 if (mediumItems == 0)
                     mediumItems = options.numberItemsMedium;
+                    
+                //  If the reulting medium/large values are over the maximum values set them to max
+                if(largeItems > options.maxItemsLarge)
+                    largeItems = options.maxItemsLarge;
+                    
+                if(mediumItems > options.maxItemsMedium)
+                    mediumItems = options.maxItemsMedium;
             }
 
             // Number of items displayed in each page
