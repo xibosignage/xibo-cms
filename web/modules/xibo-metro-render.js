@@ -25,7 +25,6 @@ jQuery.fn.extend({
             "fx": "none",
             "duration": "10",
             "numItems": 0,
-            "takeItemsFrom": "start",
             "speed": "2",
             "previewWidth": 0,
             "previewHeight": 0,
@@ -33,13 +32,16 @@ jQuery.fn.extend({
             "cellsPerRow": 6,
             "cellsPerPage": 18,
             "numberItemsLarge": 1,
-            "numberItemsMedium": 3,
+            "numberItemsMedium": 2,
             "smallItemSize": 1,
             "mediumItemSize": 2,
-            "largeItemSize": 3
+            "largeItemSize": 3,
+            "randomizeSizeRatio": false
         };
 
         options = $.extend({}, defaults, options);
+
+        options.randomizeSizeRatio = false;
 
         // Calculate the dimensions of this item based on the preview/original dimensions
         var width = height = 0;
@@ -62,36 +64,14 @@ jQuery.fn.extend({
             width = options.widgetDesignWidth;
             height = options.widgetDesignHeight;
         }
-        
+
         // Set the cells per row according to the widgets original orientation
         options.cellsPerRow = (options.widgetDesignWidth < options.widgetDesignHeight) ? 3 : 6;
 
         // For each matched element
         this.each(function() {
 
-            // 1st Objective - filter the items array we have been given
-            // settings involved: 
-            //  items, 
-            //  numItems (ticker number of items from the start/end),
-            //  takeItemsFrom (ticker sort or reverse sort the array)
-            if (options.takeItemsFrom == "end") {
-                items.reverse();
-            }
-            // Make sure the num items is not greater than the actual number of items
-            if (options.numItems > items.length || options.numItems === 0)
-                options.numItems = items.length;
-
-            // Get a new array with only the first N elements
-            items = items.slice(0, options.numItems);
-
-            // Reverse the items again (so they are in the correct order)
-            if (options.takeItemsFrom == "end") {
-                //console.log("[Xibo] Reversing items");
-                items.reverse();
-            }
-
-
-            // 2nd objective - create an array that defines the positions of the items on the layout
+            // 1st objective - create an array that defines the positions of the items on the layout
             // settings involved:
             //  positionsArray (the array that stores the positions of the items according to size)
             //  largeItems (number of large items to appear on the layout)
@@ -102,9 +82,37 @@ jQuery.fn.extend({
             // Create the positions array with size equal to the number of cells per page, and each positions starts as undefined
             var positionsArray = new Array(options.cellsPerPage);
 
-            //Randomize values so each one can have values from default to default+X
-            var largeItems = options.numberItemsLarge + Math.floor(Math.random() * 2);
-            var mediumItems = options.numberItemsMedium + Math.floor(Math.random() * 3);
+            // Get the page small/medium/large Ratio ( by random or percentage )
+            if (options.randomizeSizeRatio) {
+                // START OPTION 1 - RANDOM
+                //Randomize values so each one can have values from default to default+X
+                var largeItems = options.numberItemsLarge + Math.floor(Math.random() * 2);
+                var mediumItems = options.numberItemsMedium + Math.floor(Math.random() * 3);
+            } else {
+                // OPTION 2 - PERCENTAGE
+                // Count image tweets ratio
+                var tweetsWithImageCount = 0;
+                for (var i = 0; i < items.length; i++) {
+                    if (checkBackgroundImage(items, i))
+                        tweetsWithImageCount++;
+                }
+                var imageTweetsRatio = tweetsWithImageCount / items.length;
+                var imageTweetsCellsPerPage = Math.floor(options.cellsPerPage * imageTweetsRatio);
+
+                // Calculate the large/medium quantity according to the ratio of withImage/all tweets
+                // Try to get a number of large items that fit on the calculated cells per page 
+                var largeItems = Math.floor(imageTweetsCellsPerPage / options.largeItemSize);
+                
+                // Get the number of medium items by the remaining cells per page "space" left by the large items
+                var mediumItems = Math.floor((imageTweetsCellsPerPage - (largeItems*options.largeItemSize))/options.mediumItemSize);
+
+                // If the reulting medium/large values are 0 give them the default option values
+                if (largeItems == 0)
+                    largeItems = options.numberItemsLarge;
+
+                if (mediumItems == 0)
+                    mediumItems = options.numberItemsMedium;
+            }
 
             // Number of items displayed in each page
             var numberOfItems = 0;
@@ -152,22 +160,17 @@ jQuery.fn.extend({
                 }
             }
 
-            // 3rd objective - put the items on the respective rows, add the rows to each page and build the resulting html
-            // settings involved:
-            //  positionsArray (the array that stores the positions of the items according to size)
-            //  largeItems (number of large items to appear on the layout)
-            //  mediumItems (number of medium items to appear on the layout)
-            //  cellsPerPage (number of cells for each page)
-            //  cellsPerRow (number of cells for each row)
-            //  rowCellSum
+
+            // 2nd objective - put the items on the respective rows, add the rows to each page and build the resulting html
+            //   settings involved:
+            //   positionsArray (the array that stores the positions of the items according to size)
 
             // How many pages to we need?
             var numberOfPages = (options.numItems > numberOfItems) ? Math.floor(options.numItems / numberOfItems) : 1;
-            var rowCellSum = 0;
+
             var rowNumber = 0;
             var itemId = 0;
             var pageId = 0;
-
 
             // If we dont have enough items to fill a page, change the items array to have dummy position between items
             if (items.length < numberOfItems) {
@@ -192,6 +195,9 @@ jQuery.fn.extend({
                 items = newItems;
             }
 
+            // Create an auxiliary items array, so we can place the tweets at the same time we remove them from the new array
+            var itemsAux = items;
+
             // Cycle through all the positions on the positionsArray 
             for (var i = 0; i < positionsArray.length; i++) {
 
@@ -202,45 +208,52 @@ jQuery.fn.extend({
                 }
 
                 // Create a page and add it to the content div
-                $("#content").append("<div id='page-" + itemId + "'></div>");
+                $("#content").append("<div id='page-" + pageId + "'></div>");
 
                 for (var j = 0; j < numberOfPages; j++) {
 
-                    // Get the items that should be on this position
-                    var itemIdNow = (numberOfItems * j) + itemId;
-
                     // Pass the item to a variable and replace some tags, if there's no item we create a dummy item
                     var stringHTML;
-                    if (items[itemIdNow] != undefined) {
-                        stringHTML = items[itemIdNow];
+
+                    // Search for the item to remove regarding the type of the tweet (with/without image)
+                    var indexToRemove = checkImageTweet(itemsAux, (positionsArray[i] > 1));
+
+                    if (itemsAux[indexToRemove] != undefined) {
+                        stringHTML = itemsAux[indexToRemove];
                     } else {
                         var randomColorNumber = Math.floor(Math.random() * colors.length);
                         stringHTML = "<div class='cell-[itemType]'><div class='item-container' style='background-color:" + colors[randomColorNumber] + "'><div class='item-text'></div><div class='userData'></div></div></div>";
                     }
 
-                    stringHTML = stringHTML.replace('[itemId]', itemIdNow);
+                    // Remove the element that we used to create the new html
+                    itemsAux.splice(indexToRemove, 1);
+
+                    // Increase the item ID
+                    itemId++;
+
+                    // Replace the item ID and Type on its html
+                    stringHTML = stringHTML.replace('[itemId]', itemId);
                     stringHTML = stringHTML.replace('[itemType]', positionsArray[i]);
 
                     // Append item to the current page
-                    $("#page-" + itemId).append(stringHTML).addClass("page");
+                    $("#page-" + pageId).append(stringHTML).addClass("page");
                 }
 
                 // Move the created page into the respective row
-                $("#idrow-" + rowNumber).append($("#page-" + itemId));
+                $("#idrow-" + rowNumber).append($("#page-" + pageId));
 
-                // Increase the item ID var
-                itemId++;
+                // Increase the page ID var
+                pageId++;
 
                 // Increase the iterator so it can move forward the number of cells that the current item occupies
                 i += positionsArray[i] - 1;
             }
 
 
-
-            // 4th objective - move the items around, start the timer
+            // 3rd objective - move the items around, start the timer
             // settings involved:
-            //  fx (the way we are moving effects the HTML required)
-            //  speed (how fast we need to move
+            //   fx (the way we are moving effects the HTML required)
+            //   speed (how fast we need to move
 
             // Make sure the speed is something sensible
             options.speed = (options.speed <= 200) ? 1000 : options.speed;
@@ -248,21 +261,21 @@ jQuery.fn.extend({
             var slides = ".cell";
 
             var numberOfSlides = (numberOfItems > 1) ? numberOfPages : numberOfItems;
-            
+
             // Duration of each page, adding one page to the operation for the delay, 
             // and one half so that the page have the same items that when it started the loop
-            var duration = options.duration/(numberOfPages+1.5);
+            var duration = options.duration / (numberOfPages + 1.5);
 
             // Use cycle in all pages of items ( to cycle individually )
             // The timeout is calculated using the duration minus the delay
             for (var i = 0; i < numberOfItems; i++) {
                 // Timeout is the duration in ms
                 var timeout = (duration * 1000);
-                
+
                 // The delay is calulated usign the distance between items ( random from 0 to 5 )  
                 // that animate at the same time, and a part of the timeout duration
                 var delayDistance = Math.random() * 5;
-                var delay = (timeout/delayDistance) * (i%delayDistance);
+                var delay = (timeout / delayDistance) * (i % delayDistance);
                 $("#page-" + i).cycle({
                     fx: options.fx,
                     speed: options.speed,
@@ -300,4 +313,34 @@ function checkCellEmpty(array, index, size) {
  */
 function checkFitPosition(array, index, size, cellsPerRow) {
     return (index % cellsPerRow <= cellsPerRow - size);
+}
+
+/**
+ * Check if a given item as background image
+ */
+function checkBackgroundImage(array, index) {
+    return (array[index].includes("background-image"));
+}
+
+/**
+ * Find a tweet with image (or one without image), if not return 0
+ */
+function checkImageTweet(array, withImage) {
+    // Default return var
+    var returnVar = 0;
+
+    for (var i = 0; i < array.length; i++) {
+        // Find a tweet with image
+        if (withImage && checkBackgroundImage(array, i)) {
+            returnVar = i;
+            break;
+        }
+
+        // Find a tweet without image
+        if (!withImage && !checkBackgroundImage(array, i)) {
+            returnVar = i;
+            break;
+        }
+    }
+    return returnVar;
 }

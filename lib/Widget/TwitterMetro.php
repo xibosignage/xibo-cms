@@ -53,7 +53,7 @@ class TwitterMetro extends ModuleWidget
         if ($this->module == null) {
             // Install
             $module = $moduleFactory->createEmpty();
-            $module->name = 'TwitterMetro';
+            $module->name = 'Twitter Metro';
             $module->type = 'twittermetro';
             $module->class = 'Xibo\Widget\TwitterMetro';
             $module->description = 'Twitter Metro Search Module';
@@ -91,32 +91,39 @@ class TwitterMetro extends ModuleWidget
             $media->save();
         }
     }
-
+    
     /**
-     * Loads templates for this module
+     * @return string
      */
-    private function loadTemplates()
+    public function layoutDesignerJavaScript()
     {
-        $this->module->settings['templates'] = [];
-
-        // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/twittermetro/*.template.json') as $template) {
-            // Read the contents, json_decode and add to the array
-            $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
-        }
-
+        // We use the same javascript as the data set view designer
+        return 'twittermetro-form-javascript';
     }
-
+    
     /**
-     * Templates available
+     * Get the template HTML, CSS, widgetOriginalWidth, widgetOriginalHeight giving its orientation (0:Landscape 1:Portrait)
+     * @param int Orientation
      * @return array
      */
-    public function templatesAvailable()
-    {
-        if (!isset($this->module->settings['templates']))
-            $this->loadTemplates();
-
-        return $this->module->settings['templates'];
+    public function getTemplateData() {
+        
+        $orientation = ($this->getSanitizer()->getDouble('width', $this->region->width) > $this->getSanitizer()->getDouble('height', $this->region->height)) ? 0 : 1; 
+        
+        $templateArray = array(
+            array(  'template' => '<div class="cell-[itemType] [ShadowType] cell" id="item-[itemId]" style="[Photo]"> <div class="item-container [ShadowType]" style="[Color]"> <div class="item-text">[Tweet]</div> <div class="userData"> <div class="tweet-profilePic">[ProfileImage|normal]</div> <div class="tweet-userData"> <div class="user">[User]</div> <small>[Date]</small></div> </div> </div> </div>',
+                    'styleSheet' => 'body { font-family: "Helvetica", "Arial", sans-serif; line-height: 1; margin: 0; } #content { width: 1920px !important; height: 1080px !important; background: rgba(255, 255, 255, 0.6); color: rgba(255, 255, 255, 1); } .row-1 { height: 360px; } .page { float: left; margin: 0; padding: 0; } .cell-1 { width: 310px; } .cell-2 { width: 630px; } .cell-3 { width: 950px; } .cell-1, .cell-2, .cell-3 { float: left; height: inherit; margin: 5px; background-repeat: no-repeat; background-size: cover; background-position-x: 50%; background-position-y: 50%; } .item-container { padding: 10px; color: #fff; height: 350px; } .userData { height: 50px; } .darken-container { background-color: rgba(0, 0, 0, 0.4); } .tweet-profilePic { width: 20%; float: left; } .tweet-profilePic img { width: 48px; } .tweet-userData { width: 80%; float: left; text-align: right; } .item-text { padding: 10px; color: #fff; } .emojione { width: 26px; height: 26px; } .cell-1 .item-text { line-height: 30px; font-size: 25px; height: 280px; } .cell-2 .item-text { line-height: 40px; font-size: 40px; height: 280px; } .cell-3 .item-text { line-height: 53px; font-size: 50px; height: 280px; } .user { font-size: 14px; font-weight: bold; padding-top: 20px; } .shadow { text-shadow: 1px 1px 2px rgba(0, 0, 3, 1); } .no-shadow { text-shadow: none !important; } small { font-size: 70%; }',
+                    'originalWidth' => '1920',
+                    'originalHeight' => '1080'
+            ),
+            array(  'template' => '<div class="cell-[itemType] [ShadowType] cell" id="item-[itemId]" style="[Photo]"> <div class="item-container [ShadowType]" style="[Color]"> <div class="item-text">[Tweet]</div> <div class="userData"> <div class="tweet-profilePic">[ProfileImage|normal]</div> <div class="tweet-userData"> <div class="user">[User]</div> <small>[Date]</small></div> </div> </div> </div>',
+                    'styleSheet' => 'body { font-family: "Helvetica", "Arial", sans-serif; line-height: 1; margin: 0; } #content { width: 1080px !important; height: 1920px !important; background: rgba(255, 255, 255, 0.6); color: rgba(255, 255, 255, 1); } .row-1 { height: 320px; } .page { float: left; margin: 0; padding: 0; } .cell-1 { width: 350px; } .cell-2 { width: 710px; } .cell-3 { width: 1070px; } .cell-1, .cell-2, .cell-3 { float: left; height: inherit; margin: 5px; background-repeat: no-repeat; background-size: cover; background-position-x: 50%; background-position-y: 50%; } .item-container { padding: 10px; color: #fff; height: 310px; } .userData { height: 50px; } .darken-container { background-color: rgba(0, 0, 0, 0.4); } .tweet-profilePic { width: 20%; float: left; } .tweet-profilePic img { width: 48px; } .tweet-userData { width: 80%; float: left; text-align: right; } .item-text { padding: 10px; color: #fff; } .emojione { width: 26px; height: 26px; } .cell-1 .item-text { line-height: 30px; font-size: 25px; height: 240px; } .cell-2 .item-text { line-height: 40px; font-size: 40px; height: 240px; } .cell-3 .item-text { line-height: 53px; font-size: 50px; height: 240px; } .user { font-size: 14px; font-weight: bold; padding-top: 20px; } .shadow { text-shadow: 1px 1px 2px rgba(0, 0, 3, 1); } .no-shadow { text-shadow: none !important; } small { font-size: 70%; }',
+                    'originalWidth' => '1080',
+                    'originalHeight' => '1920'
+            )
+        );
+        
+        return $templateArray[$orientation];
     }
     
     /**
@@ -143,18 +150,6 @@ class TwitterMetro extends ModuleWidget
             $this->loadColorTemplates();
 
         return $this->module->settings['colortemplates'];
-    }
-    
-    /**
-    * Return the array of colours from the template
-    * @return array
-    */
-    public function getColorsFromTemplate($colorTemplateId)
-    {
-        foreach ($this->colorTemplatesAvailable() as $template) {
-            if($template['id'] == $colorTemplateId)
-                return explode(",", $template['colors']);
-        }
     }
 
     /**
@@ -244,16 +239,18 @@ class TwitterMetro extends ModuleWidget
         $this->setOption('removeUrls', $this->getSanitizer()->getCheckbox('removeUrls'));
         $this->setOption('removeMentions', $this->getSanitizer()->getCheckbox('removeMentions'));
         $this->setOption('removeHashtags', $this->getSanitizer()->getCheckbox('removeHashtags'));
-        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        $this->setOption('overrideColorTemplate', $this->getSanitizer()->getCheckbox('overrideColorTemplate'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
-        $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('colorTemplateId', $this->getSanitizer()->getString('colorTemplateId'));
-        $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
-        $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
         $this->setOption('resultContent', $this->getSanitizer()->getString('resultContent'));
-        $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
-        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
-        $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        
+        // Convert the colors array to string to be able to save it
+        $stringColor = $this->getSanitizer()->getStringArray('color')[0];
+        for ($i=1; $i < count($this->getSanitizer()->getStringArray('color')); $i++) {
+            if(!empty($this->getSanitizer()->getStringArray('color')[$i]))
+                $stringColor .= "|" . $this->getSanitizer()->getStringArray('color')[$i];
+        }
+        $this->setOption('templateColours', $stringColor);
     }
 
     protected function getToken()
@@ -491,8 +488,9 @@ class TwitterMetro extends ModuleWidget
             $this->getPool()->saveDeferred($cache);
         }
 
-        // Get the template
-        $template = $this->parseLibraryReferences($isPreview, $this->getRawNode('template', null));
+        // Get the template data
+        $templateData = $this->getTemplateData();
+        $template = $this->parseLibraryReferences($isPreview, $templateData['template']);
 
         // Parse the text template
         $matches = '';
@@ -640,10 +638,7 @@ class TwitterMetro extends ModuleWidget
                         if (!$this->tweetHasPhoto($tweet)) {
                         
                             // Get the colors array
-                            $colorArray = $this->getColorsFromTemplate($this->getOption('colorTemplateId', 'default'));
-                            
-                            $this->getLog()->error('GGGetOption: colorTemplateId');
-                            $this->getLog()->error($colorArray);
+                            $colorArray = explode("|", $this->getOption('templateColours'));
                             
                             // Find a random color
                             $randomNum = rand(0,count($colorArray)-1);
@@ -725,9 +720,6 @@ class TwitterMetro extends ModuleWidget
 
         $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
-
-        // Clear all linked media.
-        $this->clearMedia();
         
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
@@ -737,6 +729,9 @@ class TwitterMetro extends ModuleWidget
 
         // Generate a JSON string of substituted items.
         $items = $this->getTwitterFeed($displayId, $isPreview);
+        
+        // Get the template data
+        $templateData = $this->getTemplateData();
         
         // Return empty string if there are no items to show.
         if (count($items) == 0)
@@ -753,8 +748,8 @@ class TwitterMetro extends ModuleWidget
             'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
             'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
             'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
-            'widgetDesignWidth' => $this->getSanitizer()->int($this->getOption('widgetOriginalWidth')),
-            'widgetDesignHeight'=> $this->getSanitizer()->int($this->getOption('widgetOriginalHeight')),
+            'widgetDesignWidth' => $templateData['originalWidth'],
+            'widgetDesignHeight'=> $templateData['originalHeight'],
             'resultContent'=> $this->getSanitizer()->string($this->getOption('resultContent'))            
         );
 
@@ -763,9 +758,6 @@ class TwitterMetro extends ModuleWidget
 
         // Replace the head content
         $headContent = '';
-
-        // Get the JavaScript node
-        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
 
         $backgroundColor = $this->getOption('backgroundColor');
         if ($backgroundColor != '') {
@@ -777,7 +769,8 @@ class TwitterMetro extends ModuleWidget
         <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
         
         // Add the CSS if it isn't empty
-        $css = $this->getRawNode('styleSheet', null);
+        $css = $templateData['styleSheet'];
+        
         if ($css != '') {
             $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css) . '</style>';
         }
@@ -790,7 +783,7 @@ class TwitterMetro extends ModuleWidget
         $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
 
         // Get the colors array
-        $colorArray = $this->getColorsFromTemplate($this->getOption('colorTemplateId', 'default'));
+        $colorArray = explode("|", $this->getOption('templateColours'));
         
         // Need the cycle plugin?
         if ($this->getOption('effect') != 'none')
@@ -806,7 +799,6 @@ class TwitterMetro extends ModuleWidget
         $javaScriptContent .= '   $(document).ready(function() { ';
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboMetroRender(options, items, colors); ';
         $javaScriptContent .= '   }); ';
-        $javaScriptContent .= $javaScript;
         $javaScriptContent .= '</script>';
 
         // Replace the Head Content with our generated javascript
