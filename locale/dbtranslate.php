@@ -127,7 +127,7 @@ echo __('Force HTTPS?');
 echo __('Force the portal into HTTPS?');
 echo __('Enable STS?');
 echo __('Add STS to the response headers? Make sure you fully understand STS before turning it on as it will prevent access via HTTP after the first successful HTTPS connection.');
-echo __('The Time to Live (maxage) of the STS header expressed in minutes.');
+echo __('The Time to Live (maxage) of the STS header expressed in seconds.');
 echo __('Maintenance Alerts for Users');
 echo __('Email maintenance alerts for users with view permissions to effected Displays.');
 echo __('Set the level of logging the CMS should record. In production systems "error" is recommended.');

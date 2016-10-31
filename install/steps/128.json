@@ -34,6 +34,10 @@
     {
       "step": "Alter log channel  datatype",
       "action": "ALTER TABLE  `log` CHANGE  `channel`  `channel` VARCHAR( 20 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;"
+    },
+    {
+      "step": "Update helptext to STS setting",
+      "action": "UPDATE `setting` SET `helpText` = 'The Time to Live (maxage) of the STS header expressed in seconds.' WHERE `setting` = 'STS_TTL';"
     }
   ]
 }
