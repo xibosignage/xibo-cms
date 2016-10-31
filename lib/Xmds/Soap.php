@@ -1474,7 +1474,7 @@ class Soap
                         break;
 
                     case 'resource':
-                        $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
+                        $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget($this->display->displayId, $node->getAttribute('id'));
                         break;
 
                     default:
@@ -1495,6 +1495,9 @@ class Soap
                 $this->getLog()->info('Unable to find file in media inventory: %s', $node->getAttribute('type'), $node->getAttribute('id'));
             }
         }
+
+        // Persist into the cache
+        $this->requiredFileFactory->persist();
 
         $this->display->mediaInventoryStatus = $mediaInventoryComplete;
         $this->display->save(Display::$saveOptionsMinimum);
