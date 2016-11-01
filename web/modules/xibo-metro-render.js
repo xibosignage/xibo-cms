@@ -325,10 +325,10 @@ function checkFitPosition(array, index, size, cellsPerRow) {
 }
 
 /**
- * Check if a given item as background image
+ * Check if a given item has background image
  */
 function checkBackgroundImage(array, index) {
-    return (array[index].includes("background-image"));
+    return (array[index].indexOf("background-image") >= 0);
 }
 
 /**
