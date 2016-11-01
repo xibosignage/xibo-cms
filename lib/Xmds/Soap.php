@@ -1539,9 +1539,6 @@ class Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
-        // Update the last accessed date/logged in
-        $this->touchDisplay();
-
         // The MediaId is actually the widgetId
         try {
             $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget($this->display->displayId, $mediaId);
@@ -1564,9 +1561,6 @@ class Soap
             $this->getLog()->debug($e->getTraceAsString());
             throw new \SoapFault('Receiver', 'Unable to get the media resource');
         }
-
-        // Commit the touch
-        $this->display->save(Display::$saveOptionsMinimum);
 
         // Log Bandwidth
         $this->logBandwidth($this->display->displayId, Bandwidth::$GETRESOURCE, strlen($resource));
@@ -1645,17 +1639,6 @@ class Soap
             $this->getLog()->error($e->getMessage());
             return false;
         }
-    }
-
-    /**
-     * Touch Display
-     */
-    protected function touchDisplay()
-    {
-        // Last accessed date on the display
-        $this->display->lastAccessed = time();
-        $this->display->loggedIn = 1;
-        $this->display->clientAddress = $this->getIp();
     }
 
     /**
