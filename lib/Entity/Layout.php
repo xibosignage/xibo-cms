@@ -923,7 +923,7 @@ class Layout implements \JsonSerializable
                     // Inject the URI
                     $uriInjected = false;
                     if ($module->getModule()->regionSpecific == 0) {
-                        $media = $this->mediaFactory->getById($widget->mediaIds[0]);
+                        $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
                         $optionNode = $document->createElement('uri', $media->storedAs);
                         $optionsNode->appendChild($optionNode);
                         $uriInjected = true;

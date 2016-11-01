@@ -369,6 +369,28 @@ class Widget implements \JsonSerializable
     }
 
     /**
+     * @return int
+     * @throws NotFoundException
+     */
+    public function getPrimaryMediaId()
+    {
+        $this->getLog()->debug('Getting first MediaID for Widget: ' . $this->widgetId . ' Media: ' . json_encode($this->mediaIds) . ' audio ' . json_encode($this->getAudioIds()));
+
+        if (count($this->mediaIds) <= 0)
+            throw new NotFoundException(__('No file to return'));
+
+        // Remove the audio media from this array
+        $media = array_values(array_diff($this->mediaIds, $this->getAudioIds()));
+
+        $this->getLog()->debug('Media that is not audio: ' . json_encode($media));
+
+        if (count($media) <= 0)
+            throw new NotFoundException(__('No file to return'));
+
+        return $media[0];
+    }
+
+    /**
      * Clear Media
      */
     public function clearCachedMedia()
@@ -449,6 +471,18 @@ class Widget implements \JsonSerializable
     public function countAudio()
     {
         return count($this->audio);
+    }
+
+    /**
+     * Get AudioIds
+     * @return int[]
+     */
+    public function getAudioIds()
+    {
+        return array_map(function($element) {
+            /** @var WidgetAudio $element */
+            return $element->mediaId;
+        }, $this->audio);
     }
 
     /**
