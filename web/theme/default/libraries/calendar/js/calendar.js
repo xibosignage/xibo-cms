@@ -664,7 +664,9 @@ if(!String.prototype.formatNum) {
 		var curdate = new Date(this.options.position.start.getFullYear(), this.options.position.start.getMonth(), day, 0, 0, 0);
 
 		// if day of the current month
+		var incEvents = false;
 		if(day > 0) {
+			incEvents = true;
 			cls = this.options.classes.months.inmonth;
 		}
 		// stop cycling table rows;
@@ -674,6 +676,7 @@ if(!String.prototype.formatNum) {
 		}
 		// if day of the next month
 		if(day > daysinmonth) {
+			incEvents = false;
 			day = day - daysinmonth;
 			cls = this.options.classes.months.outmonth;
 		}
@@ -697,7 +700,8 @@ if(!String.prototype.formatNum) {
 
 		t.start = parseInt(curdate.getTime());
 		t.end = parseInt(t.start + 86400000);
-		t.events = this.getEventsBetween(t.start, t.end);
+        t.events = (incEvents) ? this.getEventsBetween(t.start, t.end) : [];
+
 		return this.options.templates['month-day'](t);
 	}
 
