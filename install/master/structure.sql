@@ -773,24 +773,10 @@ CREATE TABLE IF NOT EXISTS `schedule` (
   `DisplayOrder` int(11) NOT NULL DEFAULT '0',
   `dayPartId` int(11) NOT NULL DEFAULT '0',
   `recurrenceRepeatsOn` VARCHAR(14) NULL,
+  `lastRecurrenceWatermark` BIGINT(20) NULL,
   PRIMARY KEY (`eventID`),
   KEY `layoutID` (`CampaignID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='High level schedule information' AUTO_INCREMENT=1 ;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `schedule_detail`
---
-
-CREATE TABLE IF NOT EXISTS `schedule_detail` (
-  `schedule_detailID` int(11) NOT NULL AUTO_INCREMENT,
-  `eventID` int(11) DEFAULT NULL,
-  `FromDT` bigint(20) NOT NULL DEFAULT '0',
-  `ToDT` bigint(20) DEFAULT NULL,
-  PRIMARY KEY (`schedule_detailID`),
-  KEY `scheduleID` (`eventID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Replicated schedule across displays and recurrence' AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
@@ -975,28 +961,6 @@ CREATE TABLE IF NOT EXISTS `widgetoption` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
-
-
---
--- Table structure for table `requiredfile`
---
-
-CREATE TABLE IF NOT EXISTS `requiredfile` (
-  `rfId` bigint(20) NOT NULL AUTO_INCREMENT,
-  `nonce` varchar(100) NOT NULL,
-  `expiry` int(11) NOT NULL,
-  `lastUsed` int(11) DEFAULT NULL,
-  `displayId` int(11) NOT NULL,
-  `size` bigint(20) DEFAULT NULL,
-  `storedAs` varchar(100) DEFAULT NULL,
-  `layoutId` int(11) DEFAULT NULL,
-  `regionId` int(11) DEFAULT NULL,
-  `mediaId` int(11) DEFAULT NULL,
-  `requestKey` varchar(10) NOT NULL,
-  `bytesRequested` bigint(20) NOT NULL,
-  `complete` tinyint(4) NOT NULL,
-  PRIMARY KEY (`rfId`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 CREATE TABLE IF NOT EXISTS `command` (
   `commandId` int(11) NOT NULL AUTO_INCREMENT,

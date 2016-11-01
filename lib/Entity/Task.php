@@ -89,8 +89,13 @@ class Task implements \JsonSerializable
     {
         if ($this->taskId == null)
             $this->add();
-        else
+        else {
+            // If we've transitioned from active to inactive, then reset the task status
+            if ($this->getOriginalValue('isActive') != $this->isActive)
+                $this->status = Task::$STATUS_IDLE;
+
             $this->edit();
+        }
     }
 
     /**

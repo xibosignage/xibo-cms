@@ -223,14 +223,14 @@ class DisplayGroup implements \JsonSerializable
     /**
      * Set the Media Status to Incomplete
      */
-    public function setMediaIncomplete()
+    public function notify()
     {
-        foreach ($this->displayFactory->getByDisplayGroupId($this->displayGroupId) as $display) {
-            /* @var Display $display */
-            $display->setMediaIncomplete();
-            $display->setCollectRequired($this->collectRequired);
-            $display->save(['validate' => false, 'audit' => false, 'triggerDynamicDisplayGroupAssessment' => false]);
-        }
+        $notify = $this->displayFactory->getDisplayNotifyService();
+
+        if ($this->collectRequired)
+            $notify->collectNow();
+
+        $notify->notifyByDisplayGroupId($this->displayGroupId);
     }
 
     /**
@@ -241,7 +241,15 @@ class DisplayGroup implements \JsonSerializable
     {
         $this->load();
 
-        if (!in_array($display, $this->displays))
+        $found = false;
+        foreach ($this->displays as $existingDisplay) {
+            if ($existingDisplay->getId() === $display->getId()) {
+                $found = true;
+                break;
+            }
+        }
+
+        if (!$found)
             $this->displays[] = $display;
     }
 
@@ -465,7 +473,7 @@ class DisplayGroup implements \JsonSerializable
 
         // Set media incomplete if necessary
         if ($this->notifyRequired)
-            $this->setMediaIncomplete();
+            $this->notify();
     }
 
     /**

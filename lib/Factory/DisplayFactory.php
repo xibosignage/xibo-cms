@@ -22,13 +22,12 @@
 
 namespace Xibo\Factory;
 
-use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Display;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -38,20 +37,13 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class DisplayFactory extends BaseFactory
 {
+    /** @var  DisplayNotifyServiceInterface */
+    private $displayNotifyService;
+
     /**
      * @var ConfigServiceInterface
      */
     private $config;
-
-    /**
-     * @var PoolInterface
-     */
-    private $pool;
-
-    /**
-     * @var PlayerActionServiceInterface
-     */
-    private $playerAction;
 
     /**
      * @var DisplayGroupFactory
@@ -70,22 +62,29 @@ class DisplayFactory extends BaseFactory
      * @param SanitizerServiceInterface $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
+     * @param DisplayNotifyServiceInterface $displayNotifyService
      * @param ConfigServiceInterface $config
-     * @param PoolInterface $pool
-     * @param PlayerActionServiceInterface $playerAction
      * @param DisplayGroupFactory $displayGroupFactory
      * @param DisplayProfileFactory $displayProfileFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool, $playerAction, $displayGroupFactory, $displayProfileFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $displayNotifyService, $config, $displayGroupFactory, $displayProfileFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
+        $this->displayNotifyService = $displayNotifyService;
         $this->config = $config;
-        $this->pool = $pool;
         $this->displayGroupFactory = $displayGroupFactory;
         $this->displayProfileFactory = $displayProfileFactory;
-        $this->playerAction = $playerAction;
+    }
+
+    /**
+     * Get the Display Notify Service
+     * @return DisplayNotifyServiceInterface
+     */
+    public function getDisplayNotifyService()
+    {
+        return $this->displayNotifyService->init();
     }
 
     /**
@@ -94,7 +93,7 @@ class DisplayFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Display($this->getStore(), $this->getLog(), $this->config, $this->pool, $this->playerAction, $this->displayGroupFactory, $this->displayProfileFactory);
+        return new Display($this->getStore(), $this->getLog(), $this->config, $this->displayGroupFactory, $this->displayProfileFactory, $this);
     }
 
     /**
@@ -135,36 +134,6 @@ class DisplayFactory extends BaseFactory
     public function getByDisplayGroupId($displayGroupId)
     {
         return $this->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
-    }
-
-    /**
-     * Get displays by active campaignId
-     * @param $campaignId
-     * @return array[Display]
-     */
-    public function getByActiveCampaignId($campaignId)
-    {
-        return $this->query(null, ['disableUserCheck' => 1, 'activeCampaignId' => $campaignId]);
-    }
-
-    /**
-     * Get displays by assigned campaignId
-     * @param $campaignId
-     * @return array[Display]
-     */
-    public function getByAssignedCampaignId($campaignId)
-    {
-        return $this->query(null, ['disableUserCheck' => 1, 'assignedCampaignId' => $campaignId]);
-    }
-
-    /**
-     * Get displays by dataSetId
-     * @param $dataSetId
-     * @return array[Display]
-     */
-    public function getByActiveDataSetId($dataSetId)
-    {
-        return $this->query(null, ['disableUserCheck' => 1, 'activeDataSetId' => $dataSetId]);
     }
 
     /**
@@ -316,138 +285,6 @@ class DisplayFactory extends BaseFactory
             $params['excludeDisplayGroupId'] = $this->getSanitizer()->getInt('exclude_displaygroupid', $filterBy);
         }
 
-        // Only ones with a particular active campaign
-        if ($this->getSanitizer()->getInt('activeCampaignId', $filterBy) !== null) {
-            // Which displays does a change to this layout effect?
-            $body .= '
-              AND display.displayId IN (
-                   SELECT DISTINCT display.DisplayID
-                     FROM `schedule`
-                       INNER JOIN `schedule_detail`
-                       ON schedule_detail.eventid = schedule.eventid
-                       INNER JOIN `lkscheduledisplaygroup`
-                       ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
-                       INNER JOIN `lkdisplaydg`
-                       ON lkdisplaydg.DisplayGroupID = `lkscheduledisplaygroup`.displayGroupId
-                       INNER JOIN `display`
-                       ON lkdisplaydg.DisplayID = display.displayID
-                    WHERE `schedule`.CampaignID = :activeCampaignId
-                      AND `schedule_detail`.FromDT < :fromDt
-                      AND `schedule_detail`.ToDT > :toDt
-                   UNION
-                   SELECT DISTINCT display.DisplayID
-                     FROM `display`
-                       INNER JOIN `lkcampaignlayout`
-                       ON `lkcampaignlayout`.LayoutID = `display`.DefaultLayoutID
-                    WHERE `lkcampaignlayout`.CampaignID = :activeCampaignId2
-              )
-            ';
-
-            $currentDate = time();
-            $rfLookAhead = $this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD');
-            $rfLookAhead = intval($currentDate) + intval($rfLookAhead);
-
-            $params['fromDt'] = $rfLookAhead;
-            $params['toDt'] = $currentDate - 3600;
-            $params['activeCampaignId'] = $this->getSanitizer()->getInt('activeCampaignId', $filterBy);
-            $params['activeCampaignId2'] = $this->getSanitizer()->getInt('activeCampaignId', $filterBy);
-        }
-
-        // Only Display Groups with a Campaign containing particular Layout assigned to them
-        if ($this->getSanitizer()->getInt('assignedCampaignId', $filterBy) !== null) {
-            $body .= '
-                AND display.displayId IN (
-                    SELECT `lkdisplaydg`.displayId
-                      FROM `lkdisplaydg`
-                        INNER JOIN `lklayoutdisplaygroup`
-                        ON `lklayoutdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
-                        INNER JOIN `lkcampaignlayout`
-                        ON `lkcampaignlayout`.layoutId = `lklayoutdisplaygroup`.layoutId
-                     WHERE `lkcampaignlayout`.campaignId = :assignedCampaignId
-                )
-            ';
-
-            $params['assignedCampaignId'] = $this->getSanitizer()->getInt('assignedCampaignId', $filterBy);
-        }
-
-        // Only Display Groups that are running Layouts that have the provided data set on them
-        if ($this->getSanitizer()->getInt('activeDataSetId', $filterBy) !== null) {
-            // Which displays does a change to this layout effect?
-            $body .= '
-              AND display.displayId IN (
-                   SELECT DISTINCT display.DisplayID
-                     FROM `schedule`
-                       INNER JOIN `schedule_detail`
-                       ON schedule_detail.eventid = schedule.eventid
-                       INNER JOIN `lkscheduledisplaygroup`
-                       ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
-                       INNER JOIN `lkdisplaydg`
-                       ON lkdisplaydg.DisplayGroupID = `lkscheduledisplaygroup`.displayGroupId
-                       INNER JOIN `display`
-                       ON lkdisplaydg.DisplayID = display.displayID
-                       INNER JOIN `lkcampaignlayout`
-                       ON `lkcampaignlayout`.campaignId = `schedule`.campaignId
-                       INNER JOIN `region`
-                       ON `region`.layoutId = `lkcampaignlayout`.layoutId
-                       INNER JOIN `lkregionplaylist`
-                       ON `lkregionplaylist`.regionId = `region`.regionId
-                       INNER JOIN `widget`
-                       ON `widget`.playlistId = `lkregionplaylist`.playlistId
-                       INNER JOIN `widgetoption`
-                       ON `widgetoption`.widgetId = `widget`.widgetId
-                            AND `widgetoption`.type = \'attrib\'
-                            AND `widgetoption`.option = \'dataSetId\'
-                            AND `widgetoption`.value = :activeDataSetId
-                    WHERE `schedule_detail`.FromDT < :fromDt
-                      AND `schedule_detail`.ToDT > :toDt
-                   UNION
-                   SELECT DISTINCT display.DisplayID
-                     FROM `display`
-                       INNER JOIN `lkcampaignlayout`
-                       ON `lkcampaignlayout`.LayoutID = `display`.DefaultLayoutID
-                       INNER JOIN `region`
-                       ON `region`.layoutId = `lkcampaignlayout`.layoutId
-                       INNER JOIN `lkregionplaylist`
-                       ON `lkregionplaylist`.regionId = `region`.regionId
-                       INNER JOIN `widget`
-                       ON `widget`.playlistId = `lkregionplaylist`.playlistId
-                       INNER JOIN `widgetoption`
-                       ON `widgetoption`.widgetId = `widget`.widgetId
-                            AND `widgetoption`.type = \'attrib\'
-                            AND `widgetoption`.option = \'dataSetId\'
-                            AND `widgetoption`.value = :activeDataSetId2
-                   UNION
-                   SELECT `lkdisplaydg`.displayId
-                      FROM `lkdisplaydg`
-                        INNER JOIN `lklayoutdisplaygroup`
-                        ON `lklayoutdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
-                        INNER JOIN `lkcampaignlayout`
-                        ON `lkcampaignlayout`.layoutId = `lklayoutdisplaygroup`.layoutId
-                        INNER JOIN `region`
-                        ON `region`.layoutId = `lkcampaignlayout`.layoutId
-                        INNER JOIN `lkregionplaylist`
-                       ON `lkregionplaylist`.regionId = `region`.regionId
-                        INNER JOIN `widget`
-                        ON `widget`.playlistId = `lkregionplaylist`.playlistId
-                        INNER JOIN `widgetoption`
-                        ON `widgetoption`.widgetId = `widget`.widgetId
-                            AND `widgetoption`.type = \'attrib\'
-                            AND `widgetoption`.option = \'dataSetId\'
-                            AND `widgetoption`.value = :activeDataSetId3
-              )
-            ';
-
-            $currentDate = time();
-            $rfLookAhead = $this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD');
-            $rfLookAhead = intval($currentDate) + intval($rfLookAhead);
-
-            $params['fromDt'] = $rfLookAhead;
-            $params['toDt'] = $currentDate - 3600;
-            $params['activeDataSetId'] = $this->getSanitizer()->getInt('activeDataSetId', $filterBy);
-            $params['activeDataSetId2'] = $this->getSanitizer()->getInt('activeDataSetId', $filterBy);
-            $params['activeDataSetId3'] = $this->getSanitizer()->getInt('activeDataSetId', $filterBy);
-        }
-
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
@@ -460,8 +297,6 @@ class DisplayFactory extends BaseFactory
         }
 
         $sql = $select . $body . $order . $limit;
-
-
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, [

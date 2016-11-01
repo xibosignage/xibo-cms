@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.8.0-rc1', 5, 2, 127);
+('1.8.0-rc1', 5, 2, 128);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`, `isSystemNotification`) VALUES
 (1, 'Users', 0, 0, 0),
@@ -155,8 +155,10 @@ INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `inte
 (10, '720p HD Landscape', 800, 450, 1280, 720, 2, 1),
 (11, '1080p HD Portrait', 450, 800, 1080, 1920, 2, 1),
 (12, '720p HD Portrait', 450, 800, 720, 1280, 2, 1),
-(13, '4k', 800, 450, 4096, 2304, 2, 1),
-(14, 'Common PC Monitor 4:3', 800, 600, 1024, 768, 2, 1);
+(13, '4k cinema', 800, 450, 4096, 2304, 2, 1),
+(14, 'Common PC Monitor 4:3', 800, 600, 1024, 768, 2, 1),
+(15, '4k UHD Landscape', 450, 800, 3840, 2160, 2, 1),
+(16, '4k UHD Portrait', 800, 450, 2160, 3840, 2, 1);
 
 INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES
 (1, 'MEDIA_DEFAULT', 'private', 'dropdown', 'Media will be created with these settings. If public everyone will be able to view and use this media.', 'private|group|public', 'permissions', 1, 'Media Permissions', '', 20, 'private', 1, 'word'),
@@ -213,7 +215,7 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (76, 'DEFAULTS_IMPORTED', '0', 'text', 'Has the default layout been imported?', NULL, 'general', 0, 'Defaults Imported?', 'required', 100, '0', 0, 'checkbox'),
 (77, 'FORCE_HTTPS', '0', 'checkbox', 'Force the portal into HTTPS?', NULL, 'network', 1, 'Force HTTPS?', '', 70, '0', 1, 'checkbox'),
 (78, 'ISSUE_STS', '0', 'checkbox', 'Add STS to the response headers? Make sure you fully understand STS before turning it on as it will prevent access via HTTP after the first successful HTTPS connection.', NULL, 'network', 1, 'Enable STS?', '', 80, '0', 1, 'checkbox'),
-(79, 'STS_TTL', '600', 'text', 'The Time to Live (maxage) of the STS header expressed in minutes.', NULL, 'network', 1, 'STS Time out', '', 90, '600', 1, 'int'),
+(79, 'STS_TTL', '600', 'text', 'The Time to Live (maxage) of the STS header expressed in seconds.', NULL, 'network', 1, 'STS Time out', '', 90, '600', 1, 'int'),
 (80, 'MAINTENANCE_ALERTS_FOR_VIEW_USERS', '0', 'checkbox', 'Email maintenance alerts for users with view permissions to effected Displays.', NULL, 'displays', 1, 'Maintenance Alerts for Users', '', 60, '0', 1, 'checkbox'),
 (81, 'CALENDAR_TYPE', 'Gregorian', 'dropdown', 'Which Calendar Type should the CMS use?', 'Gregorian|Jalali', 'regional', 1, 'Calendar Type', '', 50, 'Gregorian', 1, 'string'),
 (82, 'DASHBOARD_LATEST_NEWS_ENABLED', '1', 'checkbox', 'Should the Dashboard show latest news? The address is provided by the theme.', '', 'general', 1, 'Enable Latest News?', '', 110, '1', 1, 'checkbox'),
@@ -227,7 +229,7 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (90, 'ELEVATE_LOG_UNTIL', '1463396415', 'datetime', 'Elevate the log level until this date.', null, 'troubleshooting', 1, 'Elevate Log Until', ' ', 25, '', 1, 'datetime'),
 (91, 'RESTING_LOG_LEVEL', 'Error', 'dropdown', 'Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems "error" is recommended.', 'Emergency|Alert|Critical|Error', 'troubleshooting', 1, 'Resting Log Level', '', 19, 'error', 1, 'word'),
 (92, 'TASK_CONFIG_LOCKED_CHECKB', 'Unchecked', 'dropdown', 'Is the task config locked? Useful for Service providers.', 'Checked|Unchecked', 'defaults', 0, 'Lock Task Config', '', 30, 'Unchecked', 0, 'word'),
-(93, 'WHITELIST_LOAD_BALANCERS', '', 'text', 'If the CMS is behind a load balancer, what are the load balancer IP addresses, comma delimited.', '', 'network', 1, 'Whitelist Load Balancers', '', 100, 'Unchecked', 1, 'string'),
+(93, 'WHITELIST_LOAD_BALANCERS', '', 'text', 'If the CMS is behind a load balancer, what are the load balancer IP addresses, comma delimited.', '', 'network', 1, 'Whitelist Load Balancers', '', 100, '', 1, 'string'),
 (94, 'DEFAULT_LAYOUT', '1', 'text', 'The default layout to assign for new displays and displays which have their current default deleted.', '1', 'displays', 1, 'Default Layout', '', 4, '', 1, 'int');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES

@@ -664,7 +664,9 @@ if(!String.prototype.formatNum) {
 		var curdate = new Date(this.options.position.start.getFullYear(), this.options.position.start.getMonth(), day, 0, 0, 0);
 
 		// if day of the current month
+		var incEvents = false;
 		if(day > 0) {
+			incEvents = true;
 			cls = this.options.classes.months.inmonth;
 		}
 		// stop cycling table rows;
@@ -674,6 +676,7 @@ if(!String.prototype.formatNum) {
 		}
 		// if day of the next month
 		if(day > daysinmonth) {
+			incEvents = false;
 			day = day - daysinmonth;
 			cls = this.options.classes.months.outmonth;
 		}
@@ -697,7 +700,8 @@ if(!String.prototype.formatNum) {
 
 		t.start = parseInt(curdate.getTime());
 		t.end = parseInt(t.start + 86400000);
-		t.events = this.getEventsBetween(t.start, t.end);
+        t.events = (incEvents) ? this.getEventsBetween(t.start, t.end) : [];
+
 		return this.options.templates['month-day'](t);
 	}
 
@@ -934,34 +938,6 @@ if(!String.prototype.formatNum) {
 					return [].concat(source);
 				};
 				break;
-			case 'string':
-				if(source.length) {
-					loader = function() {
-						var events = [];
-                                                var d_from = self.options.position.start;
-                                                var d_to = self.options.position.end;
-                                                var params = {from: d_from.getTime(), to: d_to.getTime(), utc_offset_from: d_from.getTimezoneOffset(), utc_offset_to: d_to.getTimezoneOffset()};
-
-						if(browser_timezone.length) {
-							params.browser_timezone = browser_timezone;
-						}
-						$.ajax({
-							url: buildEventsUrl(source, params),
-							dataType: 'json',
-							type: 'GET',
-							async: false
-						}).done(function(json) {
-							if(!json.success) {
-								$.error(json.error);
-							}
-							if(json.result) {
-								events = json.result;
-							}
-						});
-						return events;
-					};
-				}
-				break;
 		}
 		if(!loader) {
 			$.error(this.locale.error_loadurl);
@@ -995,16 +971,7 @@ if(!String.prototype.formatNum) {
 		if(this.options.templates[name]) {
 			return;
 		}
-		var self = this;
-		$.ajax({
-			url: self._templatePath(name),
-			dataType: 'html',
-			type: 'GET',
-			async: false,
-			cache: this.options.tmpl_cache
-		}).done(function(html) {
-			self.options.templates[name] = _.template(html);
-		});
+		this.options.templates[name] = _.template($('#' + this._templatePath(name)).html());
 	};
 
 	Calendar.prototype._update = function() {
@@ -1139,12 +1106,19 @@ if(!String.prototype.formatNum) {
 
 	Calendar.prototype.getEventsBetween = function(start, end) {
 		var events = [];
+		var period_start = moment(start, "x");
+		var period_end = moment(end, "x")
 		$.each(this.options.events, function() {
 			if(this.start == null) {
 				return true;
 			}
+			// Convert to a local date, without the timezone
+			var event_start = moment(moment(this.start, "x").tz(timezone).format("YYYY-MM-DD HH:mm:ss"));
 			var event_end = this.end || this.start;
-			if((parseInt(this.start) < end) && (parseInt(event_end) >= start)) {
+			event_end = moment(moment(event_end, "x").tz(timezone).format("YYYY-MM-DD HH:mm:ss"));
+
+			if (event_start.isBefore(period_end) && event_end.isSameOrAfter(period_start)) {
+				//console.log("X. PS: " + period_start.format() + ", PE:" + period_end.format() + ". ES: " + event_start.format() + "(" + parseInt(this.start) + "), EE: " + event_end.format() + " (" + parseInt(this.end) + ")");
 				events.push(this);
 			}
 		});

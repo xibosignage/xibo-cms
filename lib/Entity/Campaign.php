@@ -327,19 +327,24 @@ class Campaign implements \JsonSerializable
 
         $sql = 'INSERT INTO `lkcampaignlayout` (CampaignID, LayoutID, DisplayOrder) VALUES (:campaignId, :layoutId, :displayOrder) ON DUPLICATE KEY UPDATE layoutId = :layoutId2';
 
-        // Get the Max display order
-        $displayOrders = array_map(function ($element) {
-            return $element->displayOrder;
-        }, $this->layouts);
+        // Sort the layouts by their display order
+        usort($this->layouts, function($a, $b) {
+            /** @var Layout $a */
+            /** @var Layout $b */
+            if ($a->displayOrder === null)
+                return 1;
 
-        $maxDisplayOrder = max($displayOrders);
+            if ($a->displayOrder === $b->displayOrder)
+                return 0;
 
-        // Fill in empty display orders
+            return ($a->displayOrder < $b->displayOrder) ? -1 : 1;
+        });
+
+        // Update the layouts, in order to have display order 1 to n
+        $i = 0;
         foreach ($this->layouts as $layout) {
-            if ($layout->displayOrder == null) {
-                $maxDisplayOrder++;
-                $layout->displayOrder = $maxDisplayOrder;
-            }
+            $i++;
+            $layout->displayOrder = $i;
         }
 
         foreach ($this->layouts as $layout) {
@@ -406,8 +411,6 @@ class Campaign implements \JsonSerializable
             $params = ['campaignId' => $this->campaignId];
         }
 
-
-
         $this->getStore()->update($sql, $params);
     }
 
@@ -416,15 +419,8 @@ class Campaign implements \JsonSerializable
      */
     private function notify()
     {
-        $this->getLog()->debug('Checking for Displays to refresh on Campaign %d', $this->campaignId);
+        $this->getLog()->debug('CampaignId ' . $this->campaignId . ' wants to notify.');
 
-        $displays = array_merge($this->displayFactory->getByActiveCampaignId($this->campaignId), $this->displayFactory->getByAssignedCampaignId($this->campaignId));
-
-        foreach ($displays as $display) {
-            /* @var \Xibo\Entity\Display $display */
-            $display->setMediaIncomplete();
-            $display->setCollectRequired(true);
-            $display->save(['validate' => false, 'audit' => false]);
-        }
+        $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByCampaignId($this->campaignId);
     }
 }

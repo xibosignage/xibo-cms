@@ -92,12 +92,6 @@ ALTER TABLE `schedule`
 ADD CONSTRAINT `schedule_ibfk_1` FOREIGN KEY (`CampaignID`) REFERENCES `campaign` (`CampaignID`);
 
 --
--- Constraints for table `schedule_detail`
---
-ALTER TABLE `schedule_detail`
-ADD CONSTRAINT `schedule_detail_ibfk_7` FOREIGN KEY (`eventID`) REFERENCES `schedule` (`eventID`);
-
---
 -- Constraints for table `user`
 --
 ALTER TABLE `user`

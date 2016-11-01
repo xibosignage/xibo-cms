@@ -596,14 +596,9 @@ class DataSet implements \JsonSerializable
      */
     public function notify()
     {
-        $this->getLog()->debug('Checking for Displays to refresh for DataSet %d', $this->dataSetId);
+        $this->getLog()->debug('DataSet ' . $this->dataSetId . ' wants to notify');
 
-        foreach ($this->displayFactory->getByActiveDataSetId($this->dataSetId) as $display) {
-            /* @var \Xibo\Entity\Display $display */
-            $display->setMediaIncomplete();
-            $display->setCollectRequired(false);
-            $display->save(['validate' => false, 'audit' => false]);
-        }
+        $this->displayFactory->getDisplayNotifyService()->notifyByDataSetId($this->dataSetId);
     }
 
     /**

@@ -28,6 +28,9 @@ class PlayerActionService implements PlayerActionServiceInterface
     /** @var  LogServiceInterface */
     private $log;
 
+    /** @var bool */
+    private $triggerPlayerActions = true;
+
     /** @var string  */
     private $xmrAddress;
 
@@ -37,10 +40,11 @@ class PlayerActionService implements PlayerActionServiceInterface
     /**
      * @inheritdoc
      */
-    public function __construct($config, $log)
+    public function __construct($config, $log, $triggerPlayerActions)
     {
         $this->config = $config;
         $this->log = $log;
+        $this->triggerPlayerActions = $triggerPlayerActions;
     }
 
     /**
@@ -57,6 +61,9 @@ class PlayerActionService implements PlayerActionServiceInterface
      */
     public function sendAction($displays, $action)
     {
+        if (!$this->triggerPlayerActions)
+            return;
+
         // XMR network address
         if ($this->xmrAddress == null)
             $this->xmrAddress = $this->getConfig()->GetSetting('XMR_ADDRESS');

@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-DEFINE('XIBO', true);
+define('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
 error_reporting(0);
@@ -33,14 +33,11 @@ if (!file_exists(PROJECT_ROOT . '/web/settings.php')) {
 
 // We create a Slim Object ONLY for logging
 // Create a logger
+$uidProcessor = new \Monolog\Processor\UidProcessor(7);
 $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'XMDS',
-    'handlers' => array(
-        new \Xibo\Helper\DatabaseLogHandler()
-    ),
-    'processors' => [
-        new \Monolog\Processor\UidProcessor(7)
-    ]
+    'handlers' => [new \Xibo\Helper\DatabaseLogHandler()],
+    'processors' => [$uidProcessor]
 ));
 
 // Slim Application
@@ -49,6 +46,7 @@ $app = new \Slim\Slim(array(
     'log.writer' => $logger
 ));
 $app->setName('api');
+$app->startTime = microtime();
 
 // Load the config
 $app->configService = \Xibo\Service\ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
@@ -59,8 +57,8 @@ $app->configService = \Xibo\Service\ConfigService::Load(PROJECT_ROOT . '/web/set
 // Set state
 \Xibo\Middleware\State::setState($app);
 
-// Town down all logging
-$app->getLog()->setLevel(\Xibo\Service\LogService::resolveLogLevel('error'));
+// Set XMR
+\Xibo\Middleware\Xmr::setXmr($app, false);
 
 // Always have a version defined
 $version = $app->sanitizerService->getInt('v', 3, $_REQUEST);
@@ -98,6 +96,7 @@ $app->view($twig);
 
 // Check to see if we have a file attribute set (for HTTP file downloads)
 if (isset($_GET['file'])) {
+
     // Check send file mode is enabled
     $sendFileMode = $app->configService->GetSetting('SENDFILE_MODE');
 
@@ -135,7 +134,7 @@ if (isset($_GET['file'])) {
         } else {
             // Most likely a Get Request
             // Issue magic packet
-            $app->logService->info('HTTP GetFile request redirecting to ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->storedAs, 'services');
+            $app->logService->info('HTTP GetFile request redirecting to ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->storedAs);
 
             // Send via Apache X-Sendfile header?
             if ($sendFileMode == 'Apache') {
@@ -151,12 +150,13 @@ if (isset($_GET['file'])) {
         // Log bandwidth
         if ($logBandwidth) {
             $file->markUsed();
+            $app->requiredFileFactory->persist();
             $app->bandwidthFactory->createAndSave(4, $file->displayId, $file->size);
         }
     }
     catch (\Exception $e) {
         if ($e instanceof \Xibo\Exception\NotFoundException || $e instanceof \Xibo\Exception\FormExpiredException) {
-            $app->logService->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404', 'services');
+            $app->logService->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404. ' . $e->getMessage());
             // 404
             header('HTTP/1.0 404 Not Found');
         }
@@ -170,6 +170,8 @@ if (isset($_GET['file'])) {
     exit;
 }
 
+// Town down all logging
+$app->getLog()->setLevel(\Xibo\Service\LogService::resolveLogLevel('error'));
 
 try {
     $wsdl = PROJECT_ROOT . '/lib/Xmds/service_v' . $version . '.wsdl';
@@ -178,7 +180,7 @@ try {
         throw new InvalidArgumentException(__('Your client is not the correct version to communicate with this CMS.'));
 
     // Create a log processor
-    $logProcessor = new \Xibo\Xmds\LogProcessor($app->getLog());
+    $logProcessor = new \Xibo\Xmds\LogProcessor($app->getLog(), $uidProcessor->getUid());
     $app->logWriter->addProcessor($logProcessor);
 
     // Create a SoapServer
@@ -203,11 +205,17 @@ try {
         $app->widgetFactory,
         $app->regionFactory,
         $app->notificationFactory,
-        $app->displayEventFactory
+        $app->displayEventFactory,
+        $app->scheduleFactory,
+        $app->dayPartFactory
     );
     $soap->handle();
 
-    $app->logService->info('PDO stats: %s.', json_encode($app->store->stats()));
+    // Get the stats for this connection
+    $stats = $app->store->stats();
+    $stats['length'] = microtime() - $app->startTime;
+
+    $app->logService->info('PDO stats: %s.', json_encode($stats, JSON_PRETTY_PRINT));
 
     if ($app->store->getConnection()->inTransaction())
         $app->store->getConnection()->commit();

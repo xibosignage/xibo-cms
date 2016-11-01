@@ -288,7 +288,7 @@ class DayPart implements \JsonSerializable
             /** @var Schedule $schedule */
             $schedule
                 ->setDateService($this->getDate())
-                ->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory)
+                ->setDisplayFactory($this->displayFactory)
                 ->load();
 
             // Is this schedule a recurring event?
@@ -298,7 +298,7 @@ class DayPart implements \JsonSerializable
                 // Split the scheduled event, adjusting only the recurring end date on the original event
                 $newSchedule = clone $schedule;
                 $schedule->recurrenceRange = $now;
-                $schedule->save(['generate' => false, 'deleteDetailFrom' => $now]);
+                $schedule->save();
 
                 // Adjusting the fromdt on the new event
                 $newSchedule->fromDt = $now;

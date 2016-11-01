@@ -186,7 +186,7 @@ class DisplayGroupTest extends LocalWebTestCase
         $this->assertSame($expectedDynamic, $object->data->isDynamic);
         $this->assertSame($expectedDynamicCriteria, $object->data->dynamicCriteria);
         # Check that the group was really added
-        $displayGroups = (new XiboDisplayGroup($this->getEntityProvider()))->get();
+        $displayGroups = (new XiboDisplayGroup($this->getEntityProvider()))->get(['length' => 1000]);
         $this->assertEquals(count($this->startDisplayGroups) + 1, count($displayGroups));
         # Check that the group was added correctly
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->getById($object->id);

@@ -25,13 +25,13 @@ class DateServiceJalali implements DateServiceInterface
      */
     public function getLocalDate($timestamp = NULL, $format = NULL, $timezone = NULL)
     {
-        if ($format == NULL)
+        if ($format === NULL)
             $format = $this->getSystemFormat();
 
         if ($timestamp instanceof \Jenssegers\Date\Date)
             return $timestamp->format($format);
 
-        if ($timestamp == NULL)
+        if ($timestamp === NULL)
             $timestamp = time();
 
         return \jDateTime::date($format, $timestamp, null, null, $timezone);
@@ -54,14 +54,14 @@ class DateServiceJalali implements DateServiceInterface
      */
     public function parse($string = null, $format = null)
     {
-        if ($string == null)
+        if ($string === null)
             $string = $this->getLocalDate();
 
         if ($format == 'U') {
             // We are a timestamp, create a date out of the time stamp directly
             return \Jenssegers\Date\Date::createFromFormat($format, $string);
         }
-        else if($format == null)
+        else if($format === null)
             $format = $this->getSystemFormat();
 
         // If we are Jalali, then we want to convert from Jalali back to Gregorian.

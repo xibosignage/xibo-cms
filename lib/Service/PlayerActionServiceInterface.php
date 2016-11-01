@@ -22,8 +22,9 @@ interface PlayerActionServiceInterface
      * PlayerActionHelper constructor.
      * @param ConfigServiceInterface
      * @param LogServiceInterface
+     * @param bool
      */
-    public function __construct($config, $log);
+    public function __construct($config, $log, $triggerPlayerActions);
 
     /**
      * @param array[Display]|Display $displays

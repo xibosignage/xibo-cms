@@ -24,8 +24,6 @@ namespace Xibo\Entity;
 
 
 use Respect\Validation\Validator as v;
-use Stash\Interfaces\PoolInterface;
-use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
@@ -36,9 +34,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\XMR\CollectNowAction;
 
 /**
  * Class Display
@@ -306,33 +302,17 @@ class Display implements \JsonSerializable
     public $deviceName;
 
     /**
-     * Collect required on save?
-     * @var bool
-     */
-    private $collectRequired = false;
-
-    /**
      * Commands
      * @var array[Command]
      */
     private $commands = null;
 
-    public static $saveOptionsMinimum = ['validate' => false, 'audit' => false, 'triggerDynamicDisplayGroupAssessment' => false, 'enableActions' => false];
+    public static $saveOptionsMinimum = ['validate' => false, 'audit' => false, 'triggerDynamicDisplayGroupAssessment' => false];
 
     /**
      * @var ConfigServiceInterface
      */
     private $config;
-
-    /**
-     * @var PoolInterface
-     */
-    private $pool;
-
-    /**
-     * @var PlayerActionServiceInterface
-     */
-    private $playerAction;
 
     /**
      * @var DisplayGroupFactory
@@ -369,22 +349,20 @@ class Display implements \JsonSerializable
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param PoolInterface $pool
-     * @param PlayerActionServiceInterface $playerAction
      * @param DisplayGroupFactory $displayGroupFactory
      * @param DisplayProfileFactory $displayProfileFactory
+     * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log, $config, $pool, $playerAction, $displayGroupFactory, $displayProfileFactory)
+    public function __construct($store, $log, $config, $displayGroupFactory, $displayProfileFactory, $displayFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->excludeProperty('mediaInventoryXml');
         $this->setPermissionsClass('Xibo\Entity\DisplayGroup');
 
         $this->config = $config;
-        $this->pool = $pool;
         $this->displayGroupFactory = $displayGroupFactory;
         $this->displayProfileFactory = $displayProfileFactory;
-        $this->playerAction = $playerAction;
+        $this->displayFactory = $displayFactory;
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
@@ -392,15 +370,13 @@ class Display implements \JsonSerializable
 
     /**
      * Set child object dependencies
-     * @param DisplayFactory $displayFactory
      * @param LayoutFactory $layoutFactory
      * @param MediaFactory $mediaFactory
      * @param ScheduleFactory $scheduleFactory
      * @return $this
      */
-    public function setChildObjectDependencies($displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory)
+    public function setChildObjectDependencies($layoutFactory, $mediaFactory, $scheduleFactory)
     {
-        $this->displayFactory = $displayFactory;
         $this->layoutFactory = $layoutFactory;
         $this->mediaFactory = $mediaFactory;
         $this->scheduleFactory = $scheduleFactory;
@@ -427,9 +403,18 @@ class Display implements \JsonSerializable
      * Get the cache key
      * @return string
      */
+    public static function getCachePrefix()
+    {
+        return 'display/';
+    }
+
+    /**
+     * Get the cache key
+     * @return string
+     */
     public function getCacheKey()
     {
-        return 'display/' . $this->getId();
+        return self::getCachePrefix() . $this->getId();
     }
 
     /**
@@ -446,24 +431,11 @@ class Display implements \JsonSerializable
     /**
      * Set the Media Status to Incomplete
      */
-    public function setMediaIncomplete()
+    public function notify()
     {
-        $this->getLog()->info('Setting Media Incomplete on %s', $this->display);
+        $this->getLog()->debug($this->display . ' requests notify');
 
-        $this->mediaInventoryStatus = 3;
-        $this->setCollectRequired(true);
-
-        // remove from the cache
-        $this->pool->deleteItem($this->getCacheKey());
-    }
-
-    /**
-     * Set Collect Required
-     * @param bool|true $collectRequired
-     */
-    public function setCollectRequired($collectRequired = true)
-    {
-        $this->collectRequired = $collectRequired;
+        $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayId($this->displayId);
     }
 
     /**
@@ -543,8 +515,7 @@ class Display implements \JsonSerializable
         $options = array_merge([
             'validate' => true,
             'audit' => true,
-            'triggerDynamicDisplayGroupAssessment' => false,
-            'enableActions' => true
+            'triggerDynamicDisplayGroupAssessment' => false
         ], $options);
 
         if ($options['validate'])
@@ -557,19 +528,6 @@ class Display implements \JsonSerializable
 
         if ($options['audit'])
             $this->getLog()->audit('Display', $this->displayId, 'Display Saved', $this->jsonSerialize());
-
-        if ($this->collectRequired && $options['enableActions']) {
-            $this->getLog()->debug('Collect Now Action for Display %s', $this->display);
-
-            try {
-                if ($this->playerAction == null)
-                    throw new ConfigurationException('Player Actions not configured');
-
-                $this->playerAction->sendAction($this, new CollectNowAction());
-            } catch (\Exception $e) {
-                $this->getLog()->notice('Display Save would have triggered Player Action, but the action failed with message: %s', $e->getMessage());
-            }
-        }
 
         // Trigger an update of all dynamic DisplayGroups
         if ($options['triggerDynamicDisplayGroupAssessment']) {

@@ -25,7 +25,7 @@ trait EntityTrait
     private $permissionsClass = null;
 
     public $buttons = [];
-    private $jsonExclude = ['buttons', 'jsonExclude'];
+    private $jsonExclude = ['buttons', 'jsonExclude', 'originalValues'];
 
     /** @var array Original values hydrated */
     protected $originalValues = [];
@@ -142,6 +142,15 @@ trait EntityTrait
             }
         }
         return $json;
+    }
+
+    /**
+     * To Array
+     * @return array
+     */
+    public function toArray()
+    {
+        return $this->jsonSerialize();
     }
 
     /**

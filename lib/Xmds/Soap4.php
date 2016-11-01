@@ -256,9 +256,14 @@ class Soap4 extends Soap
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $fileId);
 
                 $media = $this->mediaFactory->getById($fileId);
+                $this->getLog()->debug(json_encode($media));
+
+                if (!file_exists($libraryLocation . $media->storedAs))
+                    throw new NotFoundException('Media exists but file missing from library. ' . $libraryLocation);
 
                 // Return the Chunk size specified
-                $f = fopen($libraryLocation . $media->storedAs, 'r');
+                if (!$f = fopen($libraryLocation . $media->storedAs, 'r'))
+                    throw new NotFoundException('Unable to get file pointer');
 
                 fseek($f, $chunkOffset);
 
@@ -267,15 +272,20 @@ class Soap4 extends Soap
                 // Store file size for bandwidth log
                 $chunkSize = strlen($file);
 
+                if ($chunkSize === 0)
+                    throw new NotFoundException('Empty file');
+
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
                 $requiredFile->markUsed();
 
             } else {
                 throw new NotFoundException('Unknown FileType Requested.');
             }
+
+            $this->requiredFileFactory->persist();
         }
         catch (NotFoundException $e) {
-            $this->getLog()->error($e->getMessage());
+            $this->getLog()->error('Not found FileId: ' . $fileId . '. FileType: ' . $fileType . '. ' . $e->getMessage());
             throw new \SoapFault('Receiver', 'Requested an invalid file.');
         }
 
@@ -394,9 +404,6 @@ class Soap4 extends Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', 'This display client is not licensed');
 
-        // Update the last accessed date/logged in
-        $this->touchDisplay();
-
         if ($this->display->isAuditing())
             $this->getLog()->debug($status);
 
@@ -450,9 +457,6 @@ class Soap4 extends Soap
         // Auth this request...
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', 'This display client is not licensed');
-
-        // Update the last accessed date/logged in
-        $this->touchDisplay();
 
         if ($this->display->isAuditing())
             $this->getLog()->debug('Received Screen shot');

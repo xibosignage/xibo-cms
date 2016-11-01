@@ -21,15 +21,17 @@ class LogProcessor
     private $displayId;
     private $route;
     private $method;
+    private $uid;
 
     /**
      * Log Processor
      * @param Log $log
      * @param string $method
      */
-    public function __construct($log, $method = 'POST')
+    public function __construct($log, $uid, $method = 'POST')
     {
         $this->log = $log;
+        $this->uid = $uid;
         $this->method = $method;
     }
 
@@ -51,6 +53,24 @@ class LogProcessor
             $this->log->setLevel(\Xibo\Service\LogService::resolveLogLevel('debug'));
 
         $this->displayId = $displayId;
+    }
+
+    /**
+     * Get Log Level
+     * @return int
+     */
+    public function getLevel()
+    {
+        return $this->log->getLevel();
+    }
+
+    /**
+     * Get UID
+     * @return string
+     */
+    public function getUid()
+    {
+        return $this->uid;
     }
 
     /**

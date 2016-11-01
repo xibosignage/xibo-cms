@@ -940,6 +940,12 @@ class LayoutFactory extends BaseFactory
             $params['userId'] = $this->getSanitizer()->getInt('userId', 0, $filterBy);
         }
 
+        // User Group filter
+        if ($this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy) != 0) {
+            $body .= ' AND layout.userid IN (SELECT DISTINCT userId FROM `lkusergroup` WHERE groupId =  :ownerUserGroupId) ';
+            $params['ownerUserGroupId'] = $this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy);
+        }
+
         // Retired options (default to 0 - provide -1 to return all
         if ($this->getSanitizer()->getInt('retired', 0, $filterBy) != -1) {
             $body .= " AND layout.retired = :retired ";
@@ -948,25 +954,38 @@ class LayoutFactory extends BaseFactory
 
         // Tags
         if ($this->getSanitizer()->getString('tags', $filterBy) != '') {
-            $body .= " AND layout.layoutID IN (
+
+            $tagFilter = $this->getSanitizer()->getString('tags', $filterBy);
+
+            if (trim($tagFilter) === '--no-tag') {
+                $body .= ' AND `layout`.layoutID NOT IN (
+                    SELECT `lktaglayout`.layoutId
+                     FROM `tag`
+                        INNER JOIN `lktaglayout`
+                        ON `lktaglayout`.tagId = `tag`.tagId
+                    )
+                ';
+            } else {
+                $body .= " AND layout.layoutID IN (
                 SELECT lktaglayout.layoutId
                   FROM tag
                     INNER JOIN lktaglayout
                     ON lktaglayout.tagId = tag.tagId
                 ";
-            $i = 0;
-            foreach (explode(',', $this->getSanitizer()->getString('tags', $filterBy)) as $tag) {
-                $i++;
+                $i = 0;
+                foreach (explode(',', $tagFilter) as $tag) {
+                    $i++;
 
-                if ($i == 1)
-                    $body .= " WHERE tag LIKE :tags$i ";
-                else
-                    $body .= " OR tag LIKE :tags$i ";
+                    if ($i == 1)
+                        $body .= " WHERE tag LIKE :tags$i ";
+                    else
+                        $body .= " OR tag LIKE :tags$i ";
 
-                $params['tags' . $i] =  '%' . $tag . '%';
+                    $params['tags' . $i] = '%' . $tag . '%';
+                }
+
+                $body .= " ) ";
             }
-
-            $body .= " ) ";
         }
 
         // Exclude templates by default

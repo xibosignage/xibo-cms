@@ -89,6 +89,14 @@ interface StorageServiceInterface
     public function select($sql, $params);
 
     /**
+     * Run SQL in an isolated connection/transaction
+     * @param $sql
+     * @param $params
+     * @return mixed
+     */
+    public function isolated($sql, $params);
+
+    /**
      * Commit if necessary
      */
     public function commitIfNecessary();

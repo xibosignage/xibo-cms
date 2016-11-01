@@ -131,8 +131,13 @@ class DisplayProfile extends Base
             // Load the config
             $profile->load();
 
-            if ($this->isApi())
-                break;
+            if ($this->isApi()) {
+                $profile->excludeProperty('configTabs');
+                $profile->excludeProperty('configDefault');
+                continue;
+            }
+
+            $profile->includeProperty('buttons');
 
             // Default Layout
             $profile->buttons[] = array(
