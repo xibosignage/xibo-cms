@@ -271,24 +271,23 @@ jQuery.fn.extend({
 
             var numberOfSlides = (numberOfItems > 1) ? numberOfPages : numberOfItems;
 
-            // Duration of each page, adding one page to the operation for the delay, 
-            // and one half so that the page have the same items that when it started the loop
-            var duration = options.duration / (numberOfPages + 1.5);
-
+            // Duration of each page
+            var pageDuration = options.duration / numberOfPages;
+                      
             // Use cycle in all pages of items ( to cycle individually )
-            // The timeout is calculated using the duration minus the delay
             for (var i = 0; i < numberOfItems; i++) {
                 // Timeout is the duration in ms
-                var timeout = (duration * 1000);
+                var timeout = (pageDuration * 1000);
 
-                // The delay is calulated usign the distance between items ( random from 0 to 5 )  
-                // that animate at the same time, and a part of the timeout duration
-                var delayDistance = Math.random() * 5;
-                var delay = (timeout / delayDistance) * (i % delayDistance);
+                // The delay is calulated usign the distance between items ( random from 1 to 5 )  
+                // that animate almost at the same time, and a part of the timeout duration
+                var delayDistance = 1 + Math.random() * 4;
+                var delay = (timeout / delayDistance) * ((i+1) % delayDistance);
+                
                 $("#page-" + i).cycle({
                     fx: options.fx,
                     speed: options.speed,
-                    delay: delay,
+                    delay: -delay,
                     timeout: timeout,
                     slides: "> " + slides
                 });
