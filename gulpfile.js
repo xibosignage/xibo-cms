@@ -34,7 +34,7 @@
  */
 
 // Include gulp
-var version = '1.8.0-beta';
+var version = '1.8.0-rc1';
 var gulp = require("gulp");
 var del = require("del");
 var composer = require("gulp-composer");
