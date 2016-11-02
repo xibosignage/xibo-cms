@@ -43,23 +43,8 @@
       "action": "ALTER TABLE `module` ADD `installName` varchar(254) NULL;"
     },
     {
-      "step": "Add released and api ref to media table",
-      "action": "ALTER TABLE `media` ADD released tinyint(4) NOT NULL DEFAULT 1, ADD apiRef varchar(254) NULL;",
-      "patchedId": 121
-    },
-    {
       "step": "Add MCAAS Routes to Scope",
       "action": "INSERT INTO `oauth_scope_routes` (scopeId, route, id, method) VALUES ('mcaas', '/', 1, 'GET'),('mcaas', '/library/download/:id(/:type)', 2, 'GET'),('mcaas', '/library/mcaas/:id', 3, 'POST');"
-    },
-    {
-      "step": "Add Layout status message column",
-      "action": "ALTER TABLE `layout` ADD `statusMessage` TEXT NULL;",
-      "patchedIn": 120
-    },
-    {
-      "step": "Add missing constraint to Display/DisplayGroup Link",
-      "action": "ALTER TABLE `lkdisplaydg` ADD CONSTRAINT `DisplayGroupDisplayId` UNIQUE KEY (DisplayGroupId, DisplayId);",
-      "patchedIn": 120
     },
     {
       "step": "Change display is auditing to be date based",
@@ -68,11 +53,6 @@
     {
       "step": "Add elevate log level setting",
       "action": "INSERT INTO setting (setting, value, fieldType, helptext, options, cat, userChange, title, validation, ordering, `default`, userSee, type) VALUES ('ELEVATE_LOG_UNTIL', '1463396415', 'datetime', 'Elevate the log level until this date.', null, 'troubleshooting', 1, 'Elevate Log Until', ' ', 25, '', 1, 'datetime');"
-    },
-    {
-      "step": "Allow Events to have an empty to date",
-      "action": "ALTER TABLE  `schedule_detail` CHANGE  `ToDT`  `ToDT` BIGINT( 20 ) NULL DEFAULT NULL;",
-      "patchedIn": 121
     }
   ]
 }
