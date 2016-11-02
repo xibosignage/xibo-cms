@@ -18,16 +18,21 @@ class MaintenanceDailyTask implements TaskInterface
 {
     use TaskTrait;
 
+    private $hasUpgradeRun = false;
+
     /** @inheritdoc */
     public function run()
     {
-        // Long running task
-        set_time_limit(0);
-
         $this->runMessage = '# ' . __('Daily Maintenance') . PHP_EOL . PHP_EOL;
 
         // Upgrade
         $this->upgrade();
+
+        if ($this->hasUpgradeRun)
+            return;
+
+        // Long running task
+        set_time_limit(0);
 
         // Import layouts
         $this->importLayouts();
@@ -89,6 +94,8 @@ class MaintenanceDailyTask implements TaskInterface
             }
 
             $this->runMessage .= '#' . __('Upgrade Complete') . PHP_EOL . PHP_EOL;
+
+            $this->hasUpgradeRun = true;
         }
     }
 
