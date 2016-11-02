@@ -23,6 +23,7 @@ use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\XTR\MaintenanceDailyTask;
 use Xibo\XTR\TaskInterface;
 
 /**
@@ -321,6 +322,36 @@ class Task extends Base
      */
     public function run($taskId)
     {
+        // Handle cases where we arrive from older versions of the application.
+        // that is versions without tasks
+        if (DBVERSION < 128) {
+            // We need to manually create and run task 1 so that we trigger an upgrade.
+            $task = new MaintenanceDailyTask();
+            $task->setApp($this->getApp())
+                ->setSanitizer($this->getSanitizer())
+                ->setUser($this->getUser())
+                ->setConfig($this->getConfig())
+                ->setLogger($this->getLog())
+                ->setDate($this->getDate())
+                ->setPool($this->pool)
+                ->setStore($this->store)
+                ->setFactories(
+                    $this->userFactory,
+                    $this->userGroupFactory,
+                    $this->layoutFactory,
+                    $this->displayFactory,
+                    $this->upgradeFactory,
+                    $this->mediaFactory,
+                    $this->notificationFactory,
+                    $this->userNotificationFactory
+                )
+                ->setTask($task)
+                ->run();
+
+            if ($taskId == 1)
+                return;
+        }
+
         // Get this task
         $task = $this->taskFactory->getById($taskId);
 

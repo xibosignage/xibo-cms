@@ -557,6 +557,38 @@
                 }
             }
         },
+        "/dataset/importjson/{dataSetId}": {
+            "post": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Import JSON",
+                "description": "Import JSON into a DataSet",
+                "operationId": "dataSetImportJson",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID to import into.",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "description": "The row data, field name vs field data format. e.g. { uniqueKeys: [col1], rows: [{col1: value1}]}",
+                        "required": true,
+                        "schema": "json",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/dataset/{dataSetId}/column": {
             "get": {
                 "tags": [
@@ -1198,10 +1230,10 @@
                         "type": "string"
                     },
                     {
-                        "name": "isAuditing",
+                        "name": "auditingUntil",
                         "in": "formData",
-                        "description": "Flag indicating whether this Display records auditing information.",
-                        "required": true,
+                        "description": "A date this Display records auditing information until.",
+                        "required": false,
                         "type": "string",
                         "format": "date-time"
                     },
@@ -1429,6 +1461,20 @@
                         "description": "Filter by DisplayGroups containing a specific display",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "nestedDisplayId",
+                        "in": "formData",
+                        "description": "Filter by DisplayGroups containing a specific display in there nesting",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dynamicCriteria",
+                        "in": "formData",
+                        "description": "Filter by DisplayGroups containing a specific dynamic criteria",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -2308,6 +2354,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "ownerUserGroupId",
+                        "in": "formData",
+                        "description": "Filter by users in this UserGroupId",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
                         "name": "embed",
                         "in": "formData",
                         "description": "Embed related data such as regions, playlists, tags, etc",
@@ -2725,6 +2778,13 @@
                         "description": "Filter by File Size - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "ownerUserGroupId",
+                        "in": "formData",
+                        "description": "Filter by users in this UserGroupId",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -5040,6 +5100,10 @@
                 "lastCommandSuccess": {
                     "description": "The last command success, 0 = failure, 1 = success, 2 = unknown",
                     "type": "integer"
+                },
+                "deviceName": {
+                    "description": "The Device Name for the device hardware associated with this Display",
+                    "type": "string"
                 }
             }
         },
@@ -6315,6 +6379,10 @@
         {
             "name": "daypart",
             "description": "Dayparting"
+        },
+        {
+            "name": "task",
+            "description": "Tasks"
         }
     ],
     "externalDocs": {

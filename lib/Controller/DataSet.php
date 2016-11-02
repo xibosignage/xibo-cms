@@ -634,7 +634,8 @@ class DataSet extends Base
      *  @SWG\Parameter(
      *      name="data",
      *      in="body",
-     *      description="The row data, field name vs field data format. e.g. { "uniqueKeys: ["col1"], "rows": [{"col1": "value1"}]}",
+     *      schema="json",
+     *      description="The row data, field name vs field data format. e.g. { uniqueKeys: [col1], rows: [{col1: value1}]}",
      *      type="string",
      *      required=true
      *   ),
