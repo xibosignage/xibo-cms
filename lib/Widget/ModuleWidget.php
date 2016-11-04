@@ -125,6 +125,9 @@ abstract class ModuleWidget implements ModuleInterface
     /** @var  EventDispatcherInterface */
     private $dispatcher;
 
+    /** @var ModuleFactory  */
+    protected $moduleFactory;
+
     /**
      * @var MediaFactory
      */
@@ -174,6 +177,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @param DateServiceInterface $date
      * @param SanitizerServiceInterface $sanitizer
      * @param EventDispatcherInterface $dispatcher
+     * @param ModuleFactory $moduleFactory
      * @param MediaFactory $mediaFactory
      * @param DataSetFactory $dataSetFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
@@ -181,7 +185,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @param DisplayFactory $displayFactory
      * @param CommandFactory $commandFactory
      */
-    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory)
+    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory)
     {
         $this->app = $app;
         $this->store = $store;
@@ -192,6 +196,7 @@ abstract class ModuleWidget implements ModuleInterface
         $this->sanitizerService = $sanitizer;
         $this->dispatcher = $dispatcher;
 
+        $this->moduleFactory = $moduleFactory;
         $this->mediaFactory = $mediaFactory;
         $this->dataSetFactory = $dataSetFactory;
         $this->dataSetColumnFactory = $dataSetColumnFactory;

@@ -18,6 +18,7 @@ use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Widget\ModuleWidget;
@@ -43,6 +44,7 @@ interface ModuleServiceInterface
 
     /**
      * @param Module $module
+     * @param ModuleFactory $moduleFactory
      * @param MediaFactory $mediaFactory
      * @param DataSetFactory $dataSetFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
@@ -51,9 +53,10 @@ interface ModuleServiceInterface
      * @param CommandFactory $commandFactory
      * @return ModuleWidget
      */
-    public function get($module, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory);
+    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory);
     /**
      * @param string $className
+     * @param ModuleFactory $moduleFactory
      * @param MediaFactory $mediaFactory
      * @param DataSetFactory $dataSetFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
@@ -62,5 +65,5 @@ interface ModuleServiceInterface
      * @param CommandFactory $commandFactory
      * @return ModuleWidget
      */
-    public function getByClass($className, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory);
+    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory);
 }
