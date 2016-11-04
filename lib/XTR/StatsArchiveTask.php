@@ -49,7 +49,7 @@ class StatsArchiveTask implements TaskInterface
         $now = $this->date->parse()->subDay($periodSizeInDays)->setTime(0, 0, 0);
         $i = 0;
 
-        while ($earliestDate < $now || $i <= $maxPeriods) {
+        while ($earliestDate < $now && $i <= $maxPeriods) {
             $i++;
 
             $this->log->debug('Running archive number ' . $i);
