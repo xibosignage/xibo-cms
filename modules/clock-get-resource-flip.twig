@@ -22,7 +22,11 @@
         .flip-clock-wrapper {
             text-align: center;
             position: relative;
+            {% if clockFace == "DailyCounter" %}
+            width: 620px;
+            {% else %}
             width: 460px;
+            {% endif %}
             margin: 0;
         }
     </style>
@@ -47,7 +51,11 @@
     }
 
     // Flip clock is always the same size
+    {% if clockFace == "DailyCounter" %}
+    var clock_width = 620;
+    {% else %}
     var clock_width = 460;
+    {% endif %}
 
     // Calculate the width ratio between the actual width and the clock_width
     var ratio = width / clock_width;
@@ -65,7 +73,23 @@
         });
     }
 
+    function getTimeRemaining(endtime) {
+        var t = Date.parse(endtime) - Date.parse(new Date());
+        var seconds = Math.floor( (t/1000) % 60 );
+        var minutes = Math.floor( (t/1000/60) % 60 );
+        var hours = Math.floor( (t/(1000*60*60)) % 24 );
+        var days = Math.floor( t/(1000*60*60*24) );
+        return {
+            'total': t,
+            'days': days,
+            'hours': hours,
+            'minutes': minutes,
+            'seconds': seconds
+        };
+    }
+
     var clock;
+    var offset = "{{ offset }}";
 
     $(document).ready(function() {
         // Show Seconds: {{ showSeconds }}
@@ -77,9 +101,16 @@
             showSeconds: {% if showSeconds == 1 %}true{% else %}false{% endif %}
         });
 
-        clock.setTime(clock.getTime() + ({{ offset }} * 60 * 1000));
+        clock.setTime(clock.getTime() + (offset * 60 * 1000));
         {% else %}
-        clock = $('#clock').FlipClock({{ duration }}, {
+
+        if (isNaN(offset)) {
+            var duration = getTimeRemaining(offset).total / 1000;
+        } else {
+            var duration = {{ duration }};
+        }
+
+        clock = $('#clock').FlipClock(duration, {
             clockFace: '{{ clockFace }}',
             showSeconds: {% if showSeconds == 1 %}true{% else %}false{% endif %},
             countdown: true
