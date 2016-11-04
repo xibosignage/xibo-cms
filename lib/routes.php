@@ -198,8 +198,8 @@ $app->get('/library', '\Xibo\Controller\Library:grid')->name('library.search');
 $app->get('/library/download/:id(/:type)', '\Xibo\Controller\Library:download')->name('library.download');
 $app->post('/library', '\Xibo\Controller\Library:add')->name('library.add');
 $app->put('/library/:id', '\Xibo\Controller\Library:edit')->name('library.edit');
-$app->delete('/library/:id', '\Xibo\Controller\Library:delete')->name('library.delete');
 $app->delete('/library/tidy', '\Xibo\Controller\Library:tidy')->name('library.tidy');
+$app->delete('/library/:id', '\Xibo\Controller\Library:delete')->name('library.delete');
 // Tagging
 $app->post('/library/:id/tag', '\Xibo\Controller\Library:tag')->name('library.tag');
 $app->delete('/library/:id/untag', '\Xibo\Controller\Library:untag')->name('library.untag');
