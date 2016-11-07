@@ -108,33 +108,19 @@ class PlayerActionService implements PlayerActionServiceInterface
 
         $failures = 0;
 
-        try {
-            // Issue a message payload to XMR.
-            $context = new \ZMQContext();
-
-            // Connect to socket
-            $socket = new \ZMQSocket($context, \ZMQ::SOCKET_REQ);
-            $socket->connect($this->xmrAddress);
-
-            foreach ($this->actions as $action) {
-                /** @var PlayerAction $action */
-                try {
-                    // Send each action
-                    if ($action->send($socket) === false) {
-                        $this->log->error('Player action refused by XMR (connected but XMR returned false).');
-                        $failures++;
-                    }
-                } catch (PlayerActionException $sockEx) {
-                    $this->log->error('Player action connection failed. E = ' . $sockEx->getMessage());
+        foreach ($this->actions as $action) {
+            /** @var PlayerAction $action */
+            try {
+                // Send each action
+                if ($action->send($this->xmrAddress) === false) {
+                    $this->log->error('Player action refused by XMR (connected but XMR returned false).');
                     $failures++;
                 }
-            }
 
-            // Disconnect socket
-            $socket->disconnect($this->xmrAddress);
-        }
-        catch (\ZMQException $ex) {
-            throw new PlayerActionException('XMR connection failed. Error = ' . $ex->getMessage());
+            } catch (PlayerActionException $sockEx) {
+                $this->log->error('Player action connection failed. E = ' . $sockEx->getMessage());
+                $failures++;
+            }
         }
 
         if ($failures > 0)
