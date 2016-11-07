@@ -104,7 +104,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         // 3. Fire a PlayerAction if appropriate - what is appropriate?!
 
         // Unique our displayIds
-        $displayIds = array_unique($this->displayIds, SORT_NUMERIC);
+        $displayIds = array_values(array_unique($this->displayIds, SORT_NUMERIC));
 
         // Make a list of them that we can use in the update statement
         $qmarks = str_repeat('?,', count($displayIds) - 1) . '?';
@@ -132,7 +132,9 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         if (count($this->displayIdsRequiringActions) <= 0)
             return;
 
-        $displayIdsRequiringActions = array_unique($this->displayIdsRequiringActions, SORT_NUMERIC);
+        $this->log->debug('Process queue of ' . count($this->displayIdsRequiringActions) . ' display actions');
+
+        $displayIdsRequiringActions = array_values(array_unique($this->displayIdsRequiringActions, SORT_NUMERIC));
         $qmarks = str_repeat('?,', count($displayIdsRequiringActions) - 1) . '?';
         $displays = $this->store->select('SELECT displayId, xmrChannel, xmrPubKey FROM `display` WHERE displayId IN (' . $qmarks . ')', $displayIdsRequiringActions);
 
