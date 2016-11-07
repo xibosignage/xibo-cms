@@ -11,6 +11,7 @@ namespace Xibo\Xmds;
 define('BLACKLIST_ALL', "All");
 define('BLACKLIST_SINGLE', "Single");
 
+use Jenssegers\Date\Date;
 use Slim\Log;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Bandwidth;
@@ -1186,7 +1187,7 @@ class Soap
 
         // Get the display timezone to use when adjusting log dates.
         $timeZone = $this->display->getSetting('displayTimeZone', '');
-        $timeZone = (empty($timeZone)) ? $this->getConfig()->GetSetting('defaultTimezone') : $timeZone;
+        $defaultTimeZone = $this->getConfig()->GetSetting('defaultTimezone');
 
         // Store processed logs in an array
         $logs = [];
@@ -1237,7 +1238,8 @@ class Soap
             }
 
             // Adjust the date according to the display timezone
-            $date = $this->getDate()->getLocalDate($this->getDate()->parse($date, 'Y-m-d H:i:s')->tz($timeZone));
+            $date = ($timeZone != null) ? Date::createFromFormat($date, 'Y-m-d H:i:s', $timeZone)->tz($defaultTimeZone) : Date::createFromFormat($date, 'Y-m-d H:i:s');
+            $date = $this->getDate()->getLocalDate($date);
 
             // Get the date and the message (all log types have these)
             foreach ($node->childNodes as $nodeElements) {
