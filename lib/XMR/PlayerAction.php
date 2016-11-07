@@ -88,71 +88,58 @@ abstract class PlayerAction implements PlayerActionInterface
 
     /**
      * Send the action to the specified connection and wait for a reply (acknowledgement)
-     * @param string $connection
-     * @return string
+     * @param \ZMQSocket $socket
+     * @return bool
      * @throws PlayerActionException
+     * @throws \ZMQException
      */
-    public final function send($connection)
+    public final function send($socket)
     {
-        try {
-            // Set the message create date
-            $this->createdDt = date('c');
+        // Set the message create date
+        $this->createdDt = date('c');
 
-            // Set the TTL if not already set
-            if ($this->ttl == 0)
-                $this->setTtl();
+        // Set the TTL if not already set
+        if ($this->ttl == 0)
+            $this->setTtl();
 
-            // Get the encrypted message
-            $encrypted = $this->getEncryptedMessage();
+        // Get the encrypted message
+        $encrypted = $this->getEncryptedMessage();
 
-            // Envelope our message
-            $message = [
-                'channel' => $this->channel,
-                'message' => $encrypted['message'],
-                'key' => $encrypted['key']
-            ];
+        // Envelope our message
+        $message = [
+            'channel' => $this->channel,
+            'message' => $encrypted['message'],
+            'key' => $encrypted['key']
+        ];
 
-            // Issue a message payload to XMR.
-            $context = new \ZMQContext();
+        // Send the message to the socket
+        $socket->send(json_encode($message));
 
-            // Connect to socket
-            $socket = new \ZMQSocket($context, \ZMQ::SOCKET_REQ);
-            $socket->connect($connection);
+        // Need to replace this with a non-blocking recv() with a retry loop
+        $retries = 15;
+        $reply = false;
 
-            // Send the message to the socket
-            $socket->send(json_encode($message));
+        do  {
+            try {
+                // Try and receive
+                // if ZMQ::MODE_NOBLOCK/MODE_DONTWAIT is used and the operation would block boolean false
+                // shall be returned.
+                $reply = $socket->recv(\ZMQ::MODE_DONTWAIT);
 
-            // Need to replace this with a non-blocking recv() with a retry loop
-            $retries = 15;
-            $reply = false;
+                if ($reply !== false)
+                    break;
 
-            do {
-                try {
-                    // Try and receive
-                    // if ZMQ::MODE_NOBLOCK/MODE_DONTWAIT is used and the operation would block boolean false
-                    // shall be returned.
-                    $reply = $socket->recv(\ZMQ::MODE_DONTWAIT);
+            } catch (\ZMQSocketException $sockEx) {
+                if ($sockEx->getCode() !== \ZMQ::ERR_EAGAIN)
+                    throw $sockEx;
+            }
 
-                    if ($reply !== false)
-                        break;
+            // Sleep to give time for XMR to respond
+            usleep(300);
 
-                } catch (\ZMQSocketException $sockEx) {
-                    if ($sockEx->getCode() !== \ZMQ::ERR_EAGAIN)
-                        throw $sockEx;
-                }
+        } while (--$retries);
 
-                usleep(100);
-
-            } while (--$retries);
-
-            // Disconnect socket
-            $socket->disconnect($connection);
-
-            // Return the reply, if we couldn't connect then the reply will be false
-            return $reply;
-        }
-        catch (\ZMQSocketException $ex) {
-            throw new PlayerActionException('XMR connection failed. Error = ' . $ex->getMessage());
-        }
+        // Return the reply, if we couldn't connect then the reply will be false
+        return $reply;
     }
 }

@@ -404,6 +404,7 @@ class Soap4 extends Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', 'This display client is not licensed');
 
+        // Important to keep this logging in place (status screen notification gets logged)
         if ($this->display->isAuditing())
             $this->getLog()->debug($status);
 
