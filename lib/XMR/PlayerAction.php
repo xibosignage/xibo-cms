@@ -141,7 +141,7 @@ abstract class PlayerAction implements PlayerActionInterface
                         throw $sockEx;
                 }
 
-                usleep(500000);
+                usleep(100000);
 
             } while (--$retries);
 
