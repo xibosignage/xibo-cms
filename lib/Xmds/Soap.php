@@ -1238,7 +1238,7 @@ class Soap
             }
 
             // Adjust the date according to the display timezone
-            $date = ($timeZone != null) ? Date::createFromFormat($date, 'Y-m-d H:i:s', $timeZone)->tz($defaultTimeZone) : Date::createFromFormat($date, 'Y-m-d H:i:s');
+            $date = ($timeZone != null) ? Date::createFromFormat('Y-m-d H:i:s', $date, $timeZone)->tz($defaultTimeZone) : Date::createFromFormat('Y-m-d H:i:s', $date);
             $date = $this->getDate()->getLocalDate($date);
 
             // Get the date and the message (all log types have these)
