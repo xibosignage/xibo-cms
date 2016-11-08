@@ -159,13 +159,21 @@ if (isset($_GET['file'])) {
             $app->logService->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404. ' . $e->getMessage());
             // 404
             header('HTTP/1.0 404 Not Found');
-        }
-        else
-            throw $e;
-    }
 
-    if ($app->store->getConnection()->inTransaction())
-        $app->store->getConnection()->commit();
+            if ($app->store->getConnection()->inTransaction())
+                $app->store->getConnection()->commit();
+        }
+        else {
+            $app->logService->error('Unknown Error: ' . $e->getMessage());
+            $app->logService->debug($e->getTraceAsString());
+
+            // Issue a 500
+            header('HTTP/1.0 500 Internal Server Error');
+
+            if ($app->store->getConnection()->inTransaction())
+                $app->store->getConnection()->rollBack();
+        }
+    }
 
     exit;
 }

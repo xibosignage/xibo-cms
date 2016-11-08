@@ -1502,7 +1502,10 @@ class Soap
         $this->requiredFileFactory->persist();
 
         $this->display->mediaInventoryStatus = $mediaInventoryComplete;
-        $this->display->save(Display::$saveOptionsMinimum);
+
+        // Only call save if this property has actually changed.
+        if ($this->display->hasPropertyChanged('mediaInventoryStatus'))
+            $this->display->save(Display::$saveOptionsMinimum);
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$MEDIAINVENTORY, strlen($inventory));
 
