@@ -123,7 +123,7 @@ class Maintenance extends Base
      */
     private function runTask($class)
     {
-        /** @var Task $taskController */
+        /** @var \Xibo\Controller\Task $taskController */
         $taskController = $this->getApp()->container->get('\Xibo\Controller\Task');
         $taskController->setApp($this->getApp());
 
