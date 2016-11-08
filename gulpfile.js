@@ -61,6 +61,8 @@ gulp.task('build-php-vendor-clean', ['build-php'], function() {
     return del([
        'vendor/**/.git/**',
        'vendor/**/Test*/**',
+       '!vendor/twig/twig/lib/Twig',
+       '!vendor/twig/twig/lib/Twig/**',
        'vendor/**/test*/**',
        'vendor/**/benchmarks/**',
        'vendor/**/smoketests/**',
@@ -68,7 +70,7 @@ gulp.task('build-php-vendor-clean', ['build-php'], function() {
        'vendor/**/doc*/**',
        'vendor/**/examples/**',
        'vendor/**/phpunit.xml',
-       'vendor/**/*.md',
+       'vendor/**/*.md'
     ]);
 });
 
