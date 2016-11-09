@@ -266,16 +266,10 @@ class Soap
         //  - nonces are marked "used" when they get used
         //  - nonce use/expiry is not checked for XMDS served files (getfile, getresource)
         //  - nonce use/expiry is checked for HTTP served files (media, layouts)
-        //  - When the required file list is returned from cache, we update the expiry time of all nonces to ensure
-        //    they are still in-date at the time of request.
         //  - Each time a nonce is used through HTTP, the required files cache is invalidated so that new nonces
         //    are generated for the next request.
         if ($cache->isHit()) {
             $this->getLog()->info('Returning required files from Cache for display %s', $this->display->display);
-
-            // Push the expiry time on all nonces.
-            $this->requiredFileFactory->resetAllExpiry($this->display->displayId);
-            $this->requiredFileFactory->persist();
 
             // Log Bandwidth
             $this->logBandwidth($this->display->displayId, Bandwidth::$RF, strlen($output));
@@ -672,9 +666,6 @@ class Soap
         // Return the results of requiredFiles()
         $requiredFilesXml->formatOutput = true;
         $output = $requiredFilesXml->saveXML();
-
-        // Persist the required files.
-        $this->requiredFileFactory->persist();
 
         // Cache
         $cache->set($output);
@@ -1504,12 +1495,9 @@ class Soap
                     $mediaInventoryComplete = 2;
             }
             catch (NotFoundException $e) {
-                $this->getLog()->info('Unable to find file in media inventory: %s', $node->getAttribute('type'), $node->getAttribute('id'));
+                $this->getLog()->error('Unable to find file in media inventory: ' . $node->getAttribute('type') . '. ' . $node->getAttribute('id'));
             }
         }
-
-        // Persist into the cache
-        $this->requiredFileFactory->persist();
 
         $this->display->mediaInventoryStatus = $mediaInventoryComplete;
 
@@ -1563,7 +1551,6 @@ class Soap
 
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
             $requiredFile->markUsed();
-            $this->requiredFileFactory->persist();
 
             if ($resource == '')
                 throw new ControllerNotImplemented();

@@ -22,12 +22,11 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class RequiredFileFactory extends BaseFactory
 {
-    private $directory = null;
-    private $files = [];
-    private $displayId = 0;
-
     /** @var  PoolInterface */
     private $pool;
+
+    private $directoryKey = '/directory/nonce';
+    private $displayKey = '/display/nonce';
 
     /**
      * Construct a factory
@@ -47,7 +46,48 @@ class RequiredFileFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new RequiredFile($this->getStore(), $this->getLog(), $this);
+        return (new RequiredFile())->setDependencies($this->getLog(), $this);
+    }
+
+    /**
+     * @param RequiredFile $file
+     * @param string $nonce
+     */
+    public function addOrReplace($file, $nonce)
+    {
+        $cacheKey = '';
+        if ($file->layoutId != 0 && $file->regionId != 0 && $file->mediaId != 0) {
+            $cacheKey = 'widget/' . $file->mediaId;
+        } else if ($file->mediaId != 0) {
+            $cacheKey = 'media/' . $file->mediaId;
+        } else if ($file->layoutId != 0) {
+            $cacheKey = 'layout/' . $file->layoutId;
+        }
+
+        $displayCache = $this->displayKey . '/' . $file->displayId . '/inventory/' . $cacheKey;
+
+        $this->getLog()->debug('Add or replace for file: ' . $displayCache);
+
+        // Update this file in the cache.
+        $item = $this->pool->getItem($displayCache);
+        $item->set($file);
+        $item->expiresAfter(86400);
+
+        // Update this nonce in the directory
+        $directory = $this->pool->getItem($this->directoryKey . '/' . $file->nonce);
+        $directory->set($displayCache);
+        $directory->expiresAfter(86400);
+
+        // Save both items
+        $this->pool->saveDeferred($item);
+        $this->pool->saveDeferred($directory);
+
+        if ($nonce !== $file->nonce) {
+            // Nonce provided is not equal to the current nonce, which means the nonce for this required file
+            // has changed.
+            // We should delete the cache keys for the old nonce in the directory.
+            $this->pool->deleteItem($this->directoryKey . '/' . $nonce);
+        }
     }
 
     /**
@@ -57,229 +97,25 @@ class RequiredFileFactory extends BaseFactory
      */
     public function getByNonce($nonce)
     {
+        // Try and get the required file diplay id from the main directory
         $this->getLog()->debug('Required file by Nonce: ' . $nonce);
 
-        if ($this->directory === null) {
-            $item = $this->pool->getItem('inventory/directory');
+        $item = $this->pool->getItem($this->directoryKey . '/' . $nonce);
 
-            if ($item->isHit()) {
-                $this->directory = json_decode($item->get(), true);
-            } else {
-                throw new NotFoundException();
-            }
-        }
-
-        if (count($this->directory) <= 0) {
-            $this->getLog()->debug('Empty inventory directory');
-            throw new NotFoundException();
-        }
-
-        if (array_key_exists($nonce, $this->directory)) {
-            // Get the nonce out of the relevent display inventory
-            $displayId = $this->directory[$nonce];
-
-            $this->getLog()->debug('Nonce resolves to displayId ' . $displayId);
-
-            return $this->getByDisplayAndNonce($displayId, $nonce);
-        } else {
+        if ($item->isMiss()) {
             $this->getLog()->debug('Nonce ' . $nonce . ' does not exist in directory.');
             throw new NotFoundException();
         }
-    }
 
-    /**
-     * Get Required files for display
-     * @param int $displayId
-     */
-    public function setDisplay($displayId)
-    {
-        if ($this->displayId === $displayId)
-            return;
+        // We have the nonce in the cache.
+        $file = $this->pool->getItem($item->get());
 
-        // Persist what we currently have
-        $this->persist();
-
-        // Load fresh display
-        $this->files = [
-            '_total' => 0,
-            '_totalSize' => 0,
-            '_totalComplete' => 0,
-            '_totalSizeComplete' => 0,
-            'layout' => [],
-            'media' => [],
-            'widget' => [],
-            'nonce' => []
-        ];
-
-        $item = $this->pool->getItem('inventory/' . $displayId);
-
-        if ($item->isHit()) {
-            $files = json_decode($item->get(), true);
-
-            foreach ($files as $key => $element) {
-
-                $file = $this->createEmpty()->hydrate($element);
-
-                $this->files['_total'] = $this->files['_total'] + 1;
-                $this->files['_totalSize'] = $this->files['_totalSize'] + $file->size;
-
-                if ($file->complete == 1) {
-                    $this->files['_totalComplete'] = $this->files['_totalComplete'] + 1;
-                    $this->files['_totalSizeComplete'] = $this->files['_totalSizeComplete'] + $file->size;
-                }
-
-                // Add the required file to the appropriate array
-                $this->addFileToLookupKey($file);
-                $this->addFileToStore($file);
-            }
-        }
-
-        //$this->getLog()->debug('Cache: ' . json_encode($this->files));
-
-        // Store the current displayId
-        $this->displayId = $displayId;
-    }
-
-    /**
-     * @param RequiredFile $file
-     */
-    private function addFileToStore($file)
-    {
-        $this->files['nonce'][$file->nonce] = $file;
-    }
-
-    /**
-     * @param RequiredFile $file
-     */
-    private function addFileToLookupKey($file)
-    {
-        // Add the required file to the appropriate array
-        if ($file->layoutId != 0 && $file->regionId != 0 && $file->mediaId != 0) {
-            $this->files['widget'][$file->mediaId] = $file->nonce;
-        } else if ($file->mediaId != 0) {
-            $this->files['media'][$file->mediaId] = $file->nonce;
-        } else if ($file->layoutId != 0) {
-            $this->files['layout'][$file->layoutId] = $file->nonce;
-        }
-    }
-
-    /**
-     * @param RequiredFile $file
-     * @param string $nonce
-     */
-    public function addOrReplace($file, $nonce)
-    {
-        if ($this->displayId != $file->displayId)
-            $this->setDisplay($file->displayId);
-
-        // Given the required file we've been provided, find that in our current cache and replace the nonce and the pointer to it
-        if ($nonce !== '') {
-            // We are an existing required file, which needs removing and then adding.
-            $this->remove($file, $nonce);
-        }
-
-        // pop it in the current array, according to its nature
-        $this->addFileToStore($file);
-
-        // Add the required file to the appropriate array
-        $this->addFileToLookupKey($file);
-    }
-
-    /**
-     * Removes a required file from the cache
-     * @param RequiredFile $file
-     * @param string $nonce
-     */
-    private function remove($file, $nonce)
-    {
-        // Remove from the cache
-        if ($file->layoutId != 0 && $file->regionId != 0 && $file->mediaId != 0) {
-            unset($this->files['widget'][$file->mediaId]);
-        } else if ($file->mediaId != 0) {
-            unset($this->files['media'][$file->mediaId]);
-        } else if ($file->layoutId != 0) {
-            unset($this->files['layout'][$file->layoutId]);
-        }
-
-        unset($this->files['nonce'][$nonce]);
-    }
-
-    /**
-     * @return int
-     */
-    public function getTotalCount()
-    {
-        return $this->files['_total'];
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getCompleteCount()
-    {
-        return $this->files['_totalComplete'];
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getTotalSize()
-    {
-        return $this->files['_totalSize'];
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getCompleteSize()
-    {
-        return $this->files['_totalSizeComplete'];
-    }
-
-    /**
-     * @return array
-     */
-    public function getLayoutIds()
-    {
-        return array_keys($this->files['layout']);
-    }
-
-    /**
-     * @return array
-     */
-    public function getMediaIds()
-    {
-        return array_keys($this->files['media']);
-    }
-
-    /**
-     * @return array
-     */
-    public function getWidgetIds()
-    {
-        return array_keys($this->files['widget']);
-    }
-
-    /**
-     * @param int $displayId
-     * @param string $nonce
-     * @return RequiredFile
-     * @throws NotFoundException
-     */
-    public function getByDisplayAndNonce($displayId, $nonce)
-    {
-        if ($this->displayId != $displayId)
-            $this->setDisplay($displayId);
-
-        if (!isset($this->files['nonce'][$nonce]))
-            throw new NotFoundException('Nonce not in directory required files.');
-
-        $rf = $this->files['nonce'][$nonce];
-
-        if ($rf == null)
+        if ($file->isMiss()) {
+            $this->getLog()->debug('Nonce ' . $nonce . ' in directory but has the wrong key.');
             throw new NotFoundException();
+        }
 
-        return $rf;
+        return $file->get()->setDependencies($this->getLog(), $this);
     }
 
     /**
@@ -290,18 +126,12 @@ class RequiredFileFactory extends BaseFactory
      */
     public function getByDisplayAndLayout($displayId, $layoutId)
     {
-        if ($this->displayId != $displayId)
-            $this->setDisplay($displayId);
+        $item = $this->pool->getItem($this->displayKey . '/' . $displayId . '/inventory/layout/' . $layoutId);
 
-        if (!isset($this->files['layout'][$layoutId]))
-            throw new NotFoundException();
+        if ($item->isMiss())
+            throw new NotFoundException(__('Required file not found for Display and Layout Combination'));
 
-        $rf = $this->files['nonce'][$this->files['layout'][$layoutId]];
-
-        if ($rf == null)
-            throw new NotFoundException();
-
-        return $rf;
+        return $item->get()->setDependencies($this->getLog(), $this);
     }
 
     /**
@@ -312,18 +142,12 @@ class RequiredFileFactory extends BaseFactory
      */
     public function getByDisplayAndMedia($displayId, $mediaId)
     {
-        if ($this->displayId != $displayId)
-            $this->setDisplay($displayId);
+        $item = $this->pool->getItem($this->displayKey . '/' . $displayId . '/inventory/media/' . $mediaId);
 
-        if (!isset($this->files['media'][$mediaId]))
-            throw new NotFoundException();
+        if ($item->isMiss())
+            throw new NotFoundException(__('Required file not found for Display and Media Combination'));
 
-        $file = $this->files['nonce'][$this->files['media'][$mediaId]];
-
-        if ($file == null)
-            throw new NotFoundException();
-
-        return $file;
+        return $item->get()->setDependencies($this->getLog(), $this);
     }
 
     /**
@@ -334,18 +158,12 @@ class RequiredFileFactory extends BaseFactory
      */
     public function getByDisplayAndWidget($displayId, $widgetId)
     {
-        if ($this->displayId != $displayId)
-            $this->setDisplay($displayId);
+        $item = $this->pool->getItem($this->displayKey . '/' . $displayId . '/inventory/widget/' . $widgetId);
 
-        if (!isset($this->files['widget'][$widgetId]))
-            throw new NotFoundException();
+        if ($item->isMiss())
+            throw new NotFoundException(__('Required file not found for Display and Layout Widget'));
 
-        $file = $this->files['nonce'][$this->files['widget'][$widgetId]];
-
-        if ($file == null)
-            throw new NotFoundException();
-
-        return $file;
+        return $item->get()->setDependencies($this->getLog(), $this);
     }
 
     /**
@@ -426,67 +244,6 @@ class RequiredFileFactory extends BaseFactory
      */
     public function expireAll($displayId)
     {
-        $this->setDisplay($displayId);
-
-        // Go through each nonce and set it to a short expiry
-        foreach ($this->files['nonce'] as $file) {
-            /** @var RequiredFile $file */
-            $file->expireSoon();
-        }
-    }
-
-    /**
-     * Expire all nonces
-     * @param $displayId
-     */
-    public function resetAllExpiry($displayId)
-    {
-        $this->setDisplay($displayId);
-
-        // Go through each nonce and set it to a short expiry
-        foreach ($this->files['nonce'] as $file) {
-            /** @var RequiredFile $file */
-            $file->resetExpiry();
-        }
-    }
-
-    /**
-     * Persist the current pool to the cache
-     */
-    public function persist()
-    {
-        if ($this->displayId == null)
-            return;
-
-        $directoryItem = $this->pool->getItem('inventory/directory');
-
-        if ($directoryItem->isHit()) {
-            $directory = json_decode($directoryItem->get(), true);
-        } else {
-            $directory = [];
-        }
-
-        // Combine our nonce directory with the existing global directory
-        foreach ($this->files['nonce'] as $key => $value) {
-            /** @var RequiredFile $value */
-            if ($value->isExpired()) {
-                unset($directory[$key]);
-                $this->remove($value, $value->nonce);
-            } else {
-                $directory[$key] = $this->displayId;
-            }
-        }
-
-        // Overwrite the pool cache
-        $item = $this->pool->getItem('inventory/' . $this->displayId);
-        $item->set(json_encode($this->files['nonce']));
-        $item->expiresAfter(new \DateInterval('P2M'));
-
-        // Set the directory
-        $directoryItem->set(json_encode($directory));
-        $directoryItem->expiresAfter(new \DateInterval('P2M'));
-
-        $this->pool->saveDeferred($item);
-        $this->pool->saveDeferred($directoryItem);
+        $this->pool->deleteItem($this->displayKey . '/' . $displayId . '/inventory');
     }
 }

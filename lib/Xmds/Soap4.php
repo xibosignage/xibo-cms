@@ -281,8 +281,6 @@ class Soap4 extends Soap
             } else {
                 throw new NotFoundException('Unknown FileType Requested.');
             }
-
-            $this->requiredFileFactory->persist();
         }
         catch (NotFoundException $e) {
             $this->getLog()->error('Not found FileId: ' . $fileId . '. FileType: ' . $fileType . '. ' . $e->getMessage());

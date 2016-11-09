@@ -11,17 +11,16 @@ namespace Xibo\Entity;
 
 use Xibo\Exception\FormExpiredException;
 use Xibo\Factory\RequiredFileFactory;
+use Xibo\Helper\ObjectVars;
 use Xibo\Helper\Random;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class RequiredFile
  * @package Xibo\Entity
  */
-class RequiredFile implements \JsonSerializable
+class RequiredFile
 {
-    use EntityTrait;
     public $nonce;
     public $expiry;
     public $lastUsed;
@@ -34,19 +33,37 @@ class RequiredFile implements \JsonSerializable
     public $bytesRequested = 0;
     public $complete = 0;
 
+    /** @var  LogServiceInterface */
+    private $log;
+
     /** @var  RequiredFileFactory */
     private $requiredFileFactory;
 
+    /** @inheritdoc */
+    public function __sleep()
+    {
+        return ['nonce', 'expiry', 'lastUsed', 'displayId', 'size', 'storedAs', 'layoutId', 'regionId', 'mediaId', 'bytesRequested', 'complete'];
+    }
+
     /**
      * Entity constructor.
-     * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param RequiredFileFactory $requiredFileFactory
+     * @return $this
      */
-    public function __construct($store, $log, $requiredFileFactory)
+    public function setDependencies($log, $requiredFileFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->log = $log;
         $this->requiredFileFactory = $requiredFileFactory;
+        return $this;
+    }
+
+    /**
+     * @return LogServiceInterface
+     */
+    private function getLog()
+    {
+        return $this->log;
     }
 
     /**
@@ -59,17 +76,20 @@ class RequiredFile implements \JsonSerializable
             'refreshExpiry' => false
         ], $options);
 
+        $originalNonce = '';
+
         // Always update the nonce when we save
         if ($options['refreshNonce']) {
             $this->lastUsed = 0;
             $this->expiry = time() + 86400;
+            $originalNonce = $this->nonce;
             $this->nonce = md5(Random::generateString() . SECRET_KEY . time() . $this->layoutId . $this->regionId . $this->mediaId);
         } else if ($options['refreshExpiry']) {
             $this->lastUsed = 0;
             $this->expiry = time() + 86400;
         }
 
-        $this->requiredFileFactory->addOrReplace($this, ($this->hasPropertyChanged('nonce') ? $this->getOriginalValue('nonce') : $this->nonce));
+        $this->requiredFileFactory->addOrReplace($this, ($options['refreshNonce'] ? $originalNonce : $this->nonce));
     }
 
     public function resetExpiry()
@@ -112,5 +132,18 @@ class RequiredFile implements \JsonSerializable
         $this->getLog()->debug('Marking ' . $this->nonce . ' as used');
         $this->lastUsed = time();
         $this->save(['refreshNonce' => false]);
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray()
+    {
+        $properties = ObjectVars::getObjectVars($this);
+        $json = [];
+        foreach ($properties as $key => $value) {
+            $json[$key] = $value;
+        }
+        return $json;
     }
 }
