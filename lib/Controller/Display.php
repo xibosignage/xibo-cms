@@ -409,8 +409,6 @@ class Display extends Base
                     $display->statusDescription = __('Unknown Display Status');
             }
 
-            $display->status = ($display->mediaInventoryStatus == 1) ? 1 : (($display->mediaInventoryStatus == 2) ? 0 : -1);
-
             // Thumbnail
             $display->thumbnail = '';
             // If we aren't logged in, and we are showThumbnail == 2, then show a circle
