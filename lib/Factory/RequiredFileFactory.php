@@ -436,6 +436,21 @@ class RequiredFileFactory extends BaseFactory
     }
 
     /**
+     * Expire all nonces
+     * @param $displayId
+     */
+    public function resetAllExpiry($displayId)
+    {
+        $this->setDisplay($displayId);
+
+        // Go through each nonce and set it to a short expiry
+        foreach ($this->files['nonce'] as $file) {
+            /** @var RequiredFile $file */
+            $file->resetExpiry();
+        }
+    }
+
+    /**
      * Persist the current pool to the cache
      */
     public function persist()

@@ -150,6 +150,7 @@ if (isset($_GET['file'])) {
         // Log bandwidth
         if ($logBandwidth) {
             $file->markUsed();
+            $app->pool->deleteItem(\Xibo\Entity\Display::getCachePrefix() . $file->displayId . '/requiredFiles');
             $app->requiredFileFactory->persist();
             $app->bandwidthFactory->createAndSave(4, $file->displayId, $file->size);
         }

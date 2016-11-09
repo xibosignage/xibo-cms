@@ -178,6 +178,8 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         foreach ($this->store->select($sql, ['displayGroupId' => $displayGroupId]) as $row) {
             $this->displayIds[] = $row['displayId'];
 
+            $this->log->debug('DisplayGroup[' . $displayGroupId .'] change caused notify on displayId[' . $row['displayId'] . ']');
+
             if ($this->collectRequired)
                 $this->displayIdsRequiringActions[] = $row['displayId'];
         }
@@ -277,6 +279,8 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                     continue;
                 }
             }
+
+            $this->log->debug('Campaign[' . $campaignId .'] change caused notify on displayId[' . $row['displayId'] . ']');
 
             $this->displayIds[] = $row['displayId'];
 
@@ -414,6 +418,8 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 }
             }
 
+            $this->log->debug('DataSet[' . $dataSetId .'] change caused notify on displayId[' . $row['displayId'] . ']');
+
             $this->displayIds[] = $row['displayId'];
 
             if ($this->collectRequired)
@@ -527,6 +533,8 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                     continue;
                 }
             }
+
+            $this->log->debug('Playlist[' . $playlistId .'] change caused notify on displayId[' . $row['displayId'] . ']');
 
             $this->displayIds[] = $row['displayId'];
 

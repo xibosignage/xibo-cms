@@ -260,10 +260,21 @@ class Soap
 
         $output = $cache->get();
 
+        // Required Files caching operates in lockstep with nonce caching
+        //  - required files are cached for 4 hours
+        //  - nonces have an expiry of 1 day
+        //  - nonces are marked "used" when they get used
+        //  - nonce use/expiry is not checked for XMDS served files (getfile, getresource)
+        //  - nonce use/expiry is checked for HTTP served files (media, layouts)
+        //  - When the required file list is returned from cache, we update the expiry time of all nonces to ensure
+        //    they are still in-date at the time of request.
+        //  - Each time a nonce is used through HTTP, the required files cache is invalidated so that new nonces
+        //    are generated for the next request.
         if ($cache->isHit()) {
             $this->getLog()->info('Returning required files from Cache for display %s', $this->display->display);
 
-            $this->requiredFileFactory->setDisplay($this->display->displayId);
+            // Push the expiry time on all nonces.
+            $this->requiredFileFactory->resetAllExpiry($this->display->displayId);
             $this->requiredFileFactory->persist();
 
             // Log Bandwidth
@@ -668,9 +679,8 @@ class Soap
         // Cache
         $cache->set($output);
 
-        // Nonces expire after 86400 seconds.
-        //$cache->expiresAt($this->getDate()->parse($toFilter, 'U'));
-        $cache->expiresAfter(86400);
+        // RF cache expires every 4 hours
+        $cache->expiresAfter(3600*4);
         $this->getPool()->saveDeferred($cache);
 
         // Log Bandwidth

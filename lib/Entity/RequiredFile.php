@@ -72,6 +72,11 @@ class RequiredFile implements \JsonSerializable
         $this->requiredFileFactory->addOrReplace($this, ($this->hasPropertyChanged('nonce') ? $this->getOriginalValue('nonce') : $this->nonce));
     }
 
+    public function resetExpiry()
+    {
+        $this->expiry = time() + 86400;
+    }
+
     public function expireSoon()
     {
         if (!$this->isExpired())
@@ -99,6 +104,9 @@ class RequiredFile implements \JsonSerializable
             throw new FormExpiredException('File expired or used');
     }
 
+    /**
+     * Mark this file as used
+     */
     public function markUsed()
     {
         $this->getLog()->debug('Marking ' . $this->nonce . ' as used');

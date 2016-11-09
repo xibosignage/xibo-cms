@@ -132,7 +132,6 @@ class Display implements \JsonSerializable
      */
     public $mediaInventoryStatus;
 
-    private $currentMacAddress;
     /**
      * @SWG\Property(description="The current Mac Address of the Player")
      * @var string
@@ -483,7 +482,7 @@ class Display implements \JsonSerializable
         }
 
         // Mac Address Changes
-        if ($this->macAddress != $this->currentMacAddress) {
+        if ($this->hasPropertyChanged('macAddress')) {
             // Mac address change detected
             $this->numberOfMacAddressChanges++;
             $this->lastChanged = time();
