@@ -182,138 +182,113 @@ class Display extends Base
         $layouts = [];
         $widgets = [];
         $media = [];
-        $units = [];
         $totalCount = 0;
         $completeCount = 0;
         $totalSize = 0;
         $completeSize = 0;
 
-        // Use our required files cache to work out our display should have downloaded, vs the information we
-        // have recorded in the nonce cache
-        $requiredFiles = $this->pool->getItem(\Xibo\Entity\Display::getCachePrefix() . $displayId . '/requiredFiles');
 
-        if ($requiredFiles->isHit()) {
+        // Show 3 widgets
+        $sql = '
+          SELECT layoutId, layout, `requiredfile`.*
+              FROM `layout`
+                INNER JOIN `requiredfile`
+                ON `requiredfile`.itemId = `layout`.layoutId
+           WHERE `requiredfile`.displayId = :displayId 
+            AND `requiredfile`.type = :type
+          ORDER BY layout
+        ';
 
-            $document = new \DOMDocument();
-            $document->loadXML($requiredFiles->get());
+        foreach ($this->store->select($sql, ['displayId' => $displayId, 'type' => 'L']) as $row) {
+            /** @var RequiredFile $rf */
+            $rf = $this->requiredFileFactory->getByDisplayAndLayout($displayId, $row['layoutId']);
 
-            // Parse each node and build a list of layoutIds, mediaIds and widgetIds we are interested in.
-            $layoutIds = [];
-            $mediaIds = [];
-            $widgetIds = [];
-            foreach ($document->getElementsByTagName('file') as $childNode) {
-                /** @var \DOMElement $childNode */
-                $type = $childNode->getAttribute('type');
+            $totalCount++;
 
-                if ($type == 'layout') {
-                    $layoutIds[] = $childNode->getAttribute('id');
-                } else if ($type == 'media') {
-                    $mediaIds[] = $childNode->getAttribute('id');
-                } else if ($type == 'resource') {
-                    $widgetIds[] = $childNode->getAttribute('mediaid');
-                }
+            if ($rf->complete) {
+                $completeCount = $completeCount + 1;
             }
 
-            // Show 3 widgets
-            if (count($layoutIds) > 0) {
-                foreach ($this->store->select('
-                SELECT layoutId, layout
-                  FROM `layout`
-                 WHERE layoutId IN (' . implode(',', array_fill(0, count($layoutIds), '?')) . ')
-                ORDER BY layout
-            ', $layoutIds) as $row) {
-                    /** @var RequiredFile $rf */
-                    $rf = $this->requiredFileFactory->getByDisplayAndLayout($displayId, $row['layoutId']);
-
-                    $totalSize = $totalSize + $rf->size;
-                    $totalCount++;
-
-                    if ($rf->complete) {
-                        $completeSize = $completeSize + $rf->size;
-                        $completeCount = $completeCount + 1;
-                    }
-
-                    $rf = $rf->toArray();
-                    $rf['layout'] = $row['layout'];
-                    $layouts[] = $rf;
-                }
-            }
-
-            // Media
-            if (count($mediaIds) > 0) {
-                foreach ($this->store->select('
-                SELECT `media`.name,
-                    `media`.type,
-                    `media`.mediaId
-                  FROM `media`
-                 WHERE mediaId IN (' . implode(',', array_fill(0, count($mediaIds), '?')) . ')
-                ORDER BY `media`.name
-            ', $mediaIds) as $row) {
-                    /** @var RequiredFile $rf */
-                    $rf = $this->requiredFileFactory->getByDisplayAndMedia($displayId, $row['mediaId']);
-
-                    $totalSize = $totalSize + $rf->size;
-                    $totalCount++;
-
-                    if ($rf->complete) {
-                        $completeSize = $completeSize + $rf->size;
-                        $completeCount = $completeCount + 1;
-                    }
-
-                    $rf = $rf->toArray();
-                    $rf['name'] = $row['name'];
-                    $rf['type'] = $row['type'];
-                    $media[] = $rf;
-                };
-            }
-
-            // Widgets
-            if (count($widgetIds) > 0) {
-                foreach ($this->store->select('
-                SELECT `widget`.type,
-                    `widgetoption`.value AS widgetName,
-                    `widget`.widgetId
-                  FROM `widget`
-                    LEFT OUTER JOIN `widgetoption`
-                    ON `widgetoption`.widgetId = `widget`.widgetId
-                      AND `widgetoption`.option = \'name\'
-                 WHERE `widget`.widgetId IN (' . implode(',', array_fill(0, count($widgetIds), '?')) . ') 
-                ORDER BY IFNULL(`widgetoption`.value, `widget`.type)
-            ', $widgetIds) as $row) {
-                    /** @var RequiredFile $rf */
-                    $rf = $this->requiredFileFactory->getByDisplayAndWidget($displayId, $row['widgetId']);
-
-                    $totalSize = $totalSize + $rf->size;
-                    $totalCount++;
-
-                    if ($rf->complete) {
-                        $completeSize = $completeSize + $rf->size;
-                        $completeCount = $completeCount + 1;
-                    }
-
-                    $rf = $rf->toArray();
-                    $rf['type'] = $row['type'];
-                    $rf['widgetName'] = $row['widgetName'];
-                    $widgets[] = $rf;
-                };
-            }
-
-            // Widget for file status
-            // Decide what our units are going to be, based on the size
-            $suffixes = array('bytes', 'k', 'M', 'G', 'T');
-            $base = (int)floor(log($totalSize) / log(1024));
-
-            if ($base < 0)
-                $base = 0;
-
-            $units = (isset($suffixes[$base]) ? $suffixes[$base] : '');
-            $this->getLog()->debug('Base for size is %d and suffix is %s', $base, $units);
-            $rfRegeneration = false;
-        } else {
-            // Required files is being regenerated.
-            $this->getLog()->debug('Required files being regenerated');
-            $rfRegeneration = true;
+            $rf = $rf->toArray();
+            $rf['layout'] = $row['layout'];
+            $layouts[] = $rf;
         }
+
+        // Media
+        $sql = '
+          SELECT mediaId, `name`, fileSize, media.type AS mediaType, storedAs, `requiredfile`.*
+              FROM `media`
+                INNER JOIN `requiredfile`
+                ON `requiredfile`.itemId = `media`.mediaId
+           WHERE `requiredfile`.displayId = :displayId 
+            AND `requiredfile`.type = :type
+          ORDER BY `name`
+        ';
+
+        foreach ($this->store->select($sql, ['displayId' => $displayId, 'type' => 'M']) as $row) {
+            /** @var RequiredFile $rf */
+            $rf = $this->requiredFileFactory->getByDisplayAndMedia($displayId, $row['mediaId']);
+
+            $totalSize = $totalSize + $row['fileSize'];
+            $totalCount++;
+
+            if ($rf->complete) {
+                $completeSize = $completeSize + $row['fileSize'];
+                $completeCount = $completeCount + 1;
+            }
+
+            $rf = $rf->toArray();
+            $rf['name'] = $row['name'];
+            $rf['type'] = $row['mediaType'];
+            $rf['storedAs'] = $row['storedAs'];
+            $rf['size'] = $row['fileSize'];
+            $media[] = $rf;
+        }
+
+        // Widgets
+        $sql = '
+          SELECT `widget`.type AS widgetType,
+                IFNULL(`widgetoption`.value, `widget`.type) AS widgetName,
+                `widget`.widgetId,
+                 `requiredfile`.*
+              FROM `widget`
+                INNER JOIN `requiredfile`
+                ON `requiredfile`.itemId = `widget`.widgetId
+                LEFT OUTER JOIN `widgetoption`
+                ON `widgetoption`.widgetId = `widget`.widgetId
+                  AND `widgetoption`.option = \'name\'
+           WHERE `requiredfile`.displayId = :displayId 
+            AND `requiredfile`.type = :type
+          ORDER BY IFNULL(`widgetoption`.value, `widget`.type)
+        ';
+
+        foreach ($this->store->select($sql, ['displayId' => $displayId, 'type' => 'W']) as $row) {
+            /** @var RequiredFile $rf */
+            $rf = $this->requiredFileFactory->getByDisplayAndWidget($displayId, $row['widgetId']);
+
+            $totalCount++;
+
+            if ($rf->complete) {
+                $completeCount = $completeCount + 1;
+            }
+
+            $rf = $rf->toArray();
+            $rf['type'] = $row['widgetType'];
+            $rf['widgetName'] = $row['widgetName'];
+            $widgets[] = $rf;
+        }
+
+        // Widget for file status
+        // Decide what our units are going to be, based on the size
+        $suffixes = array('bytes', 'k', 'M', 'G', 'T');
+        $base = (int)floor(log($totalSize) / log(1024));
+
+        if ($base < 0)
+            $base = 0;
+
+        $units = (isset($suffixes[$base]) ? $suffixes[$base] : '');
+        $this->getLog()->debug('Base for size is %d and suffix is %s', $base, $units);
+
 
         // Call to render the template
         $this->getState()->template = 'display-page-manage';
@@ -327,7 +302,6 @@ class Display extends Base
                 'media' => $media,
                 'widgets' => $widgets
             ],
-            'rfRegeneration' => $rfRegeneration,
             'status' => [
                 'units' => $units,
                 'countComplete' => $completeCount,

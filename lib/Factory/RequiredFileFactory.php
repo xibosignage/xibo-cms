@@ -8,8 +8,6 @@
 
 namespace Xibo\Factory;
 
-
-use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\RequiredFile;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
@@ -22,23 +20,17 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class RequiredFileFactory extends BaseFactory
 {
-    /** @var  PoolInterface */
-    private $pool;
-
-    private $directoryKey = '/directory/nonce';
-    private $displayKey = '/display/nonce';
+    private $statement = null;
 
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
-     * @param PoolInterface $pool
      */
-    public function __construct($store, $log, $sanitizerService, $pool)
+    public function __construct($store, $log, $sanitizerService)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
-        $this->pool = $pool;
     }
 
     /**
@@ -46,76 +38,34 @@ class RequiredFileFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return (new RequiredFile())->setDependencies($this->getLog(), $this);
+        return new RequiredFile($this->getStore(), $this->getLog());
     }
 
     /**
-     * @param RequiredFile $file
-     * @param string $nonce
+     * @param array $params
+     * @return RequiredFile[]
      */
-    public function addOrReplace($file, $nonce)
+    private function query($params)
     {
-        $cacheKey = '';
-        if ($file->layoutId != 0 && $file->regionId != 0 && $file->mediaId != 0) {
-            $cacheKey = 'widget/' . $file->mediaId;
-        } else if ($file->mediaId != 0) {
-            $cacheKey = 'media/' . $file->mediaId;
-        } else if ($file->layoutId != 0) {
-            $cacheKey = 'layout/' . $file->layoutId;
+        $files = [];
+
+        if ($this->statement === null) {
+            $this->statement = $this->getStore()->getConnection()->prepare('
+              SELECT * 
+                FROM `requiredfile` 
+               WHERE `displayId` = :displayId
+                  AND `type` = :type 
+                  AND `itemId` = :itemId
+              ');
         }
 
-        $displayCache = $this->displayKey . '/' . $file->displayId . '/inventory/' . $cacheKey;
+        $this->statement->execute($params);
 
-        $this->getLog()->debug('Add or replace for file: ' . $displayCache);
-
-        // Update this file in the cache.
-        $item = $this->pool->getItem($displayCache);
-        $item->set($file);
-        $item->expiresAfter(86400);
-
-        // Update this nonce in the directory
-        $directory = $this->pool->getItem($this->directoryKey . '/' . $file->nonce);
-        $directory->set($displayCache);
-        $directory->expiresAfter(86400);
-
-        // Save both items
-        $this->pool->saveDeferred($item);
-        $this->pool->saveDeferred($directory);
-
-        if ($nonce !== $file->nonce) {
-            // Nonce provided is not equal to the current nonce, which means the nonce for this required file
-            // has changed.
-            // We should delete the cache keys for the old nonce in the directory.
-            $this->pool->deleteItem($this->directoryKey . '/' . $nonce);
-        }
-    }
-
-    /**
-     * @param string $nonce
-     * @return RequiredFile
-     * @throws NotFoundException
-     */
-    public function getByNonce($nonce)
-    {
-        // Try and get the required file diplay id from the main directory
-        $this->getLog()->debug('Required file by Nonce: ' . $nonce);
-
-        $item = $this->pool->getItem($this->directoryKey . '/' . $nonce);
-
-        if ($item->isMiss()) {
-            $this->getLog()->debug('Nonce ' . $nonce . ' does not exist in directory.');
-            throw new NotFoundException();
+        foreach ($this->statement->fetchAll(\PDO::FETCH_ASSOC) as $item) {
+            $files[] = $this->createEmpty()->hydrate($item);
         }
 
-        // We have the nonce in the cache.
-        $file = $this->pool->getItem($item->get());
-
-        if ($file->isMiss()) {
-            $this->getLog()->debug('Nonce ' . $nonce . ' in directory but has the wrong key.');
-            throw new NotFoundException();
-        }
-
-        return $file->get()->setDependencies($this->getLog(), $this);
+        return $files;
     }
 
     /**
@@ -126,12 +76,12 @@ class RequiredFileFactory extends BaseFactory
      */
     public function getByDisplayAndLayout($displayId, $layoutId)
     {
-        $item = $this->pool->getItem($this->displayKey . '/' . $displayId . '/inventory/layout/' . $layoutId);
+        $result = $this->query(['displayId' => $displayId, 'type' => 'L', 'itemId' => $layoutId]);
 
-        if ($item->isMiss())
+        if (count($result) <= 0)
             throw new NotFoundException(__('Required file not found for Display and Layout Combination'));
 
-        return $item->get()->setDependencies($this->getLog(), $this);
+        return $result[0];
     }
 
     /**
@@ -142,12 +92,12 @@ class RequiredFileFactory extends BaseFactory
      */
     public function getByDisplayAndMedia($displayId, $mediaId)
     {
-        $item = $this->pool->getItem($this->displayKey . '/' . $displayId . '/inventory/media/' . $mediaId);
+        $result = $this->query(['displayId' => $displayId, 'type' => 'M', 'itemId' => $mediaId]);
 
-        if ($item->isMiss())
+        if (count($result) <= 0)
             throw new NotFoundException(__('Required file not found for Display and Media Combination'));
 
-        return $item->get()->setDependencies($this->getLog(), $this);
+        return $result[0];
     }
 
     /**
@@ -158,12 +108,12 @@ class RequiredFileFactory extends BaseFactory
      */
     public function getByDisplayAndWidget($displayId, $widgetId)
     {
-        $item = $this->pool->getItem($this->displayKey . '/' . $displayId . '/inventory/widget/' . $widgetId);
+        $result = $this->query(['displayId' => $displayId, 'type' => 'W', 'itemId' => $widgetId]);
 
-        if ($item->isMiss())
+        if (count($result) <= 0)
             throw new NotFoundException(__('Required file not found for Display and Layout Widget'));
 
-        return $item->get()->setDependencies($this->getLog(), $this);
+        return $result[0];
     }
 
     /**
@@ -177,41 +127,39 @@ class RequiredFileFactory extends BaseFactory
     public function createForLayout($displayId, $layoutId, $size, $path)
     {
         try {
-            $nonce = $this->getByDisplayAndLayout($displayId, $layoutId);
+            $requiredFile = $this->getByDisplayAndLayout($displayId, $layoutId);
         }
         catch (NotFoundException $e) {
-            $nonce = $this->createEmpty();
+            $requiredFile = $this->createEmpty();
         }
 
-        $nonce->displayId = $displayId;
-        $nonce->layoutId = $layoutId;
-        $nonce->size = $size;
-        $nonce->storedAs = $path;
-        return $nonce;
+        $requiredFile->displayId = $displayId;
+        $requiredFile->type = 'L';
+        $requiredFile->itemId = $layoutId;
+        $requiredFile->size = $size;
+        $requiredFile->path = $path;
+        return $requiredFile;
     }
 
     /**
      * Create for Get Resource
      * @param $displayId
-     * @param $layoutId
-     * @param $regionId
-     * @param $mediaId
+     * @param $widgetId
      * @return RequiredFile
      */
-    public function createForGetResource($displayId, $layoutId, $regionId, $mediaId)
+    public function createForGetResource($displayId, $widgetId)
     {
         try {
-            $nonce = $this->getByDisplayAndWidget($displayId, $mediaId);
+            $requiredFile = $this->getByDisplayAndWidget($displayId, $widgetId);
         }
         catch (NotFoundException $e) {
-            $nonce = $this->createEmpty();
+            $requiredFile = $this->createEmpty();
         }
 
-        $nonce->displayId = $displayId;
-        $nonce->layoutId = $layoutId;
-        $nonce->regionId = $regionId;
-        $nonce->mediaId = $mediaId;
-        return $nonce;
+        $requiredFile->displayId = $displayId;
+        $requiredFile->type = 'W';
+        $requiredFile->itemId = $widgetId;
+        return $requiredFile;
     }
 
     /**
@@ -225,25 +173,17 @@ class RequiredFileFactory extends BaseFactory
     public function createForMedia($displayId, $mediaId, $size, $path)
     {
         try {
-            $nonce = $this->getByDisplayAndMedia($displayId, $mediaId);
+            $requiredFile = $this->getByDisplayAndMedia($displayId, $mediaId);
         }
         catch (NotFoundException $e) {
-            $nonce = $this->createEmpty();
+            $requiredFile = $this->createEmpty();
         }
 
-        $nonce->displayId = $displayId;
-        $nonce->mediaId = $mediaId;
-        $nonce->size = $size;
-        $nonce->storedAs = $path;
-        return $nonce;
-    }
-
-    /**
-     * Expire all nonces
-     * @param $displayId
-     */
-    public function expireAll($displayId)
-    {
-        $this->pool->deleteItem($this->displayKey . '/' . $displayId . '/inventory');
+        $requiredFile->displayId = $displayId;
+        $requiredFile->type = 'M';
+        $requiredFile->itemId = $mediaId;
+        $requiredFile->size = $size;
+        $requiredFile->path = $path;
+        return $requiredFile;
     }
 }

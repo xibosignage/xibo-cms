@@ -176,7 +176,7 @@ class Soap4 extends Soap
         $this->logBandwidth($display->displayId, Bandwidth::$REGISTER, strlen($returnXml));
 
         // Audit our return
-        $this->getLog()->debug($returnXml, $display->displayId);
+        $this->getLog()->debug($returnXml);
 
         return $returnXml;
     }
@@ -249,7 +249,7 @@ class Soap4 extends Soap
                 $chunkSize = filesize($path);
 
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
-                $requiredFile->markUsed();
+                $requiredFile->save();
 
             } else if ($fileType == "media") {
                 // Validate the nonce
@@ -276,7 +276,7 @@ class Soap4 extends Soap
                     throw new NotFoundException('Empty file');
 
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
-                $requiredFile->markUsed();
+                $requiredFile->save();
 
             } else {
                 throw new NotFoundException('Unknown FileType Requested.');

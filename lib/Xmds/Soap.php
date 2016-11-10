@@ -39,6 +39,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\Random;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -277,8 +278,18 @@ class Soap
             return $output;
         }
 
-        // Expire all nonces
-        $this->requiredFileFactory->expireAll($this->display->displayId);
+        // Generate a new nonce for this player and store it in the cache.
+        $playerNonce = Random::generateString(32);
+        $playerNonceCache = $this->pool->getItem('/display/nonce/' . $this->display->displayId);
+        $playerNonceCache->set($playerNonce);
+        $this->pool->saveDeferred($playerNonceCache);
+
+        // Get all required files for this display.
+        // we will use this to drop items from the requirefile table if they are no longer in required files
+        $rfIds = array_map(function ($element) {
+            return intval($element['rfId']);
+        }, $this->getStore()->select('SELECT rfId FROM `requiredfile` WHERE displayId = :displayId', ['displayId' => $this->display->displayId]));
+        $newRfIds = [];
 
         // Build a new RF
         $requiredFilesXml = new \DOMDocument("1.0");
@@ -486,8 +497,8 @@ class Soap
                 }
 
                 // Add nonce
-                $mediaNonce = $this->requiredFileFactory->createForMedia($this->display->displayId, $id, $fileSize, $path);
-                $mediaNonce->save();
+                $mediaNonce = $this->requiredFileFactory->createForMedia($this->display->displayId, $id, $fileSize, $path)->save();
+                $newRfIds[] = $mediaNonce->rfId;
 
                 // Add the file node
                 $file = $requiredFilesXml->createElement("file");
@@ -498,7 +509,7 @@ class Soap
 
                 if ($httpDownloads) {
                     // Serve a link instead (standard HTTP link)
-                    $file->setAttribute("path", $this->generateRequiredFileDownloadPath($mediaNonce->nonce));
+                    $file->setAttribute("path", $this->generateRequiredFileDownloadPath('M', $id, $playerNonce));
                     $file->setAttribute("saveAs", $path);
                     $file->setAttribute("download", 'http');
                 }
@@ -553,8 +564,8 @@ class Soap
                 $this->getLog()->debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
 
             // Add nonce
-            $layoutNonce = $this->requiredFileFactory->createForLayout($this->display->displayId, $layoutId, $fileSize, $fileName);
-            $layoutNonce->save();
+            $layoutNonce = $this->requiredFileFactory->createForLayout($this->display->displayId, $layoutId, $fileSize, $fileName)->save();
+            $newRfIds[] = $layoutNonce->rfId;
 
             // Add the Layout file element
             $file = $requiredFilesXml->createElement("file");
@@ -567,7 +578,7 @@ class Soap
 
             if ($httpDownloads && $supportsHttpLayouts) {
                 // Serve a link instead (standard HTTP link)
-                $file->setAttribute("path", $this->generateRequiredFileDownloadPath($layoutNonce->nonce));
+                $file->setAttribute("path", $this->generateRequiredFileDownloadPath('L', $layoutId, $playerNonce));
                 $file->setAttribute("saveAs", $fileName);
                 $file->setAttribute("download", 'http');
             }
@@ -596,7 +607,8 @@ class Soap
                             $modules[$widget->type]->renderAs == 'html'
                         ) {
                             // Add nonce
-                            $this->requiredFileFactory->createForGetResource($this->display->displayId, $layoutId, $region->regionId, $widget->widgetId)->save();
+                            $getResourceRf = $this->requiredFileFactory->createForGetResource($this->display->displayId, $widget->widgetId)->save();
+                            $newRfIds[] = $getResourceRf->rfId;
 
                             // Does the media provide a modified Date?
                             $widgetModifiedDt = $layoutModifiedDt->getTimestamp();
@@ -655,6 +667,14 @@ class Soap
         } catch (\Exception $e) {
             $this->getLog()->error('Unable to get a list of blacklisted files. ' . $e->getMessage());
             return new \SoapFault('Sender', 'Unable to get a list of blacklisted files');
+        }
+
+        // Remove any required files that remain in the array of rfIds
+        $rfIds = array_values(array_diff($rfIds, $newRfIds));
+        if (count($rfIds) > 0) {
+            $this->getLog()->debug('Removing ' . count($rfIds) . ' from requiredfiles');
+
+            $this->getStore()->update('DELETE FROM `requiredfile` WHERE rfId IN (' . implode(',', array_fill(0, count($rfIds), '?')) . ')', $rfIds);
         }
 
         // Phone Home?
@@ -1488,7 +1508,7 @@ class Soap
                 // File complete?
                 $complete = $node->getAttribute('complete');
                 $requiredFile->complete = $complete;
-                $requiredFile->save(['refreshNonce' => false]);
+                $requiredFile->save();
 
                 // If this item is a 0 then set not complete
                 if ($complete == 0)
@@ -1502,8 +1522,14 @@ class Soap
         $this->display->mediaInventoryStatus = $mediaInventoryComplete;
 
         // Only call save if this property has actually changed.
-        if ($this->display->hasPropertyChanged('mediaInventoryStatus'))
+        if ($this->display->hasPropertyChanged('mediaInventoryStatus')) {
+            // If we are complete, then drop the player nonce cache
+            if ($this->display->mediaInventoryStatus == 1) {
+                $this->pool->deleteItem('/display/nonce/' . $this->display->displayId);
+            }
+
             $this->display->save(Display::$saveOptionsMinimum);
+        }
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$MEDIAINVENTORY, strlen($inventory));
 
@@ -1550,7 +1576,7 @@ class Soap
             $resource = $module->getResource($this->display->displayId);
 
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
-            $requiredFile->markUsed();
+            $requiredFile->save();
 
             if ($resource == '')
                 throw new ControllerNotImplemented();
@@ -1763,12 +1789,14 @@ class Soap
 
     /**
      * Generate a file download path for HTTP downloads, taking into account the precence of a CDN.
+     * @param $type
+     * @param $itemId
      * @param $nonce
      * @return string
      */
-    protected function generateRequiredFileDownloadPath($nonce)
+    protected function generateRequiredFileDownloadPath($type, $itemId, $nonce)
     {
-        $saveAsPath = Wsdl::getRoot() . '?file=' . $nonce;
+        $saveAsPath = Wsdl::getRoot() . '?file=' . $nonce . '&displayId=' . $this->display->displayId . '&type=' . $type . '&itemId=' . $itemId;
         // CDN?
         $cdnUrl = $this->configService->GetSetting('CDN_URL');
         if ($cdnUrl != '') {
