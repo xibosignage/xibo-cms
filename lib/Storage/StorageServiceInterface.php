@@ -23,14 +23,17 @@ interface StorageServiceInterface
     public function __construct($logger);
 
     /**
+     * Set a connection
+     * @param string $name
      * @return $this
      */
-    public function setConnection();
+    public function setConnection($name = 'default');
 
     /**
      * Closes the stored connection
+     * @param string|null $name The name of the connection, or null for all connections
      */
-    public function close();
+    public function close($name = null);
 
     /**
      * Open a new connection using the stored details
@@ -50,9 +53,10 @@ interface StorageServiceInterface
 
     /**
      * Get the Raw Connection
+     * @param string $name The connection name
      * @return \PDO
      */
-    public function getConnection();
+    public function getConnection($name = 'default');
 
     /**
      * Check to see if the query returns records
@@ -97,13 +101,23 @@ interface StorageServiceInterface
     public function isolated($sql, $params);
 
     /**
-     * Commit if necessary
+     * Run the SQL statement with a deadlock loop
+     * @param $sql
+     * @param $params
+     * @param string|null $connection
+     * @return mixed
      */
-    public function commitIfNecessary();
+    public function updateWithDeadlockLoop($sql, $params, $connection = null);
+
+    /**
+     * Commit if necessary
+     * @param $name
+     */
+    public function commitIfNecessary($name = 'default');
 
     /**
      * Set the TimeZone for this connection
-     * @param \PDO $connection
+     * @param string|null $connection
      * @param string $timeZone e.g. -8:00
      */
     public function setTimeZone($timeZone, $connection = null);
@@ -113,4 +127,11 @@ interface StorageServiceInterface
      * @return array
      */
     public static function stats();
+
+    /**
+     * @param $connection
+     * @param $key
+     * @return mixed
+     */
+    public static function incrementStat($connection, $key);
 }

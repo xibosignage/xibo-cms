@@ -63,7 +63,7 @@ class Storage extends Middleware
         $stats = PdoStorageService::stats();
         $stats['length'] = microtime() - $app->startTime;
 
-        $app->logService->info('PDO stats: %s.', json_encode($stats, JSON_PRETTY_PRINT));
+        $app->logService->info('Request stats: %s.', json_encode($stats, JSON_PRETTY_PRINT));
 
         $app->store->close();
     }

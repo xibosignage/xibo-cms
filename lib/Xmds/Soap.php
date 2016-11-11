@@ -23,6 +23,7 @@ use Xibo\Entity\Stat;
 use Xibo\Entity\UserGroup;
 use Xibo\Entity\Widget;
 use Xibo\Exception\ControllerNotImplemented;
+use Xibo\Exception\DeadlockException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\BandwidthFactory;
 use Xibo\Factory\DataSetFactory;
@@ -674,7 +675,11 @@ class Soap
         if (count($rfIds) > 0) {
             $this->getLog()->debug('Removing ' . count($rfIds) . ' from requiredfiles');
 
-            $this->getStore()->update('DELETE FROM `requiredfile` WHERE rfId IN (' . implode(',', array_fill(0, count($rfIds), '?')) . ')', $rfIds);
+            try {
+                $this->getStore()->updateWithDeadlockLoop('DELETE FROM `requiredfile` WHERE rfId IN (' . implode(',', array_fill(0, count($rfIds), '?')) . ')', $rfIds);
+            } catch (DeadlockException $deadlockException) {
+                $this->getLog()->error('Deadlock when deleting required files - ignoring and continuing with request');
+            }
         }
 
         // Phone Home?
@@ -1528,7 +1533,7 @@ class Soap
                 $this->pool->deleteItem('/display/nonce/' . $this->display->displayId);
             }
 
-            $this->display->save(Display::$saveOptionsMinimum);
+            $this->display->saveMediaInventoryStatus();
         }
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$MEDIAINVENTORY, strlen($inventory));

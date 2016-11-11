@@ -9,6 +9,7 @@
 namespace Xibo\Service;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Display;
+use Xibo\Exception\DeadlockException;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Storage\StorageServiceInterface;
@@ -95,9 +96,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
         $this->log->debug('Process queue of ' . count($this->displayIds) . ' display notifications');
 
-        // Create a new connection
-        $this->store->setConnection();
-
         // We want to do 3 things.
         // 1. Drop the Cache for each displayId
         // 2. Update the mediaInventoryStatus on each DisplayId to 3 (pending)
@@ -109,7 +107,11 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         // Make a list of them that we can use in the update statement
         $qmarks = str_repeat('?,', count($displayIds) - 1) . '?';
 
-        $this->store->update('UPDATE `display` SET mediaInventoryStatus = 3 WHERE displayId IN (' . $qmarks . ')', $displayIds);
+        try {
+            $this->store->updateWithDeadlockLoop('UPDATE `display` SET mediaInventoryStatus = 3 WHERE displayId IN (' . $qmarks . ')', $displayIds);
+        } catch (DeadlockException $deadlockException) {
+            $this->log->error('Failed to update media inventory status: ' . $deadlockException->getMessage());
+        }
 
         // Dump the cache
         foreach ($displayIds as $displayId) {
@@ -118,10 +120,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
         // Player actions
         $this->processPlayerActions();
-
-        // Close the connetion
-        $this->store->commitIfNecessary();
-        $this->store->close();
     }
 
     /**
