@@ -984,7 +984,7 @@ class Library extends Base
                 $media = $this->mediaFactory->createModuleSystemFile('fonts.css', $tempUrl);
                 $media->expires = 0;
                 $media->moduleSystemFile = true;
-                $media->force = true;
+                $media->isSaveRequired = true;
                 $media->save();
 
                 $cssDetails = [

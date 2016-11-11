@@ -378,9 +378,6 @@ class TwitterMetro extends TwitterBase
         // Get the date format to apply
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
 
-        // Store promises for file download
-        $promises = [];
-
         // This should return the formatted items.
         foreach ($data->statuses as $tweet) {
             // Substitute for all matches in the template
@@ -465,10 +462,7 @@ class TwitterMetro extends TwitterBase
                             $tweet->user->profile_image_url = str_replace('_normal', $imageSizeType, $tweet->user->profile_image_url);
                             
                             // Grab the profile image
-                            $file = $this->mediaFactory->createModuleFile('twitter_' . $tweet->user->id, $tweet->user->profile_image_url);
-                            $file->isRemote = true;
-                            $file->expires = $expires;
-                            $promises[] = $file->saveAsync();
+                            $file = $this->mediaFactory->queueDownload('twitter_' . $tweet->user->id, $tweet->user->profile_image_url, $expires);
 
                             // Tag this layout with this file
                             $this->assignMedia($file->mediaId);
@@ -511,10 +505,7 @@ class TwitterMetro extends TwitterBase
                             $photoUrl = $mediaObject->media_url;
                             
                             if ($photoUrl != '') {
-                                $file = $this->mediaFactory->createModuleFile('twitter_photo_' . $tweet->user->id . '_' . $mediaObject->id_str, $photoUrl);
-                                $file->isRemote = true;
-                                $file->expires = $expires;
-                                $promises[] = $file->saveAsync();
+                                $file = $this->mediaFactory->queueDownload('twitter_photo_' . $tweet->user->id . '_' . $mediaObject->id_str, $photoUrl, $expires);
 
                                 // Tag this layout with this file
                                 $this->assignMedia($file->mediaId);
@@ -547,11 +538,8 @@ class TwitterMetro extends TwitterBase
             $return[] = $rowString;
         }
 
-        if (count($promises) > 0) {
-            $this->getLog()->debug('There are ' . count($promises) . ' promises to resolve. Doing that now.');
-            $promise = \GuzzleHttp\Promise\each_limit($promises, 5);
-            $promise->wait();
-        }
+        // Process the download queue
+        $this->mediaFactory->processDownloads();
 
         // Return the data array
         return $return;
