@@ -249,6 +249,8 @@ class PdoStorageService implements StorageServiceInterface
         if ($connection === null)
             $connection = 'isolated';
 
+        $queryHash = substr($sql, 0, 15) . '... [' . md5($sql . json_encode($params)) . ']';
+
         // Prepare the statement
         $statement = $this->getConnection($connection)->prepare($sql);
 
@@ -268,7 +270,7 @@ class PdoStorageService implements StorageServiceInterface
             }
 
             // Sleep a bit, give the DB time to breathe
-            $this->log->debug('Retrying query after a short nap');
+            $this->log->debug('Retrying query after a short nap, try: ' . $retries . '. Query Hash: ' . $queryHash);
             usleep(10000);
 
         } while ($retries--);

@@ -152,7 +152,7 @@ if (isset($_GET['file'])) {
 
         } else if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
             // Log bandwidth for the file being requested
-            $app->logService->info('Delete request for ' . $file->path . ' marking nonce as used.', $file->displayId);
+            $app->logService->info('Delete request for ' . $file->path . ' marking nonce as used.');
 
         } else {
             // Most likely a Get Request
@@ -171,18 +171,14 @@ if (isset($_GET['file'])) {
         }
 
         // Log bandwidth
-        if ($logBandwidth) {
+        if ($logBandwidth)
             $app->bandwidthFactory->createAndSave(4, $file->displayId, $file->size);
-        }
     }
     catch (\Exception $e) {
         if ($e instanceof \Xibo\Exception\NotFoundException || $e instanceof \Xibo\Exception\FormExpiredException) {
             $app->logService->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404. ' . $e->getMessage());
             // 404
             header('HTTP/1.0 404 Not Found');
-
-            if ($app->store->getConnection()->inTransaction())
-                $app->store->getConnection()->commit();
         }
         else {
             $app->logService->error('Unknown Error: ' . $e->getMessage());
@@ -190,9 +186,6 @@ if (isset($_GET['file'])) {
 
             // Issue a 500
             header('HTTP/1.0 500 Internal Server Error');
-
-            if ($app->store->getConnection()->inTransaction())
-                $app->store->getConnection()->rollBack();
         }
     }
 
