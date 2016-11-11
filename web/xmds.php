@@ -138,6 +138,7 @@ if (isset($_GET['file'])) {
 
         // Add the size to the bytes we have already requested.
         $file->bytesRequested = $file->bytesRequested + $file->size;
+        $file->save();
 
         // Only log bandwidth under certain conditions
         // also controls whether the nonce is updated

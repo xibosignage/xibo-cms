@@ -8,6 +8,7 @@
 
 namespace Xibo\Entity;
 
+use Xibo\Exception\DeadlockException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -76,13 +77,17 @@ class RequiredFile implements \JsonSerializable
      */
     private function edit()
     {
-        $this->store->update('
+        try {
+            $this->store->updateWithDeadlockLoop('
             UPDATE `requiredfile` SET complete = :complete, bytesRequested = :bytesRequested
              WHERE rfId = :rfId
         ', [
-            'rfId' => $this->rfId,
-            'bytesRequested' => $this->bytesRequested,
-            'complete' => $this->complete
-        ]);
+                'rfId' => $this->rfId,
+                'bytesRequested' => $this->bytesRequested,
+                'complete' => $this->complete
+            ]);
+        } catch (DeadlockException $deadlockException) {
+            $this->getLog()->error('Failed to update bytes requested on ' . $this->rfId . ' due to deadlock');
+        }
     }
 }
