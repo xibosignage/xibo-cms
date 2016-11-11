@@ -60,7 +60,7 @@ class PdoStorageService implements StorageServiceInterface
     {
         // Create a new connection
         $this->conn[$name] = PdoStorageService::newConnection();
-        return $this;
+        return $this->conn[$name];
     }
 
     /** @inheritdoc */
