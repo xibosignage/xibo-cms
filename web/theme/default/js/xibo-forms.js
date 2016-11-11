@@ -351,6 +351,46 @@ var forecastIoFormSetup = function() {
     });
 };
 
+var financeFormSetup = function() {
+    $('#backgroundColor').colorpicker({format: 'rgba'});
+
+    // If all 3 of the template fields are empty, then the template should be reapplied.
+    if (!$("#overrideTemplate").is(":checked") && ($("#currentTemplate").val() == "" || $("#mainTemplate").val() == "" || $("#itemTemplate").val() == "" || $("#styleSheet").val() == "")) {
+        // Reapply
+        var templateId = $("#templateId").val();
+
+        $.each($('.bootbox').data().extra, function(index, value) {
+            if (value.id == templateId) {
+                $("#widgetOriginalWidth").val(value.widgetOriginalWidth);
+                $("#widgetOriginalHeight").val(value.widgetOriginalHeight);
+                $("#mainTemplate").val(value.main);
+                $("#itemTemplate").val(value.item);
+                $("#styleSheet").val(value.css);
+                $("#maxItemsPerPage").val(value.maxItemsPerPage);
+            }
+        });
+    }
+
+    $("#templateId").on('change', function() {
+        // Check to see if the override template check box is unchecked
+        if (!$("#overrideTemplate").is(":checked")) {
+
+            var templateId = $("#templateId").val();
+
+            $.each($('.bootbox').data().extra, function(index, value) {
+                if (value.id == templateId) {
+                    $("#widgetOriginalWidth").val(value.widgetOriginalWidth);
+                    $("#widgetOriginalHeight").val(value.widgetOriginalHeight);
+                    $("#mainTemplate").val(value.main);
+                    $("#itemTemplate").val(value.item);
+                    $("#styleSheet").val(value.css);
+                    $("#maxItemsPerPage").val(value.maxItemsPerPage);
+                }
+            });
+        }
+    });
+};
+
 var requestTab = function(tabName, url) {
     // Fill a new tab with the forecast information and then switch to that tab.
     $.ajax({
