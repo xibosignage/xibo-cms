@@ -60,7 +60,7 @@ class PdoStorageService implements StorageServiceInterface
     {
         // Create a new connection
         $this->conn[$name] = PdoStorageService::newConnection();
-        return $this->conn[$name];
+        return $this;
     }
 
     /** @inheritdoc */
@@ -140,7 +140,7 @@ class PdoStorageService implements StorageServiceInterface
     public function getConnection($name = 'default')
     {
         if (!isset($this->conn[$name]))
-            $this->conn[$name] = $this->setConnection($name);
+            $this->conn[$name] = PdoStorageService::newConnection();
 
         return $this->conn[$name];
     }
