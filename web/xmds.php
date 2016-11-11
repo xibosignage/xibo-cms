@@ -136,25 +136,27 @@ if (isset($_GET['file'])) {
                 throw new \Xibo\Exception\NotFoundException('Unknown type');
         }
 
-        // Add the size to the bytes we have already requested.
-        $file->bytesRequested = $file->bytesRequested + $file->size;
-        $file->save();
-
         // Only log bandwidth under certain conditions
         // also controls whether the nonce is updated
-        $logBandwidth = true;
+        $logBandwidth = false;
 
         // Are we a DELETE request or otherwise?
         if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
             // Supply a header only, pointing to the original file name
             header('Content-Disposition: attachment; filename="' . $file->path . '"');
-            $logBandwidth = false;
 
         } else if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
             // Log bandwidth for the file being requested
-            $app->logService->info('Delete request for ' . $file->path . ' marking nonce as used.');
+            $app->logService->info('Delete request for ' . $file->path);
+
+            // Log bandwith here if we are a CDN
+            $logBandwidth = ($app->configService->GetSetting('CDN_URL') != '');
 
         } else {
+
+            // Log bandwidth here if we are NOT a CDN
+            $logBandwidth = ($app->configService->GetSetting('CDN_URL') == '');
+
             // Most likely a Get Request
             // Issue magic packet
             $app->logService->info('HTTP GetFile request redirecting to ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->path);
@@ -171,8 +173,13 @@ if (isset($_GET['file'])) {
         }
 
         // Log bandwidth
-        if ($logBandwidth)
+        if ($logBandwidth) {
+            // Add the size to the bytes we have already requested.
+            $file->bytesRequested = $file->bytesRequested + $file->size;
+            $file->save();
+
             $app->bandwidthFactory->createAndSave(4, $file->displayId, $file->size);
+        }
     }
     catch (\Exception $e) {
         if ($e instanceof \Xibo\Exception\NotFoundException || $e instanceof \Xibo\Exception\FormExpiredException) {

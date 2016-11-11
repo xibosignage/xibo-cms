@@ -249,28 +249,32 @@ class PdoStorageService implements StorageServiceInterface
         if ($connection === null)
             $connection = 'isolated';
 
-        $queryHash = substr($sql, 0, 15) . '... [' . md5($sql . json_encode($params)) . ']';
-
         // Prepare the statement
         $statement = $this->getConnection($connection)->prepare($sql);
 
         // Deadlock protect this statement
         $success = false;
-        $retries = 3;
+        $retries = 2;
         do {
             try {
                 self::incrementStat($connection, 'update');
                 $statement->execute($params);
+                // Successful
                 $success = true;
+
             } catch (\PDOException $PDOException) {
                 $errorCode = isset($PDOException->errorInfo[1]) ? $PDOException->errorInfo[1] : $PDOException->getCode();
 
-                if ($errorCode != 1213 || $errorCode != 1205)
+                if ($errorCode != 1213 && $errorCode != 1205)
                     throw $PDOException;
             }
 
+            if ($success)
+                break;
+
             // Sleep a bit, give the DB time to breathe
-            $this->log->debug('Retrying query after a short nap, try: ' . $retries . '. Query Hash: ' . $queryHash);
+            $queryHash = substr($sql, 0, 15) . '... [' . md5($sql . json_encode($params)) . ']';
+            $this->log->debug('Retrying query after a short nap, try: ' . (3 - $retries) . '. Query Hash: ' . $queryHash);
             usleep(10000);
 
         } while ($retries--);
