@@ -126,12 +126,12 @@ interface StorageServiceInterface
      * PDO stats
      * @return array
      */
-    public static function stats();
+    public function stats();
 
     /**
      * @param $connection
      * @param $key
      * @return mixed
      */
-    public static function incrementStat($connection, $key);
+    public function incrementStat($connection, $key);
 }

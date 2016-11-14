@@ -59,7 +59,7 @@ class DatabaseLogHandler extends AbstractProcessingHandler
         );
 
         try {
-            PdoStorageService::incrementStat('log', 'insert');
+            PdoStorageService::incrementStatStatic('log', 'insert');
             self::$statement->execute($params);
         }
         catch (\PDOException $e) {

@@ -159,7 +159,7 @@ class PdoStorageService implements StorageServiceInterface
         $sth = $this->getConnection()->prepare($sql);
         $sth->execute($params);
 
-        self::incrementStat('default', 'exists');
+        $this->incrementStat('default', 'exists');
 
         if ($sth->fetch())
             return true;
@@ -187,7 +187,7 @@ class PdoStorageService implements StorageServiceInterface
 
         $sth->execute($params);
 
-        self::incrementStat('default', 'insert');
+        $this->incrementStat('default', 'insert');
 
         return intval($this->getConnection()->lastInsertId());
     }
@@ -205,7 +205,7 @@ class PdoStorageService implements StorageServiceInterface
 
         $sth->execute($params);
 
-        self::incrementStat('default', 'update');
+        $this->incrementStat('default', 'update');
 	}
 
 	/**
@@ -224,7 +224,7 @@ class PdoStorageService implements StorageServiceInterface
 
         $sth->execute($params);
 
-        self::incrementStat('default', 'select');
+        $this->incrementStat('default', 'select');
 
         return $sth->fetchAll(\PDO::FETCH_ASSOC);
 	}
@@ -240,7 +240,7 @@ class PdoStorageService implements StorageServiceInterface
 
         $sth->execute($params);
 
-        self::incrementStat('isolated', 'update');
+        $this->incrementStat('isolated', 'update');
     }
 
     /** @inheritdoc */
@@ -257,7 +257,7 @@ class PdoStorageService implements StorageServiceInterface
         $retries = 2;
         do {
             try {
-                self::incrementStat($connection, 'update');
+                $this->incrementStat($connection, 'update');
                 $statement->execute($params);
                 // Successful
                 $success = true;
@@ -287,7 +287,7 @@ class PdoStorageService implements StorageServiceInterface
     public function commitIfNecessary($name = 'default')
     {
         if ($this->getConnection($name)->inTransaction()) {
-            self::incrementStat($name, 'commit');
+            $this->incrementStat($name, 'commit');
             $this->getConnection()->commit();
         }
     }
@@ -301,20 +301,31 @@ class PdoStorageService implements StorageServiceInterface
     {
         $this->getConnection($connection)->query('SET time_zone = \'' . $timeZone . '\';');
 
-        self::incrementStat($connection, 'utility');
+        $this->incrementStat($connection, 'utility');
 	}
 
     /**
      * PDO stats
      * @return array
      */
-    public static function stats()
+    public function stats()
     {
         return self::$stats;
     }
 
     /** @inheritdoc */
-    public static function incrementStat($connection, $key)
+    public function incrementStat($connection, $key)
+    {
+        $currentCount = (isset(self::$stats[$connection][$key])) ? self::$stats[$connection][$key] : 0;
+        self::$stats[$connection][$key] = $currentCount + 1;
+    }
+
+    /**
+     * Statically increment stats
+     * @param $connection
+     * @param $key
+     */
+    public static function incrementStatStatic($connection, $key)
     {
         $currentCount = (isset(self::$stats[$connection][$key])) ? self::$stats[$connection][$key] : 0;
         self::$stats[$connection][$key] = $currentCount + 1;
