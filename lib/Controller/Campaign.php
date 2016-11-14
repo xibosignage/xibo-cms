@@ -405,14 +405,13 @@ class Campaign extends Base
 
     /**
      * Model to use for supplying key/value pairs to arrays
-     * SWG\Definition(
+     * @SWG\Definition(
      *  definition="LayoutAssignmentArray",
-     *  type="array",
-     *  SWG\Property(
+     *  @SWG\Property(
      *      property="layoutId",
      *      type="integer"
      *  ),
-     *  SWG\Property(
+     *  @SWG\Property(
      *      property="displayOrder",
      *      type="integer"
      *  )
@@ -423,40 +422,40 @@ class Campaign extends Base
      * Assigns a layout to a Campaign
      * @param int $campaignId
      *
-     * SWG\Post(
+     * @SWG\Post(
      *  path="/campaign/layout/assign/{campaignId}",
      *  operationId="campaignAssignLayout",
      *  tags={"campaign"},
      *  summary="Assign Layouts",
      *  description="Assign Layouts to a Campaign",
-     *  SWG\Parameter(
+     *  @SWG\Parameter(
      *      name="campaignId",
      *      in="path",
      *      description="The Campaign ID",
      *      type="integer",
      *      required=true
      *   ),
-     *  SWG\Parameter(
+     *  @SWG\Parameter(
      *      name="layoutId",
      *      in="formData",
      *      description="Array of Layout ID/Display Orders to Assign",
      *      type="array",
      *      required=true,
-     *      SWG\Items(
+     *      @SWG\Items(
      *          ref="#/definitions/LayoutAssignmentArray"
      *      )
      *   ),
-     *  SWG\Parameter(
+     *  @SWG\Parameter(
      *      name="unassignLayoutId",
      *      in="formData",
      *      description="Array of Layout ID/Display Orders to unassign",
      *      type="array",
      *      required=false,
-     *      SWG\Items(
+     *      @SWG\Items(
      *          ref="#/definitions/LayoutAssignmentArray"
      *      )
      *   ),
-     *  SWG\Response(
+     *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
      *  )

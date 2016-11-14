@@ -423,7 +423,7 @@ $app->delete('/command/:id', '\Xibo\Controller\Command:delete')->name('command.d
 /**
  * Dayparts
  * @SWG\Tag(
- *  name="daypart",
+ *  name="dayPart",
  *  description="Dayparting"
  * )
  */

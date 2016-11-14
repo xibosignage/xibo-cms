@@ -440,7 +440,7 @@ class DayPart extends Base
      * @SWG\Delete(
      *  path="/daypart/{dayPartId}",
      *  operationId="dayPartDelete",
-     *  tags={"daypart"},
+     *  tags={"dayPart"},
      *  summary="Delete DayPart",
      *  description="Delete the provided dayPart",
      *  @SWG\Parameter(

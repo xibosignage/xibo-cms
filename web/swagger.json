@@ -145,6 +145,50 @@
                 }
             }
         },
+        "/campaign/layout/assign/{campaignId}": {
+            "post": {
+                "tags": [
+                    "campaign"
+                ],
+                "summary": "Assign Layouts",
+                "description": "Assign Layouts to a Campaign",
+                "operationId": "campaignAssignLayout",
+                "parameters": [
+                    {
+                        "name": "campaignId",
+                        "in": "path",
+                        "description": "The Campaign ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "layoutId",
+                        "in": "formData",
+                        "description": "Array of Layout ID/Display Orders to Assign",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/LayoutAssignmentArray"
+                        }
+                    },
+                    {
+                        "name": "unassignLayoutId",
+                        "in": "formData",
+                        "description": "Array of Layout ID/Display Orders to unassign",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/LayoutAssignmentArray"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/clock": {
             "get": {
                 "tags": [
@@ -1106,7 +1150,7 @@
             },
             "delete": {
                 "tags": [
-                    "daypart"
+                    "dayPart"
                 ],
                 "summary": "Delete DayPart",
                 "description": "Delete the provided dayPart",
@@ -4639,6 +4683,18 @@
         }
     },
     "definitions": {
+        "LayoutAssignmentArray": {
+            "properties": {
+                "layoutId": {
+                    "description": "Model to use for supplying key/value pairs to arrays",
+                    "type": "integer"
+                },
+                "displayOrder": {
+                    "description": "Model to use for supplying key/value pairs to arrays",
+                    "type": "integer"
+                }
+            }
+        },
         "ScheduleCalendarData": {
             "properties": {
                 "id": {
@@ -6377,7 +6433,7 @@
             "description": "Commands"
         },
         {
-            "name": "daypart",
+            "name": "dayPart",
             "description": "Dayparting"
         },
         {
