@@ -311,7 +311,7 @@ class Currencies extends YahooBase
                             if (!file_exists(PROJECT_ROOT . '/web/modules/currencies/currency-flags/' . $currencyCode . '.svg')) 
                                 $currencyCode = 'default';
                             
-                            $file = $this->mediaFactory->createModuleFile('currency_' . $currencyCode, PROJECT_ROOT . '/web/modules/finance/currency-flags/' . $currencyCode . '.svg');
+                            $file = $this->mediaFactory->createModuleFile('currency_' . $currencyCode, PROJECT_ROOT . '/web/modules/currencies/currency-flags/' . $currencyCode . '.svg');
                             $file->alwaysCopy = true;
                             $file->storedAs = 'currency_' . $currencyCode . '.svg';
                             $file->save();

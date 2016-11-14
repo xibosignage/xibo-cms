@@ -300,6 +300,12 @@ class Stocks extends YahooBase
                             
                             break;
                             
+                        case 'SymbolTrimmed':
+                            
+                            $replacement = explode('.', $data['Symbol'])[0];
+                            
+                            break;
+                            
                         case 'ChangeStyle':
                             // Default value as no change
                             $replacement = 'value-equal';

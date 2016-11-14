@@ -233,7 +233,7 @@
                     <div class="tab-pane" id="advanced">
 
                         {% set title %}{% trans "Duration is per page" %}{% endset %}
-                        {% set helpText %}{% trans "The duration specified is per page otherwise it is per feed." %}{% endset %}
+                        {% set helpText %}{% trans "The duration specified is per page/item otherwise the widget duration is divided between the number of pages/items." %}{% endset %}
                         {{ forms.checkbox("durationIsPerPage", title, 1, helpText) }}
 
                         {% set title %}{% trans "Background Colour" %}{% endset %}

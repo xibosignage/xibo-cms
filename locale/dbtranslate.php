@@ -189,8 +189,12 @@ echo __('Local Video');
 echo __('Generic File');
 echo __('Audio');
 echo __('PDF');
-
 echo __('PDF document viewer');
+
+echo __('Stocks Module');
+echo __('A module for displaying Stocks information. Uses the Yahoo API');
+echo __('Currencies Module');
+echo __('A module for displaying Currencies information. Uses the Yahoo API');
 
 echo __('Media will be created with these settings. If public everyone will be able to view and use this media.');
 echo __('New layouts will be created with these settings. If public everyone will be able to view and use this layout.');
