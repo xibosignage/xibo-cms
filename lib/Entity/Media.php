@@ -23,10 +23,6 @@
 namespace Xibo\Entity;
 
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Promise\Promise;
-use GuzzleHttp\Promise\PromiseInterface;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\DuplicateEntityException;
@@ -179,8 +175,9 @@ class Media implements \JsonSerializable
     private $unassignTags = [];
 
     // New file revision
-    public $force;
+    public $isSaveRequired;
     public $isRemote;
+
     public $cloned = false;
     public $newExpiry;
     public $alwaysCopy = false;
@@ -475,10 +472,11 @@ class Media implements \JsonSerializable
     /**
      * Save this media
      * @param array $options
-     * @return null|PromiseInterface
      */
     public function save($options = [])
     {
+        $this->getLog()->debug('Save for mediaId: ' . $this->mediaId);
+
         $options = array_merge([
             'validate' => true,
             'oldMedia' => null,
@@ -490,21 +488,27 @@ class Media implements \JsonSerializable
 
         // Add or edit
         if ($this->mediaId == null || $this->mediaId == 0) {
-            $promise = $this->add();
+            $this->add();
+
+            // Always set force to true as we always want to save new files
+            $this->isSaveRequired = true;
         }
         else {
-            // If the media file is invalid, then force an update (only applies to module files)
-            if ($this->valid == 0)
-                $this->force = true;
+            $this->edit();
 
-            $promise = $this->edit();
+            // If the media file is invalid, then force an update (only applies to module files)
+            $expires = $this->getOriginalValue('expires');
+            $this->isSaveRequired = ($this->valid == 0 || ($expires > 0 && $expires < time()));
         }
 
-        if (!$options['deferred']) {
-            $this->getLog()->debug('Handling promise immediately.');
-            $promise->wait();
+        if ($options['deferred']) {
+            $this->getLog()->debug('Media Update deferred until later');
         } else {
-            $this->getLog()->debug('Async Upload, returning promise');
+            $this->getLog()->debug('Media Update happening now');
+
+            // Call save file
+            if ($this->isSaveRequired)
+                $this->saveFile();
         }
 
         // Save the tags
@@ -524,14 +528,12 @@ class Media implements \JsonSerializable
                 $tag->save();
             }
         }
-
-        return $options['deferred'] ? $promise : null;
     }
 
     /**
      * Save Async
      * @param array $options
-     * @return PromiseInterface
+     * @return $this
      */
     public function saveAsync($options = [])
     {
@@ -539,7 +541,9 @@ class Media implements \JsonSerializable
             'deferred' => true
         ], $options);
 
-        return $this->save($options);
+        $this->save($options);
+
+        return $this;
     }
 
     /**
@@ -638,14 +642,13 @@ class Media implements \JsonSerializable
 
     /**
      * Add
-     * @return PromiseInterface
      * @throws ConfigurationException
      */
     private function add()
     {
         $this->mediaId = $this->getStore()->insert('
-            INSERT INTO media (name, type, duration, originalFilename, userID, retired, moduleSystemFile, expires, released, apiRef)
-              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :expires, :released, :apiRef)
+            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid)
+              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid)
         ', [
             'name' => $this->name,
             'type' => $this->mediaType,
@@ -654,126 +657,59 @@ class Media implements \JsonSerializable
             'userId' => $this->ownerId,
             'retired' => $this->retired,
             'moduleSystemFile' => (($this->moduleSystemFile) ? 1 : 0),
-            'expires' => $this->expires,
             'released' => $this->released,
-            'apiRef' => $this->apiRef
+            'apiRef' => $this->apiRef,
+            'valid' => 0
         ]);
-
-        // Store $this
-        $media = $this;
-
-        // Create a promise
-        $promise = new Promise(function() use (&$promise) {
-            $promise->resolve('Waited');
-        });
-        $promise->then(function ($value) use (&$media) {
-            $media->getLog()->debug('Media save promise resolved ' . $value);
-
-            $media->saveFile();
-
-            // Update the MD5 and storedAs to suit
-            $media->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, duration = :duration WHERE mediaId = :mediaId', [
-                'fileSize' => $this->fileSize,
-                'md5' => $this->md5,
-                'storedAs' => $this->storedAs,
-                'duration' => $this->duration,
-                'mediaId' => $this->mediaId
-            ]);
-
-        }, function ($reason) use (&$media)  {
-            // Promise rejected - that's bad.
-            $media->getLog()->error('Unable to download media because ' . $reason);
-        });
-
-        return $promise;
     }
 
     /**
      * Edit
-     * @return PromiseInterface
      * @throws ConfigurationException
      */
     private function edit()
     {
-        // Store $this
-        $media = $this;
-
-        // Create a promise
-        $promise = new Promise(function() use (&$promise) {
-            $promise->resolve('Waited');
-        });
-        $promise->then(function ($value) use (&$media) {
-            $media->getLog()->debug('Media save promise resolved ' . $value);
-
-            // Do we need to pull a new update?
-            // Is the file either expired or is force set
-            if ($media->force || ($media->expires > 0 && $media->expires < time())) {
-                $media->getLog()->debug('Media %s has expired: %s. Force = %d', $media->name, date('Y-m-d H:i', $media->expires), $media->force);
-
-                $media->saveFile();
-            }
-
-            $media->getStore()->update('
-              UPDATE `media`
-                  SET `name` = :name,
-                    duration = :duration,
-                    retired = :retired,
-                    md5 = :md5,
-                    filesize = :fileSize,
-                    expires = :expires,
-                    moduleSystemFile = :moduleSystemFile,
-                    editedMediaId = :editedMediaId,
-                    isEdited = :isEdited,
-                    userId = :userId,
-                    released = :released,
-                    apiRef = :apiRef
-               WHERE mediaId = :mediaId
-            ', [
-                'name' => $this->name,
-                'duration' => $this->duration,
-                'retired' => $this->retired,
-                'fileSize' => $this->fileSize,
-                'md5' => $this->md5,
-                'expires' => $this->expires,
-                'moduleSystemFile' => $this->moduleSystemFile,
-                'editedMediaId' => $this->parentId,
-                'isEdited' => $this->isEdited,
-                'userId' => $this->ownerId,
-                'released' => $this->released,
-                'apiRef' => $this->apiRef,
-                'mediaId' => $this->mediaId
-            ]);
-
-        }, function ($reason) use (&$media)  {
-            // Promise rejected - that's bad.
-            $media->getLog()->error('Unable to download media because ' . $reason);
-        });
-
-        return $promise;
+        $this->getStore()->update('
+          UPDATE `media`
+            SET `name` = :name,
+                duration = :duration,
+                retired = :retired,
+                moduleSystemFile = :moduleSystemFile,
+                editedMediaId = :editedMediaId,
+                isEdited = :isEdited,
+                userId = :userId,
+                released = :released,
+                apiRef = :apiRef
+           WHERE mediaId = :mediaId
+        ', [
+            'name' => $this->name,
+            'duration' => $this->duration,
+            'retired' => $this->retired,
+            'moduleSystemFile' => $this->moduleSystemFile,
+            'editedMediaId' => $this->parentId,
+            'isEdited' => $this->isEdited,
+            'userId' => $this->ownerId,
+            'released' => $this->released,
+            'apiRef' => $this->apiRef,
+            'mediaId' => $this->mediaId
+        ]);
     }
 
     /**
      * Save File to Library
-     *  this should download remote files, handle clones, handle local module files and also handle files uploaded
-     *  over the web ui
+     *  works on files that are already in the File system
      * @throws ConfigurationException
      */
     public function saveFile()
     {
-        // If we are a remote media item, we want to download the newFile and save it to a temporary location
-        if ($this->isRemote) {
-            $this->download();
-        }
-
         $libraryFolder = $this->config->GetSetting('LIBRARY_LOCATION');
 
         // Work out the extension
         $extension = strtolower(substr(strrchr($this->fileName, '.'), 1));
 
-        $this->getLog()->debug('saveFile for "%s" with storedAs = "%s" (empty = %s), fileName = "%s" to "%s". Always Copy = "%s", Cloned = "%s"',
+        $this->getLog()->debug('saveFile for "%s" with storedAs = "%s", fileName = "%s" to "%s". Always Copy = "%s", Cloned = "%s"',
             $this->name,
             $this->storedAs,
-            empty($this->storedAs),
             $this->fileName,
             $this->mediaId . '.' . $extension,
             $this->alwaysCopy,
@@ -801,22 +737,40 @@ class Media implements \JsonSerializable
             $this->storedAs = $this->mediaId . '.' . $extension;
         }
         else {
-            $this->getLog()->debug('Copying specified file');
             // We have pre-defined where we want this to be stored
             if (empty($this->storedAs)) {
                 // Assume we want to set this automatically (i.e. we are set to always copy)
                 $this->storedAs = $this->mediaId . '.' . $extension;
             }
 
-            if (!@copy($this->fileName, $libraryFolder . $this->storedAs)) {
-                $this->getLog()->error('Cannot copy %s to %s', $this->fileName, $libraryFolder . $this->storedAs);
-                throw new ConfigurationException(__('Problem moving provided file into the Library Folder'));
+            if ($this->isRemote) {
+                $this->getLog()->debug('Moving temporary file');
+
+                // Move the file into the library
+                if (!@rename($libraryFolder . 'temp/' . $this->fileName, $libraryFolder . $this->storedAs))
+                    throw new ConfigurationException(__('Problem moving downloaded file into the Library Folder'));
+            } else {
+                $this->getLog()->debug('Copying specified file');
+
+                if (!@copy($this->fileName, $libraryFolder . $this->storedAs)) {
+                    $this->getLog()->error('Cannot copy %s to %s', $this->fileName, $libraryFolder . $this->storedAs);
+                    throw new ConfigurationException(__('Problem copying provided file into the Library Folder'));
+                }
             }
         }
 
         // Work out the MD5
         $this->md5 = md5_file($libraryFolder . $this->storedAs);
         $this->fileSize = filesize($libraryFolder . $this->storedAs);
+
+        // Update the MD5 and storedAs to suit
+        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, valid = 1 WHERE mediaId = :mediaId', [
+            'fileSize' => $this->fileSize,
+            'md5' => $this->md5,
+            'storedAs' => $this->storedAs,
+            'expires' => $this->expires,
+            'mediaId' => $this->mediaId
+        ]);
     }
 
     /**
@@ -855,30 +809,20 @@ class Media implements \JsonSerializable
     }
 
     /**
-     * Download remote file
+     * Download URL
+     * @return string
      */
-    private function download()
+    public function downloadUrl()
     {
-        if (!$this->isRemote || $this->fileName == '')
-            throw new \InvalidArgumentException(__('Not in a suitable state to download'));
+        return $this->fileName;
+    }
 
-        // Open the temporary file
-        $storedAs = $this->config->GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
-
-        $this->getLog()->debug('Downloading %s to %s', $this->fileName, $storedAs);
-
-        if (!$fileHandle = fopen($storedAs, 'w'))
-            throw new ConfigurationException(__('Temporary location not writable'));
-
-        try {
-            $client = new Client();
-            $client->get($this->fileName, $this->config->getGuzzleProxy(['save_to' => $fileHandle]));
-        }
-        catch (RequestException $e) {
-            $this->getLog()->error('Unable to get %s, %s', $this->fileName, $e->getMessage());
-        }
-
-        // Change the filename to our temporary file
-        $this->fileName = $storedAs;
+    /**
+     * Download Sink
+     * @return string
+     */
+    public function downloadSink()
+    {
+        return $this->config->GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
     }
 }

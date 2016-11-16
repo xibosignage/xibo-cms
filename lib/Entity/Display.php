@@ -24,6 +24,7 @@ namespace Xibo\Entity;
 
 
 use Respect\Validation\Validator as v;
+use Xibo\Exception\DeadlockException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
@@ -132,7 +133,6 @@ class Display implements \JsonSerializable
      */
     public $mediaInventoryStatus;
 
-    private $currentMacAddress;
     /**
      * @SWG\Property(description="The current Mac Address of the Player")
      * @var string
@@ -483,7 +483,7 @@ class Display implements \JsonSerializable
         }
 
         // Mac Address Changes
-        if ($this->macAddress != $this->currentMacAddress) {
+        if ($this->hasPropertyChanged('macAddress')) {
             // Mac address change detected
             $this->numberOfMacAddressChanges++;
             $this->lastChanged = time();
@@ -504,6 +504,21 @@ class Display implements \JsonSerializable
     {
         // Load this displays group membership
         $this->displayGroups = $this->displayGroupFactory->getByDisplayId($this->displayId);
+    }
+
+    /**
+     * Save the media inventory status
+     */
+    public function saveMediaInventoryStatus()
+    {
+        try {
+            $this->getStore()->updateWithDeadlockLoop('UPDATE `display` SET mediaInventoryStatus = :mediaInventoryStatus WHERE displayId = :displayId', [
+                'mediaInventoryStatus' => $this->mediaInventoryStatus,
+                'displayId' => $this->displayId
+            ]);
+        } catch (DeadlockException $deadlockException) {
+            $this->getLog()->error('Media Inventory Status save failed due to deadlock');
+        }
     }
 
     /**

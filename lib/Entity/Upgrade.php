@@ -126,7 +126,7 @@ class Upgrade implements \JsonSerializable
     {
         // We use a new connection so that if/when the upgrade steps do not run successfully we can still update
         // the state and rollback the executed steps
-        $dbh = $this->getStore()->newConnection();
+        $dbh = $this->getStore()->getConnection('upgrade');
         $sth = $dbh->prepare('
             UPDATE `upgrade` SET
               `complete` = :complete,

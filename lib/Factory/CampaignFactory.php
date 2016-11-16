@@ -240,7 +240,7 @@ class CampaignFactory extends BaseFactory
         // Layout durations
         if ($this->getSanitizer()->getInt('totalDuration', 0, $options) != 0) {
             $select .= ", SUM(`layout`.duration) AS totalDuration";
-            $intProperties = ['intProperties' => ['numberLayouts', 'totalDuration']];
+            $intProperties = ['intProperties' => ['numberLayouts', 'totalDuration', 'displayOrder']];
         }
 
         $sql = $select . $body . $group . $order . $limit;

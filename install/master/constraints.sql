@@ -109,3 +109,5 @@ FOREIGN KEY (clientId) REFERENCES oauth_clients (id) ON DELETE CASCADE;
 ALTER TABLE oauth_client_scopes
 ADD CONSTRAINT oauth_client_scopes_oauth_scopes_id_fk
 FOREIGN KEY (scopeId) REFERENCES oauth_scopes (id) ON DELETE CASCADE;
+
+CREATE INDEX requiredfile_displayId_type_index ON requiredfile (displayId, type);

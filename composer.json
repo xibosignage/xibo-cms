@@ -66,8 +66,7 @@
     "illuminate/database": "5.2.*",
     "illuminate/cache": "5.2.*",
     "xibosignage/oauth2-xibo-cms": "dev-master",
-    "mtdowling/cron-expression": "^1.1",
-    "react/child-process": "^0.4.1"
+    "mtdowling/cron-expression": "^1.1"
   },
   "require-dev": {
     "phpunit/phpunit": "~4.0",

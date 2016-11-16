@@ -178,13 +178,110 @@ class Display extends Base
             'toDt' => $this->getDate()->getLocalDate(null, 'U')
         ]);
 
-        // Required files
-        $this->requiredFileFactory->setDisplay($displayId);
+        // Zero out some variables
+        $layouts = [];
+        $widgets = [];
+        $media = [];
+        $totalCount = 0;
+        $completeCount = 0;
+        $totalSize = 0;
+        $completeSize = 0;
+
+
+        // Show 3 widgets
+        $sql = '
+          SELECT layoutId, layout, `requiredfile`.*
+              FROM `layout`
+                INNER JOIN `requiredfile`
+                ON `requiredfile`.itemId = `layout`.layoutId
+           WHERE `requiredfile`.displayId = :displayId 
+            AND `requiredfile`.type = :type
+          ORDER BY layout
+        ';
+
+        foreach ($this->store->select($sql, ['displayId' => $displayId, 'type' => 'L']) as $row) {
+            /** @var RequiredFile $rf */
+            $rf = $this->requiredFileFactory->getByDisplayAndLayout($displayId, $row['layoutId']);
+
+            $totalCount++;
+
+            if ($rf->complete) {
+                $completeCount = $completeCount + 1;
+            }
+
+            $rf = $rf->toArray();
+            $rf['layout'] = $row['layout'];
+            $layouts[] = $rf;
+        }
+
+        // Media
+        $sql = '
+          SELECT mediaId, `name`, fileSize, media.type AS mediaType, storedAs, `requiredfile`.*
+              FROM `media`
+                INNER JOIN `requiredfile`
+                ON `requiredfile`.itemId = `media`.mediaId
+           WHERE `requiredfile`.displayId = :displayId 
+            AND `requiredfile`.type = :type
+          ORDER BY `name`
+        ';
+
+        foreach ($this->store->select($sql, ['displayId' => $displayId, 'type' => 'M']) as $row) {
+            /** @var RequiredFile $rf */
+            $rf = $this->requiredFileFactory->getByDisplayAndMedia($displayId, $row['mediaId']);
+
+            $totalSize = $totalSize + $row['fileSize'];
+            $totalCount++;
+
+            if ($rf->complete) {
+                $completeSize = $completeSize + $row['fileSize'];
+                $completeCount = $completeCount + 1;
+            }
+
+            $rf = $rf->toArray();
+            $rf['name'] = $row['name'];
+            $rf['type'] = $row['mediaType'];
+            $rf['storedAs'] = $row['storedAs'];
+            $rf['size'] = $row['fileSize'];
+            $media[] = $rf;
+        }
+
+        // Widgets
+        $sql = '
+          SELECT `widget`.type AS widgetType,
+                IFNULL(`widgetoption`.value, `widget`.type) AS widgetName,
+                `widget`.widgetId,
+                 `requiredfile`.*
+              FROM `widget`
+                INNER JOIN `requiredfile`
+                ON `requiredfile`.itemId = `widget`.widgetId
+                LEFT OUTER JOIN `widgetoption`
+                ON `widgetoption`.widgetId = `widget`.widgetId
+                  AND `widgetoption`.option = \'name\'
+           WHERE `requiredfile`.displayId = :displayId 
+            AND `requiredfile`.type = :type
+          ORDER BY IFNULL(`widgetoption`.value, `widget`.type)
+        ';
+
+        foreach ($this->store->select($sql, ['displayId' => $displayId, 'type' => 'W']) as $row) {
+            /** @var RequiredFile $rf */
+            $rf = $this->requiredFileFactory->getByDisplayAndWidget($displayId, $row['widgetId']);
+
+            $totalCount++;
+
+            if ($rf->complete) {
+                $completeCount = $completeCount + 1;
+            }
+
+            $rf = $rf->toArray();
+            $rf['type'] = $row['widgetType'];
+            $rf['widgetName'] = $row['widgetName'];
+            $widgets[] = $rf;
+        }
 
         // Widget for file status
         // Decide what our units are going to be, based on the size
         $suffixes = array('bytes', 'k', 'M', 'G', 'T');
-        $base = (int)floor(log($this->requiredFileFactory->getTotalSize()) / log(1024));
+        $base = (int)floor(log($totalSize) / log(1024));
 
         if ($base < 0)
             $base = 0;
@@ -192,71 +289,6 @@ class Display extends Base
         $units = (isset($suffixes[$base]) ? $suffixes[$base] : '');
         $this->getLog()->debug('Base for size is %d and suffix is %s', $base, $units);
 
-        // Show 3 widgets
-        $layoutIds = $this->requiredFileFactory->getLayoutIds();
-        $layouts = [];
-
-        if (count($layoutIds) > 0) {
-            foreach ($this->store->select('
-                SELECT layoutId, layout
-                  FROM `layout`
-                 WHERE layoutId IN (' . implode(',', array_fill(0, count($layoutIds), '?')) . ')
-                ORDER BY layout
-            ', $layoutIds) as $row) {
-                /** @var RequiredFile $rf */
-                $rf = $this->requiredFileFactory->getByDisplayAndLayout($displayId, $row['layoutId']);
-                $rf = $rf->toArray();
-                $rf['layout'] = $row['layout'];
-                $layouts[] = $rf;
-            }
-        }
-
-        // Media
-        $mediaIds = $this->requiredFileFactory->getMediaIds();
-        $media = [];
-
-        if (count($mediaIds) > 0) {
-            foreach ($this->store->select('
-                SELECT `media`.name,
-                    `media`.type,
-                    `media`.mediaId
-                  FROM `media`
-                 WHERE mediaId IN (' . implode(',', array_fill(0, count($mediaIds), '?')) . ')
-                ORDER BY `media`.name
-            ', $mediaIds) as $row) {
-                /** @var RequiredFile $rf */
-                $rf = $this->requiredFileFactory->getByDisplayAndMedia($displayId, $row['mediaId']);
-                $rf = $rf->toArray();
-                $rf['name'] = $row['name'];
-                $rf['type'] = $row['type'];
-                $media[] = $rf;
-            };
-        }
-
-        // Widgets
-        $widgetIds = $this->requiredFileFactory->getWidgetIds();
-        $widgets = [];
-
-        if (count($widgetIds) > 0) {
-            foreach ($this->store->select('
-                SELECT `widget`.type,
-                    `widgetoption`.value AS widgetName,
-                    `widget`.widgetId
-                  FROM `widget`
-                    LEFT OUTER JOIN `widgetoption`
-                    ON `widgetoption`.widgetId = `widget`.widgetId
-                      AND `widgetoption`.option = \'name\'
-                 WHERE `widget`.widgetId IN (' . implode(',', array_fill(0, count($widgetIds), '?')) . ') 
-                ORDER BY IFNULL(`widgetoption`.value, `widget`.type)
-            ', $widgetIds) as $row) {
-                /** @var RequiredFile $rf */
-                $rf = $this->requiredFileFactory->getByDisplayAndWidget($displayId, $row['widgetId']);
-                $rf = $rf->toArray();
-                $rf['type'] = $row['type'];
-                $rf['widgetName'] = $row['widgetName'];
-                $widgets[] = $rf;
-            };
-        }
 
         // Call to render the template
         $this->getState()->template = 'display-page-manage';
@@ -272,10 +304,10 @@ class Display extends Base
             ],
             'status' => [
                 'units' => $units,
-                'countComplete' => $this->requiredFileFactory->getCompleteCount(),
-                'countRemaining' => $this->requiredFileFactory->getTotalCount() - $this->requiredFileFactory->getCompleteCount(),
-                'sizeComplete' => round((double)$this->requiredFileFactory->getCompleteSize() / (pow(1024, $base)), 2),
-                'sizeRemaining' => round((double)($this->requiredFileFactory->getTotalSize() - $this->requiredFileFactory->getCompleteSize()) / (pow(1024, $base)), 2),
+                'countComplete' => $completeCount,
+                'countRemaining' => $totalCount - $completeCount,
+                'sizeComplete' => round((double)$completeSize / (pow(1024, $base)), 2),
+                'sizeRemaining' => round((double)($totalSize - $completeSize) / (pow(1024, $base)), 2),
             ],
             'defaults' => [
                 'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
@@ -408,8 +440,6 @@ class Display extends Base
                 default:
                     $display->statusDescription = __('Unknown Display Status');
             }
-
-            $display->status = ($display->mediaInventoryStatus == 1) ? 1 : (($display->mediaInventoryStatus == 2) ? 0 : -1);
 
             // Thumbnail
             $display->thumbnail = '';

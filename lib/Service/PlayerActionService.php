@@ -112,7 +112,7 @@ class PlayerActionService implements PlayerActionServiceInterface
             /** @var PlayerAction $action */
             try {
                 // Send each action
-                if (!$action->send($this->xmrAddress)) {
+                if ($action->send($this->xmrAddress) === false) {
                     $this->log->error('Player action refused by XMR (connected but XMR returned false).');
                     $failures++;
                 }

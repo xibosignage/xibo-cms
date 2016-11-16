@@ -27,9 +27,13 @@ use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\ModuleFactory;
 
-
-class TwitterMetro extends ModuleWidget
+/**
+ * Class TwitterMetro
+ * @package Xibo\Widget
+ */
+class TwitterMetro extends TwitterBase
 {
+    private $parent;
     public $codeSchemaVersion = 1;
     private $resourceFolder;
 
@@ -87,9 +91,29 @@ class TwitterMetro extends ModuleWidget
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/bootstrap.min.css')->save();
         
         foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
-            /* @var Media $media */
+            /* @var \Xibo\Entity\Media $media */
             $media->save();
         }
+    }
+
+    /**
+     * Override the apikey/secret
+     * @param string $setting
+     * @param null $default
+     * @return mixed|string
+     */
+    public function getSetting($setting, $default = NULL)
+    {
+        if ($setting == 'apiKey' || $setting == 'apiSecret' || $setting == 'cachePeriod') {
+            // Create a Twitter Module as the source of this modules settings
+            // only go to the stock twitter module
+            if ($this->parent === null)
+                $this->parent = $this->moduleFactory->createByClass('Xibo\Widget\Twitter');
+
+            return $this->parent->getSetting($setting, $default);
+        }
+
+        return parent::getSetting($setting, $default);
     }
     
     /**
@@ -103,7 +127,6 @@ class TwitterMetro extends ModuleWidget
     
     /**
      * Get the template HTML, CSS, widgetOriginalWidth, widgetOriginalHeight giving its orientation (0:Landscape 1:Portrait)
-     * @param int Orientation
      * @return array
      */
     public function getTemplateData() {
@@ -157,33 +180,7 @@ class TwitterMetro extends ModuleWidget
      */
     public function settingsForm()
     {
-        return 'twitter-form-settings';
-    }
-
-    /**
-     * Process any module settings
-     */
-    public function settings()
-    {
-        // Process any module settings you asked for.
-        $apiKey = $this->getSanitizer()->getString('apiKey');
-
-        if ($apiKey == '')
-            throw new \InvalidArgumentException(__('Missing API Key'));
-
-        // Process any module settings you asked for.
-        $apiSecret = $this->getSanitizer()->getString('apiSecret');
-
-        if ($apiSecret == '')
-            throw new \InvalidArgumentException(__('Missing API Secret'));
-
-        $this->module->settings['apiKey'] = $apiKey;
-        $this->module->settings['apiSecret'] = $apiSecret;
-        $this->module->settings['cachePeriod'] = $this->getSanitizer()->getInt('cachePeriod', 300);
-        $this->module->settings['cachePeriodImages'] = $this->getSanitizer()->getInt('cachePeriodImages', 24);
-
-        // Return an array of the processed settings.
-        return $this->module->settings;
+        return 'twittermetro-form-settings';
     }
 
     public function validate()
@@ -254,168 +251,12 @@ class TwitterMetro extends ModuleWidget
         $this->setOption('templateColours', $stringColor);
     }
 
-    protected function getToken()
-    {
-        // Prepare the URL
-        $url = 'https://api.twitter.com/oauth2/token';
-
-        // Prepare the consumer key and secret
-        $key = base64_encode(urlencode($this->getSetting('apiKey')) . ':' . urlencode($this->getSetting('apiSecret')));
-
-        // Check to see if we have the bearer token already cached
-        $cache = $this->getPool()->getItem('bearer_' . $key);
-
-        $token = $cache->get();
-
-        if ($cache->isHit()) {
-            $this->getLog()->debug('Bearer Token served from cache');
-            return $token;
-        }
-
-        $this->getLog()->debug('Bearer Token served from API');
-
-        // Shame - we will need to get it.
-        // and store it.
-        $httpOptions = array(
-            CURLOPT_TIMEOUT => 20,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_HTTPHEADER => array(
-                'POST /oauth2/token HTTP/1.1',
-                'Authorization: Basic ' . $key,
-                'Content-Type: application/x-www-form-urlencoded;charset=UTF-8',
-                'Content-Length: 29'
-            ),
-            CURLOPT_USERAGENT => 'Xibo Twitter Metro Module',
-            CURLOPT_HEADER => false,
-            CURLINFO_HEADER_OUT => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => http_build_query(array('grant_type' => 'client_credentials')),
-            CURLOPT_URL => $url,
-        );
-
-        // Proxy support
-        if ($this->getConfig()->GetSetting('PROXY_HOST') != '' && !$this->getConfig()->isProxyException($url)) {
-            $httpOptions[CURLOPT_PROXY] = $this->getConfig()->GetSetting('PROXY_HOST');
-            $httpOptions[CURLOPT_PROXYPORT] = $this->getConfig()->GetSetting('PROXY_PORT');
-
-            if ($this->getConfig()->GetSetting('PROXY_AUTH') != '')
-                $httpOptions[CURLOPT_PROXYUSERPWD] = $this->getConfig()->GetSetting('PROXY_AUTH');
-        }
-
-        $curl = curl_init();
-
-        // Set options
-        curl_setopt_array($curl, $httpOptions);
-
-        // Call exec
-        if (!$result = curl_exec($curl)) {
-            // Log the error
-            $this->getLog()->error('Error contacting Twitter API: ' . curl_error($curl));
-            return false;
-        }
-
-        // We want to check for a 200
-        $outHeaders = curl_getinfo($curl);
-
-        if ($outHeaders['http_code'] != 200) {
-            $this->getLog()->error('Twitter API returned ' . $result . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
-
-            // See if we can parse the error.
-            $body = json_decode($result);
-
-            $this->getLog()->error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
-
-            return false;
-        }
-
-        // See if we can parse the body as JSON.
-        $body = json_decode($result);
-
-        // We have a 200 - therefore we want to think about caching the bearer token
-        // First, lets check its a bearer token
-        if ($body->token_type != 'bearer') {
-            $this->getLog()->error('Twitter API returned OK, but without a bearer token. ' . var_export($body, true));
-            return false;
-        }
-
-        // It is, so lets cache it
-        // long times...
-        $cache->set($body->access_token);
-        $cache->expiresAfter(100000);
-        $this->getPool()->saveDeferred($cache);
-
-        return $body->access_token;
-    }
-
-    protected function searchApi($token, $term, $resultType = 'mixed', $geoCode = '', $count = 18)
-    {
-        
-        // Construct the URL to call
-        $url = 'https://api.twitter.com/1.1/search/tweets.json';
-        $queryString = '?q=' . urlencode(trim($term)) .
-            '&result_type=' . $resultType .
-            '&count=' . $count .
-            '&include_entities=true' . 
-            '&tweet_mode=extended';
-
-        if ($geoCode != '')
-            $queryString .= '&geocode=' . $geoCode;
-
-        $httpOptions = array(
-            CURLOPT_TIMEOUT => 20,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_HTTPHEADER => array(
-                'GET /1.1/search/tweets.json' . $queryString . 'HTTP/1.1',
-                'Host: api.twitter.com',
-                'Authorization: Bearer ' . $token
-            ),
-            CURLOPT_USERAGENT => 'Xibo Twitter Module',
-            CURLOPT_HEADER => false,
-            CURLINFO_HEADER_OUT => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_URL => $url . $queryString,
-        );
-
-        // Proxy support
-        if ($this->getConfig()->GetSetting('PROXY_HOST') != '' && !$this->getConfig()->isProxyException($url)) {
-            $httpOptions[CURLOPT_PROXY] = $this->getConfig()->GetSetting('PROXY_HOST');
-            $httpOptions[CURLOPT_PROXYPORT] = $this->getConfig()->GetSetting('PROXY_PORT');
-
-            if ($this->getConfig()->GetSetting('PROXY_AUTH') != '')
-                $httpOptions[CURLOPT_PROXYUSERPWD] = $this->getConfig()->GetSetting('PROXY_AUTH');
-        }
-
-        $this->getLog()->debug('Calling API with: ' . $url . $queryString);
-
-        $curl = curl_init();
-        curl_setopt_array($curl, $httpOptions);
-        $result = curl_exec($curl);
-
-        // Get the response headers
-        $outHeaders = curl_getinfo($curl);
-
-        if ($outHeaders['http_code'] == 0) {
-            // Unable to connect
-            $this->getLog()->error('Unable to reach twitter api.');
-            return false;
-        } else if ($outHeaders['http_code'] != 200) {
-            $this->getLog()->error('Twitter API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
-
-            // See if we can parse the error.
-            $body = json_decode($result);
-
-            $this->getLog()->error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
-
-            return false;
-        }
-
-        // Parse out header and body
-        $body = json_decode($result);
-
-        return $body;
-    }
-
+    /**
+     * @param int $displayId
+     * @param bool $isPreview
+     * @return array
+     * @throws ConfigurationException
+     */
     protected function getTwitterFeed($displayId = 0, $isPreview = true)
     {
         if (!extension_loaded('curl'))
@@ -536,7 +377,6 @@ class TwitterMetro extends ModuleWidget
 
         // Get the date format to apply
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
-        
 
         // This should return the formatted items.
         foreach ($data->statuses as $tweet) {
@@ -622,10 +462,7 @@ class TwitterMetro extends ModuleWidget
                             $tweet->user->profile_image_url = str_replace('_normal', $imageSizeType, $tweet->user->profile_image_url);
                             
                             // Grab the profile image
-                            $file = $this->mediaFactory->createModuleFile('twitter_' . $tweet->user->id, $tweet->user->profile_image_url);
-                            $file->isRemote = true;
-                            $file->expires = $expires;
-                            $file->save();
+                            $file = $this->mediaFactory->queueDownload('twitter_' . $tweet->user->id, $tweet->user->profile_image_url, $expires);
 
                             // Tag this layout with this file
                             $this->assignMedia($file->mediaId);
@@ -668,10 +505,7 @@ class TwitterMetro extends ModuleWidget
                             $photoUrl = $mediaObject->media_url;
                             
                             if ($photoUrl != '') {
-                                $file = $this->mediaFactory->createModuleFile('twitter_photo_' . $tweet->user->id . '_' . $mediaObject->id_str, $photoUrl);
-                                $file->isRemote = true;
-                                $file->expires = $expires;
-                                $file->save();
+                                $file = $this->mediaFactory->queueDownload('twitter_photo_' . $tweet->user->id . '_' . $mediaObject->id_str, $photoUrl, $expires);
 
                                 // Tag this layout with this file
                                 $this->assignMedia($file->mediaId);
@@ -703,6 +537,9 @@ class TwitterMetro extends ModuleWidget
             // Substitute the replacement we have found (it might be '')
             $return[] = $rowString;
         }
+
+        // Process the download queue
+        $this->mediaFactory->processDownloads();
 
         // Return the data array
         return $return;
@@ -814,6 +651,7 @@ class TwitterMetro extends ModuleWidget
         return $this->renderTemplate($data);
     }
 
+    /** @inheritdoc */
     public function isValid()
     {
         // Using the information you have in your module calculate whether it is valid or not.
@@ -822,9 +660,16 @@ class TwitterMetro extends ModuleWidget
         // 2 = Unknown
         return 1;
     }
-    
-    public function tweetHasPhoto($tweet)
+
+    /**
+     * @param $tweet
+     * @return bool
+     */
+    private function tweetHasPhoto($tweet)
     {
-        return ((isset($tweet->entities->media) && count($tweet->entities->media) > 0) || (isset($tweet->retweeted_status->entities->media) && count($tweet->retweeted_status->entities->media) > 0));
+        return ((isset($tweet->entities->media)
+                && count($tweet->entities->media) > 0)
+            || (isset($tweet->retweeted_status->entities->media)
+                && count($tweet->retweeted_status->entities->media) > 0));
     }
 }

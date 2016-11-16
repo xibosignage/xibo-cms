@@ -20,7 +20,7 @@
  * Console Runner
  */
 
-DEFINE('XIBO', true);
+define('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
 error_reporting(0);
@@ -105,6 +105,7 @@ $app->notFound(function () use ($app) {
 });
 
 // All routes
+$app->get('/', '\Xibo\Controller\Task:poll');
 $app->get('/:id', '\Xibo\Controller\Task:run');
 
 // Run app

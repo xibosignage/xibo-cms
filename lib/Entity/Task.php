@@ -24,6 +24,7 @@ class Task implements \JsonSerializable
     public static $STATUS_IDLE = 2;
     public static $STATUS_ERROR = 3;
     public static $STATUS_SUCCESS = 4;
+    public static $STATUS_TIMEOUT = 5;
 
     public $taskId;
     public $name;

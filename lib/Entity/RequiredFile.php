@@ -8,10 +8,7 @@
 
 namespace Xibo\Entity;
 
-
-use Xibo\Exception\FormExpiredException;
-use Xibo\Factory\RequiredFileFactory;
-use Xibo\Helper\Random;
+use Xibo\Exception\DeadlockException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -22,87 +19,75 @@ use Xibo\Storage\StorageServiceInterface;
 class RequiredFile implements \JsonSerializable
 {
     use EntityTrait;
-    public $nonce;
-    public $expiry;
-    public $lastUsed;
+    public $rfId;
     public $displayId;
-    public $size;
-    public $storedAs;
-    public $layoutId;
-    public $regionId;
-    public $mediaId;
+    public $type;
+    public $itemId;
+    public $size = 0;
+    public $path;
     public $bytesRequested = 0;
     public $complete = 0;
-
-    /** @var  RequiredFileFactory */
-    private $requiredFileFactory;
 
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param RequiredFileFactory $requiredFileFactory
      */
-    public function __construct($store, $log, $requiredFileFactory)
+    public function __construct($store, $log)
     {
         $this->setCommonDependencies($store, $log);
-        $this->requiredFileFactory = $requiredFileFactory;
     }
 
     /**
-     * @param array $options
+     * Save
+     * @return $this
      */
-    public function save($options = [])
+    public function save()
     {
-        $options = array_merge([
-            'refreshNonce' => true,
-            'refreshExpiry' => false
-        ], $options);
-
-        // Always update the nonce when we save
-        if ($options['refreshNonce']) {
-            $this->lastUsed = 0;
-            $this->expiry = time() + 86400;
-            $this->nonce = md5(Random::generateString() . SECRET_KEY . time() . $this->layoutId . $this->regionId . $this->mediaId);
-        } else if ($options['refreshExpiry']) {
-            $this->lastUsed = 0;
-            $this->expiry = time() + 86400;
+        if ($this->rfId == null)
+            $this->add();
+        else if ($this->hasPropertyChanged('bytesRequested') || $this->hasPropertyChanged('complete')) {
+            $this->edit();
         }
 
-        $this->requiredFileFactory->addOrReplace($this, ($this->hasPropertyChanged('nonce') ? $this->getOriginalValue('nonce') : $this->nonce));
-    }
-
-    public function expireSoon()
-    {
-        if (!$this->isExpired())
-            $this->expiry = time() + 120;
+        return $this;
     }
 
     /**
-     * Is expired?
-     * @return bool
+     * Add
      */
-    public function isExpired()
+    private function add()
     {
-        return ($this->expiry < time());
+        $this->rfId = $this->store->insert('
+            INSERT INTO `requiredfile` (`displayId`, `type`, `itemId`, `bytesRequested`, `complete`, `size`, `path`)
+              VALUES (:displayId, :type, :itemId, :bytesRequested, :complete, :size, :path)
+        ', [
+            'displayId' => $this->displayId,
+            'type' => $this->type,
+            'itemId' => $this->itemId,
+            'bytesRequested' => $this->bytesRequested,
+            'complete' => $this->complete,
+            'size' => $this->size,
+            'path' => $this->path
+        ]);
     }
 
     /**
-     * Is valid?
-     * @throws FormExpiredException
+     * Edit
      */
-    public function isValid()
+    private function edit()
     {
-        $this->getLog()->debug('Checking validity ' . json_encode($this));
-
-        if (($this->lastUsed != 0 && $this->bytesRequested > $this->size) || $this->isExpired())
-            throw new FormExpiredException('File expired or used');
-    }
-
-    public function markUsed()
-    {
-        $this->getLog()->debug('Marking ' . $this->nonce . ' as used');
-        $this->lastUsed = time();
-        $this->save(['refreshNonce' => false]);
+        try {
+            $this->store->updateWithDeadlockLoop('
+            UPDATE `requiredfile` SET complete = :complete, bytesRequested = :bytesRequested
+             WHERE rfId = :rfId
+        ', [
+                'rfId' => $this->rfId,
+                'bytesRequested' => $this->bytesRequested,
+                'complete' => $this->complete
+            ]);
+        } catch (DeadlockException $deadlockException) {
+            $this->getLog()->error('Failed to update bytes requested on ' . $this->rfId . ' due to deadlock');
+        }
     }
 }

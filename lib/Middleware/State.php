@@ -1281,8 +1281,7 @@ class State extends Middleware
             return new \Xibo\Factory\RequiredFileFactory(
                 $container->store,
                 $container->logService,
-                $container->sanitizerService,
-                $container->pool
+                $container->sanitizerService
             );
         });
 
