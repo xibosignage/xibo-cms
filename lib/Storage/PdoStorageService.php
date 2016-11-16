@@ -246,6 +246,10 @@ class PdoStorageService implements StorageServiceInterface
     /** @inheritdoc */
     public function updateWithDeadlockLoop($sql, $params, $connection = null)
     {
+        // Should we log?
+        if ($this->log != null)
+            $this->log->sql($sql, $params);
+
         if ($connection === null)
             $connection = 'isolated';
 
