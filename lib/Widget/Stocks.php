@@ -27,10 +27,10 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Factory\ModuleFactory;
 
 /**
- * Class Finance
+ * Class Stocks
  * @package Xibo\Widget
  */
-class Finance extends YahooBase
+class Stocks extends YahooBase
 {
     public $codeSchemaVersion = 1;
 
@@ -43,10 +43,10 @@ class Finance extends YahooBase
         if ($this->module == null) {
             // Install
             $module = $moduleFactory->createEmpty();
-            $module->name = 'Finance';
-            $module->type = 'finance';
-            $module->class = 'Xibo\Widget\Finance';
-            $module->description = 'Yahoo Finance';
+            $module->name = 'Stocks';
+            $module->type = 'stocks';
+            $module->class = 'Xibo\Widget\Stocks';
+            $module->description = 'Yahoo Stocks';
             $module->imageUri = 'forms/library.gif';
             $module->enabled = 1;
             $module->previewEnabled = 1;
@@ -54,7 +54,7 @@ class Finance extends YahooBase
             $module->regionSpecific = 1;
             $module->renderAs = 'html';
             $module->schemaVersion = $this->codeSchemaVersion;
-            $module->defaultDuration = 10;
+            $module->defaultDuration = 30;
             $module->settings = [];
 
             $this->setModule($module);
@@ -71,8 +71,9 @@ class Finance extends YahooBase
     public function installFiles()
     {
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-finance-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/bootstrap.min.css')->save();
     }
 
     /**
@@ -83,12 +84,10 @@ class Finance extends YahooBase
         $this->module->settings['templates'] = [];
 
         // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/finance/*.template.json') as $template) {
+        foreach (glob(PROJECT_ROOT . '/modules/stocks/*.template.json') as $template) {
             // Read the contents, json_decode and add to the array
             $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
-
-        $this->getLog()->debug(count($this->module->settings['templates']));
     }
 
     /**
@@ -108,7 +107,7 @@ class Finance extends YahooBase
      */
     public function settingsForm()
     {
-        return 'finance-form-settings';
+        return 'stocks-form-settings';
     }
 
     /**
@@ -157,9 +156,7 @@ class Finance extends YahooBase
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('yql', $this->getSanitizer()->getString('yql'));
-        $this->setOption('item', $this->getSanitizer()->getString('item'));
-        $this->setOption('resultIdentifier', $this->getSanitizer()->getString('resultIdentifier'));
+        $this->setOption('items', $this->getSanitizer()->getString('items'));
         $this->setOption('effect', $this->getSanitizer()->getString('effect'));
         $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
         $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
@@ -168,9 +165,13 @@ class Finance extends YahooBase
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
-        $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
-        $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
-        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
+        $this->setOption('durationIsPerPage', $this->getSanitizer()->getCheckbox('durationIsPerPage'));
+        $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
+        $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
+        $this->setOption('maxItemsPerPage', $this->getSanitizer()->getInt('maxItemsPerPage', 4));
+        $this->setRawNode('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', null)));
+        $this->setRawNode('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', null)));
+        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', $this->getSanitizer()->getParam('styleSheet', null)));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
     }
 
@@ -182,8 +183,9 @@ class Finance extends YahooBase
     {
         // Construct the YQL
         // process items
-        $yql = $this->getOption('yql');
-        $items = $this->getOption('item');
+        $yql = "select * from yahoo.finance.quotes where symbol in ([Item])";
+        $items = $this->getOption('items');
+        $resultIdentifier = "quote";
 
         $this->getLog()->debug('Finance module with YQL = . Looking for %s in response', $yql, $items);
 
@@ -196,13 +198,14 @@ class Finance extends YahooBase
             $items = explode(',', $items);
         else
             $items = [$items];
-
+            
         // quote each item
-        $items = array_map(function ($element) {
-            return '\'' . trim($element) . '\'';
-        }, $items);
+        $itemsJoined = array();
+        foreach ($items as $key => $item) {
+            array_push($itemsJoined, ('\'' . trim($item) . '\''));
+        }
 
-        $yql = str_replace('[Item]', implode(',', $items), $yql);
+        $yql = str_replace('[Item]', implode(',', $itemsJoined), $yql);
 
         // Fire off a request for the data
         $cache = $this->getPool()->getItem('finance/' . md5($yql));
@@ -224,11 +227,9 @@ class Finance extends YahooBase
 
         }
 
-        $this->getLog()->debug('Finance data returned: %s', var_export($data, true));
-
         // Pull out the results according to the resultIdentifier
         // If the element to return is an array and we aren't, then box.
-        $results = $data[$this->getOption('resultIdentifier')];
+        $results = $data[$resultIdentifier];
 
         if (array_key_exists(0, $results))
             return $results;
@@ -251,24 +252,109 @@ class Finance extends YahooBase
         // Substitute
         foreach ($matches[0] as $sub) {
             $replace = str_replace('[', '', str_replace(']', '', $sub));
-
-            // Handling for date/time
-            if (stripos($replace, 'time|') > -1) {
-                $timeSplit = explode('|', $replace);
-
-                $time = $this->getDate()->getLocalDate($data['time'], $timeSplit[1]);
-
-                $this->getLog()->debug('Time: ' . $time);
-
-                // Pull time out of the array
-                $source = str_replace($sub, $time, $source);
+            $replacement = 'NULL';
+            
+            $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
+            
+            // Match that in the array
+            if ( isset($data[$replace]) ){
+                // If the tag exists on the data variables use that var
+                $replacement = $data[$replace];
             } else {
-                // Match that in the array
-                if (isset($data[$replace]))
-                    $source = str_replace($sub, $data[$replace], $source);
-                else
-                    $source = str_replace($sub, '', $source);
+                // Custom tags
+                
+                // Replace the time tag
+                if (stripos($replace, 'time|') > -1) {
+                    $timeSplit = explode('|', $replace);
+
+                    $time = $this->getDate()->getLocalDate($data['time'], $timeSplit[1]);
+
+                    $replacement = $time;
+
+                } else if (stripos($replace, 'NameTrimmed|') > -1) {
+                    $nameSplit = explode('|', $replace);
+                    $name = $data['Name'];
+                    
+                    // Remove the last word until the string is inside the pretended Serializable
+                    while (strlen($name) > $nameSplit[1]) {
+                        $name = substr($name, 0, strrpos($name, " "));
+                    }
+
+                    $replacement = strtoupper($name);
+
+                } else {
+                    
+                    // Replace the other tags
+                    switch ($replace) {
+                        case 'ChangePercentage':
+                            // Protect against null values
+                            if(($data['Change'] == null || $data['LastTradePriceOnly'] == null)){
+                                $replacement = "0";
+                            } else {
+                                // Calculate the percentage dividing the change by the ( previous value minus the change )
+                                $percentage = $data['Change'] / ( $data['LastTradePriceOnly'] - $data['Change'] );
+                                
+                                // Convert the value to percentage and round it
+                                $replacement = round($percentage*100, 2);
+                            }    
+                            
+                            break;
+                            
+                        case 'SymbolTrimmed':
+                            
+                            $replacement = explode('.', $data['Symbol'])[0];
+                            
+                            break;
+                            
+                        case 'ChangeStyle':
+                            // Default value as no change
+                            $replacement = 'value-equal';
+                            
+                            // Protect against null values
+                            if(($data['Change'] != null && $data['LastTradePriceOnly'] != null)){
+                    
+                                if ( $data['Change'] > 0 ) {
+                                    $replacement = 'value-up';
+                                } else if ( $data['Change'] < 0 ){
+                                    $replacement = 'value-down';
+                                }
+                            }
+                            
+                            break;
+                            
+                        case 'ChangeIcon':
+                        
+                            // Default value as no change
+                            $replacement = 'right-arrow';
+                            
+                            // Protect against null values
+                            if(($data['Change'] != null && $data['LastTradePriceOnly'] != null)){
+                    
+                                if ( $data['Change'] > 0 ) {
+                                    $replacement = 'up-arrow';
+                                } else if ( $data['Change'] < 0 ){
+                                    $replacement = 'down-arrow';
+                                }
+                            }
+                            
+                            break;
+                            
+                        case 'CurrencyUpper':
+                            // Currency in uppercase
+                            $replacement = strtoupper($data['Currency']);
+                            
+                            break;
+                            
+                        default:
+                            $replacement = 'NULL';
+                            
+                            break;
+                    }    
+                }
             }
+            
+            // Replace the variable on the source string
+            $source = str_replace($sub, $replacement, $source);
         }
 
         return $source;
@@ -291,15 +377,16 @@ class Finance extends YahooBase
      * @return mixed
      */
     public function getResource($displayId = 0)
-    {
+    {        
         $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
-        // Information from the Module
+        // Information from the Module        
         $duration = $this->getCalculatedDurationForGetResource();
+        $durationIsPerItem = $this->getOption('durationIsPerItem', 1);
 
         // Generate a JSON string of items.
         if (!$items = $this->getYql()) {
@@ -307,32 +394,39 @@ class Finance extends YahooBase
         }
 
         // Run through each item and substitute with the template
-        $template = $this->parseLibraryReferences($isPreview, $this->getRawNode('template'));
+        $mainTemplate = $this->parseLibraryReferences($isPreview, $this->getRawNode('mainTemplate'));
+        $itemTemplate = $this->parseLibraryReferences($isPreview, $this->getRawNode('itemTemplate'));
+        
         $renderedItems = [];
-
+        
         foreach ($items as $item) {
-            $renderedItems[] = $this->makeSubstitutions($item, $template);
-        }
-
-        $marqueeEffect = (stripos($this->getOption('effect'), 'marquee') !== false);
+            $renderedItems[] = $this->makeSubstitutions($item, $itemTemplate);
+        }        
 
         $options = array(
             'type' => $this->getModuleType(),
             'fx' => $this->getOption('effect', 'none'),
-            'speed' => $this->getOption('speed', (($marqueeEffect) ? 1 : 500)),
+            'speed' => $this->getOption('speed', 500),
             'duration' => $duration,
-            'durationIsPerItem' => ($this->getOption('durationIsPerItem', 0) == 1),
+            'durationIsPerPage' => ($this->getOption('durationIsPerPage', 0) == 1),
             'numItems' => count($renderedItems),
-            'itemsPerPage' => 1,
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
             'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
             'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
+            'widgetDesignWidth' => $this->getSanitizer()->int($this->getOption('widgetOriginalWidth')),
+            'widgetDesignHeight'=> $this->getSanitizer()->int($this->getOption('widgetOriginalHeight')),
+            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0), 
+            'maxItemsPerPage' => $this->getSanitizer()->int($this->getOption('maxItemsPerPage'))
         );
 
-        // Replace the control meta with our data from twitter
-        $data['controlMeta'] = '<!-- NUMITEMS=' . count($items) . ' -->' . PHP_EOL . '<!-- DURATION=' . ($this->getOption('durationIsPerItem', 0) == 0 ? $duration : ($duration * count($items))) . ' -->';
+        $itemsPerPage = $options['maxItemsPerPage'];
+        $pages = count($renderedItems);
+        $pages = ($itemsPerPage > 0) ? ceil($pages / $itemsPerPage) : $pages;
+        $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
+        
+        // Replace and Control Meta options
+        $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->';
 
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
@@ -340,19 +434,21 @@ class Finance extends YahooBase
         // Replace the head content
         $headContent = '';
 
-        // Add the CSS if it isn't empty
-        $css = $this->getRawNode('styleSheet', null);
-        if ($css != '') {
-            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css ) . '</style>';
-        }
-
+        // Add our fonts.css file
+        $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
+        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
+        
         $backgroundColor = $this->getOption('backgroundColor');
         if ($backgroundColor != '') {
-            $headContent .= '<style type="text/css">body, .page, .item { background-color: ' . $backgroundColor . ' }</style>';
+            $headContent .= '<style type="text/css"> .container-main, .page, .item { background-color: ' . $backgroundColor . ' }</style>';
         }
+        
+        // Add the CSS if it isn't empty, and replace the wallpaper
+        $css = $this->makeSubstitutions([], $this->getRawNode('styleSheet', null), '');
 
-        // Add our fonts.css file
-        $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
+        if ($css != '') {
+            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css) . '</style>';
+        }
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         // Replace the Head Content with our generated javascript
@@ -361,22 +457,17 @@ class Finance extends YahooBase
         // Add some scripts to the JavaScript Content
         $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
 
-        // Need the cycle plugin?
-        if ($this->getOption('effect') != 'none')
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
-
-        // Need the marquee plugin?
-        if ($marqueeEffect)
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.marquee.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-finance-render.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   var items = ' . json_encode($renderedItems) . ';';
+        $javaScriptContent .= '   var body = ' . json_encode($mainTemplate) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); ';
+        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboFinanceRender(options, items, body); ';
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= $javaScript;
         $javaScriptContent .= '</script>';
@@ -399,4 +490,5 @@ class Finance extends YahooBase
         // 2 = Unknown
         return 1;
     }
+    
 }
