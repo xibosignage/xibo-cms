@@ -239,6 +239,14 @@ class DisplayFactory extends BaseFactory
             $body .= ' AND display.license = :license ';
             $params['license'] = $this->getSanitizer()->getString('license', $filterBy);
         }
+        
+        // Filter by authorised?
+        if ($this->getSanitizer()->getInt('authorised', $filterBy) !== null) {
+            if( $this->getSanitizer()->getInt('authorised', $filterBy) > 0){
+                $body .= ' AND display.licensed = :authorised ';
+                $params['authorised'] = $this->getSanitizer()->getInt('authorised', $filterBy) - 1;
+            }
+        }
 
         // Filter by Display Name?
         if ($this->getSanitizer()->getString('display', $filterBy) != null) {
