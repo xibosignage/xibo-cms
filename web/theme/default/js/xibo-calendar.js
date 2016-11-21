@@ -20,6 +20,7 @@
 
 // Global calendar object
 var calendar;
+var events = [];
 
 $(document).ready(function() {
 
@@ -59,10 +60,54 @@ $(document).ready(function() {
         var calendarOptions = $("#CalendarContainer").data();
 
         var options = {
-            events_source: function () { return []; },
+            time_start: '00:00',
+            time_end: '23:59',
+            events_source: function () { return events; },
             view: 'month',
-            tmpl_path: calendarOptions.templatePath,
+            tmpl_path: function (name) {
+                return 'calendar-template-' + name;
+            },
             tmpl_cache: true,
+            onBeforeEventsLoad: function (done) {
+
+                var calendarOptions = $("#CalendarContainer").data();
+                var url = calendarOptions.eventSource;
+
+                // Append display groups
+                var displayGroups = $('#DisplayList').serialize();
+                if (displayGroups != '')
+                    url += '?' + displayGroups;
+
+                // Populate the events array via AJAX
+                var params = {
+                    "from": this.options.position.start.getTime(),
+                    "to": this.options.position.end.getTime()
+                }
+
+                $('#calendar-progress').addClass('fa fa-cog fa-spin');
+
+                $.getJSON(url, params)
+                    .done(function(data) {
+                        events = data.result;
+
+                        if (done != undefined)
+                            done();
+
+                        calendar._render();
+
+                        $('#calendar-progress').removeClass('fa fa-cog fa-spin');
+                    })
+                    .fail(function() {
+                        $('#calendar-progress').removeClass('fa fa-cog fa-spin');
+
+                        if (done != undefined)
+                            done();
+
+                        calendar._render();
+
+                        toastr.error(translate.error);
+                    });
+            },
             onAfterEventsLoad: function(events) {
                 if(!events) {
                     return;
@@ -103,33 +148,10 @@ $(document).ready(function() {
 
         // Set up our display selector control
         $('#DisplayList').on('change', function(){
-            setTimeout(CallGenerateCalendar(), 1000);
+            setTimeout(calendar.view(), 1000);
         });
-
-        // Generate the calendar now we have a list set up
-        CallGenerateCalendar();
     }
 });
-
-/**
- * Generates the Calendar
- */
-function CallGenerateCalendar() {
-
-    var calendarOptions = $("#CalendarContainer").data();
-    var url = calendarOptions.eventSource;
-
-    // Append display groups
-    var displayGroups = $('#DisplayList').serialize();
-    if (displayGroups != '') 
-        url += '?' + displayGroups;
-
-    // Override the calendar URL
-    calendar.setOptions({events_source: url, time_start: '00:00', time_end: '00:00'});
-
-    // Navigate
-    calendar.view();
-}
 
 /**
  * Callback for the schedule form
@@ -171,7 +193,7 @@ var setupScheduleForm = function(dialog) {
 
                 if (xhr.success) {
                     // Reload the Calendar
-                    CallGenerateCalendar();
+                    calendar.view();
                 }
             }
         });

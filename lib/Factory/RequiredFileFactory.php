@@ -8,7 +8,6 @@
 
 namespace Xibo\Factory;
 
-
 use Xibo\Entity\RequiredFile;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
@@ -21,6 +20,8 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class RequiredFileFactory extends BaseFactory
 {
+    private $statement = null;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -41,18 +42,30 @@ class RequiredFileFactory extends BaseFactory
     }
 
     /**
-     * @param string $nonce
-     * @return RequiredFile
-     * @throws NotFoundException
+     * @param array $params
+     * @return RequiredFile[]
      */
-    public function getByNonce($nonce)
+    private function query($params)
     {
-        $nonce = $this->query(null, ['nonce' => $nonce]);
+        $files = [];
 
-        if (count($nonce) <= 0)
-            throw new NotFoundException();
+        if ($this->statement === null) {
+            $this->statement = $this->getStore()->getConnection()->prepare('
+              SELECT * 
+                FROM `requiredfile` 
+               WHERE `displayId` = :displayId
+                  AND `type` = :type 
+                  AND `itemId` = :itemId
+              ');
+        }
 
-        return $nonce[0];
+        $this->statement->execute($params);
+
+        foreach ($this->statement->fetchAll(\PDO::FETCH_ASSOC) as $item) {
+            $files[] = $this->createEmpty()->hydrate($item);
+        }
+
+        return $files;
     }
 
     /**
@@ -63,12 +76,12 @@ class RequiredFileFactory extends BaseFactory
      */
     public function getByDisplayAndLayout($displayId, $layoutId)
     {
-        $files = $this->query(null, ['displayId' => $displayId, 'layoutId' => $layoutId]);
+        $result = $this->query(['displayId' => $displayId, 'type' => 'L', 'itemId' => $layoutId]);
 
-        if (count($files) <= 0)
-            throw new NotFoundException();
+        if (count($result) <= 0)
+            throw new NotFoundException(__('Required file not found for Display and Layout Combination'));
 
-        return $files[0];
+        return $result[0];
     }
 
     /**
@@ -79,166 +92,98 @@ class RequiredFileFactory extends BaseFactory
      */
     public function getByDisplayAndMedia($displayId, $mediaId)
     {
-        $files = $this->query(null, ['displayId' => $displayId, 'mediaId' => $mediaId]);
+        $result = $this->query(['displayId' => $displayId, 'type' => 'M', 'itemId' => $mediaId]);
 
-        if (count($files) <= 0)
-            throw new NotFoundException();
+        if (count($result) <= 0)
+            throw new NotFoundException(__('Required file not found for Display and Media Combination'));
 
-        return $files[0];
+        return $result[0];
     }
 
     /**
      * @param int $displayId
-     * @param int $layoutId
-     * @param int $regionId
-     * @param int $mediaId
+     * @param int $widgetId
      * @return RequiredFile
      * @throws NotFoundException
      */
-    public function getByDisplayAndResource($displayId, $layoutId, $regionId, $mediaId)
+    public function getByDisplayAndWidget($displayId, $widgetId)
     {
-        $files = $this->query(null, ['displayId' => $displayId, 'layoutId' => $layoutId, 'regionId' => $regionId, 'mediaId' => $mediaId]);
+        $result = $this->query(['displayId' => $displayId, 'type' => 'W', 'itemId' => $widgetId]);
 
-        if (count($files) <= 0)
-            throw new NotFoundException();
+        if (count($result) <= 0)
+            throw new NotFoundException(__('Required file not found for Display and Layout Widget'));
 
-        return $files[0];
+        return $result[0];
     }
 
     /**
      * Create for layout
      * @param $displayId
-     * @param $requestKey
      * @param $layoutId
      * @param $size
      * @param $path
      * @return RequiredFile
      */
-    public function createForLayout($displayId, $requestKey, $layoutId, $size, $path)
+    public function createForLayout($displayId, $layoutId, $size, $path)
     {
         try {
-            $nonce = $this->getByDisplayAndLayout($displayId, $layoutId);
+            $requiredFile = $this->getByDisplayAndLayout($displayId, $layoutId);
         }
         catch (NotFoundException $e) {
-            $nonce = $this->createEmpty();
+            $requiredFile = $this->createEmpty();
         }
 
-        $nonce->displayId = $displayId;
-        $nonce->requestKey = $requestKey;
-        $nonce->layoutId = $layoutId;
-        $nonce->size = $size;
-        $nonce->storedAs = $path;
-        return $nonce;
+        $requiredFile->displayId = $displayId;
+        $requiredFile->type = 'L';
+        $requiredFile->itemId = $layoutId;
+        $requiredFile->size = $size;
+        $requiredFile->path = $path;
+        return $requiredFile;
     }
 
     /**
      * Create for Get Resource
      * @param $displayId
-     * @param $requestKey
-     * @param $layoutId
-     * @param $regionId
-     * @param $mediaId
+     * @param $widgetId
      * @return RequiredFile
      */
-    public function createForGetResource($displayId, $requestKey, $layoutId, $regionId, $mediaId)
+    public function createForGetResource($displayId, $widgetId)
     {
         try {
-            $nonce = $this->getByDisplayAndResource($displayId, $layoutId, $regionId, $mediaId);
+            $requiredFile = $this->getByDisplayAndWidget($displayId, $widgetId);
         }
         catch (NotFoundException $e) {
-            $nonce = $this->createEmpty();
+            $requiredFile = $this->createEmpty();
         }
 
-        $nonce->displayId = $displayId;
-        $nonce->requestKey = $requestKey;
-        $nonce->layoutId = $layoutId;
-        $nonce->regionId = $regionId;
-        $nonce->mediaId = $mediaId;
-        return $nonce;
+        $requiredFile->displayId = $displayId;
+        $requiredFile->type = 'W';
+        $requiredFile->itemId = $widgetId;
+        return $requiredFile;
     }
 
     /**
      * Create for Media
      * @param $displayId
-     * @param $requestKey
      * @param $mediaId
      * @param $size
      * @param $path
      * @return RequiredFile
      */
-    public function createForMedia($displayId, $requestKey, $mediaId, $size, $path)
+    public function createForMedia($displayId, $mediaId, $size, $path)
     {
         try {
-            $nonce = $this->getByDisplayAndMedia($displayId, $mediaId);
+            $requiredFile = $this->getByDisplayAndMedia($displayId, $mediaId);
         }
         catch (NotFoundException $e) {
-            $nonce = $this->createEmpty();
+            $requiredFile = $this->createEmpty();
         }
 
-        $nonce->displayId = $displayId;
-        $nonce->requestKey = $requestKey;
-        $nonce->mediaId = $mediaId;
-        $nonce->size = $size;
-        $nonce->storedAs = $path;
-        return $nonce;
-    }
-
-    public function query($sortOrder = null, $filterBy = null)
-    {
-        $entries = [];
-        $params = [];
-        $sql = '
-            SELECT rfId,
-                `requiredfile`.requestKey,
-                `requiredfile`.nonce,
-                `requiredfile`.expiry,
-                `requiredfile`.lastUsed,
-                `requiredfile`.displayId,
-                `requiredfile`.size,
-                `requiredfile`.storedAs,
-                `requiredfile`.layoutId,
-                `requiredfile`.regionId,
-                `requiredfile`.mediaId,
-                `requiredfile`.bytesRequested,
-                `requiredfile`.complete
-             FROM `requiredfile`
-            WHERE 1 = 1
-        ';
-
-        if ($this->getSanitizer()->getString('nonce', $filterBy) !== null) {
-            $sql .= ' AND requiredfile.nonce = :nonce';
-            $params['nonce'] = $this->getSanitizer()->getString('nonce', $filterBy);
-        }
-
-        if ($this->getSanitizer()->getInt('displayId', $filterBy) !== null) {
-            $sql .= ' AND requiredfile.displayId = :displayId';
-            $params['displayId'] = $this->getSanitizer()->getInt('displayId', $filterBy);
-        }
-
-        if ($this->getSanitizer()->getInt('layoutId', $filterBy) !== null) {
-            $sql .= ' AND requiredfile.layoutId = :layoutId';
-            $params['layoutId'] = $this->getSanitizer()->getInt('layoutId', $filterBy);
-        }
-
-        if ($this->getSanitizer()->getInt('regionId', $filterBy) !== null) {
-            $sql .= ' AND requiredfile.regionId = :regionId';
-            $params['regionId'] = $this->getSanitizer()->getInt('regionId', $filterBy);
-        }
-
-        if ($this->getSanitizer()->getInt('mediaId', $filterBy) !== null) {
-            $sql .= ' AND requiredfile.mediaId = :mediaId';
-            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
-        }
-
-        // Sorting?
-        if (is_array($sortOrder))
-            $sql .= 'ORDER BY ' . implode(',', $sortOrder);
-
-
-        foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['expires', 'lastUsed', 'size']]);
-        }
-
-        return $entries;
+        $requiredFile->displayId = $displayId;
+        $requiredFile->type = 'M';
+        $requiredFile->itemId = $mediaId;
+        $requiredFile->size = $size;
+        $requiredFile->path = $path;
+        return $requiredFile;
     }
 }

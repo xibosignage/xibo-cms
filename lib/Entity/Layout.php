@@ -23,6 +23,8 @@ namespace Xibo\Entity;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\LayoutBuildEvent;
 use Xibo\Event\LayoutBuildRegionEvent;
+use Xibo\Exception\DuplicateEntityException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
@@ -590,6 +592,10 @@ class Layout implements \JsonSerializable
 
         $this->getLog()->debug('Deleting %s', $this);
 
+        // We cannot delete the default default
+        if ($this->layoutId == $this->config->GetSetting('DEFAULT_LAYOUT'))
+            throw new InvalidArgumentException(__('This layout is used as the global default and cannot be deleted'), 'layoutId');
+
         // Delete Permissions
         foreach ($this->permissions as $permission) {
             /* @var Permission $permission */
@@ -623,7 +629,10 @@ class Layout implements \JsonSerializable
         $campaign->delete();
 
         // Remove the Layout from any display defaults
-        $this->getStore()->update('UPDATE `display` SET defaultlayoutid = 4 WHERE defaultlayoutid = :layoutId', array('layoutId' => $this->layoutId));
+        $this->getStore()->update('UPDATE `display` SET defaultlayoutid = :defaultLayoutId WHERE defaultlayoutid = :layoutId', [
+            'layoutId' => $this->layoutId,
+            'defaultLayoutId' => $this->config->GetSetting('DEFAULT_LAYOUT')
+        ]);
 
         // Remove the Layout (now it is orphaned it can be deleted safely)
         $this->getStore()->update('DELETE FROM `layout` WHERE layoutid = :layoutId', array('layoutId' => $this->layoutId));
@@ -641,20 +650,20 @@ class Layout implements \JsonSerializable
     {
         // We must provide either a template or a resolution
         if ($this->width == 0 || $this->height == 0)
-            throw new \InvalidArgumentException(__('The layout dimensions cannot be empty'));
+            throw new InvalidArgumentException(__('The layout dimensions cannot be empty'), 'width/height');
 
         // Validation
         if (strlen($this->layout) > 50 || strlen($this->layout) < 1)
-            throw new \InvalidArgumentException(__("Layout Name must be between 1 and 50 characters"));
+            throw new InvalidArgumentException(__("Layout Name must be between 1 and 50 characters"), 'name');
 
         if (strlen($this->description) > 254)
-            throw new \InvalidArgumentException(__("Description can not be longer than 254 characters"));
+            throw new InvalidArgumentException(__("Description can not be longer than 254 characters"), 'description');
 
         // Check for duplicates
         $duplicates = $this->layoutFactory->query(null, array('userId' => $this->ownerId, 'layoutExact' => $this->layout, 'notLayoutId' => $this->layoutId));
 
         if (count($duplicates) > 0)
-            throw new \InvalidArgumentException(sprintf(__("You already own a layout called '%s'. Please choose another name."), $this->layout));
+            throw new DuplicateEntityException(sprintf(__("You already own a layout called '%s'. Please choose another name."), $this->layout));
     }
 
     /**
@@ -914,7 +923,7 @@ class Layout implements \JsonSerializable
                     // Inject the URI
                     $uriInjected = false;
                     if ($module->getModule()->regionSpecific == 0) {
-                        $media = $this->mediaFactory->getById($widget->mediaIds[0]);
+                        $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
                         $optionNode = $document->createElement('uri', $media->storedAs);
                         $optionsNode->appendChild($optionNode);
                         $uriInjected = true;
@@ -1195,6 +1204,8 @@ class Layout implements \JsonSerializable
                 'manageRegionAssignments' => false,
                 'saveTags' => false,
                 'setBuildRequired' => false,
+                'audit' => false,
+                'validate' => false,
                 'notify' => $options['notify']
             ]);
         }

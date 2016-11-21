@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
@@ -79,6 +80,9 @@ class Campaign implements \JsonSerializable
     private $layouts = [];
     private $permissions = [];
     private $events = [];
+
+    /** @var bool Have the Layout assignments changed? */
+    private $layoutAssignmentsChanged = false;
 
     /**
      * @var PermissionFactory
@@ -187,7 +191,7 @@ class Campaign implements \JsonSerializable
     public function validate()
     {
         if (!v::string()->notEmpty()->validate($this->campaign))
-            throw new \InvalidArgumentException(__('Name cannot be empty'));
+            throw new InvalidArgumentException(__('Name cannot be empty'), 'name');
     }
 
     /**
@@ -255,8 +259,20 @@ class Campaign implements \JsonSerializable
     {
         $this->load();
 
-        if (!in_array($layout, $this->layouts))
+        $layout->displayOrder = ($layout->displayOrder == null || $layout->displayOrder == 0) ? count($this->layouts) + 1 : $layout->displayOrder;
+
+        $found = false;
+        foreach ($this->layouts as $existingLayout) {
+            if ($existingLayout->getId() === $layout->getId() && $existingLayout->displayOrder === $layout->displayOrder) {
+                $found = true;
+                break;
+            }
+        }
+
+        if (!$found) {
+            $this->layoutAssignmentsChanged = true;
             $this->layouts[] = $layout;
+        }
     }
 
     /**
@@ -267,7 +283,8 @@ class Campaign implements \JsonSerializable
     {
         $this->load();
 
-        $this->getLog()->debug('Unassigning Layout [%s] from Campaign [%s]. Display Order %d. Count before assign = %d', $layout, $this, $layout->displayOrder, count($this->layouts));
+        $countBefore = count($this->layouts);
+        $this->getLog()->debug('Unassigning Layout [%s] from Campaign [%s]. Display Order %d. Count before assign = %d', $layout, $this, $layout->displayOrder, $countBefore);
 
         $this->layouts = array_udiff($this->layouts, [$layout], function ($a, $b) {
             /**
@@ -275,16 +292,20 @@ class Campaign implements \JsonSerializable
              * @var Layout $b
              */
             // Are we a layout that has been configured with a display order, or are we a complete layout removal?
-            if ($a->displayOrder === null || $b->displayOrder === null)
+            if ($a->displayOrder == null || $b->displayOrder == null)
                 $return = ($a->getId() - $b->getId());
             else
                 $return = ($a->getId() - $b->getId()) + ($a->displayOrder - $b->displayOrder);
 
-            $this->getLog()->debug('Comparing a [%d, %d] with b [%d, %d]. Return = %d', $a->layoutId, $a->displayOrder, $b->layoutId, $b->displayOrder, $return);
+            //$this->getLog()->debug('Comparing a [%d, %d] with b [%d, %d]. Return = %d', $a->layoutId, $a->displayOrder, $b->layoutId, $b->displayOrder, $return);
             return $return;
         });
 
-        $this->getLog()->debug('Count after unassign = %d', count($this->layouts));
+        $countAfter = count($this->layouts);
+        $this->getLog()->debug('Count after unassign = %d', $countAfter);
+
+        if ($countBefore !== $countAfter)
+            $this->layoutAssignmentsChanged = true;
     }
 
     private function add()
@@ -310,9 +331,13 @@ class Campaign implements \JsonSerializable
      */
     private function manageAssignments()
     {
-        $this->getLog()->debug('Managing Assignments on %s', $this);
-        $this->unlinkLayouts();
-        $this->linkLayouts();
+        if ($this->layoutAssignmentsChanged) {
+            $this->getLog()->debug('Managing Assignments on ' . $this);
+            $this->unlinkLayouts();
+            $this->linkLayouts();
+        } else {
+            $this->getLog()->debug('Assignments have not changed on ' . $this);
+        }
     }
 
     /**
@@ -324,32 +349,37 @@ class Campaign implements \JsonSerializable
         if (count($this->layouts) <= 0)
             return;
 
-        $sql = 'INSERT INTO `lkcampaignlayout` (CampaignID, LayoutID, DisplayOrder) VALUES (:campaignId, :layoutId, :displayOrder) ON DUPLICATE KEY UPDATE layoutId = :layoutId2';
+        // Sort the layouts by their display order
+        usort($this->layouts, function($a, $b) {
+            /** @var Layout $a */
+            /** @var Layout $b */
+            if ($a->displayOrder === null)
+                return 1;
 
-        // Get the Max display order
-        $displayOrders = array_map(function ($element) {
-            return $element->displayOrder;
-        }, $this->layouts);
+            if ($a->displayOrder === $b->displayOrder)
+                return 0;
 
-        $maxDisplayOrder = max($displayOrders);
+            return ($a->displayOrder < $b->displayOrder) ? -1 : 1;
+        });
 
-        // Fill in empty display orders
+        // Update the layouts, in order to have display order 1 to n
+        $i = 0;
+        $sql = 'INSERT INTO `lkcampaignlayout` (CampaignID, LayoutID, DisplayOrder) VALUES ';
+        $params = [];
+
         foreach ($this->layouts as $layout) {
-            if ($layout->displayOrder == null) {
-                $maxDisplayOrder++;
-                $layout->displayOrder = $maxDisplayOrder;
-            }
+            $i++;
+            $layout->displayOrder = $i;
+
+            $sql .= '(:campaignId_' . $i . ', :layoutId_' . $i . ', :displayOrder_' . $i . '),';
+            $params['campaignId_' . $i] = $this->campaignId;
+            $params['layoutId_' . $i] = $layout->layoutId;
+            $params['displayOrder_' . $i] = $layout->displayOrder;
         }
 
-        foreach ($this->layouts as $layout) {
+        $sql = rtrim($sql, ',');
 
-            $this->getStore()->insert($sql, array(
-                'campaignId' => $this->campaignId,
-                'displayOrder' => $layout->displayOrder,
-                'layoutId' => $layout->layoutId,
-                'layoutId2' => $layout->layoutId
-            ));
-        }
+        $this->getStore()->update($sql, $params);
     }
 
     /**
@@ -357,57 +387,8 @@ class Campaign implements \JsonSerializable
      */
     private function unlinkLayouts()
     {
-        // Unlink any layouts that are NOT in the collection
-        $params = ['campaignId' => $this->campaignId];
-
-        if (count($this->layouts) <= 0) {
-            $sql = ' DELETE FROM `lkcampaignlayout` WHERE campaignId = :campaignId ';
-        }
-        else {
-
-            $sql = '
-                  SELECT lkCampaignLayoutId
-                    FROM `lkcampaignlayout`
-                   WHERE campaignId = :campaignId AND (
-            ';
-
-            $i = 0;
-            foreach ($this->layouts as $layout) {
-                $i++;
-
-                if ($i > 1)
-                    $sql .= ' OR ';
-
-                $sql .= ' (layoutId = :layoutId' . $i . ' AND displayOrder = :displayOrder' . $i . ') ';
-                $params['layoutId' . $i] = $layout->layoutId;
-                $params['displayOrder' . $i] = $layout->displayOrder;
-            }
-
-            $sql .= ')';
-
-            // Get the lkid's for the delete
-
-            $ids = $this->getStore()->select($sql, $params);
-
-            $ids = array_map(function ($element) {
-                return $element['lkCampaignLayoutId'];
-            }, $ids);
-
-            if (count($ids) <= 0)
-                $ids[] = 0;
-
-            $sql = '
-              DELETE FROM `lkcampaignlayout`
-               WHERE campaignId = :campaignId
-                AND lkCampaignLayoutId NOT IN (' . implode(',', $ids) . ') ';
-
-            // Reset params to just be the campaign id
-            $params = ['campaignId' => $this->campaignId];
-        }
-
-
-
-        $this->getStore()->update($sql, $params);
+        // Delete all the links
+        $this->getStore()->update('DELETE FROM `lkcampaignlayout` WHERE campaignId = :campaignId', ['campaignId' => $this->campaignId]);
     }
 
     /**
@@ -415,15 +396,8 @@ class Campaign implements \JsonSerializable
      */
     private function notify()
     {
-        $this->getLog()->debug('Checking for Displays to refresh on Campaign %d', $this->campaignId);
+        $this->getLog()->debug('CampaignId ' . $this->campaignId . ' wants to notify.');
 
-        $displays = array_merge($this->displayFactory->getByActiveCampaignId($this->campaignId), $this->displayFactory->getByAssignedCampaignId($this->campaignId));
-
-        foreach ($displays as $display) {
-            /* @var \Xibo\Entity\Display $display */
-            $display->setMediaIncomplete();
-            $display->setCollectRequired(true);
-            $display->save(['validate' => false, 'audit' => false]);
-        }
+        $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByCampaignId($this->campaignId);
     }
 }

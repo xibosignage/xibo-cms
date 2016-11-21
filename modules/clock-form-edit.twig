@@ -165,8 +165,8 @@
                 {{ forms.dropdown("clockFace", "single", title, module.getOption("clockFace", "TwentyFourHourClock"), module.clockFaces(), "id", "value", helpText, "flip-control-group") }}
 
                 {% set title %}{% trans "Offset" %}{% endset %}
-                {% set helpText %}{% trans "The offset in minutes that should be applied to the current time." %}{% endset %}
-                {{ forms.number("offset", title, module.getOption("offset"), helpText) }}
+                {% set helpText %}{% trans "The offset in minutes that should be applied to the current time, or if a counter then date/time to run from in the format Y-m-d H:i:s." %}{% endset %}
+                {{ forms.input("offset", title, module.getOption("offset"), helpText) }}
 
                 {% set title %}{% trans "Show Seconds?" %}{% endset %}
                 {% set helpText %}{% trans "Should the clock show seconds or not?" %}{% endset %}

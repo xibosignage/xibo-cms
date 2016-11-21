@@ -127,7 +127,7 @@ echo __('Force HTTPS?');
 echo __('Force the portal into HTTPS?');
 echo __('Enable STS?');
 echo __('Add STS to the response headers? Make sure you fully understand STS before turning it on as it will prevent access via HTTP after the first successful HTTPS connection.');
-echo __('The Time to Live (maxage) of the STS header expressed in minutes.');
+echo __('The Time to Live (maxage) of the STS header expressed in seconds.');
 echo __('Maintenance Alerts for Users');
 echo __('Email maintenance alerts for users with view permissions to effected Displays.');
 echo __('Set the level of logging the CMS should record. In production systems "error" is recommended.');
@@ -153,6 +153,10 @@ echo __('Resting Log Level');
 echo __('Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems "error" is recommended.');
 echo __('Lock Task Config');
 echo __('Is the task config locked? Useful for Service providers.');
+echo __('Whitelist Load Balancers');
+echo __('If the CMS is behind a load balancer, what are the load balancer IP addresses, comma delimited.');
+echo __('Default Layout');
+echo __('The default layout to assign for new displays and displays which have their current default deleted.');
 
 // Transitions
 echo __('Fade In');
@@ -185,8 +189,12 @@ echo __('Local Video');
 echo __('Generic File');
 echo __('Audio');
 echo __('PDF');
-
 echo __('PDF document viewer');
+
+echo __('Stocks Module');
+echo __('A module for displaying Stocks information. Uses the Yahoo API');
+echo __('Currencies Module');
+echo __('A module for displaying Currencies information. Uses the Yahoo API');
 
 echo __('Media will be created with these settings. If public everyone will be able to view and use this media.');
 echo __('New layouts will be created with these settings. If public everyone will be able to view and use this layout.');

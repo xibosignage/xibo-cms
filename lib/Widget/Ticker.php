@@ -365,9 +365,6 @@ class Ticker extends ModuleWidget
         $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
-        // Clear all linked media.
-        $this->clearMedia();
-
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
@@ -585,7 +582,7 @@ class Ticker extends ModuleWidget
             $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
 
             // Set an expiry time for the media
-            $expires = time() + ($this->getOption('updateInterval', 3600) * 60);
+            $expires = $this->getDate()->parse()->addMinutes($this->getOption('updateInterval', 3600))->format('U');
 
             // Render the content now
             foreach ($feedItems as $item) {
@@ -652,10 +649,7 @@ class Ticker extends ModuleWidget
                             // image url
                             if ($link != NULL) {
                                 // Grab the profile image
-                                $file = $this->mediaFactory->createModuleFile('ticker_' . md5($this->getOption('url') . $link), $link);
-                                $file->isRemote = true;
-                                $file->expires = $expires;
-                                $file->save();
+                                $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expires);
 
                                 // Tag this layout with this file
                                 $this->assignMedia($file->mediaId);
@@ -736,6 +730,9 @@ class Ticker extends ModuleWidget
 
                 $items[] = $rowString;
             }
+
+            // Process the download queue
+            $this->mediaFactory->processDownloads();
 
             // Copyright information?
             if ($this->getOption('copyright', '') != '') {

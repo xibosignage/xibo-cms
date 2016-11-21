@@ -420,10 +420,10 @@ function dataTableDateFromUnix(data, type, row) {
     if (type != "display")
         return data;
 
-    if (data == null)
+    if (data == null || data == 0)
         return "";
 
-    return moment(data, "X").format(jsDateFormat);
+    return moment(data, "X").tz(timezone).format(jsDateFormat);
 }
 
 /**

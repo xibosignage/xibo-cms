@@ -1,0 +1,43 @@
+{
+  "dbVersion": 128,
+  "appVersion": "1.8.0-rc1",
+  "steps": [
+    {
+      "step": "Fix database contraints and indexes",
+      "type": "php",
+      "action": "Xibo\\Upgrade\\FixDatabaseIndexesAndContraints"
+    },
+    {
+      "step": "Update 4k resolution with a better name",
+      "action": "UPDATE `resolution` SET resolution = '4k cinema' WHERE resolution = '4k';"
+    },
+    {
+      "step": "Add 4k UHD",
+      "action": "INSERT INTO `resolution` (`resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES('4k UHD Landscape', 450, 800, 3840, 2160, 2, 1),('4k UHD Portrait', 800, 450, 2160, 3840, 2, 1);"
+    },
+    {
+      "step": "Update Always schedules",
+      "action": "UPDATE schedule SET fromDt = 0, toDt = 2556057600 WHERE dayPartId = 1"
+    },
+    {
+      "step": "Drop schedule detail",
+      "action": "DROP TABLE schedule_detail;"
+    },
+    {
+      "step": "Add schedule recurrence watermark",
+      "action": "ALTER TABLE schedule ADD lastRecurrenceWatermark BIGINT(20) NULL;"
+    },
+    {
+      "step": "Drop required file",
+      "action": "DROP TABLE requiredfile;"
+    },
+    {
+      "step": "Alter log channel  datatype",
+      "action": "ALTER TABLE  `log` CHANGE  `channel`  `channel` VARCHAR( 20 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;"
+    },
+    {
+      "step": "Update helptext to STS setting",
+      "action": "UPDATE `setting` SET `helpText` = 'The Time to Live (maxage) of the STS header expressed in seconds.' WHERE `setting` = 'STS_TTL';"
+    }
+  ]
+}

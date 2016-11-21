@@ -150,6 +150,35 @@ class ModuleFactory extends BaseFactory
         // Create a module
         return $this->moduleService->get(
             $modules[0],
+            $this,
+            $this->mediaFactory,
+            $this->dataSetFactory,
+            $this->dataSetColumnFactory,
+            $this->transitionFactory,
+            $this->displayFactory,
+            $this->commandFactory
+        );
+    }
+
+    /**
+     * Create a Module
+     * @param string $class
+     * @return \Xibo\Widget\ModuleWidget
+     * @throws NotFoundException
+     */
+    public function createByClass($class)
+    {
+        $modules = $this->query(['enabled DESC'], array('class' => $class));
+
+        $this->getLog()->debug('Creating %s out of possible %s', $class, json_encode(array_map(function($element) { return $element->class; }, $modules)));
+
+        if (count($modules) <= 0)
+            throw new NotFoundException(sprintf(__('Unknown class %s'), $class));
+
+        // Create a module
+        return $this->moduleService->get(
+            $modules[0],
+            $this,
             $this->mediaFactory,
             $this->dataSetFactory,
             $this->dataSetColumnFactory,
@@ -170,6 +199,7 @@ class ModuleFactory extends BaseFactory
         // Create a module
         return $this->moduleService->getByClass(
             $className,
+            $this,
             $this->mediaFactory,
             $this->dataSetFactory,
             $this->dataSetColumnFactory,
@@ -189,6 +219,7 @@ class ModuleFactory extends BaseFactory
     {
         return $this->moduleService->get(
             $this->getById($moduleId),
+            $this,
             $this->mediaFactory,
             $this->dataSetFactory,
             $this->dataSetColumnFactory,
@@ -220,6 +251,7 @@ class ModuleFactory extends BaseFactory
         $module = $modules[0];
         $object = $this->moduleService->get(
             $module,
+            $this,
             $this->mediaFactory,
             $this->dataSetFactory,
             $this->dataSetColumnFactory,
@@ -466,6 +498,11 @@ class ModuleFactory extends BaseFactory
             if ($this->getSanitizer()->getString('type', $filterBy) != '') {
                 $params['type'] = $this->getSanitizer()->getString('type', $filterBy);
                 $body .= ' AND module = :type ';
+            }
+
+            if ($this->getSanitizer()->getString('class', $filterBy) != '') {
+                $params['class'] = $this->getSanitizer()->getString('class', $filterBy);
+                $body .= ' AND `class` = :class ';
             }
 
             if ($this->getSanitizer()->getString('extension', $filterBy) != '') {

@@ -158,7 +158,7 @@ class Soap3 extends Soap
                 $chunkSize = filesize($path);
 
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
-                $requiredFile->markUsed();
+                $requiredFile->save();
 
             } else if ($fileType == "media") {
                 // Get the ID
@@ -181,7 +181,7 @@ class Soap3 extends Soap
                 $chunkSize = strlen($file);
 
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
-                $requiredFile->markUsed();
+                $requiredFile->save();
 
             } else {
                 throw new NotFoundException('Unknown FileType Requested.');

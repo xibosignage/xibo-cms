@@ -38,13 +38,13 @@ class DateServiceGregorian implements DateServiceInterface
      */
     public function getLocalDate($timestamp = NULL, $format = NULL, $timezone = NULL)
     {
-        if ($format == NULL)
+        if ($format === NULL)
             $format = $this->getSystemFormat();
 
         if ($timestamp instanceof \Jenssegers\Date\Date)
             return $timestamp->format($format);
 
-        if ($timestamp == NULL)
+        if ($timestamp === NULL)
             $timestamp = time();
 
         return \Jenssegers\Date\Date::createFromTimestamp($timestamp, $timezone)->format($format);
@@ -67,12 +67,12 @@ class DateServiceGregorian implements DateServiceInterface
      */
     public function parse($string = null, $format = null)
     {
-        if ($string == null) {
+        if ($string === null) {
             $string = $this->getLocalDate();
             $format = null;
         }
 
-        if ($format == null)
+        if ($format === null)
             $format = $this->getSystemFormat();
 
         return ($format == 'U') ? \Jenssegers\Date\Date::createFromTimestamp($string) : \Jenssegers\Date\Date::createFromFormat($format, $string);

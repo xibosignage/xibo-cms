@@ -22,6 +22,7 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -176,7 +177,7 @@ class DayPart implements \JsonSerializable
     public function validate()
     {
         if (!v::string()->notEmpty()->validate($this->name))
-            throw new \InvalidArgumentException(__('Name cannot be empty'));
+            throw new InvalidArgumentException(__('Name cannot be empty'), 'name');
     }
 
     /**
@@ -287,7 +288,7 @@ class DayPart implements \JsonSerializable
             /** @var Schedule $schedule */
             $schedule
                 ->setDateService($this->getDate())
-                ->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory)
+                ->setDisplayFactory($this->displayFactory)
                 ->load();
 
             // Is this schedule a recurring event?
@@ -297,7 +298,7 @@ class DayPart implements \JsonSerializable
                 // Split the scheduled event, adjusting only the recurring end date on the original event
                 $newSchedule = clone $schedule;
                 $schedule->recurrenceRange = $now;
-                $schedule->save(['generate' => false, 'deleteDetailFrom' => $now]);
+                $schedule->save();
 
                 // Adjusting the fromdt on the new event
                 $newSchedule->fromDt = $now;

@@ -10,6 +10,8 @@ namespace Xibo\Entity;
 
 
 use Respect\Validation\Validator as v;
+use Xibo\Exception\DuplicateEntityException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -84,6 +86,17 @@ class DisplayGroup implements \JsonSerializable
      * @var int
      */
     public $userId = 0;
+
+    /**
+     * Minimum save options
+     * @var array
+     */
+    public static $saveOptionsMinimum = [
+        'validate' => false,
+        'saveGroup' => true,
+        'manageLinks' => false,
+        'manageDisplayLinks' => false
+    ];
 
     // Child Items the Display Group is linked to
     private $displays = [];
@@ -210,14 +223,14 @@ class DisplayGroup implements \JsonSerializable
     /**
      * Set the Media Status to Incomplete
      */
-    public function setMediaIncomplete()
+    public function notify()
     {
-        foreach ($this->displayFactory->getByDisplayGroupId($this->displayGroupId) as $display) {
-            /* @var Display $display */
-            $display->setMediaIncomplete();
-            $display->setCollectRequired($this->collectRequired);
-            $display->save(['validate' => false, 'audit' => false, 'triggerDynamicDisplayGroupAssessment' => false]);
-        }
+        $notify = $this->displayFactory->getDisplayNotifyService();
+
+        if ($this->collectRequired)
+            $notify->collectNow();
+
+        $notify->notifyByDisplayGroupId($this->displayGroupId);
     }
 
     /**
@@ -228,7 +241,15 @@ class DisplayGroup implements \JsonSerializable
     {
         $this->load();
 
-        if (!in_array($display, $this->displays))
+        $found = false;
+        foreach ($this->displays as $existingDisplay) {
+            if ($existingDisplay->getId() === $display->getId()) {
+                $found = true;
+                break;
+            }
+        }
+
+        if (!$found)
             $this->displays[] = $display;
     }
 
@@ -380,10 +401,10 @@ class DisplayGroup implements \JsonSerializable
     public function validate()
     {
         if (!v::string()->notEmpty()->validate($this->displayGroup))
-            throw new \InvalidArgumentException(__('Please enter a display group name'));
+            throw new InvalidArgumentException(__('Please enter a display group name'), 'displayGroup');
 
         if (!empty($this->description) && !v::string()->length(null, 254)->validate($this->description))
-            throw new \InvalidArgumentException(__('Description can not be longer than 254 characters'));
+            throw new InvalidArgumentException(__('Description can not be longer than 254 characters'), 'description');
 
         if ($this->isDisplaySpecific == 0) {
             // Check the name
@@ -393,11 +414,11 @@ class DisplayGroup implements \JsonSerializable
             ]);
 
             if (count($result) > 0)
-                throw new \InvalidArgumentException(sprintf(__('You already own a display group called "%s". Please choose another name.'), $this->displayGroup));
+                throw new DuplicateEntityException(sprintf(__('You already own a display group called "%s". Please choose another name.'), $this->displayGroup));
 
             // If we are dynamic, then make sure we have some criteria
             if ($this->isDynamic == 1 && $this->dynamicCriteria == '')
-                throw new \InvalidArgumentException(__('Dynamic Display Groups must have at least one Criteria specified.'));
+                throw new InvalidArgumentException(__('Dynamic Display Groups must have at least one Criteria specified.'), 'dynamicCriteria');
         }
     }
 
@@ -452,7 +473,7 @@ class DisplayGroup implements \JsonSerializable
 
         // Set media incomplete if necessary
         if ($this->notifyRequired)
-            $this->setMediaIncomplete();
+            $this->notify();
     }
 
     /**

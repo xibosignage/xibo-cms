@@ -20,10 +20,21 @@
                             {{ inline.input("layout", title) }}
 
                             {% set title %}{% trans "Tags" %}{% endset %}
-                            {{ inline.input("tags", title) }}
+                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                            {{ inline.input("tags", title, null, helpText) }}
+
+                            {% set attributes = [
+                            { name: "data-live-search", value: "true" },
+                            { name: "data-selected-text-format", value: "count > 4" }
+                            ] %}
 
                             {% set title %}{% trans "Owner" %}{% endset %}
-                            {{ inline.dropdown("userId", "single", title, "", [{userId:null, userName:""}]|merge(users), "userId", "userName") }}
+                            {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}
+                            {{ inline.dropdown("userId", "single", title, "", [{userId:null, userName:""}]|merge(users), "userId", "userName", helpText, "selectPicker", "", "", "", attributes) }}
+
+                            {% set title %}{% trans "Owner User Group" %}{% endset %}
+                            {% set helpText %}{% trans "Show items owned by users in the selected User Group." %}{% endset %}
+                            {{ inline.dropdown("ownerUserGroupId", "single", title, "", [{groupId:null, group:""}]|merge(groups), "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
 
                             {% set title %}{% trans "Retired" %}{% endset %}
                             {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}

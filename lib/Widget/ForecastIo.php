@@ -236,7 +236,7 @@ class ForecastIo extends ModuleWidget
     {
         return array(
             array('id' => 'auto', 'value' => 'Automatically select based on geographic location', 'tempUnit' => '', 'windUnit' => '', 'visibilityUnit' => ''),
-            array('id' => 'ca', 'value' => 'Canada', 'tempUnit' => 'F', 'windUnit' => 'KPH', 'visibilityUnit' => 'km'),
+            array('id' => 'ca', 'value' => 'Canada', 'tempUnit' => 'C', 'windUnit' => 'KPH', 'visibilityUnit' => 'km'),
             array('id' => 'si', 'value' => 'Standard International Units', 'tempUnit' => 'C', 'windUnit' => 'MPS', 'visibilityUnit' => 'km'),
             array('id' => 'uk2', 'value' => 'United Kingdom', 'tempUnit' => 'C', 'windUnit' => 'MPH', 'visibilityUnit' => 'mi'),
             array('id' => 'us', 'value' => 'United States', 'tempUnit' => 'F', 'windUnit' => 'MPH', 'visibilityUnit' => 'km'),
@@ -345,7 +345,7 @@ class ForecastIo extends ModuleWidget
                     $defaultLat = $display->latitude;
                     $defaultLong = $display->longitude;
                 } else {
-                    $this->getLog()->error('Warning, display %s does not have a lat/long or they are invalid, and yet a forecast widget is set to use display location.', $display->display);
+                    $this->getLog()->info('Warning, display %s does not have a lat/long or they are invalid, and yet a forecast widget is set to use display location.', $display->display);
                 }
             }
         } else {

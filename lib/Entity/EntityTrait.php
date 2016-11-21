@@ -25,7 +25,10 @@ trait EntityTrait
     private $permissionsClass = null;
 
     public $buttons = [];
-    private $jsonExclude = ['buttons', 'jsonExclude'];
+    private $jsonExclude = ['buttons', 'jsonExclude', 'originalValues'];
+
+    /** @var array Original values hydrated */
+    protected $originalValues = [];
 
     /**
      * @var StorageServiceInterface
@@ -93,10 +96,34 @@ trait EntityTrait
                     $val = htmlentities($val);
 
                 $this->{$prop} =  $val;
+                $this->originalValues[$prop] = $val;
             }
         }
 
         return $this;
+    }
+
+    /**
+     * Get the original value of a property
+     * @param string $property
+     * @return null|mixed
+     */
+    public function getOriginalValue($property)
+    {
+        return (isset($this->originalValues[$property])) ? $this->originalValues[$property] : null;
+    }
+
+    /**
+     * Has the provided property been changed from its original value
+     * @param string $property
+     * @return bool
+     */
+    public function hasPropertyChanged($property)
+    {
+        if (!property_exists($this, $property))
+            return true;
+
+        return $this->getOriginalValue($property) != $this->{$property};
     }
 
     /**
@@ -115,6 +142,15 @@ trait EntityTrait
             }
         }
         return $json;
+    }
+
+    /**
+     * To Array
+     * @return array
+     */
+    public function toArray()
+    {
+        return $this->jsonSerialize();
     }
 
     /**

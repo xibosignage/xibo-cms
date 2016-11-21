@@ -23,6 +23,7 @@ use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\XTR\MaintenanceDailyTask;
 use Xibo\XTR\TaskInterface;
 
 /**
@@ -321,6 +322,36 @@ class Task extends Base
      */
     public function run($taskId)
     {
+        // Handle cases where we arrive from older versions of the application.
+        // that is versions without tasks
+        if (DBVERSION < 128) {
+            // We need to manually create and run task 1 so that we trigger an upgrade.
+            $task = new MaintenanceDailyTask();
+            $task->setApp($this->getApp())
+                ->setSanitizer($this->getSanitizer())
+                ->setUser($this->getUser())
+                ->setConfig($this->getConfig())
+                ->setLogger($this->getLog())
+                ->setDate($this->getDate())
+                ->setPool($this->pool)
+                ->setStore($this->store)
+                ->setFactories(
+                    $this->userFactory,
+                    $this->userGroupFactory,
+                    $this->layoutFactory,
+                    $this->displayFactory,
+                    $this->upgradeFactory,
+                    $this->mediaFactory,
+                    $this->notificationFactory,
+                    $this->userNotificationFactory
+                )
+                ->setTask($task)
+                ->run();
+
+            if ($taskId == 1)
+                return;
+        }
+
         // Get this task
         $task = $this->taskFactory->getById($taskId);
 
@@ -357,7 +388,7 @@ class Task extends Base
                     $this->notificationFactory,
                     $this->userNotificationFactory
                 )
-                ->setOptions($task->options)
+                ->setTask($task)
                 ->run();
 
             // Collect results
@@ -373,15 +404,90 @@ class Task extends Base
             $task->lastRunStatus = \Xibo\Entity\Task::$STATUS_ERROR;
         }
 
-        $task->lastRunDt = $this->getDate()->parse()->format('U');
+        $task->lastRunDt = $this->getDate()->getLocalDate(null, 'U');
         $task->runNow = 0;
 
         // Save
         $task->save();
 
-        $this->getLog()->debug('Finished Task ' . $task->name . ' [' . $task->taskId . ']');
+        $this->getLog()->debug('Finished Task ' . $task->name . ' [' . $task->taskId . '] Run Dt: ' . $this->getDate()->getLocalDate());
 
         // No output
         $this->setNoOutput(true);
+    }
+
+    /**
+     * Take the quickest due task and run it.
+     */
+    public function poll()
+    {
+        $this->getLog()->debug('XTR poll started');
+
+        // The getting/updating of tasks runs in a separate DB connection
+        // Query for a list of tasks to run.
+        $db = $this->store->getConnection('xtr');
+
+        $pollSth = $db->prepare('SELECT taskId, schedule, runNow, lastRunDt FROM `task` WHERE isActive = 1 AND status <> :status ORDER BY lastRunDuration');
+        $updateSth = $db->prepare('UPDATE `task` SET status = :status WHERE taskId = :taskId');
+
+        while (true) {
+
+            $pollSth->execute(['status' => \Xibo\Entity\Task::$STATUS_RUNNING]);
+            $this->store->incrementStat('xtr', 'select');
+
+            $tasks = $pollSth->fetchAll(\PDO::FETCH_ASSOC);
+
+            $taskRun = false;
+
+            foreach ($tasks as $task) {
+                /** @var \Xibo\Entity\Task $task */
+                $cron = \Cron\CronExpression::factory($task['schedule']);
+                $taskId = $task['taskId'];
+
+                // Is the next run date of this event earlier than now, or is the task set to runNow
+                $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $task['lastRunDt']))->format('U');
+
+                if ($task['runNow'] == 1 || $nextRunDt < time()) {
+
+                    $this->getLog()->info('Running Task ' . $taskId);
+
+                    // Set to running
+                    $updateSth->execute(['taskId' => $taskId, 'status' => \Xibo\Entity\Task::$STATUS_ERROR]);
+                    $this->store->incrementStat('xtr', 'update');
+
+                    // Pass to run.
+                    try {
+                        $this->run($taskId);
+
+                        // Commit the default connection at this point.
+                        $this->store->commitIfNecessary();
+
+                        // Set to idle
+                        $updateSth->execute(['taskId' => $taskId, 'status' => \Xibo\Entity\Task::$STATUS_IDLE]);
+                        $this->store->incrementStat('xtr', 'update');
+
+                    } catch (\Exception $exception) {
+                        $this->getLog()->error('Task run error for taskId ' . $taskId . '. E = ' . $exception->getMessage());
+
+                        // Rollback
+                        if ($this->store->getConnection()->inTransaction())
+                            $this->store->getConnection()->rollBack();
+
+                        // Set to error
+                        $updateSth->execute(['taskId' => $taskId, 'status' => \Xibo\Entity\Task::$STATUS_ERROR]);
+                        $this->store->incrementStat('xtr', 'update');
+                    }
+
+                    // Only do 1
+                    $taskRun = true;
+                    break;
+                }
+            }
+
+            if (!$taskRun)
+                break;
+        }
+
+        $this->getLog()->debug('XTR poll stopped');
     }
 }

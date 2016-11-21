@@ -22,6 +22,7 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -113,13 +114,13 @@ class Resolution implements \JsonSerializable
     public function validate()
     {
         if (!v::string()->notEmpty()->validate($this->resolution))
-            throw new \InvalidArgumentException(__('Please provide a name'));
+            throw new InvalidArgumentException(__('Please provide a name'), 'name');
 
         if (!v::int()->notEmpty()->min(1)->validate($this->width))
-            throw new \InvalidArgumentException(__('Please provide a width'));
+            throw new InvalidArgumentException(__('Please provide a width'), 'width');
 
         if (!v::int()->notEmpty()->min(1)->validate($this->height))
-            throw new \InvalidArgumentException(__('Please provide a height'));
+            throw new InvalidArgumentException(__('Please provide a height'), 'height');
 
         // Set the designer width and height
         $factor = min (800 / $this->width, 800 / $this->height);

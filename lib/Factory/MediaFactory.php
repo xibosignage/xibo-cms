@@ -23,6 +23,9 @@
 namespace Xibo\Factory;
 
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Pool;
 use Xibo\Entity\Media;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
@@ -37,6 +40,9 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class MediaFactory extends BaseFactory
 {
+    /** @var Media[] */
+    private $remoteDownloadQueue = [];
+
     /**
      * @var ConfigServiceInterface
      */
@@ -118,9 +124,7 @@ class MediaFactory extends BaseFactory
      */
     public function createModuleSystemFile($name, $file = '')
     {
-        $media = $this->createModuleFile($name, $file, 1);
-        $media->moduleSystemFile = 1;
-        return $media;
+        return $this->createModuleFile($name, $file, 1);
     }
 
     /**
@@ -182,6 +186,82 @@ class MediaFactory extends BaseFactory
         }
 
         return $media;
+    }
+
+    /**
+     * Queue remote file download
+     * @param $name
+     * @param $uri
+     * @param $expiry
+     * @return Media
+     */
+    public function queueDownload($name, $uri, $expiry)
+    {
+        $this->getLog()->debug('Queue download of: ' . $uri);
+
+        $media = $this->createModuleFile($name, $uri);
+        $media->isRemote = true;
+        $media->expires = $expiry;
+
+        // Save the file, but do not download yet.
+        $media->saveAsync();
+
+        // Add to our collection of queued downloads
+        if ($media->isSaveRequired)
+            $this->remoteDownloadQueue[] = $media;
+
+        // Return the media item
+        return $media;
+    }
+
+    /**
+     * Process the queue of downloads
+     */
+    public function processDownloads()
+    {
+        if (count($this->remoteDownloadQueue) <= 0)
+            return;
+
+        $this->getLog()->debug('Processing Queue of ' . count($this->remoteDownloadQueue) . ' downloads.');
+
+        // Create a generator and Pool
+        $log = $this->getLog();
+        $queue = $this->remoteDownloadQueue;
+        $client = new Client($this->config->getGuzzleProxy());
+
+        $downloads = function() use ($client, $queue) {
+            foreach ($queue as $media) {
+                $url = $media->downloadUrl();
+                $sink = $media->downloadSink();
+
+                yield function() use ($client, $url, $sink) {
+                    return $client->getAsync($url, ['save_to' => $sink]);
+                };
+            }
+        };
+
+        $pool = new Pool($client, $downloads(), [
+            'concurrency' => 5,
+            'fulfilled' => function ($response, $index) use ($log, $queue) {
+                /** @var Media $item */
+                $item = $queue[$index];
+
+                // File is downloaded, update the name and save
+                try {
+                    $item->fileName = $item->name;
+                    $item->saveFile();
+                } catch (\Exception $e) {
+                    $this->getLog()->error('Unable to save:' . $item->mediaId);
+                }
+            },
+            'rejected' => function ($reason, $index) use ($log) {
+                /* @var RequestException $reason */
+                $log->error(sprintf('Rejected Request %d to %s because %s', $index, $reason->getRequest()->getUri(), $reason->getMessage()));
+            }
+        ]);
+
+        $promise = $pool->promise();
+        $promise->wait();
     }
 
     /**
@@ -419,6 +499,12 @@ class MediaFactory extends BaseFactory
             $params['ownerId'] = $this->getSanitizer()->getInt('ownerId', $filterBy);
         }
 
+        // User Group filter
+        if ($this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy) != 0) {
+            $body .= ' AND media.userid IN (SELECT DISTINCT userId FROM `lkusergroup` WHERE groupId =  :ownerUserGroupId) ';
+            $params['ownerUserGroupId'] = $this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy);
+        }
+
         if ($this->getSanitizer()->getInt('retired', -1, $filterBy) == 1)
             $body .= " AND media.retired = 1 ";
 
@@ -457,25 +543,38 @@ class MediaFactory extends BaseFactory
 
         // Tags
         if ($this->getSanitizer()->getString('tags', $filterBy) != '') {
-            $body .= " AND `media`.mediaId IN (
+
+            $tagFilter = $this->getSanitizer()->getString('tags', $filterBy);
+
+            if (trim($tagFilter) === '--no-tag') {
+                $body .= ' AND `media`.mediaId NOT IN (
+                    SELECT `lktagmedia`.mediaId
+                     FROM tag
+                        INNER JOIN `lktagmedia`
+                        ON `lktagmedia`.tagId = tag.tagId
+                    )
+                ';
+            } else {
+                $body .= " AND `media`.mediaId IN (
                 SELECT `lktagmedia`.mediaId
                   FROM tag
                     INNER JOIN `lktagmedia`
                     ON `lktagmedia`.tagId = tag.tagId
                 ";
-            $i = 0;
-            foreach (explode(',', $this->getSanitizer()->getString('tags', $filterBy)) as $tag) {
-                $i++;
+                $i = 0;
+                foreach (explode(',', $tagFilter) as $tag) {
+                    $i++;
 
-                if ($i == 1)
-                    $body .= " WHERE tag LIKE :tags$i ";
-                else
-                    $body .= " OR tag LIKE :tags$i ";
+                    if ($i == 1)
+                        $body .= " WHERE tag LIKE :tags$i ";
+                    else
+                        $body .= " OR tag LIKE :tags$i ";
 
-                $params['tags' . $i] =  '%' . $tag . '%';
+                    $params['tags' . $i] = '%' . $tag . '%';
+                }
+
+                $body .= " ) ";
             }
-
-            $body .= " ) ";
         }
 
         // File size

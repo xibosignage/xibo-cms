@@ -369,6 +369,28 @@ class Widget implements \JsonSerializable
     }
 
     /**
+     * @return int
+     * @throws NotFoundException
+     */
+    public function getPrimaryMediaId()
+    {
+        $this->getLog()->debug('Getting first MediaID for Widget: ' . $this->widgetId . ' Media: ' . json_encode($this->mediaIds) . ' audio ' . json_encode($this->getAudioIds()));
+
+        if (count($this->mediaIds) <= 0)
+            throw new NotFoundException(__('No file to return'));
+
+        // Remove the audio media from this array
+        $media = array_values(array_diff($this->mediaIds, $this->getAudioIds()));
+
+        $this->getLog()->debug('Media that is not audio: ' . json_encode($media));
+
+        if (count($media) <= 0)
+            throw new NotFoundException(__('No file to return'));
+
+        return $media[0];
+    }
+
+    /**
      * Clear Media
      */
     public function clearCachedMedia()
@@ -449,6 +471,18 @@ class Widget implements \JsonSerializable
     public function countAudio()
     {
         return count($this->audio);
+    }
+
+    /**
+     * Get AudioIds
+     * @return int[]
+     */
+    public function getAudioIds()
+    {
+        return array_map(function($element) {
+            /** @var WidgetAudio $element */
+            return $element->mediaId;
+        }, $this->audio);
     }
 
     /**
@@ -610,7 +644,7 @@ class Widget implements \JsonSerializable
      */
     private function notify($options)
     {
-        $this->getLog()->debug('Notifying upstream playlist');
+        $this->getLog()->debug('Notifying upstream playlist. Notify Displays: ' . $options['notifyDisplays']);
 
         // Notify the Layout
         $this->getStore()->update('
@@ -628,40 +662,7 @@ class Widget implements \JsonSerializable
 
         // Notify any displays (clearing their cache)
         if ($options['notifyDisplays']) {
-            // Get a list of these layouts campaignIds
-            $campaignIds = array_map(function ($element) {
-                return $element['campaignId'];
-            }, $this->getStore()->select('
-                SELECT DISTINCT `lkcampaignlayout`.campaignId
-                 FROM `lkregionplaylist`
-                  INNER JOIN `region`
-                  ON region.regionId = `lkregionplaylist`.regionId
-                  INNER JOIN `lkcampaignlayout`
-                  ON `lkcampaignlayout`.layoutId = `region`.layoutId
-                 WHERE `lkregionplaylist`.playlistId = :playlistId
-            ', [
-                'playlistId' => $this->playlistId
-            ]));
-
-            // Store a list of displayId's we've already notified so we don't duplicate our work
-            $displayIds = [];
-
-            foreach ($campaignIds as $campaignId) {
-                $displays = array_merge($this->displayFactory->getByActiveCampaignId($campaignId), $this->displayFactory->getByAssignedCampaignId($campaignId));
-
-                foreach ($displays as $display) {
-                    /* @var \Xibo\Entity\Display $display */
-
-                    if (in_array($display->displayId, $displayIds))
-                        continue;
-
-                    $display->setMediaIncomplete();
-                    $display->setCollectRequired(true);
-                    $display->save(['validate' => false, 'audit' => false]);
-
-                    $displayIds[] = $display->displayId;
-                }
-            }
+            $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByPlaylistId($this->playlistId);
         }
     }
 

@@ -125,6 +125,9 @@ abstract class ModuleWidget implements ModuleInterface
     /** @var  EventDispatcherInterface */
     private $dispatcher;
 
+    /** @var ModuleFactory  */
+    protected $moduleFactory;
+
     /**
      * @var MediaFactory
      */
@@ -174,6 +177,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @param DateServiceInterface $date
      * @param SanitizerServiceInterface $sanitizer
      * @param EventDispatcherInterface $dispatcher
+     * @param ModuleFactory $moduleFactory
      * @param MediaFactory $mediaFactory
      * @param DataSetFactory $dataSetFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
@@ -181,7 +185,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @param DisplayFactory $displayFactory
      * @param CommandFactory $commandFactory
      */
-    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory)
+    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory)
     {
         $this->app = $app;
         $this->store = $store;
@@ -192,6 +196,7 @@ abstract class ModuleWidget implements ModuleInterface
         $this->sanitizerService = $sanitizer;
         $this->dispatcher = $dispatcher;
 
+        $this->moduleFactory = $moduleFactory;
         $this->mediaFactory = $mediaFactory;
         $this->dataSetFactory = $dataSetFactory;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
@@ -453,6 +458,7 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Clear Media
+     * should only be used on media items that do not automatically assign new media from the feed
      */
     final protected function clearMedia()
     {
@@ -595,7 +601,7 @@ abstract class ModuleWidget implements ModuleInterface
         $this->getLog()->debug('Media assigned: ' . count($this->widget->mediaIds));
 
         if ($this->getModule()->regionSpecific == 0 && count($this->widget->mediaIds) > 0) {
-            $media = $this->mediaFactory->getById($this->widget->mediaIds[0]);
+            $media = $this->getMedia();
             $name = $media->name;
         } else {
             $name = $this->module->name;
@@ -890,12 +896,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function getMediaId()
     {
-        $this->getLog()->debug('Getting first MediaID for Widget: %d. Media: %s', $this->getWidgetId(), json_encode($this->widget->mediaIds));
-
-        if (count($this->widget->mediaIds) <= 0)
-            throw new NotFoundException(__('No file to return'));
-
-        return $this->widget->mediaIds[0];
+        return $this->widget->getPrimaryMediaId();
     }
 
     /**

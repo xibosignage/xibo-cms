@@ -210,7 +210,7 @@ class Fault extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $this->getConfig()->ChangeSetting('audit', 'EMERGENCY');
+        $this->getConfig()->ChangeSetting('audit', $this->getConfig()->GetSetting('RESTING_LOG_LEVEL'));
         $this->getConfig()->ChangeSetting('ELEVATE_LOG_UNTIL', '');
 
         // Return

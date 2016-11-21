@@ -7,6 +7,7 @@
 
 
 namespace Xibo\Entity;
+use Xibo\Exception\DeadlockException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -48,16 +49,20 @@ class Bandwidth
 
     public function save()
     {
-        $this->getStore()->update('
+        try {
+            $this->getStore()->updateWithDeadlockLoop('
             INSERT INTO `bandwidth` (Month, Type, DisplayID, Size)
               VALUES (:month, :type, :displayId, :size)
             ON DUPLICATE KEY UPDATE Size = Size + :size2
         ', [
-            'month' => strtotime(date('m').'/02/'.date('Y').' 00:00:00'),
-            'type' => $this->type,
-            'displayId' => $this->displayId,
-            'size' => $this->size,
-            'size2' => $this->size
-        ]);
+                'month' => strtotime(date('m') . '/02/' . date('Y') . ' 00:00:00'),
+                'type' => $this->type,
+                'displayId' => $this->displayId,
+                'size' => $this->size,
+                'size2' => $this->size
+            ]);
+        } catch (DeadlockException $deadlockException) {
+            $this->getLog()->error('Deadlocked inserting bandwidth');
+        }
     }
 }

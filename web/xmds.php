@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-DEFINE('XIBO', true);
+define('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
 error_reporting(0);
@@ -33,14 +33,11 @@ if (!file_exists(PROJECT_ROOT . '/web/settings.php')) {
 
 // We create a Slim Object ONLY for logging
 // Create a logger
+$uidProcessor = new \Monolog\Processor\UidProcessor(7);
 $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'XMDS',
-    'handlers' => array(
-        new \Xibo\Helper\DatabaseLogHandler()
-    ),
-    'processors' => [
-        new \Monolog\Processor\UidProcessor(7)
-    ]
+    'handlers' => [new \Xibo\Helper\DatabaseLogHandler()],
+    'processors' => [$uidProcessor]
 ));
 
 // Slim Application
@@ -49,6 +46,7 @@ $app = new \Slim\Slim(array(
     'log.writer' => $logger
 ));
 $app->setName('api');
+$app->startTime = microtime();
 
 // Load the config
 $app->configService = \Xibo\Service\ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
@@ -59,8 +57,8 @@ $app->configService = \Xibo\Service\ConfigService::Load(PROJECT_ROOT . '/web/set
 // Set state
 \Xibo\Middleware\State::setState($app);
 
-// Town down all logging
-$app->getLog()->setLevel(\Xibo\Service\LogService::resolveLogLevel('error'));
+// Set XMR
+\Xibo\Middleware\Xmr::setXmr($app, false);
 
 // Always have a version defined
 $version = $app->sanitizerService->getInt('v', 3, $_REQUEST);
@@ -98,6 +96,7 @@ $app->view($twig);
 
 // Check to see if we have a file attribute set (for HTTP file downloads)
 if (isset($_GET['file'])) {
+
     // Check send file mode is enabled
     $sendFileMode = $app->configService->GetSetting('SENDFILE_MODE');
 
@@ -110,39 +109,64 @@ if (isset($_GET['file'])) {
     // Check nonce, output appropriate headers, log bandwidth and stop.
     try {
         /** @var \Xibo\Entity\RequiredFile $file */
-        $file = $app->requiredFileFactory->getByNonce($_REQUEST['file']);
+        if (!isset($_REQUEST['displayId']) || !isset($_REQUEST['type']) || !isset($_REQUEST['itemId']))
+            throw new \Xibo\Exception\NotFoundException('Missing params');
 
-        // Add the size to the bytes we have already requested.
-        $file->bytesRequested = $file->bytesRequested + $file->size;
+        // Get the player nonce from the cache
+        /** @var \Stash\Item $nonce */
+        $nonce = $app->pool->getItem('/display/nonce/' . $_REQUEST['displayId']);
 
-        // Check the file is valid
-        $file->isValid();
+        if ($nonce->isMiss())
+            throw new \Xibo\Exception\NotFoundException('No nonce cache');
+
+        // Check the nonce against the nonce we received
+        if ($nonce->get() != $_REQUEST['file'])
+            throw new \Xibo\Exception\NotFoundException('Nonce mismatch');
+
+        switch ($_REQUEST['type']) {
+            case 'L':
+                $file = $app->requiredFileFactory->getByDisplayAndLayout($_REQUEST['displayId'], $_REQUEST['itemId']);
+                break;
+
+            case 'M':
+                $file = $app->requiredFileFactory->getByDisplayAndMedia($_REQUEST['displayId'], $_REQUEST['itemId']);
+                break;
+
+            default:
+                throw new \Xibo\Exception\NotFoundException('Unknown type');
+        }
 
         // Only log bandwidth under certain conditions
         // also controls whether the nonce is updated
-        $logBandwidth = true;
+        $logBandwidth = false;
 
         // Are we a DELETE request or otherwise?
         if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
             // Supply a header only, pointing to the original file name
-            header('Content-Disposition: attachment; filename="' . $file->storedAs . '"');
-            $logBandwidth = false;
+            header('Content-Disposition: attachment; filename="' . $file->path . '"');
 
         } else if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
             // Log bandwidth for the file being requested
-            $app->logService->info('Delete request for ' . $file->storedAs . ' marking nonce as used.', $file->displayId);
+            $app->logService->info('Delete request for ' . $file->path);
+
+            // Log bandwith here if we are a CDN
+            $logBandwidth = ($app->configService->GetSetting('CDN_URL') != '');
 
         } else {
+
+            // Log bandwidth here if we are NOT a CDN
+            $logBandwidth = ($app->configService->GetSetting('CDN_URL') == '');
+
             // Most likely a Get Request
             // Issue magic packet
-            $app->logService->info('HTTP GetFile request redirecting to ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->storedAs, 'services');
+            $app->logService->info('HTTP GetFile request redirecting to ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->path);
 
             // Send via Apache X-Sendfile header?
             if ($sendFileMode == 'Apache') {
-                header('X-Sendfile: ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->storedAs);
+                header('X-Sendfile: ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->path);
             } // Send via Nginx X-Accel-Redirect?
             else if ($sendFileMode == 'Nginx') {
-                header('X-Accel-Redirect: /download/' . $file->storedAs);
+                header('X-Accel-Redirect: /download/' . $file->path);
             } else {
                 header('HTTP/1.0 404 Not Found');
             }
@@ -150,26 +174,33 @@ if (isset($_GET['file'])) {
 
         // Log bandwidth
         if ($logBandwidth) {
-            $file->markUsed();
+            // Add the size to the bytes we have already requested.
+            $file->bytesRequested = $file->bytesRequested + $file->size;
+            $file->save();
+
             $app->bandwidthFactory->createAndSave(4, $file->displayId, $file->size);
         }
     }
     catch (\Exception $e) {
         if ($e instanceof \Xibo\Exception\NotFoundException || $e instanceof \Xibo\Exception\FormExpiredException) {
-            $app->logService->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404', 'services');
+            $app->logService->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404. ' . $e->getMessage());
             // 404
             header('HTTP/1.0 404 Not Found');
         }
-        else
-            throw $e;
-    }
+        else {
+            $app->logService->error('Unknown Error: ' . $e->getMessage());
+            $app->logService->debug($e->getTraceAsString());
 
-    if ($app->store->getConnection()->inTransaction())
-        $app->store->getConnection()->commit();
+            // Issue a 500
+            header('HTTP/1.0 500 Internal Server Error');
+        }
+    }
 
     exit;
 }
 
+// Town down all logging
+$app->getLog()->setLevel(\Xibo\Service\LogService::resolveLogLevel('error'));
 
 try {
     $wsdl = PROJECT_ROOT . '/lib/Xmds/service_v' . $version . '.wsdl';
@@ -178,7 +209,7 @@ try {
         throw new InvalidArgumentException(__('Your client is not the correct version to communicate with this CMS.'));
 
     // Create a log processor
-    $logProcessor = new \Xibo\Xmds\LogProcessor($app->getLog());
+    $logProcessor = new \Xibo\Xmds\LogProcessor($app->getLog(), $uidProcessor->getUid());
     $app->logWriter->addProcessor($logProcessor);
 
     // Create a SoapServer
@@ -203,11 +234,17 @@ try {
         $app->widgetFactory,
         $app->regionFactory,
         $app->notificationFactory,
-        $app->displayEventFactory
+        $app->displayEventFactory,
+        $app->scheduleFactory,
+        $app->dayPartFactory
     );
     $soap->handle();
 
-    $app->logService->info('PDO stats: %s.', json_encode($app->store->stats()));
+    // Get the stats for this connection
+    $stats = $app->store->stats();
+    $stats['length'] = microtime() - $app->startTime;
+
+    $app->logService->info('PDO stats: %s.', json_encode($stats, JSON_PRETTY_PRINT));
 
     if ($app->store->getConnection()->inTransaction())
         $app->store->getConnection()->commit();

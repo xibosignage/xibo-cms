@@ -44,17 +44,6 @@
         <script src="{{ theme.uri("libraries/bootstrap/js/bootbox.min.js") }}"></script>
         <script src="{{ theme.uri("libraries/bootstrap-switch/bootstrap-switch.min.js") }}"></script>
 
-        {# Dates #}
-        {% if settings.CALENDAR_TYPE == "Jalali" %}
-        <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/jalali-date.js") }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker-jalali.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/calendar/js/calendar-jalali.js") }}"></script>
-        {% else %}
-        <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/calendar/js/calendar.js") }}"></script>
-        <script src="{{ theme.uri("libraries/calendar/js/language/en_GB.js") }}"></script>
-        {% endif %}
-
         {# Datatables #}
         <script src="{{ theme.uri("libraries/datatables/jquery.dataTables.min.js") }}"></script>
         <script src="{{ theme.uri("libraries/datatables/dataTables.bootstrap.js") }}"></script>
@@ -89,6 +78,7 @@
         <script src="{{ theme.uri("libraries/toastr/toastr.min.js") }}"></script>
         <script src="{{ theme.uri("libraries/date-time-format.js") }}"></script>
         <script src="{{ theme.uri("libraries/momentjs/moment.js") }}"></script>
+        <script src="{{ theme.uri("libraries/momentjs/moment-timezone.js") }}"></script>
         <script src="{{ theme.uri("libraries/morrisjs/raphael.min.js") }}"></script>
         <script src="{{ theme.uri("libraries/morrisjs/morris.min.js") }}"></script>
         <script src="{{ theme.uri("libraries/colors/colors.min.js") }}"></script>
@@ -99,6 +89,17 @@
         <script src="{{ theme.uri("js/xibo-datasets.js") }}"></script>
         <script src="{{ theme.uri("libraries/handlebars/handlebars-v3.0.0.js") }}"></script>
         <script src="{{ theme.uri("libraries/jquery-serialize-object/jquery.serialize-object.min.js") }}"></script>
+
+        {# Dates #}
+        {% if settings.CALENDAR_TYPE == "Jalali" %}
+            <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/jalali-date.js") }}"></script>
+            <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker-jalali.min.js") }}"></script>
+            <script src="{{ theme.uri("libraries/calendar/js/calendar-jalali.js") }}"></script>
+        {% else %}
+            <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js") }}"></script>
+            <script src="{{ theme.uri("libraries/calendar/js/calendar.js") }}"></script>
+            <script src="{{ theme.uri("libraries/calendar/js/language/en_GB.js") }}"></script>
+        {% endif %}
 
         {% if translate.jsLocale != 'en-GB' %}
             {# Handle the inclusion of i18n #}
@@ -126,6 +127,7 @@
             translations.statusPending = "{% trans "Status Pending" %}";
 
             var language = "{{ translate.jsLocale }}";
+            var timezone = "{{ settings.defaultTimezone }}";
             var dateFormat = "{{ settings.DATE_FORMAT }}";
             var jsDateFormat = "{{ settings.DATE_FORMAT_JS }}";
             var bootstrapDateFormat = "{{ settings.DATE_FORMAT_BOOTSTRAP }}";

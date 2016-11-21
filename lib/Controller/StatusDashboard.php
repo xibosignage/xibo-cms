@@ -254,7 +254,22 @@ class StatusDashboard extends Base
             // Add an empty one
             $displayGroupIds[] = -1;
 
-            $sql = 'SELECT IFNULL(COUNT(*), 0) AS count_scheduled FROM `schedule_detail` WHERE :now BETWEEN FromDT AND ToDT AND eventId IN (SELECT eventId FROM `lkscheduledisplaygroup` WHERE displayGroupId IN (' . implode(',', $displayGroupIds) . '))';
+            $sql = '
+              SELECT IFNULL(COUNT(*), 0) AS count_scheduled 
+                FROM `schedule` 
+               WHERE (
+                  :now BETWEEN FromDT AND ToDT
+                  OR `schedule`.recurrence_range >= :now 
+                  OR (
+                    IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
+                  )
+                )
+                AND eventId IN (
+                  SELECT eventId 
+                    FROM `lkscheduledisplaygroup` 
+                   WHERE displayGroupId IN (' . implode(',', $displayGroupIds) . ')
+                )
+            ';
             $params = array('now' => time());
 
             $sth = $dbh->prepare($sql);

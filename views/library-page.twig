@@ -27,15 +27,32 @@
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.input("media", "Name") }}
-                            {{ inline.input("tags", "Tags") }}
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input("media", title) }}
 
+                            {% set title %}{% trans "Tags" %}{% endset %}
+                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                            {{ inline.input("tags", title, null, helpText) }}
+
+                            {% set attributes = [
+                            { name: "data-live-search", value: "true" },
+                            { name: "data-selected-text-format", value: "count > 4" }
+                            ] %}
+
+                            {% set title %}{% trans "Owner" %}{% endset %}
                             {% set users = [{userId: null, userName: ""}]|merge(users) %}
-                            {{ inline.dropdown("ownerId", "single", "Owner", null, users, "userId", "userName") }}
-                            {{ inline.dropdown("type", "single", "Type", "", [{"type": none, "name": ""}]|merge(modules), "type", "name") }}
+                            {{ inline.dropdown("ownerId", "single", title, null, users, "userId", "userName", "", "selectPicker", "", "", "", attributes) }}
 
+                            {% set title %}{% trans "Owner User Group" %}{% endset %}
+                            {% set helpText %}{% trans "Show items owned by users in the selected User Group." %}{% endset %}
+                            {{ inline.dropdown("ownerUserGroupId", "single", title, "", [{groupId:null, group:""}]|merge(groups), "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
+
+                            {% set title %}{% trans "Type" %}{% endset %}
+                            {{ inline.dropdown("type", "single", title, "", [{"type": none, "name": ""}]|merge(modules), "type", "name") }}
+
+                            {% set title %}{% trans "Retired" %}{% endset %}
                             {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
-                            {{ inline.dropdown("retired", "single", "Retired", 0, values, "id", "value") }}
+                            {{ inline.dropdown("retired", "single", title, 0, values, "id", "value") }}
                         </form>
                     </div>
                 </div>

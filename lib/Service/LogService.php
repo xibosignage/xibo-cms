@@ -102,6 +102,8 @@ class LogService implements LogServiceInterface
         if (!is_string($object))
             $object = json_encode($object);
 
+        PdoStorageService::incrementStatStatic('auditlog', 'insert');
+
         $this->_auditLogStatement->execute([
             'logDate' => time(),
             'userId' => $this->userId,

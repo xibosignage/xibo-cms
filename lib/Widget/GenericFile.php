@@ -42,8 +42,11 @@ class GenericFile extends ModuleWidget
      */
     public function getResource($displayId = 0)
     {
+        if (ini_get('zlib.output_compression')) {
+            ini_set('zlib.output_compression', 'Off');
+        }
+
         $this->download();
-        $this->getApp()->halt(200);
     }
 
     /**

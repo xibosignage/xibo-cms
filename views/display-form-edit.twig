@@ -114,7 +114,7 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                     <div class="tab-pane" id="advanced">
 
                         {% set title %}{% trans "Settings Profile?" %}{% endset %}
-                        {% set helpText %}{% trans "What display profile should this display use?" %}{% endset %}
+                        {% set helpText %}{% trans "What display profile should this display use? To use the default profile leave this empty." %}{% endset %}
                         {{ forms.dropdown("displayProfileId", "single", title, display.displayProfileId, [{displayProfileId: null, name: ""}]|merge(profiles), "displayProfileId", "name", helpText) }}
  
 

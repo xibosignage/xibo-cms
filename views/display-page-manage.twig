@@ -18,9 +18,9 @@
     {% else %}
         {% set title %}{% trans %}Display {{ displayName }} is not logged in at the moment and last accessed at <span class="unixDate">{{ displayLastAccessed }}</span>{% endtrans %}{% endset %}
     {% endif %}
-    <h1>{{ title }}</h1>
-    {% if display.status == 3 %}
-    <p>{% trans "This Display hasn't connected since updates have been made in the CMS. The below information will be updated when it has." %}</p>
+    <h1 class="text-center">{{ title }}</h1>
+    {% if display.mediaInventoryStatus == 3 %}
+    <p class="text-center">{% trans "This Display hasn't connected since updates have been made in the CMS. The below information will be updated when it has." %}</p>
     {% endif %}
     <div class="row">
         <div class="col-lg-6">
@@ -79,17 +79,19 @@
                             <th>{% trans "Name" %}</th>
                             <th>{% trans "Size" %}</th>
                             <th>{% trans "Complete" %}</th>
-                            <th>{% trans "Requested" %}</th>
+                            <th>{% trans "Downloaded" %}</th>
                         </tr>
                         </thead>
                         <tbody>
                             {% for item in inventory.layouts %}
                                 <tr>
-                                    <td>{{ item.layoutId }}</td>
+                                    <td>{{ item.itemId }}</td>
                                     <td>{{ item.layout }}</td>
                                     <td>{{ item.size|byteFormat }}</td>
-                                    <td><span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span></td>
-                                    <td>{% if item.lastUsed == 0 %}<span class="fa fa-times"></span>{% else %}<span class="unixDate">{{ item.lastUsed }}</span>{% endif %}</td>
+                                    <td>
+                                        <span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span>
+                                    </td>
+                                    <td>{{ item.bytesRequested|byteFormat }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -112,19 +114,21 @@
                             <th>{% trans "File Name" %}</th>
                             <th>{% trans "Size" %}</th>
                             <th>{% trans "Complete" %}</th>
-                            <th>{% trans "Requested" %}</th>
+                            <th>{% trans "Downloaded" %}</th>
                         </tr>
                         </thead>
                         <tbody>
                             {% for item in inventory.media %}
                                 <tr>
-                                    <td>{{ item.mediaId }}</td>
+                                    <td>{{ item.itemId }}</td>
                                     <td>{{ item.name }}</td>
                                     <td>{{ item.type }}</td>
                                     <td>{{ item.storedAs }}</td>
                                     <td>{{ item.size|byteFormat }}</td>
-                                    <td><span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span></td>
-                                    <td>{% if item.lastUsed == 0 %}<span class="fa fa-times"></span>{% else %}<span class="unixDate">{{ item.lastUsed }}</span>{% endif %}</td>
+                                    <td title="{% if item.lastUsed == 0 %}{{ nonceNotUsed }}{% else %}{{ nonceUsed }}{% endif %}">
+                                        <span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span>
+                                    </td>
+                                    <td>{{ item.bytesRequested|byteFormat }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -143,18 +147,18 @@
                             <th>{% trans "Name" %}</th>
                             <th>{% trans "Type" %}</th>
                             <th>{% trans "Complete" %}</th>
-                            <th>{% trans "Requested" %}</th>
-                            <th>{% trans "Bandwidth Usage" %}</th>
+                            <th>{% trans "Downloaded" %}</th>
                         </tr>
                         </thead>
                         <tbody>
                             {% for item in inventory.widgets %}
                                 <tr>
-                                    <td>{{ item.mediaId }}</td>
+                                    <td>{{ item.itemId }}</td>
                                     <td>{{ item.widgetName }}</td>
                                     <td>{{ item.type }}</td>
-                                    <td><span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span></td>
-                                    <td>{% if item.lastUsed == 0 %}<span class="fa fa-times"></span>{% else %}<span class="unixDate">{{ item.lastUsed }}</span>{% endif %}</td>
+                                    <td title="{% if item.lastUsed == 0 %}{{ nonceNotUsed }}{% else %}{{ nonceUsed }}{% endif %}">
+                                        <span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span>
+                                    </td>
                                     <td>{{ item.bytesRequested|byteFormat }}</td>
                                 </tr>
                             {% endfor %}

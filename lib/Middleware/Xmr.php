@@ -8,8 +8,9 @@
 
 namespace Xibo\Middleware;
 
-
 use Slim\Middleware;
+use Xibo\Exception\XiboException;
+use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\PlayerActionService;
 
 /**
@@ -18,6 +19,9 @@ use Xibo\Service\PlayerActionService;
  */
 class Xmr extends Middleware
 {
+    /**
+     * Call
+     */
     public function call()
     {
         $app = $this->getApplication();
@@ -26,13 +30,19 @@ class Xmr extends Middleware
 
             $app = $this->app;
 
-            // Player Action Helper
-            $app->container->singleton('playerActionService', function() use ($app) {
-                return new PlayerActionService($app->configService, $app->logService);
-            });
+            self::setXmr($app);
         });
 
         $this->next->call();
+
+        // Handle display notifications
+        if ($app->displayNotifyService != null) {
+            try {
+                $app->displayNotifyService->processQueue();
+            } catch (XiboException $e) {
+                $app->logService->error('Unable to Process Queue of Display Notifications due to %s', $e->getMessage());
+            }
+        }
 
         // Handle player actions
         if ($app->playerActionService != null) {
@@ -42,5 +52,32 @@ class Xmr extends Middleware
                 $app->logService->error('Unable to Process Queue of Player actions due to %s', $e->getMessage());
             }
         }
+    }
+
+    /**
+     * Set XMR
+     * @param \Slim\Slim $app
+     * @param bool $triggerPlayerActions
+     */
+    public static function setXmr($app, $triggerPlayerActions = true)
+    {
+        // Player Action Helper
+        $app->container->singleton('playerActionService', function() use ($app, $triggerPlayerActions) {
+            return new PlayerActionService($app->configService, $app->logService, $triggerPlayerActions);
+        });
+
+        // Register the display notify service
+        $app->container->singleton('displayNotifyService', function () use ($app) {
+            return new DisplayNotifyService(
+                $app->configService,
+                $app->logService,
+                $app->store,
+                $app->pool,
+                $app->playerActionService,
+                $app->dateService,
+                $app->scheduleFactory,
+                $app->dayPartFactory
+            );
+        });
     }
 }

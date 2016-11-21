@@ -21,6 +21,7 @@
 
 namespace Xibo\Storage;
 
+use Xibo\Exception\DeadlockException;
 use Xibo\Service\ConfigService;
 use Xibo\Service\LogService;
 
@@ -32,39 +33,18 @@ use Xibo\Service\LogService;
 class PdoStorageService implements StorageServiceInterface
 {
     /**
-     * @var \PDO The connection
+     * @var \PDO[] The connection
      */
-	private $conn = NULL;
+	private $conn = [];
+
+    /** @var array Statistics */
+    private static $stats = [];
 
     /**
      * Logger
      * @var LogService
      */
     private $log;
-
-    /**
-     * Count of Connections
-     * @var int
-     */
-    private static $countConnections = 0;
-
-    /**
-     * Count of Selects
-     * @var int
-     */
-    private static $countSelects = 0;
-
-    /**
-     * Count of Inserts
-     * @var int
-     */
-    private static $countInserts = 0;
-
-    /**
-     * Count of Updates
-     * @var int
-     */
-    private static $countUpdates = 0;
 
     /**
      * PDOConnect constructor.
@@ -75,24 +55,22 @@ class PdoStorageService implements StorageServiceInterface
         $this->log = $logger;
     }
 
-    /**
-     * Set Connection
-     * @return $this
-     */
-    public function setConnection()
+    /** @inheritdoc */
+    public function setConnection($name = 'default')
     {
         // Create a new connection
-        $this->conn = PdoStorageService::newConnection();
+        $this->conn[$name] = PdoStorageService::newConnection();
         return $this;
     }
 
-    /**
-     * Closes the stored connection
-     */
-    public function close()
+    /** @inheritdoc */
+    public function close($name = null)
     {
-        if ($this->conn) {
-            $this->conn = null;
+        if ($name === null && isset($this->conn[$name])) {
+            $this->conn[$name] = null;
+            unset($this->conn[$name]);
+        } else {
+            $this->conn = [];
         }
     }
 
@@ -132,8 +110,6 @@ class PdoStorageService implements StorageServiceInterface
 
 		$conn->query("SET NAMES 'utf8'");
 
-        self::$countConnections++;
-
 		return $conn;
 	}
 
@@ -147,29 +123,26 @@ class PdoStorageService implements StorageServiceInterface
      */
 	public function connect($host, $user, $pass, $name = null)
     {
-		if (!$this->conn) {
-			$this->close();
-		}
+		if ($this->getConnection('default'))
+		    $this->close('default');
 
         $dsn = PdoStorageService::createDsn($host, $name);
 
         // Open the connection and set the error mode
-		$this->conn = new \PDO($dsn, $user, $pass);
-		$this->conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+		$this->conn['default'] = new \PDO($dsn, $user, $pass);
+		$this->conn['default']->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+		$this->conn['default']->query("SET NAMES 'utf8'");
 
-		$this->conn->query("SET NAMES 'utf8'");
-		
-
-		return $this->conn;
+		return $this->conn['default'];
 	}
 
-    /**
-     * Get the Raw Connection
-     * @return \PDO
-     */
-    public function getConnection()
+    /** @inheritdoc */
+    public function getConnection($name = 'default')
     {
-        return $this->conn;
+        if (!isset($this->conn[$name]))
+            $this->conn[$name] = PdoStorageService::newConnection();
+
+        return $this->conn[$name];
     }
 
     /**
@@ -183,10 +156,10 @@ class PdoStorageService implements StorageServiceInterface
         if ($this->log != null)
             $this->log->sql($sql, $params);
 
-        $sth = $this->conn->prepare($sql);
+        $sth = $this->getConnection()->prepare($sql);
         $sth->execute($params);
 
-        self::$countSelects++;
+        $this->incrementStat('default', 'exists');
 
         if ($sth->fetch())
             return true;
@@ -207,38 +180,32 @@ class PdoStorageService implements StorageServiceInterface
         if ($this->log != null)
             $this->log->sql($sql, $params);
 
-        if (!$this->conn->inTransaction())
-            $this->conn->beginTransaction();
+        if (!$this->getConnection()->inTransaction())
+            $this->getConnection()->beginTransaction();
 
-        $sth = $this->conn->prepare($sql);
+        $sth = $this->getConnection()->prepare($sql);
 
         $sth->execute($params);
 
-        self::$countInserts++;
+        $this->incrementStat('default', 'insert');
 
-        return intval($this->conn->lastInsertId());
+        return intval($this->getConnection()->lastInsertId());
     }
 
-	/**
-	 * Run Update SQL
-	 * @param string $sql
-	 * @param array $params
-     * @param \PDO[Optional] $dbh
-	 * @throws \PDOException
-	 */
+	/** @inheritdoc */
 	public function update($sql, $params)
 	{
         if ($this->log != null)
             $this->log->sql($sql, $params);
 
-        if (!$this->conn->inTransaction())
-            $this->conn->beginTransaction();
+        if (!$this->getConnection()->inTransaction())
+            $this->getConnection()->beginTransaction();
 
-        $sth = $this->conn->prepare($sql);
+        $sth = $this->getConnection()->prepare($sql);
 
         $sth->execute($params);
 
-        self::$countUpdates++;
+        $this->incrementStat('default', 'update');
 	}
 
 	/**
@@ -253,50 +220,114 @@ class PdoStorageService implements StorageServiceInterface
         if ($this->log != null)
             $this->log->sql($sql, $params);
 
-        $sth = $this->conn->prepare($sql);
+        $sth = $this->getConnection()->prepare($sql);
 
         $sth->execute($params);
 
-        self::$countSelects++;
+        $this->incrementStat('default', 'select');
 
         return $sth->fetchAll(\PDO::FETCH_ASSOC);
 	}
 
-    /**
-     * Commit if necessary
-     */
-    public function commitIfNecessary()
+	/** @inheritdoc */
+	public function isolated($sql, $params)
     {
-        if ($this->conn->inTransaction())
-            $this->conn->commit();
+        // Should we log?
+        if ($this->log != null)
+            $this->log->sql($sql, $params);
+
+        $sth = $this->getConnection('isolated')->prepare($sql);
+
+        $sth->execute($params);
+
+        $this->incrementStat('isolated', 'update');
     }
 
-	/**
+    /** @inheritdoc */
+    public function updateWithDeadlockLoop($sql, $params, $connection = null)
+    {
+        if ($connection === null)
+            $connection = 'isolated';
+
+        // Prepare the statement
+        $statement = $this->getConnection($connection)->prepare($sql);
+
+        // Deadlock protect this statement
+        $success = false;
+        $retries = 2;
+        do {
+            try {
+                $this->incrementStat($connection, 'update');
+                $statement->execute($params);
+                // Successful
+                $success = true;
+
+            } catch (\PDOException $PDOException) {
+                $errorCode = isset($PDOException->errorInfo[1]) ? $PDOException->errorInfo[1] : $PDOException->getCode();
+
+                if ($errorCode != 1213 && $errorCode != 1205)
+                    throw $PDOException;
+            }
+
+            if ($success)
+                break;
+
+            // Sleep a bit, give the DB time to breathe
+            $queryHash = substr($sql, 0, 15) . '... [' . md5($sql . json_encode($params)) . ']';
+            $this->log->debug('Retrying query after a short nap, try: ' . (3 - $retries) . '. Query Hash: ' . $queryHash);
+            usleep(10000);
+
+        } while ($retries--);
+
+        if (!$success)
+            throw new DeadlockException(__('Failed to write to database after %d retries. Please try again later.', $retries));
+    }
+
+    /** @inheritdoc */
+    public function commitIfNecessary($name = 'default')
+    {
+        if ($this->getConnection($name)->inTransaction()) {
+            $this->incrementStat($name, 'commit');
+            $this->getConnection()->commit();
+        }
+    }
+
+    /**
      * Set the TimeZone for this connection
-	 * @param \PDO $connection
-	 * @param string $timeZone e.g. -8:00
-	 */
-	public function setTimeZone($timeZone, $connection = null)
-	{
-        if ($connection == null)
-            $connection = $this->conn;
+     * @param string $timeZone e.g. -8:00
+     * @param string $connection
+     */
+    public function setTimeZone($timeZone, $connection = 'default')
+    {
+        $this->getConnection($connection)->query('SET time_zone = \'' . $timeZone . '\';');
 
-        $connection->query('SET time_zone = \'' . $timeZone . '\';');
-
-        self::$countSelects++;
+        $this->incrementStat($connection, 'utility');
 	}
 
     /**
      * PDO stats
      * @return array
      */
-    public static function stats()
+    public function stats()
     {
-        return [
-            'connections' => self::$countConnections,
-            'selects' => self::$countSelects,
-            'inserts' => self::$countInserts,
-            'updates' => self::$countUpdates
-        ];
+        return self::$stats;
+    }
+
+    /** @inheritdoc */
+    public function incrementStat($connection, $key)
+    {
+        $currentCount = (isset(self::$stats[$connection][$key])) ? self::$stats[$connection][$key] : 0;
+        self::$stats[$connection][$key] = $currentCount + 1;
+    }
+
+    /**
+     * Statically increment stats
+     * @param $connection
+     * @param $key
+     */
+    public static function incrementStatStatic($connection, $key)
+    {
+        $currentCount = (isset(self::$stats[$connection][$key])) ? self::$stats[$connection][$key] : 0;
+        self::$stats[$connection][$key] = $currentCount + 1;
     }
 }

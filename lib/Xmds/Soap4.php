@@ -176,7 +176,7 @@ class Soap4 extends Soap
         $this->logBandwidth($display->displayId, Bandwidth::$REGISTER, strlen($returnXml));
 
         // Audit our return
-        $this->getLog()->debug($returnXml, $display->displayId);
+        $this->getLog()->debug($returnXml);
 
         return $returnXml;
     }
@@ -249,16 +249,21 @@ class Soap4 extends Soap
                 $chunkSize = filesize($path);
 
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
-                $requiredFile->markUsed();
+                $requiredFile->save();
 
             } else if ($fileType == "media") {
                 // Validate the nonce
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $fileId);
 
                 $media = $this->mediaFactory->getById($fileId);
+                $this->getLog()->debug(json_encode($media));
+
+                if (!file_exists($libraryLocation . $media->storedAs))
+                    throw new NotFoundException('Media exists but file missing from library. ' . $libraryLocation);
 
                 // Return the Chunk size specified
-                $f = fopen($libraryLocation . $media->storedAs, 'r');
+                if (!$f = fopen($libraryLocation . $media->storedAs, 'r'))
+                    throw new NotFoundException('Unable to get file pointer');
 
                 fseek($f, $chunkOffset);
 
@@ -267,15 +272,18 @@ class Soap4 extends Soap
                 // Store file size for bandwidth log
                 $chunkSize = strlen($file);
 
+                if ($chunkSize === 0)
+                    throw new NotFoundException('Empty file');
+
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
-                $requiredFile->markUsed();
+                $requiredFile->save();
 
             } else {
                 throw new NotFoundException('Unknown FileType Requested.');
             }
         }
         catch (NotFoundException $e) {
-            $this->getLog()->error($e->getMessage());
+            $this->getLog()->error('Not found FileId: ' . $fileId . '. FileType: ' . $fileType . '. ' . $e->getMessage());
             throw new \SoapFault('Receiver', 'Requested an invalid file.');
         }
 
@@ -394,9 +402,7 @@ class Soap4 extends Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', 'This display client is not licensed');
 
-        // Update the last accessed date/logged in
-        $this->touchDisplay();
-
+        // Important to keep this logging in place (status screen notification gets logged)
         if ($this->display->isAuditing())
             $this->getLog()->debug($status);
 
@@ -408,6 +414,7 @@ class Soap4 extends Soap
         $this->display->storageAvailableSpace = $this->getSanitizer()->getInt('availableSpace', $this->display->storageAvailableSpace, $status);
         $this->display->storageTotalSpace = $this->getSanitizer()->getInt('totalSpace', $this->display->storageTotalSpace, $status);
         $this->display->lastCommandSuccess = $this->getSanitizer()->getCheckbox('lastCommandSuccess', $this->display->lastCommandSuccess, $status);
+        $this->display->deviceName = $this->getSanitizer()->getString('deviceName', $this->display->deviceName, $status);
 
         // Touch the display record
         $this->display->save(Display::$saveOptionsMinimum);
@@ -449,9 +456,6 @@ class Soap4 extends Soap
         // Auth this request...
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Receiver', 'This display client is not licensed');
-
-        // Update the last accessed date/logged in
-        $this->touchDisplay();
 
         if ($this->display->isAuditing())
             $this->getLog()->debug('Received Screen shot');

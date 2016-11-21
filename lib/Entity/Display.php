@@ -24,8 +24,8 @@ namespace Xibo\Entity;
 
 
 use Respect\Validation\Validator as v;
-use Stash\Interfaces\PoolInterface;
-use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\DeadlockException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -35,9 +35,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\XMR\CollectNowAction;
 
 /**
  * Class Display
@@ -135,7 +133,6 @@ class Display implements \JsonSerializable
      */
     public $mediaInventoryStatus;
 
-    private $currentMacAddress;
     /**
      * @SWG\Property(description="The current Mac Address of the Player")
      * @var string
@@ -299,10 +296,10 @@ class Display implements \JsonSerializable
     public $lastCommandSuccess = 0;
 
     /**
-     * Collect required on save?
-     * @var bool
+     * @SWG\Property(description="The Device Name for the device hardware associated with this Display")
+     * @var string
      */
-    private $collectRequired = false;
+    public $deviceName;
 
     /**
      * Commands
@@ -316,16 +313,6 @@ class Display implements \JsonSerializable
      * @var ConfigServiceInterface
      */
     private $config;
-
-    /**
-     * @var PoolInterface
-     */
-    private $pool;
-
-    /**
-     * @var PlayerActionServiceInterface
-     */
-    private $playerAction;
 
     /**
      * @var DisplayGroupFactory
@@ -362,22 +349,20 @@ class Display implements \JsonSerializable
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param PoolInterface $pool
-     * @param PlayerActionServiceInterface $playerAction
      * @param DisplayGroupFactory $displayGroupFactory
      * @param DisplayProfileFactory $displayProfileFactory
+     * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log, $config, $pool, $playerAction, $displayGroupFactory, $displayProfileFactory)
+    public function __construct($store, $log, $config, $displayGroupFactory, $displayProfileFactory, $displayFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->excludeProperty('mediaInventoryXml');
         $this->setPermissionsClass('Xibo\Entity\DisplayGroup');
 
         $this->config = $config;
-        $this->pool = $pool;
         $this->displayGroupFactory = $displayGroupFactory;
         $this->displayProfileFactory = $displayProfileFactory;
-        $this->playerAction = $playerAction;
+        $this->displayFactory = $displayFactory;
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
@@ -385,15 +370,13 @@ class Display implements \JsonSerializable
 
     /**
      * Set child object dependencies
-     * @param DisplayFactory $displayFactory
      * @param LayoutFactory $layoutFactory
      * @param MediaFactory $mediaFactory
      * @param ScheduleFactory $scheduleFactory
      * @return $this
      */
-    public function setChildObjectDependencies($displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory)
+    public function setChildObjectDependencies($layoutFactory, $mediaFactory, $scheduleFactory)
     {
-        $this->displayFactory = $displayFactory;
         $this->layoutFactory = $layoutFactory;
         $this->mediaFactory = $mediaFactory;
         $this->scheduleFactory = $scheduleFactory;
@@ -420,9 +403,18 @@ class Display implements \JsonSerializable
      * Get the cache key
      * @return string
      */
+    public static function getCachePrefix()
+    {
+        return 'display/';
+    }
+
+    /**
+     * Get the cache key
+     * @return string
+     */
     public function getCacheKey()
     {
-        return 'display/' . $this->getId();
+        return self::getCachePrefix() . $this->getId();
     }
 
     /**
@@ -439,24 +431,11 @@ class Display implements \JsonSerializable
     /**
      * Set the Media Status to Incomplete
      */
-    public function setMediaIncomplete()
+    public function notify()
     {
-        $this->getLog()->info('Setting Media Incomplete on %s', $this->display);
+        $this->getLog()->debug($this->display . ' requests notify');
 
-        $this->mediaInventoryStatus = 3;
-        $this->setCollectRequired(true);
-
-        // remove from the cache
-        $this->pool->deleteItem($this->getCacheKey());
-    }
-
-    /**
-     * Set Collect Required
-     * @param bool|true $collectRequired
-     */
-    public function setCollectRequired($collectRequired = true)
-    {
-        $this->collectRequired = $collectRequired;
+        $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayId($this->displayId);
     }
 
     /**
@@ -465,10 +444,10 @@ class Display implements \JsonSerializable
     public function validate()
     {
         if (!v::string()->notEmpty()->validate($this->display))
-            throw new \InvalidArgumentException(__('Can not have a display without a name'));
+            throw new InvalidArgumentException(__('Can not have a display without a name'), 'name');
 
         if ($this->wakeOnLanEnabled == 1 && $this->wakeOnLanTime == '')
-            throw new \InvalidArgumentException(__('Wake on Lan is enabled, but you have not specified a time to wake the display'));
+            throw new InvalidArgumentException(__('Wake on Lan is enabled, but you have not specified a time to wake the display'), 'wakeonlan');
 
         // Check the number of licensed displays
         $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
@@ -482,17 +461,17 @@ class Display implements \JsonSerializable
                 $this->getLog()->debug('There are %d licenced displays and we the maximum is %d', $countLicensed[0]['CountLicensed'], $maxDisplays);
 
                 if (intval($countLicensed[0]['CountLicensed']) + 1 > $maxDisplays)
-                    throw new \InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays));
+                    throw new InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays), 'maxDisplays');
             }
         }
 
         // Broadcast Address
         if ($this->broadCastAddress != '' && !v::ip()->validate($this->broadCastAddress))
-            throw new \InvalidArgumentException(__('BroadCast Address is not a valid IP Address'));
+            throw new InvalidArgumentException(__('BroadCast Address is not a valid IP Address'), 'broadCastAddress');
 
         // CIDR
         if (!empty($this->cidr) && !v::numeric()->between(0, 32)->validate($this->cidr))
-            throw new \InvalidArgumentException(__('CIDR subnet mask is not a number within the range of 0 to 32.'));
+            throw new InvalidArgumentException(__('CIDR subnet mask is not a number within the range of 0 to 32.'), 'cidr');
 
         // secureOn
         if ($this->secureOn != '') {
@@ -500,11 +479,11 @@ class Display implements \JsonSerializable
             $this->secureOn = str_replace(":", "-", $this->secureOn);
 
             if ((!preg_match("/([A-F0-9]{2}[-]){5}([0-9A-F]){2}/", $this->secureOn)) || (strlen($this->secureOn) != 17))
-                throw new \InvalidArgumentException(__('Pattern of secureOn-password is not "xx-xx-xx-xx-xx-xx" (x = digit or CAPITAL letter)'));
+                throw new InvalidArgumentException(__('Pattern of secureOn-password is not "xx-xx-xx-xx-xx-xx" (x = digit or CAPITAL letter)'), 'secureOn');
         }
 
         // Mac Address Changes
-        if ($this->macAddress != $this->currentMacAddress) {
+        if ($this->hasPropertyChanged('macAddress')) {
             // Mac address change detected
             $this->numberOfMacAddressChanges++;
             $this->lastChanged = time();
@@ -512,10 +491,10 @@ class Display implements \JsonSerializable
 
         // Lat/Long
         if (!empty($this->longitude) && !v::longitude()->validate($this->longitude))
-            throw new \InvalidArgumentException(__('The longitude entered is not valid.'));
+            throw new InvalidArgumentException(__('The longitude entered is not valid.'), 'longitude');
 
         if (!empty($this->latitude) && !v::latitude()->validate($this->latitude))
-            throw new \InvalidArgumentException(__('The latitude entered is not valid.'));
+            throw new InvalidArgumentException(__('The latitude entered is not valid.'), 'latitude');
     }
 
     /**
@@ -528,6 +507,21 @@ class Display implements \JsonSerializable
     }
 
     /**
+     * Save the media inventory status
+     */
+    public function saveMediaInventoryStatus()
+    {
+        try {
+            $this->getStore()->updateWithDeadlockLoop('UPDATE `display` SET mediaInventoryStatus = :mediaInventoryStatus WHERE displayId = :displayId', [
+                'mediaInventoryStatus' => $this->mediaInventoryStatus,
+                'displayId' => $this->displayId
+            ]);
+        } catch (DeadlockException $deadlockException) {
+            $this->getLog()->error('Media Inventory Status save failed due to deadlock');
+        }
+    }
+
+    /**
      * Save
      * @param array $options
      */
@@ -536,8 +530,7 @@ class Display implements \JsonSerializable
         $options = array_merge([
             'validate' => true,
             'audit' => true,
-            'triggerDynamicDisplayGroupAssessment' => false,
-            'enableActions' => true
+            'triggerDynamicDisplayGroupAssessment' => false
         ], $options);
 
         if ($options['validate'])
@@ -550,19 +543,6 @@ class Display implements \JsonSerializable
 
         if ($options['audit'])
             $this->getLog()->audit('Display', $this->displayId, 'Display Saved', $this->jsonSerialize());
-
-        if ($this->collectRequired && $options['enableActions']) {
-            $this->getLog()->debug('Collect Now Action for Display %s', $this->display);
-
-            try {
-                if ($this->playerAction == null)
-                    throw new ConfigurationException('Player Actions not configured');
-
-                $this->playerAction->sendAction($this, new CollectNowAction());
-            } catch (\Exception $e) {
-                $this->getLog()->notice('Display Save would have triggered Player Action, but the action failed with message: %s', $e->getMessage());
-            }
-        }
 
         // Trigger an update of all dynamic DisplayGroups
         if ($options['triggerDynamicDisplayGroupAssessment']) {
@@ -664,7 +644,8 @@ class Display implements \JsonSerializable
                     xmrChannel = :xmrChannel,
                     xmrPubKey = :xmrPubKey,
                     `lastCommandSuccess` = :lastCommandSuccess,
-                    `version_instructions` = :versionInstructions
+                    `version_instructions` = :versionInstructions,
+                    `deviceName` = :deviceName
              WHERE displayid = :displayId
         ', [
             'display' => $this->display,
@@ -701,14 +682,19 @@ class Display implements \JsonSerializable
             'xmrPubKey' => $this->xmrPubKey,
             'lastCommandSuccess' => $this->lastCommandSuccess,
             'versionInstructions' => $this->versionInstructions,
+            'deviceName' => $this->deviceName,
             'displayId' => $this->displayId
         ]);
 
         // Maintain the Display Group
-        $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
-        $displayGroup->displayGroup = $this->display;
-        $displayGroup->description = $this->description;
-        $displayGroup->save(['validate' => false, 'manageDisplayLinks' => false]);
+        if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('description')) {
+            $this->getLog()->debug('Display specific DisplayGroup properties need updating');
+
+            $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
+            $displayGroup->displayGroup = $this->display;
+            $displayGroup->description = $this->description;
+            $displayGroup->save(DisplayGroup::$saveOptionsMinimum);
+        }
     }
 
     /**

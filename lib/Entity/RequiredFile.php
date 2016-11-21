@@ -8,26 +8,23 @@
 
 namespace Xibo\Entity;
 
-
-use Xibo\Exception\FormExpiredException;
-use Xibo\Helper\Random;
+use Xibo\Exception\DeadlockException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class RequiredFile
+ * @package Xibo\Entity
+ */
 class RequiredFile implements \JsonSerializable
 {
     use EntityTrait;
     public $rfId;
-    public $requestKey;
-    public $nonce;
-    public $expiry;
-    public $lastUsed;
     public $displayId;
-    public $size;
-    public $storedAs;
-    public $layoutId;
-    public $regionId;
-    public $mediaId;
+    public $type;
+    public $itemId;
+    public $size = 0;
+    public $path;
     public $bytesRequested = 0;
     public $complete = 0;
 
@@ -41,101 +38,56 @@ class RequiredFile implements \JsonSerializable
         $this->setCommonDependencies($store, $log);
     }
 
-    public function save($options = [])
+    /**
+     * Save
+     * @return $this
+     */
+    public function save()
     {
-        $options = array_merge([
-            'refreshNonce' => true
-        ], $options);
-
-        // Always update the nonce when we save
-        if ($options['refreshNonce']) {
-            $this->lastUsed = 0;
-            $this->expiry = time() + 86400;
-            $this->nonce = md5(Random::generateString() . SECRET_KEY . time() . $this->layoutId . $this->regionId . $this->mediaId);
-        }
-
-        if ($this->rfId == null || $this->rfId == 0) {
+        if ($this->rfId == null)
             $this->add();
-        }
-        else
+        else if ($this->hasPropertyChanged('bytesRequested') || $this->hasPropertyChanged('complete')) {
             $this->edit();
+        }
+
+        return $this;
     }
 
-    public function isValid()
-    {
-        if (($this->lastUsed != 0 && $this->bytesRequested > $this->size) || $this->expiry < time())
-            throw new FormExpiredException();
-    }
-
-    public function markUsed()
-    {
-        $this->lastUsed = time();
-        $this->edit();
-    }
-
+    /**
+     * Add
+     */
     private function add()
     {
-        $this->rfId = $this->getStore()->insert('
-            INSERT INTO `requiredfile` (requestKey, nonce, expiry, lastUsed, displayId, size, storedAs, layoutId, regionId, mediaId, `bytesRequested`, `complete`)
-              VALUES (:requestKey, :nonce, :expiry, :lastUsed, :displayId, :size, :storedAs, :layoutId, :regionId, :mediaId, :bytesRequested, :complete)
+        $this->rfId = $this->store->insert('
+            INSERT INTO `requiredfile` (`displayId`, `type`, `itemId`, `bytesRequested`, `complete`, `size`, `path`)
+              VALUES (:displayId, :type, :itemId, :bytesRequested, :complete, :size, :path)
         ', [
-            'requestKey' => $this->requestKey,
-            'nonce' => $this->nonce,
-            'expiry' => $this->expiry,
-            'lastUsed' => $this->lastUsed,
             'displayId' => $this->displayId,
-            'size' => $this->size,
-            'storedAs' => $this->storedAs,
-            'layoutId' => $this->layoutId,
-            'regionId' => $this->regionId,
-            'mediaId' => $this->mediaId,
+            'type' => $this->type,
+            'itemId' => $this->itemId,
             'bytesRequested' => $this->bytesRequested,
-            'complete' => $this->complete
-        ]);
-    }
-
-    private function edit()
-    {
-        $this->getStore()->update('
-            UPDATE `requiredfile` SET
-                requestKey = :requestKey,
-                nonce = :nonce,
-                expiry = :expiry,
-                lastUsed = :lastUsed,
-                displayId = :displayId,
-                size = :size,
-                storedAs = :storedAs,
-                layoutId = :layoutId,
-                regionId = :regionId,
-                mediaId = :mediaId,
-                bytesRequested = :bytesRequested,
-                complete = :complete
-             WHERE rfId = :rfId
-        ', [
-            'rfId' => $this->rfId,
-            'requestKey' => $this->requestKey,
-            'nonce' => $this->nonce,
-            'expiry' => $this->expiry,
-            'lastUsed' => $this->lastUsed,
-            'displayId' => $this->displayId,
+            'complete' => $this->complete,
             'size' => $this->size,
-            'storedAs' => $this->storedAs,
-            'layoutId' => $this->layoutId,
-            'regionId' => $this->regionId,
-            'mediaId' => $this->mediaId,
-            'bytesRequested' => $this->bytesRequested,
-            'complete' => $this->complete
+            'path' => $this->path
         ]);
     }
 
     /**
-     * Remove unused nonces
-     * @param $store
-     * @param $displayId
-     * @param $requestKey
+     * Edit
      */
-    public static function removeUnusedForDisplay($store, $displayId, $requestKey)
+    private function edit()
     {
-        $store->update('DELETE FROM `requiredfile` WHERE displayId = :displayId AND requestKey <> :requestKey ', ['displayId' => $displayId, 'requestKey' => $requestKey]);
+        try {
+            $this->store->updateWithDeadlockLoop('
+            UPDATE `requiredfile` SET complete = :complete, bytesRequested = :bytesRequested
+             WHERE rfId = :rfId
+        ', [
+                'rfId' => $this->rfId,
+                'bytesRequested' => $this->bytesRequested,
+                'complete' => $this->complete
+            ]);
+        } catch (DeadlockException $deadlockException) {
+            $this->getLog()->error('Failed to update bytes requested on ' . $this->rfId . ' due to deadlock');
+        }
     }
 }

@@ -19,7 +19,7 @@
 */
 jQuery.fn.extend({
     xiboTextRender: function(options, items) {
-
+      
         // Default options
         var defaults = {
             "fx": "none",
@@ -38,7 +38,7 @@ jQuery.fn.extend({
         options = $.extend({}, defaults, options);
 
         // Calculate the dimensions of this item based on the preview/original dimensions
-        var width, height = 0
+        var width = height = 0;
         if (options.previewWidth === 0 || options.previewHeight === 0) {
             width = options.originalWidth;
             height = options.originalHeight;
@@ -51,6 +51,27 @@ jQuery.fn.extend({
         if (options.scaleOverride !== 0) {
             width = width / options.scaleOverride;
             height = height / options.scaleOverride;
+        }
+
+        var paddingBottom = paddingRight = 0;
+        if (options.widgetDesignWidth > 0 && options.widgetDesignHeight > 0) {
+          if(options.itemsPerPage > 0){
+            if($(window).width() > $(window).height()){
+              //Landscape or square size plus padding
+              options.widgetDesignWidth = (options.itemsPerPage * options.widgetDesignWidth) + (options.widgetDesignPadding * (options.itemsPerPage - 1));
+              options.widgetDesignHeight = options.widgetDesignHeight;
+              width = options.widgetDesignWidth;
+              height = options.widgetDesignHeight;
+              paddingRight = options.widgetDesignPadding;
+            } else {
+              //Portrait size plus padding
+              options.widgetDesignHeight = (options.itemsPerPage * options.widgetDesignHeight) + (options.widgetDesignPadding * (options.itemsPerPage - 1));
+              options.widgetDesignWidth = options.widgetDesignWidth;
+              width = options.widgetDesignWidth;
+              height = options.widgetDesignHeight;
+              paddingBottom = options.widgetDesignPadding;
+            }
+          }
         }
 
         // For each matched element
@@ -160,7 +181,7 @@ jQuery.fn.extend({
                 //console.log("[Xibo] initialising the cycle2 plugin with " + numberOfSlides + " slides and selector " + slides + ". Duration per slide is " + duration + " seconds.");
 
                 // Set the content div to the height of the original window
-                $(this).css("height", options.originalHeight);
+                $(this).css("height", height);
 
                 // Set the width on the cycled slides
                 $(slides, this).css({
@@ -219,6 +240,16 @@ jQuery.fn.extend({
                 // Correct for up / down
                 if (options.fx == "marqueeUp" || options.fx == "marqueeDown")
                     $(this).children().children().css({"white-space": "normal", float: "none"});
+            }
+            
+            // Add aditional padding to the items
+            if (paddingRight > 0 || paddingBottom > 0) {
+                // Add padding to all item elements
+                $(".item").css("padding", "0px " + paddingRight + "px " + paddingBottom  + "px 0px");
+                
+                // Exclude the last item on the page and the last on the content ( if there is no pages )
+                $(".page .item:last-child").css("padding", 0);
+                $("#content .item:last-child").css("padding", 0);
             }
 
             // Protect against images that don't load

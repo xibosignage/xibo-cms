@@ -58,7 +58,7 @@ class Clock extends ModuleWidget
         $this->setDuration($this->getSanitizer()->getInt('duration'));
         $this->setOption('theme', $this->getSanitizer()->getInt('themeId', 0));
         $this->setOption('clockTypeId', $this->getSanitizer()->getInt('clockTypeId', 1));
-        $this->setOption('offset', $this->getSanitizer()->getInt('offset', 0));
+        $this->setOption('offset', $this->getSanitizer()->getString('offset', 0));
         $this->setRawNode('format', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('format', '')));
         $this->setOption('showSeconds', $this->getSanitizer()->getCheckbox('showSeconds', 1));
         $this->setOption('clockFace', $this->getSanitizer()->getString('clockFace', 'TwentyFourHourClock'));
@@ -80,7 +80,7 @@ class Clock extends ModuleWidget
         $this->setDuration($this->getSanitizer()->getInt('duration'));
         $this->setOption('theme', $this->getSanitizer()->getInt('themeId', 0));
         $this->setOption('clockTypeId', $this->getSanitizer()->getInt('clockTypeId', 1));
-        $this->setOption('offset', $this->getSanitizer()->getInt('offset', 0));
+        $this->setOption('offset', $this->getSanitizer()->getString('offset', 0));
         $this->setRawNode('format', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('format', '')));
         $this->setOption('showSeconds', $this->getSanitizer()->getCheckbox('showSeconds'));
         $this->setOption('clockFace', $this->getSanitizer()->getString('clockFace'));
@@ -101,7 +101,8 @@ class Clock extends ModuleWidget
             ['id' => 'TwelveHourClock', 'value' => __('12h Clock')],
             ['id' => 'TwentyFourHourClock', 'value' => __('24h Clock')],
             ['id' => 'HourlyCounter', 'value' => __('Hourly Counter')],
-            ['id' => 'MinuteCounter', 'value' => __('Minute Counter')]
+            ['id' => 'MinuteCounter', 'value' => __('Minute Counter')],
+            ['id' => 'DailyCounter', 'value' => __('Daily Counter')]
         ];
     }
 
@@ -207,8 +208,8 @@ class Clock extends ModuleWidget
                 $template = 'clock-get-resource-flip';
 
                 // Head Content (CSS for flip clock)
-                $data['head'] = '<style type="text/css">' . file_get_contents('modules/vendor/flipclock.css') . ' </style>';
-                $data['offset'] = $this->getOption('offset', 0);
+                $data['head'] = '<style type="text/css">' . file_get_contents('modules/vendor/flipclock.css') . '</style>';
+                $data['offset'] = $this->getOption('offset', '0');
                 $data['duration'] = $this->getDuration();
                 $data['clockFace'] = $this->getOption('clockFace', 'TwentyFourHourClock');
                 $data['showSeconds'] = $this->getOption('showSeconds', 1);

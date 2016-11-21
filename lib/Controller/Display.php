@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 use finfo;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Entity\RequiredFile;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\DisplayEventFactory;
@@ -30,6 +31,7 @@ use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\LogFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\WakeOnLan;
@@ -101,6 +103,9 @@ class Display extends Base
     /** @var  DisplayEventFactory */
     private $displayEventFactory;
 
+    /** @var  RequiredFileFactory */
+    private $requiredFileFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -121,8 +126,9 @@ class Display extends Base
      * @param MediaFactory $mediaFactory
      * @param ScheduleFactory $scheduleFactory
      * @param DisplayEventFactory $displayEventFactory
+     * @param RequiredFileFactory $requiredFileFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -137,6 +143,7 @@ class Display extends Base
         $this->mediaFactory = $mediaFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->displayEventFactory = $displayEventFactory;
+        $this->requiredFileFactory = $requiredFileFactory;
     }
 
     /**
@@ -171,21 +178,110 @@ class Display extends Base
             'toDt' => $this->getDate()->getLocalDate(null, 'U')
         ]);
 
-        // Widget for file status
-        $status = $this->store->select('
-            SELECT IFNULL(SUM(size), 0) AS sizeTotal,
-                SUM(CASE WHEN complete = 1 THEN size ELSE 0 END) AS sizeComplete,
-                COUNT(*) AS countTotal,
-                IFNULL(SUM(complete), 0) AS countComplete
-              FROM `requiredfile`
-             WHERE `requiredfile`.displayId = :displayId
-        ', [
-            'displayId' => $display->displayId
-        ]);
+        // Zero out some variables
+        $layouts = [];
+        $widgets = [];
+        $media = [];
+        $totalCount = 0;
+        $completeCount = 0;
+        $totalSize = 0;
+        $completeSize = 0;
 
+
+        // Show 3 widgets
+        $sql = '
+          SELECT layoutId, layout, `requiredfile`.*
+              FROM `layout`
+                INNER JOIN `requiredfile`
+                ON `requiredfile`.itemId = `layout`.layoutId
+           WHERE `requiredfile`.displayId = :displayId 
+            AND `requiredfile`.type = :type
+          ORDER BY layout
+        ';
+
+        foreach ($this->store->select($sql, ['displayId' => $displayId, 'type' => 'L']) as $row) {
+            /** @var RequiredFile $rf */
+            $rf = $this->requiredFileFactory->getByDisplayAndLayout($displayId, $row['layoutId']);
+
+            $totalCount++;
+
+            if ($rf->complete) {
+                $completeCount = $completeCount + 1;
+            }
+
+            $rf = $rf->toArray();
+            $rf['layout'] = $row['layout'];
+            $layouts[] = $rf;
+        }
+
+        // Media
+        $sql = '
+          SELECT mediaId, `name`, fileSize, media.type AS mediaType, storedAs, `requiredfile`.*
+              FROM `media`
+                INNER JOIN `requiredfile`
+                ON `requiredfile`.itemId = `media`.mediaId
+           WHERE `requiredfile`.displayId = :displayId 
+            AND `requiredfile`.type = :type
+          ORDER BY `name`
+        ';
+
+        foreach ($this->store->select($sql, ['displayId' => $displayId, 'type' => 'M']) as $row) {
+            /** @var RequiredFile $rf */
+            $rf = $this->requiredFileFactory->getByDisplayAndMedia($displayId, $row['mediaId']);
+
+            $totalSize = $totalSize + $row['fileSize'];
+            $totalCount++;
+
+            if ($rf->complete) {
+                $completeSize = $completeSize + $row['fileSize'];
+                $completeCount = $completeCount + 1;
+            }
+
+            $rf = $rf->toArray();
+            $rf['name'] = $row['name'];
+            $rf['type'] = $row['mediaType'];
+            $rf['storedAs'] = $row['storedAs'];
+            $rf['size'] = $row['fileSize'];
+            $media[] = $rf;
+        }
+
+        // Widgets
+        $sql = '
+          SELECT `widget`.type AS widgetType,
+                IFNULL(`widgetoption`.value, `widget`.type) AS widgetName,
+                `widget`.widgetId,
+                 `requiredfile`.*
+              FROM `widget`
+                INNER JOIN `requiredfile`
+                ON `requiredfile`.itemId = `widget`.widgetId
+                LEFT OUTER JOIN `widgetoption`
+                ON `widgetoption`.widgetId = `widget`.widgetId
+                  AND `widgetoption`.option = \'name\'
+           WHERE `requiredfile`.displayId = :displayId 
+            AND `requiredfile`.type = :type
+          ORDER BY IFNULL(`widgetoption`.value, `widget`.type)
+        ';
+
+        foreach ($this->store->select($sql, ['displayId' => $displayId, 'type' => 'W']) as $row) {
+            /** @var RequiredFile $rf */
+            $rf = $this->requiredFileFactory->getByDisplayAndWidget($displayId, $row['widgetId']);
+
+            $totalCount++;
+
+            if ($rf->complete) {
+                $completeCount = $completeCount + 1;
+            }
+
+            $rf = $rf->toArray();
+            $rf['type'] = $row['widgetType'];
+            $rf['widgetName'] = $row['widgetName'];
+            $widgets[] = $rf;
+        }
+
+        // Widget for file status
         // Decide what our units are going to be, based on the size
         $suffixes = array('bytes', 'k', 'M', 'G', 'T');
-        $base = (int)floor(log($status[0]['sizeTotal']) / log(1024));
+        $base = (int)floor(log($totalSize) / log(1024));
 
         if ($base < 0)
             $base = 0;
@@ -193,56 +289,6 @@ class Display extends Base
         $units = (isset($suffixes[$base]) ? $suffixes[$base] : '');
         $this->getLog()->debug('Base for size is %d and suffix is %s', $base, $units);
 
-        // Show 3 widgets
-        $layouts = $this->store->select('
-            SELECT `layout`.layout,
-                `requiredfile`.*
-              FROM `requiredfile`
-                INNER JOIN `layout`
-                ON layout.layoutId = `requiredfile`.layoutId
-             WHERE `requiredfile`.displayId = :displayId
-              AND IFNULL(`requiredfile`.mediaId, 0) = 0
-            ORDER BY `layout`.layout
-        ', [
-            'displayId' => $display->displayId
-        ]);
-
-        // Media
-        $media = $this->store->select('
-            SELECT `media`.name,
-                `media`.type,
-                `requiredfile`.*
-              FROM `requiredfile`
-                INNER JOIN `media`
-                ON media.mediaId = `requiredfile`.mediaId
-             WHERE `requiredfile`.displayId = :displayId
-              AND IFNULL(`requiredfile`.layoutId, 0) = 0
-            ORDER BY `media`.name
-        ', [
-            'displayId' => $display->displayId
-        ]);
-
-        // Widgets
-        $widgets = $this->store->select('
-            SELECT `widget`.type,
-                `widgetoption`.value AS widgetName,
-                `requiredfile`.*
-              FROM `requiredfile`
-                INNER JOIN `layout`
-                ON layout.layoutId = `requiredfile`.layoutId
-                INNER JOIN `widget`
-                ON widget.widgetId = `requiredfile`.mediaId
-                LEFT OUTER JOIN `widgetoption`
-                ON `widgetoption`.widgetId = `widget`.widgetId
-                  AND `widgetoption`.option = \'name\'
-             WHERE `requiredfile`.displayId = :displayId
-              AND IFNULL(`requiredfile`.layoutId, 0) <> 0
-              AND IFNULL(`requiredfile`.regionId, 0) <> 0
-              AND IFNULL(`requiredfile`.mediaId, 0) <> 0
-            ORDER BY IFNULL(`widgetoption`.value, `widget`.type)
-        ', [
-            'displayId' => $display->displayId
-        ]);
 
         // Call to render the template
         $this->getState()->template = 'display-page-manage';
@@ -258,10 +304,10 @@ class Display extends Base
             ],
             'status' => [
                 'units' => $units,
-                'countComplete' => $status[0]['countComplete'],
-                'countRemaining' => $status[0]['countTotal'] - $status[0]['countComplete'],
-                'sizeComplete' => round((double)$status[0]['sizeComplete'] / (pow(1024, $base)), 2),
-                'sizeRemaining' => round((double)($status[0]['sizeTotal'] - $status[0]['sizeComplete']) / (pow(1024, $base)), 2),
+                'countComplete' => $completeCount,
+                'countRemaining' => $totalCount - $completeCount,
+                'sizeComplete' => round((double)$completeSize / (pow(1024, $base)), 2),
+                'sizeRemaining' => round((double)($totalSize - $completeSize) / (pow(1024, $base)), 2),
             ],
             'defaults' => [
                 'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
@@ -372,8 +418,10 @@ class Display extends Base
 
             $display->includeProperty('buttons');
 
+            // Format the storage available / total space
             $display->storageAvailableSpaceFormatted = ByteFormatter::format($display->storageAvailableSpace);
             $display->storageTotalSpaceFormatted = ByteFormatter::format($display->storageTotalSpace);
+            $display->storagePercentage = ($display->storageTotalSpace == 0) ? 0 : round($display->storageAvailableSpace / $display->storageTotalSpace * 100.0, 2);
 
             // Set some text for the display status
             switch ($display->mediaInventoryStatus) {
@@ -393,17 +441,12 @@ class Display extends Base
                     $display->statusDescription = __('Unknown Display Status');
             }
 
-            $display->status = ($display->mediaInventoryStatus == 1) ? 1 : (($display->mediaInventoryStatus == 2) ? 0 : -1);
-
             // Thumbnail
             $display->thumbnail = '';
             // If we aren't logged in, and we are showThumbnail == 2, then show a circle
             if (file_exists($this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
                 $display->thumbnail = $this->urlFor('display.screenShot', ['id' => $display->displayId]);
             }
-
-            // Format the storage available / total space
-            $display->storagePercentage = ($display->storageTotalSpace == 0) ? 100 : round($display->storageAvailableSpace / $display->storageTotalSpace * 100.0, 2);
 
             // Edit and Delete buttons first
             if ($this->getUser()->checkEditable($display)) {
@@ -624,12 +667,12 @@ class Display extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="isAuditing",
+     *      name="auditingUntil",
      *      in="formData",
-     *      description="Flag indicating whether this Display records auditing information.",
+     *      description="A date this Display records auditing information until.",
      *      type="string",
      *      format="date-time",
-     *      required=true
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="defaultLayoutId",
@@ -784,7 +827,7 @@ class Display extends Base
 
         // Should we invalidate this display?
         if ($defaultLayoutId != $display->defaultLayoutId) {
-            $display->setMediaIncomplete();
+            $display->notify();
         } else if ($this->getSanitizer()->getCheckbox('clearCachedData', 1) == 1) {
             // Remove the cache if the display licenced state has changed
             $this->pool->deleteItem($display->getCacheKey());
@@ -800,7 +843,7 @@ class Display extends Base
             $display->xmrPubKey = null;
         }
 
-        $display->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $display->save();
 
         // Return
@@ -841,7 +884,7 @@ class Display extends Base
         if (!$this->getUser()->checkDeleteable($display))
             throw new AccessDeniedException();
 
-        $display->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $display->delete();
 
         // Return
@@ -1131,7 +1174,7 @@ class Display extends Base
 
             // Should we test against the collection interval or the preset alert timeout?
             if ($display->alertTimeout == 0 && $display->clientType != '') {
-                $timeoutToTestAgainst = $display->getSetting('collectInterval', $globalTimeout);
+                $timeoutToTestAgainst = ((double)$display->getSetting('collectInterval', $globalTimeout)) * 1.1;
             }
             else {
                 $timeoutToTestAgainst = $globalTimeout;

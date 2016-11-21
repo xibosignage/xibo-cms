@@ -1,0 +1,11 @@
+{
+    "id": "tweet-1",
+    "value": "Template 6 - text, profile image",
+    "template": "<div class=\"container twitter-container \">\r\n<div class=\"col-xs-4\">\r\n<p class=\"pic-container center-block\">[ProfileImage]<\/p>\r\n<\/div>\r\n\r\n<div class=\"col-xs-8\">\r\n<div class=\"col-xs-12 main-tweet\">[Tweet]<\/div>\r\n\r\n<div class=\"col-xs-4 twitter-date\">[Date]<\/div>\r\n\r\n<div class=\"col-xs-5 twitter-location\">[Location]<\/div>\r\n<\/div>\r\n<\/div>\r\n",
+    "css": ".item {\r\n    float: left;\r\n}\r\n\r\nbody {\r\n    font-family: \"Helvetica\", \"Arial\", sans-serif;\r\n    line-height: 1;\r\n}\r\n\r\nbody {\r\n    background-repeat: no-repeat;\r\n    background-size: cover;\r\n    background-position: center;\r\n}\r\n\r\n.emojione {\r\n    width: 30px;\r\n    height: 30px\r\n}\r\n\r\n.pic-container img {\r\n    width: 300px;\r\n    height: 300px;\r\n}\r\n\r\n.pic-container {\r\n    position: relative;\r\n    width: 270px;\r\n    height: 270px;\r\n    overflow: hidden;\r\n}\r\n\r\n.pic-container img {\r\n    position: absolute;\r\n    left: 50%;\r\n    top: 50%;\r\n    height: 100%;\r\n    width: auto;\r\n    -webkit-transform: translate(-50%, -50%);\r\n    -ms-transform: translate(-50%, -50%);\r\n    transform: translate(-50%, -50%);\r\n}\r\n\r\n.page {\r\n    width: auto;\r\n    height: auto;\r\n}\r\n\r\n.twitter-container {\r\n    width: 960px !important;\r\n    height: 350px !important;\r\n    padding-top: 35px;\r\n    padding-bottom: 40px;\r\n    border: 1px solid #eee;\r\n    background-color: rgba(255, 255, 255, 0.6);\r\n    background: rgba(255, 255, 255, 0.6);\r\n    color: rgba(255, 255, 255, 0.6);\r\n}\r\n\r\n.main-tweet {\r\n    font-size: 30px;\r\n    padding-top: 30px;\r\n    line-height: 120%;\r\n    color: #434343;\r\n}\r\n\r\n.twitter-date, .twitter-location {\r\n    margin-top: 20px;\r\n    font-size: 17px;\r\n    color: #434343;\r\n    font-weight: bold;\r\n}",
+    "widgetOriginalWidth": "960",
+    "widgetOriginalHeight": "350",
+    "widgetOriginalPadding": "20",
+    "resultContent": "1",
+    "image":"modules/twitter/template-thumbs/twitter1.png"
+}

@@ -24,6 +24,7 @@ class Task implements \JsonSerializable
     public static $STATUS_IDLE = 2;
     public static $STATUS_ERROR = 3;
     public static $STATUS_SUCCESS = 4;
+    public static $STATUS_TIMEOUT = 5;
 
     public $taskId;
     public $name;
@@ -52,13 +53,16 @@ class Task implements \JsonSerializable
     }
 
     /**
-     * @return \DateTime
+     * @return \DateTime|string
      */
     public function nextRunDate()
     {
         $cron = CronExpression::factory($this->schedule);
 
-        return $cron->getNextRunDate()->format('U');
+        if ($this->lastRunDt == 0)
+            return (new \DateTime())->format('U');
+
+        return $cron->getNextRunDate(\DateTime::createFromFormat('U', $this->lastRunDt))->format('U');
     }
 
     /**
@@ -86,8 +90,13 @@ class Task implements \JsonSerializable
     {
         if ($this->taskId == null)
             $this->add();
-        else
+        else {
+            // If we've transitioned from active to inactive, then reset the task status
+            if ($this->getOriginalValue('isActive') != $this->isActive)
+                $this->status = Task::$STATUS_IDLE;
+
             $this->edit();
+        }
     }
 
     /**
