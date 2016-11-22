@@ -192,6 +192,18 @@ class CampaignFactory extends BaseFactory
             $body .= " AND `lkcampaignlayout`.layoutId = :layoutId ";
             $params['layoutId'] = $this->getSanitizer()->getString('layoutId', 0, $filterBy);
         }
+        
+        if ($this->getSanitizer()->getString('haslayouts', 0, $filterBy) != 0) {
+
+            $body .= " AND (
+                SELECT COUNT(*)
+                FROM lkcampaignlayout
+                WHERE lkcampaignlayout.campaignId = `campaign`.campaignId
+                )";
+    
+            $body .= ($this->getSanitizer()->getString('haslayouts', 0, $filterBy) == 1) ? " = 0 " : " > 0";
+        }
+
 
         if ($this->getSanitizer()->getString('name', $filterBy) != '') {
             // convert into a space delimited array
