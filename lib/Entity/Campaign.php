@@ -350,10 +350,12 @@ class Campaign implements \JsonSerializable
         }
         
         // Unassign all Tags
-        foreach ($this->tags as $tag) {
-            /* @var Tag $tag */
-            $tag->unassignCampaign($this->campaignId);
-            $tag->save();
+        if (is_array($this->tags)) {
+            foreach ($this->tags as $tag) {
+                /* @var Tag $tag */
+                $tag->unassignCampaign($this->campaignId);
+                $tag->save();
+            }
         }
 
         // Delete all events
