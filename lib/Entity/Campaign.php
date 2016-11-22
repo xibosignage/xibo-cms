@@ -26,6 +26,7 @@ use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\TagFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\LogServiceInterface;
@@ -77,9 +78,14 @@ class Campaign implements \JsonSerializable
      */
     public $totalDuration;
 
+    public $tags = [];
+    
     private $layouts = [];
     private $permissions = [];
     private $events = [];
+    
+    // Private
+    private $unassignTags = [];
 
     /** @var bool Have the Layout assignments changed? */
     private $layoutAssignmentsChanged = false;
@@ -93,6 +99,11 @@ class Campaign implements \JsonSerializable
      * @var LayoutFactory
      */
     private $layoutFactory;
+    
+    /**
+     * @var TagFactory
+     */
+    private $tagFactory;
 
     /**
      * @var ScheduleFactory
@@ -111,13 +122,15 @@ class Campaign implements \JsonSerializable
      * @param PermissionFactory $permissionFactory
      * @param ScheduleFactory $scheduleFactory
      * @param DisplayFactory $displayFactory
+     * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $permissionFactory, $scheduleFactory, $displayFactory)
+    public function __construct($store, $log, $permissionFactory, $scheduleFactory, $displayFactory, $tagFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->permissionFactory = $permissionFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->displayFactory = $displayFactory;
+        $this->tagFactory = $tagFactory;
     }
 
     /**
@@ -193,6 +206,78 @@ class Campaign implements \JsonSerializable
         if (!v::string()->notEmpty()->validate($this->campaign))
             throw new InvalidArgumentException(__('Name cannot be empty'), 'name');
     }
+    
+    
+    /**
+     * Does the campaign have the provided tag?
+     * @param $searchTag
+     * @return bool
+     */
+    public function hasTag($searchTag)
+    {
+        $this->load();
+
+        foreach ($this->tags as $tag) {
+            /* @var Tag $tag */
+            if ($tag->tag == $searchTag)
+                return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Assign Tag
+     * @param Tag $tag
+     * @return $this
+     */
+    public function assignTag($tag)
+    {
+        $this->load();
+
+        if (!in_array($tag, $this->tags))
+            $this->tags[] = $tag;
+
+        return $this;
+    }
+
+    /**
+     * Unassign tag
+     * @param Tag $tag
+     * @return $this
+     */
+    public function unassignTag($tag)
+    {
+        $this->tags = array_udiff($this->tags, [$tag], function($a, $b) {
+            /* @var Tag $a */
+            /* @var Tag $b */
+            return $a->tagId - $b->tagId;
+        });
+
+        return $this;
+    }
+
+    /**
+     * @param array[Tag] $tags
+     */
+    public function replaceTags($tags = [])
+    {
+        if (!is_array($this->tags) || count($this->tags) <= 0)
+            $this->tags = $this->tagFactory->loadByCampaignId($this->campaignId);
+
+        $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
+            /* @var Tag $a */
+            /* @var Tag $b */
+            return $a->tagId - $b->tagId;
+        });
+
+        $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
+
+        // Replace the arrays
+        $this->tags = $tags;
+
+        $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
+    }
 
     /**
      * Save this Campaign
@@ -200,9 +285,11 @@ class Campaign implements \JsonSerializable
      */
     public function save($options = [])
     {
+        
         $options = array_merge([
             'validate' => true,
-            'notify' => true
+            'notify' => true,
+            'saveTags' => true
         ], $options);
 
         $this->getLog()->debug('Saving %s', $this);
@@ -216,6 +303,30 @@ class Campaign implements \JsonSerializable
         }
         else
             $this->update();
+        
+            
+        // Save the tags
+        if (is_array($this->tags)) {
+            foreach ($this->tags as $tag) {
+                /* @var Tag $tag */
+
+                $this->getLog()->debug('Assigning tag %s', $tag->tag);
+
+                $tag->assignCampaign($this->campaignId);
+                $tag->save();
+            }
+        }
+
+        // Remove unwanted ones
+        if (is_array($this->unassignTags)) {
+            foreach ($this->unassignTags as $tag) {
+                /* @var Tag $tag */
+                $this->getLog()->debug('Unassigning tag %s', $tag->tag);
+
+                $tag->unassignCampaign($this->campaignId);
+                $tag->save();
+            }
+        }
 
         if ($this->loaded) {
             // Manage assignments
@@ -239,6 +350,13 @@ class Campaign implements \JsonSerializable
         foreach ($this->permissions as $permission) {
             /* @var Permission $permission */
             $permission->delete();
+        }
+        
+        // Unassign all Tags
+        foreach ($this->tags as $tag) {
+            /* @var Tag $tag */
+            $tag->unassignCampaign($this->campaignId);
+            $tag->save();
         }
 
         // Delete all events

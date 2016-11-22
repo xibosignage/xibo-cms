@@ -26,6 +26,10 @@
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Campaign" %}{% endset %}
                 {{ forms.input("name", title, campaign.campaign, helpText) }}
+                
+                {% set title %}{% trans "Tags" %}{% endset %}
+                {% set helpText %}{% trans "Tags for this campaign - used when searching for it. Comma delimited. (1 - 250 characters)" %}{% endset %}
+                {{ forms.input("tags", title, campaign.tags, helpText) }}
             </form>
         </div>
     </div>

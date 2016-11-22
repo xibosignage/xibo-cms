@@ -374,7 +374,8 @@ class State extends Middleware
                 $container->campaignFactory,
                 $container->layoutFactory,
                 $container->permissionFactory,
-                $container->userGroupFactory
+                $container->userGroupFactory,
+                $container->tagFactory
             );
         });
 
@@ -1039,7 +1040,8 @@ class State extends Middleware
                 $container->userFactory,
                 $container->permissionFactory,
                 $container->scheduleFactory,
-                $container->displayFactory
+                $container->displayFactory,
+                $container->tagFactory
             );
         });
 

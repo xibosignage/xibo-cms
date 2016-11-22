@@ -49,6 +49,11 @@ class CampaignFactory extends BaseFactory
      * @var DisplayFactory
      */
     private $displayFactory;
+    
+    /**
+     * @var TagFactory
+     */
+    private $tagFactory;
 
     /**
      * Construct a factory
@@ -61,13 +66,14 @@ class CampaignFactory extends BaseFactory
      * @param ScheduleFactory $scheduleFactory
      * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $permissionFactory, $scheduleFactory, $displayFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $permissionFactory, $scheduleFactory, $displayFactory, $tagFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
         $this->permissionFactory = $permissionFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->displayFactory = $displayFactory;
+        $this->tagFactory = $tagFactory;
     }
 
     /**
@@ -75,20 +81,24 @@ class CampaignFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Campaign($this->getStore(), $this->getLog(), $this->permissionFactory, $this->scheduleFactory, $this->displayFactory);
+        return new Campaign($this->getStore(), $this->getLog(), $this->permissionFactory, $this->scheduleFactory, $this->displayFactory, $this->tagFactory);
     }
 
     /**
      * Create Campaign
      * @param string $name
      * @param int $userId
+     * @param string $tags
      * @return Campaign
      */
-    public function create($name, $userId)
+    public function create($name, $userId, $tags)
     {
         $campaign = $this->createEmpty();
         $campaign->ownerId = $userId;
         $campaign->campaign = $name;
+        
+        // Create some tags
+        $campaign->tags = $this->tagFactory->tagsFromString($tags);
 
         return $campaign;
     }
@@ -150,11 +160,17 @@ class CampaignFactory extends BaseFactory
 
         $select = '
         SELECT `campaign`.campaignId, `campaign`.campaign, `campaign`.isLayoutSpecific, `campaign`.userId AS ownerId,
-              (
+            (
                 SELECT COUNT(*)
-                  FROM lkcampaignlayout
-                 WHERE lkcampaignlayout.campaignId = `campaign`.campaignId
-              ) AS numberLayouts
+                FROM lkcampaignlayout
+                WHERE lkcampaignlayout.campaignId = `campaign`.campaignId
+            ) AS numberLayouts,
+            (
+                SELECT GROUP_CONCAT(DISTINCT tag) 
+                FROM tag INNER JOIN lktagcampaign ON lktagcampaign.tagId = tag.tagId 
+                WHERE lktagcampaign.campaignId = campaign.CampaignID 
+                GROUP BY lktagcampaign.campaignId
+            ) AS tags
         ';
 
         $body  = '
@@ -204,6 +220,41 @@ class CampaignFactory extends BaseFactory
             $body .= ($this->getSanitizer()->getString('haslayouts', 0, $filterBy) == 1) ? " = 0 " : " > 0";
         }
 
+        // Tags
+        if ($this->getSanitizer()->getString('tags', $filterBy) != '') {
+
+            $tagFilter = $this->getSanitizer()->getString('tags', $filterBy);
+
+            if (trim($tagFilter) === '--no-tag') {
+                $body .= ' AND `campaign`.campaignID NOT IN (
+                    SELECT `lktagcampaign`.campaignId
+                     FROM `tag`
+                        INNER JOIN `lktagcampaign`
+                        ON `lktagcampaign`.tagId = `tag`.tagId
+                    )
+                ';
+            } else {
+                $body .= " AND campaign.campaignID IN (
+                SELECT lktagcampaign.campaignId
+                  FROM tag
+                    INNER JOIN lktagcampaign
+                    ON lktagcampaign.tagId = tag.tagId
+                ";
+                $i = 0;
+                foreach (explode(',', $tagFilter) as $tag) {
+                    $i++;
+
+                    if ($i == 1)
+                        $body .= " WHERE tag LIKE :tags$i ";
+                    else
+                        $body .= " OR tag LIKE :tags$i ";
+
+                    $params['tags' . $i] = '%' . $tag . '%';
+                }
+
+                $body .= " ) ";
+            }
+        }
 
         if ($this->getSanitizer()->getString('name', $filterBy) != '') {
             // convert into a space delimited array
