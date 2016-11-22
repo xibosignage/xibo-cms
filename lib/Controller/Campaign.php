@@ -109,6 +109,13 @@ class Campaign extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="haslayouts",
+     *      in="formData",
+     *      description="Filter by has layouts",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -124,6 +131,7 @@ class Campaign extends Base
         $filter = [
             'campaignId' => $this->getSanitizer()->getInt('campaignId'),
             'name' => $this->getSanitizer()->getString('name'),
+            'haslayouts' => $this->getSanitizer()->getInt('haslayouts')
         ];
 
 

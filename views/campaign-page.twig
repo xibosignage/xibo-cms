@@ -21,9 +21,19 @@ This is the template for the campaign page
         <div class="widget-title">{% trans "Campaigns" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter">
+                <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input("name", title) }}
+                            
+                            {% set title %}{% trans "Tags" %}{% endset %}
+                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                            {{ inline.input("tags", title, null, helpText) }}
+                            
+                            {% set title %}{% trans "Layouts" %}{% endset %}
+                            {% set values = [{id: 0, value: ""}, {id: 2, value: "Yes"}, {id: 1, value: "No"}] %}
+                            {{ inline.dropdown("haslayouts", "single", title, 0, values, "id", "value") }}
                         </form>
                     </div>
                 </div>
@@ -33,6 +43,7 @@ This is the template for the campaign page
                             <tr>
                                 <th>{% trans "Name" %}</th>
                                 <th>{% trans "# Layouts" %}</th>
+                                <th>{% trans "Tags" %}</th>
                                 <th>{% trans "Duration" %}</th>
                                 <th></th>
                             </tr>
@@ -64,6 +75,7 @@ This is the template for the campaign page
             "columns": [
                 { "data": "campaign" },
                 { "data": "numberLayouts" },
+                { "data": "tags" },
                 { "data": "totalDuration" },
                 {
                     "orderable": false,
