@@ -99,6 +99,11 @@ class Soap5 extends Soap4
 
                 // Create the XML nodes
                 foreach ($settings as $arrayItem) {
+                    
+                    // Disable the CEF browser option on Windows players
+                    if (strtolower($arrayItem['name']) == 'usecefwebbrowser' && ($clientType == 'windows')) {
+                        $arrayItem['value'] = 0;
+                    }
 
                     // Override the XMR address if empty
                     if (strtolower($arrayItem['name']) == 'xmrnetworkaddress' && $arrayItem['value'] == '') {
