@@ -681,6 +681,9 @@ class Twitter extends ModuleWidget
 
         // Information from the Module
         $duration = $this->getCalculatedDurationForGetResource();
+        $numItems = $this->getOption('numItems', 0);
+        $itemsPerPage = $this->getOption('itemsPerPage', 0);
+        $durationIsPerItem = $this->getOption('durationIsPerItem', 1);
 
         // Generate a JSON string of substituted items.
         $items = $this->getTwitterFeed($displayId, $isPreview);
@@ -708,8 +711,17 @@ class Twitter extends ModuleWidget
             'itemsPerPage' => $this->getSanitizer()->int($this->getOption('itemsPerPage', 5))
         );
 
+        // Work out how many pages we will be showing.
+        $pages = $numItems;
+
+        if ($numItems > count($items) || $numItems == 0)
+            $pages = count($items);
+
+        $pages = ($itemsPerPage > 0) ? ceil($pages / $itemsPerPage) : $pages;
+        $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
+        
         // Replace the control meta with our data from twitter
-        $data['controlMeta'] = '<!-- NUMITEMS=' . count($items) . ' -->' . PHP_EOL . '<!-- DURATION=' . ($this->getOption('durationIsPerItem', 0) == 0 ? $duration : ($duration * count($items))) . ' -->';
+        $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->';
 
         // Replace the head content
         $headContent = '';
