@@ -497,7 +497,7 @@ function media(parent, id, xml, options, preload) {
 
     var tmpUrl = options.getResourceUrl.replace(":regionId", self.region.id).replace(":id", self.id) + '?preview=1';
     
-    if (self.render == "html") {
+    if (self.render == "html" && self.mediaType != "twitter") {
         media.append('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
     }
     else if (self.mediaType == "image") {
@@ -515,7 +515,7 @@ function media(parent, id, xml, options, preload) {
     else if (self.mediaType == "text" || self.mediaType == "datasetview" || self.mediaType == "webpage" || self.mediaType == "embedded") {
         media.append('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
     }
-    else if (self.mediaType == "ticker") {
+    else if (self.mediaType == "ticker" || self.mediaType == "twitter") {
         media.append('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
         /* Check if the ticker duration is based on the number of items in the feed */
         if (self.options['durationisperitem'] == '1') {
