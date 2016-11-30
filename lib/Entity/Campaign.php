@@ -177,8 +177,15 @@ class Campaign implements \JsonSerializable
         $this->ownerId = $ownerId;
     }
 
-    public function load()
+    public function load($options = [])
     {
+        $options = array_merge([
+            'loadPermissions' => true,
+            'loadLayouts' => true,
+            'loadTags' => true,
+            'loadEvents' => true
+        ], $options);
+        
         // If we are already loaded, then don't do it again
         if ($this->campaignId == null || $this->loaded)
             return;
@@ -187,13 +194,20 @@ class Campaign implements \JsonSerializable
             throw new \RuntimeException('Cannot load campaign with all objects without first calling setChildObjectDependencies');
 
         // Permissions
-        $this->permissions = $this->permissionFactory->getByObjectId('Campaign', $this->campaignId);
+        if ($options['loadPermissions'])
+            $this->permissions = $this->permissionFactory->getByObjectId('Campaign', $this->campaignId);
 
         // Layouts
-        $this->layouts = $this->layoutFactory->getByCampaignId($this->campaignId);
+        if ($options['loadLayouts'])
+            $this->layouts = $this->layoutFactory->getByCampaignId($this->campaignId);
+            
+        // Load all tags
+        if ($options['loadTags'])
+            $this->tags = $this->tagFactory->loadByCampaignId($this->campaignId);
 
         // Events
-        $this->events = $this->scheduleFactory->getByCampaignId($this->campaignId);
+        if ($options['loadEvents'])
+            $this->events = $this->scheduleFactory->getByCampaignId($this->campaignId);
 
         $this->loaded = true;
     }
@@ -350,12 +364,10 @@ class Campaign implements \JsonSerializable
         }
         
         // Unassign all Tags
-        if (is_array($this->tags)) {
-            foreach ($this->tags as $tag) {
-                /* @var Tag $tag */
-                $tag->unassignCampaign($this->campaignId);
-                $tag->save();
-            }
+        foreach ($this->tags as $tag) {
+            /* @var Tag $tag */
+            $tag->unassignCampaign($this->campaignId);
+            $tag->save();
         }
 
         // Delete all events
