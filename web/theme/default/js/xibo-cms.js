@@ -427,6 +427,31 @@ function dataTableDateFromUnix(data, type, row) {
 }
 
 /**
+ * DataTable Create tags
+ * @param data
+ * @returns {*}
+ */
+function dataTableCreateTags(data) {
+
+    var returnData = '';
+
+    if(typeof data.tags != undefined && data.tags != null ) {
+        var arrayOfTags = data.tags.split(',');
+
+        returnData += '<div id="tagDiv">';
+
+        for (var i = 0; i < arrayOfTags.length; i++) {
+            if(arrayOfTags[i] != '')
+                returnData += '<li class="btn btn-sm btn-default btn-tag">' + arrayOfTags[i] + '</span></li>'
+        }
+
+        returnData += '</div>';
+    }
+
+    return returnData;
+}
+
+/**
  * DataTable Refresher
  * @param gridId
  * @param table
