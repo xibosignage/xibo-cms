@@ -497,25 +497,7 @@ function media(parent, id, xml, options, preload) {
 
     var tmpUrl = options.getResourceUrl.replace(":regionId", self.region.id).replace(":id", self.id) + '?preview=1';
     
-    if (self.render == "html" && self.mediaType != "twitter") {
-        media.append('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
-    }
-    else if (self.mediaType == "image") {
-        preload.addFiles(tmpUrl);
-        media.css("background-image", "url('" + tmpUrl + "')");
-        if (self.options['scaletype'] == 'stretch')
-            media.css("background-size", "cover");
-        else {
-            // Center scale type, do we have align or valign?
-            var align = (self.options['align'] == "") ? "center" : self.options['align'];
-            var valign = (self.options['valign'] == "" || self.options['valign'] == "middle") ? "center" : self.options['valign'];
-            media.css("background-position", align + " " + valign);
-        }
-    }
-    else if (self.mediaType == "text" || self.mediaType == "datasetview" || self.mediaType == "webpage" || self.mediaType == "embedded") {
-        media.append('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
-    }
-    else if (self.mediaType == "ticker" || self.mediaType == "twitter") {
+    if (self.render == "html" || self.mediaType == "ticker") {
         media.append('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
         /* Check if the ticker duration is based on the number of items in the feed */
         if (self.options['durationisperitem'] == '1') {
@@ -533,6 +515,21 @@ function media(parent, id, xml, options, preload) {
                 async:false
             });
         }
+    }
+    else if (self.mediaType == "image") {
+        preload.addFiles(tmpUrl);
+        media.css("background-image", "url('" + tmpUrl + "')");
+        if (self.options['scaletype'] == 'stretch')
+            media.css("background-size", "cover");
+        else {
+            // Center scale type, do we have align or valign?
+            var align = (self.options['align'] == "") ? "center" : self.options['align'];
+            var valign = (self.options['valign'] == "" || self.options['valign'] == "middle") ? "center" : self.options['valign'];
+            media.css("background-position", align + " " + valign);
+        }
+    }
+    else if (self.mediaType == "text" || self.mediaType == "datasetview" || self.mediaType == "webpage" || self.mediaType == "embedded") {
+        media.append('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
     }
     else if (self.mediaType == "video") {
         preload.addFiles(tmpUrl);
