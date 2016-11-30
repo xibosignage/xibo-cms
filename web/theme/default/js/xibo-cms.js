@@ -601,11 +601,6 @@ function XiboFormRender(sourceObj, data) {
                         });
                 }
 
-                // Do we have to call any functions due to this success?
-                if (response.callBack != "" && response.callBack != undefined) {
-                    eval(response.callBack)(dialog);
-                }
-
                 $('input[type=text]', dialog).eq(0).focus();
 
                 // Set up dependencies between controls
@@ -693,6 +688,11 @@ function XiboFormRender(sourceObj, data) {
 
                 // Call Xibo Init for this form
                 XiboInitialise("#"+dialog.attr("id"));
+                
+                // Do we have to call any functions due to this success?
+                if (response.callBack != "" && response.callBack != undefined) {
+                    eval(response.callBack)(dialog);
+                }
             }
             else {
                 // Login Form needed?
