@@ -384,6 +384,20 @@ CREATE TABLE IF NOT EXISTS `lktagmedia` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `lktagcampaign`
+--
+
+CREATE TABLE IF NOT EXISTS `lktagcampaign` (
+  `lkTagCampaignId` int(11) NOT NULL AUTO_INCREMENT,
+  `tagId` int(11) NOT NULL,
+  `campaignId` int(11) NOT NULL,
+  PRIMARY KEY (`lkTagCampaignId`),
+  UNIQUE KEY `tagId` (`tagId`,`campaignId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `lkusergroup`
 --
 
