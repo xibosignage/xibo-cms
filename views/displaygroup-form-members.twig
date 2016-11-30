@@ -56,8 +56,8 @@
                                         {{ inline.input("display", title) }}
                                         
                                         {% set title %}{% trans "Authorised" %}{% endset %}
-                                        {% set values = [{id: 0, value: ""}, {id: 2, value: "Yes"}, {id: 1, value: "No"}] %}
-                                        {{ inline.dropdown("authorised", "single", title, 0, values, "id", "value") }}
+                                        {% set values = [{id: -1, value: ""}, {id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
+                                        {{ inline.dropdown("authorised", "single", title, -1, values, "id", "value") }}
                                     </form>
                                 </div>
                             </div>
