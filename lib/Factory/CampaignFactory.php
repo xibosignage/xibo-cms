@@ -209,7 +209,7 @@ class CampaignFactory extends BaseFactory
             $params['layoutId'] = $this->getSanitizer()->getString('layoutId', 0, $filterBy);
         }
         
-        if ($this->getSanitizer()->getString('haslayouts', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getString('hasLayouts', 0, $filterBy) != 0) {
 
             $body .= " AND (
                 SELECT COUNT(*)
@@ -217,7 +217,7 @@ class CampaignFactory extends BaseFactory
                 WHERE lkcampaignlayout.campaignId = `campaign`.campaignId
                 )";
     
-            $body .= ($this->getSanitizer()->getString('haslayouts', 0, $filterBy) == 1) ? " = 0 " : " > 0";
+            $body .= ($this->getSanitizer()->getString('hasLayouts', 0, $filterBy) == 1) ? " = 0 " : " > 0";
         }
 
         // Tags
