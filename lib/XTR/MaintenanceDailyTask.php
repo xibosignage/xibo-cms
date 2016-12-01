@@ -48,6 +48,9 @@ class MaintenanceDailyTask implements TaskInterface
 
         // Tidy Cache
         $this->tidyCache();
+
+        // API tokens
+        $this->purgeExpiredApiTokens();
     }
 
     /**
@@ -200,5 +203,81 @@ class MaintenanceDailyTask implements TaskInterface
         /** @var \Xibo\Controller\Library $libraryController */
         $libraryController = $this->app->container->get('\Xibo\Controller\Library');
         $libraryController->installAllModuleFiles();
+    }
+
+    /**
+     * Purge expired API tokens
+     */
+    private function purgeExpiredApiTokens()
+    {
+        $this->runMessage .= '## ' . __('Purge Expired API Tokens') . PHP_EOL;
+
+        $params = ['now' => time()];
+
+        try {
+            // Run delete SQL for all token and session tables.
+            $this->store->update('DELETE FROM `oauth_refresh_tokens` WHERE expire_time < :now', $params);
+
+            $this->store->update('
+              DELETE FROM `oauth_sessions` 
+               WHERE id IN (
+                 SELECT session_id 
+                   FROM oauth_access_tokens
+                  WHERE expire_time < :now
+                    AND access_token NOT IN (SELECT access_token FROM oauth_refresh_tokens)
+               )
+            ', $params);
+
+            // Delete access_tokens without a refresh token
+            $this->store->update('
+              DELETE FROM `oauth_access_tokens` 
+               WHERE expire_time < :now AND access_token NOT IN (
+                  SELECT access_token FROM oauth_refresh_tokens
+               )
+           ', $params);
+
+            $this->store->update('
+              DELETE FROM `oauth_access_token_scopes`
+                WHERE access_token NOT IN (
+                  SELECT access_token FROM oauth_access_tokens
+                )
+            ', []);
+
+            // Auth codes
+            $this->store->update('
+              DELETE FROM `oauth_sessions` 
+               WHERE id IN (
+                 SELECT session_id 
+                   FROM oauth_auth_codes
+                  WHERE expire_time < :now
+               )
+            ', $params);
+
+            $this->store->update('
+              DELETE FROM `oauth_auth_codes` WHERE expire_time < :now', $params);
+
+            $this->store->update('
+              DELETE FROM `oauth_auth_code_scopes`
+                WHERE auth_code NOT IN (
+                  SELECT auth_code FROM oauth_auth_codes
+                )
+            ', []);
+
+            // Delete session scopes
+            $this->store->update('
+              DELETE FROM `oauth_session_scopes`
+                WHERE session_id NOT IN (
+                  SELECT id FROM oauth_sessions
+                )
+            ', []);
+
+            $this->runMessage .= ' - ' . __('Done.') . PHP_EOL . PHP_EOL;
+
+        } catch (\PDOException $PDOException) {
+            $this->log->debug($PDOException->getTraceAsString());
+            $this->log->error($PDOException->getMessage());
+
+            $this->runMessage .= ' - ' . __('Error.') . PHP_EOL . PHP_EOL;
+        }
     }
 }
