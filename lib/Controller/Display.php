@@ -551,7 +551,8 @@ class Display extends Base
 
             if ($this->getUser()->checkEditable($display)) {
 
-                $display->buttons[] = ['divider' => true];
+                if ($this->getUser()->checkPermissionsModifyable($display))
+                    $display->buttons[] = ['divider' => true];
 
                 // Wake On LAN
                 $display->buttons[] = array(

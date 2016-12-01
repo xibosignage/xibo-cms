@@ -388,7 +388,7 @@ class Display implements \JsonSerializable
      */
     public function getId()
     {
-        return $this->displayId;
+        return $this->displayGroupId;
     }
 
     /**
@@ -396,7 +396,8 @@ class Display implements \JsonSerializable
      */
     public function getOwnerId()
     {
-        return 1;
+        // No owner
+        return 0;
     }
 
     /**
