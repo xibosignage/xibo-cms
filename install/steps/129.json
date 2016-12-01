@@ -22,6 +22,10 @@
     {
       "step": "Set owner of existing resolutions to 0",
       "action": "UPDATE `resolution` SET userId = 0;"
+    },
+    {
+      "step": "Update permissions defaults to include group write / public write options",
+      "action": "UPDATE `setting` SET `options` = 'private|group|group write|public|public write' WHERE setting IN ('MEDIA_DEFAULT', 'LAYOUT_DEFAULT');"
     }
   ]
 }

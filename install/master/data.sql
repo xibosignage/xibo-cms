@@ -161,8 +161,8 @@ INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `inte
 (16, '4k UHD Portrait', 800, 450, 2160, 3840, 2, 1, 0);
 
 INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES
-(1, 'MEDIA_DEFAULT', 'private', 'dropdown', 'Media will be created with these settings. If public everyone will be able to view and use this media.', 'private|group|public', 'permissions', 1, 'Media Permissions', '', 20, 'private', 1, 'word'),
-(2, 'LAYOUT_DEFAULT', 'private', 'dropdown', 'New layouts will be created with these settings. If public everyone will be able to view and use this layout.', 'private|group|public', 'permissions', 1, 'Layout Permissions', '', 10, 'private', 1, 'word'),
+(1, 'MEDIA_DEFAULT', 'private', 'dropdown', 'Media will be created with these settings. If public everyone will be able to view and use this media.', 'private|group|group write|public|public write', 'permissions', 1, 'Media Permissions', '', 20, 'private', 1, 'word'),
+(2, 'LAYOUT_DEFAULT', 'private', 'dropdown', 'New layouts will be created with these settings. If public everyone will be able to view and use this layout.', 'private|group|group write|public|public write', 'permissions', 1, 'Layout Permissions', '', 10, 'private', 1, 'word'),
 (3, 'defaultUsertype', 'User', 'dropdown', 'Sets the default user type selected when creating a user.\r\n<br />\r\nWe recommend that this is set to "User"', 'User|Group Admin|Super Admin', 'users', 1, 'Default User Type', '', 10, 'User', 1, 'string'),
 (7, 'userModule', 'module_user_general.php', 'dirselect', 'This sets which user authentication module is currently being used.', NULL, 'users', 0, 'User Module', '', 0, 'module_user_general.php', 0, 'string'),
 (11, 'defaultTimezone', 'Europe/London', 'timezone', 'Set the default timezone for the application', 'Europe/London', 'regional', 1, 'Timezone', '', 20, 'Europe/London', 1, 'string'),
