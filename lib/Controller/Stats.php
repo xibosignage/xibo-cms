@@ -146,6 +146,13 @@ class Stats extends Base
      *  operationId="statsSearch",
      *  tags={"statistics"},
      *  @SWG\Parameter(
+     *      name="type",
+     *      in="formData",
+     *      description="The type of stat to return. Layout|Media|Widget or All",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="fromDt",
      *      in="formData",
      *      description="The start date for the filter. Default = 24 hours ago",
@@ -205,6 +212,7 @@ class Stats extends Base
         $displayId = $this->getSanitizer()->getInt('displayId');
         $layoutIds = $this->getSanitizer()->getIntArray('layoutId');
         $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
+        $type = $this->getSanitizer()->getString('type');
 
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
@@ -263,6 +271,15 @@ class Stats extends Base
             'fromDt' => $this->getDate()->getLocalDate($fromDt),
             'toDt' => $this->getDate()->getLocalDate($toDt)
         ];
+
+        // Type filter
+        if ($type == 'layout') {
+            $body .= ' AND `stat`.type = \'layout\' ';
+        } else if ($type == 'media') {
+            $body .= ' AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 ';
+        } else if ($type == 'widget') {
+            $body .= ' AND `stat`.type = \'media\' AND IFNULL(`widget`.widgetId, 0) <> 0 ';
+        }
 
         // Layout Filter
         if (count($layoutIds) != 0) {
@@ -332,8 +349,9 @@ class Stats extends Base
             $entry['duration'] = $this->getSanitizer()->int($row['Duration']);
             $entry['minStart'] = $this->getDate()->getLocalDate($this->getDate()->parse($row['MinStart']));
             $entry['maxEnd'] = $this->getDate()->getLocalDate($this->getDate()->parse($row['MaxEnd']));
-            $entry['layoutId'] = $row['layoutId'];
-            $entry['widgetId'] = $row['widgetId'];
+            $entry['layoutId'] = $this->getSanitizer()->int($row['layoutId']);
+            $entry['widgetId'] = $this->getSanitizer()->int($row['widgetId']);
+            $entry['mediaId'] = $this->getSanitizer()->int($row['mediaId']);
 
             $rows[] = $entry;
         }
