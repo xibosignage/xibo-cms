@@ -123,7 +123,7 @@ class PdoStorageService implements StorageServiceInterface
      */
 	public function connect($host, $user, $pass, $name = null)
     {
-		if ($this->getConnection('default'))
+        if (!isset($this->conn['default']))
 		    $this->close('default');
 
         $dsn = PdoStorageService::createDsn($host, $name);
