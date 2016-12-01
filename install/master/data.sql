@@ -295,7 +295,7 @@ INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES
 
 INSERT INTO `oauth_scopes` (id, description) VALUES ('all', 'All access'),('mcaas', 'Media Conversion as a Service');
 
-INSERT INTO permission (entityId, groupId, objectId, view, edit, `delete`) VALUES
+INSERT INTO `permission` (entityId, groupId, objectId, view, edit, `delete`) VALUES
   (1, 1, 1, 1, 0, 0),
   (1, 1, 13, 1, 0, 0),
   (1, 1, 4, 1, 0, 0),
