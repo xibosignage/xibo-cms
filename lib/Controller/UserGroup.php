@@ -19,10 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use baseDAO;
-use database;
-use JSON;
-use Kit;
 use Xibo\Entity\Page;
 use Xibo\Entity\Permission;
 use Xibo\Entity\User;
@@ -32,7 +28,6 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
-use Xibo\Helper\Form;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -130,8 +125,6 @@ class UserGroup extends Base
      */
     function grid()
     {
-        $user = $this->getUser();
-
         $filterBy = [
             'groupId' => $this->getSanitizer()->getInt('userGroupId'),
             'group' => $this->getSanitizer()->getString('userGroup')
@@ -148,7 +141,7 @@ class UserGroup extends Base
                 break;
 
             // we only want to show certain buttons, depending on the user logged in
-            if ($this->getUser()->checkEditable($group)) {
+            if ($this->isEditable($group)) {
                 // Edit
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_edit',
@@ -220,7 +213,7 @@ class UserGroup extends Base
     {
         $group = $this->userGroupFactory->getById($groupId);
 
-        if (!$this->getUser()->checkEditable($group))
+        if (!$this->isEditable($group))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'usergroup-form-edit';
@@ -241,7 +234,7 @@ class UserGroup extends Base
     {
         $group = $this->userGroupFactory->getById($groupId);
 
-        if (!$this->getUser()->checkDeleteable($group))
+        if (!$this->isEditable($group))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'usergroup-form-delete';
@@ -293,7 +286,7 @@ class UserGroup extends Base
 
         $group = $this->userGroupFactory->getById($groupId);
 
-        if (!$this->getUser()->checkEditable($group))
+        if (!$this->isEditable($group))
             throw new AccessDeniedException();
 
         $group->load();
@@ -328,7 +321,7 @@ class UserGroup extends Base
 
         $group = $this->userGroupFactory->getById($groupId);
 
-        if (!$this->getUser()->checkDeleteable($group))
+        if (!$this->isEditable($group))
             throw new AccessDeniedException();
 
         $group->delete();
@@ -488,7 +481,7 @@ class UserGroup extends Base
     {
         $group = $this->userGroupFactory->getById($groupId);
 
-        if (!$this->getUser()->checkEditable($group))
+        if (!$this->isEditable($group))
             throw new AccessDeniedException();
 
         // Users in group
@@ -540,7 +533,7 @@ class UserGroup extends Base
 
         $group = $this->userGroupFactory->getById($groupId);
 
-        if (!$this->getUser()->checkEditable($group))
+        if (!$this->isEditable($group))
             throw new AccessDeniedException();
 
         $users = $this->getSanitizer()->getIntArray('userId');
@@ -589,7 +582,7 @@ class UserGroup extends Base
     {
         $group = $this->userGroupFactory->getById($groupId);
 
-        if (!$this->getUser()->checkEditable($group))
+        if (!$this->isEditable($group))
             throw new AccessDeniedException();
 
         $users = $this->getSanitizer()->getIntArray('userId');
@@ -615,7 +608,7 @@ class UserGroup extends Base
     {
         $group = $this->userGroupFactory->getById($groupId);
 
-        if (!$this->getUser()->checkViewable($group))
+        if (!$this->isEditable($group))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'usergroup-form-copy';
@@ -671,7 +664,7 @@ class UserGroup extends Base
         $group = $this->userGroupFactory->getById($userGroupId);
 
         // Check we have permission to view this group
-        if (!$this->getUser()->checkViewable($group))
+        if (!$this->isEditable($group))
             throw new AccessDeniedException();
 
         // Clone the group
@@ -696,5 +689,15 @@ class UserGroup extends Base
             'id' => $newGroup->groupId,
             'data' => $newGroup
         ]);
+    }
+
+    /**
+     * @param \Xibo\Entity\UserGroup $group
+     * @return bool
+     */
+    private function isEditable($group)
+    {
+        return $this->getUser()->isSuperAdmin()
+            || ($this->getUser()->isGroupAdmin() && count(array_intersect($this->getUser()->groups, [$group])));
     }
 }
