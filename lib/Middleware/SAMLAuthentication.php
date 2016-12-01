@@ -117,7 +117,7 @@ class SAMLAuthentication extends Middleware
 
             if (!empty($errors)) {
                 throw new \OneLogin_Saml2_Error(
-                    'SAML SSO failed: '.implode(', ', $errors)
+                    'SAML SSO failed: '.implode(', ', $errors) . '. Last Reason: ' . $auth->getLastErrorReason()
                 );
             } else {
                 $samlAttrs = $auth->getAttributes();

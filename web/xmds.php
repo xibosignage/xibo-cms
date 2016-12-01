@@ -88,7 +88,7 @@ $twig->parserExtensions = array(
 );
 
 // Configure a user
-$app->user = $app->userFactory->getById(1);
+$app->user = $app->userFactory->getSystemUser();
 
 // Configure the template folder
 $twig->twigTemplateDirs = array_merge($app->moduleFactory->getViewPaths(), [PROJECT_ROOT . '/views']);
