@@ -14,6 +14,14 @@
       "step": "Drop player caches",
       "type": "php",
       "action": "Xibo\\Upgrade\\DropPlayerCache"
+    },
+    {
+      "step": "Add owner to Resolution",
+      "action": "ALTER TABLE `resolution` ADD userId INT NOT NULL;"
+    },
+    {
+      "step": "Set owner of existing resolutions to 0",
+      "action": "UPDATE `resolution` SET userId = 0;"
     }
   ]
 }

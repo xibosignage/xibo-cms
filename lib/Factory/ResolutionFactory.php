@@ -138,7 +138,8 @@ class ResolutionFactory extends BaseFactory
               `resolution`.width AS designerWidth,
               `resolution`.height AS designerHeight,
               `resolution`.version,
-              `resolution`.enabled
+              `resolution`.enabled,
+              `resolution`.userId
         ';
 
         $body = '

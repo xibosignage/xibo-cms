@@ -618,6 +618,13 @@ class User implements \JsonSerializable
             $campaign->save();
         }
 
+
+        // Reassign resolutions
+        $this->getStore()->update('UPDATE `resolution` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
         // Load again
         $this->loaded = false;
         $this->load(true);
@@ -747,6 +754,7 @@ class User implements \JsonSerializable
         }
 
         // Delete user specific entities
+        $this->getStore()->update('DELETE FROM `resolution` WHERE userId = :userId', ['userId' => $this->userId]);
         $this->getStore()->update('DELETE FROM `session` WHERE userId = :userId', ['userId' => $this->userId]);
         $this->getStore()->update('DELETE FROM `user` WHERE userId = :userId', ['userId' => $this->userId]);
     }

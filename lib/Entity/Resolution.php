@@ -85,6 +85,12 @@ class Resolution implements \JsonSerializable
     public $enabled = 1;
 
     /**
+     * @SWG\Property(description="The userId who owns this Resolution"
+     * @var int
+     */
+    public $userId;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
@@ -108,7 +114,7 @@ class Resolution implements \JsonSerializable
     public function getOwnerId()
     {
         // No owner
-        return 1;
+        return $this->userId;
     }
 
     public function validate()
@@ -154,8 +160,8 @@ class Resolution implements \JsonSerializable
     private function add()
     {
         $this->resolutionId = $this->getStore()->insert('
-          INSERT INTO `resolution` (resolution, width, height, intended_width, intended_height, version, enabled)
-            VALUES (:resolution, :width, :height, :intended_width, :intended_height, :version, :enabled)
+          INSERT INTO `resolution` (resolution, width, height, intended_width, intended_height, version, enabled, `userId`)
+            VALUES (:resolution, :width, :height, :intended_width, :intended_height, :version, :enabled, :userId)
         ', [
             'resolution' => $this->resolution,
             'width' => $this->designerWidth,
@@ -163,7 +169,8 @@ class Resolution implements \JsonSerializable
             'intended_width' => $this->width,
             'intended_height' => $this->height,
             'version' => $this->version,
-            'enabled' => $this->enabled
+            'enabled' => $this->enabled,
+            'userId' => $this->userId
         ]);
     }
 
