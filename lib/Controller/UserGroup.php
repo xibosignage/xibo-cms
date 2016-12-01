@@ -148,7 +148,7 @@ class UserGroup extends Base
                 break;
 
             // we only want to show certain buttons, depending on the user logged in
-            if ($user->getUserTypeId() == 1) {
+            if ($this->getUser()->checkEditable($group)) {
                 // Edit
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_edit',
@@ -156,23 +156,25 @@ class UserGroup extends Base
                     'text' => __('Edit')
                 );
 
-                // Delete
-                $group->buttons[] = array(
-                    'id' => 'usergroup_button_delete',
-                    'url' => $this->urlFor('group.delete.form', ['id' => $group->groupId]),
-                    'text' => __('Delete')
-                );
+                if ($this->getUser()->isSuperAdmin()) {
+                    // Delete
+                    $group->buttons[] = array(
+                        'id' => 'usergroup_button_delete',
+                        'url' => $this->urlFor('group.delete.form', ['id' => $group->groupId]),
+                        'text' => __('Delete')
+                    );
 
-                $group->buttons[] = ['divider' => true];
+                    $group->buttons[] = ['divider' => true];
 
-                // Copy
-                $group->buttons[] = array(
-                    'id' => 'usergroup_button_copy',
-                    'url' => $this->urlFor('group.copy.form', ['id' => $group->groupId]),
-                    'text' => __('Copy')
-                );
+                    // Copy
+                    $group->buttons[] = array(
+                        'id' => 'usergroup_button_copy',
+                        'url' => $this->urlFor('group.copy.form', ['id' => $group->groupId]),
+                        'text' => __('Copy')
+                    );
 
-                $group->buttons[] = ['divider' => true];
+                    $group->buttons[] = ['divider' => true];
+                }
 
                 // Members
                 $group->buttons[] = array(
@@ -181,12 +183,14 @@ class UserGroup extends Base
                     'text' => __('Members')
                 );
 
-                // Page Security
-                $group->buttons[] = array(
-                    'id' => 'usergroup_button_page_security',
-                    'url' => $this->urlFor('group.acl.form', ['id' => $group->groupId]),
-                    'text' => __('Page Security')
-                );
+                if ($this->getUser()->isSuperAdmin()) {
+                    // Page Security
+                    $group->buttons[] = array(
+                        'id' => 'usergroup_button_page_security',
+                        'url' => $this->urlFor('group.acl.form', ['id' => $group->groupId]),
+                        'text' => __('Page Security')
+                    );
+                }
             }
         }
 
@@ -254,6 +258,10 @@ class UserGroup extends Base
      */
     function add()
     {
+        // Check permissions
+        if (!$this->getUser()->isSuperAdmin())
+            throw new AccessDeniedException();
+
         // Build a user entity and save it
         $group = $this->userGroupFactory->createEmpty();
         $group->group = $this->getSanitizer()->getString('group');
@@ -279,6 +287,10 @@ class UserGroup extends Base
      */
     function edit($groupId)
     {
+        // Check permissions
+        if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin())
+            throw new AccessDeniedException();
+
         $group = $this->userGroupFactory->getById($groupId);
 
         if (!$this->getUser()->checkEditable($group))
@@ -310,6 +322,10 @@ class UserGroup extends Base
      */
     function delete($groupId)
     {
+        // Check permissions
+        if (!$this->getUser()->isSuperAdmin())
+            throw new AccessDeniedException();
+
         $group = $this->userGroupFactory->getById($groupId);
 
         if (!$this->getUser()->checkDeleteable($group))
@@ -331,7 +347,7 @@ class UserGroup extends Base
     public function aclForm($groupId)
     {
         // Check permissions to this function
-        if ($this->getUser()->userTypeId != 1)
+        if (!$this->getUser()->isSuperAdmin())
             throw new AccessDeniedException();
 
         // Use the factory to get all the entities
@@ -393,7 +409,7 @@ class UserGroup extends Base
     public function acl($groupId)
     {
         // Check permissions to this function
-        if ($this->getUser()->userTypeId != 1)
+        if (!$this->getUser()->isSuperAdmin())
             throw new AccessDeniedException();
 
         // Load the Group we are working on
