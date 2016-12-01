@@ -630,7 +630,7 @@ class User implements \JsonSerializable
      */
     public function validate()
     {
-        if (!v::alnum('_')->length(1, 50)->validate($this->userName))
+        if (!v::alnum('_')->length(1, 50)->validate($this->userName) && !v::email()->validate($this->userName))
             throw new InvalidArgumentException(__('User name must be between 1 and 50 characters.'), 'userName');
 
         if (!v::string()->notEmpty()->validate($this->password))
