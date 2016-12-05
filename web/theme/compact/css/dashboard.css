@@ -306,7 +306,6 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
 
 .widget .widget-body table tbody .btn-tag { 
     padding: 0px 5px;
-    pointer-events: none;
 }
 
 .widget .widget-body.no-padding .error, .widget .widget-body.no-padding .message {

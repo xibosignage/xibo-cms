@@ -149,6 +149,7 @@
             });
 
             table.on('draw', dataTableDraw);
+            table.on('draw', { form: $("#layouts").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#layouts_wrapper').find('.col-sm-6').eq(1));
         });

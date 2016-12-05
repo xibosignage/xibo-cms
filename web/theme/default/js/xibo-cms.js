@@ -452,6 +452,33 @@ function dataTableCreateTags(data) {
 }
 
 /**
+ * DataTable Create tags
+ * @param e
+ * @param settings
+ */
+function dataTableCreateTagEvents(e, settings) {
+    
+    var table = $("#" + e.target.id);
+    var form = e.data.form;
+    
+    table.find(".btn-tag").on("click", function(e) {
+        
+        // Get the form tag input text field
+        var inputText = form.find("#tags").val();
+        
+        // See if its the first element, if not add comma
+        var tagText = (inputText == "") ? "" : ", "; 
+        tagText += $(this).text();
+        
+        // Add text to form
+        form.find("#tags").val(inputText + tagText);
+        
+        // Refresh table to apply the new tag search
+        table.DataTable().ajax.reload();
+    });
+}
+
+/**
  * DataTable Refresher
  * @param gridId
  * @param table
