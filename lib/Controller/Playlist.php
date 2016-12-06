@@ -432,7 +432,7 @@ class Playlist extends Base
 
             // If a duration is provided, then we want to use it
             if ($duration !== null)
-                $widget->useDuration = 0;
+                $widget->useDuration = 1;
 
             // Assign the widget to the playlist
             $playlist->assignWidget($widget);
