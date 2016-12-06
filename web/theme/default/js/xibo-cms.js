@@ -461,7 +461,7 @@ function dataTableCreateTagEvents(e, settings) {
     var table = $("#" + e.target.id);
     var form = e.data.form;
     
-    table.find(".btn-tag").on("click", function(e) {
+    table.on("click", ".btn-tag", function(e) {
         
         // Get the form tag input text field
         var inputText = form.find("#tags").val();
