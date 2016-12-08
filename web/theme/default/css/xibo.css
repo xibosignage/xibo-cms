@@ -897,3 +897,13 @@ ul li.active.tab-design:hover a {
 .selectPickerWithImage .form-control {
     height: inherit;
 }
+
+.bootstrap-tagsinput {
+    min-width: 196px;
+}
+
+.bootstrap-tagsinput .tag {
+    margin-right: 0;
+    background-color: #5bc0de;
+    border-color: #46b8da;
+}

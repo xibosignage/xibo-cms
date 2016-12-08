@@ -32,7 +32,7 @@
 
                             {% set title %}{% trans "Tags" %}{% endset %}
                             {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
-                            {{ inline.input("tags", title, null, helpText) }}
+                            {{ inline.inputWithTags("tags", title, null, helpText) }}
 
                             {% set attributes = [
                             { name: "data-live-search", value: "true" },

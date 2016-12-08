@@ -290,6 +290,9 @@ function XiboInitialise(scope) {
     $(scope + " span.notification-date").each(function() {
         $(this).html(moment($(this).html(), "X").fromNow());
     });
+    
+    // Initialize tags input form
+    $(scope + " input[data-role=tagsInputForm], " + scope + " select[multiple][data-role=tagsInputForm]").tagsinput();
 }
 
 /**
@@ -461,17 +464,19 @@ function dataTableCreateTagEvents(e, settings) {
     var table = $("#" + e.target.id);
     var form = e.data.form;
     
+    // Unbind all 
+    table.off('click');
+    
     table.on("click", ".btn-tag", function(e) {
         
         // Get the form tag input text field
         var inputText = form.find("#tags").val();
         
         // See if its the first element, if not add comma
-        var tagText = (inputText == "") ? "" : ", "; 
-        tagText += $(this).text();
+        var tagText = $(this).text();
         
         // Add text to form
-        form.find("#tags").val(inputText + tagText);
+        form.find("#tags").tagsinput('add', tagText, { allowDuplicates: false });
         
         // Refresh table to apply the new tag search
         table.DataTable().ajax.reload();

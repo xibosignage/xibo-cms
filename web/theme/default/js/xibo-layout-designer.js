@@ -61,14 +61,10 @@ $(document).ready(function(){
             if (!hideControls) {
                 layout.find(".regionInfo").show();
                 layout.find(".previewNav").show();
-                // Increase zIndex of the hover region to see it on front
-                $(this).zIndex($(this).zIndex()+1);
             }
         }, function() {
             layout.find(".regionInfo").hide();
             layout.find(".previewNav").hide();
-            // Restore the zIndex of the hover region ( respecting the Layer option )
-            $(this).zIndex($(this).zIndex()-1);
         })
         .draggable({
             containment: layout,

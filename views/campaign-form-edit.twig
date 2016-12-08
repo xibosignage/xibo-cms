@@ -29,7 +29,7 @@
                 
                 {% set title %}{% trans "Tags" %}{% endset %}
                 {% set helpText %}{% trans "Tags for this campaign - used when searching for it. Comma delimited. (1 - 250 characters)" %}{% endset %}
-                {{ forms.input("tags", title, campaign.tags, helpText) }}
+                {{ forms.inputWithTags("tags", title, campaign.tags, helpText) }}
             </form>
         </div>
     </div>

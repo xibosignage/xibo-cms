@@ -57,7 +57,7 @@
 
                         {% set title %}{% trans "Tags" %}{% endset %}
                         {% set helpText %}{% trans "Tags for this layout - used when searching for it. Comma delimited. (1 - 250 characters)" %}{% endset %}
-                        {{ forms.input("tags", title, "", helpText) }}
+                        {{ forms.inputWithTags("tags", title, "", helpText) }}
 
                         {% set title %}{% trans "Template" %}{% endset %}
                         {% set helpText %}{% trans "Optionally choose a template you have saved before." %}{% endset %}
