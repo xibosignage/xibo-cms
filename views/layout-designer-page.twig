@@ -264,6 +264,11 @@
                         {"data": "name"},
                         {"data": "mediaType"},
                         {
+                            "name": "mediaId",
+                            "data": null,
+                            "render": {"_": "thumbnail", "display": "thumbnail", "sort": "mediaId"}
+                        },
+                        {
                             "sortable": false,
                             "data": function (data, type, row, meta) {
                                 if (type != "display")
