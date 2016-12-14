@@ -240,7 +240,10 @@
             };
 
             // Callback for the media form
-            function mediaFormCallBack() {
+            function mediaFormCallBack(dialog) {
+                
+                $(dialog).closest(".modal").addClass("modal-big");
+                
                 // prevent filter form submit
                 $("#libraryAssignFilterOptions").find("form").on("submit", function(e) {
                     e.preventDefault();
