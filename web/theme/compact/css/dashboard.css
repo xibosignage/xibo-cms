@@ -169,6 +169,7 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
 }
 #page-wrapper.active #sidebar-wrapper {
   left: 150px;
+  z-index: 1;
 }
 
 /* Header */
@@ -302,6 +303,11 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
 .widget .widget-body table tbody * {
   font-size: 13px !important;
 }
+
+.widget .widget-body table tbody .btn-tag { 
+    padding: 0px 5px;
+}
+
 .widget .widget-body.no-padding .error, .widget .widget-body.no-padding .message {
   padding: 20px;
 }

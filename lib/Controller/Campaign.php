@@ -24,6 +24,7 @@ use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\TagFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -48,6 +49,11 @@ class Campaign extends Base
     private $layoutFactory;
 
     /**
+     * @var TagFactory
+     */
+    private $tagFactory;
+
+    /**
      * @var PermissionFactory
      */
     private $permissionFactory;
@@ -70,8 +76,9 @@ class Campaign extends Base
      * @param LayoutFactory $layoutFactory
      * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
+     * @param TagFactory $tagFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $campaignFactory, $layoutFactory, $permissionFactory, $userGroupFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $campaignFactory, $layoutFactory, $permissionFactory, $userGroupFactory, $tagFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -79,6 +86,7 @@ class Campaign extends Base
         $this->layoutFactory = $layoutFactory;
         $this->permissionFactory = $permissionFactory;
         $this->userGroupFactory = $userGroupFactory;
+        $this->tagFactory = $tagFactory;
     }
 
     public function displayPage()
@@ -109,6 +117,20 @@ class Campaign extends Base
      *      type="string",
      *      required=false
      *   ),
+     *   @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="Filter by Tags",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="hasLayouts",
+     *      in="formData",
+     *      description="Filter by has layouts",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -124,8 +146,9 @@ class Campaign extends Base
         $filter = [
             'campaignId' => $this->getSanitizer()->getInt('campaignId'),
             'name' => $this->getSanitizer()->getString('name'),
+            'tags' => $this->getSanitizer()->getString('tags'),
+            'hasLayouts' => $this->getSanitizer()->getInt('hasLayouts')
         ];
-
 
         $options = [
             'totalDuration' => 1,
@@ -240,7 +263,7 @@ class Campaign extends Base
      */
     public function add()
     {
-        $campaign = $this->campaignFactory->create($this->getSanitizer()->getString('name'), $this->getUser()->userId);
+        $campaign = $this->campaignFactory->create($this->getSanitizer()->getString('name'), $this->getUser()->userId, $this->getSanitizer()->getString('tags'));
         $campaign->save();
 
         // Permissions
@@ -315,7 +338,10 @@ class Campaign extends Base
             throw new AccessDeniedException();
 
         $campaign->campaign = $this->getSanitizer()->getString('name');
-        $campaign->save();
+        $campaign->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
+        $campaign->save([
+            'saveTags' => true
+        ]);
 
         // Return
         $this->getState()->hydrate([

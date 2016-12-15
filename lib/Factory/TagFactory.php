@@ -147,6 +147,29 @@ class TagFactory extends BaseFactory
     }
 
     /**
+     * Gets tags for a campaign
+     * @param $campaignId
+     * @return array[Tag]
+     */
+    public function loadByCampaignId($campaignId)
+    {
+        $tags = array();
+
+        $sql = 'SELECT tag.tagId, tag.tag FROM `tag` INNER JOIN `lktagcampaign` ON lktagcampaign.tagId = tag.tagId WHERE lktagcampaign.campaignId = :campaignId';
+
+        foreach ($this->getStore()->select($sql, array('campaignId' => $campaignId)) as $row) {
+            $tag = $this->createEmpty();
+            $tag->tagId = $this->getSanitizer()->int($row['tagId']);
+            $tag->tag = $this->getSanitizer()->string($row['tag']);
+            $tag->assignCampaign($campaignId);
+
+            $tags[] = $tag;
+        }
+
+        return $tags;
+    }
+    
+    /**
      * Gets tags for media
      * @param $mediaId
      * @return array[Tag]

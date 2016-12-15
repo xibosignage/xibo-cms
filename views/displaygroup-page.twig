@@ -171,29 +171,159 @@
         }
 
         function displayGroupMembersFormOpen(dialog) {
+            
+            var control = $(dialog).find(".controlDiv");
 
-            // Get our table
-            var table = $(dialog).find(".controlDiv");
-
-            if (table.data().members == undefined)
-                table.data().members = {
+            // This contains the changes made since the form open
+            if (control.data().members == undefined)
+                control.data().members = {
                     displays: {},
                     displayGroups: {}
                 };
 
+            var table = $("#displaysMembersTable").DataTable({ 
+                "language": dataTablesLanguage,
+                serverSide: true, 
+                stateSave: true,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("display.search") }}",
+                    "data": function(dataDisplay) {
+                        $.extend(dataDisplay, $(dialog).find("#displayForm").serializeObject());
+                        return dataDisplay;
+                    }
+                },
+                "columns": [
+                    { "data": "displayId"},
+                    { "data": "display" },
+                    {
+                        "data": "mediaInventoryStatus",
+                        "render": function (data, type, row) {
+                            if (type != "display")
+                                return data;
+
+                            var icon = "";
+                            if (data == 1)
+                                icon = "fa-check";
+                            else if (data == 0)
+                                icon = "fa-times";
+                            else
+                                icon = "fa-cloud-download";
+
+                            return "<span class='fa " + icon + "'></span>";
+                        }
+                    },
+                    { "data": "loggedIn", "render": dataTableTickCrossColumn},
+                    {
+                        "name": "clientVersion",
+                        "data": function (data, type) {
+                            if (type != "display")
+                                return data.clientVersion;
+
+                            return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
+                        },
+                        "visible": false
+                    },
+                    {
+                        "name": "member",
+                        "orderable": false,
+                        "data": function (data, type, row) {
+                            if (type != "display")
+                                return data;
+
+                            var checked = '';
+                            
+                            // Check if the element is already been checked/unchecked
+                            if( typeof control.data().members != "undefined" && control.data().members.displays[data.displayId] != undefined){
+                                checked = (control.data().members.displays[data.displayId]) ? 'checked' : '';
+                            } else {
+                                // If its not been altered, check for the original state
+                                if( dialog.data().extra ){
+                                    dialog.data().extra.displaysAssigned.forEach(function(extraElement) {
+                                        if( extraElement.displayId == data.displayId ){
+                                            checked = 'checked';
+                                        }
+                                    });    
+                                }
+                            }
+                            
+                            var checkBox = '<input type="checkbox" class="checkbox" data-member-id=' + data.displayId + ' data-member-type="display" ' + checked + '>';
+                        
+                            // Create checkbox
+                            return checkBox;
+                        }
+                    },
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+            
+            var tableGroup = $("#displaysGroupsMembersTable").DataTable({ 
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("displayGroup.search") }}",
+                    "data": function(dataGroup) {
+                        $.extend(dataGroup, $("#displaysGroupsMembersTable").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                        return dataGroup;
+                    }
+                },
+                "columns": [
+                    { "data": "displayGroupId"},
+                    { "data": "displayGroup"},
+                    {
+                        "name": "member",
+                        "orderable": false,
+                        "data": function (data, type, row) {
+                            if (type != "display")
+                                return data;
+
+                            var checked = '';
+                            
+                            // Check if the element is already been checked/unchecked
+                            if( typeof control.data().members != "undefined" && control.data().members.displayGroups[data.displayGroupId] != undefined){
+                                checked = (control.data().members.displayGroups[data.displayGroupId]) ? 'checked' : '';
+                            } else {
+                                // If its not been altered, check for the original state
+                                if( dialog.data().extra ){
+                                    dialog.data().extra.displayGroupsAssigned.forEach(function(extraElement) {
+                                        if( extraElement.displayGroupId == data.displayGroupId ){
+                                            checked = 'checked';
+                                        }
+                                    });    
+                                }
+                            }
+                            
+                            var checkBox = '<input type="checkbox" class="checkbox" data-member-id=' + data.displayGroupId + ' data-member-type="displayGroup" ' + checked + '>';
+                        
+                            // Create checkbox
+                            return checkBox;
+                        }
+                    },
+                ]
+            });
+            
+            tableGroup.on('draw', dataTableDraw);
+            tableGroup.on('processing.dt', dataTableProcessing);
+                
             // Bind to the checkboxes change event
-            table.find("input[type=checkbox]").change(function() {
+            control.on("change", ".checkbox", function() {
+                
                 // Update our global members data with this
                 var memberId = $(this).data().memberId;
                 var memberType = $(this).data().memberType;
                 var value = $(this).is(":checked");
 
-                //console.log("Setting memberId: " + memberId + ". Value: " + value);
-
                 if (memberType == "display")
-                    table.data().members.displays[memberId] = (value) ? 1 : 0;
-                else
-                    table.data().members.displayGroups[memberId] = (value) ? 1 : 0;
+                    control.data().members.displays[memberId] = (value) ? 1 : 0;
+                else if (memberType == "displayGroup")
+                    control.data().members.displayGroups[memberId] = (value) ? 1 : 0;
             });
         }
 

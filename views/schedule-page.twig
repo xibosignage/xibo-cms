@@ -127,8 +127,9 @@
                     </div>
 
                     <% _.each(by_hour, function(event){ %>
-                    <div class="pull-left day-event day-highlight dh-<%= event['class'] %>" style="margin-top: <%= (event.top * 30) %>px; height: <%= (event.lines * 30) %>px">
-                    <% if (event.lines < 2) { %>data-toggle="popover" <% } %>>
+                    <div class="pull-left day-event day-highlight dh-<%= event['class'] %>" style="margin-top: <%= (event.top * 30) %>px; height: <%= (event.lines * 30) %>px"
+                        <% if (event.lines < 2) { %>data-toggle="popover" data-content="<%= event.title %>" title="<%= event.start_hour %> - <%= event.end_hour %>"<% } %>
+                    >
                     <span class="cal-hours"><%= event.start_hour %> - <%= event.end_hour %></span>
                     <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
                        data-event-class="<%= event['class'] %>" class="event-item">

@@ -375,6 +375,13 @@ class Display extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="authorised",
+     *      in="formData",
+     *      description="Filter by authorised flag",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -396,7 +403,8 @@ class Display extends Base
             'macAddress' => $this->getSanitizer()->getString('macAddress'),
             'license' => $this->getSanitizer()->getString('hardwareKey'),
             'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
-            'clientVersion' => $this->getSanitizer()->getString('clientVersion')
+            'clientVersion' => $this->getSanitizer()->getString('clientVersion'),
+            'authorised' => $this->getSanitizer()->getInt('authorised'),
         ];
 
         // Get a list of displays

@@ -340,6 +340,7 @@ class DisplayGroup extends Base
      */
     public function membersForm($displayGroupId)
     {
+        
         $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
@@ -347,79 +348,16 @@ class DisplayGroup extends Base
 
         // Displays in Group
         $displaysAssigned = $this->displayFactory->getByDisplayGroupId($displayGroup->displayGroupId);
-
-        // All Displays
-        $allDisplays = $this->displayFactory->query();
-
-        // The available users are all users except users already in assigned users
-        $checkboxes = array();
-
-        foreach ($allDisplays as $display) {
-            /* @var Display $display */
-            // Check to see if it exists in $usersAssigned
-            $exists = false;
-            foreach ($displaysAssigned as $displayAssigned) {
-                /* @var Display $displayAssigned */
-                if ($displayAssigned->displayId == $display->displayId) {
-                    $exists = true;
-                    break;
-                }
-            }
-
-            // Store this checkbox
-            $checkbox = array(
-                'type' => 'display',
-                'id' => $display->displayId,
-                'name' => $display->display,
-                'status' => $display->mediaInventoryStatus,
-                'clientVersion' => $display->clientVersion,
-                'clientType' => $display->clientType,
-                'clientCode' => $display->clientCode,
-                'loggedIn' => $display->loggedIn,
-                'value_checked' => (($exists) ? 'checked' : '')
-            );
-
-            $checkboxes[] = $checkbox;
-        }
-
         // Get all the DisplayGroups assigned to this Group directly
         $groupsAssigned = $this->displayGroupFactory->getByParentId($displayGroup->displayGroupId);
-
-        // Get all groups, aside from this one
-        $groups = $this->displayGroupFactory->query();
-
-        // Go through each and create a checkbox
-        foreach ($groups as $group) {
-            /* @var \Xibo\Entity\DisplayGroup $group */
-            // Make sure its not this one.
-            if ($group->displayGroupId == $displayGroup->displayGroupId)
-                continue;
-
-            // Check to see if it exists in $usersAssigned
-            $exists = false;
-            foreach ($groupsAssigned as $groupAssigned) {
-                /* @var \Xibo\Entity\DisplayGroup $groupAssigned */
-                if ($groupAssigned->displayGroupId == $group->displayGroupId) {
-                    $exists = true;
-                    break;
-                }
-            }
-
-            // Store this checkbox
-            $checkbox = array(
-                'type' => 'displayGroup',
-                'id' => $group->displayGroupId,
-                'name' => $group->displayGroup,
-                'value_checked' => (($exists) ? 'checked' : '')
-            );
-
-            $checkboxes[] = $checkbox;
-        }
 
         $this->getState()->template = 'displaygroup-form-members';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
-            'checkboxes' => $checkboxes,
+            'extra' => [
+                'displaysAssigned' => $displaysAssigned,
+                'displayGroupsAssigned' => $groupsAssigned
+            ],
             'tree' => $this->displayGroupFactory->getRelationShipTree($displayGroupId),
             'help' => $this->getHelp()->link('DisplayGroup', 'Members')
         ]);
