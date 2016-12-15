@@ -74,9 +74,9 @@ class Campaign extends Base
      * @param ConfigServiceInterface $config
      * @param CampaignFactory $campaignFactory
      * @param LayoutFactory $layoutFactory
-     * @param TagFactory $tagFactory
      * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
+     * @param TagFactory $tagFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $campaignFactory, $layoutFactory, $permissionFactory, $userGroupFactory, $tagFactory)
     {
