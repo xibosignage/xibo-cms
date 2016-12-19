@@ -13,6 +13,7 @@
         <link href="{{ theme.uri("libraries/font-awesome/css/font-awesome.min.css") }}" rel="stylesheet">
         <link href="{{ theme.uri("libraries/bootstrap-select/css/bootstrap-select.css") }}" rel="stylesheet">
         <link href="{{ theme.uri("libraries/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css") }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/jquery-timepicker/jquery.timepicker.css") }}" rel="stylesheet">
         <link href="{{ theme.uri("libraries/bootstrap-colorpicker/css/bootstrap-colorpicker.min.css") }}" rel="stylesheet">
         <link href="{{ theme.uri("libraries/bootstrap-ekko-lightbox/ekko-lightbox.min.css") }}" rel="stylesheet">
         <link href="{{ theme.uri("libraries/bootstrap-switch/bootstrap-switch.min.css") }}" rel="stylesheet">
@@ -90,6 +91,7 @@
         <script src="{{ theme.uri("libraries/handlebars/handlebars-v3.0.0.js") }}"></script>
         <script src="{{ theme.uri("libraries/jquery-serialize-object/jquery.serialize-object.min.js") }}"></script>
         <script src="{{ theme.uri("libraries/bootstrap-tagsinput-master/bootstrap-tagsinput.min.js") }}"></script>
+        <script src="{{ theme.uri("libraries/jquery-timepicker/jquery.timepicker.min.js") }}"></script>
 
         {# Dates #}
         {% if settings.CALENDAR_TYPE == "Jalali" %}
@@ -131,6 +133,9 @@
             var timezone = "{{ settings.defaultTimezone }}";
             var dateFormat = "{{ settings.DATE_FORMAT }}";
             var jsDateFormat = "{{ settings.DATE_FORMAT_JS }}";
+            var timeFormat = "{{ settings.TIME_FORMAT }}";
+            var jsTimeFormat = "{{ settings.TIME_FORMAT_JS }}";
+            var systemDateFormat = "{{ settings.systemDateFormat }}";
             var bootstrapDateFormat = "{{ settings.DATE_FORMAT_BOOTSTRAP }}";
             var bootstrapDateFormatDateOnly = "{{ settings.DATE_FORMAT_BOOTSTRAP_DATEONLY }}";
             var calendarType = "{{ settings.CALENDAR_TYPE }}";

@@ -41,7 +41,7 @@ class DateServiceJalali implements DateServiceInterface
      * Get the default date format
      * @return string
      */
-    private function getSystemFormat()
+    public function getSystemFormat()
     {
         return 'Y-m-d H:i:s';
     }
@@ -85,6 +85,54 @@ class DateServiceJalali implements DateServiceInterface
     public function setLocale($identifier)
     {
         \Jenssegers\Date\Date::setLocale($identifier);
+    }
+    
+    /**
+     * @inheritdoc
+     */
+    public function extractTimeFormat($format)
+    {
+        $replacements = [
+            'd' => '',
+            'D' => '',
+            'j' => '',
+            'l' => '',
+            'N' => '',
+            'S' => '',
+            'w' => '',
+            'z' => '',
+            'W' => '',
+            'F' => '',
+            'm' => '',
+            'M' => '',
+            'n' => '',
+            't' => '', // no equivalent
+            'L' => '', // no equivalent
+            'o' => '',
+            'Y' => '',
+            'y' => '',
+            'a' => '',
+            'A' => '',
+            'B' => '', // no equivalent
+            'g' => 'g',
+            'G' => 'G',
+            'h' => 'h',
+            'H' => 'H',
+            'i' => 'i',
+            's' => 's',
+            'u' => '',
+            'e' => '', // deprecated since version 1.6.0 of moment.js
+            'I' => '', // no equivalent
+            'O' => '', // no equivalent
+            'P' => '', // no equivalent
+            'T' => '', // no equivalent
+            'Z' => '', // no equivalent
+            'c' => '', // no equivalent
+            'r' => '', // no equivalent
+            'U' => '',
+        ];
+        $timeOnly = strtr($format, $replacements);
+        return trim($timeOnly);
     }
 
     /**
