@@ -415,7 +415,7 @@ class Display implements \JsonSerializable
      */
     public function getCacheKey()
     {
-        return self::getCachePrefix() . $this->getId();
+        return self::getCachePrefix() . $this->displayId;
     }
 
     /**
