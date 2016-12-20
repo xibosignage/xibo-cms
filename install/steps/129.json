@@ -26,6 +26,10 @@
     {
       "step": "Update permissions defaults to include group write / public write options",
       "action": "UPDATE `setting` SET `options` = 'private|group|group write|public|public write' WHERE setting IN ('MEDIA_DEFAULT', 'LAYOUT_DEFAULT');"
+    },
+    {
+      "step": "Add new Campaign Tag link table",
+      "action": "CREATE TABLE IF NOT EXISTS `lktagcampaign` (`lkTagCampaignId` int(11) NOT NULL AUTO_INCREMENT,`tagId` int(11) NOT NULL,`campaignId` int(11) NOT NULL,PRIMARY KEY (`lkTagCampaignId`),UNIQUE KEY `tagId` (`tagId`,`campaignId`)) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;"
     }
   ]
 }
