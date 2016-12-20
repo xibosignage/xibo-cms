@@ -153,12 +153,9 @@ class Hls extends ModuleWidget
         // Behave exactly like the client.
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
-        $hlsJsUrl = (($isPreview) ? $this->getResourceUrl('vendor/hls/hls.min.js') : $this->getApp()->urlFor('library.download', ['id' => $this->getOption('hlsId')]));
-        $posterUrl = (($isPreview) ? $this->getResourceUrl('vendor/hls/hls-1px-transparent.png') : $this->getApp()->urlFor('library.download', ['id' => $this->getOption('posterId')]));
-
         // Include some vendor items
         $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $hlsJsUrl . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/hls/hls.min.js') . '"></script>';
         $javaScriptContent .= '
 <script type="text/javascript">
     var HLSconfig = {
@@ -208,7 +205,7 @@ class Hls extends ModuleWidget
         // Parse any other library references
         $javaScriptContent = $this->parseLibraryReferences($isPreview, $javaScriptContent);
 
-        $body = $this->parseLibraryReferences($isPreview, '<video id="video" poster="' . $posterUrl . '"' . (($this->getOption('mute', 0) == 1) ? 'muted' : '') . '></video>');
+        $body = $this->parseLibraryReferences($isPreview, '<video id="video" poster="' . $this->getResourceUrl('vendor/hls/hls-1px-transparent.png') . '"' . (($this->getOption('mute', 0) == 1) ? 'muted' : '') . '></video>');
 
         if ($this->hasMediaChanged())
             $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true]);
