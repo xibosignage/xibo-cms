@@ -211,11 +211,11 @@
 
                         {% set title %}{% trans "Start Time" %}{% endset %}
                         {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}
-                        {{ forms.dateTime("fromDt", title, "", "", helpText, "starttime-control", "required") }}
+                        {{ forms.dateTime("fromDt", title, "", helpText, "starttime-control", "required") }}
 
                         {% set title %}{% trans "End Time" %}{% endset %}
                         {% set helpText %}{% trans "Select the end time for this event" %}{% endset %}
-                        {{ forms.dateTime("toDt", title, "", "", helpText, "endtime-control", "required") }}
+                        {{ forms.dateTime("toDt", title, "", helpText, "endtime-control", "required") }}
 
                         {# Campaign / Layout list. We want to build two arrays for us to use. #}
                         {% set layoutOptions = [] %}
