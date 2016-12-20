@@ -115,6 +115,9 @@ class Hls extends ModuleWidget
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
 
+        // This causes some android devices to switch to a hardware accellerated web view
+        $this->setOption('transparency', 0);
+
         // Ensure we have the necessary files linked up
         $media = $this->mediaFactory->createModuleFile(PROJECT_ROOT . '/web/modules/vendor/hls/hls.min.js');
         $media->save();
