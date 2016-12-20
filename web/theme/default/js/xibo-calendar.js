@@ -175,6 +175,14 @@ var setupScheduleForm = function(dialog) {
         postProcessDaypartList($(this).val());
     });
     postProcessDaypartList($("select#dayPartId").val());
+    
+    // Hide/Show form elements according to the selected options
+    var elementsArray = ['recurrenceType', 'eventTypeId', 'dayPartId'];
+    for (var i = 0; i < elementsArray.length; i++) {
+        
+        $("#" + elementsArray[i]).ready( processDisplayFormElements($('#' + elementsArray[i])) );
+        $("#" + elementsArray[i]).on("change", function(){ processDisplayFormElements($(this)) });
+    }
 
     // Bind to the dialog submit
     $("#scheduleAddForm, #scheduleEditForm, #scheduleDeleteForm").submit(function(e) {
@@ -200,6 +208,60 @@ var setupScheduleForm = function(dialog) {
         });
     });
 };
+
+var processDisplayFormElements = function(el) {
+    
+    var fieldVal = el.val();
+    
+    switch (el.attr('id')) {
+        case 'recurrenceType':
+        
+            console.log('Process: recurrenceType');
+
+            var repeatControlGroupDisplay = (fieldVal == "") ? "none" : "block";
+            var repeatControlGroupWeekDisplay = (fieldVal == "Week") ? "none" : "block";
+
+            $(".repeat-control-group").css('display', repeatControlGroupDisplay);
+            $(".repeat-weekly-control-group").css('display', repeatControlGroupWeekDisplay);
+            
+            break;
+        
+        case 'eventTypeId':
+            console.log('Process: eventTypeId');
+            
+            var layoutControlDisplay = (fieldVal == "2") ? "none" : "block";
+            var endTimeControlDisplay = (fieldVal == "2") ? "none" : "block";
+            var startTimeControlDisplay = (fieldVal == "2") ? "block" : "block";
+            var dayPartControlDisplay = (fieldVal == "2") ? "none" : "block";
+            var commandControlDisplay = (fieldVal == "2") ? "block" : "none";
+            
+            $(".layout-control").css('display', layoutControlDisplay);
+            $(".endtime-control").css('display', endTimeControlDisplay);
+            $(".starttime-control").css('display', startTimeControlDisplay);
+            $(".day-part-control").css('display', dayPartControlDisplay);
+            $(".command-control").css('display', commandControlDisplay);
+            
+            // Call funtion for the daypart ID 
+            processDisplayFormElements($('#dayPartId'));
+            
+            break;
+        
+        case 'dayPartId':
+            console.log('Process: dayPartId');
+            
+            var endTimeControlDisplay = (fieldVal == "1") ? "none" : "block";
+            var startTimeControlDisplay = (fieldVal == "1") ? "none" : "block";
+
+            $(".endtime-control").css('display', endTimeControlDisplay);
+            $(".starttime-control").css('display', startTimeControlDisplay);
+                        
+            break;
+            
+        default:
+            
+    }
+    
+}
 
 /**
  * Depending on the event type selected we either want to filter in or filter out the

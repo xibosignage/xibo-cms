@@ -54,7 +54,7 @@ class DateServiceGregorian implements DateServiceInterface
      * Get the default date format
      * @return string
      */
-    private function getSystemFormat()
+    public function getSystemFormat()
     {
         return 'Y-m-d H:i:s';
     }
@@ -84,6 +84,57 @@ class DateServiceGregorian implements DateServiceInterface
     public function setLocale($identifier)
     {
         \Jenssegers\Date\Date::setLocale($identifier);
+    }
+    
+    /**
+     * @inheritdoc
+     */
+    public function extractTimeFormat($format)
+    {
+        $replacements = [
+            'd' => '',
+            'D' => '',
+            'j' => '',
+            'l' => '',
+            'N' => '',
+            'S' => '',
+            'w' => '',
+            'z' => '',
+            'W' => '',
+            'F' => '',
+            'm' => '',
+            'M' => '',
+            'n' => '',
+            't' => '', // no equivalent
+            'L' => '', // no equivalent
+            'o' => '',
+            'Y' => '',
+            'y' => '',
+            'a' => 'a',
+            'A' => 'A',
+            'B' => '', // no equivalent
+            'g' => 'g',
+            'G' => 'G',
+            'h' => 'h',
+            'H' => 'H',
+            'i' => 'i',
+            's' => 's',
+            'u' => '',
+            'e' => '', // deprecated since version 1.6.0 of moment.js
+            'I' => '', // no equivalent
+            'O' => '', // no equivalent
+            'P' => '', // no equivalent
+            'T' => '', // no equivalent
+            'Z' => '', // no equivalent
+            'c' => '', // no equivalent
+            'r' => '', // no equivalent
+            'U' => '',
+            '-' => '',
+            '/' => '',
+            '.' => ''
+        ];
+        $timeOnly = strtr($format, $replacements);
+        return trim($timeOnly);
     }
 
     /**
@@ -161,8 +212,8 @@ class DateServiceGregorian implements DateServiceInterface
             'o' => 'yyyy',
             'Y' => 'yyyy',
             'y' => 'yy',
-            'a' => 'p',
-            'A' => 'P',
+            'a' => '',
+            'A' => '',
             'B' => '', // no equivalent
             'g' => '',
             'G' => '',
@@ -180,6 +231,7 @@ class DateServiceGregorian implements DateServiceInterface
             'c' => '', // no equivalent
             'r' => '', // no equivalent
             'U' => '',
+            ':' => ''  
         ];
 
         if ($includeTime) {
@@ -189,10 +241,13 @@ class DateServiceGregorian implements DateServiceInterface
             $replacements['H'] = 'hh';
             $replacements['i'] = 'ii';
             $replacements['s'] = 'ss';
+            $replacements['a'] = 'p';
+            $replacements['A'] = 'P';
+            $replacements[':'] = ':';
         }
 
         $momentFormat = strtr($format, $replacements);
-        return trim($momentFormat, ' :');
+        return trim($momentFormat);
     }
 
     /**
