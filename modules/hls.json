@@ -1,0 +1,7 @@
+{
+  "title": "HLS Video Stream",
+  "author": "Spring Signage Ltd",
+  "description": "A module for displaying HLS video streams",
+  "name": "hls",
+  "class": "Xibo\\Widget\\Hls"
+}
