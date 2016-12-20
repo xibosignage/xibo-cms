@@ -38,7 +38,7 @@ class Embedded extends ModuleWidget
     public function add()
     {
         // Required Attributes
-        $this->setDuration($this->getSanitizer()->getInt('duration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
@@ -56,7 +56,7 @@ class Embedded extends ModuleWidget
      */
     public function edit()
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));

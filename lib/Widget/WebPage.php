@@ -42,6 +42,9 @@ class WebPage extends ModuleWidget
 
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new InvalidArgumentException(__('You must enter a duration.'));
+
+        if ($this->getOption('modeid') == null)
+            throw new InvalidArgumentException(__('You must select a mode.'));
     }
 
     /**
@@ -51,7 +54,7 @@ class WebPage extends ModuleWidget
     {
         $this->setOption('xmds', true);
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setDuration($this->getSanitizer()->getInt('duration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
@@ -74,7 +77,7 @@ class WebPage extends ModuleWidget
     {
         $this->setOption('xmds', true);
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setDuration($this->getSanitizer()->getInt('duration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));

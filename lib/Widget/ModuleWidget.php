@@ -529,6 +529,8 @@ abstract class ModuleWidget implements ModuleInterface
                 $this->getLog()->error('Tried to get real duration from a widget without media. widgetId: %d', $this->getWidgetId());
                 // Do nothing - drop out
             }
+        } else if ($this->widget->duration === null && $this->module !== null) {
+            return $this->module->defaultDuration;
         }
 
         return $this->widget->duration;
@@ -573,7 +575,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function edit()
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
 
