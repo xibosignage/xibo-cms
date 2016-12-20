@@ -48,6 +48,7 @@ class LocalVideo extends ModuleWidget
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'aspect'));
+        $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
 
         $this->validate();
 
@@ -65,6 +66,7 @@ class LocalVideo extends ModuleWidget
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'aspect'));
+        $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
 
         $this->validate();
 
