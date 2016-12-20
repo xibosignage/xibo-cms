@@ -35,6 +35,7 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -167,6 +168,9 @@ abstract class ModuleWidget implements ModuleInterface
     /** @var  DisplayGroupFactory */
     protected $displayGroupFactory;
 
+    /** @var  ScheduleFactory */
+    private $scheduleFactory;
+
     /**
      * ModuleWidget constructor.
      * @param Slim $app
@@ -184,8 +188,9 @@ abstract class ModuleWidget implements ModuleInterface
      * @param TransitionFactory $transitionFactory
      * @param DisplayFactory $displayFactory
      * @param CommandFactory $commandFactory
+     * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory)
+    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory)
     {
         $this->app = $app;
         $this->store = $store;
@@ -203,6 +208,7 @@ abstract class ModuleWidget implements ModuleInterface
         $this->transitionFactory = $transitionFactory;
         $this->displayFactory = $displayFactory;
         $this->commandFactory = $commandFactory;
+        $this->scheduleFactory = $scheduleFactory;
 
         $this->init();
     }
@@ -909,7 +915,7 @@ abstract class ModuleWidget implements ModuleInterface
     public function getMedia()
     {
         $media = $this->mediaFactory->getById($this->getMediaId());
-        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
+        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
         return $media;
     }
 
