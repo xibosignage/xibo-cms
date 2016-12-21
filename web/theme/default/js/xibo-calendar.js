@@ -163,26 +163,14 @@ var setupScheduleForm = function(dialog) {
     $('#campaignId', dialog).selectpicker();
     $('select[name="displayGroupIds[]"]', dialog).selectpicker();
     $('select[name="recurrenceRepeatsOn[]"]', dialog).selectpicker();
-
-    // Bind to the event type dropdown
-    $("select#eventTypeId").on("change", function() {
-        postProcessLayoutList($(this).val());
-    });
-    postProcessLayoutList($("select#eventTypeId").val());
-
-    // Bind to the dayParting dropdown
-    $("select#dayPartId").on("change", function() {
-        postProcessDaypartList($(this).val());
-    });
-    postProcessDaypartList($("select#dayPartId").val());
     
     // Hide/Show form elements according to the selected options
-    var elementsArray = ['recurrenceType', 'eventTypeId', 'dayPartId'];
-    for (var i = 0; i < elementsArray.length; i++) {
-        
-        $("#" + elementsArray[i]).ready( processDisplayFormElements($('#' + elementsArray[i])) );
-        $("#" + elementsArray[i]).on("change", function(){ processDisplayFormElements($(this)) });
-    }
+    // Initial state of the components
+    processScheduleFormElements($("#recurrenceType"));
+    processScheduleFormElements($("#eventTypeId"));
+
+    // Events on change
+    $("#recurrenceType, #eventTypeId, #dayPartId").on("change", function() { processScheduleFormElements($(this)) });
 
     // Bind to the dialog submit
     $("#scheduleAddForm, #scheduleEditForm, #scheduleDeleteForm").submit(function(e) {
@@ -209,17 +197,20 @@ var setupScheduleForm = function(dialog) {
     });
 };
 
-var processDisplayFormElements = function(el) {
+/**
+ * Process schedule form elements for the purpose of showing/hiding them
+ * @param el jQuery element
+ */
+var processScheduleFormElements = function(el) {
     
     var fieldVal = el.val();
     
     switch (el.attr('id')) {
         case 'recurrenceType':
-        
-            console.log('Process: recurrenceType');
+            //console.log('Process: recurrenceType, val = ' + fieldVal);
 
             var repeatControlGroupDisplay = (fieldVal == "") ? "none" : "block";
-            var repeatControlGroupWeekDisplay = (fieldVal == "Week") ? "none" : "block";
+            var repeatControlGroupWeekDisplay = (fieldVal != "Week") ? "none" : "block";
 
             $(".repeat-control-group").css('display', repeatControlGroupDisplay);
             $(".repeat-weekly-control-group").css('display', repeatControlGroupWeekDisplay);
@@ -227,7 +218,7 @@ var processDisplayFormElements = function(el) {
             break;
         
         case 'eventTypeId':
-            console.log('Process: eventTypeId');
+            //console.log('Process: eventTypeId, val = ' + fieldVal);
             
             var layoutControlDisplay = (fieldVal == "2") ? "none" : "block";
             var endTimeControlDisplay = (fieldVal == "2") ? "none" : "block";
@@ -240,79 +231,46 @@ var processDisplayFormElements = function(el) {
             $(".starttime-control").css('display', startTimeControlDisplay);
             $(".day-part-control").css('display', dayPartControlDisplay);
             $(".command-control").css('display', commandControlDisplay);
+
+            // Depending on the event type selected we either want to filter in or filter out the
+            // campaigns.
+            $('#campaignId').parent().find(".bootstrap-select li").each(function() {
+                if (fieldVal == 1) {
+                    // Normal layout event - everything is visible.
+                    $(this).css("display", "block");
+                } else if (fieldVal == 3) {
+                    // Overlay layout, hide all campaigns
+                    if ($(this).data("optgroup") == 1)
+                        $(this).css("display", "none");
+                }
+            });
             
             // Call funtion for the daypart ID 
-            processDisplayFormElements($('#dayPartId'));
+            processScheduleFormElements($('#dayPartId'));
             
             break;
         
         case 'dayPartId':
-            console.log('Process: dayPartId');
+            //console.log('Process: dayPartId, val = ' + fieldVal);
             
-            var endTimeControlDisplay = (fieldVal == "1") ? "none" : "block";
+            var endTimeControlDisplay = (fieldVal != 0) ? "none" : "block";
             var startTimeControlDisplay = (fieldVal == "1") ? "none" : "block";
 
             $(".endtime-control").css('display', endTimeControlDisplay);
             $(".starttime-control").css('display', startTimeControlDisplay);
+
+            // Dayparts only show the start control
+            var $startTime = $("input[name=fromDt_Link2]");
+
+            // Should we show the time element
+            if (fieldVal != 0 && fieldVal != 1) {
+                // We need to update the date/time controls to only accept the date element
+                $startTime.hide();
+            } else {
+                $startTime.show();
+            }
                         
             break;
-            
-        default:
-            
-    }
-    
-}
-
-/**
- * Depending on the event type selected we either want to filter in or filter out the
- * campaigns.
- * @param eventTypeId
- */
-function postProcessLayoutList(eventTypeId) {
-
-    $('#campaignId').parent().find(".bootstrap-select li").each(function() {
-
-        if (eventTypeId == 1) {
-            // Normal layout event - everything is visible.
-            $(this).css("display", "block");
-        } else if (eventTypeId == 3) {
-            // Overlay layout, hide all campaigns
-            if ($(this).data("optgroup") == 1)
-                $(this).css("display", "none");
-        }
-    });
-}
-
-function postProcessDaypartList(dayPartId) {
-
-    // The time controls
-    var $start = $("input[name=fromDtLink]");
-    var $end = $("input[name=toDtLink]");
-
-    // Is this a full control?
-    var fullStart = $start.hasClass("dateTimePicker");
-
-    if (dayPartId != 0)
-        $end.closest(".form-group").hide();
-    else
-        $end.closest(".form-group").show();
-
-    if (dayPartId != 0 && dayPartId != 1) {
-        // We need to update the date/time controls to only accept the date element
-        if (fullStart) {
-            // we are not currently a date only control
-            $start.removeClass("dateTimePicker").addClass("datePicker").datetimepicker("remove");
-
-            XiboInitialise("#" + $start.closest("form").prop("id"));
-        }
-    } else {
-        // Datetime controls should be full date/time
-        if (!fullStart) {
-            // we are not currently a full date control
-            $start.removeClass("datePicker").addClass("dateTimePicker").datetimepicker("remove");
-
-            XiboInitialise("#" + $start.closest("form").prop("id"));
-        }
     }
 }
 
