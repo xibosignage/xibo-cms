@@ -30,6 +30,10 @@
     {
       "step": "Add new Campaign Tag link table",
       "action": "CREATE TABLE IF NOT EXISTS `lktagcampaign` (`lkTagCampaignId` int(11) NOT NULL AUTO_INCREMENT,`tagId` int(11) NOT NULL,`campaignId` int(11) NOT NULL,PRIMARY KEY (`lkTagCampaignId`),UNIQUE KEY `tagId` (`tagId`,`campaignId`)) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;"
+    },
+    {
+      "step": "Add display timezone",
+      "action": "ALTER TABLE `display` ADD timeZone VARCHAR(254) NULL;"
     }
   ]
 }

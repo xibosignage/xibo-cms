@@ -176,6 +176,7 @@ CREATE TABLE IF NOT EXISTS `display` (
   `xmrPubKey` text,
   `lastCommandSuccess` tinyint(4) NOT NULL DEFAULT '2',
   `deviceName` VARCHAR(254) DEFAULT NULL,
+  `timeZone` VARCHAR(254) DEFAULT NULL,
   PRIMARY KEY (`displayid`),
   KEY `defaultplaylistid` (`defaultlayoutid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;

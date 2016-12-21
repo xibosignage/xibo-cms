@@ -108,16 +108,22 @@ class Soap4 extends Soap
                 // Create the XML nodes
                 foreach ($settings as $arrayItem) {
 
+                    // Pull out the value or default
+                    $value = (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']);
+
                     // Append Local Time to the root element
-                    if (strtolower($arrayItem['name']) == 'displaytimezone' && $arrayItem['value'] != '') {
+                    if (strtolower($arrayItem['name']) == 'displaytimezone' && (!empty($display->timeZone) || $arrayItem['value'] != '')) {
+
+                        $value = (!empty($display->timeZone)) ? $display->timeZone : $arrayItem['value'];
+
                         // Calculate local time
-                        $dateNow->timezone($arrayItem['value']);
+                        $dateNow->timezone($value);
 
                         // Append Local Time
                         $displayElement->setAttribute('localDate', $this->getDate()->getLocalDate($dateNow));
                     }
 
-                    $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
+                    $node = $return->createElement($arrayItem['name'], $value);
                     $node->setAttribute('type', $arrayItem['type']);
                     $displayElement->appendChild($node);
                 }

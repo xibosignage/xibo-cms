@@ -191,7 +191,8 @@ class DisplayFactory extends BaseFactory
                   `display`.xmrChannel,
                   `display`.xmrPubKey,
                   `display`.lastCommandSuccess, 
-                  `display`.deviceName 
+                  `display`.deviceName , 
+                  `display`.timeZone
               ';
 
         $body = '
