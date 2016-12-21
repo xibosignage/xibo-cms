@@ -8,9 +8,8 @@
 namespace Xibo\Tests\Integration;
 
 use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
-use Xibo\OAuth2\Client\Entity\XiboUserGroup;
 use Xibo\OAuth2\Client\Entity\XiboNotification;
-use Xibo\Helper\Random;
+use Xibo\OAuth2\Client\Entity\XiboUserGroup;
 use Xibo\Tests\LocalWebTestCase;
 
 class NotificationTest extends LocalWebTestCase
