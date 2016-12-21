@@ -313,8 +313,8 @@ var setupScheduleNowForm = function(form) {
         $messageDiv.html($messageDiv.data().template.replace("[fromDt]", fromDt.format(jsDateFormat)).replace("[toDt]", toDt.format(jsDateFormat))).removeClass("hidden");
 
         // Update the final submit fields
-        $("#fromDt").val(fromDt.format("YYYY-MM-DD HH:mm:ss"));
-        $("#toDt").val(toDt.format("YYYY-MM-DD HH:mm:ss"));
+        $("#fromDt").val(fromDt.format(systemDateFormat));
+        $("#toDt").val(toDt.format(systemDateFormat));
     });
 
     // Bind to the H:i:s fields
