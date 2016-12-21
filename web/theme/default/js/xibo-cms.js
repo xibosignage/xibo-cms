@@ -231,26 +231,66 @@ function XiboInitialise(scope) {
     // Date time controls
     $(scope + ' .dateTimePicker').each(function(){
 
-        $(this).datetimepicker({
-            format: bootstrapDateFormat,
-            minuteStep: 5,
-            autoClose: true,
+        // Get the linked field and use it to set the time
+        var preset = $("#" + $(this).data().linkCombined).val();
+
+        // Bind to our 2 input fields using their classes
+        $(this).find(".dateTimePickerDate").datetimepicker({
+            format: bootstrapDateFormatDateOnly,
+            autoclose: true,
             language: language,
+            minView: 2,
             calendarType: calendarType
+        }).change(function() {
+            var value = moment($(this).val(), jsDateFormat);
+            
+            // Get the current master data
+            var preset = $("#" + $(this).data().linkCombined);
+            var updatedMaster = (preset.val() == "") ? moment() : moment(preset.val());
+            
+            if (!updatedMaster.isValid())
+                updatedMaster = moment();
+
+            updatedMaster.year(value.year());
+            updatedMaster.month(value.month());
+            updatedMaster.date(value.date());
+            
+            preset.val(updatedMaster.format(systemDateFormat));
         });
 
-        // Get the linked field and use it to set the time
-        var preset = $(this).closest("form").find("#" + $(this).data().linkField).val();
-
         if (preset != undefined && preset != "")
-            $(this).datetimepicker('update', preset);
+            $(this).find(".dateTimePickerDate").datetimepicker('update', moment(preset).format(systemDateFormat));
+            
+        // Time control
+        $(this).find(".dateTimePickerTime").timepicker({
+            'timeFormat': timeFormat,
+            'step': 15
+        }).change(function() {
+            var value = moment($(this).val(), jsTimeFormat);
+            
+            // Get the current master data
+            var preset = $("#" + $(this).data().linkCombined);
+            
+            var updatedMaster = (preset.val() == "") ? moment() : moment(preset.val());
+            if (!updatedMaster.isValid())
+                updatedMaster = moment();
+                
+            updatedMaster.hour(value.hour());
+            updatedMaster.minute(value.minute());
+            updatedMaster.second(value.second());
+
+            preset.val(updatedMaster.format(systemDateFormat));
+        });
+        
+        if (preset != undefined && preset != "")
+            $(this).find(".dateTimePickerTime").timepicker('setTime', moment(preset).toDate());
     });
 
     $(scope + ' .datePicker').each(function() {
 
         $(this).datetimepicker({
             format: bootstrapDateFormatDateOnly,
-            autoClose: true,
+            autoclose: true,
             language: language,
             calendarType: calendarType,
             minView: 2,
@@ -266,22 +306,21 @@ function XiboInitialise(scope) {
 
     $(scope + ' .timePicker').each(function() {
 
-        $(this).datetimepicker({
-            format: "hh:ii",
-            autoClose: true,
-            language: language,
-            calendarType: calendarType,
-            maxView: 1,
-            startView: 1,
-            todayHighlight: true,
-            minuteStep: 10
+        $(this).timepicker({
+            'timeFormat': timeFormat,
+            'step': 15
+        }).change(function() {
+            var value = moment($(this).val(), jsTimeFormat);
+            
+            $(this).closest("form").find("#" + $(this).data().linkField).val(moment(value).format(jsTimeFormat));
         });
 
         // Get the linked field and use it to set the time
         var preset = $(this).closest("form").find("#" + $(this).data().linkField).val();
 
         if (preset != undefined && preset != "")
-            $(this).datetimepicker('update', preset);
+            $(this).timepicker('setTime', preset);
+    
     });
 
     $(scope + " .selectPicker select.form-control").selectpicker();
