@@ -20,6 +20,8 @@
     {% trans "Save" %}, $("#applicationFormSubmit").submit()
 {% endblock %}
 
+{% block callBack %}copyFromSecretInput{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -37,8 +39,9 @@
                         {{ forms.disabled("clientId", title, client.key, "", "", "disabled") }}
 
                         {% set title %}{% trans "Client Secret" %}{% endset %}
-                        {{ forms.input("clientSecret", title, client.secret, "", "", "disabled") }}
-
+                        {% set buttonTitle %}{% trans "Copy to Clipboard" %}{% endset %}
+                        {{ forms.inputWithButton("clientSecret", title, client.secret, "", "", "readonly='readonly'", "", "copy-button", buttonTitle, "button", "") }}
+                                                    
                         {% set title %}{% trans "Reset Secret?" %}{% endset %}
                         {% set helpText %}{% trans "Reset your client secret to prevent access from any existing application." %}{% endset %}
                         {{ forms.checkbox("resetKeys", title, 0, helpText) }}

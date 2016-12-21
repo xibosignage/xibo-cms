@@ -72,6 +72,7 @@ $(document).ready(function() {
 
                 var calendarOptions = $("#CalendarContainer").data();
                 var url = calendarOptions.eventSource;
+                events = [];
 
                 // Append display groups
                 var displayGroups = $('#DisplayList').serialize();
@@ -94,6 +95,26 @@ $(document).ready(function() {
                             done();
 
                         calendar._render();
+                        
+                        // Hook up any pop-overs (for small events)
+                        $('[data-toggle="popover"]').popover({
+                            trigger: "click",
+                            html: true,
+                            placement: "bottom",
+                            content: function() {
+                                return $(this).html();
+                            }
+                        })
+                        .on('shown.bs.popover', function() {
+                            var source = $(this);
+                            var popover = source.attr("aria-describedby");
+
+                            $("#" + popover + " a").click(function(e) {
+                                e.preventDefault();
+                                XiboFormRender($(this));
+                                source.popover("hide");
+                            });
+                        });
 
                         $('#calendar-progress').removeClass('fa fa-cog fa-spin');
                     })
@@ -119,26 +140,6 @@ $(document).ready(function() {
 
                 $('.btn-group button').removeClass('active');
                 $('button[data-calendar-view="' + view + '"]').addClass('active');
-
-                // Hook up any pop-overs (for small events)
-                $('[data-toggle="popover"]').popover({
-                    trigger: "click",
-                    html: true,
-                    placement: "bottom",
-                    content: function() {
-                        return $(this).html();
-                    }
-                })
-                .on('shown.bs.popover', function() {
-                    var source = $(this);
-                    var popover = source.attr("aria-describedby");
-
-                    $("#" + popover + " a").click(function(e) {
-                        e.preventDefault();
-                        XiboFormRender($(this));
-                        source.popover("hide");
-                    });
-                });
             },
             language: calendarLanguage
         };

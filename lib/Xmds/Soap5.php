@@ -98,7 +98,12 @@ class Soap5 extends Soap4
                 $settings = $display->getSettings();
 
                 // Create the XML nodes
-                foreach ($settings as $arrayItem) {
+                foreach ($settings as $arrayItem) {                    
+                    // Disable the CEF browser option on Windows players
+                    if (strtolower($arrayItem['name']) == 'usecefwebbrowser' && ($clientType == 'windows')) {
+                        $arrayItem['value'] = 0;
+                    }
+                  
                     // Override the XMR address if empty
                     if (strtolower($arrayItem['name']) == 'xmrnetworkaddress' && $arrayItem['value'] == '') {
                         $arrayItem['value'] = $this->getConfig()->GetSetting('XMR_PUB_ADDRESS');

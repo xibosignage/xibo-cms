@@ -290,6 +290,9 @@ function XiboInitialise(scope) {
     $(scope + " span.notification-date").each(function() {
         $(this).html(moment($(this).html(), "X").fromNow());
     });
+    
+    // Initialize tags input form
+    $(scope + " input[data-role=tagsInputForm], " + scope + " select[multiple][data-role=tagsInputForm]").tagsinput();
 }
 
 /**
@@ -424,6 +427,60 @@ function dataTableDateFromUnix(data, type, row) {
         return "";
 
     return moment(data, "X").tz(timezone).format(jsDateFormat);
+}
+
+/**
+ * DataTable Create tags
+ * @param data
+ * @returns {*}
+ */
+function dataTableCreateTags(data) {
+
+    var returnData = '';
+
+    if(typeof data.tags != undefined && data.tags != null ) {
+        var arrayOfTags = data.tags.split(',');
+
+        returnData += '<div id="tagDiv">';
+
+        for (var i = 0; i < arrayOfTags.length; i++) {
+            if(arrayOfTags[i] != '')
+                returnData += '<li class="btn btn-sm btn-default btn-tag">' + arrayOfTags[i] + '</span></li>'
+        }
+
+        returnData += '</div>';
+    }
+
+    return returnData;
+}
+
+/**
+ * DataTable Create tags
+ * @param e
+ * @param settings
+ */
+function dataTableCreateTagEvents(e, settings) {
+    
+    var table = $("#" + e.target.id);
+    var form = e.data.form;
+    
+    // Unbind all 
+    table.off('click');
+    
+    table.on("click", ".btn-tag", function(e) {
+        
+        // Get the form tag input text field
+        var inputText = form.find("#tags").val();
+        
+        // See if its the first element, if not add comma
+        var tagText = $(this).text();
+        
+        // Add text to form
+        form.find("#tags").tagsinput('add', tagText, { allowDuplicates: false });
+        
+        // Refresh table to apply the new tag search
+        table.DataTable().ajax.reload();
+    });
 }
 
 /**
@@ -576,11 +633,6 @@ function XiboFormRender(sourceObj, data) {
                         });
                 }
 
-                // Do we have to call any functions due to this success?
-                if (response.callBack != "" && response.callBack != undefined) {
-                    eval(response.callBack)(dialog);
-                }
-
                 $('input[type=text]', dialog).eq(0).focus();
 
                 // Set up dependencies between controls
@@ -668,6 +720,11 @@ function XiboFormRender(sourceObj, data) {
 
                 // Call Xibo Init for this form
                 XiboInitialise("#"+dialog.attr("id"));
+                
+                // Do we have to call any functions due to this success?
+                if (response.callBack != "" && response.callBack != undefined) {
+                    eval(response.callBack)(dialog);
+                }
             }
             else {
                 // Login Form needed?

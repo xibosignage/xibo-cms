@@ -11,6 +11,7 @@
 
 {% extends "form-base.twig" %}
 {% import "forms.twig" as forms %}
+{% import "inline.twig" as inline %}
 
 {% block formTitle %}
     {% set displayGroupName = displayGroup.displayGroup %}
@@ -24,6 +25,8 @@
 {% endblock %}
 
 {% block callBack %}displayGroupMembersFormOpen{% endblock %}
+
+{% block extra %}{{ extra|json_encode|raw }}{% endblock %}
 
 {% block formHtml %}
     <div class="row">
@@ -45,58 +48,59 @@
                     <div class="tab-pane active" id="displayTab">
                         {% set helpText %}{% trans %}Check or un-check the options against each display to control whether they are a member of not.{% endtrans %}{% endset %}
                         {{ forms.message(helpText) }}
-                        <table class="table table-bordered membersTable">
-                            <tr>
-                                <th>{% trans "Display" %}</th>
-                                <th>{% trans "Status" %}</th>
-                                <th>{% trans "Logged In" %}</th>
-                                <th>{% trans "Version" %}</th>
-                                <th>{% trans "Member" %}</th>
-                            </tr>
-                            {% for item in checkboxes if item.type == "display" %}
-                                <tr>
-                                    <td>{{ item.name }}</td>
-                                    <td>
-                                      <span class=
-                                        {% if item.mediaInventoryStatus is same as(1) %}
-                                          "fa fa-check"
-                                        {% elseif item.mediaInventoryStatus is same as(0)%}
-                                          "fa fa-times"
-                                        {% else %}
-                                          "fa fa-cloud-download"
-                                        {% endif %}
-                                      ></span>
-                                    </td>
-                                    <td>
-                                      <span class=
-                                        {% if item.loggedIn is same as(1) %}
-                                          "fa fa-check"
-                                        {% elseif item.loggedIn is same as(0)%}
-                                          "fa fa-times"
-                                        {% endif %}
-                                      ></span>
-                                    </td>
-                                    <td>{{ item.clientType }} {{item.clientVersion }}-{{ item.clientCode }}</td>
-                                    <td><input type="checkbox" data-member-id="{{ item.id }}" data-member-type="display" {{ item.value_checked }}></td>
-                                </tr>
-                            {% endfor %}
-                        </table>
+                        <div class="XiboGrid" id="{{ random() }}" data-grid-name="displayDGView">
+                            <div class="XiboFilter well">
+                                <div class="FilterDiv" id="Filter">
+                                    <form class="form-inline" id="displayForm">
+                                        {% set title %}{% trans "Name" %}{% endset %}
+                                        {{ inline.input("display", title) }}
+                                        
+                                        {% set title %}{% trans "Authorised" %}{% endset %}
+                                        {% set values = [{id: -1, value: ""}, {id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
+                                        {{ inline.dropdown("authorised", "single", title, -1, values, "id", "value") }}
+                                    </form>
+                                </div>
+                            </div>
+                            <table id="displaysMembersTable" class="table table-bordered membersTable">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "ID" %}</th>
+                                        <th>{% trans "Display" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                        <th>{% trans "Logged In" %}</th>
+                                        <th>{% trans "Version" %}</th>
+                                        <th>{% trans "Member" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                     <div class="tab-pane" id="displayGroupTab">
                         {% set helpText %}{% trans %}Check or un-check the options against each display group to control whether they are a member of not.{% endtrans %}{% endset %}
                         {{ forms.message(helpText) }}
-                        <table class="table table-bordered membersTable">
-                            <tr>
-                                <th>{% trans "Display Group" %}</th>
-                                <th>{% trans "Member" %}</th>
-                            </tr>
-                            {% for item in checkboxes if item.type == "displayGroup" %}
-                                <tr>
-                                    <td>{{ item.name }}</td>
-                                    <td><input type="checkbox" data-member-id="{{ item.id }}" data-member-type="displayGroup" {{ item.value_checked }}></td>
-                                </tr>
-                            {% endfor %}
-                        </table>
+                        <div class="XiboGrid" id="{{ random() }}" data-grid-name="displayGroupDGView">
+                            <div class="XiboFilter well">
+                                <div class="FilterDiv" id="Filter">
+                                    <form class="form-inline" id="displayGroupForm">
+                                        {% set title %}{% trans "Name" %}{% endset %}
+                                        {{ inline.input("displayGroup", title) }}
+                                    </form>
+                                </div>
+                            </div>
+                            <table id="displaysGroupsMembersTable" class="table table-bordered membersTable">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "ID" %}</th>
+                                        <th>{% trans "Display Group" %}</th>
+                                        <th>{% trans "Member" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                     <div class="tab-pane" id="treeTab">
                         {% set helpText %}{% trans %}Below is the family tree for this Display Group.{% endtrans %}{% endset %}

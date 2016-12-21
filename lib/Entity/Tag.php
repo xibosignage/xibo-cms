@@ -52,6 +52,12 @@ class Tag implements \JsonSerializable
      * @var int[]
      */
     public $layoutIds = [];
+    
+    /**
+     * @SWG\Property(description="An array of campaignIDs with this Tag")
+     * @var int[]
+     */
+    public $campaignIds = [];    
 
     /**
      * @SWG\Property(description="An array of mediaIds with this Tag")
@@ -61,6 +67,7 @@ class Tag implements \JsonSerializable
 
     private $originalLayoutIds = [];
     private $originalMediaIds = [];
+    private $originalCampaignIds = [];
 
     /**
      * Entity constructor.
@@ -122,6 +129,29 @@ class Tag implements \JsonSerializable
 
         $this->mediaIds = array_diff($this->mediaIds, [$mediaId]);
     }
+    
+    /**
+     * Assign Campaign
+     * @param int $campaignId
+     */
+    public function assignCampaign($campaignId)
+    {
+        $this->load();
+
+        if (!in_array($campaignId, $this->campaignIds))
+            $this->campaignIds[] = $campaignId;
+    }
+
+    /**
+     * Unassign Campaign
+     * @param int $campaignId
+     */
+    public function unassignCampaign($campaignId)
+    {
+        $this->load();
+
+        $this->campaignIds = array_diff($this->campaignIds, [$campaignId]);
+    }
 
     /**
      * Load
@@ -135,6 +165,11 @@ class Tag implements \JsonSerializable
         foreach ($this->getStore()->select('SELECT layoutId FROM `lktaglayout` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
             $this->layoutIds[] = $row['layoutId'];
         }
+        
+        $this->campaignIds = [];
+        foreach ($this->getStore()->select('SELECT campaignId FROM `lktagcampaign` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
+            $this->campaignIds[] = $row['campaignId'];
+        }
 
         $this->mediaIds = [];
         foreach ($this->getStore()->select('SELECT mediaId FROM `lktagmedia` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
@@ -143,8 +178,9 @@ class Tag implements \JsonSerializable
 
         // Set the originals
         $this->originalLayoutIds = $this->layoutIds;
+        $this->originalCampaignIds = $this->campaignIds;
         $this->originalMediaIds = $this->mediaIds;
-
+        
         $this->loaded = true;
     }
 
@@ -159,6 +195,7 @@ class Tag implements \JsonSerializable
 
         // Manage the links to layouts and media
         $this->linkLayouts();
+        $this->linkCampaigns();
         $this->linkMedia();
         $this->removeAssignments();
 
@@ -171,6 +208,7 @@ class Tag implements \JsonSerializable
     public function removeAssignments()
     {
         $this->unlinkLayouts();
+        $this->unlinkCampaigns();
         $this->unlinkMedia();
     }
 
@@ -224,6 +262,57 @@ class Tag implements \JsonSerializable
             $i++;
             $sql .= ',:layoutId' . $i;
             $params['layoutId' . $i] = $layoutId;
+        }
+
+        $sql .= ')';
+
+
+
+        $this->getStore()->update($sql, $params);
+    }
+    
+    
+    /**
+     * Link all assigned campaigns
+     */
+    private function linkCampaigns()
+    {
+        $campaignsToLink = array_diff($this->campaignIds, $this->originalCampaignIds);
+
+        $this->getLog()->debug('Linking %d campaigns to Tag %s', count($campaignsToLink), $this->tag);
+
+        // Campaigns that are in campaignIds but not in originalCampaignIds
+        foreach ($campaignsToLink as $campaignId) {
+            $this->getStore()->update('INSERT INTO `lktagcampaign` (tagId, CampaignId) VALUES (:tagId, :CampaignId) ON DUPLICATE KEY UPDATE campaignId = campaignId', array(
+                'tagId' => $this->tagId,
+                'CampaignId' => $campaignId
+            ));
+        }
+    }
+
+    /**
+     * Unlink all assigned campaigns
+     */
+    private function unlinkCampaigns()
+    {
+        // Campaigns that are in the originalCampaignIds but not in the current campaignIds
+        $campaignsToUnlink = array_diff($this->originalCampaignIds, $this->campaignIds);
+
+        $this->getLog()->debug('Unlinking %d campaigns from Tag %s', count($campaignsToUnlink), $this->tag);
+
+        if (count($campaignsToUnlink) <= 0)
+            return;
+
+        // Unlink any campaigns that are NOT in the collection
+        $params = ['tagId' => $this->tagId];
+
+        $sql = 'DELETE FROM `lktagcampaign` WHERE tagId = :tagId AND CampaignId IN (0';
+
+        $i = 0;
+        foreach ($campaignsToUnlink as $campaignId) {
+            $i++;
+            $sql .= ',:CampaignId' . $i;
+            $params['CampaignId' . $i] = $campaignId;
         }
 
         $sql .= ')';

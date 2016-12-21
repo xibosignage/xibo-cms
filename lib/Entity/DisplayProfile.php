@@ -639,7 +639,7 @@ class DisplayProfile implements \JsonSerializable
                         'type' => 'checkbox',
                         'fieldType' => 'checkbox',
                         'default' => 0,
-                        'helpText' => __('CEF is Chrome Embedded and offers up to date web rendering. If unselected the default Internet Explorer control will be used. The Player software will need to be restarted after making this change.'),
+                        'helpText' => __('[No longer supported in 1.8+ players!] CEF is Chrome Embedded and offers up to date web rendering. If unselected the default Internet Explorer control will be used. The Player software will need to be restarted after making this change.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
