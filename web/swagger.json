@@ -2722,7 +2722,9 @@
                         }
                     }
                 }
-            },
+            }
+        },
+        "/layout/{layoutId}/untag": {
             "delete": {
                 "tags": [
                     "layout"
@@ -2986,7 +2988,7 @@
             }
         },
         "/library/tidy": {
-            "post": {
+            "delete": {
                 "tags": [
                     "library"
                 ],
@@ -3047,10 +3049,10 @@
                 }
             }
         },
-        "/media/{mediaId}/tag": {
+        "/library/{mediaId}/tag": {
             "post": {
                 "tags": [
-                    "media"
+                    "library"
                 ],
                 "summary": "Tag Media",
                 "description": "Tag a Media with one or more tags",
@@ -3082,10 +3084,12 @@
                         }
                     }
                 }
-            },
+            }
+        },
+        "/library/{mediaId}/untag": {
             "delete": {
                 "tags": [
-                    "media"
+                    "library"
                 ],
                 "summary": "Untag Media",
                 "description": "Untag a Media with one or more tags",
