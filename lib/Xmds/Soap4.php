@@ -108,22 +108,7 @@ class Soap4 extends Soap
                 // Create the XML nodes
                 foreach ($settings as $arrayItem) {
 
-                    // Pull out the value or default
-                    $value = (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']);
-
-                    // Append Local Time to the root element
-                    if (strtolower($arrayItem['name']) == 'displaytimezone' && (!empty($display->timeZone) || $arrayItem['value'] != '')) {
-
-                        $value = (!empty($display->timeZone)) ? $display->timeZone : $arrayItem['value'];
-
-                        // Calculate local time
-                        $dateNow->timezone($value);
-
-                        // Append Local Time
-                        $displayElement->setAttribute('localDate', $this->getDate()->getLocalDate($dateNow));
-                    }
-
-                    $node = $return->createElement($arrayItem['name'], $value);
+                    $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
                     $node->setAttribute('type', $arrayItem['type']);
                     $displayElement->appendChild($node);
                 }
@@ -138,6 +123,19 @@ class Soap4 extends Soap
                 $node = $return->createElement($nodeName, $display->screenShotRequested);
                 $node->setAttribute('type', 'checkbox');
                 $displayElement->appendChild($node);
+
+                $nodeName = ($clientType == 'windows') ? 'DisplayTimeZone' : 'displayTimeZone';
+                $node = $return->createElement($nodeName, (!empty($display->timeZone)) ? $display->timeZone : '');
+                $node->setAttribute('type', 'string');
+                $displayElement->appendChild($node);
+
+                if (!empty($display->timeZone)) {
+                    // Calculate local time
+                    $dateNow->timezone($display->timeZone);
+
+                    // Append Local Time
+                    $displayElement->setAttribute('localDate', $this->getDate()->getLocalDate($dateNow));
+                }
 
                 // Send Notification if required
                 $this->alertDisplayUp();
