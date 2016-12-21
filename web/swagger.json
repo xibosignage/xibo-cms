@@ -43,6 +43,20 @@
                         "description": "Filter by Name",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "tags",
+                        "in": "formData",
+                        "description": "Filter by Tags",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "hasLayouts",
+                        "in": "formData",
+                        "description": "Filter by has layouts",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -1228,6 +1242,13 @@
                         "description": "Embed related data, namely displaygroups. A comma separated list of child objects to embed.",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "authorised",
+                        "in": "formData",
+                        "description": "Filter by authorised flag",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -1371,6 +1392,13 @@
                         "description": "The Longitude of this Display",
                         "required": false,
                         "type": "number"
+                    },
+                    {
+                        "name": "timeZone",
+                        "in": "formData",
+                        "description": "The timezone for this display, or empty to use the CMS timezone",
+                        "required": false,
+                        "type": "string"
                     },
                     {
                         "name": "displayProfileId",
@@ -4124,6 +4152,13 @@
                 "operationId": "statsSearch",
                 "parameters": [
                     {
+                        "name": "type",
+                        "in": "formData",
+                        "description": "The type of stat to return. Layout|Media|Widget or All",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "fromDt",
                         "in": "formData",
                         "description": "The start date for the filter. Default = 24 hours ago",
@@ -5160,6 +5195,10 @@
                 "deviceName": {
                     "description": "The Device Name for the device hardware associated with this Display",
                     "type": "string"
+                },
+                "timeZone": {
+                    "description": "The Display Timezone, or empty to use the CMS timezone",
+                    "type": "string"
                 }
             }
         },
@@ -5844,6 +5883,10 @@
                 "enabled": {
                     "description": "A flag indicating whether this resolution is enabled or not",
                     "type": "integer"
+                },
+                "userId": {
+                    "description": "The userId who owns this Resolution",
+                    "type": "integer"
                 }
             }
         },
@@ -5945,6 +5988,13 @@
                 },
                 "layoutIds": {
                     "description": "An array of layoutIDs with this Tag",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "campaignIds": {
+                    "description": "An array of campaignIDs with this Tag",
                     "type": "array",
                     "items": {
                         "type": "integer"
