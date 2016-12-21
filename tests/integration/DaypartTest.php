@@ -32,9 +32,9 @@ class DaypartTest extends LocalWebTestCase
      */
     public function tearDown()
     {
-        // tearDown all layouts that weren't there initially
+        // tearDown all dayparts that weren't there initially
         $finalDayparts = (new XiboDaypart($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        # Loop over any remaining layouts and nuke them
+        # Loop over any remaining dayparts and nuke them
         foreach ($finalDayparts as $daypart) {
             /** @var XiboDaypart $daypart */
             $flag = true;
@@ -93,7 +93,7 @@ class DaypartTest extends LocalWebTestCase
      */
     public function testAddFailure($name, $description, $startTime, $endTime, $exceptionDays,  $exceptionStartTimes, $exceptionEndTimes)
     {
-        # Create daypart with arguments from provideSuccessCases
+        # Create daypart with arguments from provideFailureCases
         $response = $this->client->post('/daypart', [
 			'name' => $name,
 			'description' => $description,
@@ -143,14 +143,14 @@ class DaypartTest extends LocalWebTestCase
     {
         #Create new daypart
         $daypart = (new XiboDaypart($this->getEntityProvider()))->create('phpunit daypart', 'API', '02:00', '06:00', NULL, NULL, NULL);
-        # Change the daypart name, description and start time
+        # Change the daypart name and description
         $name = Random::generateString(8, 'phpunit');
         $description = Random::generateString(8, 'description');
         $this->client->put('/daypart/' . $daypart->dayPartId, [
             'name' => $name,
             'description' => $description,
-            'startTime' => '05:00',
-            'endTime' => '08:00',
+            'startTime' => '02:00',
+            'endTime' => '06:00',
 			'exceptionDays' => $daypart->exceptionDays,
 			'exceptionStartTimes' => $daypart->exceptionStartTimes,
 			'exceptionEndTimes' => $daypart->exceptionEndTimes
