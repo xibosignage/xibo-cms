@@ -68,10 +68,16 @@
                         {% endif %}
                     {% endif %}
 
-                    {% if currentUser.routeViewable("/user") or currentUser.routeViewable("/usergroup") or currentUser.routeViewable("/admin") or currentUser.routeViewable("/application") or currentUser.routeViewable("/module") or currentUser.routeViewable("/transition") %}
+                    {% if currentUser.routeViewable("/user") and (currentUser.isGroupAdmin() or currentUser.isSuperAdmin()) %}
+                        {% set userMenuViewable = true %}
+                    {% else %}
+                        {% set userMenuViewable = false %}
+                    {% endif %}
+
+                    {% if userMenuViewable or currentUser.routeViewable("/usergroup") or currentUser.routeViewable("/admin") or currentUser.routeViewable("/application") or currentUser.routeViewable("/module") or currentUser.routeViewable("/transition") %}
                         <li class="sidebar-title"><a>{% trans "Administration" %}</a></li>
 
-                        {% if currentUser.routeViewable("/user") %}
+                        {% if userMenuViewable %}
                         <li class="sidebar-list"><a href="{{ urlFor("user.view") }}">{% trans "Users" %}</a></li>
                         {% endif %}
 

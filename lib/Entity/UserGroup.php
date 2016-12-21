@@ -130,7 +130,7 @@ class UserGroup
      */
     public function getOwnerId()
     {
-        return 1;
+        return 0;
     }
 
     /**

@@ -89,6 +89,9 @@ class ModuleFactory extends BaseFactory
      */
     protected $commandFactory;
 
+    /** @var  ScheduleFactory */
+    protected $scheduleFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -106,8 +109,9 @@ class ModuleFactory extends BaseFactory
      * @param TransitionFactory $transitionFactory
      * @param DisplayFactory $displayFactory
      * @param CommandFactory $commandFactory
+     * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService, $widgetFactory, $regionFactory, $playlistFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService, $widgetFactory, $regionFactory, $playlistFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
@@ -122,6 +126,7 @@ class ModuleFactory extends BaseFactory
         $this->transitionFactory = $transitionFactory;
         $this->displayFactory = $displayFactory;
         $this->commandFactory = $commandFactory;
+        $this->scheduleFactory = $scheduleFactory;
     }
 
     /**
@@ -156,7 +161,8 @@ class ModuleFactory extends BaseFactory
             $this->dataSetColumnFactory,
             $this->transitionFactory,
             $this->displayFactory,
-            $this->commandFactory
+            $this->commandFactory,
+            $this->scheduleFactory
         );
     }
 
@@ -184,7 +190,8 @@ class ModuleFactory extends BaseFactory
             $this->dataSetColumnFactory,
             $this->transitionFactory,
             $this->displayFactory,
-            $this->commandFactory
+            $this->commandFactory,
+            $this->scheduleFactory
         );
     }
 
@@ -205,7 +212,8 @@ class ModuleFactory extends BaseFactory
             $this->dataSetColumnFactory,
             $this->transitionFactory,
             $this->displayFactory,
-            $this->commandFactory
+            $this->commandFactory,
+            $this->scheduleFactory
         );
     }
 
@@ -225,7 +233,8 @@ class ModuleFactory extends BaseFactory
             $this->dataSetColumnFactory,
             $this->transitionFactory,
             $this->displayFactory,
-            $this->commandFactory
+            $this->commandFactory,
+            $this->scheduleFactory
         );
     }
 
@@ -257,7 +266,8 @@ class ModuleFactory extends BaseFactory
             $this->dataSetColumnFactory,
             $this->transitionFactory,
             $this->displayFactory,
-            $this->commandFactory
+            $this->commandFactory,
+            $this->scheduleFactory
         );
         $object->setWidget($widget);
 

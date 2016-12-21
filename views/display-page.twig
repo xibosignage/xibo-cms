@@ -48,6 +48,7 @@
                                 <th>{% trans "Device Name" %}</th>
                                 <th>{% trans "IP Address" %}</th>
                                 <th>{% trans "Mac Address" %}</th>
+                                <th>{% trans "Timezone" %}</th>
                                 <th>{% trans "Screen shot?" %}</th>
                                 <th>{% trans "Thumbnail" %}</th>
                                 <th>{% trans "Last Command" %}</th>
@@ -134,7 +135,7 @@
                         }
                     },
                     {"data": "licensed", "render": dataTableTickCrossColumn},
-                    {"data": "currentLayout"},
+                    {"data": "currentLayout", "visible": false},
                     {
                         "data": "storageAvailableSpace",
                         "visible": false,
@@ -175,6 +176,7 @@
                     {"data": "deviceName", "visible": false},
                     {"data": "clientAddress", "visible": false},
                     {"data": "macAddress"},
+                    {"data": "timeZone", "visible": false},
                     {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false},
                     {
                         "orderable": false,

@@ -110,14 +110,17 @@ class SAMLAuthentication extends Middleware
             // Inject the POST parameters required by the SAML toolkit
             $_POST = $this->app->request->post();
 
-            $auth = new \OneLogin_Saml2_Auth($this->app->configService->samlSettings);
+            // Pull out the SAML settings
+            $samlSettings = $this->app->configService->samlSettings;
+
+            $auth = new \OneLogin_Saml2_Auth($samlSettings);
             $auth->processResponse();
 
             $errors = $auth->getErrors();
 
             if (!empty($errors)) {
                 throw new \OneLogin_Saml2_Error(
-                    'SAML SSO failed: '.implode(', ', $errors)
+                    'SAML SSO failed: '.implode(', ', $errors) . '. Last Reason: ' . $auth->getLastErrorReason()
                 );
             } else {
                 $samlAttrs = $auth->getAttributes();
@@ -126,9 +129,10 @@ class SAMLAuthentication extends Middleware
                     throw new AccessDeniedException(__('No attributes retrieved from the IdP'));
                 }
 
+                // Convert the SAML Attributes into userData mapped against the workflow mappings.
                 $userData = array();
-                if (isset($this->app->configService->samlSettings['workflow']) && isset($this->app->configService->samlSettings['workflow']['mapping']) ) {
-                    foreach ($this->app->configService->samlSettings['workflow']['mapping'] as $key => $value) {
+                if (isset($samlSettings['workflow']) && isset($samlSettings['workflow']['mapping'])) {
+                    foreach ($samlSettings['workflow']['mapping'] as $key => $value) {
                         if (!empty($value) && isset($samlAttrs[$value]) ) {
                             $userData[$key] = $samlAttrs[$value];
                         }
@@ -139,10 +143,10 @@ class SAMLAuthentication extends Middleware
                     throw new AccessDeniedException(__('No attributes could be mapped'));
                 }
 
-                if (!isset($this->app->configService->samlSettings['workflow']['field_to_identify'])) {
+                if (!isset($samlSettings['workflow']['field_to_identify'])) {
                     $identityField = 'UserName';
                 } else {
-                    $identityField = $this->app->configService->samlSettings['workflow']['field_to_identify'];
+                    $identityField = $samlSettings['workflow']['field_to_identify'];
                 }
 
                 if (!isset($userData[$identityField]) || empty($userData[$identityField])) {
@@ -166,7 +170,7 @@ class SAMLAuthentication extends Middleware
                 }
 
                 if (!isset($user)) {
-                    if (!isset($this->app->configService->samlSettings['workflow']['jit']) || $this->app->configService->samlSettings['workflow']['jit'] == false) {
+                    if (!isset($samlSettings['workflow']['jit']) || $samlSettings['workflow']['jit'] == false) {
                         throw new AccessDeniedException(__('User logged at the IdP but the account does not exist in the CMS and Just-In-Time provisioning is disabled'));
                     } else {
                         // Provision the user
@@ -193,29 +197,51 @@ class SAMLAuthentication extends Middleware
                         $user->setNewPassword($password);
 
                         // Home page
-                        if (isset($this->app->configService->samlSettings['workflow']['homePage'])) {
-                            $user->homePageId = $app->pageFactory->getByName($this->app->configService->samlSettings['workflow']['homePage'])->pageId;
+                        if (isset($samlSettings['workflow']['homePage'])) {
+                            $user->homePageId = $app->pageFactory->getByName($samlSettings['workflow']['homePage'])->pageId;
                         } else {
                             $user->homePageId = $app->pageFactory->getByName('dashboard')->pageId;
                         }
 
                         // Library Quota
-                        if (isset($this->app->configService->samlSettings['workflow']['libraryQuota'])) {
-                            $user->libraryQuota = $this->app->configService->samlSettings['workflow']['libraryQuota'];
+                        if (isset($samlSettings['workflow']['libraryQuota'])) {
+                            $user->libraryQuota = $samlSettings['workflow']['libraryQuota'];
                         } else {
                             $user->libraryQuota = 0;
+                        }
+
+                        // Match references
+                        if (isset($samlSettings['workflow']['ref1']) && isset($userData['ref1'])) {
+                            $user->ref1 = $userData['ref1'];
+                        }
+
+                        if (isset($samlSettings['workflow']['ref2']) && isset($userData['ref2'])) {
+                            $user->ref2 = $userData['ref2'];
+                        }
+
+                        if (isset($samlSettings['workflow']['ref3']) && isset($userData['ref3'])) {
+                            $user->ref3 = $userData['ref3'];
+                        }
+
+                        if (isset($samlSettings['workflow']['ref4']) && isset($userData['ref4'])) {
+                            $user->ref4 = $userData['ref4'];
+                        }
+
+                        if (isset($samlSettings['workflow']['ref5']) && isset($userData['ref5'])) {
+                            $user->ref5 = $userData['ref5'];
                         }
 
                         // Save the user
                         $user->save();
 
                         // Assign the initial group
-                        if (isset($this->app->configService->samlSettings['workflow']['group'])) {
-                            $group = $app->userGroupFactory->getByName($this->app->configService->samlSettings['workflow']['group']);
+                        if (isset($samlSettings['workflow']['group'])) {
+                            $group = $app->userGroupFactory->getByName($samlSettings['workflow']['group']);
                         } else {
                             $group = $app->userGroupFactory->getByName('Users');
                         }
 
+                        /** @var \Xibo\Entity\UserGroup $group */
                         $group->assignUser($user);
                         $group->save(['validate' => false]);
                     }
@@ -320,8 +346,7 @@ class SAMLAuthentication extends Middleware
                 }
                 else {
                     // Store the current route so we can come back to it after login
-                    $app->flash('priorRoute', $resource);
-                    $app->flash('priorRouteParams', $app->environment['slim.request.query_hash']);
+                    $app->flash('priorRoute', $app->request()->getResourceUri());
 
                     $redirectToLogin();
                 }

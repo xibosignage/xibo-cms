@@ -333,10 +333,12 @@
             var eventClass = "event-warning";
 
             if (event.event.dayPartId != 1) {
-            if (event.sameDay) {
-            title = "[" + moment(event.event.fromDt, "X").format("HH:mm") + " - " + moment(event.event.toDt, "X").format("HH:mm") + "] " + event.title;
+            if (event.event.eventTypeId == 2) {
+            title = "[" + moment(event.scheduleEvent.fromDt).format("HH:mm") + "] " + event.title;
+            } else if (event.sameDay) {
+            title = "[" + moment(event.scheduleEvent.fromDt).format("HH:mm") + " - " + moment(event.scheduleEvent.toDt).format("HH:mm") + "] " + event.title;
             } else {
-            title = "[" + moment(event.event.fromDt, "X").format(jsDateFormat) + " - " + moment(event.event.toDt, "X").format(jsDateFormat) + "] " + event.title;
+            title = "[" + moment(event.scheduleEvent.fromDt).format(jsDateFormat) + " - " + moment(event.scheduleEvent.toDt).format(jsDateFormat) + "] " + event.title;
             }
             }
 

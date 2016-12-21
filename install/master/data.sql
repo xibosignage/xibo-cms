@@ -150,19 +150,19 @@ INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (39, 'task', 'Tasks', 1);
 
 
-INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES
-(9, '1080p HD Landscape', 800, 450, 1920, 1080, 2, 1),
-(10, '720p HD Landscape', 800, 450, 1280, 720, 2, 1),
-(11, '1080p HD Portrait', 450, 800, 1080, 1920, 2, 1),
-(12, '720p HD Portrait', 450, 800, 720, 1280, 2, 1),
-(13, '4k cinema', 800, 450, 4096, 2304, 2, 1),
-(14, 'Common PC Monitor 4:3', 800, 600, 1024, 768, 2, 1),
-(15, '4k UHD Landscape', 450, 800, 3840, 2160, 2, 1),
-(16, '4k UHD Portrait', 800, 450, 2160, 3840, 2, 1);
+INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`, `userId`) VALUES
+(9, '1080p HD Landscape', 800, 450, 1920, 1080, 2, 1, 0),
+(10, '720p HD Landscape', 800, 450, 1280, 720, 2, 1, 0),
+(11, '1080p HD Portrait', 450, 800, 1080, 1920, 2, 1, 0),
+(12, '720p HD Portrait', 450, 800, 720, 1280, 2, 1, 0),
+(13, '4k cinema', 800, 450, 4096, 2304, 2, 1, 0),
+(14, 'Common PC Monitor 4:3', 800, 600, 1024, 768, 2, 1, 0),
+(15, '4k UHD Landscape', 450, 800, 3840, 2160, 2, 1, 0),
+(16, '4k UHD Portrait', 800, 450, 2160, 3840, 2, 1, 0);
 
 INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES
-(1, 'MEDIA_DEFAULT', 'private', 'dropdown', 'Media will be created with these settings. If public everyone will be able to view and use this media.', 'private|group|public', 'permissions', 1, 'Media Permissions', '', 20, 'private', 1, 'word'),
-(2, 'LAYOUT_DEFAULT', 'private', 'dropdown', 'New layouts will be created with these settings. If public everyone will be able to view and use this layout.', 'private|group|public', 'permissions', 1, 'Layout Permissions', '', 10, 'private', 1, 'word'),
+(1, 'MEDIA_DEFAULT', 'private', 'dropdown', 'Media will be created with these settings. If public everyone will be able to view and use this media.', 'private|group|group write|public|public write', 'permissions', 1, 'Media Permissions', '', 20, 'private', 1, 'word'),
+(2, 'LAYOUT_DEFAULT', 'private', 'dropdown', 'New layouts will be created with these settings. If public everyone will be able to view and use this layout.', 'private|group|group write|public|public write', 'permissions', 1, 'Layout Permissions', '', 10, 'private', 1, 'word'),
 (3, 'defaultUsertype', 'User', 'dropdown', 'Sets the default user type selected when creating a user.\r\n<br />\r\nWe recommend that this is set to "User"', 'User|Group Admin|Super Admin', 'users', 1, 'Default User Type', '', 10, 'User', 1, 'string'),
 (7, 'userModule', 'module_user_general.php', 'dirselect', 'This sets which user authentication module is currently being used.', NULL, 'users', 0, 'User Module', '', 0, 'module_user_general.php', 0, 'string'),
 (11, 'defaultTimezone', 'Europe/London', 'timezone', 'Set the default timezone for the application', 'Europe/London', 'regional', 1, 'Timezone', '', 20, 'Europe/London', 1, 'string'),
@@ -295,7 +295,7 @@ INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES
 
 INSERT INTO `oauth_scopes` (id, description) VALUES ('all', 'All access'),('mcaas', 'Media Conversion as a Service');
 
-INSERT INTO permission (entityId, groupId, objectId, view, edit, `delete`) VALUES
+INSERT INTO `permission` (entityId, groupId, objectId, view, edit, `delete`) VALUES
   (1, 1, 1, 1, 0, 0),
   (1, 1, 13, 1, 0, 0),
   (1, 1, 4, 1, 0, 0),

@@ -626,7 +626,8 @@ class State extends Middleware
                 $container->displayGroupFactory,
                 $container->regionFactory,
                 $container->dataSetFactory,
-                $container->displayFactory
+                $container->displayFactory,
+                $container->scheduleFactory
             );
         });
 
@@ -709,7 +710,9 @@ class State extends Middleware
                 $container->regionFactory,
                 $container->layoutFactory,
                 $container->displayGroupFactory,
-                $container->widgetAudioFactory
+                $container->widgetAudioFactory,
+                $container->displayFactory,
+                $container->scheduleFactory
             );
         });
 
@@ -1217,7 +1220,8 @@ class State extends Middleware
                 $container->dataSetColumnFactory,
                 $container->transitionFactory,
                 $container->displayFactory,
-                $container->commandFactory
+                $container->commandFactory,
+                $container->scheduleFactory
             );
         });
 

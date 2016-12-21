@@ -252,15 +252,16 @@ class User extends Base
             $user->homePage = __($user->homePage);
 
             // Super admins have some buttons
-            if ($this->getUser()->userTypeId == 1) {
-
+            if ($this->getUser()->checkEditable($user)) {
                 // Edit
                 $user->buttons[] = [
                     'id' => 'user_button_edit',
                     'url' => $this->getApp()->urlFor('user.edit.form', ['id' => $user->userId]),
                     'text' => __('Edit')
                 ];
+            }
 
+            if ($this->getUser()->isSuperAdmin()) {
                 // Delete
                 $user->buttons[] = [
                     'id' => 'user_button_delete',

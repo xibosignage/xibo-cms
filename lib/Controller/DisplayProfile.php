@@ -254,19 +254,12 @@ class DisplayProfile extends Base
             return $a->getId() - $b->getId();
         });
 
-        // Get a list of timezones
-        $timeZones = [];
-        foreach ($this->getDate()->timezoneList() as $key => $value) {
-            $timeZones[] = ['id' => $key, 'value' => $value];
-        }
-
         $this->getState()->template = 'displayprofile-form-edit';
         $this->getState()->setData([
             'displayProfile' => $displayProfile,
             'tabs' => $displayProfile->configTabs,
             'config' => $displayProfile->configDefault,
-            'commands' => array_merge($displayProfile->commands, $unassignedCommands),
-            'timeZones' => $timeZones
+            'commands' => array_merge($displayProfile->commands, $unassignedCommands)
         ]);
     }
 

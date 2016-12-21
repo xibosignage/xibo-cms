@@ -302,6 +302,12 @@ class Display implements \JsonSerializable
     public $deviceName;
 
     /**
+     * @SWG\Property(description="The Display Timezone, or empty to use the CMS timezone")
+     * @var string
+     */
+    public $timeZone;
+
+    /**
      * Commands
      * @var array[Command]
      */
@@ -388,7 +394,7 @@ class Display implements \JsonSerializable
      */
     public function getId()
     {
-        return $this->displayId;
+        return $this->displayGroupId;
     }
 
     /**
@@ -396,7 +402,8 @@ class Display implements \JsonSerializable
      */
     public function getOwnerId()
     {
-        return 1;
+        // No owner
+        return 0;
     }
 
     /**
@@ -414,7 +421,7 @@ class Display implements \JsonSerializable
      */
     public function getCacheKey()
     {
-        return self::getCachePrefix() . $this->getId();
+        return self::getCachePrefix() . $this->displayId;
     }
 
     /**
@@ -645,7 +652,8 @@ class Display implements \JsonSerializable
                     xmrPubKey = :xmrPubKey,
                     `lastCommandSuccess` = :lastCommandSuccess,
                     `version_instructions` = :versionInstructions,
-                    `deviceName` = :deviceName
+                    `deviceName` = :deviceName,
+                    `timeZone` = :timeZone
              WHERE displayid = :displayId
         ', [
             'display' => $this->display,
@@ -683,6 +691,7 @@ class Display implements \JsonSerializable
             'lastCommandSuccess' => $this->lastCommandSuccess,
             'versionInstructions' => $this->versionInstructions,
             'deviceName' => $this->deviceName,
+            'timeZone' => $this->timeZone,
             'displayId' => $this->displayId
         ]);
 

@@ -378,17 +378,6 @@ class DisplayProfile implements \JsonSerializable
                         'groupClass' => NULL
                     ),
                     array(
-                        'name' => 'DisplayTimeZone',
-                        'tabId' => 'general',
-                        'title' => __('Display Timezone'),
-                        'type' => 'string',
-                        'fieldType' => 'timezone',
-                        'default' => '',
-                        'helpText' => __('The timezone for this display, or empty to use the CMS timezone'),
-                        'enabled' => true,
-                        'groupClass' => NULL
-                    ),
-                    array(
                         'name' => 'DownloadStartWindow',
                         'tabId' => 'general',
                         'title' => __('Download Window Start Time'),
@@ -760,17 +749,6 @@ class DisplayProfile implements \JsonSerializable
                         'default' => 300,
                         'helpText' => __('How often should the Player check for new content.'),
                         'validation' => 'numeric',
-                        'enabled' => true,
-                        'groupClass' => NULL
-                    ),
-                    array(
-                        'name' => 'displayTimeZone',
-                        'tabId' => 'general',
-                        'title' => __('Display Timezone'),
-                        'type' => 'string',
-                        'fieldType' => 'timezone',
-                        'default' => '',
-                        'helpText' => __('The timezone for this display, or empty to use the CMS timezone'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),

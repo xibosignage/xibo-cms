@@ -55,7 +55,7 @@ class LogFactory extends BaseFactory
         $params = [];
         $order = ''; $limit = '';
 
-        $select = 'SELECT logId, runNo, logDate, channel, page, function, message, display.display, type';
+        $select = 'SELECT logId, runNo, logDate, channel, page, function, message, display.displayId, display.display, type';
 
         $body = '
               FROM `log`

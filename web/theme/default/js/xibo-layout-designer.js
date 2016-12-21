@@ -48,8 +48,8 @@ $(document).ready(function(){
     layout = $("#layout");
 
     // Read in the values of lockPosition and hideControls
-    lockPosition = $("input[name=lockPosition]")[0].checked;
-    hideControls = $("input[name=hideControls]")[0].checked;
+    lockPosition = ($("input[name=lockPosition]").length > 0) ? $("input[name=lockPosition]")[0].checked : false;
+    hideControls = ($("input[name=hideControls]").length > 0) ? $("input[name=hideControls]")[0].checked : false;
     lowDesignerScale = (layout.attr("designer_scale") < 0.41);
 
     if (lowDesignerScale)

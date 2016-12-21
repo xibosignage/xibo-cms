@@ -70,6 +70,14 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                         {% set title %}{% trans "Longitude" %}{% endset %}
                         {% set helpText %}{% trans "The Longitude of this Display" %}{% endset %}
                         {{ forms.number("longitude", title, display.longitude, helpText) }}
+
+                        {% set attributes = [
+                        { name: "data-live-search", value: "true" },
+                        { name: "data-selected-text-format", value: "count > 4" }
+                        ] %}
+                        {% set title %}{% trans "Timezone" %}{% endset %}
+                        {% set helpText %}{% trans "The timezone for this display, or empty to use the CMS timezone" %}{% endset %}
+                        {{ forms.dropdown("timeZone", "single", title, display.timeZone, [{id:"", value:""}]|merge(timeZones), "id", "value", helpText, "selectPicker", "", "", "", attributes) }}
                     </div>
                     <div class="tab-pane" id="maintenance">
 

@@ -98,25 +98,15 @@ class Soap5 extends Soap4
                 $settings = $display->getSettings();
 
                 // Create the XML nodes
-                foreach ($settings as $arrayItem) {
-                    
+                foreach ($settings as $arrayItem) {                    
                     // Disable the CEF browser option on Windows players
                     if (strtolower($arrayItem['name']) == 'usecefwebbrowser' && ($clientType == 'windows')) {
                         $arrayItem['value'] = 0;
                     }
-
+                  
                     // Override the XMR address if empty
                     if (strtolower($arrayItem['name']) == 'xmrnetworkaddress' && $arrayItem['value'] == '') {
                         $arrayItem['value'] = $this->getConfig()->GetSetting('XMR_PUB_ADDRESS');
-                    }
-
-                    // Append Local Time to the root element
-                    if (strtolower($arrayItem['name']) == 'displaytimezone' && $arrayItem['value'] != '') {
-                        // Calculate local time
-                        $dateNow->timezone($arrayItem['value']);
-
-                        // Append Local Time
-                        $displayElement->setAttribute('localDate', $this->getDate()->getLocalDate($dateNow));
                     }
 
                     $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
@@ -129,6 +119,19 @@ class Soap5 extends Soap4
                 $node = $return->createElement($nodeName, $display->display);
                 $node->setAttribute('type', 'string');
                 $displayElement->appendChild($node);
+
+                $nodeName = ($clientType == 'windows') ? 'DisplayTimeZone' : 'displayTimeZone';
+                $node = $return->createElement($nodeName, (!empty($display->timeZone)) ? $display->timeZone : '');
+                $node->setAttribute('type', 'string');
+                $displayElement->appendChild($node);
+
+                if (!empty($display->timeZone)) {
+                    // Calculate local time
+                    $dateNow->timezone($display->timeZone);
+
+                    // Append Local Time
+                    $displayElement->setAttribute('localDate', $this->getDate()->getLocalDate($dateNow));
+                }
 
                 // Commands
                 $commands = $display->getCommands();

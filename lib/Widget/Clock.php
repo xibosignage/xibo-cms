@@ -55,7 +55,7 @@ class Clock extends ModuleWidget
         // You must also provide a duration (all media items must provide this field)
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setDuration($this->getSanitizer()->getInt('duration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setOption('theme', $this->getSanitizer()->getInt('themeId', 0));
         $this->setOption('clockTypeId', $this->getSanitizer()->getInt('clockTypeId', 1));
         $this->setOption('offset', $this->getSanitizer()->getString('offset', 0));
@@ -77,7 +77,7 @@ class Clock extends ModuleWidget
         // You must also provide a duration (all media items must provide this field)
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setDuration($this->getSanitizer()->getInt('duration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setOption('theme', $this->getSanitizer()->getInt('themeId', 0));
         $this->setOption('clockTypeId', $this->getSanitizer()->getInt('clockTypeId', 1));
         $this->setOption('offset', $this->getSanitizer()->getString('offset', 0));

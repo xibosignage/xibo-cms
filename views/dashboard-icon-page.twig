@@ -47,7 +47,7 @@
             </div>
         {% endif %}
 
-        {% if currentUser.routeViewable("/user") %}
+        {% if currentUser.routeViewable("/user") and (currentUser.isGroupAdmin() or currentUser.isSuperAdmin()) %}
             <div class="dashicons">
                 <a href="{{ urlFor("user.view") }}">
                     <img src="{{ theme.uri("img/dashboard/users.png") }}" class="dash_button" />

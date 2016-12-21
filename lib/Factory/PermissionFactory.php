@@ -136,10 +136,19 @@ class PermissionFactory extends BaseFactory
                 $permissions[] = $this->createForEveryone($userGroupFactory, $entity, $objectId, 1, 0, 0);
                 break;
 
+            case 'public write':
+                $permissions[] = $this->createForEveryone($userGroupFactory, $entity, $objectId, 1, 1, 0);
+                break;
+
             case 'group':
                 foreach ($user->groups as $group) {
-                    $permission = $this->create($group->groupId, $entity, $objectId, 1, 0, 0);
-                    $permission->save();
+                    $this->create($group->groupId, $entity, $objectId, 1, 0, 0)->save();
+                }
+                break;
+
+            case 'group write':
+                foreach ($user->groups as $group) {
+                    $this->create($group->groupId, $entity, $objectId, 1, 1, 0)->save();
                 }
                 break;
 
