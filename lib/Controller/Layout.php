@@ -1037,7 +1037,7 @@ class Layout extends Base
 
     /**
      * @SWG\Delete(
-     *  path="/layout/{layoutId}/tag",
+     *  path="/layout/{layoutId}/untag",
      *  operationId="layoutUntag",
      *  tags={"layout"},
      *  summary="Untag Layout",
@@ -1080,7 +1080,7 @@ class Layout extends Base
         $tags = $this->getSanitizer()->getStringArray('tag');
 
         if (count($tags) <= 0)
-            throw new \InvalidArgumentException(__('No tags to assign'));
+            throw new \InvalidArgumentException(__('No tags to unassign'));
 
         foreach ($tags as $tag) {
             $layout->unassignTag($this->tagFactory->tagFromString($tag));

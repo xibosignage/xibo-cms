@@ -19,6 +19,7 @@ class CampaignTest extends LocalWebTestCase
 {
 
     protected $startCampaigns;
+    protected $startLayouts;
 
     /**
      * setUp - called before every test automatically
@@ -28,6 +29,7 @@ class CampaignTest extends LocalWebTestCase
     {  
         parent::setup();
         $this->startCampaigns = (new XiboCampaign($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+        $this->startLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
     }
 
     /**
@@ -54,6 +56,26 @@ class CampaignTest extends LocalWebTestCase
                 }
             }
         }
+        // tearDown all layouts that weren't there initially
+        $finalLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+        # Loop over any remaining layouts and nuke them
+        foreach ($finalLayouts as $layout) {
+            /** @var XiboLayout $layout */
+            $flag = true;
+            foreach ($this->startLayouts as $startLayout) {
+               if ($startLayout->layoutId == $layout->layoutId) {
+                   $flag = false;
+               }
+            }
+            if ($flag) {
+                try {
+                    $layout->delete();
+                } catch (\Exception $e) {
+                    fwrite(STDERR, 'Unable to delete ' . $layout->layoutId . '. E:' . $e->getMessage());
+                }
+            }
+        }
+        
         parent::tearDown();
     }
 
