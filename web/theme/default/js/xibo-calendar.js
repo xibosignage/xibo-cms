@@ -267,37 +267,37 @@ var setupScheduleNowForm = function(form) {
         $(form).find(".schedule-now-seconds-field").hide();
     }
 
-    // Bind to the form submit
-    $("#scheduleNowForm").submit(function(e) {
-        e.preventDefault();
-
+    var evaluateDates = $.debounce(500, function() {
         var hours = $(form).find("#hours").val();
         var minutes = $(form).find("#minutes").val();
         var seconds = $(form).find("#seconds").val();
 
-        var now = moment();
+        //var fromDt = moment().add(-24, "hours");
+        var fromDt = moment();
+        var toDt = moment();
 
-        // Use Hours, Minutes and Seconds to generate a from date to send to the API
-        $(this).append("<input type=\"hidden\" name=\"fromDt\" value=\"" + now.format("YYYY-MM-DD HH:mm:ss") + "\" />");
+        // Use Hours, Minutes and Seconds to generate a from date
+        var $messageDiv = $('.scheduleNowMessage');
 
         if (hours != "")
-            now.add(hours, "hours");
+            toDt.add(hours, "hours");
 
         if (minutes != "")
-            now.add(minutes, "minutes");
+            toDt.add(minutes, "minutes");
 
         if (seconds != "")
-            now.add(seconds, "seconds");
+            toDt.add(seconds, "seconds");
 
-        $(this).append("<input type=\"hidden\" name=\"toDt\" value=\"" + now.format("YYYY-MM-DD HH:mm:ss") + "\" />");
+        // Update the message div
+        $messageDiv.html($messageDiv.data().template.replace("[fromDt]", fromDt.format(jsDateFormat)).replace("[toDt]", toDt.format(jsDateFormat))).removeClass("hidden");
 
-        $.ajax({
-            type: $(this).attr("method"),
-            url: $(this).attr("action"),
-            data: $(this).serialize(),
-            cache: false,
-            dataType: "json",
-            success: XiboSubmitResponse
-        });
+        // Update the final submit fields
+        $("#fromDt").val(fromDt.format("YYYY-MM-DD HH:mm:ss"));
+        $("#toDt").val(toDt.format("YYYY-MM-DD HH:mm:ss"));
     });
+
+    // Bind to the H:i:s fields
+    $(form).find("#hours").on("keyup", evaluateDates);
+    $(form).find("#minutes").on("keyup", evaluateDates);
+    $(form).find("#seconds").on("keyup", evaluateDates);
 };

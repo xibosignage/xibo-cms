@@ -24,8 +24,10 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="scheduleNowForm" class="form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
+            <form id="scheduleNowForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
                 {{ forms.hidden("eventTypeId", "1") }}
+                {{ forms.hidden("fromDt", "") }}
+                {{ forms.hidden("toDt", "") }}
 
                 {# Campaign / Layout list. We want to build two arrays for us to use. #}
                 {% set layoutOptions = [] %}
@@ -51,15 +53,18 @@
 
                 {% set title %}{% trans "Hours" %}{% endset %}
                 {% set helpText %}{% trans "Hours this event should be scheduled for" %}{% endset %}
-                {{ forms.input("hours", title, "", helpText) }}
+                {{ forms.number("hours", title, "", helpText) }}
                 
                 {% set title %}{% trans "Minutes" %}{% endset %}
                 {% set helpText %}{% trans "Minutes this event should be scheduled for" %}{% endset %}
-                {{ forms.input("minutes", title, "", helpText) }}
+                {{ forms.number("minutes", title, "", helpText) }}
                 
                 {% set title %}{% trans "Seconds" %}{% endset %}
                 {% set helpText %}{% trans "Seconds this event should be scheduled for" %}{% endset %}
-                {{ forms.input("seconds", title, "", helpText, "schedule-now-seconds-field") }}
+                {{ forms.number("seconds", title, "", helpText, "schedule-now-seconds-field") }}
+
+                {% set title %}{% trans %}Your event will be scheduled from [fromDt] to [toDt] please check this covers each of your Displays in their respective timezones.{% endtrans %}{% endset %}
+                <div class="alert alert-info scheduleNowMessage hidden" data-template="{{ title }}"></div>
 
                 {% set title %}{% trans "Display" %}{% endset %}
                 {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
