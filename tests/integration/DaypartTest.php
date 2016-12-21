@@ -16,7 +16,7 @@ use Xibo\Tests\LocalWebTestCase;
  * @package Xibo\Tests\Integration
  */
 
-class StatisticsTest extends LocalWebTestCase
+class DaypartTest extends LocalWebTestCase
 {
 	protected $startDayparts;
     /**
