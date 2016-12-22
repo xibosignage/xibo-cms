@@ -199,6 +199,7 @@ class Template extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $this->layoutFactory->countLast();
         $this->getState()->setData($templates);
     }
 

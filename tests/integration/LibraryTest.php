@@ -13,6 +13,41 @@ use Xibo\Tests\LocalWebTestCase;
 
 class LibraryTest extends LocalWebTestCase
 {
+    protected $startMedias;
+    /**
+     * setUp - called before every test automatically
+     */
+    public function setup()
+    {  
+        parent::setup();
+        $this->startMedias = (new XiboLibrary($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+    }
+    /**
+     * tearDown - called after every test automatically
+     */
+    public function tearDown()
+    {
+        // tearDown all media files that weren't there initially
+        $finalMedias = (new XiboLibrary($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+        # Loop over any remaining media files and nuke them
+        foreach ($finalMedias as $media) {
+            /** @var XiboLibrary $media */
+            $flag = true;
+            foreach ($this->startMedias as $startMedia) {
+               if ($startMedia->mediaId == $media->mediaId) {
+                   $flag = false;
+               }
+            }
+            if ($flag) {
+                try {
+                    $media->deleteAssigned();
+                } catch (\Exception $e) {
+                    fwrite(STDERR, 'Unable to delete ' . $media->mediaId . '. E:' . $e->getMessage());
+                }
+            }
+        }
+        parent::tearDown();
+    }
 
     /**
      * List all file in library
@@ -40,6 +75,17 @@ class LibraryTest extends LocalWebTestCase
     }
 
     /**
+     * Add new file to library and replace old one in all layouts
+     */
+    public function testReplace()
+    {
+        # Using XiboLibrary wrapper to upload new file to the CMS, need to provide (name, file location)
+        $media = (new XiboLibrary($this->getEntityProvider()))->create('flowers', PROJECT_ROOT . '/tests/resources/xts-flowers-001.jpg');
+        # Replace the image and update it in all layouts (name, file location, old media id, replace in all layouts flag, delete old revision flag)
+        $media2 = (new XiboLibrary($this->getEntityProvider()))->create('API replace image', PROJECT_ROOT . '/tests/resources/xts-flowers-002.jpg',  $media->mediaId, 1, 1);
+    }
+
+    /**
      * try to add not allowed filetype
      */
     public function testAddEmpty()
@@ -52,37 +98,38 @@ class LibraryTest extends LocalWebTestCase
 
     /**
      * Add tags to media
-     * @group broken 
      */
     public function testAddTag()
     {
         # Using XiboLibrary wrapper to upload new file to the CMS, need to provide (name, file location)
-        $media = (new XiboLibrary($this->getEntityProvider()))->create('flowers', PROJECT_ROOT . '/tests/resources/xts-flowers-001.jpg');
+        $media = (new XiboLibrary($this->getEntityProvider()))->create('flowers 2', PROJECT_ROOT . '/tests/resources/xts-flowers-001.jpg');
 
-        $this->client->post('/media/' . $media->mediaId . '/tag', [
+        $this->client->post('/library/' . $media->mediaId . '/tag', [
             'tag' => ['API']
             ]);
 
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object);
-        $this->assertSame('', $object->tags->tag);
+        //$this->assertSame('API', $object->data->tags[0]['tag']);
+        $media->delete();
     }
 
     /**
      * Delete tags to media
-     * @group broken 
+     * @group broken
      */
     public function testDeleteTag()
     {
         # Using XiboLibrary wrapper to upload new file to the CMS, need to provide (name, file location)
         $media = (new XiboLibrary($this->getEntityProvider()))->create('flowers', PROJECT_ROOT . '/tests/resources/xts-flowers-001.jpg');
-
-        $this->client->delete('/media/' . $media->mediaId . '/tag', [
+        $media->AddTag('API');
+        $this->client->delete('/library/' . $media->mediaId . '/untag', [
             'tag' => ['API']
             ]);
 
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
+        $media->delete();
     }
 
     /**
@@ -125,11 +172,10 @@ class LibraryTest extends LocalWebTestCase
 
     /**
     * Library tidy
-    * @group broken
     */
     public function testTidy()
     {
-        $this->client->post('/library/tidy');
+        $this->client->delete('/library/tidy');
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
 }

@@ -569,8 +569,13 @@ class Schedule extends Base
             throw new AccessDeniedException();
 
         // Fix the event dates for display
-        $schedule->fromDt = $this->getDate()->getLocalDate($schedule->fromDt);
-        $schedule->toDt = $this->getDate()->getLocalDate($schedule->toDt);
+        if ($schedule->eventTypeId == \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+            $schedule->fromDt = '';
+            $schedule->toDt = '';
+        } else {
+            $schedule->fromDt = $this->getDate()->getLocalDate($schedule->fromDt);
+            $schedule->toDt = $this->getDate()->getLocalDate($schedule->toDt);
+        }
 
         if ($schedule->recurrenceRange != null)
             $schedule->recurrenceRange = $this->getDate()->getLocalDate($schedule->recurrenceRange);

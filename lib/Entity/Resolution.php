@@ -85,7 +85,7 @@ class Resolution implements \JsonSerializable
     public $enabled = 1;
 
     /**
-     * @SWG\Property(description="The userId who owns this Resolution"
+     * @SWG\Property(description="The userId who owns this Resolution")
      * @var int
      */
     public $userId;
