@@ -240,7 +240,10 @@
             };
 
             // Callback for the media form
-            function mediaFormCallBack() {
+            function mediaFormCallBack(dialog) {
+                
+                $(dialog).closest(".modal").addClass("modal-big");
+                
                 // prevent filter form submit
                 $("#libraryAssignFilterOptions").find("form").on("submit", function(e) {
                     e.preventDefault();
@@ -263,6 +266,11 @@
                         {"data": "mediaId"},
                         {"data": "name"},
                         {"data": "mediaType"},
+                        {
+                            "name": "mediaId",
+                            "data": null,
+                            "render": {"_": "thumbnail", "display": "thumbnail", "sort": "mediaId"}
+                        },
                         {
                             "sortable": false,
                             "data": function (data, type, row, meta) {

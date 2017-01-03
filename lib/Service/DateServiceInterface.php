@@ -22,6 +22,13 @@ interface DateServiceInterface
      */
     public function getLocalDate($timestamp = NULL, $format = NULL, $timezone = NULL);
 
+
+    /**
+     * Get the default date format
+     * @return string
+     */
+    public function getSystemFormat();
+
     /**
      * Get Date from String
      * @param string $string
@@ -41,6 +48,13 @@ interface DateServiceInterface
      * @return array
      */
     public function timezoneList();
+    
+    /**
+     * Extract only a time format from mask
+     * @param $format
+     * @return string
+     */
+    public function extractTimeFormat($format);
 
     /**
      * Converts a format to moment

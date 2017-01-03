@@ -374,7 +374,8 @@ class State extends Middleware
                 $container->campaignFactory,
                 $container->layoutFactory,
                 $container->permissionFactory,
-                $container->userGroupFactory
+                $container->userGroupFactory,
+                $container->tagFactory
             );
         });
 
@@ -625,7 +626,8 @@ class State extends Middleware
                 $container->displayGroupFactory,
                 $container->regionFactory,
                 $container->dataSetFactory,
-                $container->displayFactory
+                $container->displayFactory,
+                $container->scheduleFactory
             );
         });
 
@@ -708,7 +710,9 @@ class State extends Middleware
                 $container->regionFactory,
                 $container->layoutFactory,
                 $container->displayGroupFactory,
-                $container->widgetAudioFactory
+                $container->widgetAudioFactory,
+                $container->displayFactory,
+                $container->scheduleFactory
             );
         });
 
@@ -1039,7 +1043,8 @@ class State extends Middleware
                 $container->userFactory,
                 $container->permissionFactory,
                 $container->scheduleFactory,
-                $container->displayFactory
+                $container->displayFactory,
+                $container->tagFactory
             );
         });
 
@@ -1215,7 +1220,8 @@ class State extends Middleware
                 $container->dataSetColumnFactory,
                 $container->transitionFactory,
                 $container->displayFactory,
-                $container->commandFactory
+                $container->commandFactory,
+                $container->scheduleFactory
             );
         });
 

@@ -35,6 +35,7 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -167,6 +168,9 @@ abstract class ModuleWidget implements ModuleInterface
     /** @var  DisplayGroupFactory */
     protected $displayGroupFactory;
 
+    /** @var  ScheduleFactory */
+    private $scheduleFactory;
+
     /**
      * ModuleWidget constructor.
      * @param Slim $app
@@ -184,8 +188,9 @@ abstract class ModuleWidget implements ModuleInterface
      * @param TransitionFactory $transitionFactory
      * @param DisplayFactory $displayFactory
      * @param CommandFactory $commandFactory
+     * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory)
+    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory)
     {
         $this->app = $app;
         $this->store = $store;
@@ -203,6 +208,7 @@ abstract class ModuleWidget implements ModuleInterface
         $this->transitionFactory = $transitionFactory;
         $this->displayFactory = $displayFactory;
         $this->commandFactory = $commandFactory;
+        $this->scheduleFactory = $scheduleFactory;
 
         $this->init();
     }
@@ -529,6 +535,8 @@ abstract class ModuleWidget implements ModuleInterface
                 $this->getLog()->error('Tried to get real duration from a widget without media. widgetId: %d', $this->getWidgetId());
                 // Do nothing - drop out
             }
+        } else if ($this->widget->duration === null && $this->module !== null) {
+            return $this->module->defaultDuration;
         }
 
         return $this->widget->duration;
@@ -573,7 +581,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function edit()
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
 
@@ -907,7 +915,7 @@ abstract class ModuleWidget implements ModuleInterface
     public function getMedia()
     {
         $media = $this->mediaFactory->getById($this->getMediaId());
-        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
+        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
         return $media;
     }
 

@@ -21,7 +21,7 @@
 
                             {% set title %}{% trans "Tags" %}{% endset %}
                             {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
-                            {{ inline.input("tags", title, null, helpText) }}
+                            {{ inline.inputWithTags("tags", title, null, helpText) }}
 
                             {% set attributes = [
                             { name: "data-live-search", value: "true" },
@@ -110,7 +110,11 @@
                             return moment().startOf("day").seconds(data.duration).format("H:mm:ss");
                         }
                     },
-                    {"data": "tags", "visible": false},
+                    {
+                        "sortable": false,
+                        "visible": false,
+                        "data": dataTableCreateTags
+                    },
                     {
                         "name": "layoutId",
                         "data": null,
@@ -145,6 +149,7 @@
             });
 
             table.on('draw', dataTableDraw);
+            table.on('draw', { form: $("#layouts").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#layouts_wrapper').find('.col-sm-6').eq(1));
         });

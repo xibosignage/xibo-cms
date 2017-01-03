@@ -378,17 +378,6 @@ class DisplayProfile implements \JsonSerializable
                         'groupClass' => NULL
                     ),
                     array(
-                        'name' => 'DisplayTimeZone',
-                        'tabId' => 'general',
-                        'title' => __('Display Timezone'),
-                        'type' => 'string',
-                        'fieldType' => 'timezone',
-                        'default' => '',
-                        'helpText' => __('The timezone for this display, or empty to use the CMS timezone'),
-                        'enabled' => true,
-                        'groupClass' => NULL
-                    ),
-                    array(
                         'name' => 'DownloadStartWindow',
                         'tabId' => 'general',
                         'title' => __('Download Window Start Time'),
@@ -650,7 +639,7 @@ class DisplayProfile implements \JsonSerializable
                         'type' => 'checkbox',
                         'fieldType' => 'checkbox',
                         'default' => 0,
-                        'helpText' => __('CEF is Chrome Embedded and offers up to date web rendering. If unselected the default Internet Explorer control will be used. The Player software will need to be restarted after making this change.'),
+                        'helpText' => __('[No longer supported in 1.8+ players!] CEF is Chrome Embedded and offers up to date web rendering. If unselected the default Internet Explorer control will be used. The Player software will need to be restarted after making this change.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
@@ -760,17 +749,6 @@ class DisplayProfile implements \JsonSerializable
                         'default' => 300,
                         'helpText' => __('How often should the Player check for new content.'),
                         'validation' => 'numeric',
-                        'enabled' => true,
-                        'groupClass' => NULL
-                    ),
-                    array(
-                        'name' => 'displayTimeZone',
-                        'tabId' => 'general',
-                        'title' => __('Display Timezone'),
-                        'type' => 'string',
-                        'fieldType' => 'timezone',
-                        'default' => '',
-                        'helpText' => __('The timezone for this display, or empty to use the CMS timezone'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),

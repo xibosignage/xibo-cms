@@ -618,6 +618,13 @@ class User implements \JsonSerializable
             $campaign->save();
         }
 
+
+        // Reassign resolutions
+        $this->getStore()->update('UPDATE `resolution` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
         // Load again
         $this->loaded = false;
         $this->load(true);
@@ -630,7 +637,7 @@ class User implements \JsonSerializable
      */
     public function validate()
     {
-        if (!v::alnum('_')->length(1, 50)->validate($this->userName))
+        if (!v::alnum('_')->length(1, 50)->validate($this->userName) && !v::email()->validate($this->userName))
             throw new InvalidArgumentException(__('User name must be between 1 and 50 characters.'), 'userName');
 
         if (!v::string()->notEmpty()->validate($this->password))
@@ -747,6 +754,7 @@ class User implements \JsonSerializable
         }
 
         // Delete user specific entities
+        $this->getStore()->update('DELETE FROM `resolution` WHERE userId = :userId', ['userId' => $this->userId]);
         $this->getStore()->update('DELETE FROM `session` WHERE userId = :userId', ['userId' => $this->userId]);
         $this->getStore()->update('DELETE FROM `user` WHERE userId = :userId', ['userId' => $this->userId]);
     }
@@ -992,7 +1000,7 @@ class User implements \JsonSerializable
      */
     private function checkObjectCompatibility($object)
     {
-        if (!method_exists($object, 'getId') || !method_exists($object, 'getOwnerId'))
+        if (!method_exists($object, 'getId') || !method_exists($object, 'getOwnerId') || !method_exists($object, 'permissionsClass'))
             throw new \InvalidArgumentException(__('Provided Object not under permission management'));
     }
 
@@ -1017,7 +1025,7 @@ class User implements \JsonSerializable
             return $this->permissionFactory->getFullPermissions();
 
         // Get the permissions for that entity
-        $permissions = $this->loadPermissions(get_class($object));
+        $permissions = $this->loadPermissions($object->permissionsClass());
 
         // Check to see if our object is in the list
         if (array_key_exists($object->getId(), $permissions))
@@ -1046,7 +1054,7 @@ class User implements \JsonSerializable
             return true;
 
         // Get the permissions for that entity
-        $permissions = $this->loadPermissions(get_class($object));
+        $permissions = $this->loadPermissions($object->permissionsClass());
 
         // Check to see if our object is in the list
         if (array_key_exists($object->getId(), $permissions))
@@ -1104,7 +1112,7 @@ class User implements \JsonSerializable
             return true;
 
         // Get the permissions for that entity
-        $permissions = $this->loadPermissions(get_class($object));
+        $permissions = $this->loadPermissions($object->permissionsClass());
 
         // Check to see if our object is in the list
         if (array_key_exists($object->getId(), $permissions))

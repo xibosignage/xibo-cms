@@ -35,6 +35,7 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
@@ -118,6 +119,9 @@ class Library extends Base
     /** @var  DisplayFactory */
     private $displayFactory;
 
+    /** @var ScheduleFactory  */
+    private $scheduleFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -142,8 +146,9 @@ class Library extends Base
      * @param RegionFactory $regionFactory
      * @param DataSetFactory $dataSetFactory
      * @param DisplayFactory $displayFactory
+     * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -162,6 +167,7 @@ class Library extends Base
         $this->regionFactory = $regionFactory;
         $this->dataSetFactory = $dataSetFactory;
         $this->displayFactory = $displayFactory;
+        $this->scheduleFactory = $scheduleFactory;
     }
 
     /**
@@ -251,6 +257,22 @@ class Library extends Base
     public function getDataSetFactory()
     {
         return $this->dataSetFactory;
+    }
+
+    /**
+     * @return DisplayFactory
+     */
+    public function getDisplayFactory()
+    {
+        return $this->displayFactory;
+    }
+
+    /**
+     * @return ScheduleFactory
+     */
+    public function getScheduleFactory()
+    {
+        return $this->scheduleFactory;
     }
 
     /**
@@ -440,7 +462,7 @@ class Library extends Base
         if (!$this->getUser()->checkDeleteable($media))
             throw new AccessDeniedException();
 
-        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
+        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
         $media->load(['deleting' => true]);
 
         $this->getState()->template = 'library-form-delete';
@@ -488,7 +510,7 @@ class Library extends Base
             throw new AccessDeniedException();
 
         // Check
-        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
+        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
         $media->load(['deleting' => true]);
 
         if ($media->isUsed() && $this->getSanitizer()->getCheckbox('forceDelete') == 0)
@@ -732,7 +754,7 @@ class Library extends Base
     /**
      * Tidies up the library
      *
-     * @SWG\Post(
+     * @SWG\Delete(
      *  path="/library/tidy",
      *  operationId="libraryTidy",
      *  tags={"library"},
@@ -756,6 +778,7 @@ class Library extends Base
         foreach ($media as $item) {
             /* @var Media $item */
             $i++;
+            $item->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
             $item->load();
             $item->delete();
         }
@@ -1061,7 +1084,7 @@ class Library extends Base
             /* @var \Xibo\Entity\Media $entry */
             // If the media type is a module, then pretend its a generic file
             $this->getLog()->info('Removing Expired File %s', $entry->name);
-            $entry->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
+            $entry->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
             $entry->delete();
         }
     }
@@ -1095,9 +1118,9 @@ class Library extends Base
 
     /**
      * @SWG\Post(
-     *  path="/media/{mediaId}/tag",
+     *  path="/library/{mediaId}/tag",
      *  operationId="mediaTag",
-     *  tags={"media"},
+     *  tags={"library"},
      *  summary="Tag Media",
      *  description="Tag a Media with one or more tags",
      * @SWG\Parameter(
@@ -1156,9 +1179,9 @@ class Library extends Base
 
     /**
      * @SWG\Delete(
-     *  path="/media/{mediaId}/tag",
+     *  path="/library/{mediaId}/untag",
      *  operationId="mediaUntag",
-     *  tags={"media"},
+     *  tags={"library"},
      *  summary="Untag Media",
      *  description="Untag a Media with one or more tags",
      * @SWG\Parameter(
@@ -1199,7 +1222,7 @@ class Library extends Base
         $tags = $this->getSanitizer()->getStringArray('tag');
 
         if (count($tags) <= 0)
-            throw new \InvalidArgumentException(__('No tags to assign'));
+            throw new \InvalidArgumentException(__('No tags to unassign'));
 
         foreach ($tags as $tag) {
             $media->unassignTag($this->tagFactory->tagFromString($tag));

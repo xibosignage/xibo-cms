@@ -80,13 +80,18 @@ class DataSetView extends ModuleWidget
         $columns = $this->dataSetColumnFactory->getByDataSetId($this->getOption('dataSetId'));
         $columnsSelected = [];
         $colIds = explode(',', $this->getOption('columns'));
-
-        foreach ($columns as $column) {
-            /* @var DataSetColumn $column */
-            if (in_array($column->dataSetColumnId, $colIds))
-                $columnsSelected[] = $column;
+        
+        // Cycle elements of the ordered columns Ids array $colIds
+        foreach ($colIds as $colId) {
+            // Cycle data set columns $columns
+            foreach ($columns as $column) {
+                // See if the element on the odered list is the column
+                if ($column->dataSetColumnId == $colId) {
+                    $columnsSelected[] = $column;    
+                }
+            }
         }
-
+        
         return $columnsSelected;
     }
 

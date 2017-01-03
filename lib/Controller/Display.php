@@ -375,6 +375,13 @@ class Display extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="authorised",
+     *      in="formData",
+     *      description="Filter by authorised flag",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -396,7 +403,8 @@ class Display extends Base
             'macAddress' => $this->getSanitizer()->getString('macAddress'),
             'license' => $this->getSanitizer()->getString('hardwareKey'),
             'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
-            'clientVersion' => $this->getSanitizer()->getString('clientVersion')
+            'clientVersion' => $this->getSanitizer()->getString('clientVersion'),
+            'authorised' => $this->getSanitizer()->getInt('authorised'),
         ];
 
         // Get a list of displays
@@ -551,7 +559,8 @@ class Display extends Base
 
             if ($this->getUser()->checkEditable($display)) {
 
-                $display->buttons[] = ['divider' => true];
+                if ($this->getUser()->checkPermissionsModifyable($display))
+                    $display->buttons[] = ['divider' => true];
 
                 // Wake On LAN
                 $display->buttons[] = array(
@@ -607,12 +616,19 @@ class Display extends Base
             }
         }
 
+        // Get a list of timezones
+        $timeZones = [];
+        foreach ($this->getDate()->timezoneList() as $key => $value) {
+            $timeZones[] = ['id' => $key, 'value' => $value];
+        }
+
         $this->getState()->template = 'display-form-edit';
         $this->getState()->setData([
             'display' => $display,
             'layouts' => $this->layoutFactory->query(),
             'profiles' => $this->displayProfileFactory->query(NULL, array('type' => $display->clientType)),
             'settings' => $profile,
+            'timeZones' => $timeZones,
             'help' => $this->getHelp()->link('Display', 'Edit')
         ]);
     }
@@ -766,6 +782,13 @@ class Display extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="timeZone",
+     *      in="formData",
+     *      description="The timezone for this display, or empty to use the CMS timezone",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="displayProfileId",
      *      in="formData",
      *      description="The Display Settings Profile ID",
@@ -820,6 +843,7 @@ class Display extends Base
         $display->cidr = $this->getSanitizer()->getString('cidr');
         $display->latitude = $this->getSanitizer()->getDouble('latitude');
         $display->longitude = $this->getSanitizer()->getDouble('longitude');
+        $display->timeZone = $this->getSanitizer()->getString('timeZone');
         $display->displayProfileId = $this->getSanitizer()->getInt('displayProfileId');
 
         if ($display->auditingUntil !== null)

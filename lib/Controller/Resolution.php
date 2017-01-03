@@ -126,19 +126,23 @@ class Resolution extends Base
 
             $resolution->includeProperty('buttons');
 
-            // Edit Button
-            $resolution->buttons[] = array(
-                'id' => 'resolution_button_edit',
-                'url' => $this->urlFor('resolution.edit.form', ['id' => $resolution->resolutionId]),
-                'text' => __('Edit')
-            );
+            if ($this->getUser()->checkEditable($resolution)) {
+                // Edit Button
+                $resolution->buttons[] = array(
+                    'id' => 'resolution_button_edit',
+                    'url' => $this->urlFor('resolution.edit.form', ['id' => $resolution->resolutionId]),
+                    'text' => __('Edit')
+                );
+            }
 
-            // Delete Button
-            $resolution->buttons[] = array(
-                'id' => 'resolution_button_delete',
-                'url' => $this->urlFor('resolution.delete.form', ['id' => $resolution->resolutionId]),
-                'text' => __('Delete')
-            );
+            if ($this->getUser()->checkDeleteable($resolution)) {
+                // Delete Button
+                $resolution->buttons[] = array(
+                    'id' => 'resolution_button_delete',
+                    'url' => $this->urlFor('resolution.delete.form', ['id' => $resolution->resolutionId]),
+                    'text' => __('Delete')
+                );
+            }
         }
 
         $this->getState()->template = 'grid';
@@ -242,6 +246,7 @@ class Resolution extends Base
             $this->getSanitizer()->getInt('width'),
             $this->getSanitizer()->getInt('height'));
 
+        $resolution->userId = $this->getUser()->userId;
         $resolution->save();
 
         // Return

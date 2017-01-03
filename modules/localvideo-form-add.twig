@@ -80,6 +80,10 @@
                 { scaleTypeId: "stretch", scaleType: stretch }
                 ] %}
                 {{ forms.dropdown("scaleTypeId", "single", title, module.getOption("scaleType"), options, "scaleTypeId", "scaleType", helpText) }}
+
+                {% set title %}{% trans "Mute?" %}{% endset %}
+                {% set helpText %}{% trans "Should the video be muted?" %}{% endset %}
+                {{ forms.checkbox("mute", title, 0, helpText, "mute-fields") }}
             </form>
         </div>
     </div>

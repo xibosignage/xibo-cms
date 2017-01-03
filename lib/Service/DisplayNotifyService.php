@@ -254,8 +254,8 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         $rfLookAhead = $currentDate->copy()->addSeconds($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         $params = [
-            'fromDt' => $rfLookAhead->format('U'),
-            'toDt' => $currentDate->subHour()->format('U'),
+            'fromDt' => $currentDate->subHour()->format('U'),
+            'toDt' => $rfLookAhead->format('U'),
             'activeCampaignId' => $campaignId,
             'activeCampaignId2' => $campaignId,
             'assignedCampaignId' => $campaignId
@@ -392,8 +392,8 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         $rfLookAhead = $currentDate->copy()->addSeconds($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         $params = [
-            'fromDt' => $rfLookAhead->format('U'),
-            'toDt' => $currentDate->subHour()->format('U'),
+            'fromDt' => $currentDate->subHour()->format('U'),
+            'toDt' => $rfLookAhead->format('U'),
             'activeDataSetId' => $dataSetId,
             'activeDataSetId2' => $dataSetId,
             'activeDataSetId3' => $dataSetId
@@ -510,8 +510,8 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         $rfLookAhead = $currentDate->copy()->addSeconds($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         $params = [
-            'fromDt' => $rfLookAhead->format('U'),
-            'toDt' => $currentDate->subHour()->format('U'),
+            'fromDt' => $currentDate->subHour()->format('U'),
+            'toDt' => $rfLookAhead->format('U'),
             'playlistId' => $playlistId
         ];
 

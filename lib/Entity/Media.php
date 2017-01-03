@@ -29,11 +29,13 @@ use Xibo\Exception\DuplicateEntityException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -227,6 +229,12 @@ class Media implements \JsonSerializable
      */
     private $playlistFactory;
 
+    /** @var  DisplayFactory */
+    private $displayFactory;
+
+    /** @var  ScheduleFactory */
+    private $scheduleFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -253,13 +261,17 @@ class Media implements \JsonSerializable
      * @param LayoutFactory $layoutFactory
      * @param WidgetFactory $widgetFactory
      * @param DisplayGroupFactory $displayGroupFactory
+     * @param DisplayFactory $displayFactory
+     * @param ScheduleFactory $scheduleFactory
      * @return $this
      */
-    public function setChildObjectDependencies($layoutFactory, $widgetFactory, $displayGroupFactory)
+    public function setChildObjectDependencies($layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory)
     {
         $this->layoutFactory = $layoutFactory;
         $this->widgetFactory = $widgetFactory;
         $this->displayGroupFactory  = $displayGroupFactory;
+        $this->displayFactory = $displayFactory;
+        $this->scheduleFactory = $scheduleFactory;
         return $this;
     }
 
@@ -609,6 +621,7 @@ class Media implements \JsonSerializable
 
         foreach ($this->displayGroups as $displayGroup) {
             /* @var \Xibo\Entity\DisplayGroup $displayGroup */
+            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $displayGroup->unassignMedia($this);
 
             if ($parentMedia != null)

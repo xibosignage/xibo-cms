@@ -169,6 +169,7 @@ ul#LibraryAssignSortable {
     background-color: #E5F0FF;
     cursor: pointer;
     list-style: none;
+    word-break: break-all;
 }
 
 div.timelineLink {
