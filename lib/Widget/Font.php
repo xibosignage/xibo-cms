@@ -93,6 +93,9 @@ class Font extends ModuleWidget
 
         if ($embed != 0 && $embed != 8)
             throw new \InvalidArgumentException(__('Font file is not embeddable due to its permissions'));
+
+        // Free up the file
+        $font->close();
     }
 
     /**
