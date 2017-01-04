@@ -82,6 +82,7 @@
         $(document).ready(function() {
             table = $("#layouts").DataTable({
                 "language": dataTablesLanguage,
+                "lengthMenu": [10, 25, 50, 100, 250, 500],
                 serverSide: true,
                 stateSave: true,
                 filter: false,
