@@ -609,9 +609,12 @@ class Ticker extends ModuleWidget
                         $tag = str_replace('[', '', $tag);
                         $namespace = str_replace(']', '', $namespace);
 
+                        if ($attribute !== null)
+                            $attribute = str_replace(']', '', $attribute);
+
                         // What are we looking at
-                        $this->getLog()->debug('Namespace: %s, Tag: %s, Attribute: %s', $namespace, $tag, $attribute);
-                        $this->getLog()->debug('Item content: %s', var_export($item, true));
+                        $this->getLog()->debug('Namespace: ' . $namespace . ', Tag: ' . $tag . ', Attribute: ' . $attribute);
+                        //$this->getLog()->debug('Item content: %s', var_export($item, true));
 
                         // Are we an image place holder? [tag|image]
                         if ($namespace == 'image') {
@@ -623,27 +626,27 @@ class Ticker extends ModuleWidget
                                     if (stripos($item->getEnclosureType(), 'image') > -1) {
                                         // Use the link to get the image
                                         $link = $item->getEnclosureUrl();
+
+                                        if (empty($link)) {
+                                            $this->getLog()->debug('No image found for Link|image tag using getEnclosureUrl');
+                                        }
+                                    } else {
+                                        $this->getLog()->debug('No image found for Link|image tag using getEnclosureType');
                                     }
                                     break;
 
                                 default:
                                     // Default behaviour just tries to get the content from the tag provided.
                                     // it uses the attribute as a namespace if one has been provided
-                                    if ($attribute != null) {
-                                        // Use a namespace
-                                        if (array_key_exists($attribute, $item->namespaces)) {
-                                            $tags = $item->getTag($tag);
-                                            $link = $tags[0];
-                                        } else {
-                                            $this->getLog()->info('Looking for image with namespace %s, but that namespace does not exist.', $attribute);
-                                        }
-                                    } else {
-                                        $tags = $item->getTag($tag);
+                                    $tags = $item->getTag($tag, $attribute);
+
+                                    if (count($tags) > 0)
                                         $link = $tags[0];
-                                    }
+                                    else
+                                        $this->getLog()->debug('Tag not found for ' . $tag . ' attribute ' . $attribute);
                             }
 
-                            $this->getLog()->debug('Resolved link: %s', $link);
+                            $this->getLog()->debug('Resolved link: ' . $link);
 
                             // If we have managed to resolve a link, download it and replace the tag with the downloaded
                             // image url
@@ -665,15 +668,14 @@ class Ticker extends ModuleWidget
                             else
                                 $tags = $item->getTag($tag);
 
-                            $this->getLog()->debug('Tags:' . var_export($tags, true));
-
                             // If we find some tags then do the business with them
-                            if ($tags != NULL) {
+                            if ($tags != NULL && count($tags) > 0) {
                                 $replace = $tags[0];
+                            } else {
+                                $this->getLog()->debug('Tag not found for ' . $tag . ' attribute ' . $attribute);
                             }
                         }
                     } else {
-
                         // Use the pool of standard tags
                         switch ($sub) {
                             case '[Name]':
@@ -713,6 +715,29 @@ class Ticker extends ModuleWidget
 
                             case '[Link]':
                                 $replace = $item->getUrl();
+                                break;
+
+                            case '[Image]':
+                                if (stripos($item->getEnclosureType(), 'image') > -1) {
+                                    // Use the link to get the image
+                                    $link = $item->getEnclosureUrl();
+
+                                    if (!(empty($link))) {
+                                        // Grab the image
+                                        $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expires);
+
+                                        // Tag this layout with this file
+                                        $this->assignMedia($file->mediaId);
+
+                                        $replace = ($isPreview)
+                                            ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
+                                            : '<img src="' . $file->storedAs . '" />';
+                                    } else {
+                                        $this->getLog()->debug('No image found for image tag using getEnclosureUrl');
+                                    }
+                                } else {
+                                    $this->getLog()->debug('No image found for image tag using getEnclosureType');
+                                }
                                 break;
                         }
                     }
