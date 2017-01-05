@@ -163,6 +163,7 @@ class Currencies extends YahooBase
         $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
         $this->setOption('noRecordsMessage', $this->getSanitizer()->getString('noRecordsMessage'));
         $this->setOption('dateFormat', $this->getSanitizer()->getString('dateFormat'));
+        $this->setOption('reverseConversion', $this->getSanitizer()->getCheckbox('reverseConversion'));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
@@ -182,6 +183,9 @@ class Currencies extends YahooBase
      */
     protected function getYql()
     {
+        
+        $reverseConversion = ($this->getOption('reverseConversion', 0) == 1);
+
         $items = $this->getOption('items');
         $base = $this->getOption('base');
         
@@ -209,10 +213,12 @@ class Currencies extends YahooBase
             
         // quote each item
         $itemsJoined = array();
+        
         foreach ($items as $key => $item) {
+            $baseItemPair = ( $reverseConversion ) ? ( trim($item) . trim($base) ) : ( trim($base) . trim($item) );
             array_push(
                 $itemsJoined, 
-                ( $useVariation ) ? ('\'' . trim($base) . trim($item) . '=X' . '\'') : ('\'' . trim($base) . trim($item) . '\'')
+                ( $useVariation ) ? ('\'' . $baseItemPair . '=X' . '\'') : ('\'' . $baseItemPair . '\'')
             );
         }
 
@@ -260,6 +266,8 @@ class Currencies extends YahooBase
         // Replace all matches.
         $matches = '';
         preg_match_all('/\[.*?\]/', $source, $matches);
+        
+        $reverseConversion = ($this->getOption('reverseConversion', 0) == 1);
 
         // Substitute
         foreach ($matches[0] as $sub) {
@@ -299,14 +307,17 @@ class Currencies extends YahooBase
                     // Replace the other tags
                     switch ($replace) {
                         case 'NameShort':
-                            // Replace the name to have just the second currency
+                            // Replace the name to have just the second currency (or the first if the currency is reversed)
+                            $replaceBase = ( $reverseConversion ) ? ('/' . $baseCurrency) : ($baseCurrency . '/');
+                            
                             if (isset($data['Name']))
-                                $replacement = str_replace(($baseCurrency . '/'),'',$data['Name']);
+                                $replacement = str_replace($replaceBase,'',$data['Name']);
                                 
                             break;
                             
                         case 'CurrencyFlag':
-                            $currencyCode = str_replace(($baseCurrency . '/'),'',$data['Name']);
+                            $replaceBase = ( $reverseConversion ) ? ('/' . $baseCurrency) : ($baseCurrency . '/');
+                            $currencyCode = str_replace($replaceBase,'',$data['Name']);
                             
                             if (!file_exists(PROJECT_ROOT . '/web/modules/currencies/currency-flags/' . $currencyCode . '.svg')) 
                                 $currencyCode = 'default';
@@ -367,12 +378,6 @@ class Currencies extends YahooBase
                                     $replacement = 'down-arrow';
                                 }
                             }
-                            
-                            break;
-                            
-                        case 'CurrencyUpper':
-                            // Currency in uppercase
-                            $replacement = strtoupper($data['Currency']);
                             
                             break;
                             
