@@ -326,7 +326,19 @@ class Currencies extends YahooBase
                             if (isset($data['Name']))
                                 $replacement = trim(str_replace($replaceBase,'',$data['Name']));
                                     
-                            // If there's a multiplier, add it to the currency name
+                            break;
+                            
+                        case 'Multiplier':
+                            
+                            // Initialize replacement with empty string 
+                            $replacement = '';
+                            
+                            // Get the current currency name/code
+                            $pairName = ( $reverseConversion ) ? ('/' . $baseCurrency) : ($baseCurrency . '/');
+                            
+                            if (isset($data['Name']))
+                                $currencyName = trim(str_replace($pairName,'',$data['Name']));
+                            
                             // Search for the item that relates to the actual currency
                             foreach ($items as $item) {
                                 
@@ -334,15 +346,13 @@ class Currencies extends YahooBase
                                 $itemName = trim(explode('|', $item)[0]);
                                 
                                 // Compare the item name with the actual currency and test if the inputed value has a multiplier flag
-                                if( sizeof(explode('|', $item)) > 1 && strcmp($itemName, $replacement) == 0 ){
+                                if( sizeof(explode('|', $item)) > 1 && strcmp($itemName, $currencyName) == 0 ){
+                                    
                                     // Get the multiplier
-                                    $multiplier = explode('|', $item)[1];
-                                    
-                                    // Set the replacement to be the API value times the multiplier
-                                    $replacement = $multiplier . ' ' . $replacement;
+                                    $replacement = explode('|', $item)[1];
                                 }
-                            }        
-                                    
+                            }
+                            
                             break;
                             
                         case 'CurrencyFlag':
