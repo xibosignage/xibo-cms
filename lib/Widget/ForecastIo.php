@@ -509,9 +509,11 @@ class ForecastIo extends ModuleWidget
             if (stripos($replace, 'time|') > -1) {
                 $timeSplit = explode('|', $replace);
 
+                $this->getLog()->debug('Time Substitution for source time ' . $data['time'] . ' and timezone ' . $timezone . ', format ' . $timeSplit[1]);
+
                 $time = $this->getDate()->getLocalDate($data['time'], $timeSplit[1], $timezone);
 
-                $this->getLog()->info('Time: ' . $time);
+                $this->getLog()->debug('Time Substitution: ' . (string)($time));
 
                 // Pull time out of the array
                 $source = str_replace($sub, $time, $source);
@@ -538,8 +540,11 @@ class ForecastIo extends ModuleWidget
 
         // Do we need to override the language?
         // TODO: I don't like this date fix, the library should really check the file exists?
-        if ($this->getOption('lang', 'en') != 'en' && file_exists(PROJECT_ROOT . '/vendor/jenssegers/date/src/Lang/' . $this->getOption('lang') . '.php')) {
-            $this->getDate()->setLocale($this->getOption('lang'));
+        $lang = $this->getOption('lang', 'en');
+        if ($lang != 'en' && file_exists(PROJECT_ROOT . '/vendor/jenssegers/date/src/Lang/' . $lang . '.php')) {
+            mb_internal_encoding('UTF-8');
+            $this->getLog()->debug('Setting language to: ' . $lang);
+            $this->getDate()->setLocale($lang);
         }
 
         $data = [];
@@ -613,6 +618,7 @@ class ForecastIo extends ModuleWidget
             // Pull it out, and run substitute over it for each day
             // Substitute for every day (i.e. 7 times).
             for ($i = $offset; $i < $stopPosition; $i++) {
+                $this->getLog()->debug('Substitiution for Daily, day ' . $i);
                 $dailySubs .= $this->makeSubstitutions($foreCast['daily']['data'][$i], $dailyTemplate, $foreCast['timezone']);
             }
             // Substitute the completed template
