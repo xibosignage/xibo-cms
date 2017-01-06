@@ -215,7 +215,12 @@ class Currencies extends YahooBase
         $itemsJoined = array();
         
         foreach ($items as $key => $item) {
+            
+            // Remove the multiplier if there's one
+            $item = explode('|', $item)[0];
+            
             $baseItemPair = ( $reverseConversion ) ? ( trim($item) . trim($base) ) : ( trim($base) . trim($item) );
+            
             array_push(
                 $itemsJoined, 
                 ( $useVariation ) ? ('\'' . $baseItemPair . '=X' . '\'') : ('\'' . $baseItemPair . '\'')
@@ -267,6 +272,14 @@ class Currencies extends YahooBase
         $matches = '';
         preg_match_all('/\[.*?\]/', $source, $matches);
         
+        // Get the currencies' items
+        $items = $this->getOption('items');
+        
+        if (strstr($items, ','))
+            $items = explode(',', $items);
+        else
+            $items = [$items];
+        
         $reverseConversion = ($this->getOption('reverseConversion', 0) == 1);
 
         // Substitute
@@ -311,8 +324,25 @@ class Currencies extends YahooBase
                             $replaceBase = ( $reverseConversion ) ? ('/' . $baseCurrency) : ($baseCurrency . '/');
                             
                             if (isset($data['Name']))
-                                $replacement = str_replace($replaceBase,'',$data['Name']);
+                                $replacement = trim(str_replace($replaceBase,'',$data['Name']));
+                                    
+                            // If there's a multiplier, add it to the currency name
+                            // Search for the item that relates to the actual currency
+                            foreach ($items as $item) {
                                 
+                                // Get the item name
+                                $itemName = trim(explode('|', $item)[0]);
+                                
+                                // Compare the item name with the actual currency and test if the inputed value has a multiplier flag
+                                if( sizeof(explode('|', $item)) > 1 && strcmp($itemName, $replacement) == 0 ){
+                                    // Get the multiplier
+                                    $multiplier = explode('|', $item)[1];
+                                    
+                                    // Set the replacement to be the API value times the multiplier
+                                    $replacement = $multiplier . ' ' . $replacement;
+                                }
+                            }        
+                                    
                             break;
                             
                         case 'CurrencyFlag':
@@ -345,6 +375,38 @@ class Currencies extends YahooBase
                                 // Convert the value to percentage and round it
                                 $replacement = round($percentage*100, 2);
                             }    
+                            
+                            break;
+                            
+                        case 'LastTradePriceOnlyValue':
+                        case 'BidValue':
+                        case 'AskValue':
+                            
+                            // Get the converted currency name
+                            $currencyName = ( $reverseConversion ) ? ('/' . $baseCurrency) : ($baseCurrency . '/');
+                            
+                            if (isset($data['Name']))
+                                $currencyName = trim(str_replace($currencyName, '', $data['Name']));
+                            
+                            // Get the field's name and set the replacement as the default value from the API
+                            $fieldName = str_replace('Value', '', $replace);
+                            $replacement = $data[$fieldName];
+                                
+                            // Search for the item that relates to the actual currency
+                            foreach ($items as $item) {
+                                
+                                // Get the item name
+                                $itemName = trim(explode('|', $item)[0]);
+                                
+                                // Compare the item name with the actual currency and test if the inputed value has a multiplier flag
+                                if( sizeof(explode('|', $item)) > 1 && strcmp($itemName, $currencyName) == 0 ){
+                                    // Get the multiplier
+                                    $multiplier = explode('|', $item)[1];
+                                    
+                                    // Set the replacement to be the API value times the multiplier
+                                    $replacement = $data[$fieldName] * (float)$multiplier;
+                                }
+                            }        
                             
                             break;
                             
