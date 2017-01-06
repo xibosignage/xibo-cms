@@ -277,6 +277,10 @@ class Tag implements \JsonSerializable
      */
     private function linkCampaigns()
     {
+        // Didn't exist before 129
+        if (DBVERSION < 129)
+            return;
+
         $campaignsToLink = array_diff($this->campaignIds, $this->originalCampaignIds);
 
         $this->getLog()->debug('Linking %d campaigns to Tag %s', count($campaignsToLink), $this->tag);
@@ -295,6 +299,10 @@ class Tag implements \JsonSerializable
      */
     private function unlinkCampaigns()
     {
+        // Didn't exist before 129
+        if (DBVERSION < 129)
+            return;
+
         // Campaigns that are in the originalCampaignIds but not in the current campaignIds
         $campaignsToUnlink = array_diff($this->originalCampaignIds, $this->campaignIds);
 
