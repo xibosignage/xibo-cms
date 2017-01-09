@@ -790,6 +790,7 @@ CREATE TABLE IF NOT EXISTS `schedule` (
   `dayPartId` int(11) NOT NULL DEFAULT '0',
   `recurrenceRepeatsOn` VARCHAR(14) NULL,
   `lastRecurrenceWatermark` BIGINT(20) NULL,
+  `syncTimezone` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`eventID`),
   KEY `layoutID` (`CampaignID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='High level schedule information' AUTO_INCREMENT=1 ;

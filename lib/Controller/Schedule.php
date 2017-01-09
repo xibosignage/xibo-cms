@@ -427,6 +427,13 @@ class Schedule extends Base
      *      required=false
      *   ),
      *   @SWG\Parameter(
+     *      name="syncTimezone",
+     *      in="formData",
+     *      description="Should this schedule be synced to the resulting Display timezone?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
      *      name="fromDt",
      *      in="formData",
      *      description="The from date for this event.",
@@ -498,6 +505,7 @@ class Schedule extends Base
         $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder', 0);
         $schedule->isPriority = $this->getSanitizer()->getInt('isPriority', 0);
         $schedule->dayPartId = $this->getSanitizer()->getInt('dayPartId', 0);
+        $schedule->syncTimezone = $this->getSanitizer()->getCheckbox('syncTimezone', 0);
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $this->getSanitizer()->getIntArray('recurrenceRepeatsOn');
@@ -569,7 +577,7 @@ class Schedule extends Base
             throw new AccessDeniedException();
 
         // Fix the event dates for display
-        if ($schedule->eventTypeId == \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+        if ($schedule->dayPartId == \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
             $schedule->fromDt = '';
             $schedule->toDt = '';
         } else {
@@ -681,6 +689,13 @@ class Schedule extends Base
      *      required=false
      *   ),
      *   @SWG\Parameter(
+     *      name="syncTimezone",
+     *      in="formData",
+     *      description="Should this schedule be synced to the resulting Display timezone?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
      *      name="fromDt",
      *      in="formData",
      *      description="The from date for this event.",
@@ -749,6 +764,7 @@ class Schedule extends Base
         $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder', $schedule->displayOrder);
         $schedule->isPriority = $this->getSanitizer()->getInt('isPriority', $schedule->isPriority);
         $schedule->dayPartId = $this->getSanitizer()->getInt('dayPartId', $schedule->dayPartId);
+        $schedule->syncTimezone = $this->getSanitizer()->getCheckbox('syncTimezone', 0);
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $this->getSanitizer()->getIntArray('recurrenceRepeatsOn');

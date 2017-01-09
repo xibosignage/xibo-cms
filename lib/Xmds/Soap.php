@@ -740,7 +740,7 @@ class Soap
 
         $output = $cache->get();
 
-        if ($cache->isHit()) {
+        if (false && $cache->isHit()) {
             $this->getLog()->info('Returning Schedule from Cache for display %s. Options %s.', $this->display->display, json_encode($options));
 
             // Log Bandwidth
@@ -795,7 +795,8 @@ class Soap
                     schedule.lastRecurrenceWatermark,
                     schedule.eventId, 
                     schedule.is_priority,
-                    schedule.dayPartId
+                    schedule.dayPartId,
+                    schedule.syncTimezone
             ';
 
             if (!$options['dependentsAsNodes']) {
@@ -916,8 +917,18 @@ class Soap
                     $eventTypeId = $row['eventTypeId'];
                     $layoutId = $row['layoutId'];
                     $commandCode = $row['code'];
-                    $fromDt = $this->getDate()->getLocalDate($scheduleEvent->fromDt);
-                    $toDt = $this->getDate()->getLocalDate($scheduleEvent->toDt);
+
+                    // Handle the from/to date of the events we have been returned (they are all returned with respect to
+                    // the current CMS timezone)
+                    // Does the Display have a timezone?
+                    if (!empty($this->display->timeZone) && $schedule->syncTimezone == 1) {
+                        $fromDt = $this->getDate()->getLocalDate($scheduleEvent->fromDt, null, $this->display->timeZone);
+                        $toDt = $this->getDate()->getLocalDate($scheduleEvent->toDt, null, $this->display->timeZone);
+                    } else {
+                        $fromDt = $this->getDate()->getLocalDate($scheduleEvent->fromDt);
+                        $toDt = $this->getDate()->getLocalDate($scheduleEvent->toDt);
+                    }
+
                     $scheduleId = $row['eventId'];
                     $is_priority = $this->getSanitizer()->int($row['is_priority']);
 

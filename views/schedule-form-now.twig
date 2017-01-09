@@ -28,6 +28,7 @@
                 {{ forms.hidden("eventTypeId", "1") }}
                 {{ forms.hidden("fromDt", "") }}
                 {{ forms.hidden("toDt", "") }}
+                {{ forms.hidden("syncTimezone", "1") }}
 
                 {# Campaign / Layout list. We want to build two arrays for us to use. #}
                 {% set layoutOptions = [] %}
@@ -63,7 +64,7 @@
                 {% set helpText %}{% trans "Seconds this event should be scheduled for" %}{% endset %}
                 {{ forms.number("seconds", title, "", helpText, "schedule-now-seconds-field") }}
 
-                {% set title %}{% trans %}Your event will be scheduled from [fromDt] to [toDt] please check this covers each of your Displays in their respective timezones.{% endtrans %}{% endset %}
+                {% set title %}{% trans %}Your event will be scheduled from [fromDt] to [toDt] in the CMS timezone, please check this covers each of your Displays in their respective timezones.{% endtrans %}{% endset %}
                 <div class="alert alert-info scheduleNowMessage hidden" data-template="{{ title }}"></div>
 
                 {% set title %}{% trans "Display" %}{% endset %}
