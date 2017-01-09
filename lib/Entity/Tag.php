@@ -165,10 +165,12 @@ class Tag implements \JsonSerializable
         foreach ($this->getStore()->select('SELECT layoutId FROM `lktaglayout` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
             $this->layoutIds[] = $row['layoutId'];
         }
-        
-        $this->campaignIds = [];
-        foreach ($this->getStore()->select('SELECT campaignId FROM `lktagcampaign` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
-            $this->campaignIds[] = $row['campaignId'];
+
+        if (DBVERSION >= 129) {
+            $this->campaignIds = [];
+            foreach ($this->getStore()->select('SELECT campaignId FROM `lktagcampaign` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
+                $this->campaignIds[] = $row['campaignId'];
+            }
         }
 
         $this->mediaIds = [];
