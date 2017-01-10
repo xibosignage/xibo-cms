@@ -510,7 +510,7 @@ class Media implements \JsonSerializable
 
             // If the media file is invalid, then force an update (only applies to module files)
             $expires = $this->getOriginalValue('expires');
-            $this->isSaveRequired = ($this->valid == 0 || ($expires > 0 && $expires < time()));
+            $this->isSaveRequired = ($this->isSaveRequired || $this->valid == 0 || ($expires > 0 && $expires < time()));
         }
 
         if ($options['deferred']) {
