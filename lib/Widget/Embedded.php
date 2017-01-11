@@ -30,6 +30,7 @@ class Embedded extends ModuleWidget
     {
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
     }
 
     /**
@@ -99,6 +100,7 @@ class Embedded extends ModuleWidget
         // Include some vendor items
         $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
 
         // Get the Script
         $javaScriptContent .= $this->parseLibraryReferences($isPreview, $this->getRawNode('embedScript', null));
@@ -119,6 +121,7 @@ class Embedded extends ModuleWidget
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   $(document).ready(function() { EmbedInit(); });';
+        $javaScriptContent .= '   $("body").find("img").xiboImageRender(options);';
         $javaScriptContent .= '</script>';
 
         // Do we want to scale?
