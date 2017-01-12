@@ -54,7 +54,7 @@ jQuery.fn.extend({
                 setTimeout(function() {
                         
                         // Try to change source to the original
-                        $self.unbind("error").attr("src", originalSrc).bind("error", handleImageError);
+                        $self.attr("src", $self.data("original-src")).bind("error", handleImageError);
                         
                         // Increase the control var and set it to the element
                         reloadTimes++; 
@@ -64,13 +64,13 @@ jQuery.fn.extend({
         };
         
         // Original image source
-        var originalSrc = $self.attr("src");       
+        $self.data("original-src", $self.attr("src"));      
         
         // Initialise reload times var
         $self.data("reload-times", 0);
 
         // Bind handle image funtion to a error event
-        if( originalSrc != undefined ) {
+        if( $self.data("original-src") != undefined ) {
             $self.bind("error", handleImageError);
         } 
 
