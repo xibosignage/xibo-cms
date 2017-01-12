@@ -32,6 +32,7 @@
                         <thead>
                             <tr>
                                 <th>{% trans "Name" %}</th>
+                                <th>{% trans "Owner" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -55,6 +56,7 @@
             ajax: "{{ urlFor("application.search") }}",
             "columns": [
                 { "data": "name" },
+                { "data": "owner" },
                 {
                     "orderable": false,
                     "data": dataTableButtonsColumn
