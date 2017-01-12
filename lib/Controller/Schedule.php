@@ -569,7 +569,7 @@ class Schedule extends Base
             throw new AccessDeniedException();
 
         // Fix the event dates for display
-        if ($schedule->eventTypeId == \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+        if ($schedule->dayPartId == \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
             $schedule->fromDt = '';
             $schedule->toDt = '';
         } else {
