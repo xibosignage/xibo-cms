@@ -5,6 +5,11 @@
     {
       "step": "Add Sync Timezone flag to Schedule",
       "action": "ALTER TABLE `schedule` ADD syncTimezone TINYINT DEFAULT 0 NOT NULL;"
+    },
+    {
+      "step": "Fix database contraints and indexes",
+      "type": "php",
+      "action": "Xibo\\Upgrade\\FixDatabaseIndexesAndContraints"
     }
   ]
 }

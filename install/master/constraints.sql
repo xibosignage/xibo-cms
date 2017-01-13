@@ -86,6 +86,12 @@ ADD CONSTRAINT `oauth_session_scopes_ibfk_1` FOREIGN KEY (`session_id`) REFERENC
 ADD CONSTRAINT `oauth_session_scopes_ibfk_2` FOREIGN KEY (`scope`) REFERENCES `oauth_scopes` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `oauth_clients`
+--
+ALTER TABLE `oauth_clients`
+  ADD CONSTRAINT oauth_clients_user_UserID_fk FOREIGN KEY (userId) REFERENCES `user` (UserID) ON DELETE CASCADE;
+
+--
 -- Constraints for table `schedule`
 --
 ALTER TABLE `schedule`
