@@ -129,6 +129,13 @@ class Applications extends Base
                     'url' => $this->urlFor('application.edit.form', ['id' => $application->key]),
                     'text' => __('Edit')
                 ];
+
+                // Delete
+                $application->buttons[] = [
+                    'id' => 'application_delete_button',
+                    'url' => $this->urlFor('application.delete.form', ['id' => $application->key]),
+                    'text' => __('Delete')
+                ];
             }
         }
 
@@ -249,6 +256,25 @@ class Applications extends Base
     }
 
     /**
+     * Delete Application Form
+     * @param $clientId
+     */
+    public function deleteForm($clientId)
+    {
+        // Get the client
+        $client = $this->applicationFactory->getById($clientId);
+
+        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
+            throw new AccessDeniedException();
+
+        $this->getState()->template = 'applications-form-delete';
+        $this->getState()->setData([
+            'client' => $client,
+            'help' => $this->getHelp()->link('Services', 'Register')
+        ]);
+    }
+
+    /**
      * Register a new application with OAuth
      */
     public function add()
@@ -340,6 +366,26 @@ class Applications extends Base
             'message' => sprintf(__('Edited %s'), $client->name),
             'data' => $client,
             'id' => $client->key
+        ]);
+    }
+
+    /**
+     * Delete application
+     * @param $clientId
+     */
+    public function delete($clientId)
+    {
+        // Get the client
+        $client = $this->applicationFactory->getById($clientId);
+
+        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
+            throw new AccessDeniedException();
+
+        $client->delete();
+
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Deleted %s'), $client->name)
         ]);
     }
 }

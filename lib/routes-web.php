@@ -270,9 +270,11 @@ $app->get('/application/view', '\Xibo\Controller\Applications:displayPage')->nam
 $app->get('/application/data/activity', '\Xibo\Controller\Applications:viewActivity')->name('application.view.activity');
 $app->get('/application/form/add', '\Xibo\Controller\Applications:addForm')->name('application.add.form');
 $app->get('/application/form/edit/:id', '\Xibo\Controller\Applications:editForm')->name('application.edit.form');
+$app->get('/application/form/delete/:id', '\Xibo\Controller\Applications:deleteForm')->name('application.delete.form');
 $app->get('/application/authorize', '\Xibo\Controller\Applications:authorizeRequest')->name('application.authorize.request');
 $app->post('/application/authorize', '\Xibo\Controller\Applications:authorize')->name('application.authorize');
 $app->put('/application/:id', '\Xibo\Controller\Applications:edit')->name('application.edit');
+$app->delete('/application/:id', '\Xibo\Controller\Applications:delete')->name('application.delete');
 
 //
 // module
