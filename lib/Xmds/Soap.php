@@ -1378,6 +1378,10 @@ class Soap
         if ($statXml == "")
             throw new \SoapFault('Receiver', "Stat XML is empty.");
 
+        // Store an array of parsed stat data for insert
+        $stats = [];
+        $now = $this->getDate()->getLocalDate();
+
         // Load the XML into a DOMDocument
         $document = new \DOMDocument("1.0");
         $document->loadXML($statXml);
@@ -1398,8 +1402,12 @@ class Soap
                 continue;
             }
 
-            $scheduleID = $node->getAttribute('scheduleid');
-            $layoutID = $node->getAttribute('layoutid');
+            $scheduleId = $node->getAttribute('scheduleid');
+
+            if (empty($scheduleId))
+                $scheduleId = 0;
+
+            $layoutId = $node->getAttribute('layoutid');
             
             // Slightly confusing behaviour here to support old players without introducting a different call in 
             // xmds v=5.
@@ -1413,7 +1421,7 @@ class Soap
 
             if ($widgetId > 0) {
                 // Lookup the mediaId
-                $media = $this->mediaFactory->getByLayoutAndWidget($layoutID, $widgetId);
+                $media = $this->mediaFactory->getByLayoutAndWidget($layoutId, $widgetId);
 
                 if (count($media) <= 0) {
                     // Non-media widget
@@ -1428,23 +1436,40 @@ class Soap
             if ($tag == 'null')
                 $tag = null;
 
-            // Write the stat record with the information we have available to us.
-            try {
-                $stat = new Stat($this->getStore(), $this->getLog());
-                $stat->type = $type;
-                $stat->fromDt = $fromdt;
-                $stat->toDt = $todt;
-                $stat->scheduleId = $scheduleID;
-                $stat->displayId = $this->display->displayId;
-                $stat->layoutId = $layoutID;
-                $stat->mediaId = $mediaId;
-                $stat->widgetId = $widgetId;
-                $stat->tag = $tag;
-                $stat->save();
+            // Add this information to an array for batch insert
+            $stats[] = [
+                'type' => $type,
+                'statDate' => $now,
+                'fromDt' => $fromdt,
+                'toDt' => $todt,
+                'scheduleId' => $scheduleId,
+                'displayId' => $this->display->displayId,
+                'layoutId' => $layoutId,
+                'mediaId' => $mediaId,
+                'tag' => $tag,
+                'widgetId' => $widgetId,
+            ];
+        }
+
+        if (count($stats) > 0) {
+            // Insert
+            $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, layoutID, mediaID, Tag, `widgetId`) VALUES ';
+            $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+
+            $sql = $sql . implode(', ', array_fill(1, count($stats), $placeHolders));
+
+            // Flatten the array
+            $data = [];
+            foreach ($stats as $stat) {
+                foreach ($stat as $field) {
+                    $data[] = $field;
+                }
             }
-            catch (\PDOException $e) {
-                $this->getLog()->error('Stat Add failed with error: %s', $e->getMessage());
-            }
+
+            // Insert
+            $this->getStore()->isolated($sql, $data);
+        } else {
+            $this->getLog()->info('0 stats resolved from data package');
         }
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SUBMITSTATS, strlen($statXml));
