@@ -420,6 +420,18 @@ class Soap4 extends Soap
         $this->display->lastCommandSuccess = $this->getSanitizer()->getCheckbox('lastCommandSuccess', $this->display->lastCommandSuccess, $status);
         $this->display->deviceName = $this->getSanitizer()->getString('deviceName', $this->display->deviceName, $status);
 
+        // Timezone
+        $timeZone = $this->getSanitizer()->getString('timeZone', $status);
+
+        if (!empty($timeZone)) {
+            // Validate the provided data and log/ignore if not well formatted
+            if (array_key_exists($timeZone, $this->getDate()->timezoneList())) {
+                $this->display->timeZone = $timeZone;
+            } else {
+                $this->getLog()->info('Ignoring Incorrect timezone string: ' . $timeZone);
+            }
+        }
+
         // Touch the display record
         $this->display->save(Display::$saveOptionsMinimum);
 
