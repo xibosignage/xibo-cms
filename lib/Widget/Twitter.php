@@ -214,7 +214,7 @@ class Twitter extends TwitterBase
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
-        $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage'), 5);
+        $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage', 5));
         $this->setOption('widgetOriginalPadding', $this->getSanitizer()->getInt('widgetOriginalPadding'));
         $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
         $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
