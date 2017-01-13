@@ -57,7 +57,7 @@
     "james-heinrich/getid3": "^1.9",
     "onelogin/php-saml": "^2.10",
     "fguillot/picofeed": "@stable",
-    "xibosignage/xibo-xmr": "0.2",
+    "xibosignage/xibo-xmr": "0.3",
     "tedivm/stash": "^0.14.1",
     "akrabat/rka-slim-controller": "^2.0",
     "phenx/php-font-lib": "^0.4.0",
