@@ -601,6 +601,10 @@ function XiboFormRender(sourceObj, data) {
         data: data,
         success: function(response) {
 
+            // Restore the link to the source object if exists
+            if (typeof sourceObj === "object" || sourceObj instanceof Object)
+                sourceObj.attr("href", lastForm);
+                
             // Was the Call successful
             if (response.success) {
 
@@ -614,10 +618,6 @@ function XiboFormRender(sourceObj, data) {
                 }
 
                 var id = new Date().getTime();
-                
-                // Restore the link to the source object if exists
-                if (typeof sourceObj === "object" || sourceObj instanceof Object)
-                    sourceObj.attr("href", lastForm);
                 
                 // Create the dialog with our parameters
                 var dialog = bootbox.dialog({
