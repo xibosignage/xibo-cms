@@ -308,6 +308,11 @@ class Soap
 
         $this->getLog()->debug(sprintf('FromDT = %s. ToDt = %s', $fromFilter->toRssString(), $toFilter->toRssString()));
 
+        // Add the filter dates to the RF xml document
+        $fileElements->setAttribute('generated', $this->getDate()->getLocalDate());
+        $fileElements->setAttribute('fitlerFrom', $this->getDate()->getLocalDate($fromFilter));
+        $fileElements->setAttribute('fitlerTo', $this->getDate()->getLocalDate($toFilter));
+
         try {
             $dbh = $this->getStore()->getConnection();
 
@@ -765,6 +770,11 @@ class Soap
             $toFilter = $fromFilter->copy()->addHour();
 
         $this->getLog()->debug(sprintf('FromDT = %s. ToDt = %s', $fromFilter->toRssString(), $toFilter->toRssString()));
+
+        // Add the filter dates to the RF xml document
+        $layoutElements->setAttribute('generated', $this->getDate()->getLocalDate());
+        $layoutElements->setAttribute('fitlerFrom', $this->getDate()->getLocalDate($fromFilter));
+        $layoutElements->setAttribute('fitlerTo', $this->getDate()->getLocalDate($toFilter));
 
         try {
             $dbh = $this->getStore()->getConnection();
