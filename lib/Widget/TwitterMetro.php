@@ -186,6 +186,10 @@ class TwitterMetro extends TwitterBase
 
     public function validate()
     {
+        // If overrideColorTemplate is false we have to define a template Id 
+        if($this->getOption('overrideColorTemplate') == 0 && ( $this->getOption('colorTemplateId') == '' || $this->getOption('colorTemplateId') == null) )
+            throw new \InvalidArgumentException(__('Please choose a template'));
+            
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('Please enter a duration'));
 
@@ -243,13 +247,16 @@ class TwitterMetro extends TwitterBase
         $this->setOption('resultContent', $this->getSanitizer()->getString('resultContent'));
         $this->setOption('removeRetweets', $this->getSanitizer()->getCheckbox('removeRetweets'));
         
-        // Convert the colors array to string to be able to save it
-        $stringColor = $this->getSanitizer()->getStringArray('color')[0];
-        for ($i=1; $i < count($this->getSanitizer()->getStringArray('color')); $i++) {
-            if(!empty($this->getSanitizer()->getStringArray('color')[$i]))
-                $stringColor .= "|" . $this->getSanitizer()->getStringArray('color')[$i];
+        if( $this->getOption('overrideColorTemplate') == 1 ){
+            
+            // Convert the colors array to string to be able to save it
+            $stringColor = $this->getSanitizer()->getStringArray('color')[0];
+            for ($i=1; $i < count($this->getSanitizer()->getStringArray('color')); $i++) {
+                if(!empty($this->getSanitizer()->getStringArray('color')[$i]))
+                    $stringColor .= "|" . $this->getSanitizer()->getStringArray('color')[$i];
+            }
+            $this->setOption('templateColours', $stringColor);
         }
-        $this->setOption('templateColours', $stringColor);
     }
 
     /**
@@ -479,7 +486,19 @@ class TwitterMetro extends TwitterBase
                         if (!$this->tweetHasPhoto($tweet)) {
                         
                             // Get the colors array
-                            $colorArray = explode("|", $this->getOption('templateColours'));
+                            if( $this->getOption('overrideColorTemplate') == 0 ) {
+                                
+                                $templates = $this->colorTemplatesAvailable();
+                                
+                                foreach ($templates as $tmplt) {
+                                    if( $tmplt['id'] == $this->getOption('colorTemplateId') ){
+                                        $colorArray = $tmplt['colors'];
+                                    }
+                                }
+                                
+                            } else {
+                                $colorArray = explode("|", $this->getOption('templateColours'));
+                            }
                             
                             // Find a random color
                             $randomNum = rand(0,count($colorArray)-1);
@@ -624,7 +643,19 @@ class TwitterMetro extends TwitterBase
         $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
 
         // Get the colors array
-        $colorArray = explode("|", $this->getOption('templateColours'));
+        if( $this->getOption('overrideColorTemplate') == 0 ) {
+            
+            $templates = $this->colorTemplatesAvailable();
+            
+            foreach ($templates as $tmplt) {
+                if( $tmplt['id'] == $this->getOption('colorTemplateId') ){
+                    $colorArray = $tmplt['colors'];
+                }
+            }
+            
+        } else {
+            $colorArray = explode("|", $this->getOption('templateColours'));
+        }
         
         // Need the cycle plugin?
         if ($this->getOption('effect') != 'none')

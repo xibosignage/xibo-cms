@@ -124,6 +124,9 @@ class Currencies extends YahooBase
 
     public function validate()
     {
+        if($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null) )
+            throw new \InvalidArgumentException(__('Please choose a template'));
+            
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('Please enter a duration'));
     }
@@ -165,17 +168,20 @@ class Currencies extends YahooBase
         $this->setOption('noRecordsMessage', $this->getSanitizer()->getString('noRecordsMessage'));
         $this->setOption('dateFormat', $this->getSanitizer()->getString('dateFormat'));
         $this->setOption('reverseConversion', $this->getSanitizer()->getCheckbox('reverseConversion'));
-        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('durationIsPerPage', $this->getSanitizer()->getCheckbox('durationIsPerPage'));
-        $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
-        $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
-        $this->setOption('maxItemsPerPage', $this->getSanitizer()->getInt('maxItemsPerPage', 4));
-        $this->setRawNode('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', null)));
-        $this->setRawNode('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', null)));
-        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', $this->getSanitizer()->getParam('styleSheet', null)));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        
+        if( $this->getOption('overrideTemplate') == 1 ){
+            $this->setRawNode('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', null)));
+            $this->setRawNode('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', null)));
+            $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', $this->getSanitizer()->getParam('styleSheet', null)));
+            $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
+            $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
+            $this->setOption('maxItemsPerPage', $this->getSanitizer()->getInt('maxItemsPerPage', 4));
+        }
     }
 
     /**
@@ -508,9 +514,35 @@ class Currencies extends YahooBase
             return '';
         }
 
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            
+            $templates = $this->templatesAvailable();
+            
+            foreach ($templates as $tmplt) {
+                if( $tmplt['id'] == $this->getOption('templateId') ){
+                    
+                    $mainTemplate = $tmplt['main'];
+                    $itemTemplate = $tmplt['item'];
+                    $styleSheet = $tmplt['css'];
+                    $widgetOriginalWidth = $tmplt['widgetOriginalWidth'];
+                    $widgetOriginalHeight = $tmplt['widgetOriginalHeight'];
+                    $maxItemsPerPage = $tmplt['maxItemsPerPage'];
+                }
+            }
+            
+        } else {
+            
+            $mainTemplate = $this->getRawNode('mainTemplate');
+            $itemTemplate = $this->getRawNode('itemTemplate');
+            $styleSheet = $this->getRawNode('styleSheet', '');
+            $widgetOriginalWidth = $this->getSanitizer()->int($this->getOption('widgetOriginalWidth'));
+            $widgetOriginalHeight = $this->getSanitizer()->int($this->getOption('widgetOriginalHeight'));
+            $maxItemsPerPage = $this->getSanitizer()->int($this->getOption('maxItemsPerPage'));
+        }
+        
         // Run through each item and substitute with the template
-        $mainTemplate = $this->parseLibraryReferences($isPreview, $this->getRawNode('mainTemplate'));
-        $itemTemplate = $this->parseLibraryReferences($isPreview, $this->getRawNode('itemTemplate'));
+        $mainTemplate = $this->parseLibraryReferences($isPreview, $mainTemplate);
+        $itemTemplate = $this->parseLibraryReferences($isPreview, $itemTemplate);
         
         $renderedItems = [];
         
@@ -531,10 +563,10 @@ class Currencies extends YahooBase
             'originalHeight' => $this->region->height,
             'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
             'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-            'widgetDesignWidth' => $this->getSanitizer()->int($this->getOption('widgetOriginalWidth')),
-            'widgetDesignHeight'=> $this->getSanitizer()->int($this->getOption('widgetOriginalHeight')),
+            'widgetDesignWidth' => $widgetOriginalWidth,
+            'widgetDesignHeight'=> $widgetOriginalHeight,
             'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0), 
-            'maxItemsPerPage' => $this->getSanitizer()->int($this->getOption('maxItemsPerPage'))
+            'maxItemsPerPage' => $maxItemsPerPage
         );
 
         $itemsPerPage = $options['maxItemsPerPage'];
@@ -561,7 +593,7 @@ class Currencies extends YahooBase
         }
         
         // Add the CSS if it isn't empty, and replace the wallpaper
-        $css = $this->makeSubstitutions([], $this->getRawNode('styleSheet', null), '');
+        $css = $this->makeSubstitutions([], $styleSheet, '');
 
         if ($css != '') {
             $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css) . '</style>';

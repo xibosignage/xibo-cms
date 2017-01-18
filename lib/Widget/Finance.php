@@ -124,7 +124,11 @@ class Finance extends YahooBase
     }
 
     public function validate()
-    {
+    {        
+        // If overrideTemplate is false we have to define a template Id 
+        if($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null) )
+            throw new \InvalidArgumentException(__('Please choose a template'));
+                
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('Please enter a duration'));
     }
@@ -158,9 +162,7 @@ class Finance extends YahooBase
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('yql', $this->getSanitizer()->getString('yql'));
         $this->setOption('item', $this->getSanitizer()->getString('item'));
-        $this->setOption('resultIdentifier', $this->getSanitizer()->getString('resultIdentifier'));
         $this->setOption('effect', $this->getSanitizer()->getString('effect'));
         $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
         $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
@@ -170,9 +172,15 @@ class Finance extends YahooBase
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
-        $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
-        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        
+        if( $this->getOption('overrideTemplate') == 1 ){
+            $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
+            $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
+            $this->setOption('yql', $this->getSanitizer()->getString('yql'));
+            $this->setOption('resultIdentifier', $this->getSanitizer()->getString('resultIdentifier'));
+        }
+        
     }
 
     /**
@@ -183,7 +191,27 @@ class Finance extends YahooBase
     {
         // Construct the YQL
         // process items
-        $yql = $this->getOption('yql');
+        
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            
+            // Get YQL and result identifier from the default templates
+            
+            $templates = $this->templatesAvailable();
+            
+            foreach ($templates as $tmplt) {
+                if( $tmplt['id'] == $this->getOption('templateId') ){
+                    $yql = $tmplt['yql'];
+                    $resultIdentifier = $tmplt['resultIdentifier'];
+                }
+            }
+            
+        } else {
+            // Get YQL and result identifier from the override input fields
+            
+            $yql = $this->getOption('yql');
+            $resultIdentifier = $this->getOption('resultIdentifier');
+        }
+        
         $items = $this->getOption('item');
 
         $this->getLog()->debug('Finance module with YQL = . Looking for %s in response', $yql, $items);
@@ -229,7 +257,7 @@ class Finance extends YahooBase
 
         // Pull out the results according to the resultIdentifier
         // If the element to return is an array and we aren't, then box.
-        $results = $data[$this->getOption('resultIdentifier')];
+        $results = $data[$resultIdentifier];
 
         if (array_key_exists(0, $results))
             return $results;
@@ -306,9 +334,30 @@ class Finance extends YahooBase
         if (!$items = $this->getYql()) {
             return '';
         }
-
-        // Run through each item and substitute with the template
-        $template = $this->parseLibraryReferences($isPreview, $this->getRawNode('template'));
+        
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            
+            // Get CSS and HTML from the default templates
+            
+            $templates = $this->templatesAvailable();
+            
+            foreach ($templates as $tmplt) {
+                if( $tmplt['id'] == $this->getOption('templateId') ){
+                    $template = $tmplt['template'];
+                    $css = $tmplt['css'];
+                }
+            }
+            
+        } else {
+            // Get CSS and HTML from the override input fields
+            
+            // Run through each item and substitute with the template
+            $template = $this->parseLibraryReferences($isPreview, $this->getRawNode('template'));    
+            
+            // Get stylesheet
+            $css = $this->getRawNode('styleSheet', null);
+        }
+        
         $renderedItems = [];
 
         foreach ($items as $item) {
@@ -342,7 +391,6 @@ class Finance extends YahooBase
         $headContent = '';
 
         // Add the CSS if it isn't empty
-        $css = $this->getRawNode('styleSheet', null);
         if ($css != '') {
             $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css ) . '</style>';
         }

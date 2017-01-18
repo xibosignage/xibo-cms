@@ -263,6 +263,10 @@ class DataSetView extends ModuleWidget
         $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
         $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        
+        if( $this->getOption('overrideTemplate') == 1 ){
+            $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
+        }
 
         // Order and Filter criteria
         $orderClauses = $this->getSanitizer()->getStringArray('orderClause');
@@ -308,9 +312,6 @@ class DataSetView extends ModuleWidget
         }
 
         $this->setOption('filterClauses', json_encode($filterClauseMapping));
-
-        // Style Sheet
-        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
 
         // Save the widget
         $this->validate();
@@ -362,9 +363,22 @@ class DataSetView extends ModuleWidget
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
-
+    
+        // Get CSS from the original template or from the input field
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            
+            $templates = $this->templatesAvailable();
+            
+            foreach ($templates as $tmplt) {
+                if( $tmplt['id'] == $this->getOption('templateId') )
+                    $styleSheet = $tmplt['css'];
+            }
+        } else {
+                $styleSheet = $this->getRawNode('styleSheet', '');
+        }
+        
         // Get the embedded HTML out of RAW
-        $styleSheet = $this->parseLibraryReferences($isPreview, $this->getRawNode('styleSheet', ''));
+        $styleSheet = $this->parseLibraryReferences($isPreview, $styleSheet);
 
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));

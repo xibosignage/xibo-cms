@@ -313,10 +313,12 @@ class Ticker extends ModuleWidget
             $this->setOption('filterClauses', json_encode($filterClauseMapping));
         }
 
-        // Text Template
-        $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
-        $this->setRawNode('css', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('css', null)));
-
+        if( $this->getOption('overrideTemplate') == 1 ){
+            // Text Template
+            $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
+            $this->setRawNode('css', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('css', null)));
+        }
+        
         // Save the widget
         $this->validate();
         $this->saveWidget();
@@ -380,11 +382,28 @@ class Ticker extends ModuleWidget
         $takeItemsFrom = $this->getOption('takeItemsFrom', 'start');
         $itemsPerPage = $this->getOption('itemsPerPage', 0);
 
-        // Get the text out of RAW
-        $text = $this->parseLibraryReferences($isPreview, $this->getRawNode('template', null));
+        // Get CSS and HTML template from the original template or from the input field
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            
+            $templates = $this->templatesAvailable();
+            
+            foreach ($templates as $tmplt) {
+                if( $tmplt['id'] == $this->getOption('templateId') ){
+                    
+                    $text = $tmplt['template'];
+                    $css = $tmplt['css'];
+                }
+            }
+        } else {
+                $text = $this->getRawNode('template', '');
+                $css = $this->getRawNode('css', '');
+        }
+        
+        // Parse library references on the template
+        $text = $this->parseLibraryReferences($isPreview, $text);
 
-        // Get the CSS Node
-        $css = $this->parseLibraryReferences($isPreview, $this->getRawNode('css', ''));
+        // Parse library references on the CSS Node
+        $css = $this->parseLibraryReferences($isPreview, $css);
 
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));

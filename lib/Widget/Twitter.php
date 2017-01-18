@@ -160,6 +160,10 @@ class Twitter extends TwitterBase
 
     public function validate()
     {
+        // If overrideTemplate is false we have to define a template Id 
+        if($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null) )
+            throw new \InvalidArgumentException(__('Please choose a template'));
+            
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('Please enter a duration'));
 
@@ -216,13 +220,18 @@ class Twitter extends TwitterBase
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
         $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage'), 5);
-        $this->setOption('widgetOriginalPadding', $this->getSanitizer()->getInt('widgetOriginalPadding'));
-        $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
-        $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
-        $this->setOption('resultContent', $this->getSanitizer()->getString('resultContent'));
-        $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
-        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        
+        if( $this->getOption('overrideTemplate') == 1 ){
+            $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
+            $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
+            $this->setOption('resultContent', $this->getSanitizer()->getString('resultContent'));
+                
+            $this->setOption('widgetOriginalPadding', $this->getSanitizer()->getInt('widgetOriginalPadding'));
+            $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
+            $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
+        }
+        
     }
 
     /**
@@ -255,10 +264,24 @@ class Twitter extends TwitterBase
             $geoCode = implode(',', array($defaultLat, $defaultLong, $distance)) . 'mi';
         }
         
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            
+            $templates = $this->templatesAvailable();
+            
+            foreach ($templates as $tmplt) {
+                if( $tmplt['id'] == $this->getOption('templateId') ){
+                    $template = $tmplt['template'];
+                    $resultContent = $tmplt['resultContent'];
+                }
+            }
+            
+        } else {
+            $template = $this->getRawNode('template', null);
+            $resultContent = $this->getOption('resultContent');
+        }
         
         // Search content filtered by type of tweets  
         $searchTerm = $this->getOption('searchTerm');
-        $resultContent = $this->getOption('resultContent');
         
         switch ($resultContent) {
           case 0:
@@ -305,7 +328,7 @@ class Twitter extends TwitterBase
         }
 
         // Get the template
-        $template = $this->parseLibraryReferences($isPreview, $this->getRawNode('template', null));
+        $template = $this->parseLibraryReferences($isPreview, $template);
 
         // Parse the text template
         $matches = '';
@@ -519,6 +542,28 @@ class Twitter extends TwitterBase
         $numItems = $this->getOption('numItems', 0);
         $itemsPerPage = $this->getOption('itemsPerPage', 0);
         $durationIsPerItem = $this->getOption('durationIsPerItem', 1);
+        
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            
+            $templates = $this->templatesAvailable();
+            
+            foreach ($templates as $tmplt) {
+                if( $tmplt['id'] == $this->getOption('templateId') ){
+                    $css = $tmplt['css'];
+                    $widgetOriginalWidth = $tmplt['widgetOriginalWidth'];
+                    $widgetOriginalHeight = $tmplt['widgetOriginalHeight'];
+                    $widgetOriginalPadding = $tmplt['widgetOriginalPadding'];
+                    $resultContent = $tmplt['resultContent'];
+                }
+            }
+            
+        } else {
+            $css = $this->getRawNode('styleSheet', '');
+            $widgetOriginalWidth = $this->getSanitizer()->int($this->getOption('widgetOriginalWidth'));
+            $widgetOriginalHeight = $this->getSanitizer()->int($this->getOption('widgetOriginalHeight'));
+            $widgetOriginalPadding = $this->getSanitizer()->int($this->getOption('widgetOriginalPadding'));
+            $resultContent = $this->getOption('resultContent');
+        }
 
         // Generate a JSON string of substituted items.
         $items = $this->getTwitterFeed($displayId, $isPreview);
@@ -539,10 +584,9 @@ class Twitter extends TwitterBase
             'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
             'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
             'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
-            'widgetDesignPadding' => $this->getSanitizer()->int($this->getOption('widgetOriginalPadding')),
-            'widgetDesignWidth' => $this->getSanitizer()->int($this->getOption('widgetOriginalWidth')),
-            'widgetDesignHeight'=> $this->getSanitizer()->int($this->getOption('widgetOriginalHeight')),
-            'resultContent'=> $this->getSanitizer()->string($this->getOption('resultContent')),
+            'widgetDesignPadding' => $widgetOriginalPadding,
+            'widgetDesignWidth' => $widgetOriginalWidth,
+            'widgetDesignHeight'=> $widgetOriginalHeight,
             'itemsPerPage' => $this->getSanitizer()->int($this->getOption('itemsPerPage', 5))
         );
 
@@ -574,7 +618,6 @@ class Twitter extends TwitterBase
         <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
         
         // Add the CSS if it isn't empty
-        $css = $this->getRawNode('styleSheet', null);
         if ($css != '') {
             $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css) . '</style>';
         }
