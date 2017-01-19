@@ -127,8 +127,152 @@ class Stocks extends YahooBase
             throw new \InvalidArgumentException(__('Please enter a duration'));
     }
 
+
     /**
-     * Add Media
+     * Adds a Stocks Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/stocks/{playlistId}",
+     *  operationId="WidgetStocksAdd",
+     *  tags={"widget"},
+     *  summary="Add a Stocks Widget",
+     *  description="Add a new Stocks Widget to the specified playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The playlist ID to add a Stocks widget",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="items",
+     *      in="formData",
+     *      description="Items wanted, can be comma separated",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="effect",
+     *      in="formData",
+     *      description="Effect that will be used to transitions between items, avaiable options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="speed",
+     *      in="formData",
+     *      description="The transition speed of the selected effect in miliseconds (1000 = normal)",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="backgroundColor",
+     *      in="formData",
+     *      description="A HEX color to use as the background color of this widget",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="noRecordsMessage",
+     *      in="formData",
+     *      description="A message to display when there are no records returned by the search query",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dateFormat",
+     *      in="formData",
+     *      description="The format to apply to all dates returned by he widget",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="updateInterval",
+     *      in="formData",
+     *      description="Update interval in minutes, should be kept as high as possible, if data change once per hour, this should be set to 60",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="templateId",
+     *      in="formData",
+     *      description="Use pre-configured templates, available options: stocks1, stocks2",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="durationIsPerPage",
+     *      in="formData",
+     *      description="A flag (0, 1), The duration specified is per page, otherwise the widget duration is divided between the number of page/items",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="overrideTemplate",
+     *      in="formData",
+     *      description="flag (0, 1) set to 0 and use templateId or set to 1 and provide whole template in the next parameters",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="maxItemsPerPage",
+     *      in="formData",
+     *      description="This is the intedned number of items on each page",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="mainTemplate",
+     *      in="formData",
+     *      description="Main template, Pass only with overrideTemplate set to 1",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="itemtemplate",
+     *      in="formData",
+     *      description="Template for each item, replaces [itemsTemplate] in main template, Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="styleSheet",
+     *      in="formData",
+     *      description="Optional StyleSheet Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="javaScript",
+     *      in="formData",
+     *      description="Optional JavaScript, Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {

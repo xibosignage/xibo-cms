@@ -48,7 +48,101 @@ class WebPage extends ModuleWidget
     }
 
     /**
-     * Add Media
+     * Adds a Webpage Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/webpage/{playlistId}",
+     *  operationId="WidgetWebpageAdd",
+     *  tags={"widget"},
+     *  summary="Add a Webpage Widget",
+     *  description="Add a new Webpage Widget to the specified playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The playlist ID to add a Webpage to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="The Webpage Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="transparency",
+     *      in="formData",
+     *      description=" flag (0,1) should the HTML be shown with a transparent background?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="uri",
+     *      in="formData",
+     *      description=" string containing the location (URL) of the webpage",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="scaling",
+     *      in="formData",
+     *      description="For Manual position the percentage to scale the Webapge (0-100)",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="offsetLeft",
+     *      in="formData",
+     *      description="For Manual position, the starting point from the left in pixels",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="offsetTop",
+     *      in="formData",
+     *      description="For Manual position, the starting point from the Top in pixels",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="pageWidth",
+     *      in="formData",
+     *      description="For Manual Position and Best Fit, The width of the page - if emtpy it will use region width",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="pageHeight",
+     *      in="formData",
+     *      description="For Manual Position and Best Fit, The height of the page - if emtpy it will use region height",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="modeId",
+     *      in="formData",
+     *      description="The mode option for Webpage, 1- Open Natively, 2- Manual Posiion, 3- Best Ft",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {
@@ -69,9 +163,9 @@ class WebPage extends ModuleWidget
         $this->validate();
         $this->saveWidget();
     }
-
+    
     /**
-     * Edit Media
+     * Edit a Webpage Widget
      */
     public function edit()
     {

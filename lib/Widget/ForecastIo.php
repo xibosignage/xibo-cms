@@ -154,7 +154,150 @@ class ForecastIo extends ModuleWidget
     }
 
     /**
-     * Add Media to the Database
+     * Adds a Weather Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/forecastIo/{playlistId}",
+     *  operationId="WidgetWeatherAdd",
+     *  tags={"widget"},
+     *  summary="Add a Weather Widget",
+     *  description="Add a new Weather Widget to the specified playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The playlist ID to add a Weather widget",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDisplayLocation",
+     *      in="formData",
+     *      description="Flag (0, 1) Use the location configured on display",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="longitude",
+     *      in="formData",
+     *      description="The logitude for this weather widget, only pass if useDisplayLocation set to 0",
+     *      type="double",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="latitude",
+     *      in="formData",
+     *      description="The latitude for this weather widget, only pass if useDisplayLocation set to 0",
+     *      type="double",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="templateId",
+     *      in="formData",
+     *      description="Use pre-configured templates, available options: weather-module0-5day, weather-module0-singleday, weather-module0-singleday2, weather-module1l, weather-module1p, weather-module2l, weather-module2p, weather-module3l, weather-module3p, weather-module4l, weather-module4p, weather-module5l, weather-module6v, weather-module6h",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="units",
+     *      in="formData",
+     *      description="Units you would like to use, available options: auto, ca, si, uk2, us",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="updateInterval",
+     *      in="formData",
+     *      description="Update interval in minutes, should be kept as high as possible, if data change once per hour, this should be set to 60",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="lang",
+     *      in="formData",
+     *      description="Language you'd like to use, supported languages ar, az, be, bs, cs, de, en, el, es, fr, hr, hu, id, it, is, kw, nb, nl, pl, pt, ru, sk, sr, sv, tet, tr, uk, x-pig-latin, zh, zh-tw",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dayConditionsOnly",
+     *      in="formData",
+     *      description="Flag (0, 1) Would you like to only show the Daytime weather conditions",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="overrideTemplate",
+     *      in="formData",
+     *      description="flag (0, 1) set to 0 and use templateId or set to 1 and provide whole template in the next parameters",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="widgetOriginalWidth",
+     *      in="formData",
+     *      description="This is the intedned Width of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="widgetOriginalHeight",
+     *      in="formData",
+     *      description="This is the intedned Height of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="currentTemplate",
+     *      in="formData",
+     *      description="Current template, Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dailyTemplate",
+     *      in="formData",
+     *      description="Replaces [dailyForecast] in main template, Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="styleSheet",
+     *      in="formData",
+     *      description="Optional StyleSheet, Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="styleSheet",
+     *      in="formData",
+     *      description="Optional JavaScript, Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {

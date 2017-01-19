@@ -69,7 +69,66 @@ class Hls extends ModuleWidget
     }
 
     /**
-     * Add Media
+     * Adds a HLS Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/hls/{playlistId}",
+     *  operationId="WidgetHlsAdd",
+     *  tags={"Widget"},
+     *  summary="Add a HLS Widget",
+     *  description="Add a new HLS Widget to the specified playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The playlist ID to add a Widget to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="The Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="uri",
+     *      in="formData",
+     *      description="URL to HLS video stream",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="mute",
+     *      in="formData",
+     *      description="Flag (0, 1) Should the video be muted?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="transparency",
+     *      in="formData",
+     *      description="Flag (0, 1), This causes some android devices to switch to a hardware accellerated web view",
+     *      type="double",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {

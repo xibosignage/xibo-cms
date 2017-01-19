@@ -349,7 +349,7 @@ class Layout extends Base
      *      in="formData",
      *      description="A HEX color to use as the background color of this Layout.",
      *      type="string",
-     *      required=true
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="backgroundImageId",

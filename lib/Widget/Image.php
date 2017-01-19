@@ -37,7 +37,59 @@ class Image extends ModuleWidget
     }
 
     /**
-     * Edit Media
+     * Edit an Image Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/image/{playlistId}",
+     *  operationId="WidgetImageEdit",
+     *  tags={"Widget"},
+     *  summary="Parameters for editing exisitng image on a layout",
+     *  description="Parameters for editing exisitng image on a layout, for adding new images, please refer to POST /library documentation",
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Edit only - Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="Edit Only - The Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="scaleTypeId",
+     *      in="formData",
+     *      description="Edit only - Select scale type available options: center, stretch",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="alignId",
+     *      in="formData",
+     *      description="Edit only - Horizontal alignment - left, center, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="valignId",
+     *      in="formData",
+     *      description="Edit only - Vetical alinment - top, middle, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function edit()
     {

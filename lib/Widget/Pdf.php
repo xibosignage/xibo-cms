@@ -25,7 +25,38 @@ class Pdf extends ModuleWidget
     }
 
     /**
-     * Edit Media in the Database
+     * Edit a pdf Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/pdf/{playlistId}",
+     *  operationId="WidgetPdfEdit",
+     *  tags={"Widget"},
+     *  summary="Parameters for editing exisitng pdf on a layout",
+     *  description="Parameters for editing exisitng pdf on a layout, for adding new files, please refer to POST /library documentation",
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Edit only - Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="Edit Only - The Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function edit()
     {

@@ -48,7 +48,87 @@ class Clock extends ModuleWidget
     }
 
     /**
-     * Add Media to the Database
+     * Adds a Clock Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/clock/{playlistId}",
+     *  operationId="WidgetClockAdd",
+     *  tags={"Widget"},
+     *  summary="Add a Clock Widget",
+     *  description="Add a new Clock Widget to the specified playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The playlist ID to add a Clock to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="The Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="theme",
+     *      in="formData",
+     *      description="Flag for Analogue clock the light and dark theme",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="clockTypeId",
+     *      in="formData",
+     *      description="Type of a clock widget 1-Analogue, 2-Digital, 3-Flip clock",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="offset",
+     *      in="formData",
+     *      description="The offset in minutes that should be applied to the current time, if a counter is selected then date/time to run from in the format Y-m-d H:i:s",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="format",
+     *      in="formData",
+     *      description="For digital clock, format in which the time should be displayed example [HH:mm]",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="showSeconds",
+     *      in="formData",
+     *      description="For Flip Clock, should the clock show seconds or not",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ClockFace",
+     *      in="formData",
+     *      description="For Flip Clock, supported options: TwelveHourClock TwentyFourHourClock HourlyCounter MinuteCounter DailyCounter",
+     *      type="String",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {
@@ -69,8 +149,8 @@ class Clock extends ModuleWidget
         $this->saveWidget();
     }
 
-    /**
-     * Edit Media in the Database
+     /**
+     * Edit Clock
      */
     public function edit()
     {

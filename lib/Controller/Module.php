@@ -446,9 +446,10 @@ class Module extends Base
 
         // Successful
         $this->getState()->hydrate([
+            'httpStatus' => 201,
             'message' => sprintf(__('Added %s'), $module->getName()),
             'id' => $module->widget->widgetId,
-            'data' => $module
+            'data' => $module->widget
         ]);
     }
 
@@ -473,7 +474,30 @@ class Module extends Base
     }
 
     /**
-     * Edit Widget
+     * Edit a Widget
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}",
+     *  operationId="WidgetEdit",
+     *  tags={"Widget"},
+     *  summary="Edit a Widget",
+     *  description="Edit a Widget, please refer to individual module Add documentation for module specific parameters",
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="path",
+     *      description="The widget ID to edit",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the edited widget",
+     *          type="string"
+     *      )
+     * )
      * @param int $widgetId
      */
     public function editWidget($widgetId)
@@ -493,7 +517,7 @@ class Module extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $module->getName()),
             'id' => $module->widget->widgetId,
-            'data' => $module
+            'data' => $module->widget
         ]);
     }
 
@@ -520,7 +544,30 @@ class Module extends Base
     }
 
     /**
-     * Delete Widget
+     * Delete a Widget
+     * @SWG\Delete(
+     *  path="/playlist/widget/{widgetId}",
+     *  operationId="WidgetEdit",
+     *  tags={"Widget"},
+     *  summary="Delete a Widget",
+     *  description="Deleted a specified widget",
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="path",
+     *      description="The widget ID to delete",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     * )
      * @param int $widgetId
      */
     public function deleteWidget($widgetId)

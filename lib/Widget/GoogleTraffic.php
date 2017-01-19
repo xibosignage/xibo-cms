@@ -90,7 +90,73 @@ class GoogleTraffic extends ModuleWidget
     }
 
     /**
-     * Add Media
+     * Adds a Google Traffic Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/googleTraffic/{playlistId}",
+     *  operationId="WidgetGoogleTrafficAdd",
+     *  tags={"Widget"},
+     *  summary="Add a Google Traffic Widget",
+     *  description="Add a new Google traffic Widget to the specified playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The playlist ID to add a Widget",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="The Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="zoom",
+     *      in="formData",
+     *      description="How far should the map be zoomed in? The higher the number the closer the zoom, 1 represents entire globe",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="useDisplayLocation",
+     *      in="formData",
+     *      description="Flag (0, 1) Use the location configured on display",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="longitude",
+     *      in="formData",
+     *      description="The logitude for this weather widget, only pass if useDisplayLocation set to 0",
+     *      type="double",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="latitude",
+     *      in="formData",
+     *      description="The latitude for this weather widget, only pass if useDisplayLocation set to 0",
+     *      type="double",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {
