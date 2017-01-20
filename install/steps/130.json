@@ -10,6 +10,10 @@
       "step": "Fix database contraints and indexes",
       "type": "php",
       "action": "Xibo\\Upgrade\\FixDatabaseIndexesAndContraints"
+    },
+    {
+      "step": "Fix notification permission entity",
+      "action": "UPDATE `permissionentity` SET entity = 'Xibo\\\\Entity\\\\Notification' WHERE entity = 'XiboEntityNotification';"
     }
   ]
 }

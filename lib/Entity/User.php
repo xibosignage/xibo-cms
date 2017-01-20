@@ -985,6 +985,8 @@ class User implements \JsonSerializable
                     $new->view = max($permission->view, $old->view);
                     $new->edit = max($permission->view, $old->view);
                     $new->delete = max($permission->view, $old->view);
+
+                    $this->permissionCache[$entity][$permission->objectId] = $new;
                 }
                 else
                     $this->permissionCache[$entity][$permission->objectId] = $permission;
