@@ -89,7 +89,12 @@ class Media extends Data
                 $SQL .= " LEFT OUTER JOIN tag ON tag.tagId = lktagmedia.tagId";
             }
 
-            $SQL .= " WHERE media.isEdited = 0 ";
+            $SQL .= " WHERE 1 = 1 ";
+
+            if (Kit::GetParam('showEdited', $filter_by, _INT, -1) != -1) {
+                $SQL .= ' AND media.isEdited = :is_edited ';
+                $params['is_edited'] = Kit::GetParam('showEdited', $filter_by, _INT);
+            }
 
             if (Kit::GetParam('allModules', $filter_by, _INT) == 0) {
                 $SQL .= "AND media.type <> 'module'";

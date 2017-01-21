@@ -940,6 +940,7 @@ class User {
     public function MediaList($sort_order = array('name'), $filter_by = array())
     {
         try {
+            $filter_by['showEdited'] = 0;
             $media = Media::Entries($sort_order, $filter_by);
             $parsedMedia = array();
 
