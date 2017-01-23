@@ -97,34 +97,6 @@ class Twitter extends TwitterBase
     }
 
     /**
-     * Loads templates for this module
-     */
-    private function loadTemplates()
-    {
-        $this->module->settings['templates'] = [];
-
-        // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/twitter/*.template.json') as $template) {
-            // Read the contents, json_decode and add to the array
-            $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
-        }
-
-        $this->getLog()->debug(count($this->module->settings['templates']));
-    }
-
-    /**
-     * Templates available
-     * @return array
-     */
-    public function templatesAvailable()
-    {
-        if (!isset($this->module->settings['templates']))
-            $this->loadTemplates();
-
-        return $this->module->settings['templates'];
-    }
-
-    /**
      * Form for updating the module settings
      */
     public function settingsForm()
@@ -266,13 +238,11 @@ class Twitter extends TwitterBase
         
         if( $this->getOption('overrideTemplate') == 0 ) {
             
-            $templates = $this->templatesAvailable();
+            $tmplt = $this->getTemplateById($this->getOption('templateId'));
             
-            foreach ($templates as $tmplt) {
-                if( $tmplt['id'] == $this->getOption('templateId') ){
-                    $template = $tmplt['template'];
-                    $resultContent = $tmplt['resultContent'];
-                }
+            if (isset($tmplt)) {
+                $template = $tmplt['template'];
+                $resultContent = $tmplt['resultContent'];
             }
             
         } else {
@@ -545,16 +515,14 @@ class Twitter extends TwitterBase
         
         if( $this->getOption('overrideTemplate') == 0 ) {
             
-            $templates = $this->templatesAvailable();
+            $template = $this->getTemplateById($this->getOption('templateId'));
             
-            foreach ($templates as $tmplt) {
-                if( $tmplt['id'] == $this->getOption('templateId') ){
-                    $css = $tmplt['css'];
-                    $widgetOriginalWidth = $tmplt['widgetOriginalWidth'];
-                    $widgetOriginalHeight = $tmplt['widgetOriginalHeight'];
-                    $widgetOriginalPadding = $tmplt['widgetOriginalPadding'];
-                    $resultContent = $tmplt['resultContent'];
-                }
+            if (isset($template)) {
+                $css = $template['css'];
+                $widgetOriginalWidth = $template['widgetOriginalWidth'];
+                $widgetOriginalHeight = $template['widgetOriginalHeight'];
+                $widgetOriginalPadding = $template['widgetOriginalPadding'];
+                $resultContent = $template['resultContent'];
             }
             
         } else {

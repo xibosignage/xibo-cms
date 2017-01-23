@@ -78,32 +78,6 @@ class Currencies extends YahooBase
     }
 
     /**
-     * Loads templates for this module
-     */
-    private function loadTemplates()
-    {
-        $this->module->settings['templates'] = [];
-
-        // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/currencies/*.template.json') as $template) {
-            // Read the contents, json_decode and add to the array
-            $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
-        }
-    }
-
-    /**
-     * Templates available
-     * @return array
-     */
-    public function templatesAvailable()
-    {
-        if (!isset($this->module->settings['templates']))
-            $this->loadTemplates();
-
-        return $this->module->settings['templates'];
-    }
-
-    /**
      * Form for updating the module settings
      */
     public function settingsForm()
@@ -516,18 +490,15 @@ class Currencies extends YahooBase
 
         if( $this->getOption('overrideTemplate') == 0 ) {
             
-            $templates = $this->templatesAvailable();
+            $template = $this->getTemplateById($this->getOption('templateId'));
             
-            foreach ($templates as $tmplt) {
-                if( $tmplt['id'] == $this->getOption('templateId') ){
-                    
-                    $mainTemplate = $tmplt['main'];
-                    $itemTemplate = $tmplt['item'];
-                    $styleSheet = $tmplt['css'];
-                    $widgetOriginalWidth = $tmplt['widgetOriginalWidth'];
-                    $widgetOriginalHeight = $tmplt['widgetOriginalHeight'];
-                    $maxItemsPerPage = $tmplt['maxItemsPerPage'];
-                }
+            if (isset($template)) {
+                $mainTemplate = $template['main'];
+                $itemTemplate = $template['item'];
+                $styleSheet = $template['css'];
+                $widgetOriginalWidth = $template['widgetOriginalWidth'];
+                $widgetOriginalHeight = $template['widgetOriginalHeight'];
+                $maxItemsPerPage = $template['maxItemsPerPage'];
             }
             
         } else {

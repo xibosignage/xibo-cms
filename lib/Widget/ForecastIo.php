@@ -113,32 +113,6 @@ class ForecastIo extends ModuleWidget
         $this->module->settings['cachePeriod'] = $this->getSanitizer()->getInt('cachePeriod', 300);
     }
 
-    /**
-     * Loads templates for this module
-     */
-    private function loadTemplates()
-    {
-        // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/forecastio/*.template.json') as $template) {
-            // Read the contents, json_decode and add to the array
-            $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
-        }
-
-        $this->getLog()->debug(count($this->module->settings['templates']));
-    }
-
-    /**
-     * Templates available
-     * @return array
-     */
-    public function templatesAvailable()
-    {
-        if (!isset($this->module->settings['templates']))
-            $this->loadTemplates();
-
-        return $this->module->settings['templates'];
-    }
-
     public function validate()
     {
         
@@ -562,17 +536,15 @@ class ForecastIo extends ModuleWidget
         if( $this->getOption('overrideTemplate') == 0 ) {
             
             // Get CSS and HTML from the default templates
+
+            $template = $this->getTemplateById($this->getOption('templateId'));
             
-            $templates = $this->templatesAvailable();
-            
-            foreach ($templates as $tmplt) {
-                if( $tmplt['id'] == $this->getOption('templateId') ){
-                    $body = $tmplt['main'];
-                    $dailyTemplate = $tmplt['daily'];
-                    $styleSheet = $tmplt['css'];
-                    $widgetOriginalWidth = $tmplt['widgetOriginalWidth'];
-                    $widgetOriginalHeight = $tmplt['widgetOriginalHeight'];
-                }
+            if (isset($template)) {
+                $body = $template['main'];
+                $dailyTemplate = $template['daily'];
+                $styleSheet = $template['css'];
+                $widgetOriginalWidth = $template['widgetOriginalWidth'];
+                $widgetOriginalHeight = $template['widgetOriginalHeight'];
             }
             
         } else {

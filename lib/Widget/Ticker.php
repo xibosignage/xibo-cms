@@ -116,32 +116,6 @@ class Ticker extends ModuleWidget
         }
     }
 
-    /**
-     * Loads templates for this module
-     */
-    private function loadTemplates()
-    {
-        // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/ticker/*.template.json') as $template) {
-            // Read the contents, json_decode and add to the array
-            $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
-        }
-
-        $this->getLog()->debug(count($this->module->settings['templates']));
-    }
-
-    /**
-     * Templates available
-     * @return array
-     */
-    public function templatesAvailable()
-    {
-        if (!isset($this->module->settings['templates']))
-            $this->loadTemplates();
-
-        return $this->module->settings['templates'];
-    }
-
     public function validate()
     {
         // Must have a duration
@@ -385,14 +359,11 @@ class Ticker extends ModuleWidget
         // Get CSS and HTML template from the original template or from the input field
         if( $this->getOption('overrideTemplate') == 0 ) {
             
-            $templates = $this->templatesAvailable();
+            $template = $this->getTemplateById($this->getOption('templateId'));
             
-            foreach ($templates as $tmplt) {
-                if( $tmplt['id'] == $this->getOption('templateId') ){
-                    
-                    $text = $tmplt['template'];
-                    $css = $tmplt['css'];
-                }
+            if (isset($template)) {
+                $text = $template['template'];
+                $css = $template['css'];
             }
         } else {
                 $text = $this->getRawNode('template', '');

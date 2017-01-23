@@ -120,22 +120,6 @@ class DataSetView extends ModuleWidget
     }
 
     /**
-     * Loads templates for this module
-     */
-    private function loadTemplates()
-    {
-        $this->module->settings['templates'] = [];
-
-        // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/datasetview/*.template.json') as $template) {
-            // Read the contents, json_decode and add to the array
-            $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
-        }
-
-        $this->getLog()->debug(count($this->module->settings['templates']));
-    }
-
-    /**
      * Get the Order Clause
      * @return mixed
      */
@@ -166,18 +150,6 @@ class DataSetView extends ModuleWidget
             'columns' => $this->dataSetColumns(),
             'dataSet' => ($this->getOption('dataSetId', 0) != 0) ? $this->dataSetFactory->getById($this->getOption('dataSetId')) : null
         ];
-    }
-
-    /**
-     * Templates available
-     * @return array
-     */
-    public function templatesAvailable()
-    {
-        if (!isset($this->module->settings['templates']))
-            $this->loadTemplates();
-
-        return $this->module->settings['templates'];
     }
 
     /**
@@ -367,12 +339,11 @@ class DataSetView extends ModuleWidget
         // Get CSS from the original template or from the input field
         if( $this->getOption('overrideTemplate') == 0 ) {
             
-            $templates = $this->templatesAvailable();
+            $template = $this->getTemplateById($this->getOption('templateId'));
             
-            foreach ($templates as $tmplt) {
-                if( $tmplt['id'] == $this->getOption('templateId') )
-                    $styleSheet = $tmplt['css'];
-            }
+            if (isset($template))
+                $styleSheet = $template['css'];
+                    
         } else {
                 $styleSheet = $this->getRawNode('styleSheet', '');
         }

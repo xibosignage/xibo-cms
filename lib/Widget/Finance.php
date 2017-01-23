@@ -77,34 +77,6 @@ class Finance extends YahooBase
     }
 
     /**
-     * Loads templates for this module
-     */
-    private function loadTemplates()
-    {
-        $this->module->settings['templates'] = [];
-
-        // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/finance/*.template.json') as $template) {
-            // Read the contents, json_decode and add to the array
-            $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
-        }
-
-        $this->getLog()->debug(count($this->module->settings['templates']));
-    }
-
-    /**
-     * Templates available
-     * @return array
-     */
-    public function templatesAvailable()
-    {
-        if (!isset($this->module->settings['templates']))
-            $this->loadTemplates();
-
-        return $this->module->settings['templates'];
-    }
-
-    /**
      * Form for updating the module settings
      */
     public function settingsForm()
@@ -196,13 +168,11 @@ class Finance extends YahooBase
             
             // Get YQL and result identifier from the default templates
             
-            $templates = $this->templatesAvailable();
+            $tmplt = $this->getTemplateById($this->getOption('templateId'));
             
-            foreach ($templates as $tmplt) {
-                if( $tmplt['id'] == $this->getOption('templateId') ){
-                    $yql = $tmplt['yql'];
-                    $resultIdentifier = $tmplt['resultIdentifier'];
-                }
+            if (isset($tmplt)) {
+                $yql = $tmplt['yql'];
+                $resultIdentifier = $tmplt['resultIdentifier'];
             }
             
         } else {
@@ -339,13 +309,11 @@ class Finance extends YahooBase
             
             // Get CSS and HTML from the default templates
             
-            $templates = $this->templatesAvailable();
+            $tmplt = $this->getTemplateById($this->getOption('templateId'));
             
-            foreach ($templates as $tmplt) {
-                if( $tmplt['id'] == $this->getOption('templateId') ){
-                    $template = $tmplt['template'];
-                    $css = $tmplt['css'];
-                }
+            if (isset($tmplt)) {
+                $template = $tmplt['template'];
+                $css = $tmplt['css'];
             }
             
         } else {

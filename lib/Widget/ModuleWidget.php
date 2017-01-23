@@ -999,6 +999,45 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * Get templatesAvailable
+     * @return Templates
+     */
+    public function templatesAvailable()
+    {
+        if (!isset($this->module->settings['templates'])) {
+            
+            $this->module->settings['templates'] = [];
+
+            // Scan the folder for template files
+            foreach (glob(PROJECT_ROOT . '/modules/' . $this->module->type . '/*.template.json') as $template) {
+                // Read the contents, json_decode and add to the array
+                $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
+            }
+            
+        }
+            
+        return $this->module->settings['templates'];
+    }    
+    
+    /**
+     * Get by Template Id
+     * @param int $templateId
+     * @return Template
+     */
+    public function getTemplateById($templateId)
+    {
+        $templates = $this->templatesAvailable();
+        
+        foreach ($templates as $item) {
+            if( $item['id'] == $templateId ) {
+                $template = $item;
+            }
+        }
+        
+        return $template;
+    }
+
+    /**
      * Set template data
      * @param array $data
      * @return array
