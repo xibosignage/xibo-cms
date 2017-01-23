@@ -216,7 +216,7 @@ class Stocks extends YahooBase
      *  @SWG\Parameter(
      *      name="durationIsPerPage",
      *      in="formData",
-     *      description="A flag (0, 1), The duration specified is per page, otherwise the widget duration is divided between the number of page/items",
+     *      description="A flag (0, 1), The duration specified is per page, otherwise the widget duration is divided between the number of pages/items",
      *      type="integer",
      *      required=false
      *   ),
@@ -230,7 +230,7 @@ class Stocks extends YahooBase
      *  @SWG\Parameter(
      *      name="maxItemsPerPage",
      *      in="formData",
-     *      description="This is the intedned number of items on each page",
+     *      description="This is the intended number of items on each page",
      *      type="integer",
      *      required=false
      *   ),

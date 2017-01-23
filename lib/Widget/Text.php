@@ -46,7 +46,7 @@ class Text extends ModuleWidget
             throw new \InvalidArgumentException(__('You must enter a duration.'));
     }
 
-/**
+    /**
      * Adds a Text Widget
      * @SWG\Post(
      *  path="/playlist/widget/text/{playlistId}",
@@ -107,8 +107,8 @@ class Text extends ModuleWidget
      *      name="text",
      *      in="formData",
      *      description="Enter the text to display",
-     *      type="integer",
-     *      required=false
+     *      type="string",
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="javaScript",

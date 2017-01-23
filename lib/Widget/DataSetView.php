@@ -242,14 +242,14 @@ class DataSetView extends ModuleWidget
      *  @SWG\Parameter(
      *      name="dataSetId",
      *      in="formData",
-     *      description="Id of dataSet that should be use to create dataSetView Widget",
+     *      description="Create dataSetView Widget using provided dataSetId of an existing dataSet",
      *      type="integer",
      *      required=true
      *  ),
      *  @SWG\Parameter(
      *      name="columns",
      *      in="formData",
-     *      description=" EDIR only - Array of dataSetColumn IDs to assign",
+     *      description=" EDIT only - Array of dataSetColumn IDs to assign",
      *      type="array",
      *      required=false,
      *      @SWG\Items(type="integer")

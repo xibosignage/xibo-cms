@@ -75,7 +75,7 @@ class Image extends ModuleWidget
      *  @SWG\Parameter(
      *      name="valignId",
      *      in="formData",
-     *      description="Edit only - Vetical alinment - top, middle, bottom",
+     *      description="Edit only - Vetical alignment - top, middle, bottom",
      *      type="string",
      *      required=false
      *   ),

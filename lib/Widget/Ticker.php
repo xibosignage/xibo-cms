@@ -222,7 +222,7 @@ class Ticker extends ModuleWidget
      *  @SWG\Parameter(
      *      name="duration",
      *      in="formData",
-     *      description="EDIT Only - The dataSetView Duration",
+     *      description="The Widget Duration",
      *      type="integer",
      *      required=false
      *  ),
@@ -243,7 +243,7 @@ class Ticker extends ModuleWidget
      *  @SWG\Parameter(
      *      name="dataSetId",
      *      in="formData",
-     *      description="For sourceId=2, Id of dataSet that should be use to create dataSetView Widget",
+     *      description="For sourceId=2, Create ticker Widget using provided dataSetId of an existing dataSet",
      *      type="integer",
      *      required=true
      *  ),
@@ -271,21 +271,21 @@ class Ticker extends ModuleWidget
      *  @SWG\Parameter(
      *      name="copyright",
      *      in="formData",
-     *      description="EDIT Only, , SourceId=1 - Copyright information to display as the last item in this feed. can be styled with the #copyright CSS selector",
+     *      description="EDIT Only and SourceId=1 - Copyright information to display as the last item in this feed. can be styled with the #copyright CSS selector",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="numItems",
      *      in="formData",
-     *      description="EDIT Only, SourceId=1 - The number of RSS items you want to display",
+     *      description="EDIT Only and SourceId=1 - The number of RSS items you want to display",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="takeItemsFrom",
      *      in="formData",
-     *      description="EDIT Only, SourceId=1 - Take the items form the begginning or the end of the list, available options: start, end",
+     *      description="EDIT Only and SourceId=1 - Take the items form the begginning or the end of the list, available options: start, end",
      *      type="string",
      *      required=false
      *   ),
@@ -334,14 +334,14 @@ class Ticker extends ModuleWidget
      *  @SWG\Parameter(
      *      name="allowedAttributes",
      *      in="formData",
-     *      description="EDIT Only, , SourceId=1 - A comma separated list of attributes that should not be strippedfrom the feed",
+     *      description="EDIT Only and SourceId=1 - A comma separated list of attributes that should not be stripped from the feed",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="stripTags",
      *      in="formData",
-     *      description="EDIT Only, SourceId=1 - A comma separated list of attributes that should be stripped from the feed",
+     *      description="EDIT Only and SourceId=1 - A comma separated list of attributes that should be stripped from the feed",
      *      type="string",
      *      required=false
      *   ),

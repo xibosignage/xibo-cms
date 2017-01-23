@@ -198,7 +198,7 @@ class Twitter extends TwitterBase
      *  @SWG\Parameter(
      *      name="searchTerm",
      *      in="formData",
-     *      description="Twitter dearch term, you can test your serach term in twitter.com search box first",
+     *      description="Twitter search term, you can test your serach term in twitter.com search box first",
      *      type="string",
      *      required=true
      *   ),
@@ -336,7 +336,7 @@ class Twitter extends TwitterBase
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="resultcontent",
+     *      name="resultContent",
      *      in="formData",
      *      description="Indented content Type, available Options: 1 - All Tweets 2 - Tweets with the text only content 3 - Tweets with the text and image content. Pass only with overrideTemplate set to 1",
      *      type="string",
