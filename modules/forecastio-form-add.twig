@@ -58,38 +58,6 @@
     ".locationControls": { "display": "none" }
     }
     },{
-    "field": "templateId",
-    "trigger": "init",
-    "value": "picture",
-    "operation": "equals",
-    "actions": {
-    ".icon-controls": { "display": "block" }
-    }
-    },{
-    "field": "templateId",
-    "trigger": "change",
-    "value": "picture",
-    "operation": "equals",
-    "actions": {
-    ".icon-controls": { "display": "block" }
-    }
-    },{
-    "field": "templateId",
-    "trigger": "init",
-    "value": "picture",
-    "operation": "not",
-    "actions": {
-    ".icon-controls": { "display": "none" }
-    }
-    },{
-    "field": "templateId",
-    "trigger": "change",
-    "value": "picture",
-    "operation": "not",
-    "actions": {
-    ".icon-controls": { "display": "none" }
-    }
-    },{
     "field": "overrideTemplate",
     "trigger": "init",
     "value": false,
@@ -205,10 +173,6 @@
                         {% set title %}{% trans "Weather Template" %}{% endset %}
                         {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
                         {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.templatesAvailable(), "id", "value", helpText, "template-selector-control selectPicker selectPickerWithImage", null, null, null, null, null, baseUrl, "image") }}
-
-                        {% set title %}{% trans "Icons" %}{% endset %}
-                        {% set helpText %}{% trans "Select the icon set you would like to use." %}{% endset %}
-                        {{ forms.dropdown("icons", "single", title, module.getOption("icons"), module.iconsAvailable(), "id", "value", helpText, "icon-controls") }}
 
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}

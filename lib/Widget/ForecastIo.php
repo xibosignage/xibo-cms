@@ -144,7 +144,6 @@ class ForecastIo extends ModuleWidget
         $this->setOption('longitude', $this->getSanitizer()->getDouble('longitude'));
         $this->setOption('latitude', $this->getSanitizer()->getDouble('latitude'));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
-        $this->setOption('icons', $this->getSanitizer()->getString('icons'));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
         $this->setOption('units', $this->getSanitizer()->getString('units'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
@@ -178,7 +177,6 @@ class ForecastIo extends ModuleWidget
         $this->setOption('longitude', $this->getSanitizer()->getDouble('longitude'));
         $this->setOption('latitude', $this->getSanitizer()->getDouble('latitude'));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
-        $this->setOption('icons', $this->getSanitizer()->getString('icons'));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
         $this->setOption('units', $this->getSanitizer()->getString('units'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
@@ -198,19 +196,6 @@ class ForecastIo extends ModuleWidget
         // Save the widget
         $this->validate();
         $this->saveWidget();
-    }
-
-    public function iconsAvailable()
-    {
-        // Scan the forecast io folder for icons
-        $icons = array();
-
-        foreach (array_diff(scandir($this->resourceFolder), array('..', '.')) as $file) {
-            if (stripos($file, '-icons.png'))
-                $icons[] = array('id' => $file, 'value' => ucfirst(str_replace('-', ' ', str_replace('.png', '', $file))));
-        }
-
-        return $icons;
     }
 
     /**
