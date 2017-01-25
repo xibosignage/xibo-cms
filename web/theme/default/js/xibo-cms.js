@@ -303,6 +303,24 @@ function XiboInitialise(scope) {
         if (preset != undefined && preset != "")
             $(this).datetimepicker('update', preset);
     });
+    
+    $(scope + ' .dateMonthPicker').each(function() {
+
+        $(this).datetimepicker({
+            format: 'MM yyyy',
+            autoclose: true,
+            language: language,
+            calendarType: calendarType,
+            startView: 3,
+            minView: 3
+        });
+
+        // Get the linked field and use it to set the time
+        var preset = $(this).closest("form").find("#" + $(this).data().linkField).val();
+
+        if (preset != undefined && preset != "")
+            $(this).datetimepicker('update', preset);
+    });
 
     $(scope + ' .timePicker').each(function() {
 
