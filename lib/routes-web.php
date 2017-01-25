@@ -165,6 +165,7 @@ $app->get('/user/form/password', '\Xibo\Controller\User:changePasswordForm')->na
 $app->get('/user/form/add', '\Xibo\Controller\User:addForm')->name('user.add.form');
 $app->get('/user/form/edit/:id', '\Xibo\Controller\User:editForm')->name('user.edit.form');
 $app->get('/user/form/delete/:id', '\Xibo\Controller\User:deleteForm')->name('user.delete.form');
+$app->get('/user/form/membership/:id', '\Xibo\Controller\User:membershipForm')->name('user.membership.form');
 // permissions
 $app->get('/user/permissions/form/:entity/:id', '\Xibo\Controller\User:permissionsForm')->name('user.permissions.form');
 
