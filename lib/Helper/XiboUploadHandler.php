@@ -126,6 +126,10 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 if ($updateInLayouts) {
                     $controller->getLog()->debug('Replace in all Layouts selected. Getting associated widgets');
 
+                    if ($module->getModuleType() == 'audio') {
+                        // Replace any widg
+                    }
+
                     foreach ($controller->getWidgetFactory()->getByMediaId($oldMedia->mediaId) as $widget) {
                         /* @var Widget $widget */
                         if (!$controller->getUser()->checkEditable($widget)) {
@@ -135,20 +139,32 @@ class XiboUploadHandler extends BlueImpUploadHandler
                             $controller->getLog()->info('Media used on Widget that we cannot edit. Delete Old Revisions has been disabled.');
                         }
 
-                        // Check whether this widget is of the same type as our incoming media item
-                        if ($widget->type != $module->getModuleType()) {
-                            // Are we supposed to switch, or should we prevent?
-                            if ($this->options['allowMediaTypeChange'] == 1) {
-                                $widget->type = $module->getModuleType();
-                            } else {
-                                throw new \InvalidArgumentException(__('You cannot replace this media with an item of a different type'));
-                            }
-                        }
+                        // If we are replacing an audio media item, we should check to see if the widget we've found has any
+                        // audio items assigned.
+                        if ($module->getModuleType() == 'audio' && in_array($oldMedia->mediaId, $widget->getAudioIds())) {
 
-                        $controller->getLog()->debug('Found widget that needs updating. ID = %d. Linking %d', $widget->getId(), $media->mediaId);
-                        $widget->unassignMedia($oldMedia->mediaId);
-                        $widget->assignMedia($media->mediaId);
-                        $widget->save();
+                            $controller->getLog()->debug('Found audio on widget that needs updating. widgetId = ' . $widget->getId() . '. Linking ' . $media->mediaId);
+                            $widget->unassignAudioById($oldMedia->mediaId);
+                            $widget->assignAudioById($media->mediaId);
+                            $widget->save();
+
+                        } else if (count($widget->getPrimaryMedia()) > 0 && $widget->getPrimaryMediaId() == $oldMedia->mediaId) {
+                            // We're only interested in primary media at this point (no audio)
+                            // Check whether this widget is of the same type as our incoming media item
+                            if ($widget->type != $module->getModuleType()) {
+                                // Are we supposed to switch, or should we prevent?
+                                if ($this->options['allowMediaTypeChange'] == 1) {
+                                    $widget->type = $module->getModuleType();
+                                } else {
+                                    throw new \InvalidArgumentException(__('You cannot replace this media with an item of a different type'));
+                                }
+                            }
+
+                            $controller->getLog()->debug('Found widget that needs updating. ID = %d. Linking %d', $widget->getId(), $media->mediaId);
+                            $widget->unassignMedia($oldMedia->mediaId);
+                            $widget->assignMedia($media->mediaId);
+                            $widget->save();
+                        }
                     }
 
                     // Update any background images
