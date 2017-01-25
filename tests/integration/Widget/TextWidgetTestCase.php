@@ -78,7 +78,20 @@ class TextWidgetTestCase extends WidgetTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $this->assertSame($duration, $object->data->duration);
+        $textOptions = (new XiboText($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $this->assertSame($name, $textOptions->name);
+        $this->assertSame($duration, $textOptions->duration);
+        foreach ($textOptions->widgetOptions as $option) {
+            if ($option['option'] == 'effect') {
+                $this->assertSame($effect, $option['value']);
+            }
+            if ($option['option'] == 'speed') {
+                $this->assertSame($speed, intval($option['value']));
+            }
+            if ($option['option'] == 'text') {
+                $this->assertSame($text, $option['value']);
+            }
+        }
     }
 
     /**
@@ -92,7 +105,7 @@ class TextWidgetTestCase extends WidgetTestCase
         return [
             'text 1' => ['Text item', 0, 'marqueeRight', 5, null, null, 'TEST API TEXT', null],
             'text with formatting' => ['Text item 2', 20, 'marqueeLeft', 3, null, null, '<p><span style=color:#FFFFFF;><span style=font-size:48px;>TEST</span></span></p>', null],
-            'text with background Colour' => ['text item 3', 5, null, null, '#d900000', null, 'red background', null]
+            'text with background Colour' => ['text item 3', 5, null, 0, '#d900000', null, 'red background', null]
         ];
     }
     public function testEdit()
@@ -103,11 +116,10 @@ class TextWidgetTestCase extends WidgetTestCase
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create a text widget with wrapper
         $text = (new XiboText($this->getEntityProvider()))->create('Text item', 0, 'marqueeRight', 5, null, null, 'TEST API TEXT', null, $region->playlists[0]['playlistId']);
-        $textCheck = (new XiboWidget($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
         $nameNew = 'Edited Name';
         $durationNew = 80;
         $textNew = 'Edited Text';
-        $response = $this->client->put('/playlist/widget/' . $textCheck->widgetId, [
+        $response = $this->client->put('/playlist/widget/' . $text->widgetId, [
             'name' => $nameNew,
             'duration' => $durationNew,
             'effect' => $text->effect,
@@ -121,7 +133,14 @@ class TextWidgetTestCase extends WidgetTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $this->assertSame($durationNew, $object->data->duration);
+        $textOptions = (new XiboText($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $this->assertSame($nameNew, $textOptions->name);
+        $this->assertSame($durationNew, $textOptions->duration);
+                foreach ($textOptions->widgetOptions as $option) {
+            if ($option['option'] == 'text') {
+                $this->assertSame($textNew, $option['value']);
+            }
+        }
     }
 
     public function testDelete()
@@ -132,9 +151,8 @@ class TextWidgetTestCase extends WidgetTestCase
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create a text widget with wrapper
         $text = (new XiboText($this->getEntityProvider()))->create('Text item', 0, 'marqueeRight', 5, null, null, 'TEST API TEXT', null, $region->playlists[0]['playlistId']);
-        $textCheck = (new XiboWidget($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
         # Delete it
-        $this->client->delete('/playlist/widget/' . $textCheck->widgetId);
+        $this->client->delete('/playlist/widget/' . $text->widgetId);
         $response = json_decode($this->client->response->body());
         $this->assertSame(200, $response->status, $this->client->response->body());
     }

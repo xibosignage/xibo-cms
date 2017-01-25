@@ -59,7 +59,6 @@ class ClockWidgetTestCase extends WidgetTestCase
      */
 	public function testAdd($name, $duration, $theme, $clockTypeId, $offset, $format, $showSeconds, $clockFace)
 	{
-		//parent::setupEnv();
 		# Create layout 
         $layout = (new XiboLayout($this->getEntityProvider()))->create('Clock add Layout', 'phpunit description', '', 9);
         # Add region to our layout
@@ -68,7 +67,7 @@ class ClockWidgetTestCase extends WidgetTestCase
 		$response = $this->client->post('/playlist/widget/clock/' . $region->playlists[0]['playlistId'], [
         	'name' => $name,
         	'duration' => $duration,
-        	'theme' => $theme,
+        	'themeId' => $theme,
         	'clockTypeId' => $clockTypeId,
         	'offset' => $offset,
         	'format' => $format,
@@ -79,9 +78,30 @@ class ClockWidgetTestCase extends WidgetTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-       // $this->assertSame($name, $object->data->widgetOptions->name);
-        $this->assertSame($duration, $object->data->duration);
-       // $this->assertSame($clockTypeId, $object->data->clockTypeId);
+        $clockOptions = (new XiboClock($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $this->assertSame($name, $clockOptions->name);
+        $this->assertSame($duration, $clockOptions->duration);
+        
+        foreach ($clockOptions->widgetOptions as $option) {
+            if ($option['option'] == 'theme') {
+                $this->assertSame($theme, intval($option['value']));
+            }
+            if ($option['option'] == 'clockTypeId') {
+                $this->assertSame($clockTypeId, intval($option['value']));
+            }
+            if ($option['option'] == 'offset') {
+                $this->assertSame($offset, intval($option['value']));
+            }
+            if ($option['option'] == 'format') {
+                $this->assertSame($format, $option['value']);
+            }
+            if ($option['option'] == 'showSeconds') {
+                $this->assertSame($showSeconds, intval($option['value']));
+            }
+            if ($option['option'] == 'clockFace') {
+                $this->assertSame($clockFace, $option['value']);
+            }
+        }
 	}
 
 	/**
@@ -93,30 +113,28 @@ class ClockWidgetTestCase extends WidgetTestCase
     {
         # Sets of data used in testAdd
         return [
-            'Analogue' => ['Api Analogue clock', 20, 1, 1, NULL, NULL, NULL, NULL],
-            'Digital' => ['API digital clock', 20, NULL, 2, NULL, '[HH:mm]', NULL, NULL],
-            'Flip 24h' => ['API Flip clock 24h', 5, NULL, 3, NULL, NULL, 1, 'TwentyFourHourClock'],
-            'Flip counter' => ['API Flip clock 24h', 50, NULL, 3, NULL, NULL, 1, 'MinuteCounter']
+            'Analogue' => ['Api Analogue clock', 20, 1, 1, 0, '', 0, 'TwentyFourHourClock'],
+            'Digital' => ['API digital clock', 20, 0, 2, 0, '[HH:mm]', 0, 'TwentyFourHourClock'],
+            'Flip 24h' => ['API Flip clock 24h', 5, 0, 3, 0, '', 1, 'TwentyFourHourClock'],
+            'Flip counter' => ['API Flip clock Minute counter', 50, 0, 3, 0, '', 1, 'MinuteCounter']
         ];
     }
 
     public function testEdit()
     {
-    	//parent::setupEnv();
     	# Create layout 
         $layout = (new XiboLayout($this->getEntityProvider()))->create('Clock edit Layout', 'phpunit description', '', 9);
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
     	# Create a clock with wrapper
     	$clock = (new XiboClock($this->getEntityProvider()))->create('Api Analogue clock', 20, 1, 1, NULL, NULL, NULL, NULL, $region->playlists[0]['playlistId']);
-    	$clockCheck = (new XiboWidget($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
     	$nameNew = 'Edited Name';
     	$durationNew = 80;
     	$clockTypeIdNew = 3;
-    	$response = $this->client->put('/playlist/widget/' . $clockCheck->widgetId, [
+    	$response = $this->client->put('/playlist/widget/' . $clock->widgetId, [
         	'name' => $nameNew,
         	'duration' => $durationNew,
-        	'theme' => $clock->theme,
+        	'themeId' => $clock->theme,
         	'clockTypeId' => $clockTypeIdNew,
         	'offset' => $clock->offset,
         	'format' => $clock->format,
@@ -127,14 +145,17 @@ class ClockWidgetTestCase extends WidgetTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-       // $this->assertSame($nameNew, $object->data->name);
-        $this->assertSame($durationNew, $object->data->duration);
-       // $this->assertSame($clockTypeIdNew, $object->data->clockTypeId);
+        $clockOptions = (new XiboClock($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $this->assertSame($nameNew, $clockOptions->name);
+        $this->assertSame($durationNew, $clockOptions->duration);
+        foreach ($clockOptions->widgetOptions as $option) {
+            if ($option['option'] == 'clockTypeId') {
+                $this->assertSame($clockTypeIdNew, intval($option['value']));
+            }
+        }
     }
-
     public function testDelete()
     {
-    	//parent::setupEnv();
     	# Create layout 
         $layout = (new XiboLayout($this->getEntityProvider()))->create('Clock delete Layout', 'phpunit description', '', 9);
         # Add region to our layout
@@ -142,9 +163,8 @@ class ClockWidgetTestCase extends WidgetTestCase
 
     	# Create a clock with wrapper
 		$clock = (new XiboClock($this->getEntityProvider()))->create('Api Analogue clock', 20, 1, 1, NULL, NULL, NULL, NULL, $region->playlists[0]['playlistId']);
-		$clockCheck = (new XiboWidget($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
 		# Delete it
-		$this->client->delete('/playlist/widget/' . $clockCheck->widgetId);
+		$this->client->delete('/playlist/widget/' . $clock->widgetId);
         $response = json_decode($this->client->response->body());
         $this->assertSame(200, $response->status, $this->client->response->body());
     }

@@ -82,10 +82,17 @@ class WebpageWidgetTestCase extends WidgetTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        //$this->assertSame($name, $object->data->name);
-        $this->assertSame($duration, $object->data->duration);
-        //$this->assertSame($uri, $object->data->uri);
-        //$this->assertSame($modeId, $object->data->modeId);
+        $webpageOptions = (new XiboWebpage($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $this->assertSame($name, $webpageOptions->name);
+        $this->assertSame($duration, $webpageOptions->duration);
+        foreach ($webpageOptions->widgetOptions as $option) {
+            if ($option['option'] == 'uri') {
+                $this->assertSame($uri, urldecode($option['value']));
+            }
+            if ($option['option'] == 'modeId') {
+                $this->assertSame($modeId, intval($option['value']));
+            }
+        }
 	}
 
 	/**
@@ -108,19 +115,17 @@ class WebpageWidgetTestCase extends WidgetTestCase
 
     public function testEdit()
     {
-    	//parent::setupEnv();
     	# Create layout
         $layout = (new XiboLayout($this->getEntityProvider()))->create('Webpage edit', 'phpunit description', '', 9);
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
     	# Create a webpage with wrapper
     	$webpage = (new XiboWebpage($this->getEntityProvider()))->create('Open natively webpage widget', 60, NULL, 'http://xibo.org.uk/', NULL, NULL, NULL, NULL, NULL, 1, $region->playlists[0]['playlistId']);
-		$webpageCheck = (new XiboWidget($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
     	$nameNew = 'Edited Name';
     	$durationNew = 80;
     	$modeIdNew = 3;
     	$uriNew = 'http://xibo.org.uk/about/';
-    	$response = $this->client->put('/playlist/widget/' . $webpageCheck->widgetId, [
+    	$response = $this->client->put('/playlist/widget/' . $webpage->widgetId, [
         	'name' => $nameNew,
         	'duration' => $durationNew,
         	'transparency' => $webpage->transparency,
@@ -136,15 +141,21 @@ class WebpageWidgetTestCase extends WidgetTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        //$this->assertSame($nameNew, $object->data->name);
-        $this->assertSame($durationNew, $object->data->duration);
-        //$this->assertSame($modeIdNew, $object->data->modeId);
-        //$this->assertSame($uriNew, $object->data->uri);
+        $webpageOptions = (new XiboWebpage($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $this->assertSame($nameNew, $webpageOptions->name);
+        $this->assertSame($durationNew, $webpageOptions->duration);
+        foreach ($webpageOptions->widgetOptions as $option) {
+            if ($option['option'] == 'uri') {
+                $this->assertSame($uriNew, urldecode($option['value']));
+            }
+            if ($option['option'] == 'modeId') {
+                $this->assertSame($modeIdNew, intval($option['value']));
+            }
+        }
     }
 
     public function testDelete()
     {
-    	//parent::setupEnv();
     	# Create layout
         $name = Random::generateString(8, 'phpunit');
         $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
@@ -152,9 +163,8 @@ class WebpageWidgetTestCase extends WidgetTestCase
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
     	# Create a clock with wrapper
 		$webpage = (new XiboWebpage($this->getEntityProvider()))->create('Open natively webpage widget', 60, NULL, 'http://xibo.org.uk/', NULL, NULL, NULL, NULL, NULL, 1, $region->playlists[0]['playlistId']);
-		$webpageCheck = (new XiboWidget($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
 		# Delete it
-		$this->client->delete('/playlist/widget/' . $webpageCheck->widgetId);
+		$this->client->delete('/playlist/widget/' . $webpage->widgetId);
         # This should return 204 for success
         $response = json_decode($this->client->response->body());
         $this->assertSame(200, $response->status, $this->client->response->body());

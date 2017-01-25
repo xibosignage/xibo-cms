@@ -101,7 +101,9 @@ class ShellCommandWidgetTestCase extends WidgetTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $this->assertSame($duration, $object->data->duration);        
+        $widgetOptions = (new XiboShellCommand($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $this->assertSame($name, $widgetOptions->name);
+        $this->assertSame($duration, $widgetOptions->duration);        
     }
 
     /**
@@ -115,13 +117,12 @@ class ShellCommandWidgetTestCase extends WidgetTestCase
         return [
             'Windows new command' => ['Api Windows command', 20, '-reboot', NULL, 1, null, 1, null],
             'Android new command' => ['Api Android command', 30, null, '-reboot', null, 1, null, null],
-            'Previously created command' => ['Api shell command', 0, null, null, 1, 1, 1, 'phpunit code']
+            'Previously created command' => ['Api shell command', 50, null, null, 1, 1, 1, 'phpunit code']
         ];
     }
 
      public function testEdit()
     {
-        //parent::setupEnv();
         # Create layout 
         $layout = (new XiboLayout($this->getEntityProvider()))->create('ShellCommand edit Layout', 'phpunit description', '', 9);
         # Add region to our layout
@@ -130,11 +131,10 @@ class ShellCommandWidgetTestCase extends WidgetTestCase
         $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunit code');
         # Create a shell command widget with wrapper
         $shellCommand = (new XiboShellCommand($this->getEntityProvider()))->create('Api shell command', 0, null, null, 1, 1, 1, 'test code', $region->playlists[0]['playlistId']);
-        $shellCommandCheck = (new XiboWidget($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
         $nameNew = 'Edited Name';
         $durationNew = 80;
         $commandCode = $command->code;
-        $response = $this->client->put('/playlist/widget/' . $shellCommandCheck->widgetId, [
+        $response = $this->client->put('/playlist/widget/' . $shellCommand->widgetId, [
             'name' => $nameNew,
             'duration' => $durationNew,
             'windowsCommand' => null,
@@ -148,21 +148,26 @@ class ShellCommandWidgetTestCase extends WidgetTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $this->assertSame($durationNew, $object->data->duration);
+        $widgetOptions = (new XiboShellCommand($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $this->assertSame($nameNew, $widgetOptions->name);
+        $this->assertSame($durationNew, $widgetOptions->duration);    
+        foreach ($widgetOptions->widgetOptions as $option) {
+            if ($option['option'] == 'commandCode') {
+                $this->assertSame($commandCode, $option['value']);
+            }
+        }
     }
 
     public function testDelete()
     {
-        //parent::setupEnv();
         # Create layout 
         $layout = (new XiboLayout($this->getEntityProvider()))->create('Shell Command delete Layout', 'phpunit description', '', 9);
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create a shell command widget with wrapper
         $shellCommand = (new XiboShellCommand($this->getEntityProvider()))->create('Api shell command', 0, null, null, 1, 1, 1, 'phpunit code', $region->playlists[0]['playlistId']);
-        $shellCommandCheck = (new XiboWidget($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
         # Delete it
-        $this->client->delete('/playlist/widget/' . $shellCommandCheck->widgetId);
+        $this->client->delete('/playlist/widget/' . $shellCommand->widgetId);
         $response = json_decode($this->client->response->body());
         $this->assertSame(200, $response->status, $this->client->response->body());
     }

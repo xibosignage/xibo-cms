@@ -60,7 +60,7 @@ class EmbeddedWidgetTestCase extends WidgetTestCase
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         $response = $this->client->post('/playlist/widget/embedded/' . $region->playlists[0]['playlistId'], [
-            'name' => 'API dataSetView',
+            'name' => 'API Embedded widget',
             'duration' => 60,
             'transparency' => 0,
             'scaleContent' => 0,
@@ -72,7 +72,9 @@ class EmbeddedWidgetTestCase extends WidgetTestCase
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object);
-        $this->assertSame(60, $object->data->duration);
+        $embeddedOptions = (new XiboEmbedded($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $this->assertSame('API Embedded widget', $embeddedOptions->name);       
+        $this->assertSame(60, $embeddedOptions->duration);
     }
 
     public function testEdit()
@@ -84,9 +86,8 @@ class EmbeddedWidgetTestCase extends WidgetTestCase
         $durationNew = 80;
         # Create embedded widget
         $embedded = (new XiboEmbedded($this->getEntityProvider()))->create('API embedded', 60, 0, 0, null, null, null, $region->playlists[0]['playlistId']);
-        $embeddedCheck = (new XiboWidget($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
-        $response = $this->client->put('/playlist/widget/' . $embeddedCheck->widgetId, [
-            'name' => 'EDIED Name',
+        $response = $this->client->put('/playlist/widget/' . $embedded->widgetId, [
+            'name' => 'EDITED Name',
             'duration' => $durationNew,
             'transparency' => 1,
             'scaleContent' => 1,
@@ -98,7 +99,9 @@ class EmbeddedWidgetTestCase extends WidgetTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $this->assertSame($durationNew, $object->data->duration);
+        $embeddedOptions = (new XiboEmbedded($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $this->assertSame('EDITED Name', $embeddedOptions->name);       
+        $this->assertSame($durationNew, $embeddedOptions->duration);
     }
 
     public function testDelete()
@@ -109,9 +112,8 @@ class EmbeddedWidgetTestCase extends WidgetTestCase
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create embedded widget
         $embedded = (new XiboEmbedded($this->getEntityProvider()))->create('API embedded', 60, 0, 0, null, null, null, $region->playlists[0]['playlistId']);
-        $embeddedCheck = (new XiboWidget($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
         # Delete it
-        $this->client->delete('/playlist/widget/' . $embeddedCheck->widgetId);
+        $this->client->delete('/playlist/widget/' . $embedded->widgetId);
         $response = json_decode($this->client->response->body());
         $this->assertSame(200, $response->status, $this->client->response->body());
     }

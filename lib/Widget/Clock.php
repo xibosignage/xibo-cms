@@ -77,7 +77,7 @@ class Clock extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
-     *      name="theme",
+     *      name="themeId",
      *      in="formData",
      *      description="Flag for Analogue clock the light and dark theme",
      *      type="integer",
