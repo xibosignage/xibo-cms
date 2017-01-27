@@ -173,14 +173,14 @@ class Currencies extends YahooBase
      *  @SWG\Parameter(
      *      name="effect",
      *      in="formData",
-     *      description="Effect that will be used to transitions between items, avaiable options: fade,fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind ",
+     *      description="Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind ",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="speed",
      *      in="formData",
-     *      description="The transition speed of the selected effect in miliseconds (1000 = normal)",
+     *      description="The transition speed of the selected effect in milliseconds (1000 = normal)",
      *      type="integer",
      *      required=false
      *   ),
@@ -215,7 +215,7 @@ class Currencies extends YahooBase
      *  @SWG\Parameter(
      *      name="durationIsPerPage",
      *      in="formData",
-     *      description="A flag (0, 1), The duration specified is per page/item, otherwise the widget duration is divided betweenthe number of pages/items",
+     *      description="A flag (0, 1), The duration specified is per page/item, otherwise the widget duration is divided between the number of pages/items",
      *      type="integer",
      *      required=false
      *   ),
@@ -236,21 +236,21 @@ class Currencies extends YahooBase
      *  @SWG\Parameter(
      *      name="widgetOriginalWidth",
      *      in="formData",
-     *      description="This is the intedned Width of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
+     *      description="This is the intended Width of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="widgetOriginalHeight",
      *      in="formData",
-     *      description="This is the intedned Height of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
+     *      description="This is the intended Height of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="maxItemsPerPage",
      *      in="formData",
-     *      description="This is the intedned number of items on each page",
+     *      description="This is the intended number of items on each page",
      *      type="integer",
      *      required=false
      *   ),

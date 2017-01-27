@@ -91,6 +91,13 @@ class Hls extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="Edit Only - (0, 1) Select only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
      *      name="duration",
      *      in="formData",
      *      description="The Widget Duration",
@@ -114,7 +121,7 @@ class Hls extends ModuleWidget
      *  @SWG\Parameter(
      *      name="transparency",
      *      in="formData",
-     *      description="Flag (0, 1), This causes some android devices to switch to a hardware accellerated web view",
+     *      description="Flag (0, 1), This causes some android devices to switch to a hardware accelerated web view",
      *      type="double",
      *      required=false
      *   ),

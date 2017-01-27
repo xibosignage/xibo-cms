@@ -257,14 +257,14 @@ class Ticker extends ModuleWidget
      *  @SWG\Parameter(
      *      name="effect",
      *      in="formData",
-     *      description="Edit only - Effect that will be used to transitions between items, avaiable options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind, marqueeUp, marqueeDown, marqueeRight, marqueeLeft",
+     *      description="Edit only - Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind, marqueeUp, marqueeDown, marqueeRight, marqueeLeft",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="speed",
      *      in="formData",
-     *      description="Edit only - The transition speed of the selected effect in miliseconds (1000 = normal) or the Marquee speed in a low to high scale (normal = 1)",
+     *      description="Edit only - The transition speed of the selected effect in milliseconds (1000 = normal) or the Marquee speed in a low to high scale (normal = 1)",
      *      type="integer",
      *      required=false
      *   ),
@@ -285,7 +285,7 @@ class Ticker extends ModuleWidget
      *  @SWG\Parameter(
      *      name="takeItemsFrom",
      *      in="formData",
-     *      description="EDIT Only and SourceId=1 - Take the items form the begginning or the end of the list, available options: start, end",
+     *      description="EDIT Only and SourceId=1 - Take the items form the beginning or the end of the list, available options: start, end",
      *      type="string",
      *      required=false
      *   ),
@@ -320,7 +320,7 @@ class Ticker extends ModuleWidget
      *  @SWG\Parameter(
      *      name="itemsPerPage",
      *      in="formData",
-     *      description="EDIT Only - When in sigle mode, how many items per page should be shown",
+     *      description="EDIT Only - When in single mode, how many items per page should be shown",
      *      type="integer",
      *      required=false
      *   ),
@@ -432,7 +432,7 @@ class Ticker extends ModuleWidget
      *  @SWG\Parameter(
      *      name="useFilteringClause",
      *      in="formData",
-     *      description="EDIT Only, SourceId=2 - flag (0,1) Use advaced filter clause - set to 1 if filter is provided",
+     *      description="EDIT Only, SourceId=2 - flag (0,1) Use advanced filter clause - set to 1 if filter is provided",
      *      type="integer",
      *      required=false
      *   ),

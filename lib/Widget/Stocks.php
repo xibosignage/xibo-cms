@@ -167,14 +167,14 @@ class Stocks extends YahooBase
      *  @SWG\Parameter(
      *      name="effect",
      *      in="formData",
-     *      description="Effect that will be used to transitions between items, avaiable options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind",
+     *      description="Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="speed",
      *      in="formData",
-     *      description="The transition speed of the selected effect in miliseconds (1000 = normal)",
+     *      description="The transition speed of the selected effect in milliseconds (1000 = normal)",
      *      type="integer",
      *      required=false
      *   ),

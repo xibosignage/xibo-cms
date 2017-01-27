@@ -334,7 +334,7 @@ class DataSetView extends ModuleWidget
      *  @SWG\Parameter(
      *      name="useFilteringClause",
      *      in="formData",
-     *      description="EDIT Only - flag (0,1) Use advaced filter clause - set to 1 if filter is provided",
+     *      description="EDIT Only - flag (0,1) Use advanced filter clause - set to 1 if filter is provided",
      *      type="integer",
      *      required=false
      *   ),

@@ -42,8 +42,8 @@ class Image extends ModuleWidget
      *  path="/playlist/widget/image/{playlistId}",
      *  operationId="WidgetImageEdit",
      *  tags={"Widget"},
-     *  summary="Parameters for editing exisitng image on a layout",
-     *  description="Parameters for editing exisitng image on a layout, for adding new images, please refer to POST /library documentation",
+     *  summary="Parameters for editing existing image on a layout",
+     *  description="Parameters for editing existing image on a layout, for adding new images, please refer to POST /library documentation",
      *  @SWG\Parameter(
      *      name="name",
      *      in="formData",
@@ -75,7 +75,7 @@ class Image extends ModuleWidget
      *  @SWG\Parameter(
      *      name="valignId",
      *      in="formData",
-     *      description="Edit only - Vetical alignment - top, middle, bottom",
+     *      description="Edit only - Vertical alignment - top, middle, bottom",
      *      type="string",
      *      required=false
      *   ),

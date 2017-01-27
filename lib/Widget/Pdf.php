@@ -30,8 +30,8 @@ class Pdf extends ModuleWidget
      *  path="/playlist/widget/pdf/{playlistId}",
      *  operationId="WidgetPdfEdit",
      *  tags={"Widget"},
-     *  summary="Parameters for editing exisitng pdf on a layout",
-     *  description="Parameters for editing exisitng pdf on a layout, for adding new files, please refer to POST /library documentation",
+     *  summary="Parameters for editing existing pdf on a layout",
+     *  description="Parameters for editing existing pdf on a layout, for adding new files, please refer to POST /library documentation",
      *  @SWG\Parameter(
      *      name="name",
      *      in="formData",

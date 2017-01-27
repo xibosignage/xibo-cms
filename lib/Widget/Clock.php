@@ -58,7 +58,7 @@ class Clock extends ModuleWidget
      *  @SWG\Parameter(
      *      name="playlistId",
      *      in="path",
-     *      description="The playlist ID to add a Clock to",
+     *      description="The playlist ID to add a Clock widget to",
      *      type="integer",
      *      required=true
      *   ),
@@ -79,7 +79,7 @@ class Clock extends ModuleWidget
      *  @SWG\Parameter(
      *      name="themeId",
      *      in="formData",
-     *      description="Flag for Analogue clock the light and dark theme",
+     *      description="Flag (0 , 1) for Analogue clock the light and dark theme",
      *      type="integer",
      *      required=false
      *   ),

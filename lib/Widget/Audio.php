@@ -12,7 +12,52 @@ namespace Xibo\Widget;
 class Audio extends ModuleWidget
 {
     /**
-     * Edit Media in the Database
+     * Edit an Audio Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/audio/{playlistId}",
+     *  operationId="WidgetAudioEdit",
+     *  tags={"Widget"},
+     *  summary="Parameters for editing existing audio widget on a layout",
+     *  description="Parameters for editing existing audio widget on a layout, for adding new audio, please refer to POST /library documentation",
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="Edit Only - (0, 1) Select only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="Edit Only - The Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="mute",
+     *      in="formData",
+     *      description="Edit only - Flag (0, 1) Should the audio be muted?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="loop",
+     *      in="formData",
+     *      description="Edit only - Flag (0, 1) Should the audio loop (only for duration > 0 )?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function edit()
     {

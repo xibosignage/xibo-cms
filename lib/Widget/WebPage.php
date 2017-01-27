@@ -53,12 +53,12 @@ class WebPage extends ModuleWidget
      *  path="/playlist/widget/webpage/{playlistId}",
      *  operationId="WidgetWebpageAdd",
      *  tags={"widget"},
-     *  summary="Add a Webpage Widget",
-     *  description="Add a new Webpage Widget to the specified playlist",
+     *  summary="Add a Web page Widget",
+     *  description="Add a new Web page Widget to the specified playlist",
      *  @SWG\Parameter(
      *      name="playlistId",
      *      in="path",
-     *      description="The playlist ID to add a Webpage to",
+     *      description="The playlist ID to add a Web page to",
      *      type="integer",
      *      required=true
      *   ),
@@ -72,7 +72,7 @@ class WebPage extends ModuleWidget
      *  @SWG\Parameter(
      *      name="duration",
      *      in="formData",
-     *      description="The Webpage Duration",
+     *      description="The Web page Duration",
      *      type="integer",
      *      required=false
      *  ),
@@ -86,14 +86,14 @@ class WebPage extends ModuleWidget
      *  @SWG\Parameter(
      *      name="uri",
      *      in="formData",
-     *      description=" string containing the location (URL) of the webpage",
+     *      description=" string containing the location (URL) of the web page",
      *      type="string",
      *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="scaling",
      *      in="formData",
-     *      description="For Manual position the percentage to scale the Webapge (0-100)",
+     *      description="For Manual position the percentage to scale the Web page (0-100)",
      *      type="integer",
      *      required=false
      *   ),
@@ -114,21 +114,21 @@ class WebPage extends ModuleWidget
      *  @SWG\Parameter(
      *      name="pageWidth",
      *      in="formData",
-     *      description="For Manual Position and Best Fit, The width of the page - if emtpy it will use region width",
+     *      description="For Manual Position and Best Fit, The width of the page - if empty it will use region width",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="pageHeight",
      *      in="formData",
-     *      description="For Manual Position and Best Fit, The height of the page - if emtpy it will use region height",
+     *      description="For Manual Position and Best Fit, The height of the page - if empty it will use region height",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="modeId",
      *      in="formData",
-     *      description="The mode option for Webpage, 1- Open Natively, 2- Manual Posiion, 3- Best Ft",
+     *      description="The mode option for Web page, 1- Open Natively, 2- Manual Position, 3- Best Ft",
      *      type="integer",
      *      required=true
      *   ),

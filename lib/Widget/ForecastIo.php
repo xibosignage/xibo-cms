@@ -248,14 +248,14 @@ class ForecastIo extends ModuleWidget
      *  @SWG\Parameter(
      *      name="widgetOriginalWidth",
      *      in="formData",
-     *      description="This is the intedned Width of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
+     *      description="This is the intended Width of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="widgetOriginalHeight",
      *      in="formData",
-     *      description="This is the intedned Height of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
+     *      description="This is the intended Height of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
      *      type="integer",
      *      required=false
      *   ),

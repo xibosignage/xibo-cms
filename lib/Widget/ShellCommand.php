@@ -62,21 +62,21 @@ class ShellCommand extends ModuleWidget
      *  @SWG\Parameter(
      *      name="windowsCommand",
      *      in="formData",
-     *      description="Enter a Windows command line compatibile command",
+     *      description="Enter a Windows command line compatible command",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="linuxCommand",
      *      in="formData",
-     *      description="Enter a Android / Linux command line compatibile command",
+     *      description="Enter a Android / Linux command line compatible command",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="launchThroughCmd",
      *      in="formData",
-     *      description="flag (0,1) Windows only, Should the player launch this command through the windows command line (cmd.exe)? Yhis is useful for batch files, if you try to terminate this command only the command line will be terminated",
+     *      description="flag (0,1) Windows only, Should the player launch this command through the windows command line (cmd.exe)? This is useful for batch files, if you try to terminate this command only the command line will be terminated",
      *      type="integer",
      *      required=false
      *   ),

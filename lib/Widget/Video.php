@@ -52,13 +52,20 @@ class Video extends ModuleWidget
      *  path="/playlist/widget/video/{playlistId}",
      *  operationId="WidgetVideoEdit",
      *  tags={"Widget"},
-     *  summary="Parameters for editing exisitng video on a layout",
-     *  description="Parameters for editing exisitng video on a layout, for adding new videos, please refer to POST /library documentation",
+     *  summary="Parameters for editing existing video on a layout",
+     *  description="Parameters for editing existing video on a layout, for adding new videos, please refer to POST /library documentation",
      *  @SWG\Parameter(
      *      name="name",
      *      in="formData",
      *      description="Edit only - Optional Widget Name",
      *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="Edit Only - (0, 1) Select only if you will provide duration parameter as well",
+     *      type="integer",
      *      required=false
      *  ),
      *  @SWG\Parameter(

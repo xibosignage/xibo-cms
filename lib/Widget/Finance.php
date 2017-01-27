@@ -160,21 +160,21 @@ class Finance extends YahooBase
      *  @SWG\Parameter(
      *      name="item",
      *      in="formData",
-     *      description="Items wanted, can be comma separated (example EURUSD, GBPUSD), pass only with overridetemplate set to 1",
+     *      description="Items wanted, can be comma separated (example EURUSD, GBPUSD), pass only with overrideTemplate set to 1",
      *      type="string",
      *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="effect",
      *      in="formData",
-     *      description="Effect that will be used to transitions between items, avaiable options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind, marqueeUp, marqueeDown, marqueeRight, marqueeLeft",
+     *      description="Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind, marqueeUp, marqueeDown, marqueeRight, marqueeLeft",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="speed",
      *      in="formData",
-     *      description="The transition speed of the selected effect in miliseconds (1000 = normal) or the Marquee speed in a low to high scale (normal = 1)",
+     *      description="The transition speed of the selected effect in milliseconds (1000 = normal) or the Marquee speed in a low to high scale (normal = 1)",
      *      type="integer",
      *      required=false
      *   ),
@@ -230,7 +230,7 @@ class Finance extends YahooBase
      *  @SWG\Parameter(
      *      name="yql",
      *      in="formData",
-     *      description="The YQL query to use for data, pass only with overridetemplate set to 1",
+     *      description="The YQL query to use for data, pass only with overrideTemplate set to 1",
      *      type="string",
      *      required=true
      *   ),
