@@ -498,6 +498,10 @@ class Module extends Base
      *          type="string"
      *      )
      * )
+     *)
+     */
+    
+    /**
      * @param int $widgetId
      */
     public function editWidget($widgetId)
@@ -561,12 +565,10 @@ class Module extends Base
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Widget"),
-     *      @SWG\Header(
-     *          description="successful operation",
-     *          type="string"
-     *      )
-     * )
+     *  )
+     *)
+     */
+    /**
      * @param int $widgetId
      */
     public function deleteWidget($widgetId)
@@ -700,6 +702,9 @@ class Module extends Base
      *          type="string"
      *      )
      * )
+     *)
+     */
+    /**
      * @param string $type
      * @param int $widgetId
      */
@@ -807,6 +812,8 @@ class Module extends Base
      *      )
      *  )
      * )
+     */
+    /**
      * @param int $widgetId
      */
     public function widgetAudio($widgetId)
@@ -865,12 +872,11 @@ class Module extends Base
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Widget"),
-     *      @SWG\Header(
-     *          description="successful operation",
-     *          type="string"
-     *      )
-     * )
+     *  )
+     *)
+     */
+
+     /**
      * @param int $widgetId
      */
     public function widgetAudioDelete($widgetId)

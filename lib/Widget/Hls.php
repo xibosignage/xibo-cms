@@ -122,7 +122,7 @@ class Hls extends ModuleWidget
      *      name="transparency",
      *      in="formData",
      *      description="Flag (0, 1), This causes some android devices to switch to a hardware accelerated web view",
-     *      type="double",
+     *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Response(

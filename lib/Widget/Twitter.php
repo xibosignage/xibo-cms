@@ -255,28 +255,28 @@ class Twitter extends TwitterBase
      *      name="tweetCount",
      *      in="formData",
      *      description="The number of tweets to return",
-     *      type="intger",
+     *      type="integer",
      *      required=false
      *   ), 
      *  @SWG\Parameter(
      *      name="removeUrls",
      *      in="formData",
      *      description="Flag (0, 1) Should the URLs be removed from the tweet text?",
-     *      type="intger",
+     *      type="integer",
      *      required=false
      *   ),      
      *  @SWG\Parameter(
      *      name="removeMentions",
      *      in="formData",
      *      description="Flag (0, 1) Should mentions (@someone) be removed from the tweet text?",
-     *      type="intger",
+     *      type="integer",
      *      required=false
      *   ),      
      *  @SWG\Parameter(
      *      name="removeHashtags",
      *      in="formData",
      *      description="Flag (0, 1) Should the hashtags (#something) be removed from the tweet text",
-     *      type="intger",
+     *      type="integer",
      *      required=false
      *   ),             
      *  @SWG\Parameter(

@@ -98,7 +98,7 @@ class ShellCommand extends ModuleWidget
      *      name="commandCode",
      *      in="formData",
      *      description="Enter a reference code for exiting command in CMS",
-     *      type="String",
+     *      type="string",
      *      required=false
      *   ),
      *  @SWG\Response(

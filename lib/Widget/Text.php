@@ -114,7 +114,7 @@ class Text extends ModuleWidget
      *      name="javaScript",
      *      in="formData",
      *      description="Optional JavaScript",
-     *      type="String",
+     *      type="string",
      *      required=false
      *   ),
      *  @SWG\Response(

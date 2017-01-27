@@ -115,7 +115,7 @@ class Clock extends ModuleWidget
      *      name="ClockFace",
      *      in="formData",
      *      description="For Flip Clock, supported options: TwelveHourClock TwentyFourHourClock HourlyCounter MinuteCounter DailyCounter",
-     *      type="String",
+     *      type="string",
      *      required=false
      *   ),
      *  @SWG\Response(

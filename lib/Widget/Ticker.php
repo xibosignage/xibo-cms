@@ -426,7 +426,7 @@ class Ticker extends ModuleWidget
      *      name="useOrderingClause",
      *      in="formData",
      *      description="EDIT Only, SourceId=2 - flag (0,1) Use advanced order clause - set to 1 if ordering is provided",
-     *      type="interger",
+     *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(

@@ -328,7 +328,7 @@ class DataSetView extends ModuleWidget
      *      name="useOrderingClause",
      *      in="formData",
      *      description="EDIT Only - flag (0,1) Use advanced order clause - set to 1 if ordering is provided",
-     *      type="interger",
+     *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(

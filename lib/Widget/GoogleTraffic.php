@@ -136,14 +136,14 @@ class GoogleTraffic extends ModuleWidget
      *      name="longitude",
      *      in="formData",
      *      description="The longitude for this weather widget, only pass if useDisplayLocation set to 0",
-     *      type="double",
+     *      type="number",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="latitude",
      *      in="formData",
      *      description="The latitude for this weather widget, only pass if useDisplayLocation set to 0",
-     *      type="double",
+     *      type="number",
      *      required=false
      *   ),
      *  @SWG\Response(
