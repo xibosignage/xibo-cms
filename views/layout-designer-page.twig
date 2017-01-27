@@ -26,7 +26,7 @@
     {% if layout.backgroundImageId == 0 %}
         {% set backgroundCss = layout.backgroundColor %}
     {% else %}
-        {% set backgroundCss %}url('{{ urlFor("library.download", {id: layout.backgroundImageId}) }}?preview=1&width={{ width }}&height={{ height }}') top center no-repeat; background-color: {{ layout.backgroundColor }}{% endset %}
+        {% set backgroundCss %}url('{{ urlFor("library.download", {id: layout.backgroundImageId}) }}?preview=1&width={{ width }}&height={{ height }}&proportional=0') top center no-repeat; background-color: {{ layout.backgroundColor }}{% endset %}
     {% endif %}
 
 
