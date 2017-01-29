@@ -186,6 +186,12 @@ class Schedule implements \JsonSerializable
     public $lastRecurrenceWatermark;
 
     /**
+     * @SWG\Property(description="Flag indicating whether the event will sync to the Display timezone")
+     * @var int
+     */
+    public $syncTimezone;
+
+    /**
      * @var ScheduleEvent[]
      */
     private $scheduleEvents = [];
@@ -485,8 +491,8 @@ class Schedule implements \JsonSerializable
     private function add()
     {
         $this->eventId = $this->getStore()->insert('
-          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range, `recurrenceRepeatsOn`, `dayPartId`)
-            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange, :recurrenceRepeatsOn, :dayPartId)
+          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range, `recurrenceRepeatsOn`, `dayPartId`, `syncTimezone`)
+            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange, :recurrenceRepeatsOn, :dayPartId, :syncTimezone)
         ', [
             'eventTypeId' => $this->eventTypeId,
             'campaignId' => $this->campaignId,
@@ -500,7 +506,8 @@ class Schedule implements \JsonSerializable
             'recurrenceDetail' => $this->recurrenceDetail,
             'recurrenceRange' => $this->recurrenceRange,
             'recurrenceRepeatsOn' => $this->recurrenceRepeatsOn,
-            'dayPartId' => $this->dayPartId
+            'dayPartId' => $this->dayPartId,
+            'syncTimezone' => $this->syncTimezone
         ]);
     }
 
@@ -523,7 +530,8 @@ class Schedule implements \JsonSerializable
             recurrence_detail = :recurrenceDetail,
             recurrence_range = :recurrenceRange,
             `recurrenceRepeatsOn` = :recurrenceRepeatsOn,
-            `dayPartId` = :dayPartId
+            `dayPartId` = :dayPartId,
+            `syncTimezone` = :syncTimezone
           WHERE eventId = :eventId
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -539,6 +547,7 @@ class Schedule implements \JsonSerializable
             'recurrenceRange' => $this->recurrenceRange,
             'recurrenceRepeatsOn' => $this->recurrenceRepeatsOn,
             'dayPartId' => $this->dayPartId,
+            'syncTimezone' => $this->syncTimezone,
             'eventId' => $this->eventId
         ]);
     }

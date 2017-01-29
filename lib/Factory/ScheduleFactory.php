@@ -142,7 +142,8 @@ class ScheduleFactory extends BaseFactory
             campaign.campaign,
             `command`.commandId,
             `command`.command,
-            `schedule`.dayPartId
+            `schedule`.dayPartId,
+            `schedule`.syncTimezone
           FROM `schedule`
             LEFT OUTER JOIN `campaign`
             ON campaign.CampaignID = `schedule`.CampaignID
@@ -215,7 +216,7 @@ class ScheduleFactory extends BaseFactory
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isPriority']]);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isPriority', 'syncTimezone']]);
         }
 
         return $entries;

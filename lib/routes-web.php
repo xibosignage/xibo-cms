@@ -165,6 +165,7 @@ $app->get('/user/form/password', '\Xibo\Controller\User:changePasswordForm')->na
 $app->get('/user/form/add', '\Xibo\Controller\User:addForm')->name('user.add.form');
 $app->get('/user/form/edit/:id', '\Xibo\Controller\User:editForm')->name('user.edit.form');
 $app->get('/user/form/delete/:id', '\Xibo\Controller\User:deleteForm')->name('user.delete.form');
+$app->get('/user/form/membership/:id', '\Xibo\Controller\User:membershipForm')->name('user.membership.form');
 // permissions
 $app->get('/user/permissions/form/:entity/:id', '\Xibo\Controller\User:permissionsForm')->name('user.permissions.form');
 
@@ -270,9 +271,11 @@ $app->get('/application/view', '\Xibo\Controller\Applications:displayPage')->nam
 $app->get('/application/data/activity', '\Xibo\Controller\Applications:viewActivity')->name('application.view.activity');
 $app->get('/application/form/add', '\Xibo\Controller\Applications:addForm')->name('application.add.form');
 $app->get('/application/form/edit/:id', '\Xibo\Controller\Applications:editForm')->name('application.edit.form');
+$app->get('/application/form/delete/:id', '\Xibo\Controller\Applications:deleteForm')->name('application.delete.form');
 $app->get('/application/authorize', '\Xibo\Controller\Applications:authorizeRequest')->name('application.authorize.request');
 $app->post('/application/authorize', '\Xibo\Controller\Applications:authorize')->name('application.authorize');
 $app->put('/application/:id', '\Xibo\Controller\Applications:edit')->name('application.edit');
+$app->delete('/application/:id', '\Xibo\Controller\Applications:delete')->name('application.delete');
 
 //
 // module

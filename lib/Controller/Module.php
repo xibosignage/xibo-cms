@@ -655,11 +655,20 @@ class Module extends Base
         if (!$this->getUser()->checkEditable($module->widget))
             throw new AccessDeniedException();
 
+        $audioAvailable = true;
+        if ($module->widget->countAudio() > 0) {
+            $audio = $this->mediaFactory->getById($module->widget->getAudioIds()[0]);
+
+            $this->getLog()->debug('Found audio: ' . $audio->mediaId . ', isEdited = ' . $audio->isEdited . ', retired = ' . $audio->retired);
+            $audioAvailable = ($audio->isEdited == 0 && $audio->retired == 0);
+        }
+
         // Pass to view
         $this->getState()->template = 'module-form-audio';
         $this->getState()->setData([
             'module' => $module,
-            'media' => $this->mediaFactory->getByMediaType('audio')
+            'media' => $this->mediaFactory->getByMediaType('audio'),
+            'isAudioAvailable' => $audioAvailable
         ]);
     }
 
@@ -681,6 +690,11 @@ class Module extends Base
         $volume = $this->getSanitizer()->getInt('volume');
         $loop = $this->getSanitizer()->getCheckbox('loop');
 
+        // Remove existing audio records.
+        foreach ($widget->audio as $audio) {
+            $widget->unassignAudio($audio);
+        }
+
         if ($mediaId != 0) {
             $widgetAudio = $this->widgetAudioFactory->createEmpty();
             $widgetAudio->mediaId = $mediaId;
@@ -688,11 +702,6 @@ class Module extends Base
             $widgetAudio->loop = $loop;
 
             $widget->assignAudio($widgetAudio);
-        } else {
-            // Remove existing audio records.
-            foreach ($widget->audio as $audio) {
-                $widget->unassignAudio($audio);
-            }
         }
 
         $widget->save();

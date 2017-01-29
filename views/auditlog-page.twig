@@ -65,13 +65,21 @@
     {% raw %}
     <script type="text/x-handlebars-template" id="table-array-viewer">
         <a class="arrayViewerToggle" href="#"><span class="fa fa-search"></span></a>
-        <table class="arrayViewer">
-            {{#each items}}
-            <tr>
-                <td>{{ @key }}</td>
-                <td>{{ this }}</td>
-            </tr>
-            {{/each}}
+        <table class="arrayViewer table table-bordered">
+            <thead>
+                <tr>
+                    <th>{{ col1 }}</th>
+                    <th>{{ col2 }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each items}}
+                <tr>
+                    <td>{{ @key }}</td>
+                    <td>{{ this }}</td>
+                </tr>
+                {{/each}}
+            </tbody>
         </table>
     </script>
     {% endraw %}
@@ -103,7 +111,7 @@
                             if (type != "display")
                                 return "";
 
-                            return arrayViewer({"items": data.objectAfter});
+                            return arrayViewer({"col1": "{% trans "Property" %}", "col2": "{% trans "Value" %}", "items": data.objectAfter});
                         },
                         "sortable": false
                     }

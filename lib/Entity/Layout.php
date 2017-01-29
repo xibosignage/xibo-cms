@@ -572,7 +572,7 @@ class Layout implements \JsonSerializable
         $this->getLog()->debug('Save finished for %s', $this);
 
         if ($options['audit'])
-            $this->getLog()->audit('Layout', $this->layoutId, 'Saved', $this);
+            $this->getLog()->audit('Layout', $this->layoutId, 'Saved', $this->getChangedProperties());
     }
 
     /**

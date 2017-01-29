@@ -1,0 +1,19 @@
+{
+  "dbVersion": 130,
+  "appVersion": "1.8.0-rc3",
+  "steps": [
+    {
+      "step": "Add Sync Timezone flag to Schedule",
+      "action": "ALTER TABLE `schedule` ADD syncTimezone TINYINT DEFAULT 0 NOT NULL;"
+    },
+    {
+      "step": "Fix database contraints and indexes",
+      "type": "php",
+      "action": "Xibo\\Upgrade\\FixDatabaseIndexesAndContraints"
+    },
+    {
+      "step": "Fix notification permission entity",
+      "action": "UPDATE `permissionentity` SET entity = 'Xibo\\\\Entity\\\\Notification' WHERE entity = 'XiboEntityNotification';"
+    }
+  ]
+}

@@ -1010,6 +1010,9 @@ class Library extends Base
                 $media->isSaveRequired = true;
                 $media->save();
 
+                // We can remove the temp file
+                @unlink($tempUrl);
+
                 $cssDetails = [
                     'css' => $localCss,
                     'ckeditor' => $ckEditorString

@@ -49,6 +49,8 @@ class FixDatabaseIndexesAndContraints implements Step
     {
         if (!$this->checkIndexExists('lkdisplaydg', ['displayGroupId', 'displayId'], 1))
             $this->addUniqueIndexForLkDisplayDg();
+
+        $this->addForeignKeyToOAuthClients();
     }
 
     /**
@@ -124,6 +126,29 @@ class FixDatabaseIndexesAndContraints implements Step
             // Create the index fresh, now that duplicates removed
             $this->store->update($index, []);
         }
+    }
 
+    private function addForeignKeyToOAuthClients()
+    {
+        // Does the constraint already exist?
+        if ($this->store->exists('
+            SELECT *
+            FROM INFORMATION_SCHEMA.STATISTICS
+            WHERE table_schema=DATABASE()
+                  AND table_name = \'oauth_clients\'
+            AND index_name LIKE \'%_fk\'
+            AND column_name = \'userId\'
+        ;', [])) {
+            return;
+        }
+
+        // Detect any client records that have userIds which do not exist and update them
+        $this->store->update('
+          UPDATE `oauth_clients` SET userId = (SELECT userId FROM `user` WHERE userTypeId = 1 LIMIT 1)
+           WHERE userId NOT IN (SELECT userId FROM `user`);
+        ', []);
+
+        // Create the index fresh, now that duplicates removed
+        $this->store->update('ALTER TABLE `oauth_clients` ADD CONSTRAINT oauth_clients_user_UserID_fk FOREIGN KEY (userId) REFERENCES `user` (UserID);', []);
     }
 }

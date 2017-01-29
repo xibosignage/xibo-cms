@@ -320,6 +320,7 @@ $app->post('/user', '\Xibo\Controller\User:add')->name('user.add');
 $app->put('/user/password/change', '\Xibo\Controller\User:changePassword')->name('user.change.password');
 $app->put('/user/:id', '\Xibo\Controller\User:edit')->name('user.edit');
 $app->delete('/user/:id', '\Xibo\Controller\User:delete')->name('user.delete');
+$app->post('/user/:id/usergroup/assign', '\Xibo\Controller\User:assignUserGroup')->name('user.assign.userGroup');
 // permissions
 $app->get('/user/permissions/:entity/:id', '\Xibo\Controller\User:permissionsGrid')->name('user.permissions');
 $app->post('/user/permissions/:entity/:id', '\Xibo\Controller\User:permissions');

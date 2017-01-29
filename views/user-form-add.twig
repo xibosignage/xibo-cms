@@ -82,35 +82,35 @@
                     <div class="tab-pane" id="reference">
                         {% set title %}{% trans "First Name" %}{% endset %}
                         {% set helpText %}{% trans "The User's First Name." %}{% endset %}
-                        {{ forms.input("firstName", title, "", helpText, "", "required maxlength='254'") }}
+                        {{ forms.input("firstName", title, "", helpText, "", "maxlength='254'") }}
 
                         {% set title %}{% trans "Last Name" %}{% endset %}
                         {% set helpText %}{% trans "The User's Last Name." %}{% endset %}
-                        {{ forms.input("lastName", title, "", helpText, "", "required maxlength='254'") }}
+                        {{ forms.input("lastName", title, "", helpText, "", "maxlength='254'") }}
 
                         {% set title %}{% trans "Phone Number" %}{% endset %}
                         {% set helpText %}{% trans "The User's Phone Number." %}{% endset %}
-                        {{ forms.input("phone", title, "", helpText, "", "required maxlength='254'") }}
+                        {{ forms.input("phone", title, "", helpText, "", "maxlength='254'") }}
 
                         {% set title %}{% trans "Reference 1" %}{% endset %}
                         {% set helpText %}{% trans "A reference field for custom user data" %}{% endset %}
-                        {{ forms.input("ref1", title, "", helpText, "", "required maxlength='254'") }}
+                        {{ forms.input("ref1", title, "", helpText, "", "maxlength='254'") }}
 
                         {% set title %}{% trans "Reference 2" %}{% endset %}
                         {% set helpText %}{% trans "A reference field for custom user data" %}{% endset %}
-                        {{ forms.input("ref2", title, "", helpText, "", "required maxlength='254'") }}
+                        {{ forms.input("ref2", title, "", helpText, "", "maxlength='254'") }}
 
                         {% set title %}{% trans "Reference 3" %}{% endset %}
                         {% set helpText %}{% trans "A reference field for custom user data" %}{% endset %}
-                        {{ forms.input("ref3", title, "", helpText, "", "required maxlength='254'") }}
+                        {{ forms.input("ref3", title, "", helpText, "", "maxlength='254'") }}
 
                         {% set title %}{% trans "Reference 4" %}{% endset %}
                         {% set helpText %}{% trans "A reference field for custom user data" %}{% endset %}
-                        {{ forms.input("ref4", title, "", helpText, "", "required maxlength='254'") }}
+                        {{ forms.input("ref4", title, "", helpText, "", "maxlength='254'") }}
 
                         {% set title %}{% trans "Reference 5" %}{% endset %}
                         {% set helpText %}{% trans "A reference field for custom user data" %}{% endset %}
-                        {{ forms.input("ref5", title, "", helpText, "", "required maxlength='254'") }}
+                        {{ forms.input("ref5", title, "", helpText, "", "maxlength='254'") }}
                     </div>
                 </div>
             </form>

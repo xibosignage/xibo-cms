@@ -1071,6 +1071,7 @@ class LayoutFactory extends BaseFactory
             $layout->statusMessage = $row['statusMessage'];
 
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
+            $layout->setOriginals();
 
             $entries[] = $layout;
         }

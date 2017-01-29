@@ -308,6 +308,11 @@ class Soap
 
         $this->getLog()->debug(sprintf('FromDT = %s. ToDt = %s', $fromFilter->toRssString(), $toFilter->toRssString()));
 
+        // Add the filter dates to the RF xml document
+        $fileElements->setAttribute('generated', $this->getDate()->getLocalDate());
+        $fileElements->setAttribute('fitlerFrom', $this->getDate()->getLocalDate($fromFilter));
+        $fileElements->setAttribute('fitlerTo', $this->getDate()->getLocalDate($toFilter));
+
         try {
             $dbh = $this->getStore()->getConnection();
 
@@ -740,7 +745,7 @@ class Soap
 
         $output = $cache->get();
 
-        if ($cache->isHit()) {
+        if (false && $cache->isHit()) {
             $this->getLog()->info('Returning Schedule from Cache for display %s. Options %s.', $this->display->display, json_encode($options));
 
             // Log Bandwidth
@@ -765,6 +770,11 @@ class Soap
             $toFilter = $fromFilter->copy()->addHour();
 
         $this->getLog()->debug(sprintf('FromDT = %s. ToDt = %s', $fromFilter->toRssString(), $toFilter->toRssString()));
+
+        // Add the filter dates to the RF xml document
+        $layoutElements->setAttribute('generated', $this->getDate()->getLocalDate());
+        $layoutElements->setAttribute('fitlerFrom', $this->getDate()->getLocalDate($fromFilter));
+        $layoutElements->setAttribute('fitlerTo', $this->getDate()->getLocalDate($toFilter));
 
         try {
             $dbh = $this->getStore()->getConnection();
@@ -795,7 +805,8 @@ class Soap
                     schedule.lastRecurrenceWatermark,
                     schedule.eventId, 
                     schedule.is_priority,
-                    schedule.dayPartId
+                    schedule.dayPartId,
+                    schedule.syncTimezone
             ';
 
             if (!$options['dependentsAsNodes']) {
@@ -916,8 +927,18 @@ class Soap
                     $eventTypeId = $row['eventTypeId'];
                     $layoutId = $row['layoutId'];
                     $commandCode = $row['code'];
-                    $fromDt = $this->getDate()->getLocalDate($scheduleEvent->fromDt);
-                    $toDt = $this->getDate()->getLocalDate($scheduleEvent->toDt);
+
+                    // Handle the from/to date of the events we have been returned (they are all returned with respect to
+                    // the current CMS timezone)
+                    // Does the Display have a timezone?
+                    if (!empty($this->display->timeZone) && $schedule->syncTimezone == 1) {
+                        $fromDt = $this->getDate()->getLocalDate($scheduleEvent->fromDt, null, $this->display->timeZone);
+                        $toDt = $this->getDate()->getLocalDate($scheduleEvent->toDt, null, $this->display->timeZone);
+                    } else {
+                        $fromDt = $this->getDate()->getLocalDate($scheduleEvent->fromDt);
+                        $toDt = $this->getDate()->getLocalDate($scheduleEvent->toDt);
+                    }
+
                     $scheduleId = $row['eventId'];
                     $is_priority = $this->getSanitizer()->int($row['is_priority']);
 
@@ -1367,6 +1388,10 @@ class Soap
         if ($statXml == "")
             throw new \SoapFault('Receiver', "Stat XML is empty.");
 
+        // Store an array of parsed stat data for insert
+        $stats = [];
+        $now = $this->getDate()->getLocalDate();
+
         // Load the XML into a DOMDocument
         $document = new \DOMDocument("1.0");
         $document->loadXML($statXml);
@@ -1387,8 +1412,12 @@ class Soap
                 continue;
             }
 
-            $scheduleID = $node->getAttribute('scheduleid');
-            $layoutID = $node->getAttribute('layoutid');
+            $scheduleId = $node->getAttribute('scheduleid');
+
+            if (empty($scheduleId))
+                $scheduleId = 0;
+
+            $layoutId = $node->getAttribute('layoutid');
             
             // Slightly confusing behaviour here to support old players without introducting a different call in 
             // xmds v=5.
@@ -1402,7 +1431,7 @@ class Soap
 
             if ($widgetId > 0) {
                 // Lookup the mediaId
-                $media = $this->mediaFactory->getByLayoutAndWidget($layoutID, $widgetId);
+                $media = $this->mediaFactory->getByLayoutAndWidget($layoutId, $widgetId);
 
                 if (count($media) <= 0) {
                     // Non-media widget
@@ -1417,23 +1446,40 @@ class Soap
             if ($tag == 'null')
                 $tag = null;
 
-            // Write the stat record with the information we have available to us.
-            try {
-                $stat = new Stat($this->getStore(), $this->getLog());
-                $stat->type = $type;
-                $stat->fromDt = $fromdt;
-                $stat->toDt = $todt;
-                $stat->scheduleId = $scheduleID;
-                $stat->displayId = $this->display->displayId;
-                $stat->layoutId = $layoutID;
-                $stat->mediaId = $mediaId;
-                $stat->widgetId = $widgetId;
-                $stat->tag = $tag;
-                $stat->save();
+            // Add this information to an array for batch insert
+            $stats[] = [
+                'type' => $type,
+                'statDate' => $now,
+                'fromDt' => $fromdt,
+                'toDt' => $todt,
+                'scheduleId' => $scheduleId,
+                'displayId' => $this->display->displayId,
+                'layoutId' => $layoutId,
+                'mediaId' => $mediaId,
+                'tag' => $tag,
+                'widgetId' => $widgetId,
+            ];
+        }
+
+        if (count($stats) > 0) {
+            // Insert
+            $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, layoutID, mediaID, Tag, `widgetId`) VALUES ';
+            $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+
+            $sql = $sql . implode(', ', array_fill(1, count($stats), $placeHolders));
+
+            // Flatten the array
+            $data = [];
+            foreach ($stats as $stat) {
+                foreach ($stat as $field) {
+                    $data[] = $field;
+                }
             }
-            catch (\PDOException $e) {
-                $this->getLog()->error('Stat Add failed with error: %s', $e->getMessage());
-            }
+
+            // Insert
+            $this->getStore()->isolated($sql, $data);
+        } else {
+            $this->getLog()->info('0 stats resolved from data package');
         }
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SUBMITSTATS, strlen($statXml));
