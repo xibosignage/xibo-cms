@@ -369,6 +369,9 @@ class Schedule extends Base
 
         $date = $this->getSanitizer()->getDate('date');
 
+        // Reset the seconds
+        $date->second(0);
+
         // Get a list of scheduled events
         $events = [];
         $displayGroups = [];
@@ -395,10 +398,13 @@ class Schedule extends Base
                 ->setDayPartFactory($this->dayPartFactory)
                 ->load();
 
+            // Get scheduled events based on recurrence
             $scheduleEvents = $schedule->getEvents($date, $date);
 
+            // If this event is active, collect extra information and add to the events list
             if (count($scheduleEvents) > 0) {
 
+                // Add the Layout
                 $layoutId = $event['layoutId'];
 
                 if ($layoutId != 0 && !array_key_exists($layoutId, $layouts)) {
@@ -410,6 +416,7 @@ class Schedule extends Base
                     else
                         $layouts[$layoutId] = $layout->layout;
 
+                    // Add the Campaign
                     $layout->campaigns = $this->campaignFactory->getByLayoutId($layout->layoutId);
 
                     if (count($layout->campaigns) > 0) {
@@ -423,6 +430,7 @@ class Schedule extends Base
                 }
 
                 // Display Group details
+                $schedule->excludeProperty('displayGroups');
                 $schedule->displayGroupIds = [];
                 foreach ($schedule->displayGroups as $displayGroup) {
                     if (!array_key_exists($displayGroup->displayGroupId, $displayGroups)) {
@@ -430,7 +438,23 @@ class Schedule extends Base
                     }
                 }
 
-                $schedule->excludeProperty('displayGroups');
+                // Determine the intermediate display groups
+                $schedule->intermediateDisplayGroupIds = [];
+
+                // We need to trace the route between the events displayGroupId and the displayGroupId we
+                // are looking at. We should start at the displayGroupId for the event and stop when we reach
+                // the first occurence of the displayGroupId we are looking at.
+                $tree = $this->displayGroupFactory->getRelationShipTree(intval($event['displayGroupId']));
+
+                foreach ($tree as $branch) {
+                    if ($branch->depth > 0 && $branch->displayGroupId != $displayGroupId) {
+                        $schedule->intermediateDisplayGroupIds[] = $branch->displayGroupId;
+
+                        if (!array_key_exists($branch->displayGroupId, $displayGroups)) {
+                            $displayGroups[$branch->displayGroupId] = $this->displayGroupFactory->getById($branch->displayGroupId);
+                        }
+                    }
+                }
 
                 foreach ($scheduleEvents as $scheduleEvent) {
                     $schedule->fromDt = $scheduleEvent->fromDt;
