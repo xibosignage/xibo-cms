@@ -346,7 +346,7 @@ class SAMLAuthentication extends Middleware
                 }
                 else {
                     // Store the current route so we can come back to it after login
-                    $app->flash('priorRoute', $app->request()->getResourceUri());
+                    $app->flash('priorRoute', $app->request()->getRootUri() . $app->request()->getResourceUri());
 
                     $redirectToLogin();
                 }
