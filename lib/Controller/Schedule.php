@@ -334,6 +334,126 @@ class Schedule extends Base
     }
 
     /**
+     * Event List
+     * @param $displayGroupId
+     *
+     * @SWG\Get(
+     *  path="/schedule/:displayGroupId/events",
+     *  operationId="scheduleCalendarData",
+     *  tags={"schedule"},
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      description="The DisplayGroupId to return the event list for.",
+     *      in="path",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="date",
+     *      in="formData",
+     *      required=true,
+     *      type="string",
+     *      description="Date in Y-m-d H:i:s"
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful response"
+     *  )
+     * )
+     */
+    public function eventList($displayGroupId)
+    {
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+        if (!$this->getUser()->checkViewable($displayGroup))
+            throw new AccessDeniedException();
+
+        $date = $this->getSanitizer()->getDate('date');
+
+        // Get a list of scheduled events
+        $events = [];
+        $displayGroups = [];
+        $layouts = [];
+        $campaigns = [];
+
+        // Is this group a display specific group, or a standalone?
+        $options = [];
+        $displayId = null;
+        if ($displayGroup->isDisplaySpecific == 1) {
+            // We should lookup the displayId for this group.
+            $display = $this->displayFactory->getByDisplayGroupId($displayGroupId)[0];
+            $displayId = $display->displayId;
+        } else {
+            $options['useGroupId'] = true;
+            $options['displayGroupId'] = $displayGroupId;
+        }
+
+        foreach ($this->scheduleFactory->getForXmds($displayId, $date->format('U'), $date->format('U'), $options) as $event) {
+
+            $schedule = $this->scheduleFactory->createEmpty()->hydrate($event, ['intProperties' => ['isPriority', 'syncTimezone', 'displayOrder']]);
+            $schedule
+                ->setDateService($this->getDate())
+                ->setDayPartFactory($this->dayPartFactory)
+                ->load();
+
+            $scheduleEvents = $schedule->getEvents($date, $date);
+
+            if (count($scheduleEvents) > 0) {
+
+                $layoutId = $event['layoutId'];
+
+                if ($layoutId != 0 && !array_key_exists($layoutId, $layouts)) {
+                    // Look up the layout details
+                    $layout = $this->layoutFactory->getById($layoutId);
+
+                    if ($this->getUser()->checkViewable($layout))
+                        $layouts[$layoutId] = $layout;
+                    else
+                        $layouts[$layoutId] = $layout->layout;
+
+                    $layout->campaigns = $this->campaignFactory->getByLayoutId($layout->layoutId);
+
+                    if (count($layout->campaigns) > 0) {
+                        // Add to the campaigns array
+                        foreach ($layout->campaigns as $campaign) {
+                            if (!array_key_exists($campaign->campaignId, $campaigns)) {
+                                $campaigns[$campaign->campaignId] = $campaign;
+                            }
+                        }
+                    }
+                }
+
+                // Display Group details
+                $schedule->displayGroupIds = [];
+                foreach ($schedule->displayGroups as $displayGroup) {
+                    if (!array_key_exists($displayGroup->displayGroupId, $displayGroups)) {
+                        $displayGroups[$displayGroup->displayGroupId] = $displayGroup;
+                    }
+                }
+
+                $schedule->excludeProperty('displayGroups');
+
+                foreach ($scheduleEvents as $scheduleEvent) {
+                    $schedule->fromDt = $scheduleEvent->fromDt;
+                    $schedule->toDt = $scheduleEvent->toDt;
+                    $schedule->layoutId = intval($event['layoutId']);
+                    $schedule->displayGroupId = intval($event['displayGroupId']);
+
+                    $events[] = $schedule;
+                }
+            }
+        }
+
+        $this->getState()->hydrate([
+             'data' => [
+                 'events' => $events,
+                 'displayGroups' => $displayGroups,
+                 'layouts' => $layouts,
+                 'campaigns' => $campaigns
+             ]
+        ]);
+    }
+
+    /**
      * Shows a form to add an event
      */
     function addForm()

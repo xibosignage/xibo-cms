@@ -745,7 +745,7 @@ class Soap
 
         $output = $cache->get();
 
-        if (false && $cache->isHit()) {
+        if ($cache->isHit()) {
             $this->getLog()->info('Returning Schedule from Cache for display %s. Options %s.', $this->display->display, json_encode($options));
 
             // Log Bandwidth
@@ -791,85 +791,7 @@ class Soap
 
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
-            $SQL = '
-                SELECT `schedule`.eventTypeId, 
-                    layout.layoutId, 
-                    `layout`.status, 
-                    `command`.code, 
-                    schedule.fromDt, 
-                    schedule.toDt,
-                    schedule.recurrence_type AS recurrenceType,
-                    schedule.recurrence_detail AS recurrenceDetail,
-                    schedule.recurrence_range AS recurrenceRange,
-                    schedule.recurrenceRepeatsOn,
-                    schedule.lastRecurrenceWatermark,
-                    schedule.eventId, 
-                    schedule.is_priority,
-                    schedule.dayPartId,
-                    schedule.syncTimezone
-            ';
-
-            if (!$options['dependentsAsNodes']) {
-                // Pull in the dependents using GROUP_CONCAT
-                $SQL .= ' ,
-                  (
-                    SELECT GROUP_CONCAT(DISTINCT StoredAs)
-                      FROM `media`
-                        INNER JOIN `lkwidgetmedia`
-                        ON `lkwidgetmedia`.MediaID = `media`.MediaID
-                        INNER JOIN `widget`
-                        ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                        INNER JOIN `lkregionplaylist`
-                        ON `lkregionplaylist`.playlistId = `widget`.playlistId
-                        INNER JOIN `region`
-                        ON `region`.regionId = `lkregionplaylist`.regionId
-                     WHERE `region`.layoutId = `layout`.layoutId
-                      AND media.type <> \'module\'
-                    GROUP BY `region`.layoutId
-                  ) AS Dependents
-                ';
-            }
-
-            $SQL .= '
-                   FROM `schedule`
-                    INNER JOIN `lkscheduledisplaygroup`
-                    ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
-                    INNER JOIN `lkdgdg`
-                    ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
-                    INNER JOIN `lkdisplaydg`
-                    ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
-                    LEFT OUTER JOIN `campaign`
-                    ON `schedule`.CampaignID = campaign.CampaignID
-                    LEFT OUTER JOIN `lkcampaignlayout`
-                    ON lkcampaignlayout.CampaignID = campaign.CampaignID
-                    LEFT OUTER JOIN `layout`
-                    ON lkcampaignlayout.LayoutID = layout.LayoutID
-                      AND layout.retired = 0
-                    LEFT OUTER JOIN `command`
-                    ON `command`.commandId = `schedule`.commandId
-                 WHERE lkdisplaydg.DisplayID = :displayId
-                    AND (
-                      (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
-                      OR `schedule`.recurrence_range >= :fromDt OR (
-                        IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
-                        )
-                    )
-                ORDER BY schedule.DisplayOrder, IFNULL(lkcampaignlayout.DisplayOrder, 0), schedule.FromDT
-            ';
-
-            $params = array(
-                'displayId' => $this->display->displayId,
-                'toDt' => $toFilter->format('U'),
-                'fromDt' => $fromFilter->format('U')
-            );
-
-            if ($this->display->isAuditing())
-                $this->getLog()->sql($SQL, $params);
-
-            $sth = $dbh->prepare($SQL);
-            $sth->execute($params);
-
-            $events = $sth->fetchAll(\PDO::FETCH_ASSOC);
+            $events = $this->scheduleFactory->getForXmds($this->display->displayId, $fromFilter->format('U'), $toFilter->format('U'), $options);
 
             // If our dependents are nodes, then build a list of layouts we can use to query for nodes
             $layoutDependents = [];
@@ -940,7 +862,7 @@ class Soap
                     }
 
                     $scheduleId = $row['eventId'];
-                    $is_priority = $this->getSanitizer()->int($row['is_priority']);
+                    $is_priority = $this->getSanitizer()->int($row['isPriority']);
 
                     if ($eventTypeId == Schedule::$LAYOUT_EVENT) {
                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
