@@ -667,7 +667,7 @@ class Module extends Base
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",
-     *      description="The widget ID to add the transtion to",
+     *      description="The widget ID to add the transition to",
      *      type="integer",
      *      required=true
      *   ),
@@ -681,7 +681,7 @@ class Module extends Base
      *  @SWG\Parameter(
      *      name="transitionDuration",
      *      in="formData",
-     *      description="Duration of this transition in miliseconds",
+     *      description="Duration of this transition in milliseconds",
      *      type="integer",
      *      required=false
      *  ),
