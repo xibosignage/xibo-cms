@@ -34,6 +34,13 @@ class Audio extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Edit Only - The Widget name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
      *      name="mute",
      *      in="formData",
      *      description="Edit only - Flag (0, 1) Should the audio be muted?",
