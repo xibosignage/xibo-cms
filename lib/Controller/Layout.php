@@ -349,7 +349,7 @@ class Layout extends Base
      *      in="formData",
      *      description="A HEX color to use as the background color of this Layout.",
      *      type="string",
-     *      required=false
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="backgroundImageId",
@@ -363,14 +363,14 @@ class Layout extends Base
      *      in="formData",
      *      description="The Layer Number to use for the background.",
      *      type="integer",
-     *      required=false
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="resolutionId",
      *      in="formData",
      *      description="The Resolution ID to use on this Layout.",
      *      type="integer",
-     *      required=true
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=200,
