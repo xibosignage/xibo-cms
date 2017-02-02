@@ -144,7 +144,7 @@ pbBhRgkIdydXoZZdjQIDAQAB
             $this->fail('Display was not added correctly');
         /** @var XiboDisplay $display */
         $display = $displays[0];
-        # Check if xmr channerl and pubkey were registered correctly
+        # Check if xmr channel and pubkey were registered correctly
         $this->assertSame($xmrChannel, $display->xmrChannel, 'XMR Channel not set correctly by XMDS Register Display');
         $this->assertSame($xmrPubkey, $display->xmrPubKey, 'XMR PubKey not set correctly by XMDS Register Display');
         # Call request screenshot

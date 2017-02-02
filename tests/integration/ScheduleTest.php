@@ -142,7 +142,7 @@ class ScheduleTest extends LocalWebTestCase
      */
     public function testAddEventCampaign($isCampaign, $scheduleFrom, $scheduleTo, $scheduledayPartId, $scheduleRecurrenceType, $scheduleRecurrenceDetail, $scheduleRecurrenceRange, $scheduleOrder, $scheduleIsPriority)
     {
-        # Create new dispay group
+        # Create new display group
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
         $layout = null;
         $campaign = null;
@@ -298,7 +298,7 @@ class ScheduleTest extends LocalWebTestCase
         ];
     }
     /**
-     * @group add
+     * @group minimal
      */
     public function testEdit()
     {
