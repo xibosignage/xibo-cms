@@ -11,6 +11,7 @@ namespace Xibo\Middleware;
 
 use Slim\Slim;
 use Slim\View;
+use Xibo\Helper\HttpsDetect;
 
 class ApiView extends View
 {
@@ -77,7 +78,7 @@ class ApiView extends View
                     $size = $app->sanitizerService->getInt('length', 10);
 
                     $linkHeader = '';
-                    $url = $app->request()->getUrl() . $app->request()->getPath();
+                    $url = (new HttpsDetect())->getUrl($app) . $app->request()->getPath();
 
                     // Is there a next page?
                     if ($start + $size < $totalRows)
