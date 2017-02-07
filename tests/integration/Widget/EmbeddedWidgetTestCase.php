@@ -85,7 +85,7 @@ class EmbeddedWidgetTestCase extends WidgetTestCase
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         $durationNew = 80;
         # Create embedded widget
-        $embedded = (new XiboEmbedded($this->getEntityProvider()))->create('API embedded', 60, 0, 0, null, null, null, $region->playlists[0]['playlistId']);
+        $embedded = (new XiboEmbedded($this->getEntityProvider()))->create('API embedded', 60, 1, 0, 0, null, null, null, $region->playlists[0]['playlistId']);
         $response = $this->client->put('/playlist/widget/' . $embedded->widgetId, [
             'name' => 'EDITED Name',
             'duration' => $durationNew,
@@ -111,7 +111,7 @@ class EmbeddedWidgetTestCase extends WidgetTestCase
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create embedded widget
-        $embedded = (new XiboEmbedded($this->getEntityProvider()))->create('API embedded', 60, 0, 0, null, null, null, $region->playlists[0]['playlistId']);
+        $embedded = (new XiboEmbedded($this->getEntityProvider()))->create('API embedded', 60, 1, 0, 0, null, null, null, $region->playlists[0]['playlistId']);
         # Delete it
         $this->client->delete('/playlist/widget/' . $embedded->widgetId);
         $response = json_decode($this->client->response->body());

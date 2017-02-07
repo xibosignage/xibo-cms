@@ -85,15 +85,17 @@ class AudioWidgetTestCase extends WidgetTestCase
         # Upload new media
         $media = (new XiboLibrary($this->getEntityProvider()))->create('API audio', PROJECT_ROOT . '/tests/resources/cc0_f1_gp_cars_pass_crash.mp3');
         # Assign media to a playlist
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], $region->playlists[0]['playlistId']);
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], null, $region->playlists[0]['playlistId']);
         $name = 'Edited Name';
         $duration = 80;
+        $useDuration = 1;
         $mute = 0;
         $loop = 0;
         $widget = $playlist->widgets[0];
         $response = $this->client->put('/playlist/widget/' . $widget->widgetId, [
             'name' => $name,
             'duration' => $duration,
+            'useDuration' => $useDuration,
             'mute' => $mute,
             'loop' => $loop,
             ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
@@ -111,6 +113,9 @@ class AudioWidgetTestCase extends WidgetTestCase
             if ($option['option'] == 'loop') {
                 $this->assertSame($loop, intval($option['value']));
             }
+            if ($option['option'] == 'useDuration') {
+                $this->assertSame($useDuration, intval($option['value']));
+            }
         }
     }
 
@@ -123,7 +128,7 @@ class AudioWidgetTestCase extends WidgetTestCase
         # Upload new media
         $media = (new XiboLibrary($this->getEntityProvider()))->create('API Audio', PROJECT_ROOT . '/tests/resources/cc0_f1_gp_cars_pass_crash.mp3');
         # Assign media to a playlist
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], $region->playlists[0]['playlistId']);
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], null, $region->playlists[0]['playlistId']);
         $widget = $playlist->widgets[0];
         # Delete it
         $this->client->delete('/playlist/widget/' . $widget->widgetId);
@@ -141,7 +146,7 @@ class AudioWidgetTestCase extends WidgetTestCase
         $mediaImg = (new XiboLibrary($this->getEntityProvider()))->create('API image', PROJECT_ROOT . '/tests/resources/xts-night-001.jpg');
         $mediaAud = (new XiboLibrary($this->getEntityProvider()))->create('API audio', PROJECT_ROOT . '/tests/resources/cc0_f1_gp_cars_pass_crash.mp3');
         # Assign image media to a playlist
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$mediaImg->mediaId], $region->playlists[0]['playlistId']);
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$mediaImg->mediaId], null, $region->playlists[0]['playlistId']);
         $widget = $playlist->widgets[0];
         $volume = 80;
         $loop = 1;

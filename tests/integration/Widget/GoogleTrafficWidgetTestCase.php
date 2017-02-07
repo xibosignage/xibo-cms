@@ -158,7 +158,7 @@ class GoogleTrafficWidgetTestCase extends WidgetTestCase
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create Google traffic widget 
-        $googleTraffic = (new XiboGoogleTraffic($this->getEntityProvider()))->create('Traffic with custom location - Italy', 45, 0, 7.640974, 45.109612, 80, $region->playlists[0]['playlistId']);     
+        $googleTraffic = (new XiboGoogleTraffic($this->getEntityProvider()))->create('Traffic with custom location - Italy', 45, 1, 0, 7.640974, 45.109612, 80, $region->playlists[0]['playlistId']);     
         $nameNew = 'Edited Widget';
         $durationNew = 100;
         $longNew = 23.1223;
@@ -167,6 +167,7 @@ class GoogleTrafficWidgetTestCase extends WidgetTestCase
         $response = $this->client->put('/playlist/widget/' . $googleTraffic->widgetId, [
             'name' => $nameNew,
             'duration' => $durationNew,
+            'useDuration' => 1,
             'useDisplayLocation' => 0,
             'longitude' => $longNew,
             'latitude' => $latNew,
@@ -200,7 +201,7 @@ class GoogleTrafficWidgetTestCase extends WidgetTestCase
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create Google traffic widget 
-        $googleTraffic = (new XiboGoogleTraffic($this->getEntityProvider()))->create('Traffic with custom location - Italy', 45, 0, 7.640974, 45.109612, 80, $region->playlists[0]['playlistId']);    
+        $googleTraffic = (new XiboGoogleTraffic($this->getEntityProvider()))->create('Traffic with custom location - Italy', 45, 1, 0, 7.640974, 45.109612, 80, $region->playlists[0]['playlistId']);    
         # Delete it
         $this->client->delete('/playlist/widget/' . $googleTraffic->widgetId);
         $response = json_decode($this->client->response->body());

@@ -84,7 +84,7 @@ class ImageWidgetTestCase extends WidgetTestCase
         # Upload new media
         $media = (new XiboLibrary($this->getEntityProvider()))->create('API image', PROJECT_ROOT . '/tests/resources/xts-night-001.jpg');
         # Assign media to a playlist
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], $region->playlists[0]['playlistId']);
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], 10, $region->playlists[0]['playlistId']);
         $nameNew = 'Edited Name';
         $durationNew = 80;
         $scaleTypeIdNew = 'stretch';
@@ -94,6 +94,7 @@ class ImageWidgetTestCase extends WidgetTestCase
         $response = $this->client->put('/playlist/widget/' . $widget->widgetId, [
             'name' => $nameNew,
             'duration' => $durationNew,
+            'useDuration' => 1,
             'scaleTypeId' => $scaleTypeIdNew,
             'alignId' => $alignIdNew,
             'valignId' => $valignIdNew,
@@ -128,7 +129,7 @@ class ImageWidgetTestCase extends WidgetTestCase
         # Upload new media
         $media = (new XiboLibrary($this->getEntityProvider()))->create('API image', PROJECT_ROOT . '/tests/resources/xts-night-001.jpg');
         # Assign media to a region
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], $region->playlists[0]['playlistId']);
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], 10, $region->playlists[0]['playlistId']);
         $widget = $playlist->widgets[0];
         # Delete it
         $this->client->delete('/playlist/widget/' . $widget->widgetId);

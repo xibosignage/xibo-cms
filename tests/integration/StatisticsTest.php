@@ -153,8 +153,8 @@ class StatisticsTest extends LocalWebTestCase
        // $media2 = (new XiboLibrary($this->getEntityProvider()))->create('API image 2', PROJECT_ROOT . '/tests/resources/xts-flowers-001.jpg');
         $media3 = (new XiboLibrary($this->getEntityProvider()))->create('API image 3', PROJECT_ROOT . '/tests/resources/xts-layout-003-background.jpg');
         # Assign media to a playlists
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], $region->playlists[0]['playlistId']);
-        $playlist2 = (new XiboPlaylist($this->getEntityProvider()))->assign([$media3->mediaId], $region2->playlists[0]['playlistId']);
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], 10, $region->playlists[0]['playlistId']);
+        $playlist2 = (new XiboPlaylist($this->getEntityProvider()))->assign([$media3->mediaId], 10, $region2->playlists[0]['playlistId']);
         # Get Widget Id
         $widget = $playlist->widgets[0];
        // $widget2 = $playlist->widgets[1];

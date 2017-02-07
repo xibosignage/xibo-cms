@@ -79,7 +79,7 @@ class ShellCommandWidgetTestCase extends WidgetTestCase
      * @group add
      * @dataProvider provideSuccessCases
      */
-    public function testAdd($name, $duration, $windowsCommand, $linuxCommand, $launchThroughCmd, $terminateCommand, $useTaskkill, $commandCode)
+    public function testAdd($name, $duration, $useDuration, $windowsCommand, $linuxCommand, $launchThroughCmd, $terminateCommand, $useTaskkill, $commandCode)
     {
         $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunit code');
         # Create layout
@@ -90,6 +90,7 @@ class ShellCommandWidgetTestCase extends WidgetTestCase
         $response = $this->client->post('/playlist/widget/shellCommand/' . $region->playlists[0]['playlistId'], [
             'name' => $name,
             'duration' => $duration,
+            'useDuration' => $useDuration,
             'windowsCommand' => $windowsCommand,
             'linuxCommand' => $linuxCommand,
             'launchThroughCmd' => $launchThroughCmd,
@@ -115,9 +116,9 @@ class ShellCommandWidgetTestCase extends WidgetTestCase
     {
         # Sets of data used in testAdd
         return [
-            'Windows new command' => ['Api Windows command', 20, '-reboot', NULL, 1, null, 1, null],
-            'Android new command' => ['Api Android command', 30, null, '-reboot', null, 1, null, null],
-            'Previously created command' => ['Api shell command', 50, null, null, 1, 1, 1, 'phpunit code']
+            'Windows new command' => ['Api Windows command', 20, 1,'-reboot', NULL, 1, null, 1, null],
+            'Android new command' => ['Api Android command', 30, 1, null, '-reboot', null, 1, null, null],
+            'Previously created command' => ['Api shell command', 50, 1, null, null, 1, 1, 1, 'phpunit code']
         ];
     }
 
@@ -130,13 +131,14 @@ class ShellCommandWidgetTestCase extends WidgetTestCase
         # Create a command with wrapper
         $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunit code');
         # Create a shell command widget with wrapper
-        $shellCommand = (new XiboShellCommand($this->getEntityProvider()))->create('Api shell command', 0, null, null, 1, 1, 1, 'test code', $region->playlists[0]['playlistId']);
+        $shellCommand = (new XiboShellCommand($this->getEntityProvider()))->create('Api shell command', 0, 1, null, null, 1, 1, 1, 'test code', $region->playlists[0]['playlistId']);
         $nameNew = 'Edited Name';
         $durationNew = 80;
         $commandCode = $command->code;
         $response = $this->client->put('/playlist/widget/' . $shellCommand->widgetId, [
             'name' => $nameNew,
             'duration' => $durationNew,
+            'useDuration' => 1,
             'windowsCommand' => null,
             'linuxCommand' => null,
             'launchThroughCmd' => 1,
@@ -165,7 +167,7 @@ class ShellCommandWidgetTestCase extends WidgetTestCase
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create a shell command widget with wrapper
-        $shellCommand = (new XiboShellCommand($this->getEntityProvider()))->create('Api shell command', 0, null, null, 1, 1, 1, 'phpunit code', $region->playlists[0]['playlistId']);
+        $shellCommand = (new XiboShellCommand($this->getEntityProvider()))->create('Api shell command', 0, 1, null, null, 1, 1, 1, 'phpunit code', $region->playlists[0]['playlistId']);
         # Delete it
         $this->client->delete('/playlist/widget/' . $shellCommand->widgetId);
         $response = json_decode($this->client->response->body());

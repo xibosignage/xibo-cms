@@ -57,7 +57,7 @@ class ClockWidgetTestCase extends WidgetTestCase
 	 * @group add
      * @dataProvider provideSuccessCases
      */
-	public function testAdd($name, $duration, $theme, $clockTypeId, $offset, $format, $showSeconds, $clockFace)
+	public function testAdd($name, $duration, $useDuration, $theme, $clockTypeId, $offset, $format, $showSeconds, $clockFace)
 	{
 		# Create layout 
         $layout = (new XiboLayout($this->getEntityProvider()))->create('Clock add Layout', 'phpunit description', '', 9);
@@ -67,6 +67,7 @@ class ClockWidgetTestCase extends WidgetTestCase
 		$response = $this->client->post('/playlist/widget/clock/' . $region->playlists[0]['playlistId'], [
         	'name' => $name,
         	'duration' => $duration,
+            'useDuration' => $useDuration,
         	'themeId' => $theme,
         	'clockTypeId' => $clockTypeId,
         	'offset' => $offset,
@@ -106,17 +107,17 @@ class ClockWidgetTestCase extends WidgetTestCase
 
 	/**
      * Each array is a test run
-     * Format ($name, $duration, $theme, $clockTypeId, $offset, $format, $showSeconds, $clockFace)
+     * Format ($name, $duration, $useDuration, $theme, $clockTypeId, $offset, $format, $showSeconds, $clockFace)
      * @return array
      */
     public function provideSuccessCases()
     {
         # Sets of data used in testAdd
         return [
-            'Analogue' => ['Api Analogue clock', 20, 1, 1, 0, '', 0, 'TwentyFourHourClock'],
-            'Digital' => ['API digital clock', 20, 0, 2, 0, '[HH:mm]', 0, 'TwentyFourHourClock'],
-            'Flip 24h' => ['API Flip clock 24h', 5, 0, 3, 0, '', 1, 'TwentyFourHourClock'],
-            'Flip counter' => ['API Flip clock Minute counter', 50, 0, 3, 0, '', 1, 'MinuteCounter']
+            'Analogue' => ['Api Analogue clock', 20, 1, 1, 1, 0, '', 0, 'TwentyFourHourClock'],
+            'Digital' => ['API digital clock', 20, 1, 0, 2, 0, '[HH:mm]', 0, 'TwentyFourHourClock'],
+            'Flip 24h' => ['API Flip clock 24h', 5, 1, 0, 3, 0, '', 1, 'TwentyFourHourClock'],
+            'Flip counter' => ['API Flip clock Minute counter', 50, 1, 0, 3, 0, '', 1, 'MinuteCounter']
         ];
     }
 
@@ -127,7 +128,7 @@ class ClockWidgetTestCase extends WidgetTestCase
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
     	# Create a clock with wrapper
-    	$clock = (new XiboClock($this->getEntityProvider()))->create('Api Analogue clock', 20, 1, 1, NULL, NULL, NULL, NULL, $region->playlists[0]['playlistId']);
+    	$clock = (new XiboClock($this->getEntityProvider()))->create('Api Analogue clock', 20, 1, 1, 1, NULL, NULL, NULL, NULL, $region->playlists[0]['playlistId']);
     	$nameNew = 'Edited Name';
     	$durationNew = 80;
     	$clockTypeIdNew = 3;
@@ -160,9 +161,8 @@ class ClockWidgetTestCase extends WidgetTestCase
         $layout = (new XiboLayout($this->getEntityProvider()))->create('Clock delete Layout', 'phpunit description', '', 9);
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
-
     	# Create a clock with wrapper
-		$clock = (new XiboClock($this->getEntityProvider()))->create('Api Analogue clock', 20, 1, 1, NULL, NULL, NULL, NULL, $region->playlists[0]['playlistId']);
+		$clock = (new XiboClock($this->getEntityProvider()))->create('Api Analogue clock', 20, 1, 1, 1, NULL, NULL, NULL, NULL, $region->playlists[0]['playlistId']);
 		# Delete it
 		$this->client->delete('/playlist/widget/' . $clock->widgetId);
         $response = json_decode($this->client->response->body());

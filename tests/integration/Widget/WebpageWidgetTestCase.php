@@ -58,7 +58,7 @@ class WebpageWidgetTestCase extends WidgetTestCase
 	 * @group add
      * @dataProvider provideSuccessCases
      */
-	public function testAdd($name, $duration, $transparency, $uri, $scaling, $offsetLeft, $offsetTop, $pageWidth, $pageHeight, $modeId)
+	public function testAdd($name, $duration, $useDuration, $transparency, $uri, $scaling, $offsetLeft, $offsetTop, $pageWidth, $pageHeight, $modeId)
 	{
 		//parent::setupEnv();
 		# Create layout
@@ -69,6 +69,7 @@ class WebpageWidgetTestCase extends WidgetTestCase
 		$response = $this->client->post('/playlist/widget/webpage/' . $region->playlists[0]['playlistId'], [
         	'name' => $name,
         	'duration' => $duration,
+            'useDuration' => $useDuration,
         	'transparency' => $transparency,
         	'uri' => $uri,
         	'scaling' => $scaling,
@@ -97,19 +98,18 @@ class WebpageWidgetTestCase extends WidgetTestCase
 
 	/**
      * Each array is a test run
-     * Format (($name, $duration, $transparency, $uri, $scaling, $offsetLeft, $offsetTop, $pageWidth, $pageHeight, $modeId)
+     * Format (($name, $duration, $useDuration, $transparency, $uri, $scaling, $offsetLeft, $offsetTop, $pageWidth, $pageHeight, $modeId)
      * @return array
      */
     public function provideSuccessCases()
     {
         # Sets of data used in testAdd
         return [
-            'Open natively' => ['Open natively webpage widget', 60, NULL, 'http://xibo.org.uk/', NULL, NULL, NULL, NULL, NULL, 1],
-            'Open natively transparency no duration' => ['Open natively webpage widget no duration ', 0, 1, 'http://xibo.org.uk/', NULL, NULL, NULL, NULL, NULL, 1],
-            'Manual Position default' => ['Manual Position default values', 0, NULL, 'http://xibo.org.uk/', NULL, NULL, NULL, NULL, NULL, 2],
-            'Manual Position custom' => ['Manual Position custom values', 100, 1, 'http://xibo.org.uk/', 100, 200, 100, 1600, 900, 2],
-            'Best Fit default' => ['Best Fit webpage widget', 0, NULL, 'http://xibo.org.uk/', NULL, NULL, NULL, NULL, NULL, 3],
-            'Best Fit custom' => ['Best Fit webpage widget', 150, NULL, 'http://xibo.org.uk/', NULL, NULL, 1920, 1080, NULL, 3],
+            'Open natively' => ['Open natively webpage widget', 60, 1, NULL, 'http://xibo.org.uk/', NULL, NULL, NULL, NULL, NULL, 1],
+            'Manual Position default' => ['Manual Position default values', 10, 1, NULL, 'http://xibo.org.uk/', NULL, NULL, NULL, NULL, NULL, 2],
+            'Manual Position custom' => ['Manual Position custom values', 100, 1, 1, 'http://xibo.org.uk/', 100, 200, 100, 1600, 900, 2],
+            'Best Fit default' => ['Best Fit webpage widget', 10, 1, NULL, 'http://xibo.org.uk/', NULL, NULL, NULL, NULL, NULL, 3],
+            'Best Fit custom' => ['Best Fit webpage widget', 150, 1, NULL, 'http://xibo.org.uk/', NULL, NULL, 1920, 1080, NULL, 3],
         ];
     }
 
@@ -120,7 +120,7 @@ class WebpageWidgetTestCase extends WidgetTestCase
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
     	# Create a webpage with wrapper
-    	$webpage = (new XiboWebpage($this->getEntityProvider()))->create('Open natively webpage widget', 60, NULL, 'http://xibo.org.uk/', NULL, NULL, NULL, NULL, NULL, 1, $region->playlists[0]['playlistId']);
+    	$webpage = (new XiboWebpage($this->getEntityProvider()))->create('Open natively webpage widget', 60, 1, NULL, 'http://xibo.org.uk/', NULL, NULL, NULL, NULL, NULL, 1, $region->playlists[0]['playlistId']);
     	$nameNew = 'Edited Name';
     	$durationNew = 80;
     	$modeIdNew = 3;
@@ -128,6 +128,7 @@ class WebpageWidgetTestCase extends WidgetTestCase
     	$response = $this->client->put('/playlist/widget/' . $webpage->widgetId, [
         	'name' => $nameNew,
         	'duration' => $durationNew,
+            'useDuration' => 1,
         	'transparency' => $webpage->transparency,
         	'uri' => $uriNew,
         	'scaling' => $webpage->scaling,
@@ -162,7 +163,7 @@ class WebpageWidgetTestCase extends WidgetTestCase
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
     	# Create a clock with wrapper
-		$webpage = (new XiboWebpage($this->getEntityProvider()))->create('Open natively webpage widget', 60, NULL, 'http://xibo.org.uk/', NULL, NULL, NULL, NULL, NULL, 1, $region->playlists[0]['playlistId']);
+		$webpage = (new XiboWebpage($this->getEntityProvider()))->create('Open natively webpage widget', 60, 1, NULL, 'http://xibo.org.uk/', NULL, NULL, NULL, NULL, NULL, 1, $region->playlists[0]['playlistId']);
 		# Delete it
 		$this->client->delete('/playlist/widget/' . $webpage->widgetId);
         # This should return 204 for success

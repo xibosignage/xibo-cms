@@ -57,10 +57,10 @@ class CurrenciesWidgetTestCase extends WidgetTestCase
      * @group add
      * @dataProvider provideSuccessCases
      */
-    public function testAdd($overrideTemplate, $templateId, $name, $duration, $base, $items, $effect, $speed, $backgroundColor, $noRecordsMessage, $dateFormat, $updateInterval, $durationIsPerPage, $widgetOriginalWidth, $widgetOriginalHeight, $maxItemsPerPage, $mainTemplate, $itemTemplate, $styleSheet, $javaScript)
+    public function testAdd($overrideTemplate, $templateId, $name, $duration, $useDuration, $base, $items, $effect, $speed, $backgroundColor, $noRecordsMessage, $dateFormat, $updateInterval, $durationIsPerPage, $widgetOriginalWidth, $widgetOriginalHeight, $maxItemsPerPage, $mainTemplate, $itemTemplate, $styleSheet, $javaScript)
     {
         # Create layout
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Webpage add', 'phpunit description', '', 9);
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('Currencies layout add', 'phpunit description', '', 9);
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         
@@ -69,6 +69,7 @@ class CurrenciesWidgetTestCase extends WidgetTestCase
                 'templateId' => $templateId,
                 'name' => $name,
                 'duration' => $duration,
+                'useDuration' => $useDuration,
                 'base' => $base,
                 'items' => $items,
                 'effect' => $effect,
@@ -91,6 +92,7 @@ class CurrenciesWidgetTestCase extends WidgetTestCase
                 'templateId' => $templateId,
                 'name' => $name,
                 'duration' => $duration,
+                'useDuration' => $useDuration,
                 'base' => $base,
                 'items' => $items,
                 'effect' => $effect,
@@ -112,16 +114,16 @@ class CurrenciesWidgetTestCase extends WidgetTestCase
 
     /**
      * Each array is a test run
-     * Format ($overrideTemplate, $templateId, $name, $duration, $base, $items, $effect, $speed, $backgroundColor, $noRecordsMessage, $dateFormat, $updateInterval, $durationIsPerPage, $widgetOriginalWidth, $widgetOriginalHeight, $maxItemsPerPage, $mainTemplate, $itemTemplate, $styleSheet, $javaScript)
+     * Format ($overrideTemplate, $templateId, $name, $duration, $useDuration, $base, $items, $effect, $speed, $backgroundColor, $noRecordsMessage, $dateFormat, $updateInterval, $durationIsPerPage, $widgetOriginalWidth, $widgetOriginalHeight, $maxItemsPerPage, $mainTemplate, $itemTemplate, $styleSheet, $javaScript)
      * @return array
      */
     public function provideSuccessCases()
     {
         # Sets of data used in testAdd
         return [
-            'No override' => [0, 1, 'template 1', 6, 'GBP', 'PLN', NULL, NULL, NULL, 'No messages', NULL, 12, 1, 5],
-            'No override' => [0, 2, 'template 2', 120, 'GBP', 'EUR', NULL, NULL, NULL, 'No messages', NULL, 120, 0, 2],
-            'Overide' => [1, NULL, 'override template', 12, 'GBP', 'EUR', NULL, NULL, NULL, 'No messages', NULL, 60, 1, 1000, 800, 5, '<div class="container-main"><div class="container "><div class="row row-header"><div class="col-xs-2 col-xs-offset-7 text-center value">BUY</div><div class="col-xs-2 col-xs-offset-1 value text-center">SELL</div></div><div id="cycle-container">[itemsTemplate]</div></div></div>', '<div class="row row-finance"><div class="col-xs-1 flags"><img class="img-circle center-block " src="[CurrencyFlag]"></div><div class="col-xs-1 value ">[NameShort]</div><div class="col-xs-2 col-xs-offset-5 text-center value">[Bid]</div><div class="col-xs-2 col-xs-offset-1 value text-center">[Ask]</div> </div>','body {     font-family: "Helvetica", "Arial", sans-serif;     line-height: 1; }  .container-main {height: 420px !important;width: 820px !important; }  .container { height: 420px !important; width: 820px !important; float: left;  margin-top: 20px; }  .row-finance { height: 60px;  background: rgba(0, 0, 0, 0.87);  margin-bottom: 20px; }  .row {margin-right: 0; margin-left: 0; }  .row-header { margin-right: -15px; margin-left: -15px; margin-bottom: 20px; }  #cycle-container { margin-left: -15px; margin-right: -15px; }  .value { font-size: 20px; padding-top: 20px; font-weight: bold; color: #fff; }  .down-arrow { font-size: 20px; color: red; padding-top: 17px; }  .up-arrow { font-size: 20px;color: green; padding-top: 17px; } .variant { font-size: 20px; padding-top: 17px; }  .flags { padding-top: 4px; }  .center-block { width: 50px; height: 50px; }', NULL]
+            'No override' => [0, 1, 'template 1', 6, 1, 'GBP', 'PLN', NULL, NULL, NULL, 'No messages', NULL, 12, 1, null, null, 5, null, null, null, null],
+            'No override' => [0, 2, 'template 2', 120, 1, 'GBP', 'EUR', NULL, NULL, NULL, 'No messages', NULL, 120, 0, null, null, 2, null, null, null, null],
+            'Override' => [1, NULL, 'override template', 12, 1, 'GBP', 'EUR', NULL, NULL, NULL, 'No messages', NULL, 60, 1, 1000, 800, 5, '<div class="container-main"><div class="container "><div class="row row-header"><div class="col-xs-2 col-xs-offset-7 text-center value">BUY</div><div class="col-xs-2 col-xs-offset-1 value text-center">SELL</div></div><div id="cycle-container">[itemsTemplate]</div></div></div>', '<div class="row row-finance"><div class="col-xs-1 flags"><img class="img-circle center-block " src="[CurrencyFlag]"></div><div class="col-xs-1 value ">[NameShort]</div><div class="col-xs-2 col-xs-offset-5 text-center value">[Bid]</div><div class="col-xs-2 col-xs-offset-1 value text-center">[Ask]</div> </div>','body {     font-family: "Helvetica", "Arial", sans-serif;     line-height: 1; }  .container-main {height: 420px !important;width: 820px !important; }  .container { height: 420px !important; width: 820px !important; float: left;  margin-top: 20px; }  .row-finance { height: 60px;  background: rgba(0, 0, 0, 0.87);  margin-bottom: 20px; }  .row {margin-right: 0; margin-left: 0; }  .row-header { margin-right: -15px; margin-left: -15px; margin-bottom: 20px; }  #cycle-container { margin-left: -15px; margin-right: -15px; }  .value { font-size: 20px; padding-top: 20px; font-weight: bold; color: #fff; }  .down-arrow { font-size: 20px; color: red; padding-top: 17px; }  .up-arrow { font-size: 20px;color: green; padding-top: 17px; } .variant { font-size: 20px; padding-top: 17px; }  .flags { padding-top: 4px; }  .center-block { width: 50px; height: 50px; }', NULL]
         ];
     }
 }

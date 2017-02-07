@@ -58,7 +58,7 @@ class LocalVideoWidgetTestCase extends WidgetTestCase
      * @group add
      * @dataProvider provideSuccessCases
      */
-    public function testAdd($uri, $duration, $scaleTypeId, $mute)
+    public function testAdd($uri, $duration, $useDuration, $scaleTypeId, $mute)
     {
         # Create layout 
         $layout = (new XiboLayout($this->getEntityProvider()))->create('Local Video add Layout', 'phpunit description', '', 9);
@@ -68,6 +68,7 @@ class LocalVideoWidgetTestCase extends WidgetTestCase
         $response = $this->client->post('/playlist/widget/localVideo/' . $region->playlists[0]['playlistId'], [
             'uri' => $uri,
             'duration' => $duration,
+            'useDuration' => $useDuration,
             'scaleTypeId' => $scaleTypeId,
             'mute' => $mute,
             ]);
@@ -100,8 +101,8 @@ class LocalVideoWidgetTestCase extends WidgetTestCase
     {
         # Sets of data used in testAdd
         return [
-            'Aspect' => ['rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov', 30, 'aspect', 0],
-            'Stretch muted' => ['rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov', 100, ' stretch', 1],
+            'Aspect' => ['rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov', 30, 1, 'aspect', 0],
+            'Stretch muted' => ['rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov', 100, 1, ' stretch', 1],
         ];
     }
 
@@ -112,7 +113,7 @@ class LocalVideoWidgetTestCase extends WidgetTestCase
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Add local video widget
-        $localVideo = (new XiboLocalVideo($this->getEntityProvider()))->create('rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov', 30, 'aspect', 0, $region->playlists[0]['playlistId']);
+        $localVideo = (new XiboLocalVideo($this->getEntityProvider()))->create('rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov', 30, 1, 'aspect', 0, $region->playlists[0]['playlistId']);
         $duration = 80;
         $scaleTypeId = 'stretch';
         $mute = 1;
@@ -120,6 +121,7 @@ class LocalVideoWidgetTestCase extends WidgetTestCase
         $response = $this->client->put('/playlist/widget/' . $localVideo->widgetId, [
             'uri' => $uri,
             'duration' => $duration,
+            'useDuration' => 1,
             'scaleTypeId' => $scaleTypeId,
             'mute' => $mute,
             ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
@@ -149,7 +151,7 @@ class LocalVideoWidgetTestCase extends WidgetTestCase
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Add local video widget
-        $localVideo = (new XiboLocalVideo($this->getEntityProvider()))->create('rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov', 30, 'aspect', 0, $region->playlists[0]['playlistId']);
+        $localVideo = (new XiboLocalVideo($this->getEntityProvider()))->create('rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov', 30, 1, 'aspect', 0, $region->playlists[0]['playlistId']);
         # Delete it
         $this->client->delete('/playlist/widget/' . $localVideo->widgetId);
         $response = json_decode($this->client->response->body());

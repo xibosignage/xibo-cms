@@ -84,7 +84,7 @@ class VideoWidgetTestCase extends WidgetTestCase
         # Upload new media
         $media = (new XiboLibrary($this->getEntityProvider()))->create('API video', PROJECT_ROOT . '/tests/resources/HLH264.mp4');
         # Assign media to a playlist
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], $region->playlists[0]['playlistId']);
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], 10, $region->playlists[0]['playlistId']);
         $name = 'Edited Name';
         $duration = 80;
         $scaleTypeId = 'stretch';
@@ -94,6 +94,7 @@ class VideoWidgetTestCase extends WidgetTestCase
         $response = $this->client->put('/playlist/widget/' . $widget->widgetId, [
             'name' => $name,
             'duration' => $duration,
+            'useDuration' => $useDuration,
             'scaleTypeId' => $scaleTypeId,
             'mute' => $mute,
             'loop' => $loop,
@@ -128,7 +129,7 @@ class VideoWidgetTestCase extends WidgetTestCase
         # Upload new media
         $media = (new XiboLibrary($this->getEntityProvider()))->create('API video', PROJECT_ROOT . '/tests/resources/HLH264.mp4');
         # Assign media to a region
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], $region->playlists[0]['playlistId']);
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], 10, $region->playlists[0]['playlistId']);
         $widget = $playlist->widgets[0];
         # Delete it
         $this->client->delete('/playlist/widget/' . $widget->widgetId);

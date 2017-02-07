@@ -56,7 +56,7 @@ class TextWidgetTestCase extends WidgetTestCase
      * @group add
      * @dataProvider provideSuccessCases
      */
-    public function testAdd($name, $duration, $effect, $speed, $backgroundColor, $marqueeInlineSelector, $text, $javaScript)
+    public function testAdd($name, $duration, $useDuration, $effect, $speed, $backgroundColor, $marqueeInlineSelector, $text, $javaScript)
     {
         //parent::setupEnv();
         # Create layout 
@@ -67,6 +67,7 @@ class TextWidgetTestCase extends WidgetTestCase
         $response = $this->client->post('/playlist/widget/text/' . $region->playlists[0]['playlistId'], [
             'name' => $name,
             'duration' => $duration,
+            'useDuration' => $useDuration,
             'effect' => $effect,
             'speed' => $speed,
             'backgroundColor' => $backgroundColor,
@@ -96,16 +97,16 @@ class TextWidgetTestCase extends WidgetTestCase
 
     /**
      * Each array is a test run
-     * Format ($name, $duration, $effect, $speed, $backgroundColor, $marqueeInlineSelector, $text, $javaScript)
+     * Format ($name, $duration, $useDuration, $effect, $speed, $backgroundColor, $marqueeInlineSelector, $text, $javaScript)
      * @return array
      */
     public function provideSuccessCases()
     {
         # Sets of data used in testAdd
         return [
-            'text 1' => ['Text item', 0, 'marqueeRight', 5, null, null, 'TEST API TEXT', null],
-            'text with formatting' => ['Text item 2', 20, 'marqueeLeft', 3, null, null, '<p><span style=color:#FFFFFF;><span style=font-size:48px;>TEST</span></span></p>', null],
-            'text with background Colour' => ['text item 3', 5, null, 0, '#d900000', null, 'red background', null]
+            'text 1' => ['Text item', 10, 1, 'marqueeRight', 5, null, null, 'TEST API TEXT', null],
+            'text with formatting' => ['Text item 2', 20, 1, 'marqueeLeft', 3, null, null, '<p><span style=color:#FFFFFF;><span style=font-size:48px;>TEST</span></span></p>', null],
+            'text with background Colour' => ['text item 3', 5, 1, null, 0, '#d900000', null, 'red background', null]
         ];
     }
     public function testEdit()
@@ -115,13 +116,14 @@ class TextWidgetTestCase extends WidgetTestCase
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create a text widget with wrapper
-        $text = (new XiboText($this->getEntityProvider()))->create('Text item', 0, 'marqueeRight', 5, null, null, 'TEST API TEXT', null, $region->playlists[0]['playlistId']);
+        $text = (new XiboText($this->getEntityProvider()))->create('Text item', 10, 1, 'marqueeRight', 5, null, null, 'TEST API TEXT', null, $region->playlists[0]['playlistId']);
         $nameNew = 'Edited Name';
         $durationNew = 80;
         $textNew = 'Edited Text';
         $response = $this->client->put('/playlist/widget/' . $text->widgetId, [
             'name' => $nameNew,
             'duration' => $durationNew,
+            'useDuration' => 1,
             'effect' => $text->effect,
             'speed' => $text->speed,
             'backgroundColor' => null,
@@ -150,7 +152,7 @@ class TextWidgetTestCase extends WidgetTestCase
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create a text widget with wrapper
-        $text = (new XiboText($this->getEntityProvider()))->create('Text item', 0, 'marqueeRight', 5, null, null, 'TEST API TEXT', null, $region->playlists[0]['playlistId']);
+        $text = (new XiboText($this->getEntityProvider()))->create('Text item', 10, 1, 'marqueeRight', 5, null, null, 'TEST API TEXT', null, $region->playlists[0]['playlistId']);
         # Delete it
         $this->client->delete('/playlist/widget/' . $text->widgetId);
         $response = json_decode($this->client->response->body());

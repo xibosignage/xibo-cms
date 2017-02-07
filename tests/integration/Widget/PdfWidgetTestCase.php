@@ -84,7 +84,7 @@ class PdfWidgetTestCase extends WidgetTestCase
         # Upload new media
         $media = (new XiboLibrary($this->getEntityProvider()))->create('API PDF', PROJECT_ROOT . '/tests/resources/sampleDocument.pdf');
         # Assign media to a playlist
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], $region->playlists[0]['playlistId']);
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], 10, $region->playlists[0]['playlistId']);
         $name = 'Edited Name';
         $duration = 80;
         $widget = $playlist->widgets[0];
@@ -111,7 +111,7 @@ class PdfWidgetTestCase extends WidgetTestCase
         # Upload new media
         $media = (new XiboLibrary($this->getEntityProvider()))->create('API video', PROJECT_ROOT . '/tests/resources/sampleDocument.pdf');
         # Assign media to a region
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], $region->playlists[0]['playlistId']);
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], 10, $region->playlists[0]['playlistId']);
         $widget = $playlist->widgets[0];
         # Delete it
         $this->client->delete('/playlist/widget/' . $widget->widgetId);
