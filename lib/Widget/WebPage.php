@@ -77,6 +77,13 @@ class WebPage extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="(0, 1) Select 1 only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
      *      name="transparency",
      *      in="formData",
      *      description=" flag (0,1) should the HTML be shown with a transparent background?",

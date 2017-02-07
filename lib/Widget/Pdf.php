@@ -40,6 +40,13 @@ class Pdf extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="(0, 1) Select 1 only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
      *      name="duration",
      *      in="formData",
      *      description="Edit Only - The Widget Duration",

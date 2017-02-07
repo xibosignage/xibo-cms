@@ -119,6 +119,13 @@ class GoogleTraffic extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="(0, 1) Select 1 only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
      *      name="zoom",
      *      in="formData",
      *      description="How far should the map be zoomed in? The higher the number the closer the zoom, 1 represents entire globe",

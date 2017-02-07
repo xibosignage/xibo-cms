@@ -22,7 +22,7 @@ class Audio extends ModuleWidget
      *  @SWG\Parameter(
      *      name="useDuration",
      *      in="formData",
-     *      description="Edit Only - (0, 1) Select only if you will provide duration parameter as well",
+     *      description="Edit Only - (0, 1) Select 1 only if you will provide duration parameter as well",
      *      type="integer",
      *      required=false
      *  ),

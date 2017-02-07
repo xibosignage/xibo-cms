@@ -196,6 +196,13 @@ class Twitter extends TwitterBase
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="(0, 1) Select 1 only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
      *      name="searchTerm",
      *      in="formData",
      *      description="Twitter search term, you can test your search term in twitter.com search box first",
