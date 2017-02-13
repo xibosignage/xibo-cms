@@ -372,6 +372,8 @@ class Schedule extends Base
         // Reset the seconds
         $date->second(0);
 
+        $this->getLog()->debug('Generating eventList for DisplayGroupId ' . $displayGroupId . ' on date ' . $this->getDate()->getLocalDate($date));
+
         // Get a list of scheduled events
         $events = [];
         $displayGroups = [];
@@ -390,13 +392,20 @@ class Schedule extends Base
             $options['displayGroupId'] = $displayGroupId;
         }
 
-        foreach ($this->scheduleFactory->getForXmds($displayId, $date->format('U'), $date->format('U'), $options) as $event) {
+        // Get list of events
+        $scheduleForXmds = $this->scheduleFactory->getForXmds($displayId, $date->format('U'), $date->format('U'), $options);
 
+        $this->getLog()->debug(count($scheduleForXmds) . ' events returned for displaygroup and date');
+
+        foreach ($scheduleForXmds as $event) {
+            // Assess schedules
             $schedule = $this->scheduleFactory->createEmpty()->hydrate($event, ['intProperties' => ['isPriority', 'syncTimezone', 'displayOrder']]);
             $schedule
                 ->setDateService($this->getDate())
                 ->setDayPartFactory($this->dayPartFactory)
                 ->load();
+
+            $this->getLog()->debug('EventId ' . $schedule->eventId . ' exists in the schedule window, checking its instances for activity');
 
             // Get scheduled events based on recurrence
             $scheduleEvents = $schedule->getEvents($date, $date);
@@ -406,6 +415,8 @@ class Schedule extends Base
 
                 // Add the Layout
                 $layoutId = $event['layoutId'];
+
+                $this->getLog()->debug('Adding this events layoutId [' . $layoutId . '] to list');
 
                 if ($layoutId != 0 && !array_key_exists($layoutId, $layouts)) {
                     // Look up the layout details
@@ -430,6 +441,7 @@ class Schedule extends Base
                 }
 
                 // Display Group details
+                $this->getLog()->debug('Adding this events displayGroupIds to list');
                 $schedule->excludeProperty('displayGroups');
                 $schedule->displayGroupIds = [];
                 foreach ($schedule->displayGroups as $displayGroup) {
@@ -439,6 +451,7 @@ class Schedule extends Base
                 }
 
                 // Determine the intermediate display groups
+                $this->getLog()->debug('Adding this events intermediateDisplayGroupIds to list');
                 $schedule->intermediateDisplayGroupIds = [];
 
                 // We need to trace the route between the events displayGroupId and the displayGroupId we
@@ -456,6 +469,8 @@ class Schedule extends Base
                     }
                 }
 
+                $this->getLog()->debug('Adding scheduled event');
+
                 foreach ($scheduleEvents as $scheduleEvent) {
                     $schedule->fromDt = $scheduleEvent->fromDt;
                     $schedule->toDt = $scheduleEvent->toDt;
@@ -464,6 +479,8 @@ class Schedule extends Base
 
                     $events[] = $schedule;
                 }
+            } else {
+                $this->getLog()->debug('No activity inside window');
             }
         }
 

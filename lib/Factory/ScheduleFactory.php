@@ -130,6 +130,8 @@ class ScheduleFactory extends BaseFactory
             'toDt' => $toDt
         );
 
+        $this->getLog()->debug('Get events for XMDS - with options: ' . json_encode($options));
+
         // Add file nodes to the $fileElements
         // Firstly get all the scheduled layouts
         $SQL = '
