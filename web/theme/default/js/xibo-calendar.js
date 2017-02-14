@@ -70,64 +70,184 @@ $(document).ready(function() {
             tmpl_cache: true,
             onBeforeEventsLoad: function (done) {
 
-                var calendarOptions = $("#CalendarContainer").data();
-                var url = calendarOptions.eventSource;
-                events = [];
+                var calendarOptions = $("#CalendarContainer").data();               
 
-                // Append display groups
-                var displayGroups = $('#DisplayList').serialize();
-                if (displayGroups != '')
-                    url += '?' + displayGroups;
+                if (this.options.view != 'agenda') {
 
-                // Populate the events array via AJAX
-                var params = {
-                    "from": this.options.position.start.getTime(),
-                    "to": this.options.position.end.getTime()
-                }
+                    // Append display groups
+                    var displayGroups = $('#DisplayList').serialize();
+                    
+                    var url = calendarOptions.eventSource;
+                    
+                    if (displayGroups != '')
+                        url += '?' + displayGroups;
+                        
+                    events = [];
+                    
+                    // Populate the events array via AJAX
+                    var params = {
+                        "from": this.options.position.start.getTime(),
+                        "to": this.options.position.end.getTime()
+                    }
 
-                $('#calendar-progress').addClass('fa fa-cog fa-spin');
+                    $('#calendar-progress').addClass('fa fa-cog fa-spin');
 
-                $.getJSON(url, params)
-                    .done(function(data) {
-                        events = data.result;
+                    $.getJSON(url, params)
+                        .done(function(data) {
+                            events = data.result;
 
-                        if (done != undefined)
-                            done();
+                            if (done != undefined)
+                                done();
 
+                            calendar._render();
+                            
+                            // Hook up any pop-overs (for small events)
+                            $('[data-toggle="popover"]').popover({
+                                trigger: "click",
+                                html: true,
+                                placement: "bottom",
+                                content: function() {
+                                    return $(this).html();
+                                }
+                            })
+                            .on('shown.bs.popover', function() {
+                                var source = $(this);
+                                var popover = source.attr("aria-describedby");
+
+                                $("#" + popover + " a").click(function(e) {
+                                    e.preventDefault();
+                                    XiboFormRender($(this));
+                                    source.popover("hide");
+                                });
+                            });
+
+                            $('#calendar-progress').removeClass('fa fa-cog fa-spin');
+                        })
+                        .fail(function() {
+                            $('#calendar-progress').removeClass('fa fa-cog fa-spin');
+
+                            if (done != undefined)
+                                done();
+                            
+                            calendar._render();
+
+                            toastr.error(translate.error);
+                        });
+                } else {
+                    
+                    // Get selected display groups
+                    var selectedDisplayGroup = $('.cal-context').data().selectedTab;
+                    var displayGroupsList = {};
+                    var chooseAllDisplays = false;
+                    
+                    // Find selected display group and create a display group list used to create tabs
+                    $('#DisplayList option').each( function(){
+                            var $self = $(this);
+                            
+                            // If the all option is selected 
+                            if ($self.val() == -1 && $self.is(':selected')){
+                                chooseAllDisplays = true;
+                                return true;
+                            }
+                                
+                            if ($self.is(':selected') || chooseAllDisplays){
+                                displayGroupsList[$self.val()] = $self.html();
+                                
+                                if (typeof selectedDisplayGroup == 'undefined')
+                                    selectedDisplayGroup = $self.val(); 
+                            }
+                    });
+                        
+                    var url = calendarOptions.agendaLink.replace(":id", selectedDisplayGroup);
+                                    
+                    var dateMoment = moment(this.options.position.start.getTime());
+                    var timeFromSlider = ( $('#timePickerSlider').length ) ? $('#timePicker').slider('getValue') : 0
+                    var timeMoment = moment(timeFromSlider*60*1000);
+                    
+                    // Add hour to date to get the selected date
+                    var dateSelected = moment(dateMoment + timeMoment);
+
+                    // Populate the events array via AJAX
+                    var params = {
+                        "date": dateSelected.format(systemDateFormat)
+                    }
+                    
+                    $('#calendar-progress').addClass('fa fa-cog fa-spin');
+                    
+                    // if the result are empty create a empty object and reset the results
+                    if(jQuery.isEmptyObject(events['results'])){
+                        
+                        // events var must be an array for compatibility with the previous implementation
+                        events = [];
+                        events['results'] = {}; 
+                    }
+                    
+                    // Save displaygroup list and the selected display
+                    events['displayGroupList'] = displayGroupsList;
+                    events['selectedDisplayGroup'] = selectedDisplayGroup; 
+                    
+                    // Clean error message
+                    events['errorMessage'] = '';
+                                
+                        
+                    // 1 - if there are no displaygroups selected
+                    if ($('#DisplayList').val() == null) {
+                        
+                        events['errorMessage'] = 'display_not_selected';
                         calendar._render();
                         
-                        // Hook up any pop-overs (for small events)
-                        $('[data-toggle="popover"]').popover({
-                            trigger: "click",
-                            html: true,
-                            placement: "bottom",
-                            content: function() {
-                                return $(this).html();
-                            }
-                        })
-                        .on('shown.bs.popover', function() {
-                            var source = $(this);
-                            var popover = source.attr("aria-describedby");
-
-                            $("#" + popover + " a").click(function(e) {
-                                e.preventDefault();
-                                XiboFormRender($(this));
-                                source.popover("hide");
-                            });
-                        });
-
                         $('#calendar-progress').removeClass('fa fa-cog fa-spin');
-                    })
-                    .fail(function() {
-                        $('#calendar-progress').removeClass('fa fa-cog fa-spin');
-
+                        
+                    } else if(!jQuery.isEmptyObject(events['results'][selectedDisplayGroup]) && events['results'][selectedDisplayGroup]['request_date'] == params.date) {
+                        // 2 - Use cache if the element was already saved for the requested date
+                        console.log('Use cache for ' + selectedDisplayGroup + ' on ' + events['results'][selectedDisplayGroup]['request_date']);   
                         if (done != undefined)
                             done();
-
+                            
                         calendar._render();
 
-                        toastr.error(translate.error);
-                    });
+                        $('#calendar-progress').removeClass('fa fa-cog fa-spin');
+                    } else {
+                        // 3 - make request to get the data for the events
+                        
+                        console.log('Make request for ' + selectedDisplayGroup + ' on ' + params.date);
+                        
+                        $.getJSON(url, params)
+                            .done(function(data) {
+                                
+                                if(!jQuery.isEmptyObject(data.data) && data.data.events.length > 0){
+                                    events['results'][String(selectedDisplayGroup)] = data.data;
+                                    events['results'][String(selectedDisplayGroup)]['request_date'] = params.date;
+                                } else {
+                                    events['errorMessage'] = 'no_events';
+                                }
+                                
+                                if (done != undefined)
+                                    done();
+                                    
+                                console.log("Result:");
+                                console.log(events);
+                                    
+                                calendar._render();
+
+                                $('#calendar-progress').removeClass('fa fa-cog fa-spin');
+                            })
+                            .fail(function(data) {
+                                // Deal with the failed request
+
+                                if (done != undefined)
+                                    done();
+                                
+                                events['errorMessage'] = 'request_failed';
+                                
+                                calendar._render();
+                                
+                                $('#calendar-progress').removeClass('fa fa-cog fa-spin');
+                            });
+                    }
+                        
+                }
+                
             },
             onAfterEventsLoad: function(events) {
                 if(!events) {
@@ -135,6 +255,24 @@ $(document).ready(function() {
                 }
             },
             onAfterViewLoad: function(view) {
+                
+                // Show time slider on agenda view and call the calendar view on slide stop event
+                if (this.options.view == 'agenda') {
+                    $('.cal-event-time-bar').show();
+                    
+                    $('#timePicker').slider({
+                        tooltip: 'always',
+                        step: 5,
+                        formatter: function(value) {
+                            return moment(value*60*1000).format(jsTimeFormat);
+                        }
+                    }).off('slideStop').on('slideStop', function(ev) {
+                        calendar.view();
+                    });
+                } else {
+                    $('.cal-event-time-bar').hide();
+                }
+                
                 if (typeof this.getTitle === "function")
                     $('h1.page-header').text(this.getTitle());
 
@@ -151,6 +289,32 @@ $(document).ready(function() {
         $('#DisplayList').on('change', function(){
             setTimeout(calendar.view(), 1000);
         });
+        
+        // Set event when clicking on a tab, to refresh the view
+        $('.cal-context').on('click', 'a[data-toggle="tab"]', function (e) {
+            $('.cal-context').data().selectedTab = $(this).data("id");
+            calendar.view();
+        });
+        
+        // When selecting a layout row, create a Breadcrumb Trail and select the correspondent Display Group(s) and the Campaign(s)
+        $('.cal-context').on('click', 'tbody tr', function (e) {
+            var $self = $(this);
+            
+            $('.cal-event-breadcrumb-trail').hide();
+            $('.cal-context tbody tr').removeClass('selected');
+            $('.cal-context tbody tr').removeClass('selected-linked');
+            
+            // If the click was in a layout table row create the breadcrumb trail
+            if ($self.closest('table').prop('id') == 'layouts'){
+                $('.cal-event-breadcrumb-trail').show();
+                agendaCreateBreadcrumbTrail($self.data("id"), events);
+            }
+            
+            if (!$self.hasClass('selected')){
+                agendaSelectLinkedElements($self.closest('table').prop('id'), $self.data("id"), events);
+            }
+        });
+        
     }
 });
 
@@ -321,4 +485,104 @@ var setupScheduleNowForm = function(form) {
     $(form).find("#hours").on("keyup", evaluateDates);
     $(form).find("#minutes").on("keyup", evaluateDates);
     $(form).find("#seconds").on("keyup", evaluateDates);
+};
+
+/**
+ * Select the elements linked to the clicked element
+ */
+var agendaSelectLinkedElements = function(elemType, elemID, data) {
+    
+    var targetEvents = [];
+    var selectClass = {
+            'layouts': 'selected-linked',
+            'displaygroups': 'selected-linked',
+            'campaigns': 'selected-linked',
+    };
+    
+    results = data.results[data.selectedDisplayGroup];
+    
+    var allEvents = results.events;
+    
+    // Get the correspondent events
+    for (var i = 0; i < allEvents.length; i++) {
+        if (elemType == 'layouts' && allEvents[i].layoutId == elemID) {
+            targetEvents.push(allEvents[i]);
+            selectClass['layouts'] = 'selected';
+        } else if (elemType == 'displaygroups' && allEvents[i].displayGroupId == elemID) {
+            targetEvents.push(allEvents[i]);
+            selectClass['displaygroups'] = 'selected';
+        } else if (elemType == 'campaigns' && allEvents[i].campaignId == elemID) {
+            targetEvents.push(allEvents[i]);
+            selectClass['campaigns'] = 'selected';
+        }
+    }
+    
+    // Use the target events to select the corresponding objects
+    for (var i = 0; i < targetEvents.length; i++) {
+        // Select the corresponding layout
+        $('table#layouts tr[data-id~="' + targetEvents[i].layoutId + '"]').addClass(selectClass['layouts']);
+        
+        // Select the corresponding display group
+        $('table#displaygroups tr[data-id~="' + targetEvents[i].displayGroupId + '"]').addClass(selectClass['displaygroups']);
+        
+        // Select the corresponding campaigns
+        $('table#campaigns tr[data-id~="' + targetEvents[i].campaignId + '"]').addClass(selectClass['campaigns']);
+        
+    }
+    
+};
+
+/**
+ * Create a breadcrumb trail that shows the origin of a layout
+ */
+var agendaCreateBreadcrumbTrail = function(layoutId, data) {
+    
+    var targetEvent = {};
+    
+    results = data.results[data.selectedDisplayGroup];
+    
+    var allEvents = results.events;
+    
+    // Get the correspondent event
+    for (var i = 0; i < allEvents.length; i++) {
+        if (allEvents[i].layoutId == layoutId) {
+            targetEvent = allEvents[i];
+        }
+    }
+    
+    $('.cal-event-breadcrumb-trail #content').html('');
+    
+    var htmlStructure = '';
+    
+    // Create breadcrumb structure
+    // Add layout
+    var layoutData = results.layouts[layoutId];
+    var arrowElement = '<span>&nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i>&nbsp;</span>';
+    htmlStructure += '<span><a href="' + layoutData.link + '">' + layoutData.layout + '</a></span>'
+
+    // Add campaign
+    if (typeof results.campaigns[targetEvent.campaignId] != 'undefined'){
+        htmlStructure += arrowElement + '<span><a href="' + results.campaigns[targetEvent.campaignId].link + '">' + results.campaigns[targetEvent.campaignId].campaign + '</a></span>';
+    }
+    
+    // Add schedule
+    htmlStructure += arrowElement + '<span><a href="">Schedule</a></span>'
+    
+    
+    // Add intermediate display groups
+    for (var i = 0; i < targetEvent.intermediateDisplayGroupIds.length; i++) {
+        var displayGroupId = targetEvent.intermediateDisplayGroupIds[i];
+        if (typeof results.displayGroups[displayGroupId] != 'undefined'){
+            htmlStructure += arrowElement + '<span><a href="' + results.displayGroups[displayGroupId].link + '">' + results.displayGroups[displayGroupId].displayGroup + '</a></span>'
+        }
+    }
+    
+    // Add final display group
+    var displayGroupId = targetEvent.displayGroupId;
+    if (typeof results.displayGroups[displayGroupId] != 'undefined'){
+        htmlStructure += arrowElement + '<span><a href="' + results.displayGroups[displayGroupId].link + '">' + results.displayGroups[displayGroupId].displayGroup + '</a></span>'
+    }
+    
+    $('.cal-event-breadcrumb-trail #content').append(htmlStructure);
+    $('.cal-event-breadcrumb-trail').show();
 };

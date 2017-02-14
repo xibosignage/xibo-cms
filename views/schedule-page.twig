@@ -17,6 +17,7 @@
                 <button type="button" class="btn btn-warning active" data-calendar-view="month">{% trans "Month" %}</button>
                 <button type="button" class="btn btn-warning" data-calendar-view="week">{% trans "Week" %}</button>
                 <button type="button" class="btn btn-warning" data-calendar-view="day">{% trans "Day" %}</button>
+                <button type="button" class="btn btn-warning" data-calendar-view="agenda">{% trans "Agenda" %}</button>
             </div>
             <div class="btn-group pull-right xibo-calendar-controls">
                 <button type="button" class="btn btn-primary" data-calendar-nav="prev"><span class="glyphicon glyphicon-backward"></span> {% trans "Prev" %}</button>
@@ -50,10 +51,16 @@
             </div>
             <div class="progress pull-right"><span id="calendar-progress"></span></div>
             <h1 class="page-header"></h1>
-        </div>
+        </div>         
     </div>
     <div class="row">
-        <div id="CalendarContainer" data-event-source="{{ urlFor("schedule.calendar.data") }}" data-calendar-type="{{ settings.CALENDAR_TYPE }}" class="col-sm-12">
+        <!-- Time Slider -->
+        <div class="col-sm-8 col-sm-offset-2 cal-event-time-bar" style="display:none;">
+            <input id="timePicker" data-slider-id='timePickerSlider' type="text" data-slider-min="0" data-slider-max="1439" data-slider-step="1" data-slider-value="0" data-slider-handle="square" />
+        </div> 
+    </div> 
+    <div class="row">
+        <div id="CalendarContainer" data-event-source="{{ urlFor("schedule.calendar.data") }}" data-agenda-link="{{ urlFor("schedule.events") }}" data-calendar-type="{{ settings.CALENDAR_TYPE }}" class="col-sm-12">
             <div id="Calendar"></div>
         </div>
     </div>
@@ -419,5 +426,189 @@
             </div>
             <% } %>
         </script>
+        
+        <script type="text/x-handlebars-template" id="calendar-template-agenda">
+            
+            <div class="container-fluid">
+                
+                <!-- Content panel with tabs -->
+                <div class="panel with-nav-tabs panel-default agenda-panel">
+                
+                    <!-- Tab Panel -->
+                    <% if (!jQuery.isEmptyObject(agenda.displayGroupList)) { %>
+                        <div class="panel-heading">
+                                <ul class="nav nav-tabs">
+                                    <% _.each(agenda.displayGroupList, function(displayGroup, index){ %>
+                                        
+                                        <% if (index == agenda.selectedDisplayGroup) { %>
+                                            <li class="active">
+                                        <% } else { %>
+                                            <li>
+                                        <% }; %>
+                                        
+                                        <a data-toggle="tab" data-id="<%= index %>" href="#tab_<%= index %>"><%= agenda.displayGroupList[index] %></a>
+                                        </li>
+                                    <% }); %>
+                                </ul> 
+                        </div>
+                    <% } %>
+                
+                    <!-- Tab Content -->
+                    <div class="panel-body">
+                    <% if (agenda.errorMessage != '') { %>
+                       {% endraw %}
+                       <!-- Request failed - Show Error Message -->
+                       <div class="text-danger text-center">
+                           <% if (agenda.errorMessage == 'display_not_selected') { %>
+                               <p>{% trans "Display not selected!" %}</p>
+                           <% } else if (agenda.errorMessage == 'no_events') { %>
+                               <p>{% trans "No events for the chosen Display/Display Group on the selected date!" %}</p>    
+                           <% } else { %>
+                               <p>{% trans "Data request failed!" %}</p>
+                           <% } %>
+                       </div>
+                       {% raw %}
+                   <% } else if(!jQuery.isEmptyObject(agenda.results)) { %>
+                        <!-- Request successful - Show Data -->
+                            
+                        <!-- Breadcrumb trail -->
+                        <div class="cal-event-breadcrumb-trail col-xs-12" style="display: none;">
+                            <div id="content"></div>
+                        </div>     
+                        
+                        <!-- Agenda Data Content -->
+                        <div class="tab-content">
+                            <% _.each(agenda.displayGroupList, function(displayGroup, index){ %>
+                                <% if (typeof agenda.results[(index)] != 'undefined') { %>
+                                    <% 
+                                        var resultItem = agenda.results[index]; 
+                                        var isActive = (index == agenda.selectedDisplayGroup) ? 'active' : '';
+                                    %>
+                                    <div id="tab_<%= index %>" class="tab-pane fade in <%= isActive %> container-fluid">
+                                        <div class="col-lg-6">
+                                            <table id="layouts" class="table agenda-table">
+                                                <%= cal._layouts(resultItem.events, resultItem.layouts) %>
+                                            </table>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <table id="displaygroups" class="table agenda-table">
+                                                <%= cal._displaygroups(resultItem.events, resultItem.displayGroups) %>
+                                            </table>
+                                        </div>
+                                        <div class="col-lg-offset-6 col-lg-6">
+                                            <table id="campaigns" class="table agenda-table">
+                                                <%= cal._campaigns(resultItem.events, resultItem.campaigns) %>
+                                            </table>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            <% }); %>
+                        </div>
+                    <% } %>   
+                    </div>
+                </div>
+            </div>
+        </script>
+        
+        <script type="text/x-handlebars-template" id="calendar-template-agenda-layouts">
+            {% endraw %}
+            <thead>
+                <tr class="table-title">
+                    <th colspan="5">{% trans "Layouts" %}</th>
+                </tr>
+                <tr>
+                    <th>{% trans "ID" %}</th>
+                    <th>{% trans "Name" %}</th>
+                    <th>{% trans "Duration" %}</th>
+                    <th>{% trans "Owner" %}</th>
+                    <th>{% trans "Status" %}</th>
+                </tr>
+            </thead>
+            {% raw %}
+            <tbody>
+                <% _.each(layouts, function(layout){ %>
+                    <tr data-id="<%= layout.layoutId %>">
+                        <td><%= layout.layoutId %></td>
+                        <td><%= layout.layout %></td>
+                        <td><%= layout.duration %></td>
+                        <td><%= layout.owner %></td>
+                        <%
+                            var icon = "";
+                            if (layout.status == 1)
+                                icon = "fa-check";
+                            else if (layout.status == 0)
+                                icon = "fa-times";
+                            else if (layout.status == 3)
+                                icon = "fa-cogs";
+                            else
+                                icon = "fa-exclamation";
+                        %>
+                        <td><span class="fa <%= icon %>"></span></td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </script>
+
+        <script type="text/x-handlebars-template" id="calendar-template-agenda-displaygroups">
+            {% endraw %}
+            <thead>
+                <tr class="table-title">
+                    <th colspan="4">{% trans "Display Groups" %}</th>
+                </tr>
+                <tr>
+                    <th>{% trans "ID" %}</th>
+                    <th>{% trans "Name" %}</th>
+                    <th>{% trans "Is Dynamic?" %}</th>
+                    <th>{% trans "Criteria" %}</th>
+                </tr>
+            </thead>
+            {% raw %}
+            <tbody>
+                <% _.each(displaygroups, function(displaygroup){ %>
+                    <tr data-id="<%= displaygroup.displayGroupId %>">
+                        <td><%= displaygroup.displayGroupId %></td>
+                        <td><%= displaygroup.displayGroup %></td>
+                        <%
+                            var icon = "";
+                            if (displaygroup.isDynamic == 1)
+                                icon = "fa-check";
+                            else if (displaygroup.isDynamic == 0)
+                                icon = "fa-times";
+                            else
+                                icon = "fa-exclamation";
+                        %>
+                        <td><span class="fa <%= icon %>"></span></td>
+                        <td><%= displaygroup.criteria %></td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </script>
+        
+        <script type="text/x-handlebars-template" id="calendar-template-agenda-campaigns">
+            {% endraw %}
+            <thead>
+                <tr class="table-title">
+                    <th colspan="4">{% trans "Campaigns" %}</th>
+                </tr>
+                <tr>
+                    <th>{% trans "ID" %}</th>
+                    <th>{% trans "Name" %}</th>
+                    <th>{% trans "Tags" %}</th>
+                    <th>{% trans "Duration" %}</th>
+                </tr>
+            </thead>
+            {% raw %}
+            <tbody>
+                <% _.each(campaigns, function(campaign){ %>
+                    <tr data-id="<%= campaign.campaignId %>">
+                        <td><%= campaign.campaignId %></td>
+                        <td><%= campaign.campaign %></td>
+                        <td><%= campaign.tags %></td>
+                        <td><%= campaign.duration %></td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </script>
+        
     {% endraw %}
 {% endblock %}
