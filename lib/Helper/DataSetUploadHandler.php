@@ -48,8 +48,11 @@ class DataSetUploadHandler extends BlueImpUploadHandler
                 /* @var \Xibo\Entity\DataSetColumn $column */
                 if ($column->dataSetColumnTypeId == 1) {
                     // Has this column been provided in the mappings?
-                    $spreadSheetColumn = isset($_REQUEST['csvImport_' . $column->dataSetColumnId]) ? $_REQUEST['csvImport_' . $column->dataSetColumnId][$index] : 0;
 
+                    $spreadSheetColumn = 0;
+                    if( isset($_REQUEST['csvImport_' . $column->dataSetColumnId]) )
+                            $spreadSheetColumn = (($index === null) ? $_REQUEST['csvImport_' . $column->dataSetColumnId] : $_REQUEST['csvImport_' . $column->dataSetColumnId][$index]);
+                            
                     // If it has been left blank, then skip
                     if ($spreadSheetColumn != 0)
                         $spreadSheetMapping[($spreadSheetColumn - 1)] = $column->heading;

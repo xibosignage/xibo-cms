@@ -251,11 +251,6 @@ jQuery.fn.extend({
                 $(".page .item:last-child").css("padding", 0);
                 $("#content .item:last-child").css("padding", 0);
             }
-
-            // Protect against images that don't load
-            $(this).find("img").error(function () {
-                $(this).unbind("error").attr("src", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNiYAAAAAkAAxkR2eQAAAAASUVORK5CYII=");
-            });
         });
 
         return $(this);

@@ -44,6 +44,7 @@ class Ticker extends ModuleWidget
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
     }
 
     /**
@@ -113,32 +114,6 @@ class Ticker extends ModuleWidget
                 'templates' => $this->templatesAvailable(),
             ];
         }
-    }
-
-    /**
-     * Loads templates for this module
-     */
-    private function loadTemplates()
-    {
-        // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/ticker/*.template.json') as $template) {
-            // Read the contents, json_decode and add to the array
-            $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
-        }
-
-        $this->getLog()->debug(count($this->module->settings['templates']));
-    }
-
-    /**
-     * Templates available
-     * @return array
-     */
-    public function templatesAvailable()
-    {
-        if (!isset($this->module->settings['templates']))
-            $this->loadTemplates();
-
-        return $this->module->settings['templates'];
     }
 
     public function validate()
@@ -312,10 +287,12 @@ class Ticker extends ModuleWidget
             $this->setOption('filterClauses', json_encode($filterClauseMapping));
         }
 
-        // Text Template
-        $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
-        $this->setRawNode('css', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('css', null)));
-
+        if( $this->getOption('overrideTemplate') == 1 ){
+            // Text Template
+            $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
+            $this->setRawNode('css', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('css', null)));
+        }
+        
         // Save the widget
         $this->validate();
         $this->saveWidget();
@@ -379,11 +356,25 @@ class Ticker extends ModuleWidget
         $takeItemsFrom = $this->getOption('takeItemsFrom', 'start');
         $itemsPerPage = $this->getOption('itemsPerPage', 0);
 
-        // Get the text out of RAW
-        $text = $this->parseLibraryReferences($isPreview, $this->getRawNode('template', null));
+        // Get CSS and HTML template from the original template or from the input field
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            
+            $template = $this->getTemplateById($this->getOption('templateId'));
+            
+            if (isset($template)) {
+                $text = $template['template'];
+                $css = $template['css'];
+            }
+        } else {
+                $text = $this->getRawNode('template', '');
+                $css = $this->getRawNode('css', '');
+        }
+        
+        // Parse library references on the template
+        $text = $this->parseLibraryReferences($isPreview, $text);
 
-        // Get the CSS Node
-        $css = $this->parseLibraryReferences($isPreview, $this->getRawNode('css', ''));
+        // Parse library references on the CSS Node
+        $css = $this->parseLibraryReferences($isPreview, $css);
 
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
@@ -492,12 +483,13 @@ class Ticker extends ModuleWidget
 
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items);';
+        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); $("#content").find("img").xiboImageRender(options); ';
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= $javaScript;
         $javaScriptContent .= '</script>';

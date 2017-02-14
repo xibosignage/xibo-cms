@@ -394,7 +394,8 @@ function Region(parent, id, xml, options, preload) {
         
         self.curMedia = self.mediaObjects[self.currentMedia];
         
-        playLog(8, "debug", "nextMedia -> New: " + self.curMedia.id);
+        if (self.curMedia != undefined)
+            playLog(8, "debug", "nextMedia -> New: " + self.curMedia.id);
         
         /* Do the transition */
         self.transitionNodes(self.oldMedia, self.curMedia);
@@ -430,6 +431,20 @@ function Region(parent, id, xml, options, preload) {
                                                 self.mediaObjects.push(new media(self, $(this).attr('id'), this, options, preload));
                                               });
     
+    // If the regions does not have any media change its background to transparent red
+    if ($(self.xml).find("media").length == 0) {
+        $self = $("#" + self.containerName);
+        
+        messageSize = (self.sWidth > self.sHeight ) ? self.sHeight : self.sWidth;
+        
+        $self.css("background-color", 'rgba(255, 0, 0, 0.25)');
+        $self.append('<div class="empty-message" id="empty_' + self.containerName + '"></div>');
+        
+        $message = $("#empty_" + self.containerName);
+        $message.append('<span class="empty-icon fa fa-exclamation-triangle" style="font-size:' + messageSize/4 + 'px"></span>');
+        $message.append('<span class="empty-icon">' + emptyRegionMessage + '</span>');
+    }     
+                                              
     playLog(4, "debug", "Region " + self.id + " has " + self.mediaObjects.length + " media items");
 }
 

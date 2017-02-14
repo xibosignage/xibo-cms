@@ -85,6 +85,7 @@ class Twitter extends TwitterBase
     {
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/emojione/emojione.sprites.svg')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/bootstrap.min.css')->save();
@@ -93,34 +94,6 @@ class Twitter extends TwitterBase
             /* @var Media $media */
             $media->save();
         }
-    }
-
-    /**
-     * Loads templates for this module
-     */
-    private function loadTemplates()
-    {
-        $this->module->settings['templates'] = [];
-
-        // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/twitter/*.template.json') as $template) {
-            // Read the contents, json_decode and add to the array
-            $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
-        }
-
-        $this->getLog()->debug(count($this->module->settings['templates']));
-    }
-
-    /**
-     * Templates available
-     * @return array
-     */
-    public function templatesAvailable()
-    {
-        if (!isset($this->module->settings['templates']))
-            $this->loadTemplates();
-
-        return $this->module->settings['templates'];
     }
 
     /**
@@ -159,6 +132,10 @@ class Twitter extends TwitterBase
 
     public function validate()
     {
+        // If overrideTemplate is false we have to define a template Id 
+        if($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null) )
+            throw new \InvalidArgumentException(__('Please choose a template'));
+            
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('Please enter a duration'));
 
@@ -214,14 +191,19 @@ class Twitter extends TwitterBase
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
-        $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage', 5));
-        $this->setOption('widgetOriginalPadding', $this->getSanitizer()->getInt('widgetOriginalPadding'));
-        $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
-        $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
-        $this->setOption('resultContent', $this->getSanitizer()->getString('resultContent'));
-        $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
-        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
+        $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage'), 5);
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        
+        if( $this->getOption('overrideTemplate') == 1 ){
+            $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
+            $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
+            $this->setOption('resultContent', $this->getSanitizer()->getString('resultContent'));
+                
+            $this->setOption('widgetOriginalPadding', $this->getSanitizer()->getInt('widgetOriginalPadding'));
+            $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
+            $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
+        }
+        
     }
 
     /**
@@ -254,10 +236,22 @@ class Twitter extends TwitterBase
             $geoCode = implode(',', array($defaultLat, $defaultLong, $distance)) . 'mi';
         }
         
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            
+            $tmplt = $this->getTemplateById($this->getOption('templateId'));
+            
+            if (isset($tmplt)) {
+                $template = $tmplt['template'];
+                $resultContent = $tmplt['resultContent'];
+            }
+            
+        } else {
+            $template = $this->getRawNode('template', null);
+            $resultContent = $this->getOption('resultContent');
+        }
         
         // Search content filtered by type of tweets  
         $searchTerm = $this->getOption('searchTerm');
-        $resultContent = $this->getOption('resultContent');
         
         switch ($resultContent) {
           case 0:
@@ -304,7 +298,7 @@ class Twitter extends TwitterBase
         }
 
         // Get the template
-        $template = $this->parseLibraryReferences($isPreview, $this->getRawNode('template', null));
+        $template = $this->parseLibraryReferences($isPreview, $template);
 
         // Parse the text template
         $matches = '';
@@ -518,6 +512,26 @@ class Twitter extends TwitterBase
         $numItems = $this->getOption('numItems', 0);
         $itemsPerPage = $this->getOption('itemsPerPage', 0);
         $durationIsPerItem = $this->getOption('durationIsPerItem', 1);
+        
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            
+            $template = $this->getTemplateById($this->getOption('templateId'));
+            
+            if (isset($template)) {
+                $css = $template['css'];
+                $widgetOriginalWidth = $template['widgetOriginalWidth'];
+                $widgetOriginalHeight = $template['widgetOriginalHeight'];
+                $widgetOriginalPadding = $template['widgetOriginalPadding'];
+                $resultContent = $template['resultContent'];
+            }
+            
+        } else {
+            $css = $this->getRawNode('styleSheet', '');
+            $widgetOriginalWidth = $this->getSanitizer()->int($this->getOption('widgetOriginalWidth'));
+            $widgetOriginalHeight = $this->getSanitizer()->int($this->getOption('widgetOriginalHeight'));
+            $widgetOriginalPadding = $this->getSanitizer()->int($this->getOption('widgetOriginalPadding'));
+            $resultContent = $this->getOption('resultContent');
+        }
 
         // Generate a JSON string of substituted items.
         $items = $this->getTwitterFeed($displayId, $isPreview);
@@ -538,10 +552,9 @@ class Twitter extends TwitterBase
             'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
             'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
             'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
-            'widgetDesignPadding' => $this->getSanitizer()->int($this->getOption('widgetOriginalPadding')),
-            'widgetDesignWidth' => $this->getSanitizer()->int($this->getOption('widgetOriginalWidth')),
-            'widgetDesignHeight'=> $this->getSanitizer()->int($this->getOption('widgetOriginalHeight')),
-            'resultContent'=> $this->getSanitizer()->string($this->getOption('resultContent')),
+            'widgetDesignPadding' => $widgetOriginalPadding,
+            'widgetDesignWidth' => $widgetOriginalWidth,
+            'widgetDesignHeight'=> $widgetOriginalHeight,
             'itemsPerPage' => $this->getSanitizer()->int($this->getOption('itemsPerPage', 5))
         );
 
@@ -573,7 +586,6 @@ class Twitter extends TwitterBase
         <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
         
         // Add the CSS if it isn't empty
-        $css = $this->getRawNode('styleSheet', null);
         if ($css != '') {
             $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css) . '</style>';
         }
@@ -591,12 +603,13 @@ class Twitter extends TwitterBase
 
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); ';
+        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); $("img").xiboImageRender(options);';
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= $javaScript;
         $javaScriptContent .= '</script>';

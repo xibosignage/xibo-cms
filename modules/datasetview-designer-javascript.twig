@@ -312,8 +312,13 @@
     }
 
     function DataSetViewSubmit(apply) {
-        var form = $("#dataSetViewEditForm");
 
+        var form = $("#dataSetViewEditForm");
+        
+        // Clean the previous generated hidden dataSetColumns from the form
+        form.find('input[name="dataSetColumnId[]"]').remove();
+
+        // Add all the selected columns to the form as hidden input fields
         $($("#columnsIn").sortable('toArray')).each(function() {
             form.append('<input type="hidden" name="dataSetColumnId[]" value="' + this + '" />');
         });
