@@ -73,33 +73,8 @@ class Currencies extends YahooBase
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-finance-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/bootstrap.min.css')->save();
-    }
-
-    /**
-     * Loads templates for this module
-     */
-    private function loadTemplates()
-    {
-        $this->module->settings['templates'] = [];
-
-        // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/currencies/*.template.json') as $template) {
-            // Read the contents, json_decode and add to the array
-            $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
-        }
-    }
-
-    /**
-     * Templates available
-     * @return array
-     */
-    public function templatesAvailable()
-    {
-        if (!isset($this->module->settings['templates']))
-            $this->loadTemplates();
-
-        return $this->module->settings['templates'];
     }
 
     /**
@@ -123,6 +98,9 @@ class Currencies extends YahooBase
 
     public function validate()
     {
+        if($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null) )
+            throw new \InvalidArgumentException(__('Please choose a template'));
+            
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('Please enter a duration'));
     }
@@ -163,17 +141,21 @@ class Currencies extends YahooBase
         $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
         $this->setOption('noRecordsMessage', $this->getSanitizer()->getString('noRecordsMessage'));
         $this->setOption('dateFormat', $this->getSanitizer()->getString('dateFormat'));
-        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        $this->setOption('reverseConversion', $this->getSanitizer()->getCheckbox('reverseConversion'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('durationIsPerPage', $this->getSanitizer()->getCheckbox('durationIsPerPage'));
-        $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
-        $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
-        $this->setOption('maxItemsPerPage', $this->getSanitizer()->getInt('maxItemsPerPage', 4));
-        $this->setRawNode('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', null)));
-        $this->setRawNode('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', null)));
-        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', $this->getSanitizer()->getParam('styleSheet', null)));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        
+        if( $this->getOption('overrideTemplate') == 1 ){
+            $this->setRawNode('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', null)));
+            $this->setRawNode('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', null)));
+            $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', $this->getSanitizer()->getParam('styleSheet', null)));
+            $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
+            $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
+            $this->setOption('maxItemsPerPage', $this->getSanitizer()->getInt('maxItemsPerPage', 4));
+        }
     }
 
     /**
@@ -182,6 +164,9 @@ class Currencies extends YahooBase
      */
     protected function getYql()
     {
+        
+        $reverseConversion = ($this->getOption('reverseConversion', 0) == 1);
+
         $items = $this->getOption('items');
         $base = $this->getOption('base');
         
@@ -209,10 +194,17 @@ class Currencies extends YahooBase
             
         // quote each item
         $itemsJoined = array();
+        
         foreach ($items as $key => $item) {
+            
+            // Remove the multiplier if there's one
+            $item = explode('|', $item)[0];
+            
+            $baseItemPair = ( $reverseConversion ) ? ( trim($item) . trim($base) ) : ( trim($base) . trim($item) );
+            
             array_push(
                 $itemsJoined, 
-                ( $useVariation ) ? ('\'' . trim($base) . trim($item) . '=X' . '\'') : ('\'' . trim($base) . trim($item) . '\'')
+                ( $useVariation ) ? ('\'' . $baseItemPair . '=X' . '\'') : ('\'' . $baseItemPair . '\'')
             );
         }
 
@@ -260,6 +252,16 @@ class Currencies extends YahooBase
         // Replace all matches.
         $matches = '';
         preg_match_all('/\[.*?\]/', $source, $matches);
+        
+        // Get the currencies' items
+        $items = $this->getOption('items');
+        
+        if (strstr($items, ','))
+            $items = explode(',', $items);
+        else
+            $items = [$items];
+        
+        $reverseConversion = ($this->getOption('reverseConversion', 0) == 1);
 
         // Substitute
         foreach ($matches[0] as $sub) {
@@ -299,14 +301,44 @@ class Currencies extends YahooBase
                     // Replace the other tags
                     switch ($replace) {
                         case 'NameShort':
-                            // Replace the name to have just the second currency
+                            // Replace the name to have just the second currency (or the first if the currency is reversed)
+                            $replaceBase = ( $reverseConversion ) ? ('/' . $baseCurrency) : ($baseCurrency . '/');
+                            
                             if (isset($data['Name']))
-                                $replacement = str_replace(($baseCurrency . '/'),'',$data['Name']);
+                                $replacement = trim(str_replace($replaceBase,'',$data['Name']));
+                                    
+                            break;
+                            
+                        case 'Multiplier':
+                            
+                            // Initialize replacement with empty string 
+                            $replacement = '';
+                            
+                            // Get the current currency name/code
+                            $pairName = ( $reverseConversion ) ? ('/' . $baseCurrency) : ($baseCurrency . '/');
+                            
+                            if (isset($data['Name']))
+                                $currencyName = trim(str_replace($pairName,'',$data['Name']));
+                            
+                            // Search for the item that relates to the actual currency
+                            foreach ($items as $item) {
                                 
+                                // Get the item name
+                                $itemName = trim(explode('|', $item)[0]);
+                                
+                                // Compare the item name with the actual currency and test if the inputed value has a multiplier flag
+                                if( sizeof(explode('|', $item)) > 1 && strcmp($itemName, $currencyName) == 0 ){
+                                    
+                                    // Get the multiplier
+                                    $replacement = explode('|', $item)[1];
+                                }
+                            }
+                            
                             break;
                             
                         case 'CurrencyFlag':
-                            $currencyCode = str_replace(($baseCurrency . '/'),'',$data['Name']);
+                            $replaceBase = ( $reverseConversion ) ? ('/' . $baseCurrency) : ($baseCurrency . '/');
+                            $currencyCode = str_replace($replaceBase,'',$data['Name']);
                             
                             if (!file_exists(PROJECT_ROOT . '/web/modules/currencies/currency-flags/' . $currencyCode . '.svg')) 
                                 $currencyCode = 'default';
@@ -334,6 +366,38 @@ class Currencies extends YahooBase
                                 // Convert the value to percentage and round it
                                 $replacement = round($percentage*100, 2);
                             }    
+                            
+                            break;
+                            
+                        case 'LastTradePriceOnlyValue':
+                        case 'BidValue':
+                        case 'AskValue':
+                            
+                            // Get the converted currency name
+                            $currencyName = ( $reverseConversion ) ? ('/' . $baseCurrency) : ($baseCurrency . '/');
+                            
+                            if (isset($data['Name']))
+                                $currencyName = trim(str_replace($currencyName, '', $data['Name']));
+                            
+                            // Get the field's name and set the replacement as the default value from the API
+                            $fieldName = str_replace('Value', '', $replace);
+                            $replacement = $data[$fieldName];
+                                
+                            // Search for the item that relates to the actual currency
+                            foreach ($items as $item) {
+                                
+                                // Get the item name
+                                $itemName = trim(explode('|', $item)[0]);
+                                
+                                // Compare the item name with the actual currency and test if the inputed value has a multiplier flag
+                                if( sizeof(explode('|', $item)) > 1 && strcmp($itemName, $currencyName) == 0 ){
+                                    // Get the multiplier
+                                    $multiplier = explode('|', $item)[1];
+                                    
+                                    // Set the replacement to be the API value times the multiplier
+                                    $replacement = $data[$fieldName] * (float)$multiplier;
+                                }
+                            }        
                             
                             break;
                             
@@ -367,12 +431,6 @@ class Currencies extends YahooBase
                                     $replacement = 'down-arrow';
                                 }
                             }
-                            
-                            break;
-                            
-                        case 'CurrencyUpper':
-                            // Currency in uppercase
-                            $replacement = strtoupper($data['Currency']);
                             
                             break;
                             
@@ -430,9 +488,32 @@ class Currencies extends YahooBase
             return '';
         }
 
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            
+            $template = $this->getTemplateById($this->getOption('templateId'));
+            
+            if (isset($template)) {
+                $mainTemplate = $template['main'];
+                $itemTemplate = $template['item'];
+                $styleSheet = $template['css'];
+                $widgetOriginalWidth = $template['widgetOriginalWidth'];
+                $widgetOriginalHeight = $template['widgetOriginalHeight'];
+                $maxItemsPerPage = $template['maxItemsPerPage'];
+            }
+            
+        } else {
+            
+            $mainTemplate = $this->getRawNode('mainTemplate');
+            $itemTemplate = $this->getRawNode('itemTemplate');
+            $styleSheet = $this->getRawNode('styleSheet', '');
+            $widgetOriginalWidth = $this->getSanitizer()->int($this->getOption('widgetOriginalWidth'));
+            $widgetOriginalHeight = $this->getSanitizer()->int($this->getOption('widgetOriginalHeight'));
+            $maxItemsPerPage = $this->getSanitizer()->int($this->getOption('maxItemsPerPage'));
+        }
+        
         // Run through each item and substitute with the template
-        $mainTemplate = $this->parseLibraryReferences($isPreview, $this->getRawNode('mainTemplate'));
-        $itemTemplate = $this->parseLibraryReferences($isPreview, $this->getRawNode('itemTemplate'));
+        $mainTemplate = $this->parseLibraryReferences($isPreview, $mainTemplate);
+        $itemTemplate = $this->parseLibraryReferences($isPreview, $itemTemplate);
         
         $renderedItems = [];
         
@@ -453,10 +534,10 @@ class Currencies extends YahooBase
             'originalHeight' => $this->region->height,
             'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
             'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-            'widgetDesignWidth' => $this->getSanitizer()->int($this->getOption('widgetOriginalWidth')),
-            'widgetDesignHeight'=> $this->getSanitizer()->int($this->getOption('widgetOriginalHeight')),
+            'widgetDesignWidth' => $widgetOriginalWidth,
+            'widgetDesignHeight'=> $widgetOriginalHeight,
             'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0), 
-            'maxItemsPerPage' => $this->getSanitizer()->int($this->getOption('maxItemsPerPage'))
+            'maxItemsPerPage' => $maxItemsPerPage
         );
 
         $itemsPerPage = $options['maxItemsPerPage'];
@@ -483,7 +564,7 @@ class Currencies extends YahooBase
         }
         
         // Add the CSS if it isn't empty, and replace the wallpaper
-        $css = $this->makeSubstitutions([], $this->getRawNode('styleSheet', null), '');
+        $css = $this->makeSubstitutions([], $styleSheet, '');
 
         if ($css != '') {
             $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css) . '</style>';
@@ -500,13 +581,14 @@ class Currencies extends YahooBase
 
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-finance-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   var items = ' . json_encode($renderedItems) . ';';
         $javaScriptContent .= '   var body = ' . json_encode($mainTemplate) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboFinanceRender(options, items, body); ';
+        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboFinanceRender(options, items, body); $("#content").find("img").xiboImageRender(options); ';
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= $javaScript;
         $javaScriptContent .= '</script>';

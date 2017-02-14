@@ -27,8 +27,8 @@
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="bandwidthFilter">
                         <form class="form-inline">
-                            {{ inline.date("bandwidthFromDt", "From Date", defaults.fromDate, "", "", "", "") }}
-                            {{ inline.date("bandwidthToDt", "To Date", defaults.toDate, "", "", "", "") }}
+                            {{ inline.dateMonth("bandwidthFromDt", "From Date", defaults.fromDate, "", "", "", "") }}
+                            {{ inline.dateMonth("bandwidthToDt", "To Date", defaults.toDate, "", "", "", "") }}
                             {{ inline.dropdown("displayId", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
                         </form>
                     </div>

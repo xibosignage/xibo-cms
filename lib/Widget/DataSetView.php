@@ -40,6 +40,7 @@ class DataSetView extends ModuleWidget
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-dataset-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
     }
 
     /**
@@ -119,22 +120,6 @@ class DataSetView extends ModuleWidget
     }
 
     /**
-     * Loads templates for this module
-     */
-    private function loadTemplates()
-    {
-        $this->module->settings['templates'] = [];
-
-        // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/datasetview/*.template.json') as $template) {
-            // Read the contents, json_decode and add to the array
-            $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
-        }
-
-        $this->getLog()->debug(count($this->module->settings['templates']));
-    }
-
-    /**
      * Get the Order Clause
      * @return mixed
      */
@@ -165,18 +150,6 @@ class DataSetView extends ModuleWidget
             'columns' => $this->dataSetColumns(),
             'dataSet' => ($this->getOption('dataSetId', 0) != 0) ? $this->dataSetFactory->getById($this->getOption('dataSetId')) : null
         ];
-    }
-
-    /**
-     * Templates available
-     * @return array
-     */
-    public function templatesAvailable()
-    {
-        if (!isset($this->module->settings['templates']))
-            $this->loadTemplates();
-
-        return $this->module->settings['templates'];
     }
 
     /**
@@ -262,6 +235,10 @@ class DataSetView extends ModuleWidget
         $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
         $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        
+        if( $this->getOption('overrideTemplate') == 1 ){
+            $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
+        }
 
         // Order and Filter criteria
         $orderClauses = $this->getSanitizer()->getStringArray('orderClause');
@@ -307,9 +284,6 @@ class DataSetView extends ModuleWidget
         }
 
         $this->setOption('filterClauses', json_encode($filterClauseMapping));
-
-        // Style Sheet
-        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
 
         // Save the widget
         $this->validate();
@@ -361,9 +335,21 @@ class DataSetView extends ModuleWidget
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
-
+    
+        // Get CSS from the original template or from the input field
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            
+            $template = $this->getTemplateById($this->getOption('templateId'));
+            
+            if (isset($template))
+                $styleSheet = $template['css'];
+                    
+        } else {
+                $styleSheet = $this->getRawNode('styleSheet', '');
+        }
+        
         // Get the embedded HTML out of RAW
-        $styleSheet = $this->parseLibraryReferences($isPreview, $this->getRawNode('styleSheet', ''));
+        $styleSheet = $this->parseLibraryReferences($isPreview, $styleSheet);
 
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
@@ -393,11 +379,12 @@ class DataSetView extends ModuleWidget
 
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-dataset-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("#DataSetTableContainer").dataSetRender(options); $("body").xiboLayoutScaler(options);';
+        $javaScriptContent .= '       $("#DataSetTableContainer").dataSetRender(options); $("body").xiboLayoutScaler(options); $("#DataSetTableContainer").find("img").xiboImageRender(options); ';
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= $javaScript;
         $javaScriptContent .= '</script>';

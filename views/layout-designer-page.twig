@@ -46,7 +46,7 @@
                                 <i class="fa fa-clock-o" aria-hidden="true"></i> {% trans "" %}
                                 <span id="layout-duration" class="label label-success big-duration"></span></span>
                             <span>| <b>Currently Editing</b></span>
-                            <select id="layoutJumpList" data-live-search="true">
+                            <select id="layoutJumpList" data-live-search="true" data-width="auto">
                                 {% for item in layouts %}
                                     <option value="{{ urlFor("layout.designer", {id: item.layoutId}) }}"{% if item.layoutId == layout.layoutId %} selected{% endif %}>{{ item.layout }}</option>
                                 {% endfor %}
