@@ -759,14 +759,17 @@ class Display implements \JsonSerializable
 
             try {
                 if ($this->displayProfileId == 0) {
-                    throw new NotFoundException('Default Profile');
+                    // Load the default profile
+                    $displayProfile = $this->displayProfileFactory->getDefaultByType($this->clientType);
                 } else {
                     // Load the specified profile
                     $displayProfile = $this->displayProfileFactory->getById($this->displayProfileId);
                 }
             } catch (NotFoundException $e) {
-                // Load the default profile
-                $displayProfile = $this->displayProfileFactory->getDefaultByType($this->clientType);
+                $this->getLog()->error('Cannot get display profile');
+                $this->getLog()->debug($e->getTraceAsString());
+
+                $displayProfile = $this->displayProfileFactory->getUnknownProfile();
             }
 
             $this->_config = $displayProfile->getProfileConfig();
