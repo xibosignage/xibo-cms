@@ -451,7 +451,7 @@ class Schedule extends Base
                 // Display Group details
                 $this->getLog()->debug('Adding this events displayGroupIds to list');
                 $schedule->excludeProperty('displayGroups');
-                $schedule->displayGroupIds = [];
+
                 foreach ($schedule->displayGroups as $displayGroup) {
                     if (!array_key_exists($displayGroup->displayGroupId, $displayGroups)) {
                         $displayGroups[$displayGroup->displayGroupId] = $displayGroup;
@@ -462,17 +462,24 @@ class Schedule extends Base
                 $this->getLog()->debug('Adding this events intermediateDisplayGroupIds to list');
                 $schedule->intermediateDisplayGroupIds = [];
 
-                // We need to trace the route between the events displayGroupId and the displayGroupId we
-                // are looking at. We should start at the displayGroupId for the event and stop when we reach
-                // the first occurence of the displayGroupId we are looking at.
-                $tree = $this->displayGroupFactory->getRelationShipTree(intval($event['displayGroupId']));
+                // Is this event for the selected displayGroupId? if so we have 0 intermediates.
+                if (intval($event['displayGroupId']) != $displayGroupId) {
+                    // We need to trace the route between the events displayGroupId and the displayGroupId we
+                    // are looking at. We should start at the displayGroupId for the event and stop when we reach
+                    // the first occurence of the displayGroupId we are looking at.
+                    $tree = $this->displayGroupFactory->getRelationShipTree(intval($event['displayGroupId']));
 
-                foreach ($tree as $branch) {
-                    if ($branch->depth > 0 && $branch->displayGroupId != $displayGroupId) {
-                        $schedule->intermediateDisplayGroupIds[] = $branch->displayGroupId;
+                    foreach ($tree as $branch) {
+                        // If we've reached the displayGroupId in question, then stop
+                        if ($branch->displayGroupId == $displayGroupId)
+                            break;
 
-                        if (!array_key_exists($branch->displayGroupId, $displayGroups)) {
-                            $displayGroups[$branch->displayGroupId] = $this->displayGroupFactory->getById($branch->displayGroupId);
+                        if ($branch->depth > 0 && $branch->displayGroupId != $displayGroupId) {
+                            $schedule->intermediateDisplayGroupIds[] = $branch->displayGroupId;
+
+                            if (!array_key_exists($branch->displayGroupId, $displayGroups)) {
+                                $displayGroups[$branch->displayGroupId] = $this->displayGroupFactory->getById($branch->displayGroupId);
+                            }
                         }
                     }
                 }
