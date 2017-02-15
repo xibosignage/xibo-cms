@@ -413,6 +413,10 @@ class Schedule extends Base
             // If this event is active, collect extra information and add to the events list
             if (count($scheduleEvents) > 0) {
 
+                // Add the link to the schedule
+                if (!$this->isApi())
+                    $schedule->link = $this->getApp()->urlFor('schedule.edit.form', ['id' => $schedule->eventId]);
+
                 // Add the Layout
                 $layoutId = $event['layoutId'];
 
@@ -421,6 +425,10 @@ class Schedule extends Base
                 if ($layoutId != 0 && !array_key_exists($layoutId, $layouts)) {
                     // Look up the layout details
                     $layout = $this->layoutFactory->getById($layoutId);
+
+                    // Add the link to the layout
+                    if (!$this->isApi())
+                        $layout->link = $this->getApp()->urlFor('layout.designer', ['id' => $layout->layoutId]);
 
                     if ($this->getUser()->checkViewable($layout))
                         $layouts[$layoutId] = $layout;

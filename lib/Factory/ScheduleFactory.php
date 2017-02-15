@@ -185,8 +185,19 @@ class ScheduleFactory extends BaseFactory
                 ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
                 INNER JOIN `lkdgdg`
                 ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
+        ';
+
+        if (!$options['useGroupId']) {
+            // Only join in the display/display group link table if we are requesting this data for a display
+            // otherwise the group we are looking for might not have any displays, and this join would therefore
+            // remove any records.
+            $SQL .= '
                 INNER JOIN `lkdisplaydg`
                 ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
+            ';
+        }
+
+        $SQL .= '    
                 LEFT OUTER JOIN `campaign`
                 ON `schedule`.CampaignID = campaign.CampaignID
                 LEFT OUTER JOIN `lkcampaignlayout`
@@ -199,7 +210,7 @@ class ScheduleFactory extends BaseFactory
         ';
 
         if ($options['useGroupId']) {
-            $SQL .= ' WHERE `lkdisplaydg`.DisplayGroupID = :displayGroupId ';
+            $SQL .= ' WHERE `lkdgdg`.childId = :displayGroupId ';
             $params['displayGroupId'] = $options['displayGroupId'];
         } else {
             $SQL .= ' WHERE `lkdisplaydg`.DisplayID = :displayId ';
@@ -212,7 +223,7 @@ class ScheduleFactory extends BaseFactory
                     IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
                     )
                 )
-            ORDER BY schedule.DisplayOrder, IFNULL(lkcampaignlayout.DisplayOrder, 0), schedule.FromDT
+            ORDER BY schedule.DisplayOrder, IFNULL(lkcampaignlayout.DisplayOrder, 0), schedule.FromDT, schedule.eventId
         ';
 
         return $this->getStore()->select($SQL, $params);
