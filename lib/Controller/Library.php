@@ -1083,7 +1083,7 @@ class Library extends Base
     public function removeExpiredFiles()
     {
         // Get a list of all expired files and delete them
-        foreach ($this->mediaFactory->query(null, array('expires' => time(), 'allModules' => 1)) as $entry) {
+        foreach ($this->mediaFactory->query(null, array('expires' => time(), 'allModules' => 1, 'length' => 100)) as $entry) {
             /* @var \Xibo\Entity\Media $entry */
             // If the media type is a module, then pretend its a generic file
             $this->getLog()->info('Removing Expired File %s', $entry->name);
