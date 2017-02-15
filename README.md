@@ -1,6 +1,6 @@
 # Introduction
 Xibo - Digital Signage - http://www.xibo.org.uk
-Copyright (C) 2006-2016 Daniel Garner and Contributors.
+Copyright (C) 2006-2017 Daniel Garner and Contributors.
 
 This is the **development branch** and represents the next generation of the Xibo CMS.
 
@@ -24,6 +24,9 @@ Installing an official release is [described in the manual](http://xibo.org.uk/m
 official release notes of each release.
 
 # Developing
+
+** Please only install a Development environment if you intend make code changes to
+Xibo. Installing from the repository is not suitable for a production installation. **
 
 Xibo uses Vagrant and Docker to ensure all contributers have a repeatable development environment which is easy to get
 up and running.
@@ -80,7 +83,7 @@ asked for a database you should select to create a new database and enter these 
 
 When asked for a library location you should enter
 
- - /var/www/xibo/library
+ - /var/www/cms/library
 
 ## Under the hood
 
