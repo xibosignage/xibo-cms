@@ -380,6 +380,9 @@ class Schedule extends Base
         $layouts = [];
         $campaigns = [];
 
+        // Add the displayGroupId I am filtering for to the displayGroup object
+        $displayGroups[$displayGroup->displayGroupId] = $displayGroup;
+
         // Is this group a display specific group, or a standalone?
         $options = [];
         $displayId = null;
