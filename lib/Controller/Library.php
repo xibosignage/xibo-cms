@@ -691,7 +691,7 @@ class Library extends Base
      *  @SWG\Parameter(
      *      name="retired",
      *      in="formData",
-     *      description="Flag indicating if this Layout is retired",
+     *      description="Flag indicating if this media is retired",
      *      type="integer",
      *      required=true
      *   ),
