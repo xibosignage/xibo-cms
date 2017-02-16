@@ -2964,12 +2964,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PeterMis/oauth2-xibo-cms.git",
-                "reference": "0bd14fa0926b611f353ca74d82c5f9c5a11747d3"
+                "reference": "e5e5fa23ec944748dc2450cd48a237d236419c53"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PeterMis/oauth2-xibo-cms/zipball/0bd14fa0926b611f353ca74d82c5f9c5a11747d3",
-                "reference": "0bd14fa0926b611f353ca74d82c5f9c5a11747d3",
+                "url": "https://api.github.com/repos/PeterMis/oauth2-xibo-cms/zipball/e5e5fa23ec944748dc2450cd48a237d236419c53",
+                "reference": "e5e5fa23ec944748dc2450cd48a237d236419c53",
                 "shasum": ""
             },
             "require": {
@@ -3009,7 +3009,7 @@
             "support": {
                 "source": "https://github.com/PeterMis/oauth2-xibo-cms/tree/master"
             },
-            "time": "2017-02-07 14:27:48"
+            "time": "2017-02-16 14:28:04"
         },
         {
             "name": "xibosignage/xibo-xmr",
