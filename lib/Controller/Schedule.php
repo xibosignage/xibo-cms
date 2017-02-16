@@ -401,6 +401,11 @@ class Schedule extends Base
         $this->getLog()->debug(count($scheduleForXmds) . ' events returned for displaygroup and date');
 
         foreach ($scheduleForXmds as $event) {
+
+            // Ignore command events
+            if ($event['eventTypeId'] == \Xibo\Entity\Schedule::$COMMAND_EVENT)
+                continue;
+
             // Assess schedules
             $schedule = $this->scheduleFactory->createEmpty()->hydrate($event, ['intProperties' => ['isPriority', 'syncTimezone', 'displayOrder']]);
             $schedule
