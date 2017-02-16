@@ -526,10 +526,16 @@ class Schedule extends Base
 
             $this->getLog()->debug('Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
 
-            // In some circumstances we want to trim the seconds from the provided dates.
-            // this happens when the date format provided does not include seconds and when the add
-            // event comes from the UI.
-            if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
+            if ($schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_CUSTOM && $schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+                // Daypart selected
+                // expect only a start date (no time)
+                $schedule->fromDt = $fromDt->startOfDay()->format('U');
+                $schedule->toDt = null;
+
+            } else if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
+                // In some circumstances we want to trim the seconds from the provided dates.
+                // this happens when the date format provided does not include seconds and when the add
+                // event comes from the UI.
                 $this->getLog()->debug('Date format does not include seconds, removing them');
                 $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
 
@@ -786,10 +792,16 @@ class Schedule extends Base
 
             $this->getLog()->debug('Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
 
-            // In some circumstances we want to trim the seconds from the provided dates.
-            // this happens when the date format provided does not include seconds and when the add
-            // event comes from the UI.
-            if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
+            if ($schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_CUSTOM && $schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+                // Daypart selected
+                // expect only a start date (no time)
+                $schedule->fromDt = $fromDt->startOfDay()->format('U');
+                $schedule->toDt = null;
+
+            } else if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
+                // In some circumstances we want to trim the seconds from the provided dates.
+                // this happens when the date format provided does not include seconds and when the add
+                // event comes from the UI.
                 $this->getLog()->debug('Date format does not include seconds, removing them');
                 $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
 
