@@ -951,10 +951,7 @@ class Ticker extends ModuleWidget
                         if ($mappings[$header]['dataTypeId'] == 4) {
                             // External Image
                             // Download the image, alter the replace to wrap in an image tag
-                            $file = $this->mediaFactory->createModuleFile('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
-                            $file->isRemote = true;
-                            $file->expires = $expires;
-                            $file->save();
+                            $file = $this->mediaFactory->queueDownload('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)), $expires);
 
                             // Tag this layout with this file
                             $this->assignMedia($file->mediaId);
@@ -988,6 +985,8 @@ class Ticker extends ModuleWidget
 
                 $items[] = $rowString;
             }
+
+            $this->mediaFactory->processDownloads();
 
             return $items;
         }

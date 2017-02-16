@@ -618,10 +618,7 @@ class DataSetView extends ModuleWidget
                     if ($mapping['dataTypeId'] == 4) {
 
                         // Grab the external image
-                        $file = $this->mediaFactory->createModuleFile('datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
-                        $file->isRemote = true;
-                        $file->expires = $expires;
-                        $file->save();
+                        $file = $this->mediaFactory->queueDownload('datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)), $expires);
 
                         // Tag this layout with this file
                         $this->assignMedia($file->mediaId);
@@ -652,6 +649,8 @@ class DataSetView extends ModuleWidget
 
                     $table .= '<td class="DataSetColumn" id="column_' . ($i + 1) . '"><span class="DataSetCellSpan" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $replace . '</span></td>';
                 }
+
+                $this->mediaFactory->processDownloads();
 
                 $table .= '</tr>';
 

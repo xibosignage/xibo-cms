@@ -246,9 +246,8 @@ class MediaFactory extends BaseFactory
                 /** @var Media $item */
                 $item = $queue[$index];
 
-                // File is downloaded, update the name and save
+                // File is downloaded, call save to move it appropriately
                 try {
-                    $item->fileName = $item->name;
                     $item->saveFile();
                 } catch (\Exception $e) {
                     $this->getLog()->error('Unable to save:' . $item->mediaId);
