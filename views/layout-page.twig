@@ -273,10 +273,13 @@
             });
         }
 
-        function layoutExportFormOpen() {
-            $("#layoutExportForm").submit(function(e) {
+        function layoutExportFormSubmit() {
+            var $form = $("#layoutExportForm");
+            window.location = $form.attr("action") + "?" + $form.serialize();
+
+            setTimeout(function() {
                 XiboDialogClose();
-            });
+            }, 1000);
         }
     </script>
 {% endblock %}
