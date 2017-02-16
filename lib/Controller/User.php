@@ -434,7 +434,7 @@ class User extends Base
         $user = $this->userFactory->create();
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
 
-        $user->userName = $this->getSanitizer()->getString('userName');
+        $user->userName = $this->getSanitizer()->getUserName('userName');
         $user->email = $this->getSanitizer()->getString('email');
         $user->homePageId = $this->getSanitizer()->getInt('homePageId');
         $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota', 0);
@@ -493,7 +493,7 @@ class User extends Base
         // Build a user entity and save it
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
         $user->load();
-        $user->userName = $this->getSanitizer()->getString('userName');
+        $user->userName = $this->getSanitizer()->getUserName('userName');
         $user->email = $this->getSanitizer()->getString('email');
         $user->homePageId = $this->getSanitizer()->getInt('homePageId');
         $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
