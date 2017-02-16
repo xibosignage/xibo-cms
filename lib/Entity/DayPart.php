@@ -176,8 +176,19 @@ class DayPart implements \JsonSerializable
 
     public function validate()
     {
+        $this->getLog()->debug('Validating daypart ' . $this->name);
+
         if (!v::string()->notEmpty()->validate($this->name))
             throw new InvalidArgumentException(__('Name cannot be empty'), 'name');
+
+        // Check the start/end times are in the correct format (H:i)
+        if (strlen($this->startTime) != 5 || strlen($this->endTime) != 5)
+            throw new InvalidArgumentException(__('Start/End time are empty or in an incorrect format'), 'start/end time');
+
+        foreach ($this->exceptions as $exception) {
+            if (strlen($exception['start']) != 5 || strlen($exception['end']) != 5)
+                throw new InvalidArgumentException(sprintf(__('Exception Start/End time for %s are empty or in an incorrect format'), $exception['day']), 'exception start/end time');
+        }
     }
 
     /**
