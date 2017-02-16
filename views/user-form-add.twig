@@ -69,9 +69,14 @@
                             </div>
                         </div>
 
+                        {% set attributes = [
+                        { name: "data-live-search", value: "true" },
+                        { name: "data-selected-text-format", value: "count > 4" }
+                        ] %}
+
                         {% set title %}{% trans "Initial User Group" %}{% endset %}
                         {% set helpText %}{% trans "What is the initial user group for this user?" %}{% endset %}
-                        {{ forms.dropdown("groupId", "single", title, "", options.groups, "groupId", "group", helpText) }}
+                        {{ forms.dropdown("groupId", "single", title, "", options.groups, "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
 
                         {% if currentUser.userTypeId == 1 %}
                             {% set title %}{% trans "Receive System Notifications?" %}{% endset %}

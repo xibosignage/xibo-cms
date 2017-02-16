@@ -160,6 +160,9 @@ class UserGroupFactory extends BaseFactory
         $entries = array();
         $params = array();
 
+        if ($sortOrder === null)
+            $sortOrder = ['`group`'];
+
         try {
             $select = '
             SELECT 	`group`.group,
