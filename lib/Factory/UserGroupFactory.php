@@ -86,7 +86,7 @@ class UserGroupFactory extends BaseFactory
      */
     public function getByName($group, $isUserSpecific = 0)
     {
-        $groups = $this->query(null, ['disableUserCheck' => 1, 'group' => $group, 'isUserSpecific' => $isUserSpecific]);
+        $groups = $this->query(null, ['disableUserCheck' => 1, 'exactGroup' => $group, 'isUserSpecific' => $isUserSpecific]);
 
         if (count($groups) <= 0)
             throw new NotFoundException(__('Group not found'));
@@ -215,8 +215,33 @@ class UserGroupFactory extends BaseFactory
 
             // Filter by Group Name
             if ($this->getSanitizer()->getString('group', $filterBy) != null) {
-                $body .= ' AND `group`.group = :group ';
-                $params['group'] = $this->getSanitizer()->getString('group', $filterBy);
+                // Convert into commas
+                foreach (explode(',', $this->getSanitizer()->getString('group', $filterBy)) as $term) {
+
+                    if (empty(trim($term)))
+                        continue;
+
+                    // convert into a space delimited array
+                    $names = explode(' ', $term);
+
+                    $i = 0;
+                    foreach ($names as $searchName) {
+                        $i++;
+                        // Not like, or like?
+                        if (substr($searchName, 0, 1) == '-') {
+                            $body .= " AND `group`.group NOT RLIKE (:group$i) ";
+                            $params['group' . $i] = ltrim(($searchName), '-');
+                        } else {
+                            $body .= " AND `group`.group RLIKE (:group$i) ";
+                            $params['group' . $i] = $searchName;
+                        }
+                    }
+                }
+            }
+
+            if ($this->getSanitizer()->getString('exactGroup', $filterBy) != null) {
+                $body .= ' AND `group`.group = :exactGroup ';
+                $params['exactGroup'] = $this->getSanitizer()->getString('exactGroup', $filterBy);
             }
 
             // Filter by User Id
