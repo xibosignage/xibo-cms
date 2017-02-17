@@ -107,6 +107,17 @@ class DisplayProfileFactory extends BaseFactory
     }
 
     /**
+     * @return DisplayProfile
+     */
+    public function getUnknownProfile()
+    {
+        $profile = $this->createEmpty();
+        $profile->type = 'unknown';
+        $profile->load();
+        return $profile;
+    }
+
+    /**
      * Get by Command Id
      * @param $commandId
      * @return array[DisplayProfile]

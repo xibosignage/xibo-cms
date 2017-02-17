@@ -352,6 +352,11 @@ class DisplayProfile implements \JsonSerializable
     private function loadFromFile()
     {
         return array(
+            'unknown' => [
+                'synonym' => 'unknown',
+                'tabs' => [],
+                'settings' => []
+            ],
             'windows' => array(
                 'synonym' => 'dotnetclient',
                 'tabs' => array(
