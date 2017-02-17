@@ -107,12 +107,14 @@ class DisplayProfileFactory extends BaseFactory
     }
 
     /**
+     * @param $clientType
      * @return DisplayProfile
      */
-    public function getUnknownProfile()
+    public function getUnknownProfile($clientType)
     {
         $profile = $this->createEmpty();
         $profile->type = 'unknown';
+        $profile->setClientType($clientType);
         $profile->load();
         return $profile;
     }

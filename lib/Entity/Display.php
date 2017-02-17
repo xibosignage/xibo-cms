@@ -769,7 +769,7 @@ class Display implements \JsonSerializable
                 $this->getLog()->error('Cannot get display profile');
                 $this->getLog()->debug($e->getTraceAsString());
 
-                $displayProfile = $this->displayProfileFactory->getUnknownProfile();
+                $displayProfile = $this->displayProfileFactory->getUnknownProfile($this->clientType);
             }
 
             $this->_config = $displayProfile->getProfileConfig();
