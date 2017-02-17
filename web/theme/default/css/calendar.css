@@ -67,6 +67,10 @@
     line-height: 90px;
 }
 
+.agenda-table tbody tr.low-priority {
+    color: grey;
+}
+
 .agenda-table tbody tr:hover {
     cursor: pointer;
     color: #428bca;
@@ -84,6 +88,10 @@
     color: white;
 }
 
+.agenda-table .btn-tag {
+    padding: 0px 5px;
+    cursor: default;
+}
 
 .cal-event-time-bar .slider.slider-horizontal {
     width: 100%;

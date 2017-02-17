@@ -463,7 +463,7 @@
                                <p>{% trans "Display not selected!" %}</p>
                            <% } else if (agenda.errorMessage == 'no_events') { %>
                                <p>{% trans "No events for the chosen Display/Display Group on the selected date!" %}</p>    
-                           <% } else { %>
+                           <% } else  if (agenda.errorMessage == 'request_failed') { %>
                                <p>{% trans "Data request failed!" %}</p>
                            <% } %>
                        </div>
@@ -472,7 +472,7 @@
                         <!-- Request successful - Show Data -->
                             
                         <!-- Breadcrumb trail -->
-                        <div class="cal-event-breadcrumb-trail col-xs-12" style="display: none;">
+                        <div class="cal-event-breadcrumb-trail col-xs-12">
                             <div id="content"></div>
                         </div>     
                         
@@ -485,21 +485,22 @@
                                         var isActive = (index == agenda.selectedDisplayGroup) ? 'active' : '';
                                     %>
                                     <div id="tab_<%= index %>" class="tab-pane fade in <%= isActive %> container-fluid">
-                                        <div class="col-lg-6">
+                                        <div class="col-lg-9">
                                             <table id="layouts" class="table agenda-table">
-                                                <%= cal._layouts(resultItem.events, resultItem.layouts) %>
+                                                <%= cal._layouts(resultItem.events, resultItem.layouts, 1) %>
+                                            </table>
+                                            <table id="overlays" class="table agenda-table">
+                                                <%= cal._layouts(resultItem.events, resultItem.layouts, 3) %>
                                             </table>
                                         </div>
-                                        <div class="col-lg-6">
+                                        <div class="col-lg-3">
                                             <table id="displaygroups" class="table agenda-table">
                                                 <%= cal._displaygroups(resultItem.events, resultItem.displayGroups) %>
                                             </table>
-                                        </div>
-                                        <div class="col-lg-offset-6 col-lg-6">
                                             <table id="campaigns" class="table agenda-table">
                                                 <%= cal._campaigns(resultItem.events, resultItem.campaigns) %>
                                             </table>
-                                        </div>
+                                        </div>   
                                     </div>
                                 <% } %>
                             <% }); %>
@@ -511,37 +512,68 @@
         </script>
         
         <script type="text/x-handlebars-template" id="calendar-template-agenda-layouts">
-            {% endraw %}
             <thead>
                 <tr class="table-title">
-                    <th colspan="5">{% trans "Layouts" %}</th>
+                    <th colspan="10">
+                        <% if (layouts.type == 1) { %>
+                            {% endraw %}{% trans "Layouts" %}{% raw %}</span>
+                        <% } else if (layouts.type == 3) { %>
+                            {% endraw %}{% trans "Overlay Layouts" %}{% raw %}
+                        <% } %> 
+                    </th>
                 </tr>
+                {% endraw %}
                 <tr>
+                    <th></th>
                     <th>{% trans "ID" %}</th>
-                    <th>{% trans "Name" %}</th>
-                    <th>{% trans "Duration" %}</th>
-                    <th>{% trans "Owner" %}</th>
+                    <th>{% trans "Layout Name" %}</th>
                     <th>{% trans "Status" %}</th>
+                    <th>{% trans "From Date" %}</th>
+                    <th>{% trans "To Date" %}</th>
+                    <th>{% trans "Layout Duration" %}</th>
+                    <th>{% trans "Display Order" %}</th>
+                    <th>{% trans "Priority" %}</th>
+                    <th>{% trans "Visible" %}</th>
                 </tr>
+                {% raw %}
             </thead>
-            {% raw %}
             <tbody>
                 <% _.each(layouts, function(layout){ %>
-                    <tr data-id="<%= layout.layoutId %>">
+                    <tr 
+                        class="<%= layout.itemClass %>"
+                        data-elem-id="<%= layout.layoutId %>" 
+                        data-event-id="<%= layout.eventId %>" 
+                        data-toggle="tooltip"
+                        <% if (layout.itemClass == 'low-priority') { %>
+                            title="{% endraw %}{% trans "This layout will not be shown as there are higher priority layouts scheduled at this time" %}{% raw %}"
+                        <% } %> 
+                    >
+                        <td><span class="fa <%= layout.itemIcon %>"></span></td>
                         <td><%= layout.layoutId %></td>
-                        <td><%= layout.layout %></td>
-                        <td><%= layout.duration %></td>
-                        <td><%= layout.owner %></td>
+                        <td><%= layout.layoutName %></td>
                         <%
                             var icon = "";
-                            if (layout.status == 1)
+                            if (layout.layoutStatus == 1)
                                 icon = "fa-check";
-                            else if (layout.status == 0)
+                            else if (layout.layoutStatus == 0)
                                 icon = "fa-times";
-                            else if (layout.status == 3)
+                            else if (layout.layoutStatus == 3)
                                 icon = "fa-cogs";
                             else
                                 icon = "fa-exclamation";
+                        %>
+                        <td><span class="fa <%= icon %>"></span></td>
+                        <td><%= layout.eventFromDt %></td>
+                        <td><%= layout.eventToDt %></td>
+                        <td><%= layout.layoutDuration %></td>
+                        <td><%= layout.layoutDisplayOrder %></td>
+                        <td><%= layout.eventPriority %></td>
+                        <%
+                            var icon = "";
+                            if (layout.itemClass == 'low-priority')
+                                icon = "fa-times";
+                            else
+                                icon = "fa-check";
                         %>
                         <td><span class="fa <%= icon %>"></span></td>
                     </tr>
@@ -553,32 +585,21 @@
             {% endraw %}
             <thead>
                 <tr class="table-title">
-                    <th colspan="4">{% trans "Display Groups" %}</th>
+                    <th colspan="3">{% trans "Display Groups" %}</th>
                 </tr>
                 <tr>
+                    <th></th>
                     <th>{% trans "ID" %}</th>
                     <th>{% trans "Name" %}</th>
-                    <th>{% trans "Is Dynamic?" %}</th>
-                    <th>{% trans "Criteria" %}</th>
                 </tr>
             </thead>
             {% raw %}
             <tbody>
                 <% _.each(displaygroups, function(displaygroup){ %>
-                    <tr data-id="<%= displaygroup.displayGroupId %>">
+                    <tr data-elem-id="<%= displaygroup.displayGroupId %>">
+                        <td></td>
                         <td><%= displaygroup.displayGroupId %></td>
                         <td><%= displaygroup.displayGroup %></td>
-                        <%
-                            var icon = "";
-                            if (displaygroup.isDynamic == 1)
-                                icon = "fa-check";
-                            else if (displaygroup.isDynamic == 0)
-                                icon = "fa-times";
-                            else
-                                icon = "fa-exclamation";
-                        %>
-                        <td><span class="fa <%= icon %>"></span></td>
-                        <td><%= displaygroup.criteria %></td>
                     </tr>
                 <% }); %>
             </tbody>
@@ -588,26 +609,59 @@
             {% endraw %}
             <thead>
                 <tr class="table-title">
-                    <th colspan="4">{% trans "Campaigns" %}</th>
+                    <th colspan="3">{% trans "Campaigns" %}</th>
                 </tr>
                 <tr>
+                    <th></th>
                     <th>{% trans "ID" %}</th>
                     <th>{% trans "Name" %}</th>
-                    <th>{% trans "Tags" %}</th>
-                    <th>{% trans "Duration" %}</th>
                 </tr>
             </thead>
             {% raw %}
             <tbody>
                 <% _.each(campaigns, function(campaign){ %>
-                    <tr data-id="<%= campaign.campaignId %>">
+                    <tr data-elem-id="<%= campaign.campaignId %>">
+                        <td></td>
                         <td><%= campaign.campaignId %></td>
                         <td><%= campaign.campaign %></td>
-                        <td><%= campaign.tags %></td>
-                        <td><%= campaign.duration %></td>
                     </tr>
                 <% }); %>
             </tbody>
+        </script>
+        
+        <script type="text/x-handlebars-template" id="calendar-template-breadcrumb-trail">
+            <!-- Layout -->
+            <span>
+                <a href="<%= layout.link %>"><%= layout.name %></a>
+            </span>
+            
+            <span>&nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i>&nbsp;</span>
+            
+            <!-- Campaign -->
+            <% if (typeof campaign != 'undefined') { %>
+                <span>
+                    <a href="<%= campaign.link %>"><%= campaign.name %></a>
+                </span>
+                <span>&nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i>&nbsp;</span>
+            <% } %> 
+            
+            <!-- Schedule -->
+            <span>
+                <a href="<%= schedule.link %>" class="XiboFormButton">
+                    {% endraw %}
+                        {% trans "Schedule" %}
+                    {% raw %}
+                </a>
+            </span>
+            
+            <!-- Display Groups -->
+            <% _.each(displayGroups, function(displayGroup){ %>
+                <span>&nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i>&nbsp;</span>
+                <span>
+                    <a href="<%= displayGroup.link %>"><%= displayGroup.name %></a>
+                </span>
+            <% }); %>
+            
         </script>
         
     {% endraw %}

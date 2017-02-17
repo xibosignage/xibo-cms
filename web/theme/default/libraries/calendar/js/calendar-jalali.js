@@ -893,36 +893,86 @@ if(!String.prototype.formatNum) {
 		t.events = this.getEventsBetween(t.start, t.end);
 		return this.options.templates['month-day'](t);
 	}
-
 	
-	Calendar.prototype._layouts = function(ev, la) {
+	Calendar.prototype._layouts = function(ev, la, type) {
+			
 		this._loadTemplate('agenda-layouts');
 		
 		var t = {tooltip: '', cal: this};
-		var layouts = {};
+		var layouts = [];
+		var maxPriority = 0;
 		
 		for (var i = 0; i < ev.length; i++) {
-			layouts[ev[i].layoutId] = la[ev[i].layoutId];
+			if (ev[i].isPriority > maxPriority && ev[i].eventTypeId == type) {
+				maxPriority = ev[i].isPriority;
+			}
 		}
 		
-		t.layouts = layouts;
-		
-		return this.options.templates['agenda-layouts'](t);
-	}
+		for (var i = 0; i < ev.length; i++) {
 
+			// Add if it's a normal layout (1) or an overlay (3)
+			if(ev[i].eventTypeId == type) {
+				var layout = la[ev[i].layoutId];
+				var event = ev[i];
+				var elementPriority = 0;
+				var elementPriorityIcon = '';
+				var elementPriorityClass = '';
+				
+				if(event.isPriority == maxPriority && maxPriority != 0) {
+					elementPriority = 1;
+					elementPriorityIcon = 'fa-bullseye event-important';
+					elementPriorityClass = 'high-priority';
+				} else 	if(event.isPriority < maxPriority) {
+					elementPriority = -1;
+					elementPriorityClass = 'low-priority';
+				}
+				
+				layouts.push({
+					eventPriorityFlag: elementPriority,
+					eventId: event.eventId,
+					layoutId: event.layoutId,
+					layoutName: layout.layout,
+					layoutStatus: layout.status,
+					eventFromDt: moment(event.fromDt, "X").format(jsDateFormat),
+					eventToDt: moment(event.toDt, "X").format(jsDateFormat),
+					layoutDuration: layout.duration,
+					layoutDisplayOrder: event.displayOrder,
+					eventPriority: event.isPriority,
+					itemClass: elementPriorityClass,
+					itemIcon: elementPriorityIcon
+				});
+			}
+		}
+		
+		// Render only if there is at least one layout
+		if (layouts.length > 0) {
+			t.layouts = layouts;
+			t.layouts['type'] = type;
+			return this.options.templates['agenda-layouts'](t);
+		} else {
+			return '';
+		}	
+	}
+	
 	Calendar.prototype._displaygroups = function(ev, dg) {
 		this._loadTemplate('agenda-displaygroups');
 		
 		var t = {tooltip: '', cal: this};
 		var displaygroups = {};
+		var atLeastOneDisplayGroup = 0;
 		
 		for (var i = 0; i < ev.length; i++) {
 			displaygroups[ev[i].displayGroupId] = dg[ev[i].displayGroupId];
+			atLeastOneDisplayGroup++;
 		}
 		
-		t.displaygroups = displaygroups;
-		
-		return this.options.templates['agenda-displaygroups'](t);
+		// Render only if there is at least one display group
+		if (atLeastOneDisplayGroup > 0) {
+			t.displaygroups = displaygroups;
+			return this.options.templates['agenda-displaygroups'](t);
+		} else {
+			return '';
+		}
 	}
 
 	Calendar.prototype._campaigns = function(ev, ca) {
@@ -930,18 +980,83 @@ if(!String.prototype.formatNum) {
 		
 		var t = {tooltip: '', cal: this};
 		var campaigns = {};
+		var atLeastOneCampaign = 0;
 		
 		for (var i = 0; i < ev.length; i++) {
-			if(typeof ca[ev[i].campaignId] != 'undefined')
+			if(typeof ca[ev[i].campaignId] != 'undefined'){
 				campaigns[ev[i].campaignId] = ca[ev[i].campaignId];
+				atLeastOneCampaign++;
+			}
 		}
 		
-
-		t.campaigns = campaigns;
-		
-		return this.options.templates['agenda-campaigns'](t);
+		// Render only if there is at least one campaign
+		if (atLeastOneCampaign > 0) {
+			t.campaigns = campaigns;
+			return this.options.templates['agenda-campaigns'](t);
+		} else {
+			return '';
+		}
 	}
+	
+	Calendar.prototype._breadcrumbTrail = function(layoutId, data, eventId) {
+		this._loadTemplate('breadcrumb-trail');
+		
+		var t = {};
+		
+		var targetEvent = {};
+	    var displayGroupLink = '/displaygroup/view';
+	    var campaignLink = '/campaign/view';
 
+	    var results = data.results[data.selectedDisplayGroup];
+	    
+	    var allEvents = results.events;
+		
+	    // Get the correspondent event
+	    for (var i = 0; i < allEvents.length; i++) {
+	        if (allEvents[i].layoutId == layoutId && allEvents[i].eventId == eventId) {
+	            targetEvent = allEvents[i];
+	        }
+	    }
+	    
+	    // Layout
+	    var layoutData = results.layouts[layoutId];
+	    t.layout = {link: layoutData.link, name: layoutData.layout};
+
+	    // Campaign
+		if (typeof results.campaigns[targetEvent.campaignId] != 'undefined'){
+			t.campaign = {link:campaignLink, name: results.campaigns[targetEvent.campaignId].campaign};
+	    }
+	    
+	    // Schedule
+		t.schedule = {link: targetEvent.link};
+		
+	    // Display groups
+		t.displayGroups = [];
+		
+		//		Assigned display Group
+	    var assignedDisplayGroup = targetEvent.displayGroupId;
+	    if (typeof results.displayGroups[assignedDisplayGroup] != 'undefined'){
+			t.displayGroups.push( { link: displayGroupLink, name: results.displayGroups[assignedDisplayGroup].displayGroup } );
+		}
+	    
+	    // 		Add intermediate display groups
+	    for (var i = 0; i < targetEvent.intermediateDisplayGroupIds.length; i++) {
+	        var displayGroupId = targetEvent.intermediateDisplayGroupIds[i];
+	        if (typeof results.displayGroups[displayGroupId] != 'undefined'){
+				t.displayGroups.push( { link: displayGroupLink, name: results.displayGroups[displayGroupId].displayGroup } );
+	        }
+	    }
+	    
+	    // 		Add the final display group ( if it's not the directly assigned one)
+	    if (data.selectedDisplayGroup != assignedDisplayGroup) {
+	        if (typeof results.displayGroups[data.selectedDisplayGroup] != 'undefined'){
+	            t.displayGroups.push( { link: displayGroupLink, name: results.displayGroups[data.selectedDisplayGroup].displayGroup } );
+	        }
+	    }
+		
+		return this.options.templates['breadcrumb-trail'](t);
+	};
+	
 	Calendar.prototype._getHoliday = function(date) {
 		var result = false;
 		$.each(getHolidays(this, date.getFullYear()), function() {

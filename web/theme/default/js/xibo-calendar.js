@@ -200,7 +200,6 @@ $(document).ready(function() {
                         
                     } else if(!jQuery.isEmptyObject(events['results'][selectedDisplayGroup]) && events['results'][selectedDisplayGroup]['request_date'] == params.date) {
                         // 2 - Use cache if the element was already saved for the requested date
-                        console.log('Use cache for ' + selectedDisplayGroup + ' on ' + events['results'][selectedDisplayGroup]['request_date']);   
                         if (done != undefined)
                             done();
                             
@@ -209,9 +208,6 @@ $(document).ready(function() {
                         $('#calendar-progress').removeClass('fa fa-cog fa-spin');
                     } else {
                         // 3 - make request to get the data for the events
-                        
-                        console.log('Make request for ' + selectedDisplayGroup + ' on ' + params.date);
-                        
                         $.getJSON(url, params)
                             .done(function(data) {
                                 
@@ -224,9 +220,6 @@ $(document).ready(function() {
                                 
                                 if (done != undefined)
                                     done();
-                                    
-                                console.log("Result:");
-                                console.log(events);
                                     
                                 calendar._render();
 
@@ -299,20 +292,34 @@ $(document).ready(function() {
         // When selecting a layout row, create a Breadcrumb Trail and select the correspondent Display Group(s) and the Campaign(s)
         $('.cal-context').on('click', 'tbody tr', function (e) {
             var $self = $(this);
+            var alreadySelected = $self.hasClass('selected');
             
+            // Clean all selected elements
             $('.cal-event-breadcrumb-trail').hide();
             $('.cal-context tbody tr').removeClass('selected');
             $('.cal-context tbody tr').removeClass('selected-linked');
             
+            // If the element was already selected return so that it can deselect everything 
+            if (alreadySelected)
+                return;
+            
             // If the click was in a layout table row create the breadcrumb trail
-            if ($self.closest('table').prop('id') == 'layouts'){
+            if ($self.closest('table').prop('id') == 'layouts' || $self.closest('table').prop('id') == 'overlays'){
                 $('.cal-event-breadcrumb-trail').show();
-                agendaCreateBreadcrumbTrail($self.data("id"), events);
+                //agendaCreateBreadcrumbTrail($self.data("id"), events);
+                
+                // Clean div content
+                $('.cal-event-breadcrumb-trail #content').html('');
+                
+                // Get the template and render it on the div
+                $('.cal-event-breadcrumb-trail #content').append(calendar._breadcrumbTrail($self.data("elemId"), events, $self.data("eventId")));
+                
+                XiboInitialise("");
             }
             
-            if (!$self.hasClass('selected')){
-                agendaSelectLinkedElements($self.closest('table').prop('id'), $self.data("id"), events);
-            }
+            // Select the clicked element and the linked elements
+            agendaSelectLinkedElements($self.closest('table').prop('id'), $self.data("elemId"), events, $self.data("eventId"));
+            
         });
         
     }
@@ -490,11 +497,12 @@ var setupScheduleNowForm = function(form) {
 /**
  * Select the elements linked to the clicked element
  */
-var agendaSelectLinkedElements = function(elemType, elemID, data) {
+var agendaSelectLinkedElements = function(elemType, elemID, data, eventId) {
     
     var targetEvents = [];
     var selectClass = {
             'layouts': 'selected-linked',
+            'overlays': 'selected-linked',
             'displaygroups': 'selected-linked',
             'campaigns': 'selected-linked',
     };
@@ -505,9 +513,9 @@ var agendaSelectLinkedElements = function(elemType, elemID, data) {
     
     // Get the correspondent events
     for (var i = 0; i < allEvents.length; i++) {
-        if (elemType == 'layouts' && allEvents[i].layoutId == elemID) {
+        if ( (elemType == 'layouts' || elemType == 'overlays') && allEvents[i].layoutId == elemID && allEvents[i].eventId == eventId ) {
             targetEvents.push(allEvents[i]);
-            selectClass['layouts'] = 'selected';
+            selectClass[elemType] = 'selected';
         } else if (elemType == 'displaygroups' && allEvents[i].displayGroupId == elemID) {
             targetEvents.push(allEvents[i]);
             selectClass['displaygroups'] = 'selected';
@@ -520,69 +528,17 @@ var agendaSelectLinkedElements = function(elemType, elemID, data) {
     // Use the target events to select the corresponding objects
     for (var i = 0; i < targetEvents.length; i++) {
         // Select the corresponding layout
-        $('table#layouts tr[data-id~="' + targetEvents[i].layoutId + '"]').addClass(selectClass['layouts']);
+        $('table#layouts tr[data-elem-id~="' + targetEvents[i].layoutId + '"][data-event-id~="' + targetEvents[i].eventId + '"]').addClass(selectClass['layouts']);
+        
+        // Select the corresponding layout
+        $('table#overlays tr[data-elem-id~="' + targetEvents[i].layoutId + '"][data-event-id~="' + targetEvents[i].eventId + '"]').addClass(selectClass['overlays']);
         
         // Select the corresponding display group
-        $('table#displaygroups tr[data-id~="' + targetEvents[i].displayGroupId + '"]').addClass(selectClass['displaygroups']);
+        $('table#displaygroups tr[data-elem-id~="' + targetEvents[i].displayGroupId + '"]').addClass(selectClass['displaygroups']);
         
         // Select the corresponding campaigns
-        $('table#campaigns tr[data-id~="' + targetEvents[i].campaignId + '"]').addClass(selectClass['campaigns']);
+        $('table#campaigns tr[data-elem-id~="' + targetEvents[i].campaignId + '"]').addClass(selectClass['campaigns']);
         
     }
     
-};
-
-/**
- * Create a breadcrumb trail that shows the origin of a layout
- */
-var agendaCreateBreadcrumbTrail = function(layoutId, data) {
-    
-    var targetEvent = {};
-    
-    results = data.results[data.selectedDisplayGroup];
-    
-    var allEvents = results.events;
-    
-    // Get the correspondent event
-    for (var i = 0; i < allEvents.length; i++) {
-        if (allEvents[i].layoutId == layoutId) {
-            targetEvent = allEvents[i];
-        }
-    }
-    
-    $('.cal-event-breadcrumb-trail #content').html('');
-    
-    var htmlStructure = '';
-    
-    // Create breadcrumb structure
-    // Add layout
-    var layoutData = results.layouts[layoutId];
-    var arrowElement = '<span>&nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i>&nbsp;</span>';
-    htmlStructure += '<span><a href="' + layoutData.link + '">' + layoutData.layout + '</a></span>'
-
-    // Add campaign
-    if (typeof results.campaigns[targetEvent.campaignId] != 'undefined'){
-        htmlStructure += arrowElement + '<span><a href="' + results.campaigns[targetEvent.campaignId].link + '">' + results.campaigns[targetEvent.campaignId].campaign + '</a></span>';
-    }
-    
-    // Add schedule
-    htmlStructure += arrowElement + '<span><a href="">Schedule</a></span>'
-    
-    
-    // Add intermediate display groups
-    for (var i = 0; i < targetEvent.intermediateDisplayGroupIds.length; i++) {
-        var displayGroupId = targetEvent.intermediateDisplayGroupIds[i];
-        if (typeof results.displayGroups[displayGroupId] != 'undefined'){
-            htmlStructure += arrowElement + '<span><a href="' + results.displayGroups[displayGroupId].link + '">' + results.displayGroups[displayGroupId].displayGroup + '</a></span>'
-        }
-    }
-    
-    // Add final display group
-    var displayGroupId = targetEvent.displayGroupId;
-    if (typeof results.displayGroups[displayGroupId] != 'undefined'){
-        htmlStructure += arrowElement + '<span><a href="' + results.displayGroups[displayGroupId].link + '">' + results.displayGroups[displayGroupId].displayGroup + '</a></span>'
-    }
-    
-    $('.cal-event-breadcrumb-trail #content').append(htmlStructure);
-    $('.cal-event-breadcrumb-trail').show();
 };
