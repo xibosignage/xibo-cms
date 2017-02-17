@@ -1148,6 +1148,7 @@ class State extends Middleware
                 $container->logService,
                 $container->sanitizerService,
                 $container->configService,
+                $container->dispatcher,
                 $container->commandFactory
             );
         });

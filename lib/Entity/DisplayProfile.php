@@ -9,6 +9,7 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -85,6 +86,9 @@ class DisplayProfile implements \JsonSerializable
      */
     private $configService;
 
+    /** @var EventDispatcherInterface  */
+    private $dispatcher;
+
     /**
      * @var CommandFactory
      */
@@ -95,13 +99,15 @@ class DisplayProfile implements \JsonSerializable
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
+     * @param EventDispatcherInterface $dispatcher
      * @param CommandFactory $commandFactory
      */
-    public function __construct($store, $log, $config, $commandFactory)
+    public function __construct($store, $log, $config, $dispatcher, $commandFactory)
     {
         $this->setCommonDependencies($store, $log);
 
         $this->configService = $config;
+        $this->dispatcher = $dispatcher;
         $this->commandFactory = $commandFactory;
     }
 
