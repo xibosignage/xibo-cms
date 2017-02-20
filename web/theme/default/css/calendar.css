@@ -21,6 +21,26 @@
  .xibo-calendar-controls {
  	margin-left: 20px;
  }
+ 
+ 
+ .xibo-calendar-controls #dateInput {
+ 	background: white;
+    border: none;
+    padding: 0;
+    margin: 0;
+ }
+ 
+ .xibo-calendar-controls #dateInput .input-group-addon {
+ 	color: #428bca;
+ 	width: 0px;
+ 	font-size: 14px;
+    font-weight: 400;
+    line-height: 1.42857143;
+    background: none;
+ 	border-radius: 4px;
+    border: 1px solid #ccc;
+ }
+ 
 
  #cal-week-box {
  	z-index: 1000;
@@ -118,4 +138,3 @@
 .cal-event-breadcrumb-trail #content {
     text-align: center;
 }
-

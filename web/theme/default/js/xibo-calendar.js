@@ -137,7 +137,7 @@ $(document).ready(function() {
                     
                     // Get selected display groups
                     var selectedDisplayGroup = $('.cal-context').data().selectedTab;
-                    var displayGroupsList = {};
+                    var displayGroupsList = [];
                     var chooseAllDisplays = false;
                     
                     // Find selected display group and create a display group list used to create tabs
@@ -151,12 +151,24 @@ $(document).ready(function() {
                             }
                                 
                             if ($self.is(':selected') || chooseAllDisplays){
-                                displayGroupsList[$self.val()] = $self.html();
+                                
+                                displayGroupsList.push({id: $self.val(), name: $self.html(), isDisplaySpecific: $self.attr('type')});
                                 
                                 if (typeof selectedDisplayGroup == 'undefined')
                                     selectedDisplayGroup = $self.val(); 
                             }
                     });
+                    
+                    // Sort display group list by name
+                    displayGroupsList.sort(function(a, b){
+                        var nameA = a.name.toLowerCase(), nameB=b.name.toLowerCase()
+                        if (nameA < nameB) //sort string ascending
+                            return -1;
+                        if (nameA > nameB)
+                            return 1;
+                            
+                        return 0; //default return value (no sorting)
+                    })
                         
                     var url = calendarOptions.agendaLink.replace(":id", selectedDisplayGroup);
                                     
@@ -215,6 +227,7 @@ $(document).ready(function() {
                                     events['results'][String(selectedDisplayGroup)] = data.data;
                                     events['results'][String(selectedDisplayGroup)]['request_date'] = params.date;
                                 } else {
+                                    events['results'][String(selectedDisplayGroup)] = {};
                                     events['errorMessage'] = 'no_events';
                                 }
                                 
@@ -266,6 +279,11 @@ $(document).ready(function() {
                     $('.cal-event-time-bar').hide();
                 }
                 
+                // Sync the date of the date picker to the current calendar date
+                if (this.options.position.start != undefined && this.options.position.start != ""){
+                    $("#dateInput .form-control").datetimepicker('update', moment(this.options.position.start.getTime()).toDate());
+                }
+                    
                 if (typeof this.getTitle === "function")
                     $('h1.page-header').text(this.getTitle());
 
@@ -320,6 +338,19 @@ $(document).ready(function() {
             // Select the clicked element and the linked elements
             agendaSelectLinkedElements($self.closest('table').prop('id'), $self.data("elemId"), events, $self.data("eventId"));
             
+        });
+        
+        // Create the date input shortcut
+        $('#dateInput').datetimepicker({
+            format: bootstrapDateFormatDateOnly,
+            autoclose: true,
+            language: language,
+            calendarType: calendarType,
+            minView: 2,
+            todayHighlight: true
+        }).change(function() {
+            var value = moment($("#dateInput .form-control").val(), jsDateFormat);
+            calendar.navigate("date", value);
         });
         
     }

@@ -1182,6 +1182,8 @@ if(!String.prototype.formatNum) {
 			}
 		} else if(where == 'today') {
 			to.start.setTime(new Date().getTime());
+		} else if(where == 'date') {
+			to.start.setTime(next.format('x'));
 		}
 		else {
 			$.error(this.locale.error_where.format(where))
