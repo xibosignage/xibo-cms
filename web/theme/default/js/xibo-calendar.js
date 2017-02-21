@@ -206,6 +206,10 @@ $(document).ready(function() {
                     if ($('#DisplayList').val() == null) {
                         
                         events['errorMessage'] = 'display_not_selected';
+                        
+                        if (done != undefined)
+                            done();
+                            
                         calendar._render();
                         
                         $('#calendar-progress').removeClass('fa fa-cog fa-spin');

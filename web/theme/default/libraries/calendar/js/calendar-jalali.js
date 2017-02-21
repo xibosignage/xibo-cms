@@ -935,6 +935,7 @@ if(!String.prototype.formatNum) {
 					layoutStatus: layout.status,
 					eventFromDt: moment(event.fromDt, "X").format(jsDateFormat),
 					eventToDt: moment(event.toDt, "X").format(jsDateFormat),
+					eventDayPartId: event.dayPartId,
 					layoutDuration: layout.duration,
 					layoutDisplayOrder: event.displayOrder,
 					eventPriority: event.isPriority,

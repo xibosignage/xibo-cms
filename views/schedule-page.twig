@@ -575,8 +575,14 @@
                                     icon = "fa-exclamation";
                             %>
                             <td><span class="fa <%= icon %>"></span></td>
-                            <td><%= layout.eventFromDt %></td>
-                            <td><%= layout.eventToDt %></td>
+                            <% if (layout.eventDayPartId == 1) { %>
+                                <td>{% endraw %}{% trans "Always" %}{% raw %}</td>
+                                <td><span class="fa fa-retweet"></span></td>
+                            <% } else { %> 
+                                <td><%= layout.eventFromDt %></td>
+                                <td><%= layout.eventToDt %></td>
+                            <% } %> 
+                            
                             <td><%= layout.layoutDuration %></td>
                             <td><%= layout.layoutDisplayOrder %></td>
                             <td><%= layout.eventPriority %></td>
