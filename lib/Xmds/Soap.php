@@ -1751,6 +1751,8 @@ $this->getLog()->debug('Helooo');
                     );
 
                     $notification->save();
+
+                    $this->getLog()->critical($subject);
                 }
             }
 

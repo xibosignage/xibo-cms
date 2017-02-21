@@ -259,6 +259,8 @@ class MaintenanceRegularTask implements TaskInterface
                 );
 
                 $notification->save();
+
+                $this->log->critical($subject);
             }
         }
     }
