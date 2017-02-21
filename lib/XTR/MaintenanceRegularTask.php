@@ -34,6 +34,8 @@ class MaintenanceRegularTask implements TaskInterface
         $this->tidyLibrary();
 
         $this->checkLibraryUsage();
+
+        $this->checkOverRequestedFiles();
     }
 
     /**
@@ -257,6 +259,49 @@ class MaintenanceRegularTask implements TaskInterface
                 );
 
                 $notification->save();
+            }
+        }
+    }
+
+    /**
+     * Checks to see if there are any overrequested files.
+     */
+    private function checkOverRequestedFiles()
+    {
+        $items = $this->store->select('
+          SELECT display.displayId, 
+              display.display,
+              COUNT(*) AS countFiles 
+            FROM `requiredfile`
+              INNER JOIN `display`
+              ON display.displayId = requiredfile.displayId
+           WHERE `bytesRequested` > 0
+              AND bytesRequested >= `size` * :factor
+              AND type <> :excludedType
+            GROUP BY display.displayId, display.display
+        ', [
+            'factor' => 3,
+            'excludedType' => 'W'
+        ]);
+
+        foreach ($items as $item) {
+            // Create a notification if we don't already have one today for this display.
+            $subject = sprintf(__('%s is downloading %d files too many times'), $this->sanitizer->string($item['display']), $this->sanitizer->int($item['countFiles']));
+            $date = $this->date->parse();
+
+            if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->date->getLocalDate($date->startOfDay(), 'U'), $this->date->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
+
+                $body = sprintf(__('Please check the bandwidth graphs and display status for %s to investigate the issue.'), $this->sanitizer->string($item['display']));
+
+                $notification = $this->notificationFactory->createSystemNotification(
+                    $subject,
+                    $body,
+                    $this->date->parse()
+                );
+
+                $notification->save();
+
+                $this->log->critical($subject);
             }
         }
     }
