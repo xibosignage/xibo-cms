@@ -384,7 +384,7 @@ class DisplayProfile implements \JsonSerializable
                         'title' => __('Download Window Start Time'),
                         'type' => 'string',
                         'fieldType' => 'timePicker',
-                        'default' => 0,
+                        'default' => '00:00',
                         'helpText' => __('The start of the time window to connect to the CMS and download updates.'),
                         'enabled' => true,
                         'groupClass' => NULL
@@ -395,7 +395,7 @@ class DisplayProfile implements \JsonSerializable
                         'title' => __('Download Window End Time'),
                         'type' => 'string',
                         'fieldType' => 'timePicker',
-                        'default' => 0,
+                        'default' => '00:00',
                         'helpText' => __('The end of the time window to connect to the CMS and download updates.'),
                         'enabled' => true,
                         'groupClass' => NULL
