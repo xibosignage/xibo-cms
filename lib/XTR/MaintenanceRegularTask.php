@@ -7,6 +7,7 @@
 
 
 namespace Xibo\XTR;
+use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\WakeOnLan;
 
 /**
@@ -31,6 +32,8 @@ class MaintenanceRegularTask implements TaskInterface
         $this->buildLayouts();
 
         $this->tidyLibrary();
+
+        $this->checkLibraryUsage();
     }
 
     /**
@@ -222,5 +225,39 @@ class MaintenanceRegularTask implements TaskInterface
         $libraryController->removeTempFiles();
 
         $this->runMessage .= ' - Done' . PHP_EOL . PHP_EOL;
+    }
+
+    /**
+     * Check library usage
+     */
+    private function checkLibraryUsage()
+    {
+        $libraryLimit = $this->config->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+
+        if ($libraryLimit <= 0)
+            return;
+
+        $results = $this->store->select('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', []);
+
+        $size = $this->sanitizer->int($results[0]['SumSize']);
+
+        if ($size >= $libraryLimit) {
+            // Create a notification if we don't already have one today for this display.
+            $subject = __('Library allowance exceeded');
+            $date = $this->date->parse();
+
+            if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->date->getLocalDate($date->startOfDay(), 'U'), $this->date->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
+
+                $body = __(sprintf('Library allowance of %s exceeded. Used %s', ByteFormatter::format($libraryLimit), ByteFormatter::format($size)));
+
+                $notification = $this->notificationFactory->createSystemNotification(
+                    $subject,
+                    $body,
+                    $this->date->parse()
+                );
+
+                $notification->save();
+            }
+        }
     }
 }
