@@ -8,6 +8,7 @@
 
 namespace Xibo\Factory;
 
+use Jenssegers\Date\Date;
 use Xibo\Entity\Notification;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
@@ -55,6 +56,34 @@ class NotificationFactory extends BaseFactory
     }
 
     /**
+     * @param string $subject
+     * @param string $body
+     * @param Date $date
+     * @param bool $isEmail
+     * @return Notification
+     */
+    public function createSystemNotification($subject, $body, $date, $isEmail = true)
+    {
+        $notification = $this->createEmpty();
+        $notification->subject = $subject;
+        $notification->body = $body;
+        $notification->createdDt = $date->format('U');
+        $notification->releaseDt = $date->format('U');
+        $notification->isEmail = ($isEmail) ? 1 : 0;
+        $notification->isInterrupt = 0;
+        $notification->userId = 0;
+        $notification->isSystem = 1;
+
+        // Add the system notifications group - if there is one.
+        foreach ($this->userGroupFactory->getSystemNotificationGroups() as $group) {
+            /* @var \Xibo\Entity\UserGroup $group */
+            $notification->assignUserGroup($group);
+        }
+
+        return $notification;
+    }
+
+    /**
      * Get by Id
      * @param int $notificationId
      * @return Notification
@@ -68,6 +97,17 @@ class NotificationFactory extends BaseFactory
             throw new NotFoundException();
 
         return $notifications[0];
+    }
+
+    /**
+     * @param string $subject
+     * @param int $fromDt
+     * @param int $toDt
+     * @return Notification[]
+     */
+    public function getBySubjectAndDate($subject, $fromDt, $toDt)
+    {
+        return $this->query(null, ['subject' => $subject, 'createFromDt' => $fromDt, 'createToDt' => $toDt]);
     }
 
     /**
@@ -107,6 +147,16 @@ class NotificationFactory extends BaseFactory
         if ($this->getSanitizer()->getString('subject', $filterBy) != null) {
             $body .= ' AND `notification`.subject = :subject ';
             $params['subject'] = $this->getSanitizer()->getString('subject', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getString('createFromDt', $filterBy) != null) {
+            $body .= ' AND `notification`.createDt >= :createFromDt ';
+            $params['createFromDt'] = $this->getSanitizer()->getParam('createFromDt', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getString('createToDt', $filterBy) != null) {
+            $body .= ' AND `notification`.createDt < :createToDt ';
+            $params['createToDt'] = $this->getSanitizer()->getParam('createToDt', $filterBy);
         }
 
         // Sorting?

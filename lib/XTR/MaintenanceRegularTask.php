@@ -60,25 +60,10 @@ class MaintenanceRegularTask implements TaskInterface
                         $body = sprintf(__("Display %s with ID %d was last seen at %s."), $display->display, $display->displayId, $this->date->getLocalDate($display->lastAccessed));
 
                         // Add to system
-                        $notification = $this->notificationFactory->createEmpty();
-                        $notification->subject = $subject;
-                        $notification->body = $body;
-                        $notification->createdDt = $this->date->getLocalDate(null, 'U');
-                        $notification->releaseDt = $this->date->getLocalDate(null, 'U');
-                        $notification->isEmail = 1;
-                        $notification->isInterrupt = 0;
-                        $notification->userId = $this->user->userId;
-                        $notification->isSystem = 1;
-
-                        // Add the system notifications group - if there is one.
-                        foreach ($this->userGroupFactory->getSystemNotificationGroups() as $group) {
-                            /* @var \Xibo\Entity\UserGroup $group */
-                            $notification->assignUserGroup($group);
-                        }
+                        $notification = $this->notificationFactory->createSystemNotification($subject, $body, $this->date->parse());
 
                         // Get a list of people that have view access to the display?
                         if ($alertForViewUsers) {
-
                             foreach ($this->userGroupFactory->getByDisplayGroupId($display->displayGroupId) as $group) {
                                 /* @var \Xibo\Entity\UserGroup $group */
                                 $notification->assignUserGroup($group);
