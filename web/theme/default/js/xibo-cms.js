@@ -330,7 +330,7 @@ function XiboInitialise(scope) {
         }).change(function() {
             var value = moment($(this).val(), jsTimeFormat);
             
-            $(this).closest("form").find("#" + $(this).data().linkField).val(moment(value).format(jsTimeFormat));
+            $(this).closest("form").find("#" + $(this).data().linkField).val(moment(value).format(systemTimeFormat));
         });
 
         // Get the linked field and use it to set the time
