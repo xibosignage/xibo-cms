@@ -1222,7 +1222,9 @@ class State extends Middleware
                 $container->transitionFactory,
                 $container->displayFactory,
                 $container->commandFactory,
-                $container->scheduleFactory
+                $container->scheduleFactory,
+                $container->permissionFactory,
+                $container->userGroupFactory
             );
         });
 
