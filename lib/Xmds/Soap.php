@@ -247,7 +247,7 @@ class Soap
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
-$this->getLog()->debug('Helooo');
+
         // Make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
