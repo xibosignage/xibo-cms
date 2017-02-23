@@ -908,3 +908,13 @@ ul li.active.tab-design:hover a {
     background-color: #5bc0de;
     border-color: #46b8da;
 }
+
+/*
+ * This resets a form-control so that it isn't displayed block within a column. Used for the datetimepicker where
+ * there are 2 input fields in one column.
+ */
+.form-control-inline {
+    display: inline;
+    width: auto;
+    padding-right: 0;
+}

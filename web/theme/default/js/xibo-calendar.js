@@ -467,18 +467,21 @@ var processScheduleFormElements = function(el) {
             var endTimeControlDisplay = (fieldVal != 0) ? "none" : "block";
             var startTimeControlDisplay = (fieldVal == "1") ? "none" : "block";
 
-            $(".endtime-control").css('display', endTimeControlDisplay);
-            $(".starttime-control").css('display', startTimeControlDisplay);
+            var $startTime = $(".starttime-control");
+            var $endTime = $(".endtime-control");
+
+            // Set control visibility
+            $startTime.css('display', startTimeControlDisplay);
+            $endTime.css('display', endTimeControlDisplay);
 
             // Dayparts only show the start control
-            var $startTime = $("input[name=fromDt_Link2]");
-
-            // Should we show the time element
             if (fieldVal != 0 && fieldVal != 1) {
                 // We need to update the date/time controls to only accept the date element
-                $startTime.hide();
+                $startTime.find("input[name=fromDt_Link2]").hide();
+                $startTime.find(".help-block").html($startTime.closest("form").data().notDaypartMessage);
             } else {
-                $startTime.show();
+                $startTime.find("input[name=fromDt_Link2]").show();
+                $startTime.find(".help-block").html($startTime.closest("form").data().daypartMessage);
             }
                         
             break;

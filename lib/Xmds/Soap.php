@@ -40,6 +40,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Random;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -1266,11 +1267,11 @@ class Soap
             // Insert
             $this->getStore()->isolated($sql, $data);
         } else {
-            $this->getLog()->error('0 logs resolved from log package');
+            $this->getLog()->info('0 logs resolved from log package');
         }
 
         if ($discardedLogs > 0)
-            $this->getLog()->error('Discarded ' . $discardedLogs . ' logs. Consider adjusting your display profile log level. Resolved level is ' . $logLevel);
+            $this->getLog()->info('Discarded ' . $discardedLogs . ' logs. Consider adjusting your display profile log level. Resolved level is ' . $logLevel);
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SUBMITLOG, strlen($logXml));
 
@@ -1665,21 +1666,7 @@ class Soap
                 $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
                 $body = sprintf(__("Display %s with ID %d is now back online."), $this->display->display, $this->display->displayId);
 
-                $notification = $this->notificationFactory->createEmpty();
-                $notification->subject = $subject;
-                $notification->body = $body;
-                $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
-                $notification->releaseDt = $this->getDate()->getLocalDate(null, 'U');
-                $notification->isEmail = 1;
-                $notification->isInterrupt = 0;
-                $notification->userId = 0;
-                $notification->isSystem = 1;
-
-                // Add the system notifications group - if there is one.
-                foreach ($this->userGroupFactory->getSystemNotificationGroups() as $group) {
-                    /* @var UserGroup $group */
-                    $notification->assignUserGroup($group);
-                }
+                $notification = $this->notificationFactory->createSystemNotification($subject, $body, $this->getDate()->parse());
 
                 // Get a list of people that have view access to the display?
                 if ($this->getConfig()->GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1) {
@@ -1722,9 +1709,13 @@ class Soap
 
     /**
      * Check we haven't exceeded the bandwidth limits
+     *  - Note, display logging doesn't work in here, this is CMS level logging
      */
     protected function checkBandwidth()
     {
+        // Uncomment to enable auditing.
+        //$this->logProcessor->setDisplay(0, true);
+
         $xmdsLimit = $this->getConfig()->GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 
         if ($xmdsLimit <= 0)
@@ -1739,9 +1730,33 @@ class Soap
                 'month' => strtotime(date('m') . '/02/' . date('Y') . ' 00:00:00')
             ));
 
-            $bandwidthUsage = $sth->fetchColumn(0);
+            $bandwidthUsageBytes = $sth->fetchColumn(0);
+            $bandwidthUsage = ($bandwidthUsageBytes >= ($xmdsLimit * 1024)) ? false : true;
 
-            return ($bandwidthUsage >= ($xmdsLimit * 1024)) ? false : true;
+            $this->getLog()->debug('Checking bandwidth usage against allowance: ' . ByteFormatter::format($xmdsLimit * 1024) . '. ' . ByteFormatter::format($bandwidthUsageBytes));
+
+            if (!$bandwidthUsage) {
+                // Create a notification if we don't already have one today for this display.
+                $subject = __('Bandwidth allowance exceeded');
+                $date = $this->dateService->parse();
+
+                if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->dateService->getLocalDate($date->startOfDay(), 'U'), $this->dateService->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
+
+                    $body = __(sprintf('Bandwidth allowance of %s exceeded. Used %s', ByteFormatter::format($xmdsLimit * 1024), ByteFormatter::format($bandwidthUsageBytes)));
+
+                    $notification = $this->notificationFactory->createSystemNotification(
+                        $subject,
+                        $body,
+                        $this->dateService->parse()
+                    );
+
+                    $notification->save();
+
+                    $this->getLog()->critical($subject);
+                }
+            }
+
+            return $bandwidthUsage;
 
         } catch (\Exception $e) {
             $this->getLog()->error($e->getMessage());

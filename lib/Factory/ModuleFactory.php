@@ -92,6 +92,12 @@ class ModuleFactory extends BaseFactory
     /** @var  ScheduleFactory */
     protected $scheduleFactory;
 
+    /** @var  PermissionFactory */
+    protected $permissionFactory;
+
+    /** @var  UserGroupFactory */
+    protected $userGroupFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -110,8 +116,10 @@ class ModuleFactory extends BaseFactory
      * @param DisplayFactory $displayFactory
      * @param CommandFactory $commandFactory
      * @param ScheduleFactory $scheduleFactory
+     * @param PermissionFactory $permissionFactory
+     * @param UserGroupFactory $userGroupFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService, $widgetFactory, $regionFactory, $playlistFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService, $widgetFactory, $regionFactory, $playlistFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
@@ -127,6 +135,8 @@ class ModuleFactory extends BaseFactory
         $this->displayFactory = $displayFactory;
         $this->commandFactory = $commandFactory;
         $this->scheduleFactory = $scheduleFactory;
+        $this->permissionFactory = $permissionFactory;
+        $this->userGroupFactory = $userGroupFactory;
     }
 
     /**
@@ -162,7 +172,9 @@ class ModuleFactory extends BaseFactory
             $this->transitionFactory,
             $this->displayFactory,
             $this->commandFactory,
-            $this->scheduleFactory
+            $this->scheduleFactory,
+            $this->permissionFactory,
+            $this->userGroupFactory
         );
     }
 
@@ -191,7 +203,9 @@ class ModuleFactory extends BaseFactory
             $this->transitionFactory,
             $this->displayFactory,
             $this->commandFactory,
-            $this->scheduleFactory
+            $this->scheduleFactory,
+            $this->permissionFactory,
+            $this->userGroupFactory
         );
     }
 
@@ -213,7 +227,9 @@ class ModuleFactory extends BaseFactory
             $this->transitionFactory,
             $this->displayFactory,
             $this->commandFactory,
-            $this->scheduleFactory
+            $this->scheduleFactory,
+            $this->permissionFactory,
+            $this->userGroupFactory
         );
     }
 
@@ -234,7 +250,9 @@ class ModuleFactory extends BaseFactory
             $this->transitionFactory,
             $this->displayFactory,
             $this->commandFactory,
-            $this->scheduleFactory
+            $this->scheduleFactory,
+            $this->permissionFactory,
+            $this->userGroupFactory
         );
     }
 
@@ -267,7 +285,9 @@ class ModuleFactory extends BaseFactory
             $this->transitionFactory,
             $this->displayFactory,
             $this->commandFactory,
-            $this->scheduleFactory
+            $this->scheduleFactory,
+            $this->permissionFactory,
+            $this->userGroupFactory
         );
         $object->setWidget($widget);
 

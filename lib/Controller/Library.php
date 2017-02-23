@@ -952,7 +952,7 @@ class Library extends Base
         $this->getLog()->debug('Install Fonts called with options: %s', json_encode($options));
 
         // Get the item from the cache
-        $cssItem = $this->pool->getItem('fontCss');
+        $cssItem = $this->pool->getItem('fontCss' . $this->getUser()->userId);
 
         // Get the CSS
         $cssDetails = $cssItem->get();
@@ -987,6 +987,10 @@ class Library extends Base
 
                     // Css for the client contains the actual stored as location of the font.
                     $css .= str_replace('[url]', $font->storedAs, str_replace('[family]', $familyName, $fontTemplate));
+
+                    // Test to see if this user should have access to this font
+                    if (!$this->getUser()->checkViewable($font))
+                        continue;
 
                     // Css for the local CMS contains the full download path to the font
                     $url = $this->urlFor('library.download', ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';

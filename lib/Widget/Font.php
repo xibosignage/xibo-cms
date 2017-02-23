@@ -48,6 +48,10 @@ class Font extends ModuleWidget
             } catch (NotFoundException $e) {
                 // Excellent, we don't have it
                 $font->save(['validate' => false]);
+
+                // Assign the everyone permission
+                $permission = $this->permissionFactory->createForEveryone($this->userGroupFactory, 'Xibo\\Entity\\Media', $font->getId(), 1, 0, 0);
+                $permission->save();
             }
         }
     }

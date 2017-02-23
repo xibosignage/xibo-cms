@@ -9,6 +9,8 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Event\DisplayProfileLoadedEvent;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -80,10 +82,16 @@ class DisplayProfile implements \JsonSerializable
      */
     public $commands = [];
 
+    /** @var  string the client type */
+    private $clientType;
+
     /**
      * @var ConfigServiceInterface
      */
     private $configService;
+
+    /** @var EventDispatcherInterface  */
+    private $dispatcher;
 
     /**
      * @var CommandFactory
@@ -95,13 +103,15 @@ class DisplayProfile implements \JsonSerializable
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
+     * @param EventDispatcherInterface $dispatcher
      * @param CommandFactory $commandFactory
      */
-    public function __construct($store, $log, $config, $commandFactory)
+    public function __construct($store, $log, $config, $dispatcher, $commandFactory)
     {
         $this->setCommonDependencies($store, $log);
 
         $this->configService = $config;
+        $this->dispatcher = $dispatcher;
         $this->commandFactory = $commandFactory;
     }
 
@@ -120,6 +130,23 @@ class DisplayProfile implements \JsonSerializable
     public function getOwnerId()
     {
         return $this->userId;
+    }
+
+    /**
+     * @param $clientType
+     */
+    public function setClientType($clientType)
+    {
+        $this->clientType = $clientType;
+    }
+
+    /**
+     * Get the client type
+     * @return string
+     */
+    public function getClientType()
+    {
+        return (empty($this->clientType)) ? $this->type : $this->clientType;
     }
 
     /**
@@ -177,6 +204,11 @@ class DisplayProfile implements \JsonSerializable
         $this->configDefault = $this->loadFromFile();
         $this->configTabs = $this->configDefault[$this->type]['tabs'];
         $this->configDefault = $this->configDefault[$this->type]['settings'];
+
+        // We've loaded a profile
+        // dispatch an event with a reference to this object, allowing subscribers to modify the config before we
+        // continue further.
+        $this->dispatcher->dispatch(DisplayProfileLoadedEvent::NAME, new DisplayProfileLoadedEvent($this));
 
         // Just populate the values with the defaults if the values aren't set already
         for ($i = 0; $i < count($this->configDefault); $i++) {

@@ -134,7 +134,7 @@ class UserFactory extends BaseFactory
      */
     public function getByName($userName)
     {
-        $users = $this->query(null, array('disableUserCheck' => 1, 'userName' => $userName));
+        $users = $this->query(null, array('disableUserCheck' => 1, 'exactUserName' => $userName));
 
         if (count($users) <= 0)
             throw new NotFoundException(__('User not found'));
@@ -324,9 +324,34 @@ class UserFactory extends BaseFactory
         }
 
         // User Name Provided
+        if ($this->getSanitizer()->getString('exactUserName', $filterBy) != null) {
+            $body .= " AND user.userName = :exactUserName ";
+            $params['exactUserName'] = $this->getSanitizer()->getString('exactUserName', $filterBy);
+        }
+
         if ($this->getSanitizer()->getString('userName', $filterBy) != null) {
-            $body .= " AND user.userName = :userName ";
-            $params['userName'] = $this->getSanitizer()->getString('userName', $filterBy);
+            // Convert into commas
+            foreach (explode(',', $this->getSanitizer()->getString('userName', $filterBy)) as $term) {
+
+                if (empty(trim($term)))
+                    continue;
+
+                // convert into a space delimited array
+                $names = explode(' ', $term);
+
+                $i = 0;
+                foreach ($names as $searchName) {
+                    $i++;
+                    // Not like, or like?
+                    if (substr($searchName, 0, 1) == '-') {
+                        $body .= " AND `user`.userName NOT RLIKE (:userName$i) ";
+                        $params['userName' . $i] = ltrim(($searchName), '-');
+                    } else {
+                        $body .= " AND `user`.userName RLIKE (:userName$i) ";
+                        $params['userName' . $i] = $searchName;
+                    }
+                }
+            }
         }
 
         // Email Provided

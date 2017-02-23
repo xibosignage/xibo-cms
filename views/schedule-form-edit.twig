@@ -29,7 +29,9 @@
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li><a href="#repeats" role="tab" data-toggle="tab"><span>{% trans "Repeats" %}</span></a></li>
             </ul>
-            <form id="scheduleEditForm" class="form-horizontal" method="put" action="{{ urlFor("schedule.edit", {id: event.eventId}) }}">
+            {% set dayPartMessage %}{% trans "Select the start time for this event" %}{% endset %}
+            {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
+            <form id="scheduleEditForm" class="form-horizontal" method="put" action="{{ urlFor("schedule.edit", {id: event.eventId}) }}" data-daypart-message="{{ dayPartMessage }}" data-not-daypart-message="{{ notDayPartMessage }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Event Type" %}{% endset %}

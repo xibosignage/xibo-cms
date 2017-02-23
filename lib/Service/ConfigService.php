@@ -33,6 +33,7 @@ class ConfigService implements ConfigServiceInterface
     public static $WEBSITE_VERSION_NAME = '1.8.0-rc3';
     public static $WEBSITE_VERSION = 130;
     public static $VERSION_REQUIRED = '5.5';
+    public static $VERSION_UNSUPPORTED = '7.0';
 
     /**
      * @var StorageServiceInterface
@@ -817,12 +818,12 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /**
-     * Check PHP version > 5
-     * @return
+     * Check PHP version > 5 < 7
+     * @return bool
      */
     function CheckPHP()
     {
-        return (version_compare(phpversion(), ConfigService::$VERSION_REQUIRED) != -1);
+        return (version_compare(phpversion(), ConfigService::$VERSION_REQUIRED) != -1) && (version_compare(phpversion(), ConfigService::$VERSION_UNSUPPORTED) != 1);
     }
 
     /**

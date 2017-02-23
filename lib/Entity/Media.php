@@ -767,7 +767,7 @@ class Media implements \JsonSerializable
                 $this->getLog()->debug('Moving temporary file');
 
                 // Move the file into the library
-                if (!@rename($libraryFolder . 'temp/' . $this->fileName, $libraryFolder . $this->storedAs))
+                if (!@rename($libraryFolder . 'temp/' . $this->name, $libraryFolder . $this->storedAs))
                     throw new ConfigurationException(__('Problem moving downloaded file into the Library Folder'));
             } else {
                 $this->getLog()->debug('Copying specified file');
