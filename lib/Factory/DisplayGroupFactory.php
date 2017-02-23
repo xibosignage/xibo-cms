@@ -147,7 +147,10 @@ class DisplayGroupFactory extends BaseFactory
         ', [
             'displayGroupId' => $displayGroupId
         ]) as $row) {
-            $tree[] = $this->createEmpty()->hydrate($row);
+            $item = $this->createEmpty()->hydrate($row);
+            $item->depth = intval($row['depth']);
+            $item->level = intval($row['level']);
+            $tree[] = $item;
         }
 
         return $tree;

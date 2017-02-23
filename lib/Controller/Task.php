@@ -452,7 +452,7 @@ class Task extends Base
                     $this->getLog()->info('Running Task ' . $taskId);
 
                     // Set to running
-                    $updateSth->execute(['taskId' => $taskId, 'status' => \Xibo\Entity\Task::$STATUS_ERROR]);
+                    $updateSth->execute(['taskId' => $taskId, 'status' => \Xibo\Entity\Task::$STATUS_RUNNING]);
                     $this->store->incrementStat('xtr', 'update');
 
                     // Pass to run.
