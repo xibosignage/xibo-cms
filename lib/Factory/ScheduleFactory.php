@@ -124,7 +124,7 @@ class ScheduleFactory extends BaseFactory
      */
     public function getForXmds($displayId, $fromDt, $toDt, $options = [])
     {
-        $options = array_merge(['dependentsAsNodes' => false, 'useGroupId' => false, 'range' => ($fromDt != $toDt)], $options);
+        $options = array_merge(['dependentsAsNodes' => false, 'useGroupId' => false], $options);
         $params = array(
             'fromDt' => $fromDt,
             'toDt' => $toDt
@@ -219,31 +219,16 @@ class ScheduleFactory extends BaseFactory
 
         // Are we requesting a range or a single date/time?
         // only the inclusive range changes, but it is clearer to have the whole statement reprinted.
-        if ($options['range']) {
-            // Ranged request
-            $SQL .= ' 
-                AND (
-                      (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
-                      OR `schedule`.recurrence_range >= :fromDt 
-                      OR (
-                        IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
-                      )
-                )
-            ';
-        } else {
-            // Single date/time
-            $SQL .= ' 
-                AND (
-                      (schedule.FromDT >= :fromDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) <= :toDt) 
-                      OR `schedule`.recurrence_range >= :fromDt 
-                      OR (
-                        IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
-                      )
-                )
-            ';
-        }
-
-        $SQL .= '
+        // Ranged request
+        $SQL .= ' 
+            AND (
+                  (schedule.FromDT <= :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                  OR `schedule`.recurrence_range >= :fromDt 
+                  OR (
+                    IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
+                  )
+            )
+            
             ORDER BY schedule.DisplayOrder, IFNULL(lkcampaignlayout.DisplayOrder, 0), schedule.FromDT, schedule.eventId
         ';
 
