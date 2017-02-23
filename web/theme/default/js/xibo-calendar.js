@@ -200,7 +200,11 @@ $(document).ready(function() {
                     
                     // Clean error message
                     events['errorMessage'] = '';
-                                
+                    
+                    // Clean cache/results if its requested by the options
+                    if (calendar.options['clearCache'] == true) {
+                        events['results'] = {}; 
+                    }        
                         
                     // 1 - if there are no displaygroups selected
                     if ($('#DisplayList').val() == null) {
@@ -396,6 +400,7 @@ var setupScheduleForm = function(dialog) {
 
                 if (xhr.success) {
                     // Reload the Calendar
+                    calendar.options['clearCache'] = true;
                     calendar.view();
                 }
             }
