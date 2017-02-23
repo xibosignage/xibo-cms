@@ -191,7 +191,151 @@ class DataSetView extends ModuleWidget
     }
 
     /**
-     * Add Media to the Database
+     * Adds a dataSetView Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/dataSetView/{playlistId}",
+     *  operationId="WidgetdataSetViewAdd",
+     *  tags={"Widget"},
+     *  summary="Add a dataSetView Widget",
+     *  description="Add a new dataSetView Widget to the specified playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The playlist ID to add a Widget to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="formData",
+     *      description="Create dataSetView Widget using provided dataSetId of an existing dataSet",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="columns",
+     *      in="formData",
+     *      description=" EDIT only - Array of dataSetColumn IDs to assign",
+     *      type="array",
+     *      required=false,
+     *      @SWG\Items(type="integer")
+     *   ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="EDIT Only - The dataSetView Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="Edit Only - (0, 1) Select 1 only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="updateInterval",
+     *      in="formData",
+     *      description="EDIT Only - Update interval in minutes",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="rowsPerPage",
+     *      in="formData",
+     *      description="EDIT Only - Number of rows per page, 0 for no pages",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="showHeadings",
+     *      in="formData",
+     *      description="EDIT Only - Should the table show Heading? (0,1)",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="upperLimit",
+     *      in="formData",
+     *      description="EDIT Only - Upper low limit for this dataSet, 0 for nor limit",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="lowerLimit",
+     *      in="formData",
+     *      description="EDIT Only - Lower low limit for this dataSet, 0 for nor limit",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="filter",
+     *      in="formData",
+     *      description="EDIT Only - SQL clause for filter this dataSet",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ordering",
+     *      in="formData",
+     *      description="EDIT Only - SQL clause for how this dataSet should be ordered",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="templateId",
+     *      in="formData",
+     *      description="EDIT Only - Template you'd like to apply, options available: empty, light-green",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="overrideTemplate",
+     *      in="formData",
+     *      description="EDIT Only - flag (0, 1) override template checkbox",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="useOrderingClause",
+     *      in="formData",
+     *      description="EDIT Only - flag (0,1) Use advanced order clause - set to 1 if ordering is provided",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="useFilteringClause",
+     *      in="formData",
+     *      description="EDIT Only - flag (0,1) Use advanced filter clause - set to 1 if filter is provided",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="noDataMessage",
+     *      in="formData",
+     *      description="EDIT Only - A message to display when no data is returned from the source",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {
@@ -222,7 +366,6 @@ class DataSetView extends ModuleWidget
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('rowsPerPage', $this->getSanitizer()->getInt('rowsPerPage'));
         $this->setOption('showHeadings', $this->getSanitizer()->getCheckbox('showHeadings'));
         $this->setOption('upperLimit', $this->getSanitizer()->getInt('upperLimit', 0));

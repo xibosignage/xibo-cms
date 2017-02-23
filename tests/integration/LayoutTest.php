@@ -241,7 +241,7 @@ class LayoutTest extends LocalWebTestCase
      */
     public function testAddDuplicate()
     {
-        # Check if there are layouts with that name alrady in the system
+        # Check if there are layouts with that name already in the system
         $flag = true;
         foreach ($this->startLayouts as $layout) {
             if ($layout->layout == 'phpunit layout') {
@@ -263,7 +263,7 @@ class LayoutTest extends LocalWebTestCase
     */
     public function testEdit()
     {
-        # Check if there are layouts with that name alrady in the system
+        # Check if there are layouts with that name already in the system
         foreach ($this->startLayouts as $lay) {
             if ($lay->layout == 'phpunit layout') {
                 $this->skipTest('layout already exists with that name');
@@ -445,7 +445,7 @@ class LayoutTest extends LocalWebTestCase
         return [
             // various incorrect regions
             'region no size' => [NULL, NULL, 20, 420, 200, 250, 250],
-            'region negative dimesions' => [-69, -420, 20, 420, 500, null, null]
+            'region negative dimensions' => [-69, -420, 20, 420, 500, null, null]
         ];
     }
 
@@ -537,7 +537,7 @@ class LayoutTest extends LocalWebTestCase
         # Create layout 
         $name = Random::generateString(8, 'phpunit');
         $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
-        # Calculate layou's status
+        # Calculate layouts status
         $this->client->get('/layout/status/' . $layout->layoutId);
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
@@ -608,7 +608,7 @@ class LayoutTest extends LocalWebTestCase
     }
 
     /**
-     * Position Test with incorrect properities (missing height and incorrect spelling)
+     * Position Test with incorrect parameters (missing height and incorrect spelling)
      */
     public function testPositionFailure()
     {
@@ -636,7 +636,7 @@ class LayoutTest extends LocalWebTestCase
         $this->client->put('/region/position/all/' . $layout->layoutId, [
             'regions' => $regionJson
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        # Check ifit fails as expected 
+        # Check if it fails as expected 
         $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
         $object = json_decode($this->client->response->body());
         # Clean up

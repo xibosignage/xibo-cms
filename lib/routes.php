@@ -142,6 +142,12 @@ $app->get('/playlist/widget', '\Xibo\Controller\Playlist:widgetGrid')->name('pla
 $app->post('/playlist/order/:id', '\Xibo\Controller\Playlist:order')->name('playlist.order');
 $app->post('/playlist/library/assign/:id', '\Xibo\Controller\Playlist:libraryAssign')->name('playlist.library.assign');
 // Widget Modules
+/**
+ * @SWG\Tag(
+ *  name="widget",
+ *  description="Widgets"
+ * )
+ */
 $app->post('/playlist/widget/:type/:id', '\Xibo\Controller\Module:addWidget')->name('module.widget.add');
 $app->put('/playlist/widget/:id', '\Xibo\Controller\Module:editWidget')->name('module.widget.edit');
 $app->delete('/playlist/widget/:id', '\Xibo\Controller\Module:deleteWidget')->name('module.widget.delete');

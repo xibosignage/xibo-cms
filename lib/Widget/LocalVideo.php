@@ -39,7 +39,66 @@ class LocalVideo extends ModuleWidget
     }
 
     /**
-     * Add Media to the Database
+     * Adds a Local Video Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/localVideo/{playlistId}",
+     *  operationId="WidgetLocalVideoAdd",
+     *  tags={"Widget"},
+     *  summary="Add a Local Video Widget",
+     *  description="Add a new Local Video Widget to the specified playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The playlist ID to add a Widget to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="The Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="(0, 1) Select 1 only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="uri",
+     *      in="formData",
+     *      description="A local file path or URL to the video. This can be RTSP stream.",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="scaleTypeId",
+     *      in="formData",
+     *      description="How should the video be scaled, available options: aspect, stretch",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="mute",
+     *      in="formData",
+     *      description="Flag (0, 1) Should the video be muted?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {

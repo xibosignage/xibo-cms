@@ -50,11 +50,11 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
         parent::tearDown();
     }
     /**
-     * Shows all display pofiles
+     * Shows all display profiles
      */
     public function testListAll()
     {
-        # Get list of all isplay profiles
+        # Get list of all display profiles
         $this->client->get('/displayprofile');
 
         $this->assertSame(200, $this->client->response->status());
@@ -124,7 +124,7 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
      */
     public function testAddFailure($profileName, $profileType, $profileIsDefault)
     {
-        # Add new display profile with argumets from provideFailureCases
+        # Add new display profile with arguments from provideFailureCases
         $response = $this->client->post('/displayprofile', [
             'name' => $profileName,
             'type' => $profileType,

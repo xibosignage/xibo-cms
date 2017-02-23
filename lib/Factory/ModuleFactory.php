@@ -327,7 +327,7 @@ class ModuleFactory extends BaseFactory
             $playlist->load(['playlistIncludeRegionAssignments' => false]);
 
             // Create a new widget to use
-            $widget = $this->widgetFactory->create($ownerId, $playlistId, $module->getModuleType(), 0);
+            $widget = $this->widgetFactory->create($ownerId, $playlistId, $module->getModuleType(), null);
             $module->setWidget($widget);
 
             $playlist->assignWidget($widget);

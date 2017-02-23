@@ -446,9 +446,10 @@ class Module extends Base
 
         // Successful
         $this->getState()->hydrate([
+            'httpStatus' => 201,
             'message' => sprintf(__('Added %s'), $module->getName()),
             'id' => $module->widget->widgetId,
-            'data' => $module
+            'data' => $module->widget
         ]);
     }
 
@@ -473,7 +474,34 @@ class Module extends Base
     }
 
     /**
-     * Edit Widget
+     * Edit a Widget
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}",
+     *  operationId="WidgetEdit",
+     *  tags={"Widget"},
+     *  summary="Edit a Widget",
+     *  description="Edit a Widget, please refer to individual widget Add documentation for module specific parameters",
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="path",
+     *      description="The widget ID to edit",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the edited widget",
+     *          type="string"
+     *      )
+     * )
+     *)
+     */
+    
+    /**
      * @param int $widgetId
      */
     public function editWidget($widgetId)
@@ -493,7 +521,7 @@ class Module extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $module->getName()),
             'id' => $module->widget->widgetId,
-            'data' => $module
+            'data' => $module->widget
         ]);
     }
 
@@ -520,7 +548,27 @@ class Module extends Base
     }
 
     /**
-     * Delete Widget
+     * Delete a Widget
+     * @SWG\Delete(
+     *  path="/playlist/widget/{widgetId}",
+     *  operationId="WidgetDelete",
+     *  tags={"Widget"},
+     *  summary="Delete a Widget",
+     *  description="Deleted a specified widget",
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="path",
+     *      description="The widget ID to delete",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *  )
+     *)
+     */
+    /**
      * @param int $widgetId
      */
     public function deleteWidget($widgetId)
@@ -602,7 +650,61 @@ class Module extends Base
     }
 
     /**
-     * Edit Widget Transition
+     * Edit Widget transition
+     * @SWG\Put(
+     *  path="/playlist/widget/{type}/{widgetId]",
+     *  operationId="WidgetEditTransition",
+     *  tags={"Widget"},
+     *  summary="Adds In/Out transition",
+     *  description="Adds In/Out transition to a specified widget",
+     *  @SWG\Parameter(
+     *      name="type",
+     *      in="path",
+     *      description="Transition type, available options: in, out",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="path",
+     *      description="The widget ID to add the transition to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="transitionType",
+     *      in="formData",
+     *      description="Type of a transition, available Options: fly, fadeIn, fadeOut",
+     *      type="string",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="transitionDuration",
+     *      in="formData",
+     *      description="Duration of this transition in milliseconds",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="transitionDirection",
+     *      in="formData",
+     *      description="The direction for this transition, only appropriate for transitions that move, such as fly. Available options: N, NE, E, SE, S, SW, W, NW",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     * )
+     *)
+     */
+    /**
      * @param string $type
      * @param int $widgetId
      */
@@ -673,7 +775,54 @@ class Module extends Base
     }
 
     /**
-     * Widget Audio
+     * Edit an Audio Widget
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}/audio",
+     *  operationId="WidgetAssignedAudioEdit",
+     *  tags={"Widget"},
+     *  summary="Parameters for edting/adding audio file to a specific widget",
+     *  description="Parameters for edting/adding audio file to a specific widget",
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="path",
+     *      description="Id of a widget to which you want to add audio or edit existing audio",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      in="formData",
+     *      description="Id of a audio file in CMS library you wish to add to a widget",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="volume",
+     *      in="formData",
+     *      description="Volume percentage(0-100) for this audio to play at",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="loop",
+     *      in="formData",
+     *      description="Flag (0, 1) Should the audio loop if it finishes before the widget has finished?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     */
+    /**
      * @param int $widgetId
      */
     public function widgetAudio($widgetId)
@@ -687,7 +836,7 @@ class Module extends Base
 
         // Pull in the parameters we are expecting from the form.
         $mediaId = $this->getSanitizer()->getInt('mediaId');
-        $volume = $this->getSanitizer()->getInt('volume');
+        $volume = $this->getSanitizer()->getInt('volume', 100);
         $loop = $this->getSanitizer()->getCheckbox('loop');
 
         // Remove existing audio records.
@@ -715,7 +864,28 @@ class Module extends Base
     }
 
     /**
-     * Widget Audio
+     * Delete an Assigned Audio Widget
+     * @SWG\Delete(
+     *  path="/playlist/widget/{widgetId}/audio",
+     *  operationId="WidgetAudioDelete",
+     *  tags={"Widget"},
+     *  summary="Delete assigned audio widget",
+     *  description="Delete assigned audio widget from specified widget ID",
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="path",
+     *      description="Id of a widget from which you want to delete the audio from",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *  )
+     *)
+     */
+
+     /**
      * @param int $widgetId
      */
     public function widgetAudioDelete($widgetId)

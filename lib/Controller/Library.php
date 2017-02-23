@@ -549,6 +549,34 @@ class Library extends Base
      *      type="file",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Media Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="oldMediaId",
+     *      in="formData",
+     *      description="Id of an existing media file which should be replaced with the new upload",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="updateInLayouts",
+     *      in="formData",
+     *      description="Flag (0, 1), set to 1 to update this media in all layouts (use with oldMediaId) ",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="removeOldRevisions",
+     *      in="formData",
+     *      description="Flag (0 , 1), to either remove or leave the old file revisions (use with oldMediaId)",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation"
@@ -663,7 +691,7 @@ class Library extends Base
      *  @SWG\Parameter(
      *      name="retired",
      *      in="formData",
-     *      description="Flag indicating if this Layout is retired",
+     *      description="Flag indicating if this media is retired",
      *      type="integer",
      *      required=true
      *   ),
