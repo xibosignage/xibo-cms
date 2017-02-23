@@ -66,6 +66,7 @@ class Theme extends Middleware
         $settings['TIME_FORMAT'] = $app->dateService->extractTimeFormat($settings['DATE_FORMAT']);
         $settings['TIME_FORMAT_JS'] = $app->dateService->convertPhpToMomentFormat($settings['TIME_FORMAT']);
         $settings['systemDateFormat'] = $app->dateService->convertPhpToMomentFormat($app->dateService->getSystemFormat());
+        $settings['systemTimeFormat'] = $app->dateService->convertPhpToMomentFormat($app->dateService->extractTimeFormat($app->dateService->getSystemFormat()));
 
         // Resolve the current route name
         $routeName = ($app->router()->getCurrentRoute() == null) ? 'notfound' : $app->router()->getCurrentRoute()->getName();
