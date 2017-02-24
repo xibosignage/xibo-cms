@@ -276,7 +276,7 @@ class Hls extends ModuleWidget
         $body = $this->parseLibraryReferences($isPreview, '<video id="video" poster="' . $this->getResourceUrl('vendor/hls/hls-1px-transparent.png') . '"' . (($this->getOption('mute', 0) == 1) ? 'muted' : '') . '></video>');
 
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate([
             'viewPortWidth' => ($isPreview) ? $this->region->width : '[[ViewPortWidth]]',

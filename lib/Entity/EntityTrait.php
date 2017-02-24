@@ -148,7 +148,7 @@ trait EntityTrait
     /**
      * Get all changed properties for this entity
      */
-    protected function getChangedProperties()
+    public function getChangedProperties()
     {
         $changedProperties = [];
 
@@ -222,5 +222,21 @@ trait EntityTrait
     protected function setPermissionsClass($class)
     {
         $this->permissionsClass = $class;
+    }
+
+    /**
+     * @param $entityId
+     * @param $message
+     * @param array[Optional] $changedProperties
+     */
+    protected function audit($entityId, $message, $changedProperties = null)
+    {
+        if ($changedProperties === null)
+            $changedProperties = $this->getChangedProperties();
+
+        $class = substr(get_class($this), strrpos(get_class($this), '\\') + 1);
+
+        if (count($changedProperties) > 0)
+            $this->getLog()->audit($class, $entityId, $message, $changedProperties);
     }
 }
