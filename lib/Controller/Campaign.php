@@ -536,6 +536,9 @@ class Campaign extends Base
         // Run through the layouts to unassign
         $layouts = $this->getSanitizer()->getParam('unassignLayoutId', null);
         $layouts = is_array($layouts) ? $layouts : [];
+        
+        $this->getLog()->debug('There are %d Layouts to unassign', count($layouts));
+        
         foreach ($layouts as $object) {
 
             $layout = $this->layoutFactory->getById($this->getSanitizer()->getInt('layoutId', $object));
