@@ -41,6 +41,11 @@
                 {% set helpText %}{% trans "Select the audio file that should be played when this Widget starts." %}{% endset %}
                 {{ forms.dropdown("mediaId", "single", title, mediaId, [{mediaId: 0, name: ""}]|merge(media), "mediaId", "name", helpText) }}
 
+                {% if not isAudioAvailable %}
+                    {% set message %}{% trans "The currently selected audio has been retired, please select a new item or cancel to keep the current one." %}{% endset %}
+                    {{ forms.message(message, "alert alert-danger") }}
+                {% endif %}
+
                 {% set title %}{% trans "Volume" %}{% endset %}
                 {% set helpText %}{% trans "Enter the volume percentage for this audio to play at." %}{% endset %}
                 {{ forms.number("volume", title, volume, helpText) }}

@@ -47,7 +47,66 @@ class Video extends ModuleWidget
     }
 
     /**
-     * Edit Media in the Database
+     * Edit a Video Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/video/{playlistId}",
+     *  operationId="WidgetVideoEdit",
+     *  tags={"Widget"},
+     *  summary="Parameters for editing existing video on a layout",
+     *  description="Parameters for editing existing video on a layout, for adding new videos, please refer to POST /library documentation",
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Edit only - Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="Edit Only - (0, 1) Select 1 only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="Edit Only - The Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="scaleTypeId",
+     *      in="formData",
+     *      description="How should the video be scaled, available options: aspect, stretch",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="mute",
+     *      in="formData",
+     *      description="Edit only - Flag (0, 1) Should the video be muted?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="loop",
+     *      in="formData",
+     *      description="Edit only - Flag (0, 1) Should the video loop (only for duration > 0 )?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function edit()
     {

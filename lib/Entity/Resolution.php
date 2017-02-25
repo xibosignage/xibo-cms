@@ -149,7 +149,7 @@ class Resolution implements \JsonSerializable
         else
             $this->edit();
 
-        $this->getLog()->audit('Resolution', $this->resolutionId, 'Saving', $this);
+        $this->getLog()->audit('Resolution', $this->resolutionId, 'Saving', $this->getChangedProperties());
     }
 
     public function delete()

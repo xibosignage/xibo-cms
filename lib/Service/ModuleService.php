@@ -76,9 +76,9 @@ class ModuleService implements ModuleServiceInterface
     /**
      * @inheritdoc
      */
-    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory)
+    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory)
     {
-        $object = $this->getByClass($module->class, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory);
+        $object = $this->getByClass($module->class, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory);
 
         $object->setModule($module);
 
@@ -88,7 +88,7 @@ class ModuleService implements ModuleServiceInterface
     /**
      * @inheritdoc
      */
-    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory)
+    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory)
     {
         if (!\class_exists($className))
             throw new NotFoundException(__('Class %s not found', $className));
@@ -110,7 +110,9 @@ class ModuleService implements ModuleServiceInterface
             $transitionFactory,
             $displayFactory,
             $commandFactory,
-            $scheduleFactory
+            $scheduleFactory,
+            $permissionFactory,
+            $userGroupFactory
         );
 
         return $object;

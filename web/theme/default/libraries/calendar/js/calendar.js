@@ -123,6 +123,9 @@ if(!String.prototype.formatNum) {
 			},
 			day: {
 				enable: 1
+			},
+			agenda: {
+				enable: 1
 			}
 		},
 		merge_holidays: false,
@@ -156,7 +159,8 @@ if(!String.prototype.formatNum) {
 			year: '',
 			month: '',
 			week: '',
-			day: ''
+			day: '',
+			agenda: ''
 		},
 		stop_cycling: false
 	};
@@ -418,42 +422,53 @@ if(!String.prototype.formatNum) {
 	}
 
 	Calendar.prototype._render = function() {
+		
 		this.context.html('');
 		this._loadTemplate(this.options.view);
 		this.stop_cycling = false;
-
+		
 		var data = {};
-		data.cal = this;
-		data.day = 1;
 
-		// Getting list of days in a week in correct order. Works for month and week views
-		if(getExtentedOption(this, 'first_day') == 1) {
-			data.days_name = [this.locale.d1, this.locale.d2, this.locale.d3, this.locale.d4, this.locale.d5, this.locale.d6, this.locale.d0]
-		} else {
-			data.days_name = [this.locale.d0, this.locale.d1, this.locale.d2, this.locale.d3, this.locale.d4, this.locale.d5, this.locale.d6]
+		// Render the non agenda views ( Day, Week, Month,Year)
+		if (this.options.view != 'agenda') {
+			
+			data.cal = this;
+			data.day = 1;
+
+			// Getting list of days in a week in correct order. Works for month and week views
+			if(getExtentedOption(this, 'first_day') == 1) {
+				data.days_name = [this.locale.d1, this.locale.d2, this.locale.d3, this.locale.d4, this.locale.d5, this.locale.d6, this.locale.d0]
+			} else {
+				data.days_name = [this.locale.d0, this.locale.d1, this.locale.d2, this.locale.d3, this.locale.d4, this.locale.d5, this.locale.d6]
+			}
+
+			// Get all events between start and end
+			var start = parseInt(this.options.position.start.getTime());
+			var end = parseInt(this.options.position.end.getTime());
+
+			data.events = this.getEventsBetween(start, end);
+
+			switch(this.options.view) {
+				case 'month':
+					break;
+				case 'week':
+					this._calculate_hour_minutes(data);
+					break;
+				case 'day':
+					this._calculate_hour_minutes(data);
+					break;
+			}
+
+			data.start = new Date(this.options.position.start.getTime());
+			data.lang = this.locale;
+		} else { // Render the event view 
+			data.cal = this;
+			data.agenda = this.options.events;
+			data.lang = this.locale;
 		}
-
-		// Get all events between start and end
-		var start = parseInt(this.options.position.start.getTime());
-		var end = parseInt(this.options.position.end.getTime());
-
-		data.events = this.getEventsBetween(start, end);
-
-		switch(this.options.view) {
-			case 'month':
-				break;
-			case 'week':
-				this._calculate_hour_minutes(data);
-				break;
-			case 'day':
-				this._calculate_hour_minutes(data);
-				break;
-		}
-
-		data.start = new Date(this.options.position.start.getTime());
-		data.lang = this.locale;
-
+	
 		this.context.append(this.options.templates[this.options.view](data));
+		
 		this._update();
 	};
 
@@ -704,7 +719,171 @@ if(!String.prototype.formatNum) {
 
 		return this.options.templates['month-day'](t);
 	}
+	
+	Calendar.prototype._layouts = function(ev, la, type) {
+			
+		this._loadTemplate('agenda-layouts');
+		
+		var t = {tooltip: '', cal: this};
+		var layouts = [];
+		var maxPriority = 0;
+		
+		for (var i = 0; i < ev.length; i++) {
+			if (ev[i].isPriority > maxPriority && ev[i].eventTypeId == type) {
+				maxPriority = ev[i].isPriority;
+			}
+		}
+		
+		for (var i = 0; i < ev.length; i++) {
 
+			// Add if it's a normal layout (1) or an overlay (3)
+			if(ev[i].eventTypeId == type) {
+				var layout = la[ev[i].layoutId];
+				var event = ev[i];
+				var elementPriority = 0;
+				var elementPriorityIcon = '';
+				var elementPriorityClass = '';
+				
+				if(event.isPriority == maxPriority && maxPriority != 0) {
+					elementPriority = 1;
+					elementPriorityIcon = 'fa-bullseye event-important';
+					elementPriorityClass = 'high-priority';
+				} else 	if(event.isPriority < maxPriority) {
+					elementPriority = -1;
+					elementPriorityClass = 'low-priority';
+				}
+				
+				layouts.push({
+					eventPriorityFlag: elementPriority,
+					eventId: event.eventId,
+					layoutId: event.layoutId,
+					layoutName: layout.layout,
+					layoutStatus: layout.status,
+					eventFromDt: moment(event.fromDt, "X").format(jsDateFormat),
+					eventToDt: moment(event.toDt, "X").format(jsDateFormat),
+					eventDayPartId: event.dayPartId,
+					layoutDuration: layout.duration,
+					layoutDisplayOrder: event.displayOrder,
+					eventPriority: event.isPriority,
+					itemClass: elementPriorityClass,
+					itemIcon: elementPriorityIcon
+				});
+			}
+		}
+		
+		// Render only if there is at least one layout
+		if (layouts.length > 0) {
+			t.layouts = layouts;
+			t.layouts['type'] = type;
+			return this.options.templates['agenda-layouts'](t);
+		} else {
+			return '';
+		}	
+	}
+	
+	Calendar.prototype._displaygroups = function(ev, dg) {
+		this._loadTemplate('agenda-displaygroups');
+		
+		var t = {tooltip: '', cal: this};
+		var displaygroups = {};
+		var atLeastOneDisplayGroup = 0;
+		
+		for (var i = 0; i < ev.length; i++) {
+			displaygroups[ev[i].displayGroupId] = dg[ev[i].displayGroupId];
+			atLeastOneDisplayGroup++;
+		}
+		
+		// Render only if there is at least one display group
+		if (atLeastOneDisplayGroup > 0) {
+			t.displaygroups = displaygroups;
+			return this.options.templates['agenda-displaygroups'](t);
+		} else {
+			return '';
+		}
+	}
+
+	Calendar.prototype._campaigns = function(ev, ca) {
+		this._loadTemplate('agenda-campaigns');
+		
+		var t = {tooltip: '', cal: this};
+		var campaigns = {};
+		var atLeastOneCampaign = 0;
+		
+		for (var i = 0; i < ev.length; i++) {
+			if(typeof ca[ev[i].campaignId] != 'undefined'){
+				campaigns[ev[i].campaignId] = ca[ev[i].campaignId];
+				atLeastOneCampaign++;
+			}
+		}
+		
+		// Render only if there is at least one campaign
+		if (atLeastOneCampaign > 0) {
+			t.campaigns = campaigns;
+			return this.options.templates['agenda-campaigns'](t);
+		} else {
+			return '';
+		}
+	}
+	
+	Calendar.prototype._breadcrumbTrail = function(layoutId, data, eventId) {
+		this._loadTemplate('breadcrumb-trail');
+		
+		var t = {};
+		
+		var targetEvent = {};
+	    var displayGroupLink = '/displaygroup/view';
+	    var campaignLink = '/campaign/view';
+
+	    var results = data.results[data.selectedDisplayGroup];
+	    
+	    var allEvents = results.events;
+		
+	    // Get the correspondent event
+	    for (var i = 0; i < allEvents.length; i++) {
+	        if (allEvents[i].layoutId == layoutId && allEvents[i].eventId == eventId) {
+	            targetEvent = allEvents[i];
+	        }
+	    }
+	    
+	    // Layout
+	    var layoutData = results.layouts[layoutId];
+	    t.layout = {link: layoutData.link, name: layoutData.layout};
+
+	    // Campaign
+		if (typeof results.campaigns[targetEvent.campaignId] != 'undefined'){
+			t.campaign = {link:campaignLink, name: results.campaigns[targetEvent.campaignId].campaign};
+	    }
+	    
+	    // Schedule
+		t.schedule = {link: targetEvent.link};
+		
+	    // Display groups
+		t.displayGroups = [];
+		
+		//		Assigned display Group
+	    var assignedDisplayGroup = targetEvent.displayGroupId;
+	    if (typeof results.displayGroups[assignedDisplayGroup] != 'undefined'){
+			t.displayGroups.push( { link: displayGroupLink, name: results.displayGroups[assignedDisplayGroup].displayGroup } );
+		}
+	    
+	    // 		Add intermediate display groups
+	    for (var i = 0; i < targetEvent.intermediateDisplayGroupIds.length; i++) {
+	        var displayGroupId = targetEvent.intermediateDisplayGroupIds[i];
+	        if (typeof results.displayGroups[displayGroupId] != 'undefined'){
+				t.displayGroups.push( { link: displayGroupLink, name: results.displayGroups[displayGroupId].displayGroup } );
+	        }
+	    }
+	    
+	    // 		Add the final display group ( if it's not the directly assigned one)
+	    if (data.selectedDisplayGroup != assignedDisplayGroup) {
+	        if (typeof results.displayGroups[data.selectedDisplayGroup] != 'undefined'){
+	            t.displayGroups.push( { link: displayGroupLink, name: results.displayGroups[data.selectedDisplayGroup].displayGroup } );
+	        }
+	    }
+		
+		return this.options.templates['breadcrumb-trail'](t);
+	};
+	
 	Calendar.prototype._getHoliday = function(date) {
 		var result = false;
 		$.each(getHolidays(this, date.getFullYear()), function() {
@@ -790,6 +969,9 @@ if(!String.prototype.formatNum) {
 				case 'day':
 					to.start.setDate(this.options.position.start.getDate() + 1);
 					break;
+				case 'agenda':
+					to.start.setDate(this.options.position.start.getDate() + 1);
+					break;
 			}
 		} else if(where == 'prev') {
 			switch(this.options.view) {
@@ -805,9 +987,14 @@ if(!String.prototype.formatNum) {
 				case 'day':
 					to.start.setDate(this.options.position.start.getDate() - 1);
 					break;
+				case 'agenda':
+					to.start.setDate(this.options.position.start.getDate() - 1);
+					break;
 			}
 		} else if(where == 'today') {
 			to.start.setTime(new Date().getTime());
+		} else if(where == 'date') {
+			to.start.setTime(next.format('x'));
 		}
 		else {
 			$.error(this.locale.error_where.format(where))
@@ -862,6 +1049,10 @@ if(!String.prototype.formatNum) {
 				this.options.position.start.setTime(new Date(year, month, first).getTime());
 				this.options.position.end.setTime(new Date(year, month, first + 7).getTime());
 				break;
+			case 'agenda':
+				this.options.position.start.setTime(new Date(year, month, day).getTime());
+				this.options.position.end.setTime(new Date(year, month, day).getTime());
+				break;
 			default:
 				$.error(this.locale.error_noview.format(this.options.view))
 		}
@@ -881,6 +1072,9 @@ if(!String.prototype.formatNum) {
 				return this.locale.title_week.format(p.getWeek(getExtentedOption(this, 'week_numbers_iso_8601')), p.getFullYear());
 				break;
 			case 'day':
+				return this.locale.title_day.format(this.locale['d' + p.getDay()], p.getDate(), this.locale['m' + p.getMonth()], p.getFullYear());
+				break;
+			case 'agenda':
 				return this.locale.title_day.format(this.locale['d' + p.getDay()], p.getDate(), this.locale['m' + p.getMonth()], p.getFullYear());
 				break;
 		}
@@ -968,9 +1162,11 @@ if(!String.prototype.formatNum) {
 	};
 
 	Calendar.prototype._loadTemplate = function(name) {
+		
 		if(this.options.templates[name]) {
 			return;
 		}
+		
 		this.options.templates[name] = _.template($('#' + this._templatePath(name)).html());
 	};
 
@@ -1021,6 +1217,9 @@ if(!String.prototype.formatNum) {
 
 	Calendar.prototype._update_year = function() {
 		this._update_month_year();
+	};
+	
+	Calendar.prototype._update_agenda = function() {
 	};
 
 	Calendar.prototype._update_month = function() {

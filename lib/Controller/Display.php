@@ -612,7 +612,7 @@ class Display extends Base
                         $profile[$i]['valueString'] = $option['value'];
                 }
             } else if ($profile[$i]['fieldType'] == 'timePicker') {
-                $profile[$i]['valueString'] = ($profile[$i]['value'] == null) ? '00:00' : $this->getDate()->parse($profile[$i]['value'], 'H:i')->format('H:i');
+                $profile[$i]['valueString'] = ($profile[$i]['value'] == null || $profile[$i]['value'] == '0' ) ? '00:00' : $this->getDate()->parse($profile[$i]['value'], 'H:i')->format('H:i');
             }
         }
 

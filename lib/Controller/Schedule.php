@@ -334,6 +334,190 @@ class Schedule extends Base
     }
 
     /**
+     * Event List
+     * @param $displayGroupId
+     *
+     * @SWG\Get(
+     *  path="/schedule/:displayGroupId/events",
+     *  operationId="scheduleCalendarData",
+     *  tags={"schedule"},
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      description="The DisplayGroupId to return the event list for.",
+     *      in="path",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="date",
+     *      in="formData",
+     *      required=true,
+     *      type="string",
+     *      description="Date in Y-m-d H:i:s"
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful response"
+     *  )
+     * )
+     */
+    public function eventList($displayGroupId)
+    {
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+        if (!$this->getUser()->checkViewable($displayGroup))
+            throw new AccessDeniedException();
+
+        $date = $this->getSanitizer()->getDate('date');
+
+        // Reset the seconds
+        $date->second(0);
+
+        $this->getLog()->debug('Generating eventList for DisplayGroupId ' . $displayGroupId . ' on date ' . $this->getDate()->getLocalDate($date));
+
+        // Get a list of scheduled events
+        $events = [];
+        $displayGroups = [];
+        $layouts = [];
+        $campaigns = [];
+
+        // Add the displayGroupId I am filtering for to the displayGroup object
+        $displayGroups[$displayGroup->displayGroupId] = $displayGroup;
+
+        // Is this group a display specific group, or a standalone?
+        $options = [];
+        $displayId = null;
+        if ($displayGroup->isDisplaySpecific == 1) {
+            // We should lookup the displayId for this group.
+            $display = $this->displayFactory->getByDisplayGroupId($displayGroupId)[0];
+            $displayId = $display->displayId;
+        } else {
+            $options['useGroupId'] = true;
+            $options['displayGroupId'] = $displayGroupId;
+        }
+
+        // Get list of events
+        $scheduleForXmds = $this->scheduleFactory->getForXmds($displayId, $date->format('U'), $date->format('U'), $options);
+
+        $this->getLog()->debug(count($scheduleForXmds) . ' events returned for displaygroup and date');
+
+        foreach ($scheduleForXmds as $event) {
+
+            // Ignore command events
+            if ($event['eventTypeId'] == \Xibo\Entity\Schedule::$COMMAND_EVENT)
+                continue;
+
+            // Assess schedules
+            $schedule = $this->scheduleFactory->createEmpty()->hydrate($event, ['intProperties' => ['isPriority', 'syncTimezone', 'displayOrder']]);
+            $schedule
+                ->setDateService($this->getDate())
+                ->setDayPartFactory($this->dayPartFactory)
+                ->load();
+
+            $this->getLog()->debug('EventId ' . $schedule->eventId . ' exists in the schedule window, checking its instances for activity');
+
+            // Get scheduled events based on recurrence
+            $scheduleEvents = $schedule->getEvents($date, $date);
+
+            // If this event is active, collect extra information and add to the events list
+            if (count($scheduleEvents) > 0) {
+
+                // Add the link to the schedule
+                if (!$this->isApi())
+                    $schedule->link = $this->getApp()->urlFor('schedule.edit.form', ['id' => $schedule->eventId]);
+
+                // Add the Layout
+                $layoutId = $event['layoutId'];
+
+                $this->getLog()->debug('Adding this events layoutId [' . $layoutId . '] to list');
+
+                if ($layoutId != 0 && !array_key_exists($layoutId, $layouts)) {
+                    // Look up the layout details
+                    $layout = $this->layoutFactory->getById($layoutId);
+
+                    // Add the link to the layout
+                    if (!$this->isApi())
+                        $layout->link = $this->getApp()->urlFor('layout.designer', ['id' => $layout->layoutId]);
+
+                    if ($this->getUser()->checkViewable($layout))
+                        $layouts[$layoutId] = $layout;
+                    else
+                        $layouts[$layoutId] = $layout->layout;
+
+                    // Add the Campaign
+                    $layout->campaigns = $this->campaignFactory->getByLayoutId($layout->layoutId);
+
+                    if (count($layout->campaigns) > 0) {
+                        // Add to the campaigns array
+                        foreach ($layout->campaigns as $campaign) {
+                            if (!array_key_exists($campaign->campaignId, $campaigns)) {
+                                $campaigns[$campaign->campaignId] = $campaign;
+                            }
+                        }
+                    }
+                }
+
+                // Display Group details
+                $this->getLog()->debug('Adding this events displayGroupIds to list');
+                $schedule->excludeProperty('displayGroups');
+
+                foreach ($schedule->displayGroups as $displayGroup) {
+                    if (!array_key_exists($displayGroup->displayGroupId, $displayGroups)) {
+                        $displayGroups[$displayGroup->displayGroupId] = $displayGroup;
+                    }
+                }
+
+                // Determine the intermediate display groups
+                $this->getLog()->debug('Adding this events intermediateDisplayGroupIds to list');
+                $schedule->intermediateDisplayGroupIds = [];
+
+                // Is this event for the selected displayGroupId? if so we have 0 intermediates.
+                if (intval($event['displayGroupId']) != $displayGroupId) {
+                    // We need to trace the route between the events displayGroupId and the displayGroupId we
+                    // are looking at. We should start at the displayGroupId for the event and stop when we reach
+                    // the first occurence of the displayGroupId we are looking at.
+                    $tree = $this->displayGroupFactory->getRelationShipTree(intval($event['displayGroupId']));
+
+                    foreach ($tree as $branch) {
+                        // If we've reached the displayGroupId in question, then stop
+                        if ($branch->displayGroupId == $displayGroupId)
+                            break;
+
+                        if ($branch->depth > 0 && $branch->displayGroupId != $displayGroupId) {
+                            $schedule->intermediateDisplayGroupIds[] = $branch->displayGroupId;
+
+                            if (!array_key_exists($branch->displayGroupId, $displayGroups)) {
+                                $displayGroups[$branch->displayGroupId] = $this->displayGroupFactory->getById($branch->displayGroupId);
+                            }
+                        }
+                    }
+                }
+
+                $this->getLog()->debug('Adding scheduled event');
+
+                foreach ($scheduleEvents as $scheduleEvent) {
+                    $schedule->fromDt = $scheduleEvent->fromDt;
+                    $schedule->toDt = $scheduleEvent->toDt;
+                    $schedule->layoutId = intval($event['layoutId']);
+                    $schedule->displayGroupId = intval($event['displayGroupId']);
+
+                    $events[] = $schedule;
+                }
+            } else {
+                $this->getLog()->debug('No activity inside window');
+            }
+        }
+
+        $this->getState()->hydrate([
+             'data' => [
+                 'events' => $events,
+                 'displayGroups' => $displayGroups,
+                 'layouts' => $layouts,
+                 'campaigns' => $campaigns
+             ]
+        ]);
+    }
+
+    /**
      * Shows a form to add an event
      */
     function addForm()
@@ -427,6 +611,13 @@ class Schedule extends Base
      *      required=false
      *   ),
      *   @SWG\Parameter(
+     *      name="syncTimezone",
+     *      in="formData",
+     *      description="Should this schedule be synced to the resulting Display timezone?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
      *      name="fromDt",
      *      in="formData",
      *      description="The from date for this event.",
@@ -498,6 +689,7 @@ class Schedule extends Base
         $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder', 0);
         $schedule->isPriority = $this->getSanitizer()->getInt('isPriority', 0);
         $schedule->dayPartId = $this->getSanitizer()->getInt('dayPartId', 0);
+        $schedule->syncTimezone = $this->getSanitizer()->getCheckbox('syncTimezone', 0);
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $this->getSanitizer()->getIntArray('recurrenceRepeatsOn');
@@ -518,10 +710,16 @@ class Schedule extends Base
 
             $this->getLog()->debug('Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
 
-            // In some circumstances we want to trim the seconds from the provided dates.
-            // this happens when the date format provided does not include seconds and when the add
-            // event comes from the UI.
-            if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
+            if ($schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_CUSTOM && $schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+                // Daypart selected
+                // expect only a start date (no time)
+                $schedule->fromDt = $fromDt->startOfDay()->format('U');
+                $schedule->toDt = null;
+
+            } else if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
+                // In some circumstances we want to trim the seconds from the provided dates.
+                // this happens when the date format provided does not include seconds and when the add
+                // event comes from the UI.
                 $this->getLog()->debug('Date format does not include seconds, removing them');
                 $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
 
@@ -569,7 +767,7 @@ class Schedule extends Base
             throw new AccessDeniedException();
 
         // Fix the event dates for display
-        if ($schedule->eventTypeId == \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+        if ($schedule->dayPartId == \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
             $schedule->fromDt = '';
             $schedule->toDt = '';
         } else {
@@ -681,6 +879,13 @@ class Schedule extends Base
      *      required=false
      *   ),
      *   @SWG\Parameter(
+     *      name="syncTimezone",
+     *      in="formData",
+     *      description="Should this schedule be synced to the resulting Display timezone?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
      *      name="fromDt",
      *      in="formData",
      *      description="The from date for this event.",
@@ -749,6 +954,7 @@ class Schedule extends Base
         $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder', $schedule->displayOrder);
         $schedule->isPriority = $this->getSanitizer()->getInt('isPriority', $schedule->isPriority);
         $schedule->dayPartId = $this->getSanitizer()->getInt('dayPartId', $schedule->dayPartId);
+        $schedule->syncTimezone = $this->getSanitizer()->getCheckbox('syncTimezone', 0);
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $this->getSanitizer()->getIntArray('recurrenceRepeatsOn');
@@ -770,10 +976,16 @@ class Schedule extends Base
 
             $this->getLog()->debug('Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
 
-            // In some circumstances we want to trim the seconds from the provided dates.
-            // this happens when the date format provided does not include seconds and when the add
-            // event comes from the UI.
-            if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
+            if ($schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_CUSTOM && $schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+                // Daypart selected
+                // expect only a start date (no time)
+                $schedule->fromDt = $fromDt->startOfDay()->format('U');
+                $schedule->toDt = null;
+
+            } else if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
+                // In some circumstances we want to trim the seconds from the provided dates.
+                // this happens when the date format provided does not include seconds and when the add
+                // event comes from the UI.
                 $this->getLog()->debug('Date format does not include seconds, removing them');
                 $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
 

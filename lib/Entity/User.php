@@ -637,7 +637,7 @@ class User implements \JsonSerializable
      */
     public function validate()
     {
-        if (!v::alnum('_')->length(1, 50)->validate($this->userName) && !v::email()->validate($this->userName))
+        if (!v::alnum('_.')->length(1, 50)->validate($this->userName) && !v::email()->validate($this->userName))
             throw new InvalidArgumentException(__('User name must be between 1 and 50 characters.'), 'userName');
 
         if (!v::string()->notEmpty()->validate($this->password))
@@ -985,6 +985,8 @@ class User implements \JsonSerializable
                     $new->view = max($permission->view, $old->view);
                     $new->edit = max($permission->view, $old->view);
                     $new->delete = max($permission->view, $old->view);
+
+                    $this->permissionCache[$entity][$permission->objectId] = $new;
                 }
                 else
                     $this->permissionCache[$entity][$permission->objectId] = $permission;

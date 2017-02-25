@@ -48,6 +48,10 @@ class Font extends ModuleWidget
             } catch (NotFoundException $e) {
                 // Excellent, we don't have it
                 $font->save(['validate' => false]);
+
+                // Assign the everyone permission
+                $permission = $this->permissionFactory->createForEveryone($this->userGroupFactory, 'Xibo\\Entity\\Media', $font->getId(), 1, 0, 0);
+                $permission->save();
             }
         }
     }
@@ -93,6 +97,9 @@ class Font extends ModuleWidget
 
         if ($embed != 0 && $embed != 8)
             throw new \InvalidArgumentException(__('Font file is not embeddable due to its permissions'));
+
+        // Free up the file
+        $font->close();
     }
 
     /**

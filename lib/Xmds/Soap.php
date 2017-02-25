@@ -40,6 +40,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Random;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -307,6 +308,11 @@ class Soap
             $toFilter = $fromFilter->copy()->addHour();
 
         $this->getLog()->debug(sprintf('FromDT = %s. ToDt = %s', $fromFilter->toRssString(), $toFilter->toRssString()));
+
+        // Add the filter dates to the RF xml document
+        $fileElements->setAttribute('generated', $this->getDate()->getLocalDate());
+        $fileElements->setAttribute('fitlerFrom', $this->getDate()->getLocalDate($fromFilter));
+        $fileElements->setAttribute('fitlerTo', $this->getDate()->getLocalDate($toFilter));
 
         try {
             $dbh = $this->getStore()->getConnection();
@@ -766,6 +772,11 @@ class Soap
 
         $this->getLog()->debug(sprintf('FromDT = %s. ToDt = %s', $fromFilter->toRssString(), $toFilter->toRssString()));
 
+        // Add the filter dates to the RF xml document
+        $layoutElements->setAttribute('generated', $this->getDate()->getLocalDate());
+        $layoutElements->setAttribute('fitlerFrom', $this->getDate()->getLocalDate($fromFilter));
+        $layoutElements->setAttribute('fitlerTo', $this->getDate()->getLocalDate($toFilter));
+
         try {
             $dbh = $this->getStore()->getConnection();
 
@@ -781,84 +792,7 @@ class Soap
 
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
-            $SQL = '
-                SELECT `schedule`.eventTypeId, 
-                    layout.layoutId, 
-                    `layout`.status, 
-                    `command`.code, 
-                    schedule.fromDt, 
-                    schedule.toDt,
-                    schedule.recurrence_type AS recurrenceType,
-                    schedule.recurrence_detail AS recurrenceDetail,
-                    schedule.recurrence_range AS recurrenceRange,
-                    schedule.recurrenceRepeatsOn,
-                    schedule.lastRecurrenceWatermark,
-                    schedule.eventId, 
-                    schedule.is_priority,
-                    schedule.dayPartId
-            ';
-
-            if (!$options['dependentsAsNodes']) {
-                // Pull in the dependents using GROUP_CONCAT
-                $SQL .= ' ,
-                  (
-                    SELECT GROUP_CONCAT(DISTINCT StoredAs)
-                      FROM `media`
-                        INNER JOIN `lkwidgetmedia`
-                        ON `lkwidgetmedia`.MediaID = `media`.MediaID
-                        INNER JOIN `widget`
-                        ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                        INNER JOIN `lkregionplaylist`
-                        ON `lkregionplaylist`.playlistId = `widget`.playlistId
-                        INNER JOIN `region`
-                        ON `region`.regionId = `lkregionplaylist`.regionId
-                     WHERE `region`.layoutId = `layout`.layoutId
-                      AND media.type <> \'module\'
-                    GROUP BY `region`.layoutId
-                  ) AS Dependents
-                ';
-            }
-
-            $SQL .= '
-                   FROM `schedule`
-                    INNER JOIN `lkscheduledisplaygroup`
-                    ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
-                    INNER JOIN `lkdgdg`
-                    ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
-                    INNER JOIN `lkdisplaydg`
-                    ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
-                    LEFT OUTER JOIN `campaign`
-                    ON `schedule`.CampaignID = campaign.CampaignID
-                    LEFT OUTER JOIN `lkcampaignlayout`
-                    ON lkcampaignlayout.CampaignID = campaign.CampaignID
-                    LEFT OUTER JOIN `layout`
-                    ON lkcampaignlayout.LayoutID = layout.LayoutID
-                      AND layout.retired = 0
-                    LEFT OUTER JOIN `command`
-                    ON `command`.commandId = `schedule`.commandId
-                 WHERE lkdisplaydg.DisplayID = :displayId
-                    AND (
-                      (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
-                      OR `schedule`.recurrence_range >= :fromDt OR (
-                        IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
-                        )
-                    )
-                ORDER BY schedule.DisplayOrder, IFNULL(lkcampaignlayout.DisplayOrder, 0), schedule.FromDT
-            ';
-
-            $params = array(
-                'displayId' => $this->display->displayId,
-                'toDt' => $toFilter->format('U'),
-                'fromDt' => $fromFilter->format('U')
-            );
-
-            if ($this->display->isAuditing())
-                $this->getLog()->sql($SQL, $params);
-
-            $sth = $dbh->prepare($SQL);
-            $sth->execute($params);
-
-            $events = $sth->fetchAll(\PDO::FETCH_ASSOC);
+            $events = $this->scheduleFactory->getForXmds($this->display->displayId, $fromFilter->format('U'), $toFilter->format('U'), $options);
 
             // If our dependents are nodes, then build a list of layouts we can use to query for nodes
             $layoutDependents = [];
@@ -916,10 +850,20 @@ class Soap
                     $eventTypeId = $row['eventTypeId'];
                     $layoutId = $row['layoutId'];
                     $commandCode = $row['code'];
-                    $fromDt = $this->getDate()->getLocalDate($scheduleEvent->fromDt);
-                    $toDt = $this->getDate()->getLocalDate($scheduleEvent->toDt);
+
+                    // Handle the from/to date of the events we have been returned (they are all returned with respect to
+                    // the current CMS timezone)
+                    // Does the Display have a timezone?
+                    if (!empty($this->display->timeZone) && $schedule->syncTimezone == 1) {
+                        $fromDt = $this->getDate()->getLocalDate($scheduleEvent->fromDt, null, $this->display->timeZone);
+                        $toDt = $this->getDate()->getLocalDate($scheduleEvent->toDt, null, $this->display->timeZone);
+                    } else {
+                        $fromDt = $this->getDate()->getLocalDate($scheduleEvent->fromDt);
+                        $toDt = $this->getDate()->getLocalDate($scheduleEvent->toDt);
+                    }
+
                     $scheduleId = $row['eventId'];
-                    $is_priority = $this->getSanitizer()->int($row['is_priority']);
+                    $is_priority = $this->getSanitizer()->int($row['isPriority']);
 
                     if ($eventTypeId == Schedule::$LAYOUT_EVENT) {
                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
@@ -1323,11 +1267,11 @@ class Soap
             // Insert
             $this->getStore()->isolated($sql, $data);
         } else {
-            $this->getLog()->error('0 logs resolved from log package');
+            $this->getLog()->info('0 logs resolved from log package');
         }
 
         if ($discardedLogs > 0)
-            $this->getLog()->error('Discarded ' . $discardedLogs . ' logs. Consider adjusting your display profile log level. Resolved level is ' . $logLevel);
+            $this->getLog()->info('Discarded ' . $discardedLogs . ' logs. Consider adjusting your display profile log level. Resolved level is ' . $logLevel);
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SUBMITLOG, strlen($logXml));
 
@@ -1367,6 +1311,10 @@ class Soap
         if ($statXml == "")
             throw new \SoapFault('Receiver', "Stat XML is empty.");
 
+        // Store an array of parsed stat data for insert
+        $stats = [];
+        $now = $this->getDate()->getLocalDate();
+
         // Load the XML into a DOMDocument
         $document = new \DOMDocument("1.0");
         $document->loadXML($statXml);
@@ -1387,8 +1335,12 @@ class Soap
                 continue;
             }
 
-            $scheduleID = $node->getAttribute('scheduleid');
-            $layoutID = $node->getAttribute('layoutid');
+            $scheduleId = $node->getAttribute('scheduleid');
+
+            if (empty($scheduleId))
+                $scheduleId = 0;
+
+            $layoutId = $node->getAttribute('layoutid');
             
             // Slightly confusing behaviour here to support old players without introducting a different call in 
             // xmds v=5.
@@ -1402,7 +1354,7 @@ class Soap
 
             if ($widgetId > 0) {
                 // Lookup the mediaId
-                $media = $this->mediaFactory->getByLayoutAndWidget($layoutID, $widgetId);
+                $media = $this->mediaFactory->getByLayoutAndWidget($layoutId, $widgetId);
 
                 if (count($media) <= 0) {
                     // Non-media widget
@@ -1417,23 +1369,40 @@ class Soap
             if ($tag == 'null')
                 $tag = null;
 
-            // Write the stat record with the information we have available to us.
-            try {
-                $stat = new Stat($this->getStore(), $this->getLog());
-                $stat->type = $type;
-                $stat->fromDt = $fromdt;
-                $stat->toDt = $todt;
-                $stat->scheduleId = $scheduleID;
-                $stat->displayId = $this->display->displayId;
-                $stat->layoutId = $layoutID;
-                $stat->mediaId = $mediaId;
-                $stat->widgetId = $widgetId;
-                $stat->tag = $tag;
-                $stat->save();
+            // Add this information to an array for batch insert
+            $stats[] = [
+                'type' => $type,
+                'statDate' => $now,
+                'fromDt' => $fromdt,
+                'toDt' => $todt,
+                'scheduleId' => $scheduleId,
+                'displayId' => $this->display->displayId,
+                'layoutId' => $layoutId,
+                'mediaId' => $mediaId,
+                'tag' => $tag,
+                'widgetId' => $widgetId,
+            ];
+        }
+
+        if (count($stats) > 0) {
+            // Insert
+            $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, layoutID, mediaID, Tag, `widgetId`) VALUES ';
+            $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+
+            $sql = $sql . implode(', ', array_fill(1, count($stats), $placeHolders));
+
+            // Flatten the array
+            $data = [];
+            foreach ($stats as $stat) {
+                foreach ($stat as $field) {
+                    $data[] = $field;
+                }
             }
-            catch (\PDOException $e) {
-                $this->getLog()->error('Stat Add failed with error: %s', $e->getMessage());
-            }
+
+            // Insert
+            $this->getStore()->isolated($sql, $data);
+        } else {
+            $this->getLog()->info('0 stats resolved from data package');
         }
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SUBMITSTATS, strlen($statXml));
@@ -1697,21 +1666,7 @@ class Soap
                 $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
                 $body = sprintf(__("Display %s with ID %d is now back online."), $this->display->display, $this->display->displayId);
 
-                $notification = $this->notificationFactory->createEmpty();
-                $notification->subject = $subject;
-                $notification->body = $body;
-                $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
-                $notification->releaseDt = $this->getDate()->getLocalDate(null, 'U');
-                $notification->isEmail = 1;
-                $notification->isInterrupt = 0;
-                $notification->userId = 0;
-                $notification->isSystem = 1;
-
-                // Add the system notifications group - if there is one.
-                foreach ($this->userGroupFactory->getSystemNotificationGroups() as $group) {
-                    /* @var UserGroup $group */
-                    $notification->assignUserGroup($group);
-                }
+                $notification = $this->notificationFactory->createSystemNotification($subject, $body, $this->getDate()->parse());
 
                 // Get a list of people that have view access to the display?
                 if ($this->getConfig()->GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1) {
@@ -1754,9 +1709,13 @@ class Soap
 
     /**
      * Check we haven't exceeded the bandwidth limits
+     *  - Note, display logging doesn't work in here, this is CMS level logging
      */
     protected function checkBandwidth()
     {
+        // Uncomment to enable auditing.
+        //$this->logProcessor->setDisplay(0, true);
+
         $xmdsLimit = $this->getConfig()->GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 
         if ($xmdsLimit <= 0)
@@ -1771,9 +1730,33 @@ class Soap
                 'month' => strtotime(date('m') . '/02/' . date('Y') . ' 00:00:00')
             ));
 
-            $bandwidthUsage = $sth->fetchColumn(0);
+            $bandwidthUsageBytes = $sth->fetchColumn(0);
+            $bandwidthUsage = ($bandwidthUsageBytes >= ($xmdsLimit * 1024)) ? false : true;
 
-            return ($bandwidthUsage >= ($xmdsLimit * 1024)) ? false : true;
+            $this->getLog()->debug('Checking bandwidth usage against allowance: ' . ByteFormatter::format($xmdsLimit * 1024) . '. ' . ByteFormatter::format($bandwidthUsageBytes));
+
+            if (!$bandwidthUsage) {
+                // Create a notification if we don't already have one today for this display.
+                $subject = __('Bandwidth allowance exceeded');
+                $date = $this->dateService->parse();
+
+                if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->dateService->getLocalDate($date->startOfDay(), 'U'), $this->dateService->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
+
+                    $body = __(sprintf('Bandwidth allowance of %s exceeded. Used %s', ByteFormatter::format($xmdsLimit * 1024), ByteFormatter::format($bandwidthUsageBytes)));
+
+                    $notification = $this->notificationFactory->createSystemNotification(
+                        $subject,
+                        $body,
+                        $this->dateService->parse()
+                    );
+
+                    $notification->save();
+
+                    $this->getLog()->critical($subject);
+                }
+            }
+
+            return $bandwidthUsage;
 
         } catch (\Exception $e) {
             $this->getLog()->error($e->getMessage());

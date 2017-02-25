@@ -213,12 +213,9 @@
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <input type="hidden" name="{{ name }}" id="{{ name }}" value="{{ value }}" />
         <div class="col-sm-10">
-            <div class="col-sm-2" style="padding: 0;">
-                <input class="form-control dateTimePickerDate dateControl" name="{{ name }}_Link1" type="text" id="{{ name }}_Link1" {{ validation }} data-link-combined="{{ name }}" />
-            </div>
-            <div class="col-sm-10" style="padding: 0;">
-                <input class="form-control dateTimePickerTime dateControl" name="{{ name }}_Link2" type="text" id="{{ name }}_Link2" {{ validation }} data-link-combined="{{ name }}" />
-            </div>
+            {# form-control-inline brings these two columns back onto the same line (resetting form-control) #}
+            <input class="form-control form-control-inline dateTimePickerDate dateControl" name="{{ name }}_Link1" type="text" id="{{ name }}_Link1" {{ validation }} data-link-combined="{{ name }}" />
+            <input class="form-control form-control-inline dateTimePickerTime dateControl" name="{{ name }}_Link2" type="text" id="{{ name }}_Link2" {{ validation }} data-link-combined="{{ name }}" />
             <span class="help-block">{{ helpText }}</span>
         </div>
     </div>

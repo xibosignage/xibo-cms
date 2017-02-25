@@ -16,6 +16,7 @@
         
         <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
         <link rel="stylesheet" type="text/css" href="{{ theme.uri("css/html-preview.css") }}" />
+        <link rel="stylesheet" type="text/css" href="{{ theme.uri("libraries/font-awesome/css/font-awesome.min.css") }}" />
         
     </head>
     <body>
@@ -24,6 +25,9 @@
         <script src="{{ theme.uri("libraries/html5preloader/html5Preloader.js") }}"></script>
         <script src="{{ theme.uri("js/html-preview.js") }}"></script>
         <script type="text/javascript">
+        
+            var emptyRegionMessage = "{% trans "Empty Region" %}"; 
+        
             (function($){
               $(document).ready(function(){
                 dsInit({{ layout.layoutId }}, {{ previewOptions|json_encode()|raw }}, true)

@@ -268,6 +268,21 @@ class User extends Base
                     'url' => $this->getApp()->urlFor('user.delete.form', ['id' => $user->userId]),
                     'text' => __('Delete')
                 ];
+            }
+
+            if ($this->getUser()->checkPermissionsModifyable($user)) {
+                $user->buttons[] = ['divider' => true];
+
+                // User Groups
+                $user->buttons[] = array(
+                    'id' => 'user_button_group_membership',
+                    'url' => $this->urlFor('user.membership.form', ['id' => $user->userId]),
+                    'text' => __('User Groups')
+                );
+            }
+
+            if ($this->getUser()->isSuperAdmin()) {
+                $user->buttons[] = ['divider' => true];
 
                 // Page Security
                 $user->buttons[] = [
@@ -419,7 +434,7 @@ class User extends Base
         $user = $this->userFactory->create();
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
 
-        $user->userName = $this->getSanitizer()->getString('userName');
+        $user->userName = $this->getSanitizer()->getUserName('userName');
         $user->email = $this->getSanitizer()->getString('email');
         $user->homePageId = $this->getSanitizer()->getInt('homePageId');
         $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota', 0);
@@ -478,7 +493,7 @@ class User extends Base
         // Build a user entity and save it
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
         $user->load();
-        $user->userName = $this->getSanitizer()->getString('userName');
+        $user->userName = $this->getSanitizer()->getUserName('userName');
         $user->email = $this->getSanitizer()->getString('email');
         $user->homePageId = $this->getSanitizer()->getInt('homePageId');
         $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
@@ -1046,6 +1061,95 @@ class User extends Base
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => ($i == 1) ? __('Updated Preference') : __('Updated Preferences')
+        ]);
+    }
+
+    /**
+     * @param $userId
+     */
+    public function membershipForm($userId)
+    {
+        $user = $this->userFactory->getById($userId);
+
+        if (!$this->getUser()->checkEditable($user))
+            throw new AccessDeniedException();
+
+        // Groups we are assigned to
+        $groupsAssigned = $this->userGroupFactory->getByUserId($user->userId);
+
+        // All Groups
+        $allGroups = $this->userGroupFactory->query();
+
+        // The available users are all users except users already in assigned users
+        $checkboxes = array();
+
+        foreach ($allGroups as $group) {
+            /* @var \Xibo\Entity\UserGroup $group */
+            // Check to see if it exists in $usersAssigned
+            $exists = false;
+            foreach ($groupsAssigned as $groupAssigned) {
+                /* @var \Xibo\Entity\UserGroup $groupAssigned */
+                if ($groupAssigned->groupId == $group->groupId) {
+                    $exists = true;
+                    break;
+                }
+            }
+
+            // Store this checkbox
+            $checkbox = array(
+                'id' => $group->groupId,
+                'name' => $group->group,
+                'value_checked' => (($exists) ? 'checked' : '')
+            );
+
+            $checkboxes[] = $checkbox;
+        }
+
+        $this->getState()->template = 'user-form-membership';
+        $this->getState()->setData([
+            'user' => $user,
+            'checkboxes' => $checkboxes,
+            'help' =>  $this->getHelp()->link('User', 'Members')
+        ]);
+    }
+
+    /**
+     * @param $userId
+     */
+    public function assignUserGroup($userId)
+    {
+        $user = $this->userFactory->getById($userId);
+
+        if (!$this->getUser()->checkEditable($user))
+            throw new AccessDeniedException();
+
+        // Go through each ID to assign
+        foreach ($this->getSanitizer()->getIntArray('userGroupId') as $userGroupId) {
+            $userGroup = $this->userGroupFactory->getById($userGroupId);
+
+            if (!$this->getUser()->checkEditable($userGroup))
+                throw new AccessDeniedException(__('Access Denied to UserGroup'));
+
+            $userGroup->assignUser($user);
+            $userGroup->save(['validate' => false]);
+        }
+
+        // Have we been provided with unassign id's as well?
+        foreach ($this->getSanitizer()->getIntArray('unassignUserGroupId') as $userGroupId) {
+            $userGroup = $this->userGroupFactory->getById($userGroupId);
+
+            if (!$this->getUser()->checkEditable($userGroup))
+                throw new AccessDeniedException(__('Access Denied to UserGroup'));
+
+            $userGroup->unassignUser($user);
+            $userGroup->save(['validate' => false]);
+        }
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('%s assigned to User Groups'), $user->userName),
+            'id' => $user->userId
         ]);
     }
 }

@@ -169,6 +169,10 @@
                         {% set title %}{% trans "Base" %}{% endset %}
                         {% set helpText %}{% trans "The base currency." %}{% endset %}
                         {{ forms.input("base", title, module.getOption("base"), helpText, "", "required") }}
+                        
+                        {% set title %}{% trans "Reverse conversion?" %}{% endset %}
+                        {% set helpText %}{% trans "Tick if you would like your base currency to be used as the comparison currency for each currency you've entered. For example base/compare becomes compare/base - USD/GBP becomes GBP/USD." %}{% endset %}
+                        {{ forms.checkbox("reverseConversion", title, module.getOption("reverseConversion", 0), helpText) }}
 
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}

@@ -549,6 +549,34 @@ class Library extends Base
      *      type="file",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Media Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="oldMediaId",
+     *      in="formData",
+     *      description="Id of an existing media file which should be replaced with the new upload",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="updateInLayouts",
+     *      in="formData",
+     *      description="Flag (0, 1), set to 1 to update this media in all layouts (use with oldMediaId) ",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="removeOldRevisions",
+     *      in="formData",
+     *      description="Flag (0 , 1), to either remove or leave the old file revisions (use with oldMediaId)",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation"
@@ -663,7 +691,7 @@ class Library extends Base
      *  @SWG\Parameter(
      *      name="retired",
      *      in="formData",
-     *      description="Flag indicating if this Layout is retired",
+     *      description="Flag indicating if this media is retired",
      *      type="integer",
      *      required=true
      *   ),
@@ -952,7 +980,7 @@ class Library extends Base
         $this->getLog()->debug('Install Fonts called with options: %s', json_encode($options));
 
         // Get the item from the cache
-        $cssItem = $this->pool->getItem('fontCss');
+        $cssItem = $this->pool->getItem('fontCss' . $this->getUser()->userId);
 
         // Get the CSS
         $cssDetails = $cssItem->get();
@@ -988,6 +1016,10 @@ class Library extends Base
                     // Css for the client contains the actual stored as location of the font.
                     $css .= str_replace('[url]', $font->storedAs, str_replace('[family]', $familyName, $fontTemplate));
 
+                    // Test to see if this user should have access to this font
+                    if (!$this->getUser()->checkViewable($font))
+                        continue;
+
                     // Css for the local CMS contains the full download path to the font
                     $url = $this->urlFor('library.download', ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
                     $localCss .= str_replace('[url]', $url, str_replace('[family]', $familyName, $fontTemplate));
@@ -1009,6 +1041,9 @@ class Library extends Base
                 $media->moduleSystemFile = true;
                 $media->isSaveRequired = true;
                 $media->save();
+
+                // We can remove the temp file
+                @unlink($tempUrl);
 
                 $cssDetails = [
                     'css' => $localCss,
@@ -1080,7 +1115,7 @@ class Library extends Base
     public function removeExpiredFiles()
     {
         // Get a list of all expired files and delete them
-        foreach ($this->mediaFactory->query(null, array('expires' => time(), 'allModules' => 1)) as $entry) {
+        foreach ($this->mediaFactory->query(null, array('expires' => time(), 'allModules' => 1, 'length' => 100)) as $entry) {
             /* @var \Xibo\Entity\Media $entry */
             // If the media type is a module, then pretend its a generic file
             $this->getLog()->info('Removing Expired File %s', $entry->name);

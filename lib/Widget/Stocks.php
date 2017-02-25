@@ -73,33 +73,8 @@ class Stocks extends YahooBase
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-finance-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/bootstrap.min.css')->save();
-    }
-
-    /**
-     * Loads templates for this module
-     */
-    private function loadTemplates()
-    {
-        $this->module->settings['templates'] = [];
-
-        // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/stocks/*.template.json') as $template) {
-            // Read the contents, json_decode and add to the array
-            $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
-        }
-    }
-
-    /**
-     * Templates available
-     * @return array
-     */
-    public function templatesAvailable()
-    {
-        if (!isset($this->module->settings['templates']))
-            $this->loadTemplates();
-
-        return $this->module->settings['templates'];
     }
 
     /**
@@ -123,12 +98,166 @@ class Stocks extends YahooBase
 
     public function validate()
     {
+        if($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null) )
+            throw new \InvalidArgumentException(__('Please choose a template'));
+            
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('Please enter a duration'));
     }
 
+
     /**
-     * Add Media
+     * Adds a Stocks Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/stocks/{playlistId}",
+     *  operationId="WidgetStocksAdd",
+     *  tags={"widget"},
+     *  summary="Add a Stocks Widget",
+     *  description="Add a new Stocks Widget to the specified playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The playlist ID to add a Stocks widget",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="(0, 1) Select 1 only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="items",
+     *      in="formData",
+     *      description="Items wanted, can be comma separated",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="effect",
+     *      in="formData",
+     *      description="Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="speed",
+     *      in="formData",
+     *      description="The transition speed of the selected effect in milliseconds (1000 = normal)",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="backgroundColor",
+     *      in="formData",
+     *      description="A HEX color to use as the background color of this widget",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="noRecordsMessage",
+     *      in="formData",
+     *      description="A message to display when there are no records returned by the search query",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dateFormat",
+     *      in="formData",
+     *      description="The format to apply to all dates returned by he widget",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="updateInterval",
+     *      in="formData",
+     *      description="Update interval in minutes, should be kept as high as possible, if data change once per hour, this should be set to 60",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="templateId",
+     *      in="formData",
+     *      description="Use pre-configured templates, available options: stocks1, stocks2",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="durationIsPerPage",
+     *      in="formData",
+     *      description="A flag (0, 1), The duration specified is per page, otherwise the widget duration is divided between the number of pages/items",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="overrideTemplate",
+     *      in="formData",
+     *      description="flag (0, 1) set to 0 and use templateId or set to 1 and provide whole template in the next parameters",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="maxItemsPerPage",
+     *      in="formData",
+     *      description="This is the intended number of items on each page",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="mainTemplate",
+     *      in="formData",
+     *      description="Main template, Pass only with overrideTemplate set to 1",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="itemtemplate",
+     *      in="formData",
+     *      description="Template for each item, replaces [itemsTemplate] in main template, Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="styleSheet",
+     *      in="formData",
+     *      description="Optional StyleSheet Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="javaScript",
+     *      in="formData",
+     *      description="Optional JavaScript, Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {
@@ -166,13 +295,16 @@ class Stocks extends YahooBase
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('durationIsPerPage', $this->getSanitizer()->getCheckbox('durationIsPerPage'));
-        $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
-        $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
-        $this->setOption('maxItemsPerPage', $this->getSanitizer()->getInt('maxItemsPerPage', 4));
-        $this->setRawNode('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', null)));
-        $this->setRawNode('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', null)));
-        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', $this->getSanitizer()->getParam('styleSheet', null)));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        
+        if( $this->getOption('overrideTemplate') == 1 ){
+            $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
+            $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
+            $this->setOption('maxItemsPerPage', $this->getSanitizer()->getInt('maxItemsPerPage', 4));
+            $this->setRawNode('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', null)));
+            $this->setRawNode('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', null)));
+            $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', $this->getSanitizer()->getParam('styleSheet', null)));
+        }
     }
 
     /**
@@ -392,10 +524,33 @@ class Stocks extends YahooBase
         if (!$items = $this->getYql()) {
             return '';
         }
+        
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            
+            $template = $this->getTemplateById($this->getOption('templateId'));
+            
+            if (isset($template)) {
+                $mainTemplate = $template['main'];
+                $itemTemplate = $template['item'];
+                $styleSheet = $template['css'];
+                $widgetOriginalWidth = $template['widgetOriginalWidth'];
+                $widgetOriginalHeight = $template['widgetOriginalHeight'];
+                $maxItemsPerPage = $template['maxItemsPerPage'];
+            }
+            
+        } else {
+            
+            $mainTemplate = $this->getRawNode('mainTemplate');
+            $itemTemplate = $this->getRawNode('itemTemplate');
+            $styleSheet = $this->getRawNode('styleSheet', '');
+            $widgetOriginalWidth = $this->getSanitizer()->int($this->getOption('widgetOriginalWidth'));
+            $widgetOriginalHeight = $this->getSanitizer()->int($this->getOption('widgetOriginalHeight'));
+            $maxItemsPerPage = $this->getSanitizer()->int($this->getOption('maxItemsPerPage'));
+        }
 
         // Run through each item and substitute with the template
-        $mainTemplate = $this->parseLibraryReferences($isPreview, $this->getRawNode('mainTemplate'));
-        $itemTemplate = $this->parseLibraryReferences($isPreview, $this->getRawNode('itemTemplate'));
+        $mainTemplate = $this->parseLibraryReferences($isPreview, $mainTemplate);
+        $itemTemplate = $this->parseLibraryReferences($isPreview, $itemTemplate);
         
         $renderedItems = [];
         
@@ -414,10 +569,10 @@ class Stocks extends YahooBase
             'originalHeight' => $this->region->height,
             'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
             'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-            'widgetDesignWidth' => $this->getSanitizer()->int($this->getOption('widgetOriginalWidth')),
-            'widgetDesignHeight'=> $this->getSanitizer()->int($this->getOption('widgetOriginalHeight')),
+            'widgetDesignWidth' => $widgetOriginalWidth,
+            'widgetDesignHeight'=> $widgetOriginalHeight,
             'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0), 
-            'maxItemsPerPage' => $this->getSanitizer()->int($this->getOption('maxItemsPerPage'))
+            'maxItemsPerPage' => $maxItemsPerPage
         );
 
         $itemsPerPage = $options['maxItemsPerPage'];
@@ -444,7 +599,7 @@ class Stocks extends YahooBase
         }
         
         // Add the CSS if it isn't empty, and replace the wallpaper
-        $css = $this->makeSubstitutions([], $this->getRawNode('styleSheet', null), '');
+        $css = $this->makeSubstitutions([], $styleSheet, '');
 
         if ($css != '') {
             $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css) . '</style>';
@@ -461,13 +616,14 @@ class Stocks extends YahooBase
 
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-finance-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   var items = ' . json_encode($renderedItems) . ';';
         $javaScriptContent .= '   var body = ' . json_encode($mainTemplate) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboFinanceRender(options, items, body); ';
+        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboFinanceRender(options, items, body); $("#content").find("img").xiboImageRender(options); ';
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= $javaScript;
         $javaScriptContent .= '</script>';

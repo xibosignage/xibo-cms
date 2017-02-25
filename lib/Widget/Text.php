@@ -34,6 +34,7 @@ class Text extends ModuleWidget
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
     }
 
     public function validate()
@@ -47,7 +48,94 @@ class Text extends ModuleWidget
     }
 
     /**
-     * Add Media
+     * Adds a Text Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/text/{playlistId}",
+     *  operationId="WidgetTextAdd",
+     *  tags={"Widget"},
+     *  summary="Add a Text Widget",
+     *  description="Add a new Text Widget to the specified playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The playlist ID to add a Widget to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="The Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="(0, 1) Select 1 only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="effect",
+     *      in="formData",
+     *      description="Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind, marqueeUp, marqueeDown, marqueeRight, marqueeLeft",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="speed",
+     *      in="formData",
+     *      description="The transition speed of the selected effect in milliseconds (1000 = normal) or the Marquee speed in a low to high scale (normal = 1)",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="backgroundcolor",
+     *      in="formData",
+     *      description="A HEX color to use as the background color of this widget",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="marqueeInlineSelector",
+     *      in="formData",
+     *      description="The selector to use for stacking marquee items in a line when scrolling left/right",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="text",
+     *      in="formData",
+     *      description="Enter the text to display",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="javaScript",
+     *      in="formData",
+     *      description="Optional JavaScript",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {
@@ -181,6 +269,7 @@ class Text extends ModuleWidget
 
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
 
         // Do we need to include moment?
         if ($clock)
@@ -190,7 +279,7 @@ class Text extends ModuleWidget
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("#content").xiboTextRender(options, items); $("body").xiboLayoutScaler(options);';
+        $javaScriptContent .= '       $("#content").xiboTextRender(options, items); $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); ';
 
         if ($clock)
             $javaScriptContent .= ' moment.locale("' . Translate::GetJsLocale() . '"); updateClock(); setInterval(updateClock, 1000); ';

@@ -15,10 +15,8 @@
 
 {% block formButtons %}
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Yes" %}, $("#layoutExportForm").submit()
+    {% trans "Yes" %}, layoutExportFormSubmit()
 {% endblock %}
-
-{% block callBack %}layoutExportFormOpen{% endblock %}
 
 {% block formHtml %}
     <div class="row">

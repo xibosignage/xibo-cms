@@ -142,6 +142,11 @@ class Soap3 extends Soap
 
         $file = null;
 
+        if (empty($filePath)) {
+            $this->getLog()->error('Soap3 GetFile request without a file path. Maybe a player missing ?v= parameter');
+            throw new \SoapFault('Receiver', 'GetFile request is missing file path - is this version compatible with this CMS?');
+        }
+
         try {
             // Handle fetching the file
             if ($fileType == "layout") {

@@ -32,6 +32,7 @@
                         <thead>
                             <tr>
                                 <th>{% trans "Name" %}</th>
+                                <th>{% trans "Owner" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -55,6 +56,7 @@
             ajax: "{{ urlFor("application.search") }}",
             "columns": [
                 { "data": "name" },
+                { "data": "owner" },
                 {
                     "orderable": false,
                     "data": dataTableButtonsColumn
@@ -69,12 +71,15 @@
             // Initialize the tooltip.
             $('#copy-button').tooltip();
 
+
+
             $('#copy-button').bind('click', function() {
                 
-              var input = document.querySelector('#clientSecret');
+              var input = $('#clientSecret');
               
               // Select the input to copy 
-              input.setSelectionRange(0, input.value.length + 1);
+              input.focus();
+              input.select();
               
               // Try to copy to clipboard and give feedback
               try {
@@ -89,7 +94,7 @@
               }
               
               // Unselect the input
-              input.setSelectionRange(0,0);
+              input.blur();
             });
 
             // Handler for updating the tooltip message.

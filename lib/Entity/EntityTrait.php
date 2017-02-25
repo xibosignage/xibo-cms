@@ -104,6 +104,16 @@ trait EntityTrait
     }
 
     /**
+     * Reset originals to current values
+     */
+    public function setOriginals()
+    {
+        foreach ($this->jsonSerialize() as $key => $value) {
+            $this->originalValues[$key] = $value;
+        }
+    }
+
+    /**
      * Get the original value of a property
      * @param string $property
      * @return null|mixed
@@ -124,6 +134,31 @@ trait EntityTrait
             return true;
 
         return $this->getOriginalValue($property) != $this->{$property};
+    }
+
+    /**
+     * @param $property
+     * @return bool
+     */
+    public function propertyOriginallyExisted($property)
+    {
+        return array_key_exists($property, $this->originalValues);
+    }
+
+    /**
+     * Get all changed properties for this entity
+     */
+    protected function getChangedProperties()
+    {
+        $changedProperties = [];
+
+        foreach ($this->jsonSerialize() as $key => $value) {
+            if (!is_array($value) && !is_object($value) && $this->propertyOriginallyExisted($key) && $this->hasPropertyChanged($key)) {
+                $changedProperties[$key] = $this->getOriginalValue($key) . ' > ' . $value;
+            }
+        }
+
+        return $changedProperties;
     }
 
     /**

@@ -129,7 +129,7 @@ class CommandTest extends LocalWebTestCase
      */
     public function testAddFailure($commandName, $commandDescription, $commandCode)
     {
-        # Add new comands with arguments from provideFailureCases
+        # Add new commands with arguments from provideFailureCases
         $response = $this->client->post('/command', [
             'command' => $commandName,
             'description' => $commandDescription,
@@ -200,7 +200,7 @@ class CommandTest extends LocalWebTestCase
         # Load in a known command
         /** @var XiboCommand $command */
         $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunit code');
-        # Generate new name and desciption
+        # Generate new name and description
         $name = Random::generateString(8, 'command');
         $description = Random::generateString(8, 'description');
         # Change name and description of earlier created command

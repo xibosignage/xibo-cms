@@ -46,6 +46,14 @@ class Application implements \JsonSerializable
      * @var string
      */
     public $name;
+    
+    /**
+     * @SWG\Property(
+     *  description="Application Owner"
+     * )
+     * @var string
+     */
+    public $owner;
 
     /**
      * @SWG\Property(

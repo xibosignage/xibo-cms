@@ -303,6 +303,24 @@ function XiboInitialise(scope) {
         if (preset != undefined && preset != "")
             $(this).datetimepicker('update', preset);
     });
+    
+    $(scope + ' .dateMonthPicker').each(function() {
+
+        $(this).datetimepicker({
+            format: 'MM yyyy',
+            autoclose: true,
+            language: language,
+            calendarType: calendarType,
+            startView: 3,
+            minView: 3
+        });
+
+        // Get the linked field and use it to set the time
+        var preset = $(this).closest("form").find("#" + $(this).data().linkField).val();
+
+        if (preset != undefined && preset != "")
+            $(this).datetimepicker('update', preset);
+    });
 
     $(scope + ' .timePicker').each(function() {
 
@@ -312,7 +330,7 @@ function XiboInitialise(scope) {
         }).change(function() {
             var value = moment($(this).val(), jsTimeFormat);
             
-            $(this).closest("form").find("#" + $(this).data().linkField).val(moment(value).format(jsTimeFormat));
+            $(this).closest("form").find("#" + $(this).data().linkField).val(moment(value).format(systemTimeFormat));
         });
 
         // Get the linked field and use it to set the time
@@ -601,6 +619,10 @@ function XiboFormRender(sourceObj, data) {
         data: data,
         success: function(response) {
 
+            // Restore the link to the source object if exists
+            if (typeof sourceObj === "object" || sourceObj instanceof Object)
+                sourceObj.attr("href", lastForm);
+                
             // Was the Call successful
             if (response.success) {
 
@@ -614,10 +636,6 @@ function XiboFormRender(sourceObj, data) {
                 }
 
                 var id = new Date().getTime();
-                
-                // Restore the link to the source object if exists
-                if (typeof sourceObj === "object" || sourceObj instanceof Object)
-                    sourceObj.attr("href", lastForm);
                 
                 // Create the dialog with our parameters
                 var dialog = bootbox.dialog({

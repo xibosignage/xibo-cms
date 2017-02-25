@@ -44,6 +44,7 @@ class Ticker extends ModuleWidget
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
     }
 
     /**
@@ -115,32 +116,6 @@ class Ticker extends ModuleWidget
         }
     }
 
-    /**
-     * Loads templates for this module
-     */
-    private function loadTemplates()
-    {
-        // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/ticker/*.template.json') as $template) {
-            // Read the contents, json_decode and add to the array
-            $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
-        }
-
-        $this->getLog()->debug(count($this->module->settings['templates']));
-    }
-
-    /**
-     * Templates available
-     * @return array
-     */
-    public function templatesAvailable()
-    {
-        if (!isset($this->module->settings['templates']))
-            $this->loadTemplates();
-
-        return $this->module->settings['templates'];
-    }
-
     public function validate()
     {
         // Must have a duration
@@ -198,7 +173,262 @@ class Ticker extends ModuleWidget
     }
 
     /**
-     * Add Media
+     * Adds a Ticker Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/ticker/{playlistId}",
+     *  operationId="WidgetTickerAdd",
+     *  tags={"Widget"},
+     *  summary="Add a ticker Widget",
+     *  description="Add a new ticker Widget to the specified playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The playlist ID to add a Widget to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="The Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="(0, 1) Select 1 only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="sourceId",
+     *      in="formData",
+     *      description="Add only - 1 for rss feed, 2 for dataset",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="uri",
+     *      in="formData",
+     *      description="For sourceId=1, the link for the rss feed",
+     *      type="string",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="formData",
+     *      description="For sourceId=2, Create ticker Widget using provided dataSetId of an existing dataSet",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="updateInterval",
+     *      in="formData",
+     *      description="EDIT Only - Update interval in minutes",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="effect",
+     *      in="formData",
+     *      description="Edit only - Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind, marqueeUp, marqueeDown, marqueeRight, marqueeLeft",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="speed",
+     *      in="formData",
+     *      description="Edit only - The transition speed of the selected effect in milliseconds (1000 = normal) or the Marquee speed in a low to high scale (normal = 1)",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="copyright",
+     *      in="formData",
+     *      description="EDIT Only and SourceId=1 - Copyright information to display as the last item in this feed. can be styled with the #copyright CSS selector",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="numItems",
+     *      in="formData",
+     *      description="EDIT Only and SourceId=1 - The number of RSS items you want to display",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="takeItemsFrom",
+     *      in="formData",
+     *      description="EDIT Only and SourceId=1 - Take the items form the beginning or the end of the list, available options: start, end",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="durationIsPerItem",
+     *      in="formData",
+     *      description="A flag (0, 1), The duration specified is per item, otherwise it is per feed",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="itemsSideBySide",
+     *      in="formData",
+     *      description="A flag (0, 1), Should items be shown side by side",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="upperLimit",
+     *      in="formData",
+     *      description="EDIT Only, SourceId=2 - Upper low limit for this dataSet, 0 for nor limit",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="lowerLimit",
+     *      in="formData",
+     *      description="EDIT Only, SourceId=2 - Lower low limit for this dataSet, 0 for nor limit",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="itemsPerPage",
+     *      in="formData",
+     *      description="EDIT Only - When in single mode, how many items per page should be shown",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dateFormat",
+     *      in="formData",
+     *      description="EDIT Only - The date format to apply to all dates returned by the ticker",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="allowedAttributes",
+     *      in="formData",
+     *      description="EDIT Only and SourceId=1 - A comma separated list of attributes that should not be stripped from the feed",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="stripTags",
+     *      in="formData",
+     *      description="EDIT Only and SourceId=1 - A comma separated list of attributes that should be stripped from the feed",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="backgroundColor",
+     *      in="formData",
+     *      description="Edit only - A HEX color to use as the background color of this widget",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="disableDateSort",
+     *      in="formData",
+     *      description="EDIT Only, SourceId=1 - Should the date sort applied to the feed be disabled?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="textDirection",
+     *      in="formData",
+     *      description="EDIT Only, SourceId=1 - Which direction does the text in the feed use? Available options: ltr, rtl",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="noDataMessage",
+     *      in="formData",
+     *      description="EDIT Only - A message to display when no data is returned from the source",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="templateId",
+     *      in="formData",
+     *      description="EDIT Only, SourceId=1 - Template you'd like to apply, options available: title-only, prominent-title-with-desc-and-name-separator, media-rss-with-title, media-rss-wth-left-hand-text",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="overrideTemplate",
+     *      in="formData",
+     *      description="EDIT Only, SourceId=1 - flag (0, 1) override template checkbox",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="template",
+     *      in="formData",
+     *      description="Template for each item, replaces [itemsTemplate] in main template, Pass only with overrideTemplate set to 1 or with sourceId=2 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="css",
+     *      in="formData",
+     *      description="Optional StyleSheet Pass only with overrideTemplate set to 1 or with sourceId=2 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="javaScript",
+     *      in="formData",
+     *      description="Optional JavaScript, Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="filter",
+     *      in="formData",
+     *      description="EDIT Only, SourceId=2 - SQL clause for filter this dataSet",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ordering",
+     *      in="formData",
+     *      description="EDIT Only, SourceId=2- SQL clause for how this dataSet should be ordered",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="useOrderingClause",
+     *      in="formData",
+     *      description="EDIT Only, SourceId=2 - flag (0,1) Use advanced order clause - set to 1 if ordering is provided",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="useFilteringClause",
+     *      in="formData",
+     *      description="EDIT Only, SourceId=2 - flag (0,1) Use advanced filter clause - set to 1 if filter is provided",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {
@@ -312,10 +542,12 @@ class Ticker extends ModuleWidget
             $this->setOption('filterClauses', json_encode($filterClauseMapping));
         }
 
-        // Text Template
-        $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
-        $this->setRawNode('css', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('css', null)));
-
+        if( $this->getOption('overrideTemplate') == 1 ){
+            // Text Template
+            $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
+            $this->setRawNode('css', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('css', null)));
+        }
+        
         // Save the widget
         $this->validate();
         $this->saveWidget();
@@ -379,11 +611,25 @@ class Ticker extends ModuleWidget
         $takeItemsFrom = $this->getOption('takeItemsFrom', 'start');
         $itemsPerPage = $this->getOption('itemsPerPage', 0);
 
-        // Get the text out of RAW
-        $text = $this->parseLibraryReferences($isPreview, $this->getRawNode('template', null));
+        // Get CSS and HTML template from the original template or from the input field
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            
+            $template = $this->getTemplateById($this->getOption('templateId'));
+            
+            if (isset($template)) {
+                $text = $template['template'];
+                $css = $template['css'];
+            }
+        } else {
+                $text = $this->getRawNode('template', '');
+                $css = $this->getRawNode('css', '');
+        }
+        
+        // Parse library references on the template
+        $text = $this->parseLibraryReferences($isPreview, $text);
 
-        // Get the CSS Node
-        $css = $this->parseLibraryReferences($isPreview, $this->getRawNode('css', ''));
+        // Parse library references on the CSS Node
+        $css = $this->parseLibraryReferences($isPreview, $css);
 
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
@@ -492,12 +738,13 @@ class Ticker extends ModuleWidget
 
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items);';
+        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); $("#content").find("img").xiboImageRender(options); ';
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= $javaScript;
         $javaScriptContent .= '</script>';
@@ -609,9 +856,12 @@ class Ticker extends ModuleWidget
                         $tag = str_replace('[', '', $tag);
                         $namespace = str_replace(']', '', $namespace);
 
+                        if ($attribute !== null)
+                            $attribute = str_replace(']', '', $attribute);
+
                         // What are we looking at
-                        $this->getLog()->debug('Namespace: %s, Tag: %s, Attribute: %s', $namespace, $tag, $attribute);
-                        $this->getLog()->debug('Item content: %s', var_export($item, true));
+                        $this->getLog()->debug('Namespace: ' . $namespace . ', Tag: ' . $tag . ', Attribute: ' . $attribute);
+                        //$this->getLog()->debug('Item content: %s', var_export($item, true));
 
                         // Are we an image place holder? [tag|image]
                         if ($namespace == 'image') {
@@ -623,27 +873,27 @@ class Ticker extends ModuleWidget
                                     if (stripos($item->getEnclosureType(), 'image') > -1) {
                                         // Use the link to get the image
                                         $link = $item->getEnclosureUrl();
+
+                                        if (empty($link)) {
+                                            $this->getLog()->debug('No image found for Link|image tag using getEnclosureUrl');
+                                        }
+                                    } else {
+                                        $this->getLog()->debug('No image found for Link|image tag using getEnclosureType');
                                     }
                                     break;
 
                                 default:
                                     // Default behaviour just tries to get the content from the tag provided.
                                     // it uses the attribute as a namespace if one has been provided
-                                    if ($attribute != null) {
-                                        // Use a namespace
-                                        if (array_key_exists($attribute, $item->namespaces)) {
-                                            $tags = $item->getTag($tag);
-                                            $link = $tags[0];
-                                        } else {
-                                            $this->getLog()->info('Looking for image with namespace %s, but that namespace does not exist.', $attribute);
-                                        }
-                                    } else {
-                                        $tags = $item->getTag($tag);
+                                    $tags = $item->getTag($tag, $attribute);
+
+                                    if (count($tags) > 0)
                                         $link = $tags[0];
-                                    }
+                                    else
+                                        $this->getLog()->debug('Tag not found for ' . $tag . ' attribute ' . $attribute);
                             }
 
-                            $this->getLog()->debug('Resolved link: %s', $link);
+                            $this->getLog()->debug('Resolved link: ' . $link);
 
                             // If we have managed to resolve a link, download it and replace the tag with the downloaded
                             // image url
@@ -665,15 +915,14 @@ class Ticker extends ModuleWidget
                             else
                                 $tags = $item->getTag($tag);
 
-                            $this->getLog()->debug('Tags:' . var_export($tags, true));
-
                             // If we find some tags then do the business with them
-                            if ($tags != NULL) {
+                            if ($tags != NULL && count($tags) > 0) {
                                 $replace = $tags[0];
+                            } else {
+                                $this->getLog()->debug('Tag not found for ' . $tag . ' attribute ' . $attribute);
                             }
                         }
                     } else {
-
                         // Use the pool of standard tags
                         switch ($sub) {
                             case '[Name]':
@@ -713,6 +962,29 @@ class Ticker extends ModuleWidget
 
                             case '[Link]':
                                 $replace = $item->getUrl();
+                                break;
+
+                            case '[Image]':
+                                if (stripos($item->getEnclosureType(), 'image') > -1) {
+                                    // Use the link to get the image
+                                    $link = $item->getEnclosureUrl();
+
+                                    if (!(empty($link))) {
+                                        // Grab the image
+                                        $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expires);
+
+                                        // Tag this layout with this file
+                                        $this->assignMedia($file->mediaId);
+
+                                        $replace = ($isPreview)
+                                            ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
+                                            : '<img src="' . $file->storedAs . '" />';
+                                    } else {
+                                        $this->getLog()->debug('No image found for image tag using getEnclosureUrl');
+                                    }
+                                } else {
+                                    $this->getLog()->debug('No image found for image tag using getEnclosureType');
+                                }
                                 break;
                         }
                     }
@@ -934,10 +1206,7 @@ class Ticker extends ModuleWidget
                         if ($mappings[$header]['dataTypeId'] == 4) {
                             // External Image
                             // Download the image, alter the replace to wrap in an image tag
-                            $file = $this->mediaFactory->createModuleFile('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
-                            $file->isRemote = true;
-                            $file->expires = $expires;
-                            $file->save();
+                            $file = $this->mediaFactory->queueDownload('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)), $expires);
 
                             // Tag this layout with this file
                             $this->assignMedia($file->mediaId);
@@ -971,6 +1240,8 @@ class Ticker extends ModuleWidget
 
                 $items[] = $rowString;
             }
+
+            $this->mediaFactory->processDownloads();
 
             return $items;
         }

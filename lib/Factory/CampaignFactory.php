@@ -164,14 +164,20 @@ class CampaignFactory extends BaseFactory
                 SELECT COUNT(*)
                 FROM lkcampaignlayout
                 WHERE lkcampaignlayout.campaignId = `campaign`.campaignId
-            ) AS numberLayouts,
-            (
-                SELECT GROUP_CONCAT(DISTINCT tag) 
-                FROM tag INNER JOIN lktagcampaign ON lktagcampaign.tagId = tag.tagId 
-                WHERE lktagcampaign.campaignId = campaign.CampaignID 
-                GROUP BY lktagcampaign.campaignId
-            ) AS tags
+            ) AS numberLayouts
         ';
+
+        // Didn't exist before 129
+        if (DBVERSION >= 129) {
+            $select .= ',
+                (
+                    SELECT GROUP_CONCAT(DISTINCT tag) 
+                    FROM tag INNER JOIN lktagcampaign ON lktagcampaign.tagId = tag.tagId 
+                    WHERE lktagcampaign.campaignId = campaign.CampaignID 
+                    GROUP BY lktagcampaign.campaignId
+                ) AS tags
+            ';
+        }
 
         $body  = '
             FROM `campaign`

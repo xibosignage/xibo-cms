@@ -116,6 +116,126 @@ class ScheduleFactory extends BaseFactory
     }
 
     /**
+     * @param $displayId
+     * @param $fromDt
+     * @param $toDt
+     * @param $options
+     * @return array
+     */
+    public function getForXmds($displayId, $fromDt, $toDt, $options = [])
+    {
+        $options = array_merge(['dependentsAsNodes' => false, 'useGroupId' => false], $options);
+        $params = array(
+            'fromDt' => $fromDt,
+            'toDt' => $toDt
+        );
+
+        $this->getLog()->debug('Get events for XMDS - with options: ' . json_encode($options));
+
+        // Add file nodes to the $fileElements
+        // Firstly get all the scheduled layouts
+        $SQL = '
+            SELECT `schedule`.eventTypeId, 
+                layout.layoutId, 
+                `layout`.status, 
+                `command`.code, 
+                schedule.fromDt, 
+                schedule.toDt,
+                schedule.recurrence_type AS recurrenceType,
+                schedule.recurrence_detail AS recurrenceDetail,
+                schedule.recurrence_range AS recurrenceRange,
+                schedule.recurrenceRepeatsOn,
+                schedule.lastRecurrenceWatermark,
+                schedule.eventId, 
+                schedule.is_priority AS isPriority,
+                `schedule`.displayOrder,
+                schedule.dayPartId,
+                `schedule`.campaignId,
+                `schedule`.commandId,
+                schedule.syncTimezone,
+                `campaign`.campaign,
+                `command`.command,
+                `lkscheduledisplaygroup`.displayGroupId
+        ';
+
+        if (!$options['dependentsAsNodes']) {
+            // Pull in the dependents using GROUP_CONCAT
+            $SQL .= ' ,
+                  (
+                    SELECT GROUP_CONCAT(DISTINCT StoredAs)
+                      FROM `media`
+                        INNER JOIN `lkwidgetmedia`
+                        ON `lkwidgetmedia`.MediaID = `media`.MediaID
+                        INNER JOIN `widget`
+                        ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                        INNER JOIN `lkregionplaylist`
+                        ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                        INNER JOIN `region`
+                        ON `region`.regionId = `lkregionplaylist`.regionId
+                     WHERE `region`.layoutId = `layout`.layoutId
+                      AND media.type <> \'module\'
+                    GROUP BY `region`.layoutId
+                  ) AS Dependents
+            ';
+        }
+
+        $SQL .= '
+               FROM `schedule`
+                INNER JOIN `lkscheduledisplaygroup`
+                ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
+                INNER JOIN `lkdgdg`
+                ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
+        ';
+
+        if (!$options['useGroupId']) {
+            // Only join in the display/display group link table if we are requesting this data for a display
+            // otherwise the group we are looking for might not have any displays, and this join would therefore
+            // remove any records.
+            $SQL .= '
+                INNER JOIN `lkdisplaydg`
+                ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
+            ';
+        }
+
+        $SQL .= '    
+                LEFT OUTER JOIN `campaign`
+                ON `schedule`.CampaignID = campaign.CampaignID
+                LEFT OUTER JOIN `lkcampaignlayout`
+                ON lkcampaignlayout.CampaignID = campaign.CampaignID
+                LEFT OUTER JOIN `layout`
+                ON lkcampaignlayout.LayoutID = layout.LayoutID
+                  AND layout.retired = 0
+                LEFT OUTER JOIN `command`
+                ON `command`.commandId = `schedule`.commandId
+        ';
+
+        if ($options['useGroupId']) {
+            $SQL .= ' WHERE `lkdgdg`.childId = :displayGroupId ';
+            $params['displayGroupId'] = $options['displayGroupId'];
+        } else {
+            $SQL .= ' WHERE `lkdisplaydg`.DisplayID = :displayId ';
+            $params['displayId'] = $displayId;
+        }
+
+        // Are we requesting a range or a single date/time?
+        // only the inclusive range changes, but it is clearer to have the whole statement reprinted.
+        // Ranged request
+        $SQL .= ' 
+            AND (
+                  (schedule.FromDT <= :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                  OR `schedule`.recurrence_range >= :fromDt 
+                  OR (
+                    IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
+                  )
+            )
+            
+            ORDER BY schedule.DisplayOrder, IFNULL(lkcampaignlayout.DisplayOrder, 0), schedule.FromDT, schedule.eventId
+        ';
+
+        return $this->getStore()->select($SQL, $params);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[Schedule]
@@ -142,7 +262,8 @@ class ScheduleFactory extends BaseFactory
             campaign.campaign,
             `command`.commandId,
             `command`.command,
-            `schedule`.dayPartId
+            `schedule`.dayPartId,
+            `schedule`.syncTimezone
           FROM `schedule`
             LEFT OUTER JOIN `campaign`
             ON campaign.CampaignID = `schedule`.CampaignID
@@ -215,7 +336,7 @@ class ScheduleFactory extends BaseFactory
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isPriority']]);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isPriority', 'syncTimezone']]);
         }
 
         return $entries;

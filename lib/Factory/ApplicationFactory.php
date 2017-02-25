@@ -129,6 +129,7 @@ class ApplicationFactory extends BaseFactory
             SELECT `oauth_clients`.id AS `key`,
                 `oauth_clients`.secret,
                 `oauth_clients`.name,
+                `user`.UserName AS owner,
                 `oauth_clients`.authCode,
                 `oauth_clients`.clientCredentials,
                 `oauth_clients`.userId ';
@@ -136,6 +137,8 @@ class ApplicationFactory extends BaseFactory
         $body = '
               FROM `oauth_clients`
         ';
+        
+        $body .= " INNER JOIN `user` ON `user`.userId = `oauth_clients`.userId ";
 
         if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
 

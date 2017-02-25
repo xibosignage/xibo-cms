@@ -31,7 +31,94 @@ class ShellCommand extends ModuleWidget
     }
 
     /**
-     * Add Media
+     * Adds a Shell Command Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/shellCommand/{playlistId}",
+     *  operationId="WidgetShellCommandAdd",
+     *  tags={"Widget"},
+     *  summary="Add a Shell Command Widget",
+     *  description="Add a new Shell Command Widget to the specified playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The playlist ID to add a Widget to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="The Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="(0, 1) Select 1 only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="windowsCommand",
+     *      in="formData",
+     *      description="Enter a Windows command line compatible command",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="linuxCommand",
+     *      in="formData",
+     *      description="Enter a Android / Linux command line compatible command",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="launchThroughCmd",
+     *      in="formData",
+     *      description="flag (0,1) Windows only, Should the player launch this command through the windows command line (cmd.exe)? This is useful for batch files, if you try to terminate this command only the command line will be terminated",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="terminateCommand",
+     *      in="formData",
+     *      description="flag (0,1) Should the player forcefully terminate the command after the duration specified, 0 to let the command terminate naturally",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="useTaskkill",
+     *      in="formData",
+     *      description="flag (0,1) Windows only, should the player use taskkill to terminate commands",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="commandCode",
+     *      in="formData",
+     *      description="Enter a reference code for exiting command in CMS",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {

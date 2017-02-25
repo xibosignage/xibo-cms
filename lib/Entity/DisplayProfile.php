@@ -9,6 +9,8 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Event\DisplayProfileLoadedEvent;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -80,10 +82,16 @@ class DisplayProfile implements \JsonSerializable
      */
     public $commands = [];
 
+    /** @var  string the client type */
+    private $clientType;
+
     /**
      * @var ConfigServiceInterface
      */
     private $configService;
+
+    /** @var EventDispatcherInterface  */
+    private $dispatcher;
 
     /**
      * @var CommandFactory
@@ -95,13 +103,15 @@ class DisplayProfile implements \JsonSerializable
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
+     * @param EventDispatcherInterface $dispatcher
      * @param CommandFactory $commandFactory
      */
-    public function __construct($store, $log, $config, $commandFactory)
+    public function __construct($store, $log, $config, $dispatcher, $commandFactory)
     {
         $this->setCommonDependencies($store, $log);
 
         $this->configService = $config;
+        $this->dispatcher = $dispatcher;
         $this->commandFactory = $commandFactory;
     }
 
@@ -120,6 +130,23 @@ class DisplayProfile implements \JsonSerializable
     public function getOwnerId()
     {
         return $this->userId;
+    }
+
+    /**
+     * @param $clientType
+     */
+    public function setClientType($clientType)
+    {
+        $this->clientType = $clientType;
+    }
+
+    /**
+     * Get the client type
+     * @return string
+     */
+    public function getClientType()
+    {
+        return (empty($this->clientType)) ? $this->type : $this->clientType;
     }
 
     /**
@@ -177,6 +204,11 @@ class DisplayProfile implements \JsonSerializable
         $this->configDefault = $this->loadFromFile();
         $this->configTabs = $this->configDefault[$this->type]['tabs'];
         $this->configDefault = $this->configDefault[$this->type]['settings'];
+
+        // We've loaded a profile
+        // dispatch an event with a reference to this object, allowing subscribers to modify the config before we
+        // continue further.
+        $this->dispatcher->dispatch(DisplayProfileLoadedEvent::NAME, new DisplayProfileLoadedEvent($this));
 
         // Just populate the values with the defaults if the values aren't set already
         for ($i = 0; $i < count($this->configDefault); $i++) {
@@ -346,6 +378,11 @@ class DisplayProfile implements \JsonSerializable
     private function loadFromFile()
     {
         return array(
+            'unknown' => [
+                'synonym' => 'unknown',
+                'tabs' => [],
+                'settings' => []
+            ],
             'windows' => array(
                 'synonym' => 'dotnetclient',
                 'tabs' => array(
@@ -369,7 +406,8 @@ class DisplayProfile implements \JsonSerializable
                             array('id' => 1800, 'value' => __('30 minutes')),
                             array('id' => 3600, 'value' => __('1 hour')),
                             array('id' => 14400, 'value' => __('4 hours')),
-                            array('id' => 43200, 'value' => __('12 hours'))
+                            array('id' => 43200, 'value' => __('12 hours')),
+                            array('id' => 86400, 'value' => __('24 hours'))
                         ),
                         'default' => 900,
                         'helpText' => __('How often should the Player check for new content.'),
@@ -383,7 +421,7 @@ class DisplayProfile implements \JsonSerializable
                         'title' => __('Download Window Start Time'),
                         'type' => 'string',
                         'fieldType' => 'timePicker',
-                        'default' => 0,
+                        'default' => '00:00',
                         'helpText' => __('The start of the time window to connect to the CMS and download updates.'),
                         'enabled' => true,
                         'groupClass' => NULL
@@ -394,7 +432,7 @@ class DisplayProfile implements \JsonSerializable
                         'title' => __('Download Window End Time'),
                         'type' => 'string',
                         'fieldType' => 'timePicker',
-                        'default' => 0,
+                        'default' => '00:00',
                         'helpText' => __('The end of the time window to connect to the CMS and download updates.'),
                         'enabled' => true,
                         'groupClass' => NULL
@@ -744,7 +782,8 @@ class DisplayProfile implements \JsonSerializable
                             array('id' => 1800, 'value' => __('30 minutes')),
                             array('id' => 3600, 'value' => __('1 hour')),
                             array('id' => 14400, 'value' => __('4 hours')),
-                            array('id' => 43200, 'value' => __('12 hours'))
+                            array('id' => 43200, 'value' => __('12 hours')),
+                            array('id' => 86400, 'value' => __('24 hours'))
                         ),
                         'default' => 300,
                         'helpText' => __('How often should the Player check for new content.'),
@@ -758,7 +797,7 @@ class DisplayProfile implements \JsonSerializable
                         'title' => __('Download Window Start Time'),
                         'type' => 'string',
                         'fieldType' => 'timePicker',
-                        'default' => 0,
+                        'default' => '00:00',
                         'helpText' => __('The start of the time window to connect to the CMS and download updates.'),
                         'enabled' => true,
                         'groupClass' => NULL
@@ -769,7 +808,7 @@ class DisplayProfile implements \JsonSerializable
                         'title' => __('Download Window End Time'),
                         'type' => 'string',
                         'fieldType' => 'timePicker',
-                        'default' => 0,
+                        'default' => '00:00',
                         'helpText' => __('The end of the time window to connect to the CMS and download updates.'),
                         'enabled' => true,
                         'groupClass' => NULL
@@ -995,7 +1034,7 @@ class DisplayProfile implements \JsonSerializable
                         'title' => __('Update Window Start Time'),
                         'type' => 'string',
                         'fieldType' => 'timePicker',
-                        'default' => 0,
+                        'default' => '00:00',
                         'helpText' => __('The start of the time window to install application updates.'),
                         'enabled' => true,
                         'groupClass' => NULL
@@ -1006,7 +1045,7 @@ class DisplayProfile implements \JsonSerializable
                         'title' => __('Update Window End Time'),
                         'type' => 'string',
                         'fieldType' => 'timePicker',
-                        'default' => 0,
+                        'default' => '00:00',
                         'helpText' => __('The end of the time window to install application updates.'),
                         'enabled' => true,
                         'groupClass' => NULL

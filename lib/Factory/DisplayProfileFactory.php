@@ -9,6 +9,7 @@
 namespace Xibo\Factory;
 
 
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\DisplayProfile;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
@@ -27,6 +28,9 @@ class DisplayProfileFactory extends BaseFactory
      */
     private $config;
 
+    /** @var EventDispatcherInterface  */
+    private $dispatcher;
+
     /**
      * @var CommandFactory
      */
@@ -38,13 +42,15 @@ class DisplayProfileFactory extends BaseFactory
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
      * @param ConfigServiceInterface $config
+     * @param EventDispatcherInterface $dispatcher
      * @param CommandFactory $commandFactory
      */
-    public function __construct($store, $log, $sanitizerService, $config, $commandFactory)
+    public function __construct($store, $log, $sanitizerService, $config, $dispatcher, $commandFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
 
         $this->config = $config;
+        $this->dispatcher = $dispatcher;
         $this->commandFactory = $commandFactory;
     }
 
@@ -57,6 +63,7 @@ class DisplayProfileFactory extends BaseFactory
             $this->getStore(),
             $this->getLog(),
             $this->config,
+            $this->dispatcher,
             $this->commandFactory
         );
     }
@@ -95,6 +102,19 @@ class DisplayProfileFactory extends BaseFactory
         $profile = $profiles[0];
         /* @var DisplayProfile $profile */
 
+        $profile->load();
+        return $profile;
+    }
+
+    /**
+     * @param $clientType
+     * @return DisplayProfile
+     */
+    public function getUnknownProfile($clientType)
+    {
+        $profile = $this->createEmpty();
+        $profile->type = 'unknown';
+        $profile->setClientType($clientType);
         $profile->load();
         return $profile;
     }

@@ -374,20 +374,27 @@ class Widget implements \JsonSerializable
      */
     public function getPrimaryMediaId()
     {
-        $this->getLog()->debug('Getting first MediaID for Widget: ' . $this->widgetId . ' Media: ' . json_encode($this->mediaIds) . ' audio ' . json_encode($this->getAudioIds()));
+        $primary = $this->getPrimaryMedia();
+
+        if (count($primary) <= 0)
+            throw new NotFoundException(__('No file to return'));
+
+        return $primary[0];
+    }
+
+    /**
+     * Get Primary Media
+     * @return int[]
+     */
+    public function getPrimaryMedia()
+    {
+        $this->getLog()->debug('Getting first primary media for Widget: ' . $this->widgetId . ' Media: ' . json_encode($this->mediaIds) . ' audio ' . json_encode($this->getAudioIds()));
 
         if (count($this->mediaIds) <= 0)
-            throw new NotFoundException(__('No file to return'));
+            return [];
 
         // Remove the audio media from this array
-        $media = array_values(array_diff($this->mediaIds, $this->getAudioIds()));
-
-        $this->getLog()->debug('Media that is not audio: ' . json_encode($media));
-
-        if (count($media) <= 0)
-            throw new NotFoundException(__('No file to return'));
-
-        return $media[0];
+        return array_values(array_diff($this->mediaIds, $this->getAudioIds()));
     }
 
     /**
@@ -431,6 +438,22 @@ class Widget implements \JsonSerializable
 
     /**
      * Unassign Audio Media
+     * @param int $mediaId
+     */
+    public function assignAudioById($mediaId)
+    {
+        $this->load();
+
+        $widgetAudio = $this->widgetAudioFactory->createEmpty();
+        $widgetAudio->mediaId = $mediaId;
+        $widgetAudio->volume = 100;
+        $widgetAudio->loop = 0;
+
+        $this->assignAudio($widgetAudio);
+    }
+
+    /**
+     * Unassign Audio Media
      * @param WidgetAudio $audio
      */
     public function unassignAudio($audio)
@@ -470,6 +493,8 @@ class Widget implements \JsonSerializable
      */
     public function countAudio()
     {
+        $this->load();
+
         return count($this->audio);
     }
 
@@ -479,6 +504,8 @@ class Widget implements \JsonSerializable
      */
     public function getAudioIds()
     {
+        $this->load();
+
         return array_map(function($element) {
             /** @var WidgetAudio $element */
             return $element->mediaId;

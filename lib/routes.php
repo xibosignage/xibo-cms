@@ -79,6 +79,7 @@ $app->get('/clock', '\Xibo\Controller\Clock:clock')->name('clock');
  * )
  */
 $app->get('/schedule/data/events', '\Xibo\Controller\Schedule:eventData')->name('schedule.calendar.data');
+$app->get('/schedule/:id/events', '\Xibo\Controller\Schedule:eventList')->name('schedule.events');
 $app->post('/schedule', '\Xibo\Controller\Schedule:add')->name('schedule.add');
 $app->put('/schedule/:id', '\Xibo\Controller\Schedule:edit')->name('schedule.edit');
 $app->delete('/schedule/:id', '\Xibo\Controller\Schedule:delete')->name('schedule.delete');
@@ -141,6 +142,12 @@ $app->get('/playlist/widget', '\Xibo\Controller\Playlist:widgetGrid')->name('pla
 $app->post('/playlist/order/:id', '\Xibo\Controller\Playlist:order')->name('playlist.order');
 $app->post('/playlist/library/assign/:id', '\Xibo\Controller\Playlist:libraryAssign')->name('playlist.library.assign');
 // Widget Modules
+/**
+ * @SWG\Tag(
+ *  name="widget",
+ *  description="Widgets"
+ * )
+ */
 $app->post('/playlist/widget/:type/:id', '\Xibo\Controller\Module:addWidget')->name('module.widget.add');
 $app->put('/playlist/widget/:id', '\Xibo\Controller\Module:editWidget')->name('module.widget.edit');
 $app->delete('/playlist/widget/:id', '\Xibo\Controller\Module:deleteWidget')->name('module.widget.delete');
@@ -320,6 +327,7 @@ $app->post('/user', '\Xibo\Controller\User:add')->name('user.add');
 $app->put('/user/password/change', '\Xibo\Controller\User:changePassword')->name('user.change.password');
 $app->put('/user/:id', '\Xibo\Controller\User:edit')->name('user.edit');
 $app->delete('/user/:id', '\Xibo\Controller\User:delete')->name('user.delete');
+$app->post('/user/:id/usergroup/assign', '\Xibo\Controller\User:assignUserGroup')->name('user.assign.userGroup');
 // permissions
 $app->get('/user/permissions/:entity/:id', '\Xibo\Controller\User:permissionsGrid')->name('user.permissions');
 $app->post('/user/permissions/:entity/:id', '\Xibo\Controller\User:permissions');

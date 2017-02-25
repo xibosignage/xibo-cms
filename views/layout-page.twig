@@ -82,6 +82,7 @@
         $(document).ready(function() {
             table = $("#layouts").DataTable({
                 "language": dataTablesLanguage,
+                "lengthMenu": [10, 25, 50, 100, 250, 500],
                 serverSide: true,
                 stateSave: true,
                 filter: false,
@@ -272,10 +273,13 @@
             });
         }
 
-        function layoutExportFormOpen() {
-            $("#layoutExportForm").submit(function(e) {
+        function layoutExportFormSubmit() {
+            var $form = $("#layoutExportForm");
+            window.location = $form.attr("action") + "?" + $form.serialize();
+
+            setTimeout(function() {
                 XiboDialogClose();
-            });
+            }, 1000);
         }
     </script>
 {% endblock %}

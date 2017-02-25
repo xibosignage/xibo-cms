@@ -13,6 +13,8 @@ use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboLibrary;
 use Xibo\OAuth2\Client\Entity\XiboPlaylist;
 use Xibo\OAuth2\Client\Entity\XiboRegion;
+use Xibo\OAuth2\Client\Entity\XiboStats;
+use Xibo\OAuth2\Client\Entity\XiboText;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
@@ -150,19 +152,28 @@ class StatisticsTest extends LocalWebTestCase
         $region2 = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 100,100,475,425);
         # Upload three media files
         $media = (new XiboLibrary($this->getEntityProvider()))->create('API image', PROJECT_ROOT . '/tests/resources/xts-night-001.jpg');
-       // $media2 = (new XiboLibrary($this->getEntityProvider()))->create('API image 2', PROJECT_ROOT . '/tests/resources/xts-flowers-001.jpg');
-        $media3 = (new XiboLibrary($this->getEntityProvider()))->create('API image 3', PROJECT_ROOT . '/tests/resources/xts-layout-003-background.jpg');
+        $media2 = (new XiboLibrary($this->getEntityProvider()))->create('API image 2', PROJECT_ROOT . '/tests/resources/xts-layout-003-background.jpg');
+        # Create and assign new text widget
+        $text = (new XiboText($this->getEntityProvider()))->create('Text item', 10, 1, 'marqueeRight', 5, null, null, 'TEST API TEXT', null, $region2->playlists[0]['playlistId']);
         # Assign media to a playlists
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], $region->playlists[0]['playlistId']);
-        $playlist2 = (new XiboPlaylist($this->getEntityProvider()))->assign([$media3->mediaId], $region2->playlists[0]['playlistId']);
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId, $media2->mediaId], 10, $region->playlists[0]['playlistId']);
         # Get Widget Id
         $widget = $playlist->widgets[0];
-       // $widget2 = $playlist->widgets[1];
-        $widget3 = $playlist2->widgets[0];
-        $mediaId = $widget->mediaIds[0];
+        $widget2 = $playlist->widgets[1];
         # Set start and date time
-        $fromDt =  '2016-10-12 00:00:00';
-        $toDt =  '2016-10-15 00:00:00';
+        /*
+        $fromDt =  '2017-02-12 00:00:00';
+        $toDt =  '2017-02-15 00:00:00';
+
+        $fromDt2 =  '2017-02-12 00:00:00';
+        $toDt2 =  '2017-02-14 00:00:00';
+
+        $fromDt3 =  '2017-02-14 00:00:00';
+        $toDt3 =  '2017-02-15 00:00:00';
+         
+        $fromDt4 =  '2017-02-15 00:00:00';
+        $toDt4 =  '2017-02-16 00:00:00';
+        */
         # Add stats to the DB -  known set
         # 
         # 1 layout, 1 region, 1 media
@@ -199,14 +210,17 @@ class StatisticsTest extends LocalWebTestCase
         # M2 72 hours
         #
         #
+
+
+        # First insert
         self::$container->store->insert('
-            INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag, `widgetId`)
+            INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag, widgetId)
               VALUES (:type, :statDate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag, :widgetId)
         ', [
-            'type' => 'layout', // layout|media
+            'type' => 'layout', 
             'statDate' => date("Y-m-d H:i:s"),
-            'start' => $fromDt,
-            'end' => $toDt,
+            'start' => '2017-02-12 00:00:00',
+            'end' => '2017-02-15 00:00:00',
             'scheduleId' => 0,
             'displayId' => $display->displayId,
             'layoutId' => $layout->layoutId,
@@ -214,18 +228,191 @@ class StatisticsTest extends LocalWebTestCase
             'tag' => null,
             'widgetId' => null
         ]);
+        self::$container->store->insert('
+            INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag, widgetId)
+              VALUES (:type, :statDate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag, :widgetId)
+        ', [
+            'type' => 'media', 
+            'statDate' => date("Y-m-d H:i:s"),
+            'start' => '2017-02-12 00:00:00',
+            'end' => '2017-02-13 00:00:00',
+            'scheduleId' => 0,
+            'displayId' => $display->displayId,
+            'layoutId' => $layout->layoutId,
+            'mediaId' => $media->mediaId,
+            'tag' => null,
+            'widgetId' => $widget->widgetId
+        ]);
+        self::$container->store->insert('
+            INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag, widgetId)
+              VALUES (:type, :statDate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag, :widgetId)
+        ', [
+            'type' => 'media', 
+            'statDate' => date("Y-m-d H:i:s"),
+            'start' => '2017-02-14 00:00:00',
+            'end' => '2017-02-15 00:00:00',
+            'scheduleId' => 0,
+            'displayId' => $display->displayId,
+            'layoutId' => $layout->layoutId,
+            'mediaId' => $media2->mediaId,
+            'tag' => null,
+            'widgetId' => $widget2->widgetId
+        ]);
+        self::$container->store->insert('
+            INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag, widgetId)
+              VALUES (:type, :statDate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag, :widgetId)
+        ', [
+            'type' => 'widget',
+            'statDate' => date("Y-m-d H:i:s"),
+            'start' => '2017-02-12 00:00:00',
+            'end' => '2017-02-15 00:00:00',
+            'scheduleId' => 0,
+            'displayId' => $display->displayId,
+            'layoutId' => $layout->layoutId,
+            'mediaId' => null,
+            'tag' => null,
+            'widgetId' => $text->widgetId
+        ]);
+
+        # Second insert
+        self::$container->store->insert('
+            INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag, widgetId)
+              VALUES (:type, :statDate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag, :widgetId)
+        ', [
+            'type' => 'layout', 
+            'statDate' => date("Y-m-d H:i:s"),
+            'start' => '2017-02-15 00:00:00',
+            'end' => '2017-02-16 00:00:00',
+            'scheduleId' => 0,
+            'displayId' => $display->displayId,
+            'layoutId' => $layout->layoutId,
+            'mediaId' => null,
+            'tag' => null,
+            'widgetId' => null
+        ]);
+        self::$container->store->insert('
+            INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag, widgetId)
+              VALUES (:type, :statDate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag, :widgetId)
+        ', [
+            'type' => 'media', 
+            'statDate' => date("Y-m-d H:i:s"),
+            'start' => '2017-02-13 00:00:00',
+            'end' => '2017-02-14 00:00:00',
+            'scheduleId' => 0,
+            'displayId' => $display->displayId,
+            'layoutId' => $layout->layoutId,
+            'mediaId' => $media->mediaId,
+            'tag' => null,
+            'widgetId' => $widget->widgetId
+        ]);
+        self::$container->store->insert('
+            INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag, widgetId)
+              VALUES (:type, :statDate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag, :widgetId)
+        ', [
+            'type' => 'media', 
+            'statDate' => date("Y-m-d H:i:s"),
+            'start' => '2017-02-15 00:00:00',
+            'end' => '2017-02-16 00:00:00',
+            'scheduleId' => 0,
+            'displayId' => $display->displayId,
+            'layoutId' => $layout->layoutId,
+            'mediaId' => $media2->mediaId,
+            'tag' => null,
+            'widgetId' => $widget2->widgetId
+        ]);
+        self::$container->store->insert('
+            INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag, widgetId)
+              VALUES (:type, :statDate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag, :widgetId)
+        ', [
+            'type' => 'widget',
+            'statDate' => date("Y-m-d H:i:s"),
+            'start' => '2017-02-15 00:00:00',
+            'end' => '2017-02-16 00:00:00',
+            'scheduleId' => 0,
+            'displayId' => $display->displayId,
+            'layoutId' => $layout->layoutId,
+            'mediaId' => null,
+            'tag' => null,
+            'widgetId' => $text->widgetId
+        ]);
+        
+        # Third insert
+        self::$container->store->insert('
+            INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag, widgetId)
+              VALUES (:type, :statDate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag, :widgetId)
+        ', [
+            'type' => 'layout', 
+            'statDate' => date("Y-m-d H:i:s"),
+            'start' => '2017-02-16 00:00:00',
+            'end' => '2017-02-17 00:00:00',
+            'scheduleId' => 0,
+            'displayId' => $display->displayId,
+            'layoutId' => $layout->layoutId,
+            'mediaId' => null,
+            'tag' => null,
+            'widgetId' => null
+        ]);
+        self::$container->store->insert('
+            INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag, widgetId)
+              VALUES (:type, :statDate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag, :widgetId)
+        ', [
+            'type' => 'media', 
+            'statDate' => date("Y-m-d H:i:s"),
+            'start' => '2017-02-16 12:00:00',
+            'end' => '2017-02-17 00:00:00',
+            'scheduleId' => 0,
+            'displayId' => $display->displayId,
+            'layoutId' => $layout->layoutId,
+            'mediaId' => $media->mediaId,
+            'tag' => null,
+            'widgetId' => $widget->widgetId
+        ]);
+        self::$container->store->insert('
+            INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag, widgetId)
+              VALUES (:type, :statDate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag, :widgetId)
+        ', [
+            'type' => 'media', 
+            'statDate' => date("Y-m-d H:i:s"),
+            'start' => '2017-02-16 00:00:00',
+            'end' => '2017-02-16 12:00:00',
+            'scheduleId' => 0,
+            'displayId' => $display->displayId,
+            'layoutId' => $layout->layoutId,
+            'mediaId' => $media2->mediaId,
+            'tag' => null,
+            'widgetId' => $widget2->widgetId
+        ]);
+        self::$container->store->insert('
+            INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag, widgetId)
+              VALUES (:type, :statDate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag, :widgetId)
+        ', [
+            'type' => 'widget',
+            'statDate' => date("Y-m-d H:i:s"),
+            'start' => '2017-02-16 00:00:00',
+            'end' => '2017-02-17 00:00:00',
+            'scheduleId' => 0,
+            'displayId' => $display->displayId,
+            'layoutId' => $layout->layoutId,
+            'mediaId' => null,
+            'tag' => null,
+            'widgetId' => $text->widgetId
+        ]);        
+
+        self::$container->store->commitIfNecessary();
         # get stats and see if they match with what we expect
         $this->client->get('/stats' , [
-            'fromDt' => '2016-10-10 00:00:00',
+            'fromDt' => '2017-02-12 00:00:00',
+            'toDt' => '2017-02-17 00:00:00',
+            'displayId' => $display->displayId
             ]);
 
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
-       // fwrite(STDERR, $this->client->response->body());
+        //fwrite(STDERR, $this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-
-
-       // self::$container->store->update('DELETE FROM `stat`', []);
+        $stats = (new XiboStats($this->getEntityProvider()))->get([$layout->layoutId]);
+        //print_r($stats);
+        self::$container->store->update('DELETE FROM `stat`', []);
     }
 }

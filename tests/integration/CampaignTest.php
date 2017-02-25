@@ -212,7 +212,7 @@ class CampaignTest extends LocalWebTestCase
         // Get a layout for the test
         $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit description', '', 9);
         $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
-        // Assaign layout to campaign
+        // Assign layout to campaign
         $campaign->assignLayout($layout->layoutId);
         # Call unassign on the created layout
         $this->client->post('/campaign/layout/unassign/' . $campaign->campaignId, ['layoutId' => [['layoutId' => $layout->layoutId, 'displayOrder' => 1]]]);

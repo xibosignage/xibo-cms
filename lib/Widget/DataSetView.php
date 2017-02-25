@@ -40,6 +40,7 @@ class DataSetView extends ModuleWidget
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-dataset-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
     }
 
     /**
@@ -119,22 +120,6 @@ class DataSetView extends ModuleWidget
     }
 
     /**
-     * Loads templates for this module
-     */
-    private function loadTemplates()
-    {
-        $this->module->settings['templates'] = [];
-
-        // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/datasetview/*.template.json') as $template) {
-            // Read the contents, json_decode and add to the array
-            $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
-        }
-
-        $this->getLog()->debug(count($this->module->settings['templates']));
-    }
-
-    /**
      * Get the Order Clause
      * @return mixed
      */
@@ -165,18 +150,6 @@ class DataSetView extends ModuleWidget
             'columns' => $this->dataSetColumns(),
             'dataSet' => ($this->getOption('dataSetId', 0) != 0) ? $this->dataSetFactory->getById($this->getOption('dataSetId')) : null
         ];
-    }
-
-    /**
-     * Templates available
-     * @return array
-     */
-    public function templatesAvailable()
-    {
-        if (!isset($this->module->settings['templates']))
-            $this->loadTemplates();
-
-        return $this->module->settings['templates'];
     }
 
     /**
@@ -218,7 +191,151 @@ class DataSetView extends ModuleWidget
     }
 
     /**
-     * Add Media to the Database
+     * Adds a dataSetView Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/dataSetView/{playlistId}",
+     *  operationId="WidgetdataSetViewAdd",
+     *  tags={"Widget"},
+     *  summary="Add a dataSetView Widget",
+     *  description="Add a new dataSetView Widget to the specified playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The playlist ID to add a Widget to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="formData",
+     *      description="Create dataSetView Widget using provided dataSetId of an existing dataSet",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="columns",
+     *      in="formData",
+     *      description=" EDIT only - Array of dataSetColumn IDs to assign",
+     *      type="array",
+     *      required=false,
+     *      @SWG\Items(type="integer")
+     *   ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="EDIT Only - The dataSetView Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="Edit Only - (0, 1) Select 1 only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="updateInterval",
+     *      in="formData",
+     *      description="EDIT Only - Update interval in minutes",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="rowsPerPage",
+     *      in="formData",
+     *      description="EDIT Only - Number of rows per page, 0 for no pages",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="showHeadings",
+     *      in="formData",
+     *      description="EDIT Only - Should the table show Heading? (0,1)",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="upperLimit",
+     *      in="formData",
+     *      description="EDIT Only - Upper low limit for this dataSet, 0 for nor limit",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="lowerLimit",
+     *      in="formData",
+     *      description="EDIT Only - Lower low limit for this dataSet, 0 for nor limit",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="filter",
+     *      in="formData",
+     *      description="EDIT Only - SQL clause for filter this dataSet",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ordering",
+     *      in="formData",
+     *      description="EDIT Only - SQL clause for how this dataSet should be ordered",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="templateId",
+     *      in="formData",
+     *      description="EDIT Only - Template you'd like to apply, options available: empty, light-green",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="overrideTemplate",
+     *      in="formData",
+     *      description="EDIT Only - flag (0, 1) override template checkbox",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="useOrderingClause",
+     *      in="formData",
+     *      description="EDIT Only - flag (0,1) Use advanced order clause - set to 1 if ordering is provided",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="useFilteringClause",
+     *      in="formData",
+     *      description="EDIT Only - flag (0,1) Use advanced filter clause - set to 1 if filter is provided",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="noDataMessage",
+     *      in="formData",
+     *      description="EDIT Only - A message to display when no data is returned from the source",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {
@@ -249,7 +366,6 @@ class DataSetView extends ModuleWidget
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('rowsPerPage', $this->getSanitizer()->getInt('rowsPerPage'));
         $this->setOption('showHeadings', $this->getSanitizer()->getCheckbox('showHeadings'));
         $this->setOption('upperLimit', $this->getSanitizer()->getInt('upperLimit', 0));
@@ -262,6 +378,10 @@ class DataSetView extends ModuleWidget
         $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
         $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        
+        if( $this->getOption('overrideTemplate') == 1 ){
+            $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
+        }
 
         // Order and Filter criteria
         $orderClauses = $this->getSanitizer()->getStringArray('orderClause');
@@ -307,9 +427,6 @@ class DataSetView extends ModuleWidget
         }
 
         $this->setOption('filterClauses', json_encode($filterClauseMapping));
-
-        // Style Sheet
-        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
 
         // Save the widget
         $this->validate();
@@ -361,9 +478,21 @@ class DataSetView extends ModuleWidget
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
-
+    
+        // Get CSS from the original template or from the input field
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            
+            $template = $this->getTemplateById($this->getOption('templateId'));
+            
+            if (isset($template))
+                $styleSheet = $template['css'];
+                    
+        } else {
+                $styleSheet = $this->getRawNode('styleSheet', '');
+        }
+        
         // Get the embedded HTML out of RAW
-        $styleSheet = $this->parseLibraryReferences($isPreview, $this->getRawNode('styleSheet', ''));
+        $styleSheet = $this->parseLibraryReferences($isPreview, $styleSheet);
 
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
@@ -393,11 +522,12 @@ class DataSetView extends ModuleWidget
 
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-dataset-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("#DataSetTableContainer").dataSetRender(options); $("body").xiboLayoutScaler(options);';
+        $javaScriptContent .= '       $("#DataSetTableContainer").dataSetRender(options); $("body").xiboLayoutScaler(options); $("#DataSetTableContainer").find("img").xiboImageRender(options); ';
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= $javaScript;
         $javaScriptContent .= '</script>';
@@ -631,10 +761,7 @@ class DataSetView extends ModuleWidget
                     if ($mapping['dataTypeId'] == 4) {
 
                         // Grab the external image
-                        $file = $this->mediaFactory->createModuleFile('datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
-                        $file->isRemote = true;
-                        $file->expires = $expires;
-                        $file->save();
+                        $file = $this->mediaFactory->queueDownload('datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)), $expires);
 
                         // Tag this layout with this file
                         $this->assignMedia($file->mediaId);
@@ -665,6 +792,8 @@ class DataSetView extends ModuleWidget
 
                     $table .= '<td class="DataSetColumn" id="column_' . ($i + 1) . '"><span class="DataSetCellSpan" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $replace . '</span></td>';
                 }
+
+                $this->mediaFactory->processDownloads();
 
                 $table .= '</tr>';
 

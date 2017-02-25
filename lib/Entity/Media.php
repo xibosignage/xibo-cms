@@ -510,7 +510,7 @@ class Media implements \JsonSerializable
 
             // If the media file is invalid, then force an update (only applies to module files)
             $expires = $this->getOriginalValue('expires');
-            $this->isSaveRequired = ($this->valid == 0 || ($expires > 0 && $expires < time()));
+            $this->isSaveRequired = ($this->isSaveRequired || $this->valid == 0 || ($expires > 0 && $expires < time()));
         }
 
         if ($options['deferred']) {
@@ -718,13 +718,20 @@ class Media implements \JsonSerializable
         $libraryFolder = $this->config->GetSetting('LIBRARY_LOCATION');
 
         // Work out the extension
-        $extension = strtolower(substr(strrchr($this->fileName, '.'), 1));
+        $lastPeriod = strrchr($this->fileName, '.');
+
+        // Determine the save name
+        if ($lastPeriod === false) {
+            $saveName = $this->mediaId;
+        } else {
+            $saveName = $this->mediaId . '.' . strtolower(substr($lastPeriod, 1));
+        }
 
         $this->getLog()->debug('saveFile for "%s" with storedAs = "%s", fileName = "%s" to "%s". Always Copy = "%s", Cloned = "%s"',
             $this->name,
             $this->storedAs,
             $this->fileName,
-            $this->mediaId . '.' . $extension,
+            $saveName,
             $this->alwaysCopy,
             $this->cloned
         );
@@ -736,31 +743,31 @@ class Media implements \JsonSerializable
             if ($this->cloned) {
                 $this->getLog()->debug('Copying cloned file');
                 // Copy the file into the library
-                if (!@copy($libraryFolder . $this->fileName, $libraryFolder . $this->mediaId . '.' . $extension))
+                if (!@copy($libraryFolder . $this->fileName, $libraryFolder . $saveName))
                     throw new ConfigurationException(__('Problem copying file in the Library Folder'));
 
             } else {
                 $this->getLog()->debug('Moving temporary file');
                 // Move the file into the library
-                if (!@rename($libraryFolder . 'temp/' . $this->fileName, $libraryFolder . $this->mediaId . '.' . $extension))
+                if (!@rename($libraryFolder . 'temp/' . $this->fileName, $libraryFolder . $saveName))
                     throw new ConfigurationException(__('Problem moving uploaded file into the Library Folder'));
             }
 
             // Set the storedAs
-            $this->storedAs = $this->mediaId . '.' . $extension;
+            $this->storedAs = $saveName;
         }
         else {
             // We have pre-defined where we want this to be stored
             if (empty($this->storedAs)) {
                 // Assume we want to set this automatically (i.e. we are set to always copy)
-                $this->storedAs = $this->mediaId . '.' . $extension;
+                $this->storedAs = $saveName;
             }
 
             if ($this->isRemote) {
                 $this->getLog()->debug('Moving temporary file');
 
                 // Move the file into the library
-                if (!@rename($libraryFolder . 'temp/' . $this->fileName, $libraryFolder . $this->storedAs))
+                if (!@rename($libraryFolder . 'temp/' . $this->name, $libraryFolder . $this->storedAs))
                     throw new ConfigurationException(__('Problem moving downloaded file into the Library Folder'));
             } else {
                 $this->getLog()->debug('Copying specified file');

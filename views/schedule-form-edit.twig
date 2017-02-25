@@ -29,7 +29,9 @@
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li><a href="#repeats" role="tab" data-toggle="tab"><span>{% trans "Repeats" %}</span></a></li>
             </ul>
-            <form id="scheduleEditForm" class="form-horizontal" method="put" action="{{ urlFor("schedule.edit", {id: event.eventId}) }}">
+            {% set dayPartMessage %}{% trans "Select the start time for this event" %}{% endset %}
+            {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
+            <form id="scheduleEditForm" class="form-horizontal" method="put" action="{{ urlFor("schedule.edit", {id: event.eventId}) }}" data-daypart-message="{{ dayPartMessage }}" data-not-daypart-message="{{ notDayPartMessage }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Event Type" %}{% endset %}
@@ -106,6 +108,10 @@
                         {% set title %}{% trans "Priority" %}{% endset %}
                         {% set helpText %}{% trans "Sets the event priority - events with the highest priority play in preference to lower priority events." %}{% endset %}
                         {{ forms.number("isPriority", title, event.isPriority, helpText) }}
+
+                        {% set title %}{% trans "Run at CMS Time?" %}{% endset %}
+                        {% set helpText %}{% trans "When selected, your event will run according to the timezone set on the CMS, otherwise the event will run at Display local time" %}{% endset %}
+                        {{ forms.checkbox("syncTimezone", title, event.syncTimezone, helpText) }}
 
                     </div>
                     

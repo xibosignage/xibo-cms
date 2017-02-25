@@ -35,12 +35,13 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TransitionFactory;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
-use Xibo\Service\FactoryServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -169,7 +170,13 @@ abstract class ModuleWidget implements ModuleInterface
     protected $displayGroupFactory;
 
     /** @var  ScheduleFactory */
-    private $scheduleFactory;
+    protected $scheduleFactory;
+
+    /** @var  PermissionFactory */
+    protected $permissionFactory;
+
+    /** @var  UserGroupFactory */
+    protected $userGroupFactory;
 
     /**
      * ModuleWidget constructor.
@@ -189,8 +196,10 @@ abstract class ModuleWidget implements ModuleInterface
      * @param DisplayFactory $displayFactory
      * @param CommandFactory $commandFactory
      * @param ScheduleFactory $scheduleFactory
+     * @param PermissionFactory $permissionFactory
+     * @param UserGroupFactory $userGroupFactory
      */
-    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory)
+    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory)
     {
         $this->app = $app;
         $this->store = $store;
@@ -209,6 +218,8 @@ abstract class ModuleWidget implements ModuleInterface
         $this->displayFactory = $displayFactory;
         $this->commandFactory = $commandFactory;
         $this->scheduleFactory = $scheduleFactory;
+        $this->permissionFactory = $permissionFactory;
+        $this->userGroupFactory = $userGroupFactory;
 
         $this->init();
     }
@@ -996,6 +1007,45 @@ abstract class ModuleWidget implements ModuleInterface
         }
 
         return $parsedContent;
+    }
+
+    /**
+     * Get templatesAvailable
+     * @return Templates
+     */
+    public function templatesAvailable()
+    {
+        if (!isset($this->module->settings['templates'])) {
+            
+            $this->module->settings['templates'] = [];
+
+            // Scan the folder for template files
+            foreach (glob(PROJECT_ROOT . '/modules/' . $this->module->type . '/*.template.json') as $template) {
+                // Read the contents, json_decode and add to the array
+                $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
+            }
+            
+        }
+            
+        return $this->module->settings['templates'];
+    }    
+    
+    /**
+     * Get by Template Id
+     * @param int $templateId
+     * @return Template
+     */
+    public function getTemplateById($templateId)
+    {
+        $templates = $this->templatesAvailable();
+        
+        foreach ($templates as $item) {
+            if( $item['id'] == $templateId ) {
+                $template = $item;
+            }
+        }
+        
+        return $template;
     }
 
     /**

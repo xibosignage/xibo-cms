@@ -111,7 +111,7 @@ class ResolutionTest extends LocalWebTestCase
 
         public function provideSuccessCases()
     {
-        # Sets of correct data, which should be successfuly added
+        # Sets of correct data, which should be successfully added
         return [
             'resolution 1' => ['test resolution', 800, 200],
             'resolution 2' => ['different test resolution', 1069, 1699]

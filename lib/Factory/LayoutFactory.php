@@ -345,8 +345,14 @@ class LayoutFactory extends BaseFactory
             /* @var \DOMElement $regionNode */
             $this->getLog()->debug('Found Region');
 
+            // Get the ownerId
+            $regionOwnerId = $regionNode->getAttribute('userId');
+            if ($regionOwnerId == null)
+                $regionOwnerId = $layout->ownerId;
+
+            // Create the region
             $region = $this->regionFactory->create(
-                (int)$regionNode->getAttribute('userId'),
+                $regionOwnerId,
                 $regionNode->getAttribute('name'),
                 (double)$regionNode->getAttribute('width'),
                 (double)$regionNode->getAttribute('height'),
@@ -368,9 +374,14 @@ class LayoutFactory extends BaseFactory
             // Get all widgets
             foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media') as $mediaNode) {
                 /* @var \DOMElement $mediaNode */
+
+                $mediaOwnerId = $mediaNode->getAttribute('userId');
+                if ($mediaOwnerId == null)
+                    $mediaOwnerId = $regionOwnerId;
+
                 $widget = $this->widgetFactory->createEmpty();
                 $widget->type = $mediaNode->getAttribute('type');
-                $widget->ownerId = $mediaNode->getAttribute('userId');
+                $widget->ownerId = $mediaOwnerId;
                 $widget->duration = $mediaNode->getAttribute('duration');
                 $widget->useDuration = $mediaNode->getAttribute('useDuration');
                 $widget->useDuration = ($widget->useDuration == '') ? 0 : 1;
@@ -1071,6 +1082,7 @@ class LayoutFactory extends BaseFactory
             $layout->statusMessage = $row['statusMessage'];
 
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
+            $layout->setOriginals();
 
             $entries[] = $layout;
         }

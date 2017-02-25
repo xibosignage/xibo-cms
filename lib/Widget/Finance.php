@@ -72,35 +72,8 @@ class Finance extends YahooBase
     {
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-    }
-
-    /**
-     * Loads templates for this module
-     */
-    private function loadTemplates()
-    {
-        $this->module->settings['templates'] = [];
-
-        // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/finance/*.template.json') as $template) {
-            // Read the contents, json_decode and add to the array
-            $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
-        }
-
-        $this->getLog()->debug(count($this->module->settings['templates']));
-    }
-
-    /**
-     * Templates available
-     * @return array
-     */
-    public function templatesAvailable()
-    {
-        if (!isset($this->module->settings['templates']))
-            $this->loadTemplates();
-
-        return $this->module->settings['templates'];
     }
 
     /**
@@ -123,13 +96,167 @@ class Finance extends YahooBase
     }
 
     public function validate()
-    {
+    {        
+        // If overrideTemplate is false we have to define a template Id 
+        if($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null) )
+            throw new \InvalidArgumentException(__('Please choose a template'));
+                
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('Please enter a duration'));
     }
 
     /**
-     * Add Media
+     * Adds a Finance Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/finance/{playlistId}",
+     *  operationId="WidgetFinanceAdd",
+     *  tags={"widget"},
+     *  summary="Add a Finance Widget",
+     *  description="Add a new Finance Widget to the specified playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The playlist ID to add a Finance widget",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="(0, 1) Select 1 only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="item",
+     *      in="formData",
+     *      description="Items wanted, can be comma separated (example EURUSD, GBPUSD), pass only with overrideTemplate set to 1",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="effect",
+     *      in="formData",
+     *      description="Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind, marqueeUp, marqueeDown, marqueeRight, marqueeLeft",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="speed",
+     *      in="formData",
+     *      description="The transition speed of the selected effect in milliseconds (1000 = normal) or the Marquee speed in a low to high scale (normal = 1)",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="backgroundColor",
+     *      in="formData",
+     *      description="A HEX color to use as the background color of this widget",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="noRecordsMessage",
+     *      in="formData",
+     *      description="A message to display when there are no records returned by the search query",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dateFormat",
+     *      in="formData",
+     *      description="The format to apply to all dates returned by he widget",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="updateInterval",
+     *      in="formData",
+     *      description="Update interval in minutes, should be kept as high as possible, if data change once per hour, this should be set to 60",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="templateId",
+     *      in="formData",
+     *      description="Use pre-configured templates, available options: currency-simple, stock-simple",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="durationIsPerItem",
+     *      in="formData",
+     *      description="A flag (0, 1), The duration specified is per item, otherwise the widget duration is divided between the number of items",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="overrideTemplate",
+     *      in="formData",
+     *      description="flag (0, 1) set to 0 and use templateId or set to 1 and provide whole template in the next parameters",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="yql",
+     *      in="formData",
+     *      description="The YQL query to use for data, pass only with overrideTemplate set to 1",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="resultIdentifier",
+     *      in="formData",
+     *      description="The name of the result identifier returned by the YQL, pass only with overrideTemplate set to 1",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="template",
+     *      in="formData",
+     *      description="Main template, Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="styleSheet",
+     *      in="formData",
+     *      description="Optional StyleSheet Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="javaScript",
+     *      in="formData",
+     *      description="Optional JavaScript, Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {
@@ -157,9 +284,7 @@ class Finance extends YahooBase
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('yql', $this->getSanitizer()->getString('yql'));
         $this->setOption('item', $this->getSanitizer()->getString('item'));
-        $this->setOption('resultIdentifier', $this->getSanitizer()->getString('resultIdentifier'));
         $this->setOption('effect', $this->getSanitizer()->getString('effect'));
         $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
         $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
@@ -169,9 +294,15 @@ class Finance extends YahooBase
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
-        $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
-        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        
+        if( $this->getOption('overrideTemplate') == 1 ){
+            $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
+            $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
+            $this->setOption('yql', $this->getSanitizer()->getString('yql'));
+            $this->setOption('resultIdentifier', $this->getSanitizer()->getString('resultIdentifier'));
+        }
+        
     }
 
     /**
@@ -182,7 +313,25 @@ class Finance extends YahooBase
     {
         // Construct the YQL
         // process items
-        $yql = $this->getOption('yql');
+        
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            
+            // Get YQL and result identifier from the default templates
+            
+            $tmplt = $this->getTemplateById($this->getOption('templateId'));
+            
+            if (isset($tmplt)) {
+                $yql = $tmplt['yql'];
+                $resultIdentifier = $tmplt['resultIdentifier'];
+            }
+            
+        } else {
+            // Get YQL and result identifier from the override input fields
+            
+            $yql = $this->getOption('yql');
+            $resultIdentifier = $this->getOption('resultIdentifier');
+        }
+        
         $items = $this->getOption('item');
 
         $this->getLog()->debug('Finance module with YQL = . Looking for %s in response', $yql, $items);
@@ -228,7 +377,7 @@ class Finance extends YahooBase
 
         // Pull out the results according to the resultIdentifier
         // If the element to return is an array and we aren't, then box.
-        $results = $data[$this->getOption('resultIdentifier')];
+        $results = $data[$resultIdentifier];
 
         if (array_key_exists(0, $results))
             return $results;
@@ -305,9 +454,28 @@ class Finance extends YahooBase
         if (!$items = $this->getYql()) {
             return '';
         }
-
-        // Run through each item and substitute with the template
-        $template = $this->parseLibraryReferences($isPreview, $this->getRawNode('template'));
+        
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            
+            // Get CSS and HTML from the default templates
+            
+            $tmplt = $this->getTemplateById($this->getOption('templateId'));
+            
+            if (isset($tmplt)) {
+                $template = $tmplt['template'];
+                $css = $tmplt['css'];
+            }
+            
+        } else {
+            // Get CSS and HTML from the override input fields
+            
+            // Run through each item and substitute with the template
+            $template = $this->parseLibraryReferences($isPreview, $this->getRawNode('template'));    
+            
+            // Get stylesheet
+            $css = $this->getRawNode('styleSheet', null);
+        }
+        
         $renderedItems = [];
 
         foreach ($items as $item) {
@@ -341,7 +509,6 @@ class Finance extends YahooBase
         $headContent = '';
 
         // Add the CSS if it isn't empty
-        $css = $this->getRawNode('styleSheet', null);
         if ($css != '') {
             $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css ) . '</style>';
         }
@@ -371,12 +538,14 @@ class Finance extends YahooBase
 
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
+        
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   var items = ' . json_encode($renderedItems) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); ';
+        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); $("#content").find("img").xiboImageRender(options); ';
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= $javaScript;
         $javaScriptContent .= '</script>';

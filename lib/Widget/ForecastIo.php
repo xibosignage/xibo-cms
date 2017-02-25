@@ -81,6 +81,7 @@ class ForecastIo extends ModuleWidget
     {
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/bootstrap.min.css')->save();
 
         foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
@@ -112,34 +113,12 @@ class ForecastIo extends ModuleWidget
         $this->module->settings['cachePeriod'] = $this->getSanitizer()->getInt('cachePeriod', 300);
     }
 
-    /**
-     * Loads templates for this module
-     */
-    private function loadTemplates()
-    {
-        // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/forecastio/*.template.json') as $template) {
-            // Read the contents, json_decode and add to the array
-            $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
-        }
-
-        $this->getLog()->debug(count($this->module->settings['templates']));
-    }
-
-    /**
-     * Templates available
-     * @return array
-     */
-    public function templatesAvailable()
-    {
-        if (!isset($this->module->settings['templates']))
-            $this->loadTemplates();
-
-        return $this->module->settings['templates'];
-    }
-
     public function validate()
     {
+        
+        if($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null) )
+            throw new \InvalidArgumentException(__('Please choose a template'));
+            
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('Please enter a duration'));
 
@@ -154,7 +133,157 @@ class ForecastIo extends ModuleWidget
     }
 
     /**
-     * Add Media to the Database
+     * Adds a Weather Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/forecastIo/{playlistId}",
+     *  operationId="WidgetWeatherAdd",
+     *  tags={"widget"},
+     *  summary="Add a Weather Widget",
+     *  description="Add a new Weather Widget to the specified playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The playlist ID to add a Weather widget",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="(0, 1) Select 1 only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDisplayLocation",
+     *      in="formData",
+     *      description="Flag (0, 1) Use the location configured on display",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="longitude",
+     *      in="formData",
+     *      description="The longitude for this weather widget, only pass if useDisplayLocation set to 0",
+     *      type="number",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="latitude",
+     *      in="formData",
+     *      description="The latitude for this weather widget, only pass if useDisplayLocation set to 0",
+     *      type="number",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="templateId",
+     *      in="formData",
+     *      description="Use pre-configured templates, available options: weather-module0-5day, weather-module0-singleday, weather-module0-singleday2, weather-module1l, weather-module1p, weather-module2l, weather-module2p, weather-module3l, weather-module3p, weather-module4l, weather-module4p, weather-module5l, weather-module6v, weather-module6h",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="units",
+     *      in="formData",
+     *      description="Units you would like to use, available options: auto, ca, si, uk2, us",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="updateInterval",
+     *      in="formData",
+     *      description="Update interval in minutes, should be kept as high as possible, if data change once per hour, this should be set to 60",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="lang",
+     *      in="formData",
+     *      description="Language you'd like to use, supported languages ar, az, be, bs, cs, de, en, el, es, fr, hr, hu, id, it, is, kw, nb, nl, pl, pt, ru, sk, sr, sv, tet, tr, uk, x-pig-latin, zh, zh-tw",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dayConditionsOnly",
+     *      in="formData",
+     *      description="Flag (0, 1) Would you like to only show the Daytime weather conditions",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="overrideTemplate",
+     *      in="formData",
+     *      description="flag (0, 1) set to 0 and use templateId or set to 1 and provide whole template in the next parameters",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="widgetOriginalWidth",
+     *      in="formData",
+     *      description="This is the intended Width of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="widgetOriginalHeight",
+     *      in="formData",
+     *      description="This is the intended Height of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="currentTemplate",
+     *      in="formData",
+     *      description="Current template, Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dailyTemplate",
+     *      in="formData",
+     *      description="Replaces [dailyForecast] in main template, Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="styleSheet",
+     *      in="formData",
+     *      description="Optional StyleSheet, Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="styleSheet",
+     *      in="formData",
+     *      description="Optional JavaScript, Pass only with overrideTemplate set to 1 ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {
@@ -165,20 +294,22 @@ class ForecastIo extends ModuleWidget
         $this->setOption('longitude', $this->getSanitizer()->getDouble('longitude'));
         $this->setOption('latitude', $this->getSanitizer()->getDouble('latitude'));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
-        $this->setOption('icons', $this->getSanitizer()->getString('icons'));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
         $this->setOption('units', $this->getSanitizer()->getString('units'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('lang', $this->getSanitizer()->getString('lang'));
         $this->setOption('dayConditionsOnly', $this->getSanitizer()->getCheckbox('dayConditionsOnly'));
         
-        $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
-        $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
-        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
-        $this->setRawNode('currentTemplate', $this->getSanitizer()->getParam('currentTemplate', null));
-        $this->setRawNode('dailyTemplate', $this->getSanitizer()->getParam('dailyTemplate', null));
+        if( $this->getOption('overrideTemplate') == 1 ){
+            $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
+            $this->setRawNode('currentTemplate', $this->getSanitizer()->getParam('currentTemplate', null));
+            $this->setRawNode('dailyTemplate', $this->getSanitizer()->getParam('dailyTemplate', null));
+            $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
+            $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
+        }
+        
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
-
+        
         // Save the widget
         $this->validate();
         $this->saveWidget();
@@ -196,36 +327,25 @@ class ForecastIo extends ModuleWidget
         $this->setOption('longitude', $this->getSanitizer()->getDouble('longitude'));
         $this->setOption('latitude', $this->getSanitizer()->getDouble('latitude'));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
-        $this->setOption('icons', $this->getSanitizer()->getString('icons'));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
         $this->setOption('units', $this->getSanitizer()->getString('units'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('lang', $this->getSanitizer()->getString('lang'));
         $this->setOption('dayConditionsOnly', $this->getSanitizer()->getCheckbox('dayConditionsOnly'));
+        
+        if( $this->getOption('overrideTemplate') == 1 ){
+            $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
+            $this->setRawNode('currentTemplate', $this->getSanitizer()->getParam('currentTemplate', null));
+            $this->setRawNode('dailyTemplate', $this->getSanitizer()->getParam('dailyTemplate', null));
+            $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
+            $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
+        }
 
-        $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
-        $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
-        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
-        $this->setRawNode('currentTemplate', $this->getSanitizer()->getParam('currentTemplate', null));
-        $this->setRawNode('dailyTemplate', $this->getSanitizer()->getParam('dailyTemplate', null));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
 
         // Save the widget
         $this->validate();
         $this->saveWidget();
-    }
-
-    public function iconsAvailable()
-    {
-        // Scan the forecast io folder for icons
-        $icons = array();
-
-        foreach (array_diff(scandir($this->resourceFolder), array('..', '.')) as $file) {
-            if (stripos($file, '-icons.png'))
-                $icons[] = array('id' => $file, 'value' => ucfirst(str_replace('-', ' ', str_replace('.png', '', $file))));
-        }
-
-        return $icons;
     }
 
     /**
@@ -509,9 +629,11 @@ class ForecastIo extends ModuleWidget
             if (stripos($replace, 'time|') > -1) {
                 $timeSplit = explode('|', $replace);
 
+                $this->getLog()->debug('Time Substitution for source time ' . $data['time'] . ' and timezone ' . $timezone . ', format ' . $timeSplit[1]);
+
                 $time = $this->getDate()->getLocalDate($data['time'], $timeSplit[1], $timezone);
 
-                $this->getLog()->info('Time: ' . $time);
+                $this->getLog()->debug('Time Substitution: ' . (string)($time));
 
                 // Pull time out of the array
                 $source = str_replace($sub, $time, $source);
@@ -538,8 +660,11 @@ class ForecastIo extends ModuleWidget
 
         // Do we need to override the language?
         // TODO: I don't like this date fix, the library should really check the file exists?
-        if ($this->getOption('lang', 'en') != 'en' && file_exists(PROJECT_ROOT . '/vendor/jenssegers/date/src/Lang/' . $this->getOption('lang') . '.php')) {
-            $this->getDate()->setLocale($this->getOption('lang'));
+        $lang = $this->getOption('lang', 'en');
+        if ($lang != 'en' && file_exists(PROJECT_ROOT . '/vendor/jenssegers/date/src/Lang/' . $lang . '.php')) {
+            mb_internal_encoding('UTF-8');
+            $this->getLog()->debug('Setting language to: ' . $lang);
+            $this->getDate()->setLocale($lang);
         }
 
         $data = [];
@@ -547,7 +672,35 @@ class ForecastIo extends ModuleWidget
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
+        
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            
+            // Get CSS and HTML from the default templates
 
+            $template = $this->getTemplateById($this->getOption('templateId'));
+            
+            if (isset($template)) {
+                $body = $template['main'];
+                $dailyTemplate = $template['daily'];
+                $styleSheet = $template['css'];
+                $widgetOriginalWidth = $template['widgetOriginalWidth'];
+                $widgetOriginalHeight = $template['widgetOriginalHeight'];
+            }
+            
+        } else {
+            // Get CSS and HTML from the override input fields
+            
+            $body = $this->parseLibraryReferences($isPreview, $this->getRawNode('currentTemplate', ''));
+            $dailyTemplate = $this->parseLibraryReferences($isPreview, $this->getRawNode('dailyTemplate', ''));
+            $styleSheet = $this->getRawNode('styleSheet', '');
+            $widgetOriginalWidth = $this->getSanitizer()->int($this->getOption('widgetOriginalWidth'));
+            $widgetOriginalHeight = $this->getSanitizer()->int($this->getOption('widgetOriginalHeight'));
+        }
+        
+        // Parse library references
+        $body = $this->parseLibraryReferences($isPreview, $body);
+        $dailyTemplate = $this->parseLibraryReferences($isPreview, $dailyTemplate);
+        
         // Provide the background images to the templates styleSheet
         $styleSheet = $this->makeSubstitutions([
             'cloudy-image' => $this->getResourceUrl('forecastio/wi-cloudy.jpg'),
@@ -560,7 +713,7 @@ class ForecastIo extends ModuleWidget
             'rain-image' => $this->getResourceUrl('forecastio/wi-rain.jpg'),
             'snow-image' => $this->getResourceUrl('forecastio/wi-snow.jpg'),
             'windy' => $this->getResourceUrl('forecastio/wi-windy.jpg'),
-          ], $this->getRawNode('styleSheet', null)
+          ], $styleSheet
         );
 
         $headContent = '
@@ -580,10 +733,6 @@ class ForecastIo extends ModuleWidget
 
         // Replace any icon sets
         $data['head'] = str_replace('[[ICONS]]', $this->getResourceUrl('forecastio/' . $this->getOption('icons')), $headContent);
-
-        // Make some body content
-        $body = $this->parseLibraryReferences($isPreview, $this->getRawNode('currentTemplate', null));
-        $dailyTemplate = $this->parseLibraryReferences($isPreview, $this->getRawNode('dailyTemplate', null));
 
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
@@ -613,6 +762,7 @@ class ForecastIo extends ModuleWidget
             // Pull it out, and run substitute over it for each day
             // Substitute for every day (i.e. 7 times).
             for ($i = $offset; $i < $stopPosition; $i++) {
+                $this->getLog()->debug('Substitiution for Daily, day ' . $i);
                 $dailySubs .= $this->makeSubstitutions($foreCast['daily']['data'][$i], $dailyTemplate, $foreCast['timezone']);
             }
             // Substitute the completed template
@@ -630,18 +780,20 @@ class ForecastIo extends ModuleWidget
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
             'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
-            'widgetDesignWidth' => $this->getSanitizer()->int($this->getOption('widgetOriginalWidth')),
-            'widgetDesignHeight'=> $this->getSanitizer()->int($this->getOption('widgetOriginalHeight'))
+            'widgetDesignWidth' => $widgetOriginalWidth,
+            'widgetDesignHeight'=> $widgetOriginalHeight
         );
 
         $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
         $javaScriptContent .= '<script>
 
             var options = ' . json_encode($options) . '
 
             $(document).ready(function() {
                 $("body").xiboLayoutScaler(options);
+                $("#content").find("img").xiboImageRender(options);
             });
         </script>';
         $javaScriptContent .= $javaScript;
