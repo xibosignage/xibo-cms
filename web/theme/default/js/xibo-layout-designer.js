@@ -60,7 +60,7 @@ $(document).ready(function(){
         .hover(function() {
             var $region = $(this);
 
-            $region.zIndex(1000000);
+            $region.zIndex(900);
 
             if (!hideControls) {
                 layout.find(".regionInfo").show();
