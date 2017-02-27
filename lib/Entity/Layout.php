@@ -660,7 +660,7 @@ class Layout implements \JsonSerializable
             throw new InvalidArgumentException(__("Description can not be longer than 254 characters"), 'description');
 
         // Check for duplicates
-        $duplicates = $this->layoutFactory->query(null, array('userId' => $this->ownerId, 'layoutExact' => $this->layout, 'notLayoutId' => $this->layoutId));
+        $duplicates = $this->layoutFactory->query(null, array('userId' => $this->ownerId, 'layoutExact' => $this->layout, 'notLayoutId' => $this->layoutId, 'disableUserCheck' => 1));
 
         if (count($duplicates) > 0)
             throw new DuplicateEntityException(sprintf(__("You already own a layout called '%s'. Please choose another name."), $this->layout));

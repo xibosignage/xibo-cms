@@ -184,9 +184,6 @@ class MaintenanceDailyTask implements TaskInterface
                 }
             }
 
-            // Install files
-            $this->app->container->get('\Xibo\Controller\Library')->installAllModuleFiles();
-
             $this->config->ChangeSetting('DEFAULTS_IMPORTED', 1);
 
             $this->runMessage .= ' - ' . __('Done.') . PHP_EOL . PHP_EOL;
