@@ -322,6 +322,7 @@ class State extends Middleware
             $pool = new Pool($composite);
             $pool->setLogger($logWriter);
             $pool->setNamespace($configService->getCacheNamespace());
+            $configService->setPool($pool);
             return $pool;
         });
     }

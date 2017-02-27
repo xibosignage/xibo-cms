@@ -51,11 +51,16 @@ class Actions extends Middleware
 
                 foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                     if (stripos($file, '.zip')) {
-                        /** @var \Xibo\Entity\Layout $layout */
-                        $layout = $app->layoutFactory->createFromZip($folder . '/' . $file, null, 1, false, false, true, false, true, $app->container->get('\Xibo\Controller\Library')->setApp($app));
-                        $layout->save([
-                            'audit' => false
-                        ]);
+                        try {
+                            /** @var \Xibo\Entity\Layout $layout */
+                            $layout = $app->layoutFactory->createFromZip($folder . '/' . $file, null, 1, false, false, true, false, true, $app->container->get('\Xibo\Controller\Library')->setApp($app));
+                            $layout->save([
+                                'audit' => false
+                            ]);
+                        } catch (\Exception $e) {
+                            $app->logService->error('Unable to import layout: ' . $file);
+                            $app->logService->debug($e->getTraceAsString());
+                        }
                     }
                 }
 
