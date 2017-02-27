@@ -280,10 +280,12 @@ class MaintenanceRegularTask implements TaskInterface
            WHERE `bytesRequested` > 0
               AND bytesRequested >= `size` * :factor
               AND type <> :excludedType
+              AND display.lastAccessed > :lastAccessed
             GROUP BY display.displayId, display.display
         ', [
             'factor' => 3,
-            'excludedType' => 'W'
+            'excludedType' => 'W',
+            'lastAccessed' => $this->date->parse()->subDay()->format('U')
         ]);
 
         foreach ($items as $item) {

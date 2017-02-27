@@ -354,6 +354,7 @@ class Schedule extends Base
      *      required=true,
      *      type="string",
      *      description="Date in Y-m-d H:i:s"
+     *  ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful response"

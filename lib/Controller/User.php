@@ -740,7 +740,7 @@ class User extends Base
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         // List of all Groups with a view / edit / delete check box
-        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object), $objectId, $this->gridRenderSort(), $this->gridRenderFilter(['name' => $this->getSanitizer()->getString('name')]));
+        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $objectId, $this->gridRenderSort(), $this->gridRenderFilter(['name' => $this->getSanitizer()->getString('name')]));
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($permissions);
@@ -767,7 +767,7 @@ class User extends Base
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         $currentPermissions = [];
-        foreach ($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object), $objectId) as $permission) {
+        foreach ($this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $objectId) as $permission) {
             /* @var Permission $permission */
             $currentPermissions[$permission->groupId] = [
                 'view' => ($permission->view == null) ? 0 : $permission->view,
@@ -839,7 +839,6 @@ class User extends Base
      */
     public function permissions($entity, $objectId)
     {
-        $requestEntity = $entity;
         $entity = $this->parsePermissionsEntity($entity, $objectId);
 
         // Load our object
@@ -850,7 +849,7 @@ class User extends Base
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         // Get all current permissions
-        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object), $objectId);
+        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $objectId);
 
         // Get the provided permissions
         $groupIds = $this->getSanitizer()->getStringArray('groupIds');
@@ -874,7 +873,7 @@ class User extends Base
         }
 
         // Cascade permissions
-        if ($requestEntity == 'Campaign' && $this->getSanitizer()->getCheckbox('cascade') == 1) {
+        if ($object->permissionsClass() == 'Xibo\Entity\Campaign' && $this->getSanitizer()->getCheckbox('cascade') == 1) {
             /* @var Campaign $object */
             $this->getLog()->debug('Cascade permissions down');
 

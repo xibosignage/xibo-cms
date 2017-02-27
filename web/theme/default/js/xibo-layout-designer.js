@@ -58,11 +58,23 @@ $(document).ready(function(){
     // Hover functions for previews/info
     layout.find(".region")
         .hover(function() {
+            var $region = $(this);
+
+            $region.zIndex(1000000);
+
             if (!hideControls) {
                 layout.find(".regionInfo").show();
                 layout.find(".previewNav").show();
             }
         }, function() {
+            // Reset each region
+            layout.find('.region').each(function() {
+                var $resetRegion = $(this);
+
+                // Reset to the original z-index
+                $resetRegion.zIndex($resetRegion.attr("zindex"));
+            });
+
             layout.find(".regionInfo").hide();
             layout.find(".previewNav").hide();
         })

@@ -26,9 +26,9 @@ use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\TagFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
+use Xibo\Factory\TagFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -402,6 +402,7 @@ class Campaign implements \JsonSerializable
         }
 
         if (!$found) {
+            $this->getLog()->debug('Layout assignment doesnt exist, adding it. ' . $layout . ', display order ' . $layout->displayOrder);
             $this->layoutAssignmentsChanged = true;
             $this->layouts[] = $layout;
         }
@@ -416,25 +417,36 @@ class Campaign implements \JsonSerializable
         $this->load();
 
         $countBefore = count($this->layouts);
-        $this->getLog()->debug('Unassigning Layout [%s] from Campaign [%s]. Display Order %d. Count before assign = %d', $layout, $this, $layout->displayOrder, $countBefore);
+        $this->getLog()->debug('Unassigning Layout, count before assign = ' . $countBefore);
 
-        $this->layouts = array_udiff($this->layouts, [$layout], function ($a, $b) {
-            /**
-             * @var Layout $a
-             * @var Layout $b
-             */
-            // Are we a layout that has been configured with a display order, or are we a complete layout removal?
-            if ($a->displayOrder == null || $b->displayOrder == null)
-                $return = ($a->getId() - $b->getId());
-            else
-                $return = ($a->getId() - $b->getId()) + ($a->displayOrder - $b->displayOrder);
+        $found = false;
+        $existingKey = null;
+        foreach ($this->layouts as $key => $existing) {
+            /** @var Layout $existing */
+            $this->getLog()->debug('Comparing existing [' . $existing->layoutId . ', ' . $existing->displayOrder . '] with unassign [' . $layout->layoutId . ', ' . $layout->displayOrder . '].');
 
-            //$this->getLog()->debug('Comparing a [%d, %d] with b [%d, %d]. Return = %d', $a->layoutId, $a->displayOrder, $b->layoutId, $b->displayOrder, $return);
-            return $return;
-        });
+            if ($existing->displayOrder == null) {
+                if ($existing->getId() == $layout->getId()) {
+                    $found = true;
+                    $existingKey = $key;
+                    break;
+                }
+            } else {
+                if ($existing->getId() == $layout->getId() && $existing->displayOrder == $layout->displayOrder) {
+                    $found = true;
+                    $existingKey = $key;
+                    break;
+                }
+            }
+        }
+
+        if ($found) {
+            $this->getLog()->debug('Removing item at key ' . $existingKey);
+            unset($this->layouts[$existingKey]);
+        }
 
         $countAfter = count($this->layouts);
-        $this->getLog()->debug('Count after unassign = %d', $countAfter);
+        $this->getLog()->debug('Count after unassign ' . $countAfter);
 
         if ($countBefore !== $countAfter)
             $this->layoutAssignmentsChanged = true;
