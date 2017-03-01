@@ -571,12 +571,22 @@ class Schedule implements \JsonSerializable
         if ($this->eventId == null)
             throw new InvalidArgumentException(__('Unable to generate schedule, unknown event'), 'eventId');
 
+        // What if we are requesting a single point in time?
+        if ($fromDt == $toDt) {
+            $this->log->debug('Requesting event for a single point in time: ' . $this->getDate()->getLocalDate($fromDt));
+        }
+
         $events = [];
         $fromTimeStamp = $fromDt->format('U');
         $toTimeStamp = $toDt->format('U');
 
         // Rewind the from date to the start of the month
         $fromDt->startOfMonth();
+
+        if ($fromDt == $toDt) {
+            $this->log->debug('From and To Dates are the same after rewinding 1 month, the date is the 1st of the month, adding a month to toDate.');
+            $toDt->addMonth();
+        }
 
         // Request month cache
         while ($fromDt < $toDt) {
