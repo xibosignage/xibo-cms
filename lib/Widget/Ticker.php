@@ -540,10 +540,13 @@ class Ticker extends ModuleWidget
             }
 
             $this->setOption('filterClauses', json_encode($filterClauseMapping));
-        }
 
-        if( $this->getOption('overrideTemplate') == 1 ){
-            // Text Template
+            // DataSet Tickers always have Templates provided.
+            $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
+            $this->setRawNode('css', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('css', null)));
+
+        } else if ($this->getOption('overrideTemplate') == 1) {
+            // Feed tickers should only use the template if they have override set.
             $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
             $this->setRawNode('css', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('css', null)));
         }
