@@ -20,6 +20,8 @@
  */
 namespace Xibo\Controller;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Entity\Display;
+use Xibo\Entity\DisplayGroup;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
@@ -386,18 +388,18 @@ class Schedule extends Base
 
         // Is this group a display specific group, or a standalone?
         $options = [];
-        $displayId = null;
+        /** @var \Xibo\Entity\Display $display */
+        $display = null;
         if ($displayGroup->isDisplaySpecific == 1) {
             // We should lookup the displayId for this group.
             $display = $this->displayFactory->getByDisplayGroupId($displayGroupId)[0];
-            $displayId = $display->displayId;
         } else {
             $options['useGroupId'] = true;
             $options['displayGroupId'] = $displayGroupId;
         }
 
         // Get list of events
-        $scheduleForXmds = $this->scheduleFactory->getForXmds($displayId, $date->format('U'), $date->format('U'), $options);
+        $scheduleForXmds = $this->scheduleFactory->getForXmds(($display === null) ? null : $display->displayId, $date->format('U'), $date->format('U'), $options);
 
         $this->getLog()->debug(count($scheduleForXmds) . ' events returned for displaygroup and date');
 
@@ -465,35 +467,19 @@ class Schedule extends Base
                 $this->getLog()->debug('Adding this events displayGroupIds to list');
                 $schedule->excludeProperty('displayGroups');
 
-                foreach ($schedule->displayGroups as $displayGroup) {
-                    if (!array_key_exists($displayGroup->displayGroupId, $displayGroups)) {
-                        $displayGroups[$displayGroup->displayGroupId] = $displayGroup;
+                foreach ($schedule->displayGroups as $scheduleDisplayGroup) {
+                    if (!array_key_exists($scheduleDisplayGroup->displayGroupId, $displayGroups)) {
+                        $displayGroups[$scheduleDisplayGroup->displayGroupId] = $scheduleDisplayGroup;
                     }
                 }
 
                 // Determine the intermediate display groups
                 $this->getLog()->debug('Adding this events intermediateDisplayGroupIds to list');
-                $schedule->intermediateDisplayGroupIds = [];
+                $schedule->intermediateDisplayGroupIds = $this->calculateIntermediates($display, $displayGroup, $event['displayGroupId']);
 
-                // Is this event for the selected displayGroupId? if so we have 0 intermediates.
-                if (intval($event['displayGroupId']) != $displayGroupId) {
-                    // We need to trace the route between the events displayGroupId and the displayGroupId we
-                    // are looking at. We should start at the displayGroupId for the event and stop when we reach
-                    // the first occurence of the displayGroupId we are looking at.
-                    $tree = $this->displayGroupFactory->getRelationShipTree(intval($event['displayGroupId']));
-
-                    foreach ($tree as $branch) {
-                        // If we've reached the displayGroupId in question, then stop
-                        if ($branch->displayGroupId == $displayGroupId)
-                            break;
-
-                        if ($branch->depth > 0 && $branch->displayGroupId != $displayGroupId) {
-                            $schedule->intermediateDisplayGroupIds[] = $branch->displayGroupId;
-
-                            if (!array_key_exists($branch->displayGroupId, $displayGroups)) {
-                                $displayGroups[$branch->displayGroupId] = $this->displayGroupFactory->getById($branch->displayGroupId);
-                            }
-                        }
+                foreach ($schedule->intermediateDisplayGroupIds as $intermediate) {
+                    if (!array_key_exists($intermediate, $displayGroups)) {
+                        $displayGroups[$intermediate] = $this->displayGroupFactory->getById($intermediate);
                     }
                 }
 
@@ -520,6 +506,85 @@ class Schedule extends Base
                  'campaigns' => $campaigns
              ]
         ]);
+    }
+
+    /**
+     * @param Display $display
+     * @param DisplayGroup $displayGroup
+     * @param int $eventDisplayGroupId
+     * @return array
+     */
+    private function calculateIntermediates($display, $displayGroup, $eventDisplayGroupId)
+    {
+        $this->getLog()->debug('Calculating intermediates for events displayGroupId ' . $eventDisplayGroupId . ' viewing displayGroupId ' . $displayGroup->displayGroupId);
+
+        $intermediates = [];
+        $eventDisplayGroup = $this->displayGroupFactory->getById($eventDisplayGroupId);
+
+        // Is the event scheduled directly on the displayGroup in question?
+        if ($displayGroup->displayGroupId == $eventDisplayGroupId)
+            return $intermediates;
+
+        // Is the event scheduled directly on the display in question?
+        if ($eventDisplayGroup->isDisplaySpecific == 1)
+            return $intermediates;
+
+        $this->getLog()->debug('Event isnt directly scheduled to a display or to the current displaygroup ');
+
+        // There are nested groups involved, so we need to trace the relationship tree.
+        if ($display === null) {
+            $this->getLog()->debug('We are looking at a DisplayGroup');
+            // We are on a group.
+
+            // Get the relationship tree for this display group
+            $tree = $this->displayGroupFactory->getRelationShipTree($displayGroup->displayGroupId);
+
+            foreach ($tree as $branch) {
+                $this->getLog()->debug('Branch found: ' . $branch->displayGroup . ' [' . $branch->displayGroupId . '], ' . $branch->depth . '-' . $branch->level);
+                if ($branch->depth < 0 && $branch->displayGroupId != $eventDisplayGroup->displayGroupId) {
+                    $intermediates[] = $branch->displayGroupId;
+                }
+            }
+        } else {
+            // We are on a display.
+            $this->getLog()->debug('We are looking at a Display');
+
+            // We will need to get all of this displays groups and then add only those ones that give us an eventual
+            // match on the events display group (complicated or what!)
+            $display->load();
+
+            foreach ($display->displayGroups as $displayDisplayGroup) {
+
+                // Ignore the display specific group
+                if ($displayDisplayGroup->isDisplaySpecific == 1)
+                    continue;
+
+                // Get the relationship tree for this display group
+                $tree = $this->displayGroupFactory->getRelationShipTree($displayDisplayGroup->displayGroupId);
+
+                $found = false;
+                $possibleIntermediates = [];
+
+                foreach ($tree as $branch) {
+                    $this->getLog()->debug('Branch found: ' . $branch->displayGroup . ' [' . $branch->displayGroupId . '], ' . $branch->depth . '-' . $branch->level);
+                    if ($branch->displayGroupId != $eventDisplayGroup->displayGroupId) {
+                        $possibleIntermediates[] = $branch->displayGroupId;
+                    }
+
+                    if ($branch->displayGroupId != $eventDisplayGroup->displayGroupId && count($possibleIntermediates) > 0)
+                        $found = true;
+                }
+
+                if ($found) {
+                    $this->getLog()->debug('We have found intermediates ' . json_encode($possibleIntermediates) . ' for display when looking at displayGroupId ' . $displayDisplayGroup->displayGroupId);
+                    $intermediates = array_merge($intermediates, $possibleIntermediates);
+                }
+            }
+        }
+
+        $this->getLog()->debug('Returning intermediates: ' . json_encode($intermediates));
+
+        return $intermediates;
     }
 
     /**
