@@ -614,18 +614,26 @@ class Ticker extends ModuleWidget
         $takeItemsFrom = $this->getOption('takeItemsFrom', 'start');
         $itemsPerPage = $this->getOption('itemsPerPage', 0);
 
+        // Text/CSS subsitution variables.
+        $text = null;
+        $css = null;
+
         // Get CSS and HTML template from the original template or from the input field
-        if( $this->getOption('overrideTemplate') == 0 ) {
-            
+        if ($this->getOption('sourceId') != 2 && $this->getOption('overrideTemplate') == 0) {
+            // Feed tickers without override set.
             $template = $this->getTemplateById($this->getOption('templateId'));
             
             if (isset($template)) {
                 $text = $template['template'];
                 $css = $template['css'];
-            }
-        } else {
+            } else {
                 $text = $this->getRawNode('template', '');
                 $css = $this->getRawNode('css', '');
+            }
+        } else {
+            // DataSet tickers or feed tickers without overrides.
+            $text = $this->getRawNode('template', '');
+            $css = $this->getRawNode('css', '');
         }
         
         // Parse library references on the template
