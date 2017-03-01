@@ -407,6 +407,10 @@ class Schedule extends Base
             if ($event['eventTypeId'] == \Xibo\Entity\Schedule::$COMMAND_EVENT)
                 continue;
 
+            // Ignore events that have a campaignId, but no layoutId (empty Campaigns)
+            if ($event['layoutId'] == 0 && $event['campaignId'] != 0)
+                continue;
+
             // Assess schedules
             $schedule = $this->scheduleFactory->createEmpty()->hydrate($event, ['intProperties' => ['isPriority', 'syncTimezone', 'displayOrder']]);
             $schedule
