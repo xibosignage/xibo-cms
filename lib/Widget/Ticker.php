@@ -896,12 +896,15 @@ class Ticker extends ModuleWidget
                                 default:
                                     // Default behaviour just tries to get the content from the tag provided.
                                     // it uses the attribute as a namespace if one has been provided
-                                    $tags = $item->getTag($tag, $attribute);
+                                    if ($attribute != null)
+                                        $tags = $item->getTag($tag, $attribute);
+                                    else
+                                        $tags = $item->getTag($tag);
 
-                                    if (count($tags) > 0)
+                                    if (count($tags) > 0 && !empty($tags[0]))
                                         $link = $tags[0];
                                     else
-                                        $this->getLog()->debug('Tag not found for ' . $tag . ' attribute ' . $attribute);
+                                        $this->getLog()->debug('Tag not found for [' . $tag . '] attribute [' . $attribute . ']');
                             }
 
                             $this->getLog()->debug('Resolved link: ' . $link);
