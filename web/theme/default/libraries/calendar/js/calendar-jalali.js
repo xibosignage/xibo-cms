@@ -1005,8 +1005,8 @@ if(!String.prototype.formatNum) {
 		var t = {};
 		
 		var targetEvent = {};
-	    var displayGroupLink = '/displaygroup/view';
-	    var campaignLink = '/campaign/view';
+	    var displayGroupLink = '';
+	    var campaignLink = '';
 
 	    var results = data.results[data.selectedDisplayGroup];
 	    
