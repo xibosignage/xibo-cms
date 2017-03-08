@@ -120,9 +120,15 @@ class Upgrade extends Base
             $upgradeStep->lastTryDate = $this->getDate()->parse()->format('U');
             $upgradeStep->save();
 
-            // Install all module files if we are on the last step
-            if (count($this->upgradeFactory->getIncomplete()) <= 0)
+            // Are we on the last step?
+            if (count($this->upgradeFactory->getIncomplete()) <= 0) {
+                // Install all module files if we are on the last step
                 $this->getApp()->container->get('\Xibo\Controller\Library')->installAllModuleFiles();
+
+                // Attempt to delete the install/index.php file
+                if (file_exists(PROJECT_ROOT . '/web/install/index.php') && !unlink(PROJECT_ROOT . '/web/install/index.php'))
+                    $this->getLog()->critical('Unable to delete install.php file after upgrade');
+            }
         }
         catch (\Exception $e) {
             $upgradeStep->lastTryDate = $this->getDate()->parse()->format('U');
