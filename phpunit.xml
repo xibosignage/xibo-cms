@@ -5,8 +5,8 @@
          convertWarningsToExceptions="true">
       <testsuites>
         <testsuite name="Xibo Integration Test Suite">
-            <directory>tests/integration/*Test.php</directory>
-            <directory>tests/integration/Widget/*Test.php</directory>
+            <directory suffix="Test.php">tests/integration/</directory>
+            <directory suffix="Test.php">tests/integration/Widget/</directory>
         </testsuite>
       </testsuites>
     <groups>
