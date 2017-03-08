@@ -3,11 +3,12 @@
          convertErrorsToExceptions="true"
          convertNoticesToExceptions="true"
          convertWarningsToExceptions="true">
-    <testsuites>
+      <testsuites>
         <testsuite name="Xibo Integration Test Suite">
-            <directory suffix="Test.php">tests/integration</directory>
+            <directory>tests/integration/*Test.php</directory>
+            <directory>tests/integration/Widget/*Test.php</directory>
         </testsuite>
-    </testsuites>
+      </testsuites>
     <groups>
       <exclude>
         <group>broken</group>
