@@ -16,9 +16,8 @@ use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboAudio;
 use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Tests\Integration\Widget\WidgetTestCase;
 
-class AudioWidgetTest extends WidgetTestCase
+class AudioWidgetTest extends LocalWebTestCase
 {
 	protected $startLayouts;
     /**

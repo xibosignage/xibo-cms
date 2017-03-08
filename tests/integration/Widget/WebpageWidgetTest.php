@@ -13,9 +13,8 @@ use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboWebpage;
 use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Tests\Integration\Widget\WidgetTestCase;
 
-class WebpageWidgetTest extends WidgetTestCase
+class WebpageWidgetTest extends LocalWebTestCase
 {
 
 	protected $startLayouts;

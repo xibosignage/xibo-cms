@@ -13,9 +13,8 @@ use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboCurrencies;
 use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Tests\Integration\Widget\WidgetTestCase;
 
-class CurrenciesWidgetTest extends WidgetTestCase
+class CurrenciesWidgetTest extends LocalWebTestCase
 {
 
 	protected $startLayouts;

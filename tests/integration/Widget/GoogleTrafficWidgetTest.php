@@ -13,9 +13,8 @@ use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboGoogleTraffic;
 use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Tests\Integration\Widget\WidgetTestCase;
 
-class GoogleTrafficWidgetTest extends WidgetTestCase
+class GoogleTrafficWidgetTest extends LocalWebTestCase
 {
 	protected $startLayouts;
     /**

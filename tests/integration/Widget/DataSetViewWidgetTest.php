@@ -15,9 +15,8 @@ use Xibo\OAuth2\Client\Entity\XiboDataSetColumn;
 use Xibo\OAuth2\Client\Entity\XiboDataSetView;
 use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Tests\Integration\Widget\WidgetTestCase;
 
-class DataSetViewWidgetTest extends WidgetTestCase
+class DataSetViewWidgetTest extends LocalWebTestCase
 {
 
 	protected $startLayouts;

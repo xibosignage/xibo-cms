@@ -15,9 +15,8 @@ use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboVideo;
 use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Tests\Integration\Widget\WidgetTestCase;
 
-class VideoWidgetTest extends WidgetTestCase
+class VideoWidgetTest extends LocalWebTestCase
 {
 	protected $startLayouts;
     /**

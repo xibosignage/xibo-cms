@@ -14,9 +14,8 @@ use Xibo\OAuth2\Client\Entity\XiboCommand;
 use Xibo\OAuth2\Client\Entity\XiboShellCommand;
 use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Tests\Integration\Widget\WidgetTestCase;
 
-class ShellCommandWidgetTest extends WidgetTestCase
+class ShellCommandWidgetTest extends LocalWebTestCase
 {
 	protected $startLayouts;
     protected $startCommands;

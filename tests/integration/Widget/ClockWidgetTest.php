@@ -13,9 +13,8 @@ use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboClock;
 use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Tests\Integration\Widget\WidgetTestCase;
 
-class ClockWidgetTest extends WidgetTestCase
+class ClockWidgetTest extends LocalWebTestCase
 {
 	protected $startLayouts;
     /**

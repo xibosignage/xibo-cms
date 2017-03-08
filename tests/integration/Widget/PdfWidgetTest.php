@@ -15,9 +15,8 @@ use Xibo\OAuth2\Client\Entity\XiboPlaylist;
 use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Tests\Integration\Widget\WidgetTestCase;
 
-class PdfWidgetTest extends WidgetTestCase
+class PdfWidgetTest extends LocalWebTestCase
 {
 	protected $startLayouts;
     /**
