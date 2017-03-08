@@ -53,7 +53,7 @@ class HlsWidgetTest extends LocalWebTestCase
     }
 
 	/**
-	 * @group add
+     * @group broken
      * @dataProvider provideSuccessCases
      */
 	public function testAdd($name, $useDuration, $duration, $uri, $mute, $transparency)
@@ -103,6 +103,7 @@ class HlsWidgetTest extends LocalWebTestCase
     /**
      * testAddFailure - test adding various hls widgets that should be invalid
      * @dataProvider provideFailureCases
+     * @group broken
      */
     public function testAddFailure($name, $useDuration, $duration, $uri, $mute, $transparency)
     {
@@ -139,6 +140,7 @@ class HlsWidgetTest extends LocalWebTestCase
 
     /**
     * Edit
+    * @group broken
     */
     public function testEdit()
     {
@@ -174,6 +176,10 @@ class HlsWidgetTest extends LocalWebTestCase
         }
     }
 
+    /**
+    * Delete
+    * @group broken
+    */
     public function testDelete()
     {
         # Create layout 

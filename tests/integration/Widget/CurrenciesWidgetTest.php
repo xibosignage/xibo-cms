@@ -53,7 +53,7 @@ class CurrenciesWidgetTest extends LocalWebTestCase
         parent::tearDown();
     }
     /**
-     * @group add
+     * @group broken
      * @dataProvider provideSuccessCases
      */
     public function testAdd($overrideTemplate, $templateId, $name, $duration, $useDuration, $base, $items, $effect, $speed, $backgroundColor, $noRecordsMessage, $dateFormat, $updateInterval, $durationIsPerPage, $widgetOriginalWidth, $widgetOriginalHeight, $maxItemsPerPage, $mainTemplate, $itemTemplate, $styleSheet, $javaScript)

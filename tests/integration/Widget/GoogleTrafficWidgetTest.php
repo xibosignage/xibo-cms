@@ -53,7 +53,7 @@ class GoogleTrafficWidgetTest extends LocalWebTestCase
     }
 
 	/**
-	 * @group add
+     * @group broken
      * @dataProvider provideSuccessCases
      */
 	public function testAdd($name, $duration, $useDisplayLocation, $longitude, $latitude, $zoom)
@@ -113,6 +113,7 @@ class GoogleTrafficWidgetTest extends LocalWebTestCase
     /**
      * testAddFailure - test adding various Google traffic widgets that should be invalid
      * @dataProvider provideFailureCases
+     * @group broken
      */
     public function testAddFailure($name, $duration, $useDisplayLocation, $longitude, $latitude, $zoom)
     {
@@ -149,6 +150,7 @@ class GoogleTrafficWidgetTest extends LocalWebTestCase
 
     /**
     * Edit
+    * @group broken
     */
     public function testEdit()
     {
@@ -193,6 +195,10 @@ class GoogleTrafficWidgetTest extends LocalWebTestCase
         }
     }
 
+    /**
+    * Delete
+    * @group broken
+    */
     public function testDelete()
     {
         # Create layout 
