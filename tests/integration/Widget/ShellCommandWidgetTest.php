@@ -2,7 +2,7 @@
 /*
  * Spring Signage Ltd - http://www.springsignage.com
  * Copyright (C) 2015 Spring Signage Ltd
- * (ShellCommandWidgetTestCase.php)
+ * (ShellCommandWidgetTest.php)
  */
 
 namespace Xibo\Tests\Integration\Widget;
@@ -16,7 +16,7 @@ use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
 use Xibo\Tests\Integration\Widget\WidgetTestCase;
 
-class ShellCommandWidgetTestCase extends WidgetTestCase
+class ShellCommandWidgetTest extends WidgetTestCase
 {
 	protected $startLayouts;
     protected $startCommands;

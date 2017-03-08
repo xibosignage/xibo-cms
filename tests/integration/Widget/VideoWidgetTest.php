@@ -2,7 +2,7 @@
 /*
  * Spring Signage Ltd - http://www.springsignage.com
  * Copyright (C) 2015 Spring Signage Ltd
- * (VideoWidgetTestCase.php)
+ * (VideoWidgetTest.php)
  */
 
 namespace Xibo\Tests\Integration\Widget;
@@ -17,7 +17,7 @@ use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
 use Xibo\Tests\Integration\Widget\WidgetTestCase;
 
-class VideoWidgetTestCase extends WidgetTestCase
+class VideoWidgetTest extends WidgetTestCase
 {
 	protected $startLayouts;
     /**
@@ -86,6 +86,7 @@ class VideoWidgetTestCase extends WidgetTestCase
         # Assign media to a playlist
         $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], 10, $region->playlists[0]['playlistId']);
         $name = 'Edited Name';
+        $useDuration = 1;
         $duration = 80;
         $scaleTypeId = 'stretch';
         $mute = 1;
@@ -116,6 +117,9 @@ class VideoWidgetTestCase extends WidgetTestCase
             }
             if ($option['option'] == 'loop') {
                 $this->assertSame($loop, intval($option['value']));
+            }
+            if ($option['option'] == 'useDuration') {
+                $this->assertSame($useDuration, $option['value']);
             }
         }
     }

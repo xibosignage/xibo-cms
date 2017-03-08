@@ -2,7 +2,7 @@
 /*
  * Spring Signage Ltd - http://www.springsignage.com
  * Copyright (C) 2015 Spring Signage Ltd
- * (TextWidgetTestCase.php)
+ * (TextWidgetTest.php)
  */
 
 namespace Xibo\Tests\Integration\Widget;
@@ -15,7 +15,7 @@ use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
 use Xibo\Tests\Integration\Widget\WidgetTestCase;
 
-class TextWidgetTestCase extends WidgetTestCase
+class TextWidgetTest extends WidgetTestCase
 {
 	protected $startLayouts;
     /**

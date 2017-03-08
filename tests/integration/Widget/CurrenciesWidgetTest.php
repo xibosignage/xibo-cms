@@ -2,7 +2,7 @@
 /*
  * Spring Signage Ltd - http://www.springsignage.com
  * Copyright (C) 2015 Spring Signage Ltd
- * (CurrenciesWidgetTestCase.php)
+ * (CurrenciesWidgetTest.php)
  */
 
 namespace Xibo\Tests\Integration\Widget;
@@ -15,7 +15,7 @@ use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
 use Xibo\Tests\Integration\Widget\WidgetTestCase;
 
-class CurrenciesWidgetTestCase extends WidgetTestCase
+class CurrenciesWidgetTest extends WidgetTestCase
 {
 
 	protected $startLayouts;
