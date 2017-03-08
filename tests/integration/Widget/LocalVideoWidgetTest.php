@@ -2,7 +2,7 @@
 /*
  * Spring Signage Ltd - http://www.springsignage.com
  * Copyright (C) 2015 Spring Signage Ltd
- * (LocalVideoWidgetTestCase.php)
+ * (LocalVideoWidgetTest.php)
  */
 
 namespace Xibo\Tests\Integration\Widget;
@@ -14,9 +14,8 @@ use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboLocalVideo;
 use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Tests\Integration\Widget\WidgetTestCase;
 
-class LocalVideoWidgetTestCase extends WidgetTestCase
+class LocalVideoWidgetTest extends LocalWebTestCase
 {
 	protected $startLayouts;
     /**

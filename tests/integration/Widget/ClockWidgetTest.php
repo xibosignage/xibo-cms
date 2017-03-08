@@ -2,7 +2,7 @@
 /*
  * Spring Signage Ltd - http://www.springsignage.com
  * Copyright (C) 2015 Spring Signage Ltd
- * (ClockWidgetTestCase.php)
+ * (ClockWidgetTest.php)
  */
 
 namespace Xibo\Tests\Integration\Widget;
@@ -13,9 +13,8 @@ use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboClock;
 use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Tests\Integration\Widget\WidgetTestCase;
 
-class ClockWidgetTestCase extends WidgetTestCase
+class ClockWidgetTest extends LocalWebTestCase
 {
 	protected $startLayouts;
     /**

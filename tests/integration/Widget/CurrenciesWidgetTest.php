@@ -2,7 +2,7 @@
 /*
  * Spring Signage Ltd - http://www.springsignage.com
  * Copyright (C) 2015 Spring Signage Ltd
- * (CurrenciesWidgetTestCase.php)
+ * (CurrenciesWidgetTest.php)
  */
 
 namespace Xibo\Tests\Integration\Widget;
@@ -13,9 +13,8 @@ use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboCurrencies;
 use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Tests\Integration\Widget\WidgetTestCase;
 
-class CurrenciesWidgetTestCase extends WidgetTestCase
+class CurrenciesWidgetTest extends LocalWebTestCase
 {
 
 	protected $startLayouts;
@@ -54,7 +53,7 @@ class CurrenciesWidgetTestCase extends WidgetTestCase
         parent::tearDown();
     }
     /**
-     * @group add
+     * @group broken
      * @dataProvider provideSuccessCases
      */
     public function testAdd($overrideTemplate, $templateId, $name, $duration, $useDuration, $base, $items, $effect, $speed, $backgroundColor, $noRecordsMessage, $dateFormat, $updateInterval, $durationIsPerPage, $widgetOriginalWidth, $widgetOriginalHeight, $maxItemsPerPage, $mainTemplate, $itemTemplate, $styleSheet, $javaScript)
