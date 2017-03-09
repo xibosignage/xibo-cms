@@ -283,6 +283,7 @@ $app->delete('/application/:id', '\Xibo\Controller\Applications:delete')->name('
 $app->get('/module/view', '\Xibo\Controller\Module:displayPage')->name('module.view');
 $app->post('/module/inst/:name', '\Xibo\Controller\Module:install')->name('module.install');
 $app->get('/module/form/inst/:name', '\Xibo\Controller\Module:installForm')->name('module.install.form');
+$app->get('/module/form/instlist', '\Xibo\Controller\Module:installListForm')->name('module.install.list.form');
 $app->get('/module/form/verify', '\Xibo\Controller\Module:verifyForm')->name('module.verify.form');
 $app->get('/module/form/settings/:id', '\Xibo\Controller\Module:settingsForm')->name('module.settings.form');
 $app->get('/module/form/:id/custom/:name', '\Xibo\Controller\Module:customFormRender')->name('module.custom.form');

@@ -23,6 +23,8 @@ namespace Xibo\Controller;
 use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -157,37 +159,10 @@ class Module extends Base
      */
     function displayPage()
     {
-        $data = [];
-
-        // Do we have any modules to install?!
-        if ($this->getConfig()->GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
-            // Get a list of matching files in the modules folder
-            $files = array_merge(glob(PROJECT_ROOT . '/modules/*.json'), glob(PROJECT_ROOT . '/custom/*.json'));
-
-            // Get a list of all currently installed modules
-            $installed = [];
-            $data['modulesToInstall'] = [];
-
-            foreach ($this->moduleFactory->query() as $row) {
-                /* @var \Xibo\Entity\Module $row */
-                $installed[] = $row->installName;
-            }
-
-            // Compare the two
-            foreach ($files as $file) {
-                // Check to see if the module has already been installed
-                $fileName = explode('.', basename($file));
-
-                if (in_array($fileName[0], $installed))
-                    continue;
-
-                // If not, open it up and get some information about it
-                $data['modulesToInstall'][] = json_decode(file_get_contents($file));
-            }
-        }
-
         $this->getState()->template = 'module-page';
-        $this->getState()->setData($data);
+        $this->getState()->setData([
+            'modulesToInstall' => $this->getInstallableModules()
+        ]);
     }
 
     /**
@@ -323,10 +298,33 @@ class Module extends Base
     }
 
     /**
+     * Form for the install list
+     */
+    public function installListForm()
+    {
+        // Use the name to get details about this module.
+        $modules = $this->getInstallableModules();
+
+        if (count($modules) <= 0)
+            throw new InvalidArgumentException(__('Sorry, no modules available to install'), 'modules');
+
+        $this->getState()->template = 'module-form-install-list';
+        $this->getState()->setData([
+            'modulesToInstall' => $modules,
+            'help' => $this->getHelp()->link('Module', 'Install')
+        ]);
+    }
+
+    /**
      * @param string $name
+     * @throws InvalidArgumentException
      */
     public function installForm($name)
     {
+        // Check the module hasn't already been installed
+        if ($this->checkModuleInstalled($name))
+            throw new InvalidArgumentException(__('Module already installed'), 'install');
+
         // Use the name to get details about this module.
         if (file_exists(PROJECT_ROOT . '/modules/' . $name . '.json'))
             $module = json_decode(file_get_contents(PROJECT_ROOT . '/modules/' . $name . '.json'));
@@ -346,10 +344,15 @@ class Module extends Base
     /**
      * Install Module
      * @param string $name
+     * @throws InvalidArgumentException
      */
     public function install($name)
     {
         $this->getLog()->notice('Request to install Module: ' . $name);
+
+        // Check the module hasn't already been installed
+        if ($this->checkModuleInstalled($name))
+            throw new InvalidArgumentException(__('Module already installed'), 'install');
 
         if (file_exists(PROJECT_ROOT . '/modules/' . $name . '.json'))
             $moduleDetails = json_decode(file_get_contents(PROJECT_ROOT . '/modules/' . $name . '.json'));
@@ -979,5 +982,57 @@ class Module extends Base
 
         $module->$formName();
         $this->setNoOutput(true);
+    }
+
+    /**
+     * Get installable modules
+     * @return array
+     */
+    private function getInstallableModules()
+    {
+        $modules = [];
+
+        // Do we have any modules to install?!
+        if ($this->getConfig()->GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
+            // Get a list of matching files in the modules folder
+            $files = array_merge(glob(PROJECT_ROOT . '/modules/*.json'), glob(PROJECT_ROOT . '/custom/*.json'));
+
+            // Get a list of all currently installed modules
+            $installed = [];
+
+            foreach ($this->moduleFactory->query() as $row) {
+                /* @var \Xibo\Entity\Module $row */
+                $installed[] = $row->installName;
+            }
+
+            // Compare the two
+            foreach ($files as $file) {
+                // Check to see if the module has already been installed
+                $fileName = explode('.', basename($file));
+
+                if (in_array($fileName[0], $installed))
+                    continue;
+
+                // If not, open it up and get some information about it
+                $modules[] = json_decode(file_get_contents($file));
+            }
+        }
+
+        return $modules;
+    }
+
+    /**
+     * Check whether a module is installed or not.
+     * @param string $name
+     * @return bool
+     */
+    private function checkModuleInstalled($name)
+    {
+        try {
+            $this->moduleFactory->getByInstallName($name);
+            return true;
+        } catch (NotFoundException $notFoundException) {
+            return false;
+        }
     }
 }

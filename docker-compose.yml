@@ -3,6 +3,8 @@ version: "2"
 services:
   db:
     image: mysql:5.6
+    ports:
+      - 3315:3306
     volumes:
      - ./library/containers/db:/var/lib/mysql
     environment:
