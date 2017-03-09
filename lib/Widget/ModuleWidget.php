@@ -90,6 +90,9 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected $statusMessage;
 
+    /** @var string|null Cache Key Prefix */
+    private $cacheKeyPrefix = null;
+
     //
     // Injected Factory Classes and Services Follow
     //
@@ -321,6 +324,36 @@ abstract class ModuleWidget implements ModuleInterface
     public function init()
     {
 
+    }
+
+    /**
+     * Make a cache key
+     * @param $id
+     * @return string
+     */
+    public function makeCacheKey($id)
+    {
+        return $this->getCacheKeyPrefix() . '/' . $id;
+    }
+
+    /**
+     * Get the cache prefix, including the leading /
+     * @return null|string
+     */
+    private function getCacheKeyPrefix()
+    {
+        if ($this->cacheKeyPrefix == null)
+            $this->cacheKeyPrefix = '/widget/' . basename(get_class($this));
+
+        return $this->cacheKeyPrefix;
+    }
+
+    /**
+     * Dump the cache for this module
+     */
+    public function dumpCacheForModule()
+    {
+        $this->getPool()->deleteItem($this->getCacheKeyPrefix());
     }
 
     /**

@@ -318,7 +318,7 @@ class TwitterMetro extends TwitterBase
         $searchTerm .= ($this->getOption('removeRetweets')) ? ' -filter:retweets' : '';
         
         // Connect to twitter and get the twitter feed.
-        $cache = $this->getPool()->getItem(md5($searchTerm . $this->getOption('resultType') . $this->getOption('tweetCount', 60) . $geoCode));
+        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($searchTerm . $this->getOption('resultType') . $this->getOption('tweetCount', 60) . $geoCode)));
 
         $data = $cache->get();
 

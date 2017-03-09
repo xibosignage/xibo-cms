@@ -488,7 +488,7 @@ class Twitter extends TwitterBase
         }
         
         // Connect to twitter and get the twitter feed.
-        $cache = $this->getPool()->getItem(md5($searchTerm . $this->getOption('resultType') . $this->getOption('tweetCount', 15) . $geoCode));
+        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($searchTerm . $this->getOption('resultType') . $this->getOption('tweetCount', 15) . $geoCode)));
 
         $data = $cache->get();
 

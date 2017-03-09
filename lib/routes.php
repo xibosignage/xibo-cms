@@ -369,6 +369,7 @@ $app->post('/application', '\Xibo\Controller\Applications:add')->name('applicati
 $app->get('/module', '\Xibo\Controller\Module:grid')->name('module.search');
 $app->put('/module/settings/:id', '\Xibo\Controller\Module:settings')->name('module.settings');
 $app->put('/module/verify', '\Xibo\Controller\Module:verify')->name('module.verify');
+$app->put('/module/clear-cache/:id', '\Xibo\Controller\Module:clearCache')->name('module.clear.cache');
 
 //
 // Transition

@@ -191,6 +191,15 @@ class Module extends Base
                 );
             }
 
+            // Clear cache
+            if ($module->regionSpecific == 1) {
+                $module->buttons[] = array(
+                    'id' => 'module_button_clear_cache',
+                    'url' => $this->urlFor('module.clear.cache.form', ['id' => $module->moduleId]),
+                    'text' => __('Clear Cache')
+                );
+            }
+
             // Create a module object and return any buttons it may require
             $moduleObject = $this->moduleFactory->create($module->type);
 
@@ -1034,5 +1043,34 @@ class Module extends Base
         } catch (NotFoundException $notFoundException) {
             return false;
         }
+    }
+
+    /**
+     * Clear Cache Form
+     * @param $moduleId
+     */
+    public function clearCacheForm($moduleId)
+    {
+        $module = $this->moduleFactory->getById($moduleId);
+
+        $this->getState()->template = 'module-form-clear-cache';
+        $this->getState()->setData([
+            'module' => $module,
+            'help' => $this->getHelp()->link('Module', 'General')
+        ]);
+    }
+
+    /**
+     * Clear Cache
+     * @param $moduleId
+     */
+    public function clearCache($moduleId)
+    {
+        $module = $this->moduleFactory->createById($moduleId);
+        $module->dumpCacheForModule();
+
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Cleared the Cache'))
+        ]);
     }
 }

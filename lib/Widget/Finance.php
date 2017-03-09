@@ -352,7 +352,7 @@ class Finance extends YahooBase
         $yql = str_replace('[Item]', implode(',', $items), $yql);
 
         // Fire off a request for the data
-        $cache = $this->getPool()->getItem('finance/' . md5($yql));
+        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($yql)));
 
         $data = $cache->get();
 
