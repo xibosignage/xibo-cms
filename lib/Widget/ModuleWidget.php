@@ -342,8 +342,10 @@ abstract class ModuleWidget implements ModuleInterface
      */
     private function getCacheKeyPrefix()
     {
-        if ($this->cacheKeyPrefix == null)
-            $this->cacheKeyPrefix = '/widget/' . basename(get_class($this));
+        if ($this->cacheKeyPrefix == null) {
+            $className = get_class($this);
+            $this->cacheKeyPrefix = '/widget/' . substr($className, strrpos($className, '\\') + 1);
+        }
 
         return $this->cacheKeyPrefix;
     }
