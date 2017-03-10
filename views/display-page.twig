@@ -18,11 +18,17 @@
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
 
-                            {{ inline.input("display", "Name") }}
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input("display", title) }}
 
-                            {{ inline.input("macAddress", "Mac Address") }}
+                            {% set title %}{% trans "Mac Address" %}{% endset %}
+                            {{ inline.input("macAddress", title) }}
 
-                            {{ inline.dropdown("displayGroupId", "single", "Display Group", "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
+                            {% set title %}{% trans "Display Group" %}{% endset %}
+                            {{ inline.dropdown("displayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
+
+                            {% set title %}{% trans "Display Profile" %}{% endset %}
+                            {{ inline.dropdown("displayProfileId", "single", title, "", [{displayProfileId:null, name:""}]|merge(displayProfiles), "displayProfileId", "name") }}
                         </form>
                     </div>
                 </div>
@@ -44,6 +50,7 @@
                                 <th>{% trans "Email Alert" %}</th>
                                 <th>{% trans "Logged In" %}</th>
                                 <th>{% trans "Last Accessed" %}</th>
+                                <th>{% trans "Display Profile" %}</th>
                                 <th>{% trans "Version" %}</th>
                                 <th>{% trans "Device Name" %}</th>
                                 <th>{% trans "IP Address" %}</th>
@@ -159,10 +166,11 @@
                     {"data": "storagePercentage", "visible": false},
                     {"data": "description", "visible": false},
                     {"data": "defaultLayout", "visible": false},
-                    {"data": "incSchedule", "render": dataTableTickCrossColumn},
-                    {"data": "emailAlert", "render": dataTableTickCrossColumn},
+                    {"data": "incSchedule", "render": dataTableTickCrossColumn, "visible": false},
+                    {"data": "emailAlert", "render": dataTableTickCrossColumn, "visible": false},
                     {"data": "loggedIn", "render": dataTableTickCrossColumn},
                     {"data": "lastAccessed", "render": dataTableDateFromUnix},
+                    {"data": "displayProfile", "visible": false},
                     {
                         "name": "clientVersion",
                         "data": function (data, type) {

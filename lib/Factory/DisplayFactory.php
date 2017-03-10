@@ -229,6 +229,16 @@ class DisplayFactory extends BaseFactory
             $params['displayId'] = $this->getSanitizer()->getInt('displayId', $filterBy);
         }
 
+        // Display Profile
+        if ($this->getSanitizer()->getInt('displayProfileId', $filterBy) !== null) {
+            if ($this->getSanitizer()->getInt('displayProfileId', $filterBy) == -1) {
+                $body .= ' AND IFNULL(displayProfileId, 0) = 0 ';
+            } else {
+                $body .= ' AND `display`.displayProfileId = :displayProfileId ';
+                $params['displayProfileId'] = $this->getSanitizer()->getInt('displayProfileId', $filterBy);
+            }
+        }
+
         // Filter by Wake On LAN
         if ($this->getSanitizer()->getInt('wakeOnLan', $filterBy) !== null) {
             $body .= ' AND display.wakeOnLan = :wakeOnLan ';
