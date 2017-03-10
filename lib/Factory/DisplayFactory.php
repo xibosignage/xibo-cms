@@ -181,8 +181,6 @@ class DisplayFactory extends BaseFactory
                   display.client_version AS clientVersion,
                   display.client_code AS clientCode,
                   display.displayProfileId,
-                  display.currentLayoutId,
-                  currentLayout.layout AS currentLayout,
                   display.screenShotRequested,
                   display.storageAvailableSpace,
                   display.storageTotalSpace,
@@ -204,8 +202,6 @@ class DisplayFactory extends BaseFactory
                         AND `displaygroup`.isDisplaySpecific = 1
                     LEFT OUTER JOIN layout 
                     ON layout.layoutid = display.defaultlayoutid
-                    LEFT OUTER JOIN layout currentLayout 
-                    ON currentLayout.layoutId = display.currentLayoutId
             ';
 
         // Restrict to members of a specific display group

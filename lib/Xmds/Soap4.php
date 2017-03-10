@@ -415,7 +415,6 @@ class Soap4 extends Soap
 
         $status = json_decode($status, true);
 
-        $this->display->currentLayoutId = $this->getSanitizer()->getInt('currentLayoutId', $this->display->currentLayoutId, $status);
         $this->display->storageAvailableSpace = $this->getSanitizer()->getInt('availableSpace', $this->display->storageAvailableSpace, $status);
         $this->display->storageTotalSpace = $this->getSanitizer()->getInt('totalSpace', $this->display->storageTotalSpace, $status);
         $this->display->lastCommandSuccess = $this->getSanitizer()->getCheckbox('lastCommandSuccess', $this->display->lastCommandSuccess, $status);
@@ -433,8 +432,23 @@ class Soap4 extends Soap
             }
         }
 
+        // Current Layout
+        $currentLayoutId = $this->getSanitizer()->getInt('currentLayoutId', $status);
+
+        if ($currentLayoutId !== null) {
+            // Cache it
+            $this->getLog()->debug('Caching currentLayoutId with Pool');
+
+            $item = $this->getPool()->getItem($this->display->getCacheKey() . '/currentLayoutId');
+            $item->set($currentLayoutId);
+            $item->expiresAfter(new \DateInterval('P1W'));
+
+            $this->getPool()->saveDeferred($item);
+        }
+
         // Touch the display record
-        $this->display->save(Display::$saveOptionsMinimum);
+        if (count($this->display->getChangedProperties()) > 0)
+            $this->display->save(Display::$saveOptionsMinimum);
 
         return true;
     }

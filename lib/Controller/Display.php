@@ -440,6 +440,10 @@ class Display extends Base
                 $display->excludeProperty('displayGroups');
             }
 
+            // Current layout from cache
+            $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+            $display->setCurrentLayoutId($this->pool);
+
             if ($this->isApi())
                 break;
 
