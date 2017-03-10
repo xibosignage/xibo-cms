@@ -157,6 +157,14 @@ echo __('Whitelist Load Balancers');
 echo __('If the CMS is behind a load balancer, what are the load balancer IP addresses, comma delimited.');
 echo __('Default Layout');
 echo __('The default layout to assign for new displays and displays which have their current default deleted.');
+echo __('Default setting for Statistics Enabled?');
+echo __('Enable the option to report the current layout status?');
+echo __('Enable the option to set the screenshot interval?');
+echo __('The default size in pixels for the Display Screenshots');
+echo __('Display Screenshot Default Size');
+echo __('Latest News URL');
+echo __('RSS/Atom Feed to be displayed on the Status Dashboard');
+
 
 // Transitions
 echo __('Fade In');
