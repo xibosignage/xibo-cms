@@ -20,8 +20,6 @@
  */
 namespace Xibo\Controller;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Entity\Display;
-use Xibo\Entity\DisplayGroup;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
@@ -509,8 +507,8 @@ class Schedule extends Base
     }
 
     /**
-     * @param Display $display
-     * @param DisplayGroup $displayGroup
+     * @param \Xibo\Entity\Display $display
+     * @param \Xibo\Entity\DisplayGroup $displayGroup
      * @param int $eventDisplayGroupId
      * @return array
      */
