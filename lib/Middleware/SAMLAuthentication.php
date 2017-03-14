@@ -77,6 +77,7 @@ class SAMLAuthentication extends Middleware
 
         // Register SAML routes.
         $app->excludedCsrfRoutes = SAMLAuthentication::samlRoutes();
+        $app->logoutRoute = 'saml.logout';
 
         $app->get('/saml/metadata', function () {
             $settings = new \OneLogin_Saml2_Settings($this->app->configService->samlSettings, true);
@@ -101,7 +102,7 @@ class SAMLAuthentication extends Middleware
 
         $app->get('/saml/logout', function () {
             $this->samlLogout();
-        });
+        })->setName('saml.logout');
 
         $app->post('/saml/acs', function () {
             // Assertion Consumer Endpoint
