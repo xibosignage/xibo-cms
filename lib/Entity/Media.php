@@ -727,14 +727,9 @@ class Media implements \JsonSerializable
             $saveName = $this->mediaId . '.' . strtolower(substr($lastPeriod, 1));
         }
 
-        $this->getLog()->debug('saveFile for "%s" with storedAs = "%s", fileName = "%s" to "%s". Always Copy = "%s", Cloned = "%s"',
-            $this->name,
-            $this->storedAs,
-            $this->fileName,
-            $saveName,
-            $this->alwaysCopy,
-            $this->cloned
-        );
+        $this->getLog()->debug('saveFile for "' . $this->name . '" [' . $this->mediaId . '] with storedAs = "'
+            . $this->storedAs . '", fileName = "' . $this->fileName . '" to "' . $saveName . '". Always Copy = "'
+            . $this->alwaysCopy . '", Cloned = "' . $this->cloned . '"');
 
         // If the storesAs is empty, then set it to be the moved file name
         if (empty($this->storedAs) && !$this->alwaysCopy) {
