@@ -274,14 +274,20 @@ class SAMLAuthentication extends Middleware
             }
         });
 
-        $app->get('/saml/sls', function () {
+        $app->get('/saml/sls', function () use ($app) {
             // Single Logout Service
 
             // Inject the GET parameters required by the SAML toolkit
             $_GET = $this->app->request->get();
 
             $auth = new \OneLogin_Saml2_Auth($this->app->configService->samlSettings);
-            $auth->processSLO();
+            $auth->processSLO(false, null, false, function() use ($app) {
+                // Grab a login controller
+                /** @var \Xibo\Controller\Login $loginController */
+                $loginController = $app->container->get('\Xibo\Controller\Login');
+                $loginController->logout(false);
+            });
+
             $errors = $auth->getErrors();
 
             if (empty($errors)) {
