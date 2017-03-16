@@ -182,9 +182,9 @@
 
                     if (event.event.dayPartId != 1) {
                     if (event.event.eventTypeId == 2) {
-                    title = "[" + moment(event.scheduleEvent.fromDt).format("HH:mm") + "] " + event.title;
+                    title = "[" + moment(event.scheduleEvent.fromDt).format(jsTimeFormat) + "] " + event.title;
                     } else if (event.sameDay) {
-                    title = "[" + moment(event.scheduleEvent.fromDt).format("HH:mm") + " - " + moment(event.scheduleEvent.toDt).format("HH:mm") + "] " + event.title;
+                    title = "[" + moment(event.scheduleEvent.fromDt).format(jsTimeFormat) + " - " + moment(event.scheduleEvent.toDt).format(jsTimeFormat) + "] " + event.title;
                     } else {
                     title = "[" + moment(event.scheduleEvent.fromDt).format(jsDateFormat) + " - " + moment(event.scheduleEvent.toDt).format(jsDateFormat) + "] " + event.title;
                     }
@@ -269,9 +269,9 @@
 
                     if (event.event.dayPartId != 1) {
                     if (event.event.eventTypeId == 2) {
-                    title = "[" + moment(event.scheduleEvent.fromDt).format("HH:mm") + "] " + event.title;
+                    title = "[" + moment(event.scheduleEvent.fromDt).format(jsTimeFormat) + "] " + event.title;
                     } else if (event.sameDay) {
-                    title = "[" + moment(event.scheduleEvent.fromDt).format("HH:mm") + " - " + moment(event.scheduleEvent.toDt).format("HH:mm") + "] " + event.title;
+                    title = "[" + moment(event.scheduleEvent.fromDt).format(jsTimeFormat) + " - " + moment(event.scheduleEvent.toDt).format(jsTimeFormat) + "] " + event.title;
                     } else {
                     title = "[" + moment(event.scheduleEvent.fromDt).format(jsDateFormat) + " - " + moment(event.scheduleEvent.toDt).format(jsDateFormat) + "] " + event.title;
                     }
@@ -349,9 +349,9 @@
 
             if (event.event.dayPartId != 1) {
             if (event.event.eventTypeId == 2) {
-            title = "[" + moment(event.scheduleEvent.fromDt).format("HH:mm") + "] " + event.title;
+            title = "[" + moment(event.scheduleEvent.fromDt).format(jsTimeFormat) + "] " + event.title;
             } else if (event.sameDay) {
-            title = "[" + moment(event.scheduleEvent.fromDt).format("HH:mm") + " - " + moment(event.scheduleEvent.toDt).format("HH:mm") + "] " + event.title;
+            title = "[" + moment(event.scheduleEvent.fromDt).format(jsTimeFormat) + " - " + moment(event.scheduleEvent.toDt).format(jsTimeFormat) + "] " + event.title;
             } else {
             title = "[" + moment(event.scheduleEvent.fromDt).format(jsDateFormat) + " - " + moment(event.scheduleEvent.toDt).format(jsDateFormat) + "] " + event.title;
             }
