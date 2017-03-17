@@ -668,7 +668,11 @@
             <!-- Campaign -->
             <% if (typeof campaign != 'undefined') { %>
                 <span>
-                    <a href="<%= campaign.link %>"><%= campaign.name %></a>
+                    <% if (campaign.link != '') { %>
+                      <a href="<%= campaign.link %>"><%= campaign.name %></a>
+                    <% } else { %>   
+                      <%= campaign.name %>
+                    <% } %> 
                 </span>
                 <span>&nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i>&nbsp;</span>
             <% } %> 
@@ -686,7 +690,11 @@
             <% _.each(displayGroups, function(displayGroup){ %>
                 <span>&nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i>&nbsp;</span>
                 <span>
+                  <% if (displayGroup.link != '') { %>
                     <a href="<%= displayGroup.link %>"><%= displayGroup.name %></a>
+                  <% } else { %>   
+                    <%= displayGroup.name %>
+                  <% } %> 
                 </span>
             <% }); %>
             

@@ -737,7 +737,7 @@ if(!String.prototype.formatNum) {
 		for (var i = 0; i < ev.length; i++) {
 
 			// Add if it's a normal layout (1) or an overlay (3)
-			if(ev[i].eventTypeId == type) {
+			if(ev[i].eventTypeId == type && ev[i].layoutId != 0) {
 				var layout = la[ev[i].layoutId];
 				var event = ev[i];
 				var elementPriority = 0;
@@ -831,8 +831,8 @@ if(!String.prototype.formatNum) {
 		var t = {};
 		
 		var targetEvent = {};
-	    var displayGroupLink = '/displaygroup/view';
-	    var campaignLink = '/campaign/view';
+	    var displayGroupLink = '';
+			var campaignLink = '';
 
 	    var results = data.results[data.selectedDisplayGroup];
 	    
