@@ -151,10 +151,15 @@ class Display extends Base
      */
     function displayPage()
     {
+        // Build a list of display profiles
+        $displayProfiles = $this->displayProfileFactory->query();
+        $displayProfiles[] = ['displayProfileId' => -1, 'name' => __('Default')];
+
         // Call to render the template
         $this->getState()->template = 'display-page';
         $this->getState()->setData([
-            'displayGroups' => $this->displayGroupFactory->query()
+            'displayGroups' => $this->displayGroupFactory->query(),
+            'displayProfiles' => $displayProfiles
         ]);
     }
 
@@ -382,6 +387,13 @@ class Display extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="displayProfileId",
+     *      in="formData",
+     *      description="Filter by Display Profile",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -405,10 +417,17 @@ class Display extends Base
             'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
             'clientVersion' => $this->getSanitizer()->getString('clientVersion'),
             'authorised' => $this->getSanitizer()->getInt('authorised'),
+            'displayProfileId' => $this->getSanitizer()->getInt('displayProfileId'),
         ];
 
         // Get a list of displays
         $displays = $this->displayFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+
+        // Get all Display Profiles
+        $displayProfiles = [];
+        foreach ($this->displayProfileFactory->query() as $displayProfile) {
+            $displayProfiles[$displayProfile->displayProfileId] = $displayProfile->name;
+        }
 
         // validate displays so we get a realistic view of the table
         $this->validateDisplays($displays);
@@ -421,8 +440,15 @@ class Display extends Base
                 $display->excludeProperty('displayGroups');
             }
 
+            // Current layout from cache
+            $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+            $display->setCurrentLayoutId($this->pool);
+
             if ($this->isApi())
                 break;
+
+            // Add in the display profile information
+            $display->displayProfile = (!array_key_exists($display->displayProfileId, $displayProfiles)) ? __('Default') : $displayProfiles[$display->displayProfileId];
 
             $display->includeProperty('buttons');
 

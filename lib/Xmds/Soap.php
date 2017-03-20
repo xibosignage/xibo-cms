@@ -688,6 +688,15 @@ class Soap
             }
         }
 
+        // Set any remaining required files to have 0 bytes requested (as we've generated a new nonce)
+        try {
+            $this->getStore()->update('UPDATE `requiredfile` SET bytesRequested = 0 WHERE displayId = :displayId', [
+                'displayId' => $this->display->displayId
+            ]);
+        } catch (DeadlockException $deadlockException) {
+            $this->getLog()->error('Deadlock when updating required files bytesRequested - ignoring and continuing with request');
+        }
+
         // Phone Home?
         $this->phoneHome();
 
@@ -1236,12 +1245,18 @@ class Soap
             if ($message == '')
                 $message = $node->textContent;
 
+            // Trim the page if it is over 50 characters.
+            $page = $thread . $method . $type;
+
+            if (strlen($page) >= 50)
+                $page = substr($page, 0, 49);
+
             $logs[] = [
                 $this->logProcessor->getUid(),
                 $date,
                 'PLAYER',
                 $levelName,
-                $thread . $method . $type,
+                $page,
                 'POST',
                 $message . $scheduleId . $layoutId . $mediaId,
                 0,

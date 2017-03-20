@@ -27,7 +27,7 @@ abstract class TwitterBase extends ModuleWidget
         $key = base64_encode(urlencode($this->getSetting('apiKey')) . ':' . urlencode($this->getSetting('apiSecret')));
 
         // Check to see if we have the bearer token already cached
-        $cache = $this->getPool()->getItem('bearer_' . $key);
+        $cache = $this->getPool()->getItem($this->makeCacheKey('bearer_' . $key));
 
         $token = $cache->get();
 

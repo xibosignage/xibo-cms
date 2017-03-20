@@ -29,7 +29,7 @@ class Pdf extends ModuleWidget
      * @SWG\Post(
      *  path="/playlist/widget/pdf/{playlistId}",
      *  operationId="WidgetPdfEdit",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Parameters for editing existing pdf on a layout",
      *  description="Parameters for editing existing pdf on a layout, for adding new files, please refer to POST /library documentation",
      *  @SWG\Parameter(

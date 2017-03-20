@@ -485,7 +485,7 @@ class ForecastIo extends ModuleWidget
         // Query the API and Dump the Results.
         $apiOptions = array('units' => $this->getOption('units', 'auto'), 'lang' => $this->getOption('lang', 'en'), 'exclude' => 'minutely,hourly');
 
-        $cache = $this->getPool()->getItem('forecast/' . md5($defaultLat . $defaultLong . implode('.', $apiOptions)));
+        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($defaultLat . $defaultLong . implode('.', $apiOptions))));
         $data = $cache->get();
 
         if ($cache->isMiss()) {

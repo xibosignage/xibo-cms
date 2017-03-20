@@ -43,7 +43,7 @@ class LocalVideo extends ModuleWidget
      * @SWG\Post(
      *  path="/playlist/widget/localVideo/{playlistId}",
      *  operationId="WidgetLocalVideoAdd",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Add a Local Video Widget",
      *  description="Add a new Local Video Widget to the specified playlist",
      *  @SWG\Parameter(

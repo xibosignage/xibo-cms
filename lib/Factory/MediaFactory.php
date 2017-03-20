@@ -157,7 +157,7 @@ class MediaFactory extends BaseFactory
             $media->mediaType = 'module';
             $media->expires = 0;
             $media->storedAs = $name;
-            $media->ownerId = 1;
+            $media->ownerId = $this->getUserFactory()->getSystemUser()->getOwnerId();
             $media->moduleSystemFile = $systemFile;
         }
 
@@ -250,7 +250,7 @@ class MediaFactory extends BaseFactory
                 try {
                     $item->saveFile();
                 } catch (\Exception $e) {
-                    $this->getLog()->error('Unable to save:' . $item->mediaId);
+                    $this->getLog()->error('Unable to save:' . $item->mediaId . '. ' . $e->getMessage());
                 }
             },
             'rejected' => function ($reason, $index) use ($log) {
@@ -419,7 +419,9 @@ class MediaFactory extends BaseFactory
         $body = " FROM media ";
         $body .= "   LEFT OUTER JOIN media parentmedia ";
         $body .= "   ON parentmedia.MediaID = media.MediaID ";
-        $body .= "   INNER JOIN `user` ON `user`.userId = `media`.userId ";
+
+        // Media might be linked to the system user (userId 0)
+        $body .= "   LEFT OUTER JOIN `user` ON `user`.userId = `media`.userId ";
 
         if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
             $body .= '

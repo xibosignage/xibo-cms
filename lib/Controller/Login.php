@@ -145,8 +145,9 @@ class Login extends Base
 
     /**
      * Log out
+     * @param bool $redirect
      */
-    function logout()
+    public function logout($redirect = true)
     {
         $this->getUser()->loggedIn = 0;
 
@@ -157,7 +158,9 @@ class Login extends Base
 
         $session = $this->session;
         $session->setIsExpired(1);
-        $this->getApp()->redirectTo('login');
+
+        if ($redirect)
+            $this->getApp()->redirectTo('login');
     }
 
     /**

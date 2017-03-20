@@ -1,12 +1,12 @@
 library/
-vendor/
+vendor
 settings.php
 .project/
 .vagrant/
 .idea/
 cache/
 web/swagger-ui/
-custom/
+custom
 .DS_Store
-node_modules/
 web/theme/custom
+node_modules

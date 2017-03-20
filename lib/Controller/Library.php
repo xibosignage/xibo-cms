@@ -767,14 +767,28 @@ class Library extends Base
         // Work out how many files there are
         $media = $this->mediaFactory->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser()->userId]);
 
-        $size = ByteFormatter::format(array_sum(array_map(function ($element) {
-            return $element->fileSize;
-        }, $media)));
+        $sumExcludingGeneric = 0;
+        $countExcludingGeneric = 0;
+        $sumGeneric = 0;
+        $countGeneric = 0;
+
+        foreach ($media as $item) {
+            if ($item->mediaType == 'genericfile') {
+                $countGeneric++;
+                $sumGeneric = $sumGeneric + $item->fileSize;
+            }
+            else {
+                $countExcludingGeneric++;
+                $sumExcludingGeneric = $sumExcludingGeneric + $item->fileSize;
+            }
+        }
 
         $this->getState()->template = 'library-form-tidy';
         $this->getState()->setData([
-            'size' => $size,
-            'quantity' => count($media),
+            'sumExcludingGeneric' => ByteFormatter::format($sumExcludingGeneric),
+            'sumGeneric' => ByteFormatter::format($sumGeneric),
+            'countExcludingGeneric' => $countExcludingGeneric,
+            'countGeneric' => $countGeneric,
             'help' => $this->getHelp()->link('Content', 'TidyLibrary')
         ]);
     }
@@ -788,6 +802,13 @@ class Library extends Base
      *  tags={"library"},
      *  summary="Tidy Library",
      *  description="Routine tidy of the library, removing unused files.",
+     *  @SWG\Parameter(
+     *      name="tidyGenericFiles",
+     *      in="formData",
+     *      description="Also delete generic files?",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation"
@@ -799,14 +820,20 @@ class Library extends Base
         if ($this->getConfig()->GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
             throw new ConfigurationException(__('Sorry this function is disabled.'));
 
+        $tidyGenericFiles = $this->getSanitizer()->getCheckbox('tidyGenericFiles');
+
         // Get a list of media that is not in use (for this user)
         $media = $this->mediaFactory->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser()->userId]);
 
         $i = 0;
         foreach ($media as $item) {
             /* @var Media $item */
+            if ($tidyGenericFiles != 1 && $item->mediaType == 'genericfile')
+                continue;
+
+            // Eligable for delete
             $i++;
-            $item->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
+            $item->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
             $item->load();
             $item->delete();
         }

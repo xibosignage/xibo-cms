@@ -11,7 +11,7 @@
             "name": "AGPLv3 or later",
             "url": "http://www.gnu.org/licenses/"
         },
-        "version": "1.8.0-alpha3"
+        "version": "1.8.0"
     },
     "basePath": "/api",
     "schemes": [
@@ -1247,6 +1247,13 @@
                         "name": "authorised",
                         "in": "formData",
                         "description": "Filter by authorised flag",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "displayProfileId",
+                        "in": "formData",
+                        "description": "Filter by Display Profile",
                         "required": false,
                         "type": "integer"
                     }
@@ -3023,6 +3030,15 @@
                 "summary": "Tidy Library",
                 "description": "Routine tidy of the library, removing unused files.",
                 "operationId": "libraryTidy",
+                "parameters": [
+                    {
+                        "name": "tidyGenericFiles",
+                        "in": "formData",
+                        "description": "Also delete generic files?",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation"
@@ -3176,7 +3192,7 @@
         "/playlist/widget/{widgetId}": {
             "put": {
                 "tags": [
-                    "Widget"
+                    "widget"
                 ],
                 "summary": "Edit a Widget",
                 "description": "Edit a Widget, please refer to individual widget Add documentation for module specific parameters",
@@ -3207,7 +3223,7 @@
             },
             "delete": {
                 "tags": [
-                    "Widget"
+                    "widget"
                 ],
                 "summary": "Delete a Widget",
                 "description": "Deleted a specified widget",
@@ -3231,7 +3247,7 @@
         "/playlist/widget/{type}/{widgetId]": {
             "put": {
                 "tags": [
-                    "Widget"
+                    "widget"
                 ],
                 "summary": "Adds In/Out transition",
                 "description": "Adds In/Out transition to a specified widget",
@@ -3292,7 +3308,7 @@
         "/playlist/widget/{widgetId}/audio": {
             "put": {
                 "tags": [
-                    "Widget"
+                    "widget"
                 ],
                 "summary": "Parameters for edting/adding audio file to a specific widget",
                 "description": "Parameters for edting/adding audio file to a specific widget",
@@ -3344,7 +3360,7 @@
             },
             "delete": {
                 "tags": [
-                    "Widget"
+                    "widget"
                 ],
                 "summary": "Delete assigned audio widget",
                 "description": "Delete assigned audio widget from specified widget ID",
@@ -4987,7 +5003,7 @@
         "/playlist/widget/audio/{playlistId}": {
             "post": {
                 "tags": [
-                    "Widget"
+                    "widget"
                 ],
                 "summary": "Parameters for editing existing audio widget on a layout",
                 "description": "Parameters for editing existing audio widget on a layout, for adding new audio, please refer to POST /library documentation",
@@ -5048,7 +5064,7 @@
         "/playlist/widget/clock/{playlistId}": {
             "post": {
                 "tags": [
-                    "Widget"
+                    "widget"
                 ],
                 "summary": "Add a Clock Widget",
                 "description": "Add a new Clock Widget to the specified playlist",
@@ -5324,7 +5340,7 @@
         "/playlist/widget/dataSetView/{playlistId}": {
             "post": {
                 "tags": [
-                    "Widget"
+                    "widget"
                 ],
                 "summary": "Add a dataSetView Widget",
                 "description": "Add a new dataSetView Widget to the specified playlist",
@@ -5479,7 +5495,7 @@
         "/playlist/widget/embedded/{playlistId}": {
             "post": {
                 "tags": [
-                    "Widget"
+                    "widget"
                 ],
                 "summary": "Add a Embedded Widget",
                 "description": "Add a new Embedded Widget to the specified playlist",
@@ -5886,7 +5902,7 @@
         "/playlist/widget/googleTraffic/{playlistId}": {
             "post": {
                 "tags": [
-                    "Widget"
+                    "widget"
                 ],
                 "summary": "Add a Google Traffic Widget",
                 "description": "Add a new Google traffic Widget to the specified playlist",
@@ -5968,7 +5984,7 @@
         "/playlist/widget/hls/{playlistId}": {
             "post": {
                 "tags": [
-                    "Widget"
+                    "widget"
                 ],
                 "summary": "Add a HLS Widget",
                 "description": "Add a new HLS Widget to the specified playlist",
@@ -6043,7 +6059,7 @@
         "/playlist/widget/image/{playlistId}": {
             "post": {
                 "tags": [
-                    "Widget"
+                    "widget"
                 ],
                 "summary": "Parameters for editing existing image on a layout",
                 "description": "Parameters for editing existing image on a layout, for adding new images, please refer to POST /library documentation",
@@ -6111,7 +6127,7 @@
         "/playlist/widget/localVideo/{playlistId}": {
             "post": {
                 "tags": [
-                    "Widget"
+                    "widget"
                 ],
                 "summary": "Add a Local Video Widget",
                 "description": "Add a new Local Video Widget to the specified playlist",
@@ -6179,7 +6195,7 @@
         "/playlist/widget/pdf/{playlistId}": {
             "post": {
                 "tags": [
-                    "Widget"
+                    "widget"
                 ],
                 "summary": "Parameters for editing existing pdf on a layout",
                 "description": "Parameters for editing existing pdf on a layout, for adding new files, please refer to POST /library documentation",
@@ -6226,7 +6242,7 @@
         "/playlist/widget/shellCommand/{playlistId}": {
             "post": {
                 "tags": [
-                    "Widget"
+                    "widget"
                 ],
                 "summary": "Add a Shell Command Widget",
                 "description": "Add a new Shell Command Widget to the specified playlist",
@@ -6481,7 +6497,7 @@
         "/playlist/widget/text/{playlistId}": {
             "post": {
                 "tags": [
-                    "Widget"
+                    "widget"
                 ],
                 "summary": "Add a Text Widget",
                 "description": "Add a new Text Widget to the specified playlist",
@@ -6577,7 +6593,7 @@
         "/playlist/widget/ticker/{playlistId}": {
             "post": {
                 "tags": [
-                    "Widget"
+                    "widget"
                 ],
                 "summary": "Add a ticker Widget",
                 "description": "Add a new ticker Widget to the specified playlist",
@@ -7063,7 +7079,7 @@
         "/playlist/widget/video/{playlistId}": {
             "post": {
                 "tags": [
-                    "Widget"
+                    "widget"
                 ],
                 "summary": "Parameters for editing existing video on a layout",
                 "description": "Parameters for editing existing video on a layout, for adding new videos, please refer to POST /library documentation",

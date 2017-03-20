@@ -33,6 +33,10 @@
                 {% set title %}{% trans "Remove all media not currently in use?" %}{% endset %}
                 {% set helpText %}{% trans "Selecting this option will remove any media that is not currently being used in Layouts or linked to Displays. This process cannot be reversed." %}{% endset %}
                 {{ forms.checkbox("cleanUnusedFiles", title, 0, helpText) }}
+
+                {% set title %}{% trans "Delete Generic Files?" %}{% endset %}
+                {% set helpText %}{% trans "Selecting this option will remove any generic files that is are not currently linked to Displays. This process cannot be reversed." %}{% endset %}
+                {{ forms.checkbox("tidyGenericFiles", title, 0, helpText) }}
             </form>
         </div>
     </div>

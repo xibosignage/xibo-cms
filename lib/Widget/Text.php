@@ -52,7 +52,7 @@ class Text extends ModuleWidget
      * @SWG\Post(
      *  path="/playlist/widget/text/{playlistId}",
      *  operationId="WidgetTextAdd",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Add a Text Widget",
      *  description="Add a new Text Widget to the specified playlist",
      *  @SWG\Parameter(

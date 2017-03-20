@@ -133,7 +133,7 @@ class DisplayProfileFactory extends BaseFactory
     /**
      * @param array $sortOrder
      * @param array $filterBy
-     * @return array[DisplayProfile]
+     * @return DisplayProfile[]
      * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = null)

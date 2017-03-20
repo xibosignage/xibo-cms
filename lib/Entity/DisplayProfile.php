@@ -454,7 +454,7 @@ class DisplayProfile implements \JsonSerializable
                         'title' => __('Enable stats reporting?'),
                         'type' => 'checkbox',
                         'fieldType' => 'checkbox',
-                        'default' => $this->configService->getThemeConfig('client_statsEnabled_default', 0),
+                        'default' => $this->configService->GetSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0),
                         'helpText' => __('Should the application send proof of play stats to the CMS.'),
                         'enabled' => true,
                         'groupClass' => NULL
@@ -689,7 +689,7 @@ class DisplayProfile implements \JsonSerializable
                         'fieldType' => 'checkbox',
                         'default' => 0,
                         'helpText' => __('When enabled the client will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN.'),
-                        'enabled' => $this->configService->getThemeConfig('client_sendCurrentLayoutAsStatusUpdate_enabled', true),
+                        'enabled' => ($this->configService->GetSetting('DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED', 0) == 1),
                         'groupClass' => NULL
                     ),
                     array(
@@ -700,7 +700,7 @@ class DisplayProfile implements \JsonSerializable
                         'fieldType' => 'number',
                         'default' => 0,
                         'helpText' => __('The duration between status screen shots in minutes. 0 to disable. Warning: This is bandwidth intensive.'),
-                        'enabled' => $this->configService->getThemeConfig('client_screenShotRequestInterval_enabled', true),
+                        'enabled' => ($this->configService->GetSetting('DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED', 0) == 1),
                         'groupClass' => NULL
                     ),
                     array(
@@ -830,7 +830,7 @@ class DisplayProfile implements \JsonSerializable
                         'title' => __('Enable stats reporting?'),
                         'type' => 'checkbox',
                         'fieldType' => 'checkbox',
-                        'default' => $this->configService->getThemeConfig('client_statsEnabled_default', 0),
+                        'default' => $this->configService->GetSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0),
                         'helpText' => __('Should the application send proof of play stats to the CMS.'),
                         'enabled' => true,
                         'groupClass' => NULL
@@ -981,7 +981,7 @@ class DisplayProfile implements \JsonSerializable
                         'fieldType' => 'checkbox',
                         'default' => 0,
                         'helpText' => __('When enabled the client will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN.'),
-                        'enabled' => $this->configService->getThemeConfig('client_sendCurrentLayoutAsStatusUpdate_enabled', true),
+                        'enabled' => ($this->configService->GetSetting('DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED', 0) == 1),
                         'groupClass' => NULL
                     ),
                     array(
@@ -992,7 +992,7 @@ class DisplayProfile implements \JsonSerializable
                         'fieldType' => 'number',
                         'default' => 0,
                         'helpText' => __('The duration between status screen shots in minutes. 0 to disable. Warning: This is bandwidth intensive.'),
-                        'enabled' => $this->configService->getThemeConfig('client_screenShotRequestInterval_enabled', true),
+                        'enabled' => ($this->configService->GetSetting('DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED', 0) == 1),
                         'groupClass' => NULL
                     ),
                     array(
@@ -1023,7 +1023,7 @@ class DisplayProfile implements \JsonSerializable
                         'title' => __('Screen Shot Size'),
                         'type' => 'int',
                         'fieldType' => 'number',
-                        'default' => $this->configService->getThemeConfig('client_screenShotSize_default', 200),
+                        'default' => $this->configService->GetSetting('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', 200),
                         'helpText' => __('The size of the largest dimension. Empty or 0 means the screen size.'),
                         'enabled' => true,
                         'groupClass' => NULL

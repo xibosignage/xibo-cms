@@ -278,12 +278,12 @@ class StatusDashboard extends Base
             $data['nowShowing'] = $sth->fetchColumn(0);
 
             // Latest news
-            if ($this->getConfig()->GetSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1) {
+            if ($this->getConfig()->GetSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1 && !empty($this->getConfig()->GetSetting('LATEST_NEWS_URL'))) {
                 // Make sure we have the cache location configured
                 Library::ensureLibraryExists($this->getConfig()->GetSetting('LIBRARY_LOCATION'));
 
                 try {
-                    $feedUrl = $this->getConfig()->getThemeConfig('latest_news_url');
+                    $feedUrl = $this->getConfig()->GetSetting('LATEST_NEWS_URL');
                     $cache = $this->pool->getItem('rss/' . md5($feedUrl));
 
                     $latestNews = $cache->get();
