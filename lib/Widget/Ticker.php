@@ -778,7 +778,7 @@ class Ticker extends ModuleWidget
         // Create a key to use as a caching key for this item.
         // the rendered feed will be cached, so it is important the key covers all options.
         $feedUrl = urldecode($this->getOption('uri'));
-        $cache = $this->getPool()->getItem($this->makeCacheKey(md5(json_encode($this->widget->widgetOptions))));
+        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($isPreview . ' ' . json_encode($this->widget->widgetOptions))));
 
         $items = $cache->get();
 
