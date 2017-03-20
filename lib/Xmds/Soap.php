@@ -1245,12 +1245,18 @@ class Soap
             if ($message == '')
                 $message = $node->textContent;
 
+            // Trim the page if it is over 50 characters.
+            $page = $thread . $method . $type;
+
+            if (strlen($page) >= 50)
+                $page = substr($page, 0, 49);
+
             $logs[] = [
                 $this->logProcessor->getUid(),
                 $date,
                 'PLAYER',
                 $levelName,
-                $thread . $method . $type,
+                $page,
                 'POST',
                 $message . $scheduleId . $layoutId . $mediaId,
                 0,
