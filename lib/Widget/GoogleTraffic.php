@@ -94,7 +94,7 @@ class GoogleTraffic extends ModuleWidget
      * @SWG\Post(
      *  path="/playlist/widget/googleTraffic/{playlistId}",
      *  operationId="WidgetGoogleTrafficAdd",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Add a Google Traffic Widget",
      *  description="Add a new Google traffic Widget to the specified playlist",
      *  @SWG\Parameter(

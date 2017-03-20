@@ -177,7 +177,7 @@ class Ticker extends ModuleWidget
      * @SWG\Post(
      *  path="/playlist/widget/ticker/{playlistId}",
      *  operationId="WidgetTickerAdd",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Add a ticker Widget",
      *  description="Add a new ticker Widget to the specified playlist",
      *  @SWG\Parameter(

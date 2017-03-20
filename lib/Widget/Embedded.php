@@ -38,7 +38,7 @@ class Embedded extends ModuleWidget
      * @SWG\Post(
      *  path="/playlist/widget/embedded/{playlistId}",
      *  operationId="WidgetEmbeddedAdd",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Add a Embedded Widget",
      *  description="Add a new Embedded Widget to the specified playlist",
      *  @SWG\Parameter(

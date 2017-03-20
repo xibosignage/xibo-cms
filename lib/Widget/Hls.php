@@ -73,7 +73,7 @@ class Hls extends ModuleWidget
      * @SWG\Post(
      *  path="/playlist/widget/hls/{playlistId}",
      *  operationId="WidgetHlsAdd",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Add a HLS Widget",
      *  description="Add a new HLS Widget to the specified playlist",
      *  @SWG\Parameter(

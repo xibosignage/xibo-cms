@@ -41,7 +41,7 @@ class Image extends ModuleWidget
      * @SWG\Post(
      *  path="/playlist/widget/image/{playlistId}",
      *  operationId="WidgetImageEdit",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Parameters for editing existing image on a layout",
      *  description="Parameters for editing existing image on a layout, for adding new images, please refer to POST /library documentation",
      *  @SWG\Parameter(

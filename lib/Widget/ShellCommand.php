@@ -35,7 +35,7 @@ class ShellCommand extends ModuleWidget
      * @SWG\Post(
      *  path="/playlist/widget/shellCommand/{playlistId}",
      *  operationId="WidgetShellCommandAdd",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Add a Shell Command Widget",
      *  description="Add a new Shell Command Widget to the specified playlist",
      *  @SWG\Parameter(

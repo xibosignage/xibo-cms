@@ -490,7 +490,7 @@ class Module extends Base
      * @SWG\Put(
      *  path="/playlist/widget/{widgetId}",
      *  operationId="WidgetEdit",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Edit a Widget",
      *  description="Edit a Widget, please refer to individual widget Add documentation for module specific parameters",
      *  @SWG\Parameter(
@@ -564,7 +564,7 @@ class Module extends Base
      * @SWG\Delete(
      *  path="/playlist/widget/{widgetId}",
      *  operationId="WidgetDelete",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Delete a Widget",
      *  description="Deleted a specified widget",
      *  @SWG\Parameter(
@@ -666,7 +666,7 @@ class Module extends Base
      * @SWG\Put(
      *  path="/playlist/widget/{type}/{widgetId]",
      *  operationId="WidgetEditTransition",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Adds In/Out transition",
      *  description="Adds In/Out transition to a specified widget",
      *  @SWG\Parameter(
@@ -791,7 +791,7 @@ class Module extends Base
      * @SWG\Put(
      *  path="/playlist/widget/{widgetId}/audio",
      *  operationId="WidgetAssignedAudioEdit",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Parameters for edting/adding audio file to a specific widget",
      *  description="Parameters for edting/adding audio file to a specific widget",
      *  @SWG\Parameter(
@@ -880,7 +880,7 @@ class Module extends Base
      * @SWG\Delete(
      *  path="/playlist/widget/{widgetId}/audio",
      *  operationId="WidgetAudioDelete",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Delete assigned audio widget",
      *  description="Delete assigned audio widget from specified widget ID",
      *  @SWG\Parameter(

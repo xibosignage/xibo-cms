@@ -52,7 +52,7 @@ class Clock extends ModuleWidget
      * @SWG\Post(
      *  path="/playlist/widget/clock/{playlistId}",
      *  operationId="WidgetClockAdd",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Add a Clock Widget",
      *  description="Add a new Clock Widget to the specified playlist",
      *  @SWG\Parameter(

@@ -195,7 +195,7 @@ class DataSetView extends ModuleWidget
      * @SWG\Post(
      *  path="/playlist/widget/dataSetView/{playlistId}",
      *  operationId="WidgetdataSetViewAdd",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Add a dataSetView Widget",
      *  description="Add a new dataSetView Widget to the specified playlist",
      *  @SWG\Parameter(
