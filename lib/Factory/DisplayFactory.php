@@ -217,7 +217,7 @@ class DisplayFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'displaygroup.displaygroupid', null, $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Display', $body, $params, 'display.displayId', null, $filterBy);
 
         // Filter by Display ID?
         if ($this->getSanitizer()->getInt('displayId', $filterBy) !== null) {

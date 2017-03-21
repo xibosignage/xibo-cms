@@ -9,6 +9,10 @@
     {
       "step": "Remove the current layout column from Display",
       "action": "ALTER TABLE `display` DROP COLUMN currentLayoutId;"
+    },
+    {
+      "step": "Add Display Permission Entity",
+      "action": "INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES (NULL, 'Xibo\\\\Entity\\\\Display');"
     }
   ]
 }
