@@ -364,7 +364,7 @@ class Display implements \JsonSerializable
     {
         $this->setCommonDependencies($store, $log);
         $this->excludeProperty('mediaInventoryXml');
-        $this->setPermissionsClass('Xibo\Entity\DisplayGroup');
+        $this->setPermissionsClass('Xibo\Entity\Display');
 
         $this->config = $config;
         $this->displayGroupFactory = $displayGroupFactory;
@@ -612,7 +612,7 @@ class Display implements \JsonSerializable
 
         $displayGroup = $this->displayGroupFactory->createEmpty();
         $displayGroup->displayGroup = $this->display;
-        $displayGroup->setOwner($this);
+        $displayGroup->setDisplaySpecificDisplay($this);
         $displayGroup->save();
     }
 

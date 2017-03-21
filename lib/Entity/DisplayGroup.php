@@ -200,6 +200,15 @@ class DisplayGroup implements \JsonSerializable
     }
 
     /**
+     * Set the owner of this group
+     * @param $userId
+     */
+    public function setOwner($userId)
+    {
+        $this->userId = $userId;
+    }
+
+    /**
      * Set Notify Required
      * @param bool|true $collectRequired
      */
@@ -212,7 +221,7 @@ class DisplayGroup implements \JsonSerializable
      * Set the Owner of this Group
      * @param Display $display
      */
-    public function setOwner($display)
+    public function setDisplaySpecificDisplay($display)
     {
         $this->load();
 

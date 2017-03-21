@@ -571,7 +571,7 @@ class Display extends Base
                 // Permissions
                 $display->buttons[] = array(
                     'id' => 'display_button_group_permissions',
-                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'Display', 'id' => $display->displayGroupId]),
+                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'Display', 'id' => $display->displayId]),
                     'text' => __('Permissions')
                 );
 
