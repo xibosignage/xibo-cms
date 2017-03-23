@@ -1130,6 +1130,12 @@ class Library extends Base
             if ($item == '.' || $item == '..')
                 continue;
 
+            // Has this file been written to recently?
+            if (filemtime($libraryTemp . DIRECTORY_SEPARATOR . $item) > (time() - 86400)) {
+                $this->getLog()->debug('Skipping active file: ' . $item);
+                continue;
+            }
+
             $this->getLog()->debug('Deleting temp file: ' . $item);
 
             unlink($libraryTemp . DIRECTORY_SEPARATOR . $item);
