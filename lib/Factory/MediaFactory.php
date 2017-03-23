@@ -447,6 +447,7 @@ class MediaFactory extends BaseFactory
             $body .= '
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`)
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkmediadisplaygroup`)
+                AND media.mediaId NOT IN (SELECT backgroundImageId FROM `layout`)
                 AND media.type <> \'module\'
                 AND media.type <> \'font\'
             ';
