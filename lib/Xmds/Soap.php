@@ -1165,7 +1165,6 @@ class Soap
         $discardedLogs = 0;
 
         // Get the display timezone to use when adjusting log dates.
-        $timeZone = $this->display->getSetting('displayTimeZone', '');
         $defaultTimeZone = $this->getConfig()->GetSetting('defaultTimezone');
 
         // Store processed logs in an array
@@ -1217,7 +1216,7 @@ class Soap
             }
 
             // Adjust the date according to the display timezone
-            $date = ($timeZone != null) ? Date::createFromFormat('Y-m-d H:i:s', $date, $timeZone)->tz($defaultTimeZone) : Date::createFromFormat('Y-m-d H:i:s', $date);
+            $date = ($this->display->timeZone != null) ? Date::createFromFormat('Y-m-d H:i:s', $date, $this->display->timeZone)->tz($defaultTimeZone) : Date::createFromFormat('Y-m-d H:i:s', $date);
             $date = $this->getDate()->getLocalDate($date);
 
             // Get the date and the message (all log types have these)
