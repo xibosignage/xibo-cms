@@ -100,12 +100,28 @@ class LayoutStructureStep implements Step
         $libraryLocation = $this->config->GetSetting('LIBRARY_LOCATION');
 
         // We need to go through each layout, save the XLF as a backup in the library and then upgrade it.
-        foreach ($this->store->select('SELECT layoutId, xml FROM `layout` WHERE IFNULL(xml, \'\') <> \'\'', []) as $oldLayout) {
-            // Save off a copy of the XML in the library
-            file_put_contents($libraryLocation . 'archive_' . $oldLayout['layoutId'] . '.xlf', $oldLayout['xml']);
+        foreach ($this->store->select('SELECT layoutId, xml FROM `layout`', []) as $oldLayout) {
 
-            // Create a new layout from the XML
-            $layout = $layoutFactory->loadByXlf($oldLayout['xml'], $layoutFactory->getById($oldLayout['layoutId']));
+            $oldLayoutId = intval($oldLayout['layoutId']);
+
+            // Does this layout have any XML associated with it? If not, then it is an empty layout.
+            if (empty($oldLayout['xml'])) {
+                // This is frankly, odd, so we better log it
+                $this->log->critical('Layout upgrade without any existing XLF, i.e. empty. ID = ' . $oldLayoutId);
+
+                // Pull out the layout record, and set some best guess defaults
+                $layout = $layoutFactory->getById($oldLayoutId);
+                $layout->schemaVersion = 2;
+                $layout->width = 1920;
+                $layout->height = 1080;
+
+            } else {
+                // Save off a copy of the XML in the library
+                file_put_contents($libraryLocation . 'archive_' . $oldLayoutId . '.xlf', $oldLayout['xml']);
+
+                // Create a new layout from the XML
+                $layout = $layoutFactory->loadByXlf($oldLayout['xml'], $layoutFactory->getById($oldLayoutId));
+            }
 
             // Save the layout
             $layout->save(['notify' => false]);
