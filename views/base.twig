@@ -119,17 +119,19 @@
         <script type="text/javascript">
             var translations = {{ translations|raw }};
             // Translations we want always available
-            translations.withselected = "{% trans "With Selected" %}";
-            translations.multiselect = "{% trans "Multiple Items Selected" %}";
-            translations.multiselectNoItemsMessage = "{% trans "Sorry, no items have been selected." %}";
-            translations.multiselectMessage = "{% trans "Caution, you have selected %1 items. Clicking save will run the %2 transaction on all these items." %}";
-            translations.save = "{% trans "Save" %}";
-            translations.cancel = "{% trans "Cancel" %}";
-            translations.close = "{% trans "Close" %}";
-            translations.success = "{% trans "Success" %}";
-            translations.failure = "{% trans "Failure" %}";
-            translations.enterText = "{% trans "Enter text..." %}";
-            translations.statusPending = "{% trans "Status Pending" %}";
+            {% autoescape "js" %}
+            translations.withselected = "{{ "With Selected"|trans }}";
+            translations.multiselect = "{{ "Multiple Items Selected"|trans }}";
+            translations.multiselectNoItemsMessage = "{{ "Sorry, no items have been selected."|trans }}";
+            translations.multiselectMessage = "{{ "Caution, you have selected %1 items. Clicking save will run the %2 transaction on all these items."|trans }}";
+            translations.save = "{{ "Save"|trans }}";
+            translations.cancel = "{{ "Cancel"|trans }}";
+            translations.close = "{{ "Close"|trans }}";
+            translations.success = "{{ "Success"|trans }}";
+            translations.failure = "{{ "Failure"|trans }}";
+            translations.enterText = "{{ "Enter text..."|trans }}";
+            translations.statusPending = "{{ "Status Pending"|trans }}";
+            {% endautoescape %}
 
             var language = "{{ translate.jsLocale }}";
             var timezone = "{{ settings.defaultTimezone }}";
@@ -145,30 +147,33 @@
             var clockUrl = "{{ urlFor("clock") }}";
             var calendarLanguage = "{{ translate.calendarLanguage }}";
             var pingUrl = "{{ urlFor("ping") }}";
+
+            {% autoescape "js" %}
             var dataTablesLanguage = {
                 "decimal":        "",
-                "emptyTable":     "{% trans "No data available in table" %}",
-                "info":           "{% trans "Showing _START_ to _END_ of _TOTAL_ entries" %}",
-                "infoEmpty":      "{% trans "Showing 0 to 0 of 0 entries" %}",
-                "infoFiltered":   "{% trans "(filtered from _MAX_ total entries)" %}",
+                "emptyTable":     "{{ "No data available in table"|trans }}",
+                "info":           "{{ "Showing _START_ to _END_ of _TOTAL_ entries"|trans }}",
+                "infoEmpty":      "{{ "Showing 0 to 0 of 0 entries"|trans }}",
+                "infoFiltered":   "{{ "(filtered from _MAX_ total entries)"|trans }}",
                 "infoPostFix":    "",
                 "thousands":      ",",
-                "lengthMenu":     "{% trans "Show _MENU_ entries" %}",
-                "loadingRecords": "{% trans "Loading..." %}",
-                "processing":     "{% trans "Processing..." %}",
-                "search":         "{% trans "Search:" %}",
-                "zeroRecords":    "{% trans "No matching records found" %}",
+                "lengthMenu":     "{{ "Show _MENU_ entries"|trans }}",
+                "loadingRecords": "{{ "Loading..."|trans }}",
+                "processing":     "{{ "Processing..."|trans }}",
+                "search":         "{{ "Search:"|trans }}",
+                "zeroRecords":    "{{ "No matching records found"|trans }}",
                 "paginate": {
-                    "first":      "{% trans "First" %}",
-                    "last":       "{% trans "Last" %}",
-                    "next":       "{% trans "Next" %}",
-                    "previous":   "{% trans "Previous" %}"
+                    "first":      "{{ "First"|trans }}",
+                    "last":       "{{ "Last"|trans }}",
+                    "next":       "{{ "Next"|trans }}",
+                    "previous":   "{{ "Previous"|trans }}"
                 },
                 "aria": {
-                    "sortAscending":  "{% trans ": activate to sort column ascending" %}",
-                    "sortDescending": "{% trans ": activate to sort column descending" %}"
+                    "sortAscending":  "{{ ": activate to sort column ascending"|trans }}",
+                    "sortDescending": "{{ ": activate to sort column descending"|trans }}"
                 }
             };
+            {% endautoescape %}
 
             moment.locale("{{ translate.jsLocale }}");
 
