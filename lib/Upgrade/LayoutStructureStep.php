@@ -104,61 +104,62 @@ class LayoutStructureStep implements Step
 
             $oldLayoutId = intval($oldLayout['layoutId']);
 
-            // Does this layout have any XML associated with it? If not, then it is an empty layout.
-            if (empty($oldLayout['xml'])) {
-                // This is frankly, odd, so we better log it
-                $this->log->critical('Layout upgrade without any existing XLF, i.e. empty. ID = ' . $oldLayoutId);
+            try {
+                // Does this layout have any XML associated with it? If not, then it is an empty layout.
+                if (empty($oldLayout['xml'])) {
+                    // This is frankly, odd, so we better log it
+                    $this->log->critical('Layout upgrade without any existing XLF, i.e. empty. ID = ' . $oldLayoutId);
 
-                // Pull out the layout record, and set some best guess defaults
-                $layout = $layoutFactory->getById($oldLayoutId);
-                $layout->schemaVersion = 2;
-                $layout->width = 1920;
-                $layout->height = 1080;
+                    // Pull out the layout record, and set some best guess defaults
+                    $layout = $layoutFactory->getById($oldLayoutId);
+                    $layout->schemaVersion = 2;
+                    $layout->width = 1920;
+                    $layout->height = 1080;
 
-            } else {
-                // Save off a copy of the XML in the library
-                file_put_contents($libraryLocation . 'archive_' . $oldLayoutId . '.xlf', $oldLayout['xml']);
+                } else {
+                    // Save off a copy of the XML in the library
+                    file_put_contents($libraryLocation . 'archive_' . $oldLayoutId . '.xlf', $oldLayout['xml']);
 
-                // Create a new layout from the XML
-                $layout = $layoutFactory->loadByXlf($oldLayout['xml'], $layoutFactory->getById($oldLayoutId));
-            }
-
-            // Save the layout
-            $layout->save(['notify' => false]);
-
-            // Now that we have new ID's we need to cross reference them with the old IDs and recreate the permissions
-            foreach ($layout->regions as $region) {
-                /* @var \Xibo\Entity\Region $region */
-                if (array_key_exists($region->tempId, $regionPermissions)) {
-                    $permission = $regionPermissions[$region->tempId];
-                    /* @var \Xibo\Entity\Permission $permission */
-                    // Double check we are for the same layout
-                    if ($permission->objectId == $layout->layoutId) {
-                        $permission = clone $permission;
-                        $permission->objectId = $region->regionId;
-                        $permission->save();
-                    }
+                    // Create a new layout from the XML
+                    $layout = $layoutFactory->loadByXlf($oldLayout['xml'], $layoutFactory->getById($oldLayoutId));
                 }
 
-                foreach ($region->playlists as $playlist) {
-                    /* @var \Xibo\Entity\Playlist $playlist */
-                    foreach ($playlist->widgets as $widget) {
-                        /* @var \Xibo\Entity\Widget $widget */
-                        if (array_key_exists($widget->tempId, $mediaPermissions)) {
-                            $permission = $mediaPermissions[$widget->tempId];
-                            /* @var \Xibo\Entity\Permission $permission */
-                            if ($permission->objectId == $layout->layoutId && $region->tempId == $permission->objectIdString) {
-                                $permission = clone $permission;
-                                $permission->objectId = $widget->widgetId;
-                                $permission->save();
+                // Save the layout
+                $layout->save(['notify' => false]);
+
+                // Now that we have new ID's we need to cross reference them with the old IDs and recreate the permissions
+                foreach ($layout->regions as $region) {
+                    /* @var \Xibo\Entity\Region $region */
+                    if (array_key_exists($region->tempId, $regionPermissions)) {
+                        $permission = $regionPermissions[$region->tempId];
+                        /* @var \Xibo\Entity\Permission $permission */
+                        // Double check we are for the same layout
+                        if ($permission->objectId == $layout->layoutId) {
+                            $permission = clone $permission;
+                            $permission->objectId = $region->regionId;
+                            $permission->save();
+                        }
+                    }
+
+                    foreach ($region->playlists as $playlist) {
+                        /* @var \Xibo\Entity\Playlist $playlist */
+                        foreach ($playlist->widgets as $widget) {
+                            /* @var \Xibo\Entity\Widget $widget */
+                            if (array_key_exists($widget->tempId, $mediaPermissions)) {
+                                $permission = $mediaPermissions[$widget->tempId];
+                                /* @var \Xibo\Entity\Permission $permission */
+                                if ($permission->objectId == $layout->layoutId && $region->tempId == $permission->objectIdString) {
+                                    $permission = clone $permission;
+                                    $permission->objectId = $widget->widgetId;
+                                    $permission->save();
+                                }
                             }
                         }
                     }
                 }
+            } catch (\Exception $e) {
+                $this->log->critical('Error upgrading Layout, this should be checked post-upgrade. ID: ' . $oldLayoutId);
             }
-
-            // Clear the XML field (we do this in case we are interrupted and we need to process again
-            $this->store->update('UPDATE `layout` SET xml = NULL WHERE layoutId = :layoutId', ['layoutId' => $layout->layoutId]);
         }
 
         // Drop the permissions
