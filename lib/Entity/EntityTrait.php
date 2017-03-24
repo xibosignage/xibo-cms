@@ -231,8 +231,11 @@ trait EntityTrait
      */
     protected function audit($entityId, $message, $changedProperties = null)
     {
-        if ($changedProperties === null)
-            $changedProperties = $this->getChangedProperties();
+        if ($changedProperties === null) {
+            // No properties provided, so we should work them out
+            // If we have originals, then get changed, otherwise get the current object state
+            $changedProperties = (count($this->originalValues) <= 0) ? $this->toArray() : $this->getChangedProperties();
+        }
 
         $class = substr(get_class($this), strrpos(get_class($this), '\\') + 1);
 

@@ -417,7 +417,8 @@ class Schedule implements \JsonSerializable
     public function save($options = [])
     {
         $options = array_merge([
-            'validate' => true
+            'validate' => true,
+            'audit' => true
         ], $options);
 
         if ($options['validate'])
@@ -431,10 +432,13 @@ class Schedule implements \JsonSerializable
 
         if ($this->eventId == null || $this->eventId == 0) {
             $this->add();
+            $auditMessage = 'Added';
             $this->loaded = true;
         }
-        else
+        else {
             $this->edit();
+            $auditMessage = 'Saved';
+        }
 
         // Manage display assignments
         if ($this->loaded) {
@@ -451,6 +455,9 @@ class Schedule implements \JsonSerializable
                 $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
             }
         }
+
+        if ($options['audit'])
+            $this->audit($this->getId(), $auditMessage);
 
         // Drop the cache for this event
         $this->dropEventCache();
@@ -483,6 +490,9 @@ class Schedule implements \JsonSerializable
 
         // Drop the cache for this event
         $this->dropEventCache();
+
+        // Audit
+        $this->audit($this->getId(), 'Deleted', $this->toArray());
     }
 
     /**
