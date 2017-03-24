@@ -1,0 +1,10 @@
+{
+  "dbVersion": 132,
+  "appVersion": "1.8.1",
+  "steps": [
+    {
+      "step": "Convert all always schedules to use 2038 as infinity time",
+      "action": "UPDATE `schedule` SET toDt = 2147483647 WHERE toDt = 2556057600;"
+    }
+  ]
+}

@@ -38,7 +38,7 @@ class Schedule implements \JsonSerializable
     public static $DAY_PART_CUSTOM = 0;
     public static $DAY_PART_ALWAYS = 1;
     public static $DATE_MIN = 0;
-    public static $DATE_MAX = 2556057600;
+    public static $DATE_MAX = 2147483647;
 
     /**
      * @SWG\Property(
