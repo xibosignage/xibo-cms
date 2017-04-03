@@ -664,7 +664,7 @@ class Module extends Base
     /**
      * Edit Widget transition
      * @SWG\Put(
-     *  path="/playlist/widget/{type}/{widgetId]",
+     *  path="/playlist/widget/transition/{type}/{widgetId}",
      *  operationId="WidgetEditTransition",
      *  tags={"widget"},
      *  summary="Adds In/Out transition",
