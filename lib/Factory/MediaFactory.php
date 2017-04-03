@@ -142,13 +142,11 @@ class MediaFactory extends BaseFactory
         }
 
         try {
-            $media = $this->getByName($name);
+            $media = $this->getByNameAndType($name, 'module');
 
             // Reassert the new file (which we might want to download)
             $media->fileName = $file;
-
-            if ($media->mediaType != 'module')
-                throw new NotFoundException();
+            $media->storedAs = $name;
         }
         catch (NotFoundException $e) {
             $media = $this->createEmpty();
@@ -201,6 +199,8 @@ class MediaFactory extends BaseFactory
 
         $media = $this->createModuleFile($name, $uri);
         $media->isRemote = true;
+
+        // We update the desired expiry here - isSavedRequired is tested agains the original value
         $media->expires = $expiry;
 
         // Save the file, but do not download yet.
@@ -304,6 +304,23 @@ class MediaFactory extends BaseFactory
     public function getByName($name)
     {
         $media = $this->query(null, array('disableUserCheck' => 1, 'nameExact' => $name, 'allModules' => 1));
+
+        if (count($media) <= 0)
+            throw new NotFoundException(__('Cannot find media'));
+
+        return $media[0];
+    }
+
+    /**
+     * Get by Media Name
+     * @param string $name
+     * @param string $type
+     * @return Media
+     * @throws NotFoundException
+     */
+    public function getByNameAndType($name, $type)
+    {
+        $media = $this->query(null, array('disableUserCheck' => 1, 'nameExact' => $name, 'type' => $type, 'allModules' => 1));
 
         if (count($media) <= 0)
             throw new NotFoundException(__('Cannot find media'));
