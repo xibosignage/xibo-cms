@@ -593,7 +593,9 @@ class Stocks extends YahooBase
         
         $backgroundColor = $this->getOption('backgroundColor');
         if ($backgroundColor != '') {
-            $headContent .= '<style type="text/css"> .container-main, .page, .item { background-color: ' . $backgroundColor . ' }</style>';
+            $headContent .= '<style type="text/css"> body { background-color: ' . $backgroundColor . ' }</style>';
+        } else {
+          $headContent .= '<style type="text/css"> body { background-color: transparent }</style>';
         }
         
         // Add the CSS if it isn't empty, and replace the wallpaper
