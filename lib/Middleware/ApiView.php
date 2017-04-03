@@ -78,7 +78,7 @@ class ApiView extends View
                     $size = $app->sanitizerService->getInt('length', 10);
 
                     $linkHeader = '';
-                    $url = (new HttpsDetect())->getUrl($app) . $app->request()->getPath();
+                    $url = (new HttpsDetect())->getUrl() . $app->request()->getPath();
 
                     // Is there a next page?
                     if ($start + $size < $totalRows)
