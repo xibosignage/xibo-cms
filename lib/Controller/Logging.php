@@ -20,6 +20,7 @@
  */
 namespace Xibo\Controller;
 
+use Jenssegers\Date\Date;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LogFactory;
@@ -105,6 +106,11 @@ class Logging extends Base
             'runNo' => $this->getSanitizer()->getString('runNo'),
             'message' => $this->getSanitizer()->getString('message')
         ]));
+
+        foreach ($logs as $log) {
+            // Normalise the date
+            $log->logDate = $this->getDate()->getLocalDate(Date::createFromFormat($this->getDate()->getSystemFormat(), $log->logDate));
+        }
 
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->logFactory->countLast();

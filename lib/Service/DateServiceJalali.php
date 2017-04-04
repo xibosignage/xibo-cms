@@ -14,7 +14,7 @@ namespace Xibo\Service;
  */
 class DateServiceJalali implements DateServiceInterface
 {
-    private static $timezones = null;
+    use DateServiceTrait;
 
     /**
      * Get a local date
@@ -28,22 +28,15 @@ class DateServiceJalali implements DateServiceInterface
         if ($format === NULL)
             $format = $this->getSystemFormat();
 
-        if ($timestamp instanceof \Jenssegers\Date\Date)
-            return $timestamp->format($format);
-
         if ($timestamp === NULL)
             $timestamp = time();
 
-        return \jDateTime::date($format, $timestamp, null, null, $timezone);
-    }
+        if (!($timestamp instanceof \Jenssegers\Date\Date))
+            $timestamp = \Jenssegers\Date\Date::createFromTimestamp($timestamp, $timezone);
 
-    /**
-     * Get the default date format
-     * @return string
-     */
-    public function getSystemFormat()
-    {
-        return 'Y-m-d H:i:s';
+        $jDate = \jDateTime::toJalali($timestamp->year, $timestamp->month, $timestamp->day);
+
+        return \Jenssegers\Date\Date::create($jDate[0], $jDate[1], $jDate[2], $timestamp->hour, $timestamp->minute, $timestamp->second)->format($format);
     }
 
     /**
@@ -54,6 +47,7 @@ class DateServiceJalali implements DateServiceInterface
      */
     public function parse($string = null, $format = null)
     {
+        // Get a local date (jalali date)
         if ($string === null)
             $string = $this->getLocalDate();
 
@@ -61,8 +55,6 @@ class DateServiceJalali implements DateServiceInterface
             // We are a timestamp, create a date out of the time stamp directly
             return \Jenssegers\Date\Date::createFromFormat($format, $string);
         }
-        else if($format === null)
-            $format = $this->getSystemFormat();
 
         // If we are Jalali, then we want to convert from Jalali back to Gregorian.
         // Split the time stamp into its component parts and pass it to the conversion.
@@ -82,86 +74,27 @@ class DateServiceJalali implements DateServiceInterface
     /**
      * @inheritdoc
      */
-    public function setLocale($identifier)
-    {
-        \Jenssegers\Date\Date::setLocale($identifier);
-    }
-    
-    /**
-     * @inheritdoc
-     */
-    public function extractTimeFormat($format)
-    {
-        $replacements = [
-            'd' => '',
-            'D' => '',
-            'j' => '',
-            'l' => '',
-            'N' => '',
-            'S' => '',
-            'w' => '',
-            'z' => '',
-            'W' => '',
-            'F' => '',
-            'm' => '',
-            'M' => '',
-            'n' => '',
-            't' => '', // no equivalent
-            'L' => '', // no equivalent
-            'o' => '',
-            'Y' => '',
-            'y' => '',
-            'a' => '',
-            'A' => '',
-            'B' => '', // no equivalent
-            'g' => 'g',
-            'G' => 'G',
-            'h' => 'h',
-            'H' => 'H',
-            'i' => 'i',
-            's' => 's',
-            'u' => '',
-            'e' => '', // deprecated since version 1.6.0 of moment.js
-            'I' => '', // no equivalent
-            'O' => '', // no equivalent
-            'P' => '', // no equivalent
-            'T' => '', // no equivalent
-            'Z' => '', // no equivalent
-            'c' => '', // no equivalent
-            'r' => '', // no equivalent
-            'U' => '',
-        ];
-        $timeOnly = strtr($format, $replacements);
-        return trim($timeOnly);
-    }
-
-    /**
-     * Converts a format to moment
-     *  inspired by http://stackoverflow.com/questions/30186611/php-dateformat-to-moment-js-format
-     * @param $format
-     * @return string
-     */
     public function convertPhpToMomentFormat($format)
     {
         $replacements = [
-            'd' => 'DD',
-            'D' => 'ddd',
-            'j' => 'D',
-            'l' => 'dddd',
-            'N' => 'E',
-            'S' => 'o',
-            'w' => 'e',
-            'z' => 'DDD',
-            'W' => 'W',
-            'F' => 'MMMM',
-            'm' => 'MM',
-            'M' => 'MMM',
-            'n' => 'M',
+            'd' => 'jDD',
+            'D' => 'jddd',
+            'j' => 'jD',
+            'l' => 'jdddd',
+            'N' => 'jE',
+            'S' => 'jo',
+            'w' => 'je',
+            'z' => 'jDDD',
+            'W' => 'jW',
+            'F' => 'jMMMM',
+            'm' => 'jMM',
+            'M' => 'jMMM',
+            'n' => 'jM',
             't' => '', // no equivalent
             'L' => '', // no equivalent
-            'o' => 'YYYY',
-            'Y' => 'YYYY',
-            'y' => 'YY',
+            'o' => 'jYYYY',
+            'Y' => 'jYYYY',
+            'y' => 'jYY',
             'a' => 'a',
             'A' => 'A',
             'B' => '', // no equivalent
@@ -172,7 +105,7 @@ class DateServiceJalali implements DateServiceInterface
             'i' => 'mm',
             's' => 'ss',
             'u' => 'SSS',
-            'e' => 'zz', // deprecated since version 1.6.0 of moment.js
+            'e' => 'jzz', // deprecated since version 1.6.0 of moment.js
             'I' => '', // no equivalent
             'O' => '', // no equivalent
             'P' => '', // no equivalent
@@ -180,109 +113,9 @@ class DateServiceJalali implements DateServiceInterface
             'Z' => '', // no equivalent
             'c' => '', // no equivalent
             'r' => '', // no equivalent
-            'U' => 'X',
+            'U' => 'jX',
         ];
         $momentFormat = strtr($format, $replacements);
         return $momentFormat;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function convertPhpToBootstrapFormat($format, $includeTime = true)
-    {
-        $replacements = [
-            'd' => 'dd',
-            'D' => '',
-            'j' => 'd',
-            'l' => '',
-            'N' => '',
-            'S' => '',
-            'w' => '',
-            'z' => '',
-            'W' => '',
-            'F' => 'MM',
-            'm' => 'mm',
-            'M' => 'M',
-            'n' => 'i',
-            't' => '', // no equivalent
-            'L' => '', // no equivalent
-            'o' => 'yyyy',
-            'Y' => 'yyyy',
-            'y' => 'yy',
-            'a' => 'p',
-            'A' => 'P',
-            'B' => '', // no equivalent
-            'g' => '',
-            'G' => '',
-            'h' => '',
-            'H' => '',
-            'i' => '',
-            's' => '',
-            'u' => '',
-            'e' => '', // deprecated since version 1.6.0 of moment.js
-            'I' => '', // no equivalent
-            'O' => '', // no equivalent
-            'P' => '', // no equivalent
-            'T' => '', // no equivalent
-            'Z' => '', // no equivalent
-            'c' => '', // no equivalent
-            'r' => '', // no equivalent
-            'U' => '',
-        ];
-
-        if ($includeTime) {
-            $replacements['g'] = 'H';
-            $replacements['G'] = 'h';
-            $replacements['h'] = 'HH';
-            $replacements['H'] = 'hh';
-            $replacements['i'] = 'ii';
-            $replacements['s'] = 'ss';
-        }
-
-        $momentFormat = strtr($format, $replacements);
-        return trim($momentFormat, ' :');
-    }
-
-    /**
-     * Timezone identifiers
-     * @return array
-     */
-    public function timezoneList()
-    {
-        if (self::$timezones === null) {
-            self::$timezones = [];
-            $offsets = [];
-            $now = new \DateTime();
-
-            foreach (\DateTimeZone::listIdentifiers() as $timezone) {
-                $now->setTimezone(new \DateTimeZone($timezone));
-                $offsets[] = $offset = $now->getOffset();
-                self::$timezones[$timezone] = '(' . self::formatGmtOffset($offset) . ') ' . self::formatTimezoneName($timezone);
-            }
-
-            array_multisort($offsets, self::$timezones);
-        }
-
-        return self::$timezones;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    private static function formatGmtOffset($offset) {
-        $hours = intval($offset / 3600);
-        $minutes = abs(intval($offset % 3600 / 60));
-        return 'GMT' . ($offset ? sprintf('%+03d:%02d', $hours, $minutes) : '');
-    }
-
-    /**
-     * @inheritdoc
-     */
-    private static function formatTimezoneName($name) {
-        $name = str_replace('/', ', ', $name);
-        $name = str_replace('_', ' ', $name);
-        $name = str_replace('St ', 'St. ', $name);
-        return $name;
     }
 }

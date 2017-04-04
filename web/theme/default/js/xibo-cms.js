@@ -246,7 +246,7 @@ function XiboInitialise(scope) {
             
             // Get the current master data
             var preset = $("#" + $(this).data().linkCombined);
-            var updatedMaster = (preset.val() == "") ? moment() : moment(preset.val());
+            var updatedMaster = (preset.val() == "") ? moment() : moment(preset.val(), systemDateFormat);
             
             if (!updatedMaster.isValid())
                 updatedMaster = moment();
@@ -259,7 +259,7 @@ function XiboInitialise(scope) {
         });
 
         if (preset != undefined && preset != "")
-            $(this).find(".dateTimePickerDate").datetimepicker('update', moment(preset).format(systemDateFormat));
+            $(this).find(".dateTimePickerDate").datetimepicker('update', moment(preset, systemDateFormat).format(systemDateFormat));
             
         // Time control
         $(this).find(".dateTimePickerTime").timepicker({
@@ -271,7 +271,7 @@ function XiboInitialise(scope) {
             // Get the current master data
             var preset = $("#" + $(this).data().linkCombined);
             
-            var updatedMaster = (preset.val() == "") ? moment() : moment(preset.val());
+            var updatedMaster = (preset.val() == "") ? moment() : moment(preset.val(), systemDateFormat);
             if (!updatedMaster.isValid())
                 updatedMaster = moment();
                 
@@ -283,7 +283,7 @@ function XiboInitialise(scope) {
         });
         
         if (preset != undefined && preset != "")
-            $(this).find(".dateTimePickerTime").timepicker('setTime', moment(preset).toDate());
+            $(this).find(".dateTimePickerTime").timepicker('setTime', moment(preset, systemDateFormat).toDate());
     });
 
     $(scope + ' .datePicker').each(function() {
@@ -330,7 +330,7 @@ function XiboInitialise(scope) {
         }).change(function() {
             var value = moment($(this).val(), jsTimeFormat);
             
-            $(this).closest("form").find("#" + $(this).data().linkField).val(moment(value).format(systemTimeFormat));
+            $(this).closest("form").find("#" + $(this).data().linkField).val(value.format(systemTimeFormat));
         });
 
         // Get the linked field and use it to set the time
@@ -473,7 +473,7 @@ function dataTableDateFromIso(data, type, row) {
     if (data == null)
         return "";
 
-    return moment(data).format(jsDateFormat);
+    return moment(data, systemDateFormat).format(jsDateFormat);
 }
 
 function dataTableDateFromUnix(data, type, row) {

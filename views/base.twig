@@ -100,6 +100,10 @@
             <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/jalali-date.js") }}"></script>
             <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker-jalali.min.js") }}"></script>
             <script src="{{ theme.uri("libraries/calendar/js/calendar-jalali.js") }}"></script>
+            <script src="{{ theme.uri("libraries/momentjs/moment-jalali.js") }}"></script>
+            <script type="text/javascript">
+                moment.loadPersian();
+            </script>
         {% else %}
             <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js") }}"></script>
             <script src="{{ theme.uri("libraries/calendar/js/calendar.js") }}"></script>
