@@ -8,6 +8,7 @@
 
 namespace Xibo\Entity;
 use Cron\CronExpression;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -57,12 +58,19 @@ class Task implements \JsonSerializable
      */
     public function nextRunDate()
     {
-        $cron = CronExpression::factory($this->schedule);
+        try {
+            $cron = CronExpression::factory($this->schedule);
 
-        if ($this->lastRunDt == 0)
-            return (new \DateTime())->format('U');
+            if ($this->lastRunDt == 0)
+                return (new \DateTime())->format('U');
 
-        return $cron->getNextRunDate(\DateTime::createFromFormat('U', $this->lastRunDt))->format('U');
+            return $cron->getNextRunDate(\DateTime::createFromFormat('U', $this->lastRunDt))->format('U');
+        } catch (\RuntimeException $e) {
+            $this->getLog()->error('Invalid CRON expression for TaskId ' . $this->taskId);
+
+            $this->status = self::$STATUS_ERROR;
+            return (new \DateTime())->add(new \DateInterval('P1Y'))->format('U');
+        }
     }
 
     /**
@@ -84,10 +92,36 @@ class Task implements \JsonSerializable
     }
 
     /**
-     * Save
+     * Validate
+     * @throws InvalidArgumentException
      */
-    public function save()
+    private function validate()
     {
+        // Test the CRON expression
+        if (empty($this->schedule))
+            throw new InvalidArgumentException(__('Please enter a CRON expression in the Schedule'), 'schedule');
+
+        try {
+            $cron = CronExpression::factory($this->schedule);
+            $cron->getNextRunDate();
+        } catch (\RuntimeException $e) {
+            throw new InvalidArgumentException(__('Invalid CRON expression in the Schedule'), 'schedule');
+        }
+    }
+
+    /**
+     * Save
+     * @param $options
+     */
+    public function save($options = [])
+    {
+        $options = array_merge([
+            'validate' => true
+        ], $options);
+
+        if ($options['validate'])
+            $this->validate();
+
         if ($this->taskId == null)
             $this->add();
         else {
