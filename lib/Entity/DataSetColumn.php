@@ -167,6 +167,9 @@ class DataSetColumn implements \JsonSerializable
             // Look up all DataSet data in this table to make sure that the existing data is covered by the list content
             $list = $this->listContentArray();
 
+            // Add an empty field
+            $list[] = '';
+
             // We can check this is valid by building up a NOT IN sql statement, if we get results.. we know its not good
             $select = '';
 
