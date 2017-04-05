@@ -23,6 +23,7 @@ trait EntityTrait
     private $hash = null;
     private $loaded = false;
     private $permissionsClass = null;
+    private $canChangeOwner = true;
 
     public $buttons = [];
     private $jsonExclude = ['buttons', 'jsonExclude', 'originalValues'];
@@ -222,6 +223,23 @@ trait EntityTrait
     protected function setPermissionsClass($class)
     {
         $this->permissionsClass = $class;
+    }
+
+    /**
+     * Can the owner change?
+     * @return bool
+     */
+    public function canChangeOwner()
+    {
+        return $this->canChangeOwner && method_exists($this, 'setOwner');
+    }
+
+    /**
+     * @param bool $bool Can the owner be changed?
+     */
+    protected function setCanChangeOwner($bool)
+    {
+        $this->canChangeOwner = $bool;
     }
 
     /**
