@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 use Xibo\Entity\Display;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -549,6 +550,7 @@ class DisplayGroup extends Base
     /**
      * Sets the Members of a group
      * @param int $displayGroupId
+     * @throws InvalidArgumentException
      *
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/display/assign",
@@ -590,6 +592,10 @@ class DisplayGroup extends Base
     public function assignDisplay($displayGroupId)
     {
         $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+        if ($displayGroup->isDisplaySpecific == 1)
+            throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'), 'displayGroupId');
+
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
         if (!$this->getUser()->checkEditable($displayGroup))
@@ -651,6 +657,7 @@ class DisplayGroup extends Base
     /**
      * Unassign displays from a Display Group
      * @param int $displayGroupId
+     * @throws InvalidArgumentException
      *
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/display/unassign",
@@ -684,6 +691,10 @@ class DisplayGroup extends Base
     public function unassignDisplay($displayGroupId)
     {
         $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+        if ($displayGroup->isDisplaySpecific == 1)
+            throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'), 'displayGroupId');
+
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
         if (!$this->getUser()->checkEditable($displayGroup))
@@ -711,6 +722,7 @@ class DisplayGroup extends Base
     /**
      * Sets the Members of a group
      * @param int $displayGroupId
+     * @throws InvalidArgumentException
      *
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/displayGroup/assign",
@@ -752,6 +764,10 @@ class DisplayGroup extends Base
     public function assignDisplayGroup($displayGroupId)
     {
         $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+        if ($displayGroup->isDisplaySpecific == 1)
+            throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'), 'displayGroupId');
+
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
         if (!$this->getUser()->checkEditable($displayGroup))
@@ -797,6 +813,7 @@ class DisplayGroup extends Base
     /**
      * Unassign DisplayGroups from a Display Group
      * @param int $displayGroupId
+     * @throws InvalidArgumentException
      *
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/displayGroup/unassign",
@@ -830,6 +847,10 @@ class DisplayGroup extends Base
     public function unassignDisplayGroup($displayGroupId)
     {
         $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+        if ($displayGroup->isDisplaySpecific == 1)
+            throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'), 'displayGroupId');
+
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
