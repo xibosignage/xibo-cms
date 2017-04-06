@@ -259,7 +259,7 @@
     },
     {
       "step": "De-dupe any Media/Display Group Assignments",
-      "action": "CREATE TABLE `temp_lkmediadisplaygroup` AS SELECT * FROM `lkmediadisplaygroup` WHERE 1 GROUP BY `mediaid` ,`displaygroupid`; DROP TABLE `lkmediadisplaygroup`; RENAME TABLE `temp_lkmediadisplaygroup` TO `lkmediadisplaygroup`;"
+      "action": "CREATE TABLE `temp_lkmediadisplaygroup` AS SELECT `mediaid` ,`displaygroupid` FROM `lkmediadisplaygroup` WHERE 1 GROUP BY `mediaid` ,`displaygroupid`; DROP TABLE `lkmediadisplaygroup`; RENAME TABLE `temp_lkmediadisplaygroup` TO `lkmediadisplaygroup`;"
     },
     {
       "step": "Add Unique Key to Media/Display Group Assignments",

@@ -172,9 +172,9 @@ $(document).ready(function() {
                         
                     var url = calendarOptions.agendaLink.replace(":id", selectedDisplayGroup);
                                     
-                    var dateMoment = moment(this.options.position.start.getTime());
+                    var dateMoment = moment(this.options.position.start.getTime() / 1000, "X");
                     var timeFromSlider = ( $('#timePickerSlider').length ) ? $('#timePicker').slider('getValue') : 0
-                    var timeMoment = moment(timeFromSlider*60*1000);
+                    var timeMoment = moment(timeFromSlider*60, "X");
                     
                     // Add hour to date to get the selected date
                     var dateSelected = moment(dateMoment + timeMoment);
@@ -278,7 +278,7 @@ $(document).ready(function() {
                         tooltip: 'always',
                         step: 5,
                         formatter: function(value) {
-                            return moment(value*60*1000).format(jsTimeFormat);
+                            return moment(value*60, "X").format(jsTimeFormat);
                         }
                     }).off('slideStop').on('slideStop', function(ev) {
                         calendar.view();
@@ -289,7 +289,7 @@ $(document).ready(function() {
                 
                 // Sync the date of the date picker to the current calendar date
                 if (this.options.position.start != undefined && this.options.position.start != ""){
-                    $("#dateInput .form-control").datetimepicker('update', moment(this.options.position.start.getTime()).toDate());
+                    $("#dateInput .form-control").datetimepicker('update', moment(this.options.position.start.getTime() / 1000, "X").format(systemDateFormat));
                 }
                     
                 if (typeof this.getTitle === "function")
@@ -357,10 +357,8 @@ $(document).ready(function() {
             minView: 2,
             todayHighlight: true
         }).change(function() {
-            var value = moment($("#dateInput .form-control").val(), jsDateFormat);
-            calendar.navigate("date", value);
-        });
-        
+            calendar.navigate("date", moment($("#dateInput .form-control").val(), jsDateFormat));
+        }).datetimepicker('update', moment(calendar.options.position.start.getTime() / 1000, "X").format(systemDateFormat));
     }
 });
 

@@ -15,7 +15,7 @@ services:
     ports:
      - "9505:9505"
     environment:
-      DEBUG: "true"
+      XMR_DEBUG: "true"
       IPV6RESPSUPPORT: "false"
       IPV6PUBSUPPORT: "false"
 

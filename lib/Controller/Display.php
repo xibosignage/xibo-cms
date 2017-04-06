@@ -571,7 +571,7 @@ class Display extends Base
                 // Permissions
                 $display->buttons[] = array(
                     'id' => 'display_button_group_permissions',
-                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'Display', 'id' => $display->displayId]),
+                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]),
                     'text' => __('Permissions')
                 );
 
@@ -619,6 +619,9 @@ class Display extends Base
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
+        // Time format for display
+        $timeFormat = $this->getDate()->extractTimeFormat($this->getConfig()->GetSetting('DATE_FORMAT'));
+
         // Dates
         $display->auditingUntilIso = $this->getDate()->getLocalDate($display->auditingUntil);
 
@@ -638,7 +641,15 @@ class Display extends Base
                         $profile[$i]['valueString'] = $option['value'];
                 }
             } else if ($profile[$i]['fieldType'] == 'timePicker') {
-                $profile[$i]['valueString'] = ($profile[$i]['value'] == null || $profile[$i]['value'] == '0' ) ? '00:00' : $this->getDate()->parse($profile[$i]['value'], 'H:i')->format('H:i');
+                // Determine the value and its format
+                if ($profile[$i]['value'] == null || $profile[$i]['value'] == '0') {
+                    // Empty (new profile)
+                    $profile[$i]['valueString'] = $this->getDate()->parse('00:00', 'H:i')->format($timeFormat);
+                } else {
+                    // A format has been set
+                    $format = strlen($profile[$i]['value'] == 5) ? 'H:i' : 'H:i:s';
+                    $profile[$i]['valueString'] = $this->getDate()->parse($profile[$i]['value'], $format)->format($timeFormat);
+                }
             }
         }
 

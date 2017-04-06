@@ -182,11 +182,11 @@
 
                     if (event.event.dayPartId != 1) {
                     if (event.event.eventTypeId == 2) {
-                    title = "[" + moment(event.scheduleEvent.fromDt).format(jsTimeFormat) + "] " + event.title;
+                    title = "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsTimeFormat) + "] " + event.title;
                     } else if (event.sameDay) {
-                    title = "[" + moment(event.scheduleEvent.fromDt).format(jsTimeFormat) + " - " + moment(event.scheduleEvent.toDt).format(jsTimeFormat) + "] " + event.title;
+                    title = "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsTimeFormat) + " - " + moment(event.scheduleEvent.toDt, systemDateFormat).format(jsTimeFormat) + "] " + event.title;
                     } else {
-                    title = "[" + moment(event.scheduleEvent.fromDt).format(jsDateFormat) + " - " + moment(event.scheduleEvent.toDt).format(jsDateFormat) + "] " + event.title;
+                    title = "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsDateFormat) + " - " + moment(event.scheduleEvent.toDt, systemDateFormat).format(jsDateFormat) + "] " + event.title;
                     }
                     }
 
@@ -269,11 +269,11 @@
 
                     if (event.event.dayPartId != 1) {
                     if (event.event.eventTypeId == 2) {
-                    title = "[" + moment(event.scheduleEvent.fromDt).format(jsTimeFormat) + "] " + event.title;
+                    title = "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsTimeFormat) + "] " + event.title;
                     } else if (event.sameDay) {
-                    title = "[" + moment(event.scheduleEvent.fromDt).format(jsTimeFormat) + " - " + moment(event.scheduleEvent.toDt).format(jsTimeFormat) + "] " + event.title;
+                    title = "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsTimeFormat) + " - " + moment(event.scheduleEvent.toDt, systemDateFormat).format(jsTimeFormat) + "] " + event.title;
                     } else {
-                    title = "[" + moment(event.scheduleEvent.fromDt).format(jsDateFormat) + " - " + moment(event.scheduleEvent.toDt).format(jsDateFormat) + "] " + event.title;
+                    title = "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsDateFormat) + " - " + moment(event.scheduleEvent.toDt, systemDateFormat).format(jsDateFormat) + "] " + event.title;
                     }
                     }
 
@@ -349,11 +349,11 @@
 
             if (event.event.dayPartId != 1) {
             if (event.event.eventTypeId == 2) {
-            title = "[" + moment(event.scheduleEvent.fromDt).format(jsTimeFormat) + "] " + event.title;
+            title = "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsTimeFormat) + "] " + event.title;
             } else if (event.sameDay) {
-            title = "[" + moment(event.scheduleEvent.fromDt).format(jsTimeFormat) + " - " + moment(event.scheduleEvent.toDt).format(jsTimeFormat) + "] " + event.title;
+            title = "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsTimeFormat) + " - " + moment(event.scheduleEvent.toDt, systemDateFormat).format(jsTimeFormat) + "] " + event.title;
             } else {
-            title = "[" + moment(event.scheduleEvent.fromDt).format(jsDateFormat) + " - " + moment(event.scheduleEvent.toDt).format(jsDateFormat) + "] " + event.title;
+            title = "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsDateFormat) + " - " + moment(event.scheduleEvent.toDt, systemDateFormat).format(jsDateFormat) + "] " + event.title;
             }
             }
 

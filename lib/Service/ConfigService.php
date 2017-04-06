@@ -316,6 +316,8 @@ class ConfigService implements ConfigServiceInterface
 
             if ($setting == 'ELEVATE_LOG_UNTIL' && intval($data) > time())
                 $item->expiresAfter(intval($data) - time());
+            else if ($setting == 'LIBRARY_SIZE_LIMIT_KB' || $setting == 'MONTHLY_XMDS_TRANSFER_LIMIT_KB' || $setting == 'MAX_LICENSED_DISPLAYS')
+                $item->expiresAfter(60 * 5);
 
             $this->getPool()->saveDeferred($item->set($data));
         }

@@ -30,7 +30,7 @@ class Soap5 extends Soap4
      * @return string
      * @throws \SoapFault
      */
-    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel, $xmrPubKey)
+    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel = null, $xmrPubKey = null)
     {
         $this->logProcessor->setRoute('RegisterDisplay');
 

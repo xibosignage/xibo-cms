@@ -9,6 +9,8 @@
 namespace Xibo\Xmds;
 
 
+use Xibo\Helper\HttpsDetect;
+
 class Wsdl
 {
     private $path;
@@ -68,26 +70,6 @@ class Wsdl
 
         $request = explode('?', $_SERVER['REQUEST_URI']);
 
-        $fullUrl = 'http';
-
-        if (
-            (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ||
-            (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) == 'https')
-        ) {
-            $fullUrl .=  's';
-        }
-
-        $fullUrl .=  '://';
-
-        if($_SERVER['SERVER_PORT']!='80')
-        {
-            $fullUrl .=  $_SERVER['SERVER_NAME'].':'.$_SERVER['SERVER_PORT'];
-        }
-        else
-        {
-            $fullUrl .=  $_SERVER['SERVER_NAME'];
-        }
-
-        return $fullUrl . '/' . ltrim($request[0], '/');
+        return ((new HttpsDetect())->getUrl()) . '/' . ltrim($request[0], '/');
     }
 }

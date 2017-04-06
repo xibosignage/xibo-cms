@@ -238,7 +238,7 @@
         <script src="{{ theme.uri("js/xibo-layout-designer.js") }}"></script>
         <script type="text/javascript">
             var translation = {
-                savePositionsFirst: "{% trans "Please save the pending position changes first by clicking Save Positions or cancel by clicking Undo." %}"
+                savePositionsFirst: "{% autoescape "js" %}{{ "Please save the pending position changes first by clicking Save Positions or cancel by clicking Undo."|trans }}{% endautoescape %}"
             };
 
             // Callback for the media form

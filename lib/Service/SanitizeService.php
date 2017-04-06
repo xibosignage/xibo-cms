@@ -85,7 +85,7 @@ class SanitizeService implements SanitizerServiceInterface
     /**
      * @inheritdoc
      */
-    public function getParam($param, $default, $source = null)
+    public function getParam($param, $default, $source = null, $emptyAsNull = true)
     {
         if (is_array($default)) {
             return isset($default[$param]) ? $default[$param] : null;
@@ -109,7 +109,7 @@ class SanitizeService implements SanitizerServiceInterface
                     $return = $default;
             }
 
-            return ($return === null || $return === '') ? $default : $return;
+            return ($return === null || ($emptyAsNull && $return === '')) ? $default : $return;
         }
         else
             return isset($source[$param]) ? $source[$param] : $default;
