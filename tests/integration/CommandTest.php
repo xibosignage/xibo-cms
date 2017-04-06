@@ -201,7 +201,7 @@ class CommandTest extends LocalWebTestCase
     {
         # Load in a known command
         /** @var XiboCommand $command */
-        $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunit code');
+        $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunitcode');
         # Generate new name and description
         $name = Random::generateString(8, 'command');
         $description = Random::generateString(8, 'description');
