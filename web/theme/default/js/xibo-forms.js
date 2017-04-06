@@ -69,6 +69,7 @@ var text_callback = function(dialog, extra) {
             "background: " + $('#layout').css('background-color') + "; " +
             "transform: scale(" + scale + "); " +
             "transform-origin: 0 0; }" +
+            "h1, h2, h3, h4, p { margin-top: 0;}" +
             "</style>");
     }
 
