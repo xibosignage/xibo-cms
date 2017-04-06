@@ -16,7 +16,7 @@
 
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
-    {% trans "Close" %}, XiboDialogClose()
+    {% trans "Close" %}, closeTimeLineCallback()
     {% trans "Switch to Grid" %}, XiboSwapDialog("{{ urlFor("region.timeline.form", {id: region.regionId}) }}?view=grid")
     {% trans "Save Order" %}, XiboTimelineSaveOrder("timelineControl")
 {% endblock %}
