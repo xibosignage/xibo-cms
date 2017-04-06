@@ -8,106 +8,105 @@
         <meta name="token" content="{{ csrfToken }}"/>
         <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
 
-        <link href="{{ theme.uri("libraries/bootstrap/css/bootstrap.min.css") }}" rel="stylesheet" media="screen">
-        <!--  <link href="{{ theme.uri("libraries/bootstrap/css/bootstrap-theme.min.css") }}" rel="stylesheet" media="screen">-->
-        <link href="{{ theme.uri("libraries/font-awesome/css/font-awesome.min.css") }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/bootstrap-select/css/bootstrap-select.css") }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css") }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/jquery-timepicker/jquery.timepicker.css") }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/bootstrap-slider-master/bootstrap-slider.min.css") }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/bootstrap-colorpicker/css/bootstrap-colorpicker.min.css") }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/bootstrap-ekko-lightbox/ekko-lightbox.min.css") }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/bootstrap-switch/bootstrap-switch.min.css") }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/bootstrap-tagsinput-master/bootstrap-tagsinput.css") }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/calendar/css/calendar.css") }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/morrisjs/morris.css") }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/datatables/dataTables.bootstrap.css") }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/datatables/buttons.dataTables.min.css") }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.10.2.custom.min.css") }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/jquery-file-upload/css/jquery.fileupload.css") }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/jquery-file-upload/css/jquery.fileupload-ui.css") }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/bootstrap/css/bootstrap.min.css") }}?{{ version }}" rel="stylesheet" media="screen">
+        <link href="{{ theme.uri("libraries/font-awesome/css/font-awesome.min.css") }}?{{ version }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/bootstrap-select/css/bootstrap-select.css") }}?{{ version }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css") }}?{{ version }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/jquery-timepicker/jquery.timepicker.css") }}?{{ version }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/bootstrap-slider-master/bootstrap-slider.min.css") }}?{{ version }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/bootstrap-colorpicker/css/bootstrap-colorpicker.min.css") }}?{{ version }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/bootstrap-ekko-lightbox/ekko-lightbox.min.css") }}?{{ version }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/bootstrap-switch/bootstrap-switch.min.css") }}?{{ version }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/bootstrap-tagsinput-master/bootstrap-tagsinput.css") }}?{{ version }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/calendar/css/calendar.css") }}?{{ version }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/morrisjs/morris.css") }}?{{ version }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/datatables/dataTables.bootstrap.css") }}?{{ version }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/datatables/buttons.dataTables.min.css") }}?{{ version }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.10.2.custom.min.css") }}?{{ version }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/jquery-file-upload/css/jquery.fileupload.css") }}?{{ version }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/jquery-file-upload/css/jquery.fileupload-ui.css") }}?{{ version }}" rel="stylesheet">
         <link href="{{ theme.uri("libraries/toastr/toastr.min.css") }}" rel="stylesheet">
-        <link href="{{ theme.uri("css/dashboard.css") }}" rel="stylesheet" media="screen">
-        <link href="{{ theme.uri("css/timeline.css") }}" rel="stylesheet" media="screen">
-        <link href="{{ theme.uri("css/xibo.css") }}" rel="stylesheet" media="screen">
-        <link href="{{ theme.uri("css/calendar.css") }}" rel="stylesheet" media="screen">
-        <link href="{{ theme.uri("css/override.css") }}" rel="stylesheet" media="screen">
+        <link href="{{ theme.uri("css/dashboard.css") }}?{{ version }}" rel="stylesheet" media="screen">
+        <link href="{{ theme.uri("css/timeline.css") }}?{{ version }}" rel="stylesheet" media="screen">
+        <link href="{{ theme.uri("css/xibo.css") }}?{{ version }}" rel="stylesheet" media="screen">
+        <link href="{{ theme.uri("css/calendar.css") }}?{{ version }}" rel="stylesheet" media="screen">
+        <link href="{{ theme.uri("css/override.css") }}?{{ version }}" rel="stylesheet" media="screen">
         <link href="{{ urlFor("library.font.css") }}" rel="stylesheet">
-        <!-- Copyright 2006-2016 Daniel Garner. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+        <!-- Copyright 2006-2017 Daniel Garner. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
         <!-- Please be sure you read this before removing the Source/About links from your theme: http://bit.ly/agplv3 -->
         {% block headContent %}{% endblock %}
     </head>
     <body>
         {% block content %}{% endblock %}
 
-        <script src="{{ theme.uri("libraries/jquery/jquery-1.11.1.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/jquery/jquery.validate.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/jquery/additional-methods.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap/js/bootstrap.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap/js/bootbox.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap-switch/bootstrap-switch.min.js") }}"></script>
+        <script src="{{ theme.uri("libraries/jquery/jquery-1.11.1.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/jquery/jquery.validate.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/jquery/additional-methods.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/bootstrap/js/bootstrap.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/bootstrap/js/bootbox.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/bootstrap-switch/bootstrap-switch.min.js") }}?{{ version }}"></script>
 
         {# Datatables #}
-        <script src="{{ theme.uri("libraries/datatables/jquery.dataTables.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/datatables/dataTables.bootstrap.js") }}"></script>
-        <script src="{{ theme.uri("libraries/datatables/dataTables.buttons.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/datatables/buttons.colVis.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/datatables/buttons.print.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/datatables/buttons.html5.js") }}"></script>
-        <script src="{{ theme.uri("libraries/datatables/buttons.flash.min.js") }}"></script>
+        <script src="{{ theme.uri("libraries/datatables/jquery.dataTables.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/datatables/dataTables.bootstrap.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/datatables/dataTables.buttons.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/datatables/buttons.colVis.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/datatables/buttons.print.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/datatables/buttons.html5.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/datatables/buttons.flash.min.js") }}?{{ version }}"></script>
 
-        <script src="{{ theme.uri("libraries/jquery/jquery-ui/jquery-ui-1.10.2.custom.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap-colorpicker/js/bootstrap-colorpicker.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap-select/js/bootstrap-select.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap-ekko-lightbox/ekko-lightbox.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/underscore/underscore-min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/jstimezonedetect/jstz.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/ckeditor/ckeditor.js") }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap/js/bootstrap-ckeditor-fix.js") }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/tmpl.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-load-image/load-image.all.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.iframe-transport.js") }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload.js") }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-process.js") }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-resize.js") }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-validate.js") }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-ui.js") }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-image.js") }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-video.js") }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-audio.js") }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-message-queuing/jquery.ba-jqmq.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-throttle-debounce/jquery.ba-throttle-debounce.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/toastr/toastr.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/date-time-format.js") }}"></script>
-        <script src="{{ theme.uri("libraries/momentjs/moment.js") }}"></script>
-        <script src="{{ theme.uri("libraries/momentjs/moment-timezone.js") }}"></script>
-        <script src="{{ theme.uri("libraries/morrisjs/raphael.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/morrisjs/morris.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/colors/colors.min.js") }}"></script>
-        <script src="{{ theme.uri("js/xibo-cms.js") }}"></script>
-        <script src="{{ theme.uri("js/xibo-forms.js") }}"></script>
-        <script src="{{ theme.uri("js/xibo-preview-timeline.js") }}"></script>
-        <script src="{{ theme.uri("js/xibo-calendar.js") }}"></script>
-        <script src="{{ theme.uri("js/xibo-datasets.js") }}"></script>
-        <script src="{{ theme.uri("libraries/handlebars/handlebars-v3.0.0.js") }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-serialize-object/jquery.serialize-object.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap-tagsinput-master/bootstrap-tagsinput.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-timepicker/jquery.timepicker.min.js") }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap-slider-master/bootstrap-slider.min.js") }}"></script>
+        <script src="{{ theme.uri("libraries/jquery/jquery-ui/jquery-ui-1.10.2.custom.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/bootstrap-colorpicker/js/bootstrap-colorpicker.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/bootstrap-select/js/bootstrap-select.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/bootstrap-ekko-lightbox/ekko-lightbox.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/underscore/underscore-min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/jstimezonedetect/jstz.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/ckeditor/ckeditor.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/bootstrap/js/bootstrap-ckeditor-fix.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/jquery-file-upload/js/tmpl.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/jquery-load-image/load-image.all.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.iframe-transport.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-process.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-resize.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-validate.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-ui.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-image.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-video.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-audio.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/jquery-message-queuing/jquery.ba-jqmq.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/jquery-throttle-debounce/jquery.ba-throttle-debounce.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/toastr/toastr.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/date-time-format.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/momentjs/moment.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/momentjs/moment-timezone.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/morrisjs/raphael.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/morrisjs/morris.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/colors/colors.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("js/xibo-cms.js") }}?{{ version }}?{{ version }}"></script>
+        <script src="{{ theme.uri("js/xibo-forms.js") }}?{{ version }}?{{ version }}"></script>
+        <script src="{{ theme.uri("js/xibo-preview-timeline.js") }}?{{ version }}?{{ version }}"></script>
+        <script src="{{ theme.uri("js/xibo-calendar.js") }}?{{ version }}?{{ version }}"></script>
+        <script src="{{ theme.uri("js/xibo-datasets.js") }}?{{ version }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/handlebars/handlebars-v3.0.0.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/jquery-serialize-object/jquery.serialize-object.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/bootstrap-tagsinput-master/bootstrap-tagsinput.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/jquery-timepicker/jquery.timepicker.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/bootstrap-slider-master/bootstrap-slider.min.js") }}?{{ version }}"></script>
 
         {# Dates #}
         {% if settings.CALENDAR_TYPE == "Jalali" %}
-            <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/jalali-date.js") }}"></script>
-            <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker-jalali.min.js") }}"></script>
-            <script src="{{ theme.uri("libraries/calendar/js/calendar-jalali.js") }}"></script>
-            <script src="{{ theme.uri("libraries/momentjs/moment-jalali.js") }}"></script>
+            <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/jalali-date.js") }}?{{ version }}"></script>
+            <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker-jalali.min.js") }}?{{ version }}"></script>
+            <script src="{{ theme.uri("libraries/calendar/js/calendar-jalali.js") }}?{{ version }}"></script>
+            <script src="{{ theme.uri("libraries/momentjs/moment-jalali.js") }}?{{ version }}"></script>
             <script type="text/javascript">
                 moment.loadPersian();
             </script>
         {% else %}
-            <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js") }}"></script>
-            <script src="{{ theme.uri("libraries/calendar/js/calendar.js") }}"></script>
-            <script src="{{ theme.uri("libraries/calendar/js/language/en_GB.js") }}"></script>
+            <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js") }}?{{ version }}"></script>
+            <script src="{{ theme.uri("libraries/calendar/js/calendar.js") }}?{{ version }}"></script>
+            <script src="{{ theme.uri("libraries/calendar/js/language/en_GB.js") }}?{{ version }}"></script>
         {% endif %}
 
         {% if translate.jsLocale != 'en-GB' %}
