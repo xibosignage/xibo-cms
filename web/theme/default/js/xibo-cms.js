@@ -405,12 +405,25 @@ function dataTableDraw(e, settings) {
                 buttons.push({id: $(this).data("id"), gridId: e.target.id, text: $(this).data("text")})
         });
 
-        var output = template({withSelected: translations.withselected, buttons: buttons});
+        var output = template({selectAll: translations.selectAll, withSelected: translations.withselected, buttons: buttons});
         target.closest(".dataTables_wrapper").find(".dataTables_info").prepend(output);
 
         // Bind to our output
         target.closest(".dataTables_wrapper").find(".dataTables_info li.XiboMultiSelectFormButton").click(function(){
             XiboMultiSelectFormRender(this);
+        });
+        
+        // Bind click to select all button
+        target.closest(".dataTables_wrapper").find(".dataTables_info button.select-all").click(function(){
+            var allRows = target.find("tbody tr");
+            var numberSelectedRows = target.find("tbody tr.selected").length;
+            
+            // If there are more rows selected than unselected, unselect all, otherwise, selected them all
+            if (numberSelectedRows > allRows.length/2){
+              allRows.removeClass('selected');
+            } else {
+              allRows.addClass('selected');
+            }
         });
     }
 

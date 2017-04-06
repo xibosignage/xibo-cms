@@ -619,14 +619,16 @@ class TwitterMetro extends TwitterBase
         // Replace the head content
         $headContent = '';
 
-        $backgroundColor = $this->getOption('backgroundColor');
-        if ($backgroundColor != '') {
-            $headContent .= '<style type="text/css">body, .page, .item { background-color: ' . $backgroundColor . ' }</style>';
-        }
-
         // Add our fonts.css file
         $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
         <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
+        
+        $backgroundColor = $this->getOption('backgroundColor');
+        if ($backgroundColor != '') {
+            $headContent .= '<style type="text/css">body { background-color: ' . $backgroundColor . ' }</style>';
+        } else {
+          $headContent .= '<style type="text/css"> body { background-color: transparent }</style>';
+        }
         
         // Add the CSS if it isn't empty
         $css = $templateData['styleSheet'];
