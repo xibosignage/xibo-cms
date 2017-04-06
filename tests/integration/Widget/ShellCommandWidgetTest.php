@@ -78,7 +78,7 @@ class ShellCommandWidgetTest extends LocalWebTestCase
      */
     public function testAdd($name, $duration, $useDuration, $windowsCommand, $linuxCommand, $launchThroughCmd, $terminateCommand, $useTaskkill, $commandCode)
     {
-        $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunit code');
+        $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunitcode');
         # Create layout
         $layout = (new XiboLayout($this->getEntityProvider()))->create('ShellCommand add Layout', 'phpunit description', '', 9);
         # Add region to our layout
@@ -126,7 +126,7 @@ class ShellCommandWidgetTest extends LocalWebTestCase
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create a command with wrapper
-        $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunit code');
+        $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunitcode');
         # Create a shell command widget with wrapper
         $shellCommand = (new XiboShellCommand($this->getEntityProvider()))->create('Api shell command', 0, 1, null, null, 1, 1, 1, 'test code', $region->playlists[0]['playlistId']);
         $nameNew = 'Edited Name';
