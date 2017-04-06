@@ -7,12 +7,10 @@
 
 namespace Xibo\Tests\Integration\Widget;
 
-use Xibo\Helper\Random;
+use Xibo\OAuth2\Client\Entity\XiboCommand;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboRegion;
-use Xibo\OAuth2\Client\Entity\XiboCommand;
 use Xibo\OAuth2\Client\Entity\XiboShellCommand;
-use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
 
 class ShellCommandWidgetTest extends LocalWebTestCase
@@ -115,8 +113,8 @@ class ShellCommandWidgetTest extends LocalWebTestCase
     {
         # Sets of data used in testAdd
         return [
-            'Windows new command' => ['Api Windows command', 20, 1,'-reboot', NULL, 1, null, 1, null],
-            'Android new command' => ['Api Android command', 30, 1, null, '-reboot', null, 1, null, null],
+            'Windows new command' => ['Api Windows command', 20, 1,'reboot', NULL, 1, null, 1, null],
+            'Android new command' => ['Api Android command', 30, 1, null, 'reboot', null, 1, null, null],
             'Previously created command' => ['Api shell command', 50, 1, null, null, 1, 1, 1, 'phpunit code']
         ];
     }

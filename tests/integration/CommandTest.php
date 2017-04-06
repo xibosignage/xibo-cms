@@ -116,9 +116,9 @@ class CommandTest extends LocalWebTestCase
     {
         # Cases we provide to testAddSuccess, you can extend it by simply adding new case here
         return [
-            'reboot' => ['test command', 'test description', '-reboot'],
-            'binary' => ['test command 2', 'aaa', '|01100100|01100001|01101110|00001101'],
-            'sleep' => ['test command 3', 'test description', '-sleep'],
+            'reboot' => ['test command', 'test description', 'reboot'],
+            'binary' => ['test command 2', '|01100100|01100001|01101110|00001101', 'binary'],
+            'sleep' => ['test command 3', 'test description', 'sleep'],
         ];
     }
 
@@ -150,7 +150,9 @@ class CommandTest extends LocalWebTestCase
         # Cases we provide to testAddFailure, you can extend it by simply adding new case here
         return [
             'No code' => ['No code', 'aa', NULL],
-            'No description' => ['no description', NULL, 'code'], 
+            'Code with space' => ['Code with space', 'Code with space', 'Code with space'],
+            'Code with symbol' => ['Code with symbol', 'Code with symbol', 'Codewithsymbol$$'],
+            'No description' => ['no description', NULL, 'code'],
             'No Name' => [NULL, 'Bienvenue à la suite de tests Xibo', 'beep'],
             'Only Name' => ['Deutsch Prüfung 1', NULL, NULL],
             'Empty' => [NULL, NULL, NULL] 
@@ -236,7 +238,7 @@ class CommandTest extends LocalWebTestCase
         $name2 = Random::generateString(8, 'phpunit');
         # Load in a couple of known commands
         $command1 = (new XiboCommand($this->getEntityProvider()))->create($name1, 'phpunit description', 'code');
-        $command2 = (new XiboCommand($this->getEntityProvider()))->create($name2, 'phpunit description', 'code2');
+        $command2 = (new XiboCommand($this->getEntityProvider()))->create($name2, 'phpunit description', 'codetwo');
         # Delete the one we created last
         $this->client->delete('/command/' . $command2->commandId);
         # This should return 204 for success
