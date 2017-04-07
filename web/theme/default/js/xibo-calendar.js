@@ -427,13 +427,13 @@ var processScheduleFormElements = function(el) {
             break;
         
         case 'eventTypeId':
-            //console.log('Process: eventTypeId, val = ' + fieldVal);
+            console.log('Process: eventTypeId, val = ' + fieldVal);
             
-            var layoutControlDisplay = (fieldVal == "2") ? "none" : "block";
-            var endTimeControlDisplay = (fieldVal == "2") ? "none" : "block";
-            var startTimeControlDisplay = (fieldVal == "2") ? "block" : "block";
-            var dayPartControlDisplay = (fieldVal == "2") ? "none" : "block";
-            var commandControlDisplay = (fieldVal == "2") ? "block" : "none";
+            var layoutControlDisplay = (fieldVal == 2) ? "none" : "block";
+            var endTimeControlDisplay = (fieldVal == 2) ? "none" : "block";
+            var startTimeControlDisplay = (fieldVal == 2) ? "block" : "block";
+            var dayPartControlDisplay = (fieldVal == 2) ? "none" : "block";
+            var commandControlDisplay = (fieldVal == 2) ? "block" : "none";
             
             $(".layout-control").css('display', layoutControlDisplay);
             $(".endtime-control").css('display', endTimeControlDisplay);
@@ -460,10 +460,13 @@ var processScheduleFormElements = function(el) {
             break;
         
         case 'dayPartId':
-            //console.log('Process: dayPartId, val = ' + fieldVal);
+            console.log('Process: dayPartId, val = ' + fieldVal + ', visibility = ' + el.is(":visible"));
+
+            if (!el.is(":visible"))
+                return;
             
             var endTimeControlDisplay = (fieldVal != 0) ? "none" : "block";
-            var startTimeControlDisplay = (fieldVal == "1") ? "none" : "block";
+            var startTimeControlDisplay = (fieldVal == 1) ? "none" : "block";
 
             var $startTime = $(".starttime-control");
             var $endTime = $(".endtime-control");
