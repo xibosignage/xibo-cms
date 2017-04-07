@@ -1362,6 +1362,12 @@ class Soap
             $widgetId = $node->getAttribute('mediaid');
             $mediaId = 0;
 
+            // Ignore old "background" stat records.
+            if ($widgetId === 'background') {
+                $this->getLog()->info('Ignoring old "background" stat record.');
+                continue;
+            }
+
             // The mediaId (really widgetId) might well be null
             if ($widgetId == 'null' || $widgetId == '')
                 $widgetId = 0;
