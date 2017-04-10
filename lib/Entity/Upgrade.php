@@ -58,8 +58,9 @@ class Upgrade implements \JsonSerializable
 
     /**
      * Do the upgrade step
+     * @param string $connectionName The connection name to use for this step
      */
-    public function doStep()
+    public function doStep($connectionName = 'default')
     {
         // SQL or not?
         switch ($this->type) {
@@ -68,7 +69,7 @@ class Upgrade implements \JsonSerializable
 
                 // Split the statement and run
                 // DDL doesn't rollback, so ideally we'd only have 1 statement
-                $dbh = $this->getStore()->getConnection();
+                $dbh = $this->getStore()->getConnection($connectionName);
 
                 // Run the SQL to create the necessary tables
                 $statements = Install::remove_remarks($this->action);
