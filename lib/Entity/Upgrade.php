@@ -60,7 +60,7 @@ class Upgrade implements \JsonSerializable
      * Do the upgrade step
      * @param string $connectionName The connection name to use for this step
      */
-    public function doStep($connectionName = 'default')
+    public function doStep($connectionName = 'upgrade')
     {
         // SQL or not?
         switch ($this->type) {
@@ -125,17 +125,12 @@ class Upgrade implements \JsonSerializable
 
     private function edit()
     {
-        // We use a new connection so that if/when the upgrade steps do not run successfully we can still update
-        // the state and rollback the executed steps
-        $dbh = $this->getStore()->getConnection('upgrade');
-        $sth = $dbh->prepare('
+        $this->getStore()->update('
             UPDATE `upgrade` SET
               `complete` = :complete,
               `lastTryDate` = :lastTryDate
              WHERE stepId = :stepId
-        ');
-
-        $sth->execute([
+        ', [
             'stepId' => $this->stepId,
             'complete' => $this->complete,
             'lastTryDate' => $this->lastTryDate

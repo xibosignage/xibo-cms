@@ -942,6 +942,7 @@ class State extends Middleware
                 $container->helpService,
                 $container->dateService,
                 $container->configService,
+                $container->store,
                 $container->upgradeFactory
             );
         });
