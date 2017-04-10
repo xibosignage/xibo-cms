@@ -91,27 +91,39 @@ class MaintenanceDailyTask implements TaskInterface
                     return;
                 }
 
-                try {
-                    $upgradeStep->doStep('upgrade');
-                    $upgradeStep->complete = 1;
-                    $upgradeStep->lastTryDate = $this->date->parse()->format('U');
-                    $upgradeStep->save();
+                // Assume success
+                $stepFailed = false;
 
-                    // if we are a step that updates the version table, then exit
-                    if ($upgradeStep->type == 'sql' && stripos($upgradeStep->action, 'SET `DBVersion`'))
-                        $previousStepSetsDbVersion = true;
+                try {
+                    $upgradeStep->doStep();
+                    $upgradeStep->complete = 1;
 
                     // Commit
                     $this->store->commitIfNecessary('upgrade');
-                }
-                catch (\Exception $e) {
-                    $upgradeStep->lastTryDate = $this->date->parse()->format('U');
-                    $upgradeStep->save();
-                    $this->log->error('Unable to run upgrade step. Message = %s', $e->getMessage());
+
+                } catch (\Exception $e) {
+                    // Failed to run upgrade step
+                    $this->log->error('Unable to run upgrade stepId ' . $upgradeStep->stepId . '. Message = ' . $e->getMessage());
                     $this->log->error($e->getTraceAsString());
 
-                    throw new ConfigurationException($e->getMessage());
+                    try {
+                        $this->store->getConnection('upgrade')->rollBack();
+                    } catch (\Exception $exception) {
+                        $this->log->error('Unable to rollback. E = ' . $e->getMessage());
+                    }
+
+                    $stepFailed = true;
                 }
+
+                $upgradeStep->lastTryDate = $this->date->parse()->format('U');
+                $upgradeStep->save();
+
+                // if we are a step that updates the version table, then exit
+                if ($upgradeStep->type == 'sql' && stripos($upgradeStep->action, 'SET `DBVersion`'))
+                    $previousStepSetsDbVersion = true;
+
+                if ($stepFailed)
+                    throw new ConfigurationException('Unable to run upgrade step. Aborting Maintenance Task.');
             }
 
             $this->runMessage .= '#' . __('Upgrade Complete') . PHP_EOL . PHP_EOL;
