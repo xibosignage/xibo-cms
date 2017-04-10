@@ -92,7 +92,7 @@ class MaintenanceDailyTask implements TaskInterface
                 }
 
                 try {
-                    $upgradeStep->doStep();
+                    $upgradeStep->doStep('upgrade');
                     $upgradeStep->complete = 1;
                     $upgradeStep->lastTryDate = $this->date->parse()->format('U');
                     $upgradeStep->save();
@@ -100,6 +100,9 @@ class MaintenanceDailyTask implements TaskInterface
                     // if we are a step that updates the version table, then exit
                     if ($upgradeStep->type == 'sql' && stripos($upgradeStep->action, 'SET `DBVersion`'))
                         $previousStepSetsDbVersion = true;
+
+                    // Commit
+                    $this->store->commitIfNecessary('upgrade');
                 }
                 catch (\Exception $e) {
                     $upgradeStep->lastTryDate = $this->date->parse()->format('U');
