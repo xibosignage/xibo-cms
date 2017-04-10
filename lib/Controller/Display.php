@@ -647,7 +647,7 @@ class Display extends Base
                     $profile[$i]['valueString'] = $this->getDate()->parse('00:00', 'H:i')->format($timeFormat);
                 } else {
                     // A format has been set
-                    $format = strlen($profile[$i]['value'] == 5) ? 'H:i' : 'H:i:s';
+                    $format = (strlen($profile[$i]['value']) == 5) ? 'H:i' : 'H:i:s';
                     $profile[$i]['valueString'] = $this->getDate()->parse($profile[$i]['value'], $format)->format($timeFormat);
                 }
             }
