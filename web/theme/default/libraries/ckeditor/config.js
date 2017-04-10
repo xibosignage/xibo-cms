@@ -34,7 +34,7 @@ CKEDITOR.editorConfig = function( config ) {
 	config.format_tags = 'p;h1;h2;h3;pre';
 
 	// Add some more font-sizes
-	config.fontSize_sizes += ';80/80px;88/88px;96/96px;128/128px;144/144px;168/168px';
+	config.fontSize_sizes += ';80/80px;88/88px;96/96px;128/128px;144/144px;168/168px;186/186px;200/200px;244/244px;288/288px;300/300px';
 
 	// Make dialogs simpler.
 	config.removeDialogTabs = 'image:advanced;link:advanced';

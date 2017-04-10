@@ -34,9 +34,10 @@ interface SanitizerServiceInterface
      * @param $param
      * @param $default
      * @param null $source
+     * @param bool $emptyIsNull Should empty values be treated as NULL
      * @return mixed
      */
-    public function getParam($param, $default, $source = null);
+    public function getParam($param, $default, $source = null, $emptyIsNull = true);
 
     /**
      * Get Int

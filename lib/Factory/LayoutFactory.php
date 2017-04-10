@@ -100,6 +100,9 @@ class LayoutFactory extends BaseFactory
      */
     private $widgetOptionFactory;
 
+    /** @var  PlaylistFactory */
+    private $playlistFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -119,10 +122,11 @@ class LayoutFactory extends BaseFactory
      * @param ResolutionFactory $resolutionFactory
      * @param WidgetFactory $widgetFactory
      * @param WidgetOptionFactory $widgetOptionFactory
+     * @param PlaylistFactory $playlistFactory
      */
     public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $date, $dispatcher, $permissionFactory,
                                 $regionFactory, $tagFactory, $campaignFactory, $mediaFactory, $moduleFactory, $resolutionFactory,
-                                $widgetFactory, $widgetOptionFactory)
+                                $widgetFactory, $widgetOptionFactory, $playlistFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
@@ -138,6 +142,7 @@ class LayoutFactory extends BaseFactory
         $this->resolutionFactory = $resolutionFactory;
         $this->widgetFactory = $widgetFactory;
         $this->widgetOptionFactory = $widgetOptionFactory;
+        $this->playlistFactory = $playlistFactory;
     }
 
     /**
@@ -226,6 +231,15 @@ class LayoutFactory extends BaseFactory
 
         // Set the owner
         $layout->setOwner($ownerId);
+
+        // Ensure we have Playlists for each region
+        foreach ($layout->regions as $region) {
+            if (count($region->playlists) <= 0) {
+                // Create a Playlist for this region
+                $playlist = $this->playlistFactory->create($name, $ownerId);
+                $region->assignPlaylist($playlist);
+            }
+        }
 
         // Fresh layout object, entirely new and ready to be saved
         return $layout;
@@ -384,7 +398,7 @@ class LayoutFactory extends BaseFactory
                 $widget->ownerId = $mediaOwnerId;
                 $widget->duration = $mediaNode->getAttribute('duration');
                 $widget->useDuration = $mediaNode->getAttribute('useDuration');
-                $widget->useDuration = ($widget->useDuration == '') ? 0 : 1;
+                $widget->useDuration = ($widget->useDuration == '') ? 1 : 0;
                 $widget->tempId = $mediaNode->getAttribute('fileId');
                 $widgetId = $mediaNode->getAttribute('id');
 

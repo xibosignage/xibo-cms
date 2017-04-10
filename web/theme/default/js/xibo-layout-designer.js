@@ -210,17 +210,14 @@ function updateRegionInfo(e, ui) {
     $('.region-tip', this).html(Math.round($(this).width() / scale, 0) + " x " + Math.round($(this).height() / scale, 0) + " (" + Math.round(pos.left / scale, 0) + "," + Math.round(pos.top / scale, 0) + ")");
 }
 
+/**
+ * Update preview for region position changes
+ * @param e
+ * @param ui
+ */
 function regionPositionUpdate(e, ui) {
-
-    var width   = $(this).css("width");
-    var height  = $(this).css("height");
-    var regionid = $(this).attr("regionid");
-
-    // Update the region width / height attributes
-    $(this).attr("width", width).attr("height", height);
-
     // Update the Preview for the new sizing
-    var preview = Preview.instances[regionid];
+    var preview = Preview.instances[$(this).attr("regionid")];
     preview.SetSequence(preview.seq);
 
     // Expose a new button to save the positions
@@ -291,15 +288,20 @@ function refreshPreview(regionId) {
 }
 
 var loadTimeLineCallback = function(dialog) {
-
+    // Make this a big modal
     dialog.addClass("modal-big");
+    console.log(dialog);
+    dialog.on("hidden.bs.modal", function () {
+        refreshPreview($("#layout").data("currentRegionId"));
+    });
 
-    refreshPreview($('#timelineControl').attr('regionid'));
+    // Each time we open, we want to set a "current region id" in the designer
+    $("#layout").data("currentRegionId", $('#timelineControl').attr('regionid'));
 
+    // Bind to hover event on the media list
     $("li.timelineMediaListItem").hover(function() {
 
         var position = $(this).position();
-        var scale = $('#layout').attr('designer_scale');
 
         // Change the hidden div's content
         $("div#timelinePreview")
@@ -309,12 +311,23 @@ var loadTimeLineCallback = function(dialog) {
             })
             .show();
 
-        $("#timelinePreview .hoverPreview").css({
-            width: $("div#timelinePreview").width() / scale,
-            transform: "scale(" + scale + ")",
-            "transform-origin": "0 0 ",
-            background: $('#layout').css('background-color')
-        })
+        $hoverPreview = $("#timelinePreview .hoverPreview");
+
+        // Apply a background to the hover preview area
+        $hoverPreview.css("background", $('#layout').css('background-color'));
+
+        // Scale if necessary
+        if ($hoverPreview.data() !== undefined && $hoverPreview.data().scale) {
+            // Adjust the scale again, to drop down to 180 (hover preview width)
+            var regionWidth = $("#region_" + $('#timelineControl').attr('regionid')).attr("width");
+            var scale = 180 / regionWidth;
+
+            $("#timelinePreview .hoverPreview").css({
+                width: regionWidth,
+                transform: "scale(" + scale + ")",
+                "transform-origin": "0 0 "
+            });
+        }
 
     }, function() {
         return false;
@@ -325,7 +338,6 @@ var loadTimeLineCallback = function(dialog) {
     // Hook up the library Upload Buttons
     $(".libraryUploadForm").click(libraryUploadClick);
 };
-
 
 var XiboTimelineSaveOrder = function(timelineDiv) {
 

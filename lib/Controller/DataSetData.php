@@ -315,27 +315,43 @@ class DataSetData extends Base
         // Expect input for each value-column
         foreach ($dataSet->getColumn() as $column) {
             /* @var \Xibo\Entity\DataSetColumn $column */
-
             $existingValue = $this->getSanitizer()->getParam($column->heading, null, $existingRow);
 
             if ($column->dataSetColumnTypeId == 1) {
 
+                // Pull out the value
+                $value = $this->getSanitizer()->getParam('dataSetColumnId_' . $column->dataSetColumnId, null, null, false);
+
+                $this->getLog()->debug('Value is: ' . var_export($value, true) . ', existing value is ' . var_export($existingValue, true));
+
                 // Sanitize accordingly
                 if ($column->dataTypeId == 2) {
                     // Number
-                    $value = $this->getSanitizer()->getDouble('dataSetColumnId_' . $column->dataSetColumnId, $existingValue);
+                    if ($value === null)
+                        $value = $existingValue;
+
+                    $value = $this->getSanitizer()->double($value);
                 }
                 else if ($column->dataTypeId == 3) {
                     // Date
-                    $value = $this->getDate()->getLocalDate($this->getSanitizer()->getDate('dataSetColumnId_' . $column->dataSetColumnId, $existingValue));
+                    $value = $this->getDate()->parse($value);
+
+                    if ($value === null)
+                        $value = $existingValue;
+
+                    $value = $this->getDate()->getLocalDate($value);
                 }
                 else if ($column->dataTypeId == 5) {
                     // Media Id
-                    $value = $this->getSanitizer()->getInt('dataSetColumnId_' . $column->dataSetColumnId);
+                    if ($value !== null)
+                        $value = $this->getSanitizer()->int($value);
                 }
                 else {
                     // String
-                    $value = $this->getSanitizer()->getString('dataSetColumnId_' . $column->dataSetColumnId, $existingValue);
+                    if ($value === null)
+                        $value = $existingValue;
+
+                    $value = $this->getSanitizer()->string($value);
                 }
 
                 $row[$column->heading] = $value;

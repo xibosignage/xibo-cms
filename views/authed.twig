@@ -262,7 +262,10 @@
 
     <script type="text/x-handlebars-template" id="multiselect-button-template">
         <div class="btn-group">
-            <button class="btn dropdown-toggle" data-toggle="dropdown">
+            <button class="btn select-all" data-toggle="selectAll">
+                {{ selectAll }}
+            </button>
+            <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
                 <span class="fa fa-caret-down"></span>
                 {{ withSelected }}
             </button>

@@ -23,6 +23,7 @@ trait EntityTrait
     private $hash = null;
     private $loaded = false;
     private $permissionsClass = null;
+    private $canChangeOwner = true;
 
     public $buttons = [];
     private $jsonExclude = ['buttons', 'jsonExclude', 'originalValues'];
@@ -225,14 +226,34 @@ trait EntityTrait
     }
 
     /**
+     * Can the owner change?
+     * @return bool
+     */
+    public function canChangeOwner()
+    {
+        return $this->canChangeOwner && method_exists($this, 'setOwner');
+    }
+
+    /**
+     * @param bool $bool Can the owner be changed?
+     */
+    protected function setCanChangeOwner($bool)
+    {
+        $this->canChangeOwner = $bool;
+    }
+
+    /**
      * @param $entityId
      * @param $message
      * @param array[Optional] $changedProperties
      */
     protected function audit($entityId, $message, $changedProperties = null)
     {
-        if ($changedProperties === null)
-            $changedProperties = $this->getChangedProperties();
+        if ($changedProperties === null) {
+            // No properties provided, so we should work them out
+            // If we have originals, then get changed, otherwise get the current object state
+            $changedProperties = (count($this->originalValues) <= 0) ? $this->toArray() : $this->getChangedProperties();
+        }
 
         $class = substr(get_class($this), strrpos(get_class($this), '\\') + 1);
 

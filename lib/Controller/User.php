@@ -780,7 +780,7 @@ class User extends Base
             'entity' => $requestEntity,
             'objectId' => $objectId,
             'permissions' => $currentPermissions,
-            'canSetOwner' => method_exists($object, 'setOwner'),
+            'canSetOwner' => $object->canChangeOwner(),
             'owners' => $this->userFactory->query(),
             'help' => [
                 'permissions' => $this->getHelp()->link('Campaign', 'Permissions')
@@ -864,7 +864,7 @@ class User extends Base
 
             $this->getLog()->debug('Requesting update to a new Owner - id = ' . $ownerId);
 
-            if (method_exists($object, 'setOwner')) {
+            if ($object->canChangeOwner()) {
                 $object->setOwner($ownerId);
                 $object->save();
             } else {

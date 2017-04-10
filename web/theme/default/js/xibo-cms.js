@@ -246,7 +246,7 @@ function XiboInitialise(scope) {
             
             // Get the current master data
             var preset = $("#" + $(this).data().linkCombined);
-            var updatedMaster = (preset.val() == "") ? moment() : moment(preset.val());
+            var updatedMaster = (preset.val() == "") ? moment() : moment(preset.val(), systemDateFormat);
             
             if (!updatedMaster.isValid())
                 updatedMaster = moment();
@@ -259,7 +259,7 @@ function XiboInitialise(scope) {
         });
 
         if (preset != undefined && preset != "")
-            $(this).find(".dateTimePickerDate").datetimepicker('update', moment(preset).format(systemDateFormat));
+            $(this).find(".dateTimePickerDate").datetimepicker('update', moment(preset, systemDateFormat).format(systemDateFormat));
             
         // Time control
         $(this).find(".dateTimePickerTime").timepicker({
@@ -271,7 +271,7 @@ function XiboInitialise(scope) {
             // Get the current master data
             var preset = $("#" + $(this).data().linkCombined);
             
-            var updatedMaster = (preset.val() == "") ? moment() : moment(preset.val());
+            var updatedMaster = (preset.val() == "") ? moment() : moment(preset.val(), systemDateFormat);
             if (!updatedMaster.isValid())
                 updatedMaster = moment();
                 
@@ -283,7 +283,7 @@ function XiboInitialise(scope) {
         });
         
         if (preset != undefined && preset != "")
-            $(this).find(".dateTimePickerTime").timepicker('setTime', moment(preset).toDate());
+            $(this).find(".dateTimePickerTime").timepicker('setTime', moment(preset, systemDateFormat).toDate());
     });
 
     $(scope + ' .datePicker').each(function() {
@@ -330,7 +330,7 @@ function XiboInitialise(scope) {
         }).change(function() {
             var value = moment($(this).val(), jsTimeFormat);
             
-            $(this).closest("form").find("#" + $(this).data().linkField).val(moment(value).format(systemTimeFormat));
+            $(this).closest("form").find("#" + $(this).data().linkField).val(value.format(systemTimeFormat));
         });
 
         // Get the linked field and use it to set the time
@@ -405,12 +405,25 @@ function dataTableDraw(e, settings) {
                 buttons.push({id: $(this).data("id"), gridId: e.target.id, text: $(this).data("text")})
         });
 
-        var output = template({withSelected: translations.withselected, buttons: buttons});
+        var output = template({selectAll: translations.selectAll, withSelected: translations.withselected, buttons: buttons});
         target.closest(".dataTables_wrapper").find(".dataTables_info").prepend(output);
 
         // Bind to our output
         target.closest(".dataTables_wrapper").find(".dataTables_info li.XiboMultiSelectFormButton").click(function(){
             XiboMultiSelectFormRender(this);
+        });
+        
+        // Bind click to select all button
+        target.closest(".dataTables_wrapper").find(".dataTables_info button.select-all").click(function(){
+            var allRows = target.find("tbody tr");
+            var numberSelectedRows = target.find("tbody tr.selected").length;
+            
+            // If there are more rows selected than unselected, unselect all, otherwise, selected them all
+            if (numberSelectedRows > allRows.length/2){
+              allRows.removeClass('selected');
+            } else {
+              allRows.addClass('selected');
+            }
         });
     }
 
@@ -473,7 +486,7 @@ function dataTableDateFromIso(data, type, row) {
     if (data == null)
         return "";
 
-    return moment(data).format(jsDateFormat);
+    return moment(data, systemDateFormat).format(jsDateFormat);
 }
 
 function dataTableDateFromUnix(data, type, row) {

@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.8.0', 5, 2, 131);
+('1.8.1', 5, 2, 132);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`, `isSystemNotification`) VALUES
 (1, 'Users', 0, 0, 0),
@@ -296,8 +296,7 @@ INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES
 (8, 'Xibo\\Entity\\Playlist'),
 (9, 'Xibo\\Entity\\DataSet'),
 (10, 'Xibo\\Entity\\Notification'),
-(11, 'Xibo\\Entity\\DayPart'),
-(12, 'Xibo\\Entity\\Display');
+(11, 'Xibo\\Entity\\DayPart');
 
 INSERT INTO `oauth_scopes` (id, description) VALUES ('all', 'All access'),('mcaas', 'Media Conversion as a Service');
 

@@ -162,9 +162,13 @@ class DataSetColumn implements \JsonSerializable
             throw new InvalidArgumentException(__('Provided DataSet Column Type doesn\'t exist'), 'dataSetColumnTypeId');
         }
 
-        // Validation
+        // Should we validate the list content?
         if ($this->dataSetColumnId != 0 && $this->listContent != '') {
+            // Look up all DataSet data in this table to make sure that the existing data is covered by the list content
             $list = $this->listContentArray();
+
+            // Add an empty field
+            $list[] = '';
 
             // We can check this is valid by building up a NOT IN sql statement, if we get results.. we know its not good
             $select = '';
@@ -178,8 +182,8 @@ class DataSetColumn implements \JsonSerializable
 
             $select = rtrim($select, ',');
 
-            // $select has been quoted in the for loop
-            $SQL = 'SELECT id FROM `dataset_' . $this->dataSetId . '` WHERE `' . $this->heading . '` NOT IN (' . $select . ')';
+            // $select has been quoted in the for loop - always test the original value of the column (we won't have changed the actualised table yet)
+            $SQL = 'SELECT id FROM `dataset_' . $this->dataSetId . '` WHERE `' . $this->getOriginalValue('heading') . '` NOT IN (' . $select . ')';
 
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
@@ -199,7 +203,7 @@ class DataSetColumn implements \JsonSerializable
     {
         $options = array_merge(['validate' => true, 'rebuilding' => false], $options);
 
-        if ($options['validate'])
+        if ($options['validate'] && !$options['rebuilding'])
             $this->validate();
 
         if ($this->dataSetColumnId == 0)
@@ -251,10 +255,6 @@ class DataSetColumn implements \JsonSerializable
      */
     private function edit($options)
     {
-        // Get the current heading
-        $currentHeading = $this->getStore()->select('SELECT heading FROM `datasetcolumn` WHERE dataSetColumnId = :dataSetColumnId', ['dataSetColumnId' => $this->dataSetColumnId]);
-        $currentHeading = $currentHeading[0]['heading'];
-
         $this->getStore()->update('
           UPDATE `datasetcolumn` SET
             dataSetId = :dataSetId,
@@ -279,8 +279,8 @@ class DataSetColumn implements \JsonSerializable
         if ($options['rebuilding'] && $this->dataSetColumnTypeId == 1) {
             $this->getStore()->update('ALTER TABLE `dataset_' . $this->dataSetId . '` ADD `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL', []);
 
-        } else if ($this->dataSetColumnTypeId == 1 && $currentHeading != $this->heading) {
-            $sql = 'ALTER TABLE `dataset_' . $this->dataSetId . '` CHANGE `' . $currentHeading . '` `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL DEFAULT NULL';
+        } else if ($this->dataSetColumnTypeId == 1 && $this->hasPropertyChanged('heading')) {
+            $sql = 'ALTER TABLE `dataset_' . $this->dataSetId . '` CHANGE `' . $this->getOriginalValue('heading') . '` `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL DEFAULT NULL';
             $this->getLog()->debug($sql);
             $this->getStore()->update($sql, []);
         }

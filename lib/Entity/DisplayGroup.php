@@ -209,6 +209,14 @@ class DisplayGroup implements \JsonSerializable
     }
 
     /**
+     * @return bool
+     */
+    public function canChangeOwner()
+    {
+        return $this->isDisplaySpecific == 0;
+    }
+
+    /**
      * Set Notify Required
      * @param bool|true $collectRequired
      */

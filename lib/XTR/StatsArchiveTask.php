@@ -34,7 +34,7 @@ class StatsArchiveTask implements TaskInterface
         $this->runMessage = '# ' . __('Stats Archive') . PHP_EOL . PHP_EOL;
 
         // Get the earliest
-        $earliestDate = $this->store->select('SELECT MIN(start) AS minDate FROM `stat`', []);
+        $earliestDate = $this->store->select('SELECT MIN(statDate) AS minDate FROM `stat`', []);
 
         if (count($earliestDate) <= 0) {
             $this->runMessage = __('Nothing to archive');
@@ -49,7 +49,7 @@ class StatsArchiveTask implements TaskInterface
         $now = $this->date->parse()->subDay($periodSizeInDays)->setTime(0, 0, 0);
         $i = 0;
 
-        while ($earliestDate < $now && $i <= $maxPeriods) {
+        while ($earliestDate < $now && $i < $maxPeriods) {
             $i++;
 
             $this->log->debug('Running archive number ' . $i);
@@ -74,8 +74,10 @@ class StatsArchiveTask implements TaskInterface
     {
         $this->runMessage .= ' - ' . $fromDt . ' / ' . $toDt . PHP_EOL;
 
+        $select = 'SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName';
+        $countSelect = 'SELECT COUNT(*) AS cnt';
+
         $sql = '
-            SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName
               FROM stat
                 INNER JOIN display
                 ON stat.DisplayID = display.DisplayID
@@ -84,8 +86,9 @@ class StatsArchiveTask implements TaskInterface
                 LEFT OUTER JOIN media
                 ON media.mediaID = stat.mediaID
              WHERE 1 = 1
-              AND stat.start >= :fromDt
-              AND stat.start < :toDt
+              AND stat.statDate >= :fromDt
+              AND stat.statDate < :toDt
+             ORDER BY stat.statDate
         ';
 
         $params = [
@@ -93,36 +96,53 @@ class StatsArchiveTask implements TaskInterface
             'toDt' => $this->date->getLocalDate($toDt)
         ];
 
-        $sql .= " ORDER BY stat.start ";
+        // How many records are we expecting?
+        $records = $this->store->select($countSelect . $sql, $params);
+
+        if (count($records) <= 0)
+            return;
+
+        $records = $this->sanitizer->int($records[0]['cnt']);
 
         // Create a temporary file for this
-        $fileName = $this->config->GetSetting('LIBRARY_LOCATION') . 'temp/stats.csv';
+        $fileName = tempnam(sys_get_temp_dir(), 'stats');
 
         $out = fopen($fileName, 'w');
         fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId']);
 
-        // Do some post processing
-        foreach ($this->store->select($sql, $params) as $row) {
-            // Read the columns
-            fputcsv($out, [
-                $this->sanitizer->string($row['Type']),
-                $this->sanitizer->string($row['start']),
-                $this->sanitizer->string($row['end']),
-                $this->sanitizer->string($row['Layout']),
-                $this->sanitizer->string($row['Display']),
-                $this->sanitizer->string($row['MediaName']),
-                $this->sanitizer->string($row['Tag']),
-                $this->sanitizer->int($row['displayID']),
-                $this->sanitizer->int($row['layoutID']),
-                $this->sanitizer->int($row['widgetId']),
-                $this->sanitizer->int($row['mediaID'])
-            ]);
+        // Get records in blocks of 1000
+        $i = 0;
+        while ($i < $records) {
+
+            $rows = $this->store->select($select . $sql . ' LIMIT ' . $i . ', 1000 ', $params);
+
+            // Do some post processing
+            foreach ($rows as $row) {
+                // Read the columns
+                fputcsv($out, [
+                    $this->sanitizer->string($row['Type']),
+                    $this->sanitizer->string($row['start']),
+                    $this->sanitizer->string($row['end']),
+                    $this->sanitizer->string($row['Layout']),
+                    $this->sanitizer->string($row['Display']),
+                    $this->sanitizer->string($row['MediaName']),
+                    $this->sanitizer->string($row['Tag']),
+                    $this->sanitizer->int($row['displayID']),
+                    $this->sanitizer->int($row['layoutID']),
+                    $this->sanitizer->int($row['widgetId']),
+                    $this->sanitizer->int($row['mediaID'])
+                ]);
+            }
+
+            $i = $i + 1000;
         }
 
         fclose($out);
 
+        // Create a ZIP file and add our temporary file
+        $zipName = $this->config->GetSetting('LIBRARY_LOCATION') . 'temp/stats.csv.zip';
         $zip = new \ZipArchive();
-        $result = $zip->open($fileName . '.zip', \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+        $result = $zip->open($zipName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
         if ($result !== true)
             throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
 
@@ -137,7 +157,7 @@ class StatsArchiveTask implements TaskInterface
         $media->save();
 
         // Delete the stats
-        $this->store->update('DELETE FROM `stat` WHERE stat.start >= :fromDt AND stat.start < :toDt', $params);
+        $this->store->update('DELETE FROM `stat` WHERE stat.statDate >= :fromDt AND stat.statDate < :toDt', $params);
     }
 
     /**

@@ -61,6 +61,9 @@ class MaintenanceDailyTask implements TaskInterface
     {
         // Is there a pending upgrade (i.e. are there any pending upgrade steps).
         if ($this->config->isUpgradePending()) {
+            // Flag to indicate we've run upgrade steps
+            $this->hasUpgradeRun = true;
+
             $this->runMessage .= '#' . __('Upgrade') . PHP_EOL;
             $steps = $this->upgradeFactory->getIncomplete();
 
@@ -78,13 +81,25 @@ class MaintenanceDailyTask implements TaskInterface
             // Cycle through the steps until done
             set_time_limit(0);
 
+            $previousStepSetsDbVersion = false;
+
             foreach ($steps as $upgradeStep) {
                 /* @var \Xibo\Entity\Upgrade $upgradeStep */
+                if ($previousStepSetsDbVersion) {
+                    $this->log->notice('Pausing upgrade to reset version');
+                    $this->runMessage .= '#' . __('Upgrade Paused') . PHP_EOL . PHP_EOL;
+                    return;
+                }
+
                 try {
                     $upgradeStep->doStep();
                     $upgradeStep->complete = 1;
                     $upgradeStep->lastTryDate = $this->date->parse()->format('U');
                     $upgradeStep->save();
+
+                    // if we are a step that updates the version table, then exit
+                    if ($upgradeStep->type == 'sql' && stripos($upgradeStep->action, 'SET `DBVersion`'))
+                        $previousStepSetsDbVersion = true;
                 }
                 catch (\Exception $e) {
                     $upgradeStep->lastTryDate = $this->date->parse()->format('U');
@@ -97,8 +112,6 @@ class MaintenanceDailyTask implements TaskInterface
             }
 
             $this->runMessage .= '#' . __('Upgrade Complete') . PHP_EOL . PHP_EOL;
-
-            $this->hasUpgradeRun = true;
         }
     }
 

@@ -721,7 +721,7 @@ class ForecastIo extends ModuleWidget
             <link href="' . $this->getResourceUrl('forecastio/weather-icons.min.css') . '" rel="stylesheet" media="screen">
             <link href="' . $this->getResourceUrl('forecastio/font-awesome.min.css')  . '" rel="stylesheet" media="screen">
             <link href="' . $this->getResourceUrl('forecastio/animate.css')  . '" rel="stylesheet" media="screen">
-            
+            <style type="text/css"> body { background-color: transparent }</style>
             <style type="text/css">
                 ' . $this->parseLibraryReferences($isPreview, $styleSheet) . '
             </style>
