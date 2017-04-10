@@ -721,7 +721,7 @@ class Schedule implements \JsonSerializable
         // loop until we have added the recurring events for the schedule
         while ($start < $range)
         {
-            $this->getLog()->debug('Loop: ' . $start->toRssString() . ' to ' . $range->toRssString() . ' [eventId:' . $this->eventId . ']');
+            $this->getLog()->debug('Loop: ' . $start->toRssString() . ' to ' . $range->toRssString() . ' [eventId:' . $this->eventId . ', end: ' . $end->toRssString() . ']');
 
             // add the appropriate time to the start and end
             switch ($this->recurrenceType)
@@ -782,7 +782,7 @@ class Schedule implements \JsonSerializable
                                 continue;
 
                             if ($start >= $generateFromDt) {
-                                if ($this->toDt == null) {
+                                if ($this->eventTypeId == self::$COMMAND_EVENT) {
                                     $this->addDetail($start->format('U'), null);
                                 }
                                 else {
@@ -843,7 +843,7 @@ class Schedule implements \JsonSerializable
                 continue;
 
             if ($start >= $generateFromDt) {
-                if ($this->toDt == null)
+                if ($this->eventTypeId == self::$COMMAND_EVENT)
                     $this->addDetail($start->format('U'), null);
                 else {
                     // If we are a daypart event, look up the start/end times for the event

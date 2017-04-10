@@ -69,6 +69,7 @@ var text_callback = function(dialog, extra) {
             "background: " + $('#layout').css('background-color') + "; " +
             "transform: scale(" + scale + "); " +
             "transform-origin: 0 0; }" +
+            "h1, h2, h3, h4, p { margin-top: 0;}" +
             "</style>");
     }
 
@@ -121,13 +122,17 @@ var text_callback = function(dialog, extra) {
     }
 
     // Make sure when we close the dialog we also destroy the editor
-    dialog.on("hide", function() {
-        if (CKEDITOR.instances["ta_text"] !== undefined) {
-            CKEDITOR.instances["ta_text"].destroy();
-        }
+    dialog.on("hide.bs.modal", function() {
+        try {
+            if (CKEDITOR.instances["ta_text"] !== undefined) {
+                CKEDITOR.instances["ta_text"].destroy();
+            }
 
-        if (CKEDITOR.instances["noDataMessage"] !== undefined) {
-            CKEDITOR.instances["noDataMessage"].destroy();
+            if (CKEDITOR.instances["noDataMessage"] !== undefined) {
+                CKEDITOR.instances["noDataMessage"].destroy();
+            }
+        } catch (e) {
+            console.log("Unable to remove CKEditor instance. " + e);
         }
 
         // Remove colour picker

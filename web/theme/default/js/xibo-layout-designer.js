@@ -290,6 +290,10 @@ function refreshPreview(regionId) {
 var loadTimeLineCallback = function(dialog) {
     // Make this a big modal
     dialog.addClass("modal-big");
+    console.log(dialog);
+    dialog.on("hidden.bs.modal", function () {
+        refreshPreview($("#layout").data("currentRegionId"));
+    });
 
     // Each time we open, we want to set a "current region id" in the designer
     $("#layout").data("currentRegionId", $('#timelineControl').attr('regionid'));
@@ -334,11 +338,6 @@ var loadTimeLineCallback = function(dialog) {
     // Hook up the library Upload Buttons
     $(".libraryUploadForm").click(libraryUploadClick);
 };
-
-var closeTimeLineCallback = function() {
-    refreshPreview($('#timelineControl').attr('regionid'));
-    XiboDialogClose();
-}
 
 var XiboTimelineSaveOrder = function(timelineDiv) {
 
