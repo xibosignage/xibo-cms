@@ -98,8 +98,6 @@ This is the template for the campaign page
 
             // Hold a container for the layouts we have assigned already
             var container = $("#LayoutAssign");
-            if (container.data().layouts == undefined)
-                container.data().layouts = {};
 
             // Layout DataTable
             var layoutTable = $("#layoutAssignments").DataTable({ "language": dataTablesLanguage,
@@ -140,7 +138,6 @@ This is the template for the campaign page
                     // Append to our layouts list
                     // We are adding a new layout, so the display order should be the highest display order
                     var order = nextDisplayOrder();
-                    container.data().layouts[data.layoutId + "_" + order] = 1;
 
                     // Construct a new item for the assigned box
                     var newItem = $("<li/>", {
@@ -156,7 +153,6 @@ This is the template for the campaign page
                     $("<span/>", {
                         "class": "glyphicon glyphicon-minus-sign",
                         click: function(){
-                            container.data().layouts[$(this).parent().data().layoutId + "_" + order] = 0;
                             $(this).parent().remove();
                         }
                     }).appendTo(newItem);
@@ -165,60 +161,10 @@ This is the template for the campaign page
             layoutTable.on('processing.dt', dataTableProcessing);
 
             // Make our little list sortable
-            var startPosition = 0;
-            $("#LayoutAssignSortable").sortable({
-                start: function (event, ui) {
-                    startPosition = ui.item.index();
-                },
-                update: function (event, ui) {
-                    // Update the layouts container according to this change
-                    var position = ui.item.index();
-
-                    // Unassign from current position
-                    container.data().layouts[ui.item.data().layoutId + "_" + ui.item.data().displayOrder] = 0;
-
-                    // Shuffle others
-                    var shuffle = (startPosition < position) ? -1 : 1;
-
-                    // All items
-                    var allItems = $("#LayoutAssignSortable").find("li");
-
-                    // Set the display order on ours
-                    if (position == 0) {
-                        // One to the right
-                        var rightOne = allItems.eq(1).data().displayOrder;
-                        if (rightOne > 1)
-                            rightOne--;
-
-                        ui.item.data().displayOrder = rightOne;
-                    }
-                    else {
-                        // One to the left
-                        ui.item.data().displayOrder = allItems.eq(position - 1).data().displayOrder + 1;
-                    }
-
-                    // Assign to the new position
-                    container.data().layouts[ui.item.data().layoutId + "_" + ui.item.data().displayOrder] = 1;
-
-                    // Shuffle
-                    $.each(allItems, function (index) {
-                        if ((shuffle == 1 && index > position) || (shuffle == -1 && index < position)) {
-                            // Add shuffle to each item, remove and assign
-                            container.data().layouts[$(this).data().layoutId + "_" + $(this).data().displayOrder] = 0;
-
-                            // Shuffle
-                            $(this).data().displayOrder = $(this).data().displayOrder + shuffle;
-
-                            // Assign
-                            container.data().layouts[$(this).data().layoutId + "_" + $(this).data().displayOrder] = 1;
-                        }
-                    });
-                }
-            });
+            $("#LayoutAssignSortable").sortable();
 
             // Bind to the existing items in the list
             $("#LayoutAssignSortable").find('li span').click(function () {
-                container.data().layouts[$(this).parent().data().layoutId + "_" + $(this).parent().data().displayOrder] = 0;
                 $(this).parent().remove();
             });
 
@@ -226,35 +172,82 @@ This is the template for the campaign page
             $(".layoutAssignFilterOptions").find("input, select").change(function() {
                 layoutTable.ajax.reload();
             });
+            
+            // Get the original sortable positions
+            container.data().originalLayoutPositions = [];
+            $("#LayoutAssignSortable").find("li").each(function(){
+                container.data().originalLayoutPositions.push($(this).data("layoutId"));
+            });
         }
 
         function layoutAssignSubmit() {
+            
             // Collect our media
             var container = $("#LayoutAssign");
-
+            
+            var originalLayoutPositions = container.data().originalLayoutPositions;
+            var originalPositionsLength = originalLayoutPositions.length;
+            
+            var finalLayoutPositions = [];
+            
+            var layoutChanges = [];
+            
+            // Get the final sortable positions
+            finalLayoutPositions = [];
+            $("#LayoutAssignSortable").find("li").each(function(){
+                finalLayoutPositions.push($(this).data("layoutId"));
+            });
+            
             // Build an array of id's to assign and an array to unassign
             var assign = [];
             var unassign = [];
-
-            $.each(container.data().layouts, function(name, value) {
-                var item = name.split("_");
-                var layout = {
-                    layoutId: item[0],
-                    displayOrder: item[1]
-                };
-
-                if (value == 1)
-                    assign.push(layout);
-                else
-                    unassign.push(layout);
-            });
-
+            
+            for (var i = 0; i < finalLayoutPositions.length; i++) {
+                var elem = finalLayoutPositions[i];
+                
+                // Search for the element on the original layout
+                if (originalLayoutPositions.indexOf(elem) != -1) {
+                    
+                    var originalPosition = originalLayoutPositions.indexOf(elem);
+                    var finalPosition = i;
+                    
+                    // If the original position is different from the final, make the swap
+                    if (originalPosition != finalPosition) {
+                        // Remove from the original position
+                        unassign.push({layoutId: elem, displayOrder: originalPosition+1});
+                        
+                        // Assign to the new position
+                        assign.push({layoutId: elem, displayOrder: finalPosition+1});
+                    }
+                    
+                    // Clean picked element from the original list
+                    originalLayoutPositions[originalPosition] = -1;
+                } else {
+                    
+                    // If the element is not on the list add it to the end of it
+                    assign.push({layoutId: elem, displayOrder: originalPositionsLength});
+                    
+                    // Increase the last position variable
+                    originalPositionsLength++
+                }
+            }
+            
+            // Remove all non processed elements
+            for (var i = 0; i < originalLayoutPositions.length; i++) {
+                    if (originalLayoutPositions[i] != -1) {
+                        var elem = originalLayoutPositions[i];
+                        
+                        // Remove from the original position
+                        unassign.push({layoutId: elem, displayOrder: i+1});
+                    }
+            }
+            
             assignLayoutsToCampaign(container.data().url, assign, unassign);
         }
 
         function assignLayoutsToCampaign(url, layout, unassign) {
             toastr.info(layout, "Assign Layouts to Campaign");
-
+            
             $.ajax({
                 type: "post",
                 url: url,

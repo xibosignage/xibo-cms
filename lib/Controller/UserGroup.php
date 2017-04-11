@@ -420,7 +420,7 @@ class UserGroup extends Base
         $objectIds = $this->getSanitizer()->getParam('objectId', null);
 
         if (!is_array($objectIds))
-            throw new \InvalidArgumentException(__('Missing New ACL'));
+            $objectIds = [];
 
         $newAcl = array();
         array_map(function ($string) use (&$newAcl) {

@@ -20,6 +20,7 @@
  */
 namespace Xibo\Controller;
 
+use Jenssegers\Date\Date;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\SessionFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -76,9 +77,13 @@ class Sessions extends Base
             'fromDt' => $this->getSanitizer()->getString('fromDt')
         ]));
 
-        if (!$this->isApi() && $this->getUser()->isSuperAdmin()) {
-            foreach ($sessions as $row) {
-                /* @var \Xibo\Entity\Session $row */
+        foreach ($sessions as $row) {
+            /* @var \Xibo\Entity\Session $row */
+
+            // Normalise the date
+            $row->lastAccessed = $this->getDate()->getLocalDate(Date::createFromFormat($this->getDate()->getSystemFormat(), $row->lastAccessed));
+
+            if (!$this->isApi() && $this->getUser()->isSuperAdmin()) {
 
                 $row->includeProperty('buttons');
 

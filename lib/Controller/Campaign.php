@@ -24,8 +24,8 @@ use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\TagFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -183,6 +183,9 @@ class Campaign extends Base
 
             // Buttons based on permissions
             if ($this->getUser()->checkEditable($campaign)) {
+
+                $campaign->buttons[] = ['divider' => true];
+
                 // Assign Layouts
                 $campaign->buttons[] = array(
                     'id' => 'campaign_button_layouts',
@@ -190,12 +193,16 @@ class Campaign extends Base
                     'text' => __('Layouts')
                 );
 
+                $campaign->buttons[] = ['divider' => true];
+
                 // Edit the Campaign
                 $campaign->buttons[] = array(
                     'id' => 'campaign_button_edit',
                     'url' => $this->urlFor('campaign.edit.form', ['id' => $campaign->campaignId]),
                     'text' => __('Edit')
                 );
+            } else {
+                $campaign->buttons[] = ['divider' => true];
             }
 
             if ($this->getUser()->checkDeleteable($campaign)) {
@@ -208,6 +215,9 @@ class Campaign extends Base
             }
 
             if ($this->getUser()->checkPermissionsModifyable($campaign)) {
+
+                $campaign->buttons[] = ['divider' => true];
+
                 // Permissions for Campaign
                 $campaign->buttons[] = array(
                     'id' => 'campaign_button_delete',
@@ -526,6 +536,9 @@ class Campaign extends Base
         // Run through the layouts to unassign
         $layouts = $this->getSanitizer()->getParam('unassignLayoutId', null);
         $layouts = is_array($layouts) ? $layouts : [];
+        
+        $this->getLog()->debug('There are %d Layouts to unassign', count($layouts));
+        
         foreach ($layouts as $object) {
 
             $layout = $this->layoutFactory->getById($this->getSanitizer()->getInt('layoutId', $object));

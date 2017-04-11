@@ -38,7 +38,7 @@ class Schedule implements \JsonSerializable
     public static $DAY_PART_CUSTOM = 0;
     public static $DAY_PART_ALWAYS = 1;
     public static $DATE_MIN = 0;
-    public static $DATE_MAX = 2556057600;
+    public static $DATE_MAX = 2147483647;
 
     /**
      * @SWG\Property(
@@ -417,7 +417,8 @@ class Schedule implements \JsonSerializable
     public function save($options = [])
     {
         $options = array_merge([
-            'validate' => true
+            'validate' => true,
+            'audit' => true
         ], $options);
 
         if ($options['validate'])
@@ -431,10 +432,13 @@ class Schedule implements \JsonSerializable
 
         if ($this->eventId == null || $this->eventId == 0) {
             $this->add();
+            $auditMessage = 'Added';
             $this->loaded = true;
         }
-        else
+        else {
             $this->edit();
+            $auditMessage = 'Saved';
+        }
 
         // Manage display assignments
         if ($this->loaded) {
@@ -451,6 +455,9 @@ class Schedule implements \JsonSerializable
                 $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
             }
         }
+
+        if ($options['audit'])
+            $this->audit($this->getId(), $auditMessage);
 
         // Drop the cache for this event
         $this->dropEventCache();
@@ -483,6 +490,9 @@ class Schedule implements \JsonSerializable
 
         // Drop the cache for this event
         $this->dropEventCache();
+
+        // Audit
+        $this->audit($this->getId(), 'Deleted', $this->toArray());
     }
 
     /**
@@ -571,12 +581,22 @@ class Schedule implements \JsonSerializable
         if ($this->eventId == null)
             throw new InvalidArgumentException(__('Unable to generate schedule, unknown event'), 'eventId');
 
+        // What if we are requesting a single point in time?
+        if ($fromDt == $toDt) {
+            $this->log->debug('Requesting event for a single point in time: ' . $this->getDate()->getLocalDate($fromDt));
+        }
+
         $events = [];
         $fromTimeStamp = $fromDt->format('U');
         $toTimeStamp = $toDt->format('U');
 
         // Rewind the from date to the start of the month
         $fromDt->startOfMonth();
+
+        if ($fromDt == $toDt) {
+            $this->log->debug('From and To Dates are the same after rewinding 1 month, the date is the 1st of the month, adding a month to toDate.');
+            $toDt->addMonth();
+        }
 
         // Request month cache
         while ($fromDt < $toDt) {
@@ -701,7 +721,7 @@ class Schedule implements \JsonSerializable
         // loop until we have added the recurring events for the schedule
         while ($start < $range)
         {
-            $this->getLog()->debug('Loop: ' . $start->toRssString() . ' to ' . $range->toRssString() . ' [eventId:' . $this->eventId . ']');
+            $this->getLog()->debug('Loop: ' . $start->toRssString() . ' to ' . $range->toRssString() . ' [eventId:' . $this->eventId . ', end: ' . $end->toRssString() . ']');
 
             // add the appropriate time to the start and end
             switch ($this->recurrenceType)
@@ -762,7 +782,7 @@ class Schedule implements \JsonSerializable
                                 continue;
 
                             if ($start >= $generateFromDt) {
-                                if ($this->toDt == null) {
+                                if ($this->eventTypeId == self::$COMMAND_EVENT) {
                                     $this->addDetail($start->format('U'), null);
                                 }
                                 else {
@@ -823,7 +843,7 @@ class Schedule implements \JsonSerializable
                 continue;
 
             if ($start >= $generateFromDt) {
-                if ($this->toDt == null)
+                if ($this->eventTypeId == self::$COMMAND_EVENT)
                     $this->addDetail($start->format('U'), null);
                 else {
                     // If we are a daypart event, look up the start/end times for the event

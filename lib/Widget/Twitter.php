@@ -488,7 +488,7 @@ class Twitter extends TwitterBase
         }
         
         // Connect to twitter and get the twitter feed.
-        $cache = $this->getPool()->getItem(md5($searchTerm . $this->getOption('resultType') . $this->getOption('tweetCount', 15) . $geoCode));
+        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($searchTerm . $this->getOption('resultType') . $this->getOption('tweetCount', 15) . $geoCode)));
 
         $data = $cache->get();
 
@@ -789,14 +789,16 @@ class Twitter extends TwitterBase
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
 
-        $backgroundColor = $this->getOption('backgroundColor');
-        if ($backgroundColor != '') {
-            $headContent .= '<style type="text/css">body, .page, .item { background-color: ' . $backgroundColor . ' }</style>';
-        }
-
         // Add our fonts.css file
         $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
         <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
+        
+        $backgroundColor = $this->getOption('backgroundColor');
+        if ($backgroundColor != '') {
+            $headContent .= '<style type="text/css">body { background-color: ' . $backgroundColor . ' }</style>';
+        } else {
+          $headContent .= '<style type="text/css"> body { background-color: transparent }</style>';
+        }
         
         // Add the CSS if it isn't empty
         if ($css != '') {
@@ -832,7 +834,7 @@ class Twitter extends TwitterBase
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
     }

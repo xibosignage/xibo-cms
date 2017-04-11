@@ -605,7 +605,12 @@ if(!String.prototype.formatNum) {
 	}
 
 	function Calendar(params, context) {
-		this.options = $.extend(true, {position: {start: new Date(), end: new Date()}}, defaults, params);
+		this.options = $.extend(true, {
+                position: {
+                    start: new Date(), end: new Date()
+                }
+            }, defaults, params);
+
 		this.setLanguage(this.options.language);
 		this.context = context;
 
@@ -643,7 +648,7 @@ if(!String.prototype.formatNum) {
 		var data = {};
 
 		// Render the non agenda views ( Day, Week, Month,Year)
-		if (this.options.view != 'agenda') {
+		if (this.options.view !== 'agenda') {
 			data.cal = this;
 			data.day = 1;
 
@@ -683,91 +688,90 @@ if(!String.prototype.formatNum) {
 		this._update();
 	};
 
-	Calendar.prototype._calculate_hour_minutes = function(data) {
-		var $self = this;
-		var time_split = parseInt(this.options.time_split);
-		var time_split_count = 60 / time_split;
-		var time_split_hour = Math.min(time_split_count, 1);
+    Calendar.prototype._calculate_hour_minutes = function(data) {
+        var $self = this;
+        var time_split = parseInt(this.options.time_split);
+        var time_split_count = 60 / time_split;
+        var time_split_hour = Math.min(time_split_count, 1);
 
-		if(((time_split_count >= 1) && (time_split_count % 1 != 0)) || ((time_split_count < 1) && (1440 / time_split % 1 != 0))) {
-			$.error(this.locale.error_timedevide);
-		}
+        if(((time_split_count >= 1) && (time_split_count % 1 != 0)) || ((time_split_count < 1) && (1440 / time_split % 1 != 0))) {
+            $.error(this.locale.error_timedevide);
+        }
 
-		var time_start = this.options.time_start.split(":");
-		var time_end = this.options.time_end.split(":");
-        var time_hour_duration = parseInt(time_end[0]) - parseInt(time_start[0]);
+        var time_start = this.options.time_start.split(":");
+        var time_end = this.options.time_end.split(":");
 
-		data.hours = ((time_hour_duration == 0) ? 24 : time_hour_duration) * time_split_hour;
-		var lines = data.hours * time_split_count - parseInt(time_start[1]) / time_split;
-		var ms_per_line = (60000 * time_split);
+        data.hours = (parseInt(time_end[0]) - parseInt(time_start[0])) * time_split_hour;
+        var lines = data.hours * time_split_count - parseInt(time_start[1]) / time_split;
+        var ms_per_line = (60000 * time_split);
 
-		var start = new Date(this.options.position.start.getTime());
-		start.setHours(time_start[0]);
-		start.setMinutes(time_start[1]);
-		var end = new Date(this.options.position.end.getTime());
-		end.setHours(time_end[0]);
-		end.setMinutes(time_end[1]);
+        var start = new Date(this.options.position.start.getTime());
+        start.setHours(time_start[0]);
+        start.setMinutes(time_start[1]);
+        var end = new Date(this.options.position.end.getTime());
+        end.setHours(time_end[0]);
+        end.setMinutes(time_end[1]);
 
-		data.all_day = [];
-		data.by_hour = [];
-		data.after_time = [];
-		data.before_time = [];
-		$.each(data.events, function(k, e) {
-			var s = new Date(parseInt(e.start));
-			var f = new Date(parseInt(e.end));
+        data.all_day = [];
+        data.by_hour = [];
+        data.after_time = [];
+        data.before_time = [];
+        $.each(data.events, function(k, e) {
+            var s = new Date(parseInt(e.start));
+            var f = new Date(parseInt(e.end));
 
-			e.start_hour = s.getHours().toString().formatNum(2) + ':' + s.getMinutes().toString().formatNum(2);
-			e.end_hour = f.getHours().toString().formatNum(2) + ':' + f.getMinutes().toString().formatNum(2);
+            e.start_hour = s.getHours().toString().formatNum(2) + ':' + s.getMinutes().toString().formatNum(2);
+            e.end_hour = f.getHours().toString().formatNum(2) + ':' + f.getMinutes().toString().formatNum(2);
 
-			if(e.start < start.getTime()) {
-				e.start_hour = s.getDate() + ' ' + $self.locale['ms' + s.getMonth()] + ' ' + e.start_hour;
-			}
+            if(e.start < start.getTime()) {
+                e.start_hour = s.getJalaliDate() + ' ' + $self.locale['jms' + (s.getJalaliMonth() - 1)] + ' ' + e.start_hour;
+            }
 
-			if(e.end > end.getTime()) {
-				e.end_hour = f.getDate() + ' ' + $self.locale['ms' + f.getMonth()] + ' ' + e.end_hour;
-			}
+            if(e.end > end.getTime()) {
+                e.end_hour = f.getJalaliDate() + ' ' + $self.locale['jms' + (s.getJalaliMonth() - 1)] + ' ' + e.end_hour;
+            }
 
-			if(e.start < start.getTime() && e.end > end.getTime()) {
-				data.all_day.push(e);
-				return;
-			}
+            if(e.start < start.getTime() && e.end > end.getTime()) {
+                data.all_day.push(e);
+                return;
+            }
 
-			if(e.end < start.getTime()) {
-				data.before_time.push(e);
-				return;
-			}
+            if(e.end < start.getTime()) {
+                data.before_time.push(e);
+                return;
+            }
 
-			if(e.start > end.getTime()) {
-				data.after_time.push(e);
-				return;
-			}
+            if(e.start > end.getTime()) {
+                data.after_time.push(e);
+                return;
+            }
 
-			var event_start = start.getTime() - e.start;
+            var event_start = start.getTime() - e.start;
 
-			if(event_start >= 0) {
-				e.top = 0;
-			} else {
-				e.top = Math.abs(event_start) / ms_per_line;
-			}
+            if(event_start >= 0) {
+                e.top = 0;
+            } else {
+                e.top = Math.abs(event_start) / ms_per_line;
+            }
 
-			var lines_left = Math.abs(lines - e.top);
-			var lines_in_event = (e.end - e.start) / ms_per_line;
-			if(event_start >= 0) {
-				lines_in_event = (e.end - start.getTime()) / ms_per_line;
-			}
+            var lines_left = Math.abs(lines - e.top);
+            var lines_in_event = (e.end - e.start) / ms_per_line;
+            if(event_start >= 0) {
+                lines_in_event = (e.end - start.getTime()) / ms_per_line;
+            }
 
 
-			e.lines = lines_in_event;
-			if(lines_in_event > lines_left) {
-				e.lines = lines_left;
-			}
+            e.lines = lines_in_event;
+            if(lines_in_event > lines_left) {
+                e.lines = lines_left;
+            }
 
-			data.by_hour.push(e);
-		});
+            data.by_hour.push(e);
+        });
 
-		//var d = new Date('2013-03-14 13:20:00');
-		//warn(d.getTime());
-	};
+        //var d = new Date('2013-03-14 13:20:00');
+        //warn(d.getTime());
+    };
 
 	Calendar.prototype._hour_min = function(hour) {
 		var time_start = this.options.time_start.split(":");
@@ -825,74 +829,78 @@ if(!String.prototype.formatNum) {
 		return self.options.templates['week-days'](t);
 	}
 
-	Calendar.prototype._month = function(month) {
-		this._loadTemplate('year-month');
+    Calendar.prototype._month = function(month) {
+        this._loadTemplate('year-month');
 
-		var t = {cal: this};
-		var newmonth = month + 1;
-		t.data_day = this.options.position.start.getFullYear() + '-' + (newmonth < 10 ? '0' + newmonth : newmonth) + '-' + '01';
-		t.month_name = this.locale['m' + month];
+        var t = {cal: this};
+        t.month_name = this.locale['jm' + month];
 
-		var curdate = new Date(this.options.position.start.getFullYear(), month, 1, 0, 0, 0);
-		t.start = parseInt(curdate.getTime());
-		t.end = parseInt(new Date(this.options.position.start.getFullYear(), month + 1, 1, 0, 0, 0).getTime());
-		t.events = this.getEventsBetween(t.start, t.end);
-		return this.options.templates['year-month'](t);
-	}
+        var jStart = JalaliDate.jalaliToGregorian(this.options.position.start.getJalaliFullYear(), month +1, 1);
+        var jStop = JalaliDate.jalaliToGregorian(this.options.position.start.getJalaliFullYear(), month + 2, 1);
+        t.data_day = jStart[0] + '-' + (jStart[1] < 10 ? '0' + jStart[1] : jStart[1]) + '-' + (jStart[2] < 10 ? '0' + jStart[2] : jStart[2]);
+        var curdate = new Date(jStart[0], jStart[1] - 1, jStart[2], 0, 0, 0);
+        t.start = parseInt(curdate.getTime());
+        t.end = parseInt(new Date(jStop[0], jStop[1] - 1, jStop[2], 0, 0, 0).getTime());
+        t.events = this.getEventsBetween(t.start, t.end);
+        return this.options.templates['year-month'](t);
+    };
 
-	Calendar.prototype._day = function(week, day) {
-		this._loadTemplate('month-day');
+    Calendar.prototype._day = function(week, day) {
+        this._loadTemplate('month-day');
 
-		var t = {tooltip: '', cal: this};
-		var cls = this.options.classes.months.outmonth;
+        var t = {tooltip: '', cal: this};
+        var cls = this.options.classes.months.outmonth;
 
-		var firstday = this.options.position.start.getDay();
-		if(getExtentedOption(this, 'first_day') == 2) {
-			firstday++;
-		} else {
-			firstday = (firstday == 0 ? 7 : firstday);
-		}
+        var firstday = this.options.position.start.getDay();
+        if(getExtentedOption(this, 'first_day') == 2) {
+            firstday++;
+        } else {
+            firstday = (firstday == 0 ? 7 : firstday);
+        }
 
-		day = (day - firstday) + 1;
-		var curdate = new Date(this.options.position.start.getFullYear(), this.options.position.start.getMonth(), day, 0, 0, 0);
+        day = (day - firstday) + 1;
+        var curdate = new Date(this.options.position.start.getFullYear(),
+            this.options.position.start.getMonth(),
+            this.options.position.start.getDate() + day - 1);
 
-		// if day of the current month
-		if(day > 0) {
-			cls = this.options.classes.months.inmonth;
-		}
-		// stop cycling table rows;
-		var daysinmonth = (new Date(this.options.position.end.getTime() - 1)).getDate();
-		if((day + 1) > daysinmonth) {
-			this.stop_cycling = true;
-		}
-		// if day of the next month
-		if(day > daysinmonth) {
-			day = day - daysinmonth;
-			cls = this.options.classes.months.outmonth;
-		}
+        // if day of the current month
+        if(day > 0) {
+            cls = this.options.classes.months.inmonth;
+        }
+        // stop cycling table rows;
+        var daysinmonth = (new Date(this.options.position.end.getTime() - 1)).getJalaliDate();
+        if((day + 1) > daysinmonth) {
+            this.stop_cycling = true;
+        }
+        // if day of the next month
+        if(day > daysinmonth) {
+            day = day - daysinmonth;
+            cls = this.options.classes.months.outmonth;
+        }
 
-		cls = $.trim(cls + " " + this._getDayClass("months", curdate));
+        cls = $.trim(cls + " " + this._getDayClass("months", curdate));
+        //console.log(curdate);
 
-		if(day <= 0) {
-			var daysinprevmonth = (new Date(this.options.position.start.getFullYear(), this.options.position.start.getMonth(), 0)).getDate();
-			day = daysinprevmonth - Math.abs(day);
-			cls += ' cal-month-first-row';
-		}
+        if(day <= 0) {
+            var daysinprevmonth = JalaliDate.j_days_in_month[new Date(this.options.position.start.getTime() - 1).getJalaliMonth() - 1];
+            day = daysinprevmonth - Math.abs(day);
+            cls += ' cal-month-first-row';
+        }
 
-		var holiday = this._getHoliday(curdate);
-		if(holiday !== false) {
-			t.tooltip = holiday;
-		}
+        var holiday = this._getHoliday(curdate);
+        if(holiday !== false) {
+            t.tooltip = holiday;
+        }
 
-		t.data_day = curdate.getFullYear() + '-' + curdate.getMonthFormatted() + '-' + (day < 10 ? '0' + day : day);
-		t.cls = cls;
-		t.day = day;
+        t.data_day = curdate.getFullYear() + '-' + curdate.getMonthFormatted() + '-' + (curdate.getDate() < 10 ? '0' + curdate.getDate() : curdate.getDate());
+        t.cls = cls;
+        t.day = day;
 
-		t.start = parseInt(curdate.getTime());
-		t.end = parseInt(t.start + 86400000);
-		t.events = this.getEventsBetween(t.start, t.end);
-		return this.options.templates['month-day'](t);
-	}
+        t.start = parseInt(curdate.getTime());
+        t.end = parseInt(t.start + 86400000);
+        t.events = this.getEventsBetween(t.start, t.end);
+        return this.options.templates['month-day'](t);
+    };
 	
 	Calendar.prototype._layouts = function(ev, la, type) {
 			
@@ -911,7 +919,7 @@ if(!String.prototype.formatNum) {
 		for (var i = 0; i < ev.length; i++) {
 
 			// Add if it's a normal layout (1) or an overlay (3)
-			if(ev[i].eventTypeId == type) {
+			if(ev[i].eventTypeId == type && ev[i].layoutId != 0) {
 				var layout = la[ev[i].layoutId];
 				var event = ev[i];
 				var elementPriority = 0;
@@ -933,8 +941,8 @@ if(!String.prototype.formatNum) {
 					layoutId: event.layoutId,
 					layoutName: layout.layout,
 					layoutStatus: layout.status,
-					eventFromDt: moment(event.fromDt, "X").format(jsDateFormat),
-					eventToDt: moment(event.toDt, "X").format(jsDateFormat),
+					eventFromDt: moment(event.fromDt, "X").tz(timezone).format(jsDateFormat),
+					eventToDt: moment(event.toDt, "X").tz(timezone).format(jsDateFormat),
 					eventDayPartId: event.dayPartId,
 					layoutDuration: layout.duration,
 					layoutDisplayOrder: event.displayOrder,
@@ -1005,8 +1013,8 @@ if(!String.prototype.formatNum) {
 		var t = {};
 		
 		var targetEvent = {};
-	    var displayGroupLink = '/displaygroup/view';
-	    var campaignLink = '/campaign/view';
+	    var displayGroupLink = '';
+	    var campaignLink = '';
 
 	    var results = data.results[data.selectedDisplayGroup];
 	    
@@ -1112,164 +1120,160 @@ if(!String.prototype.formatNum) {
 		return classes.join(" ");
 	};
 
-	Calendar.prototype.setType = function (type) {
-		if (type === 'Jalali' && this.options.type !== 'Jalali') {
-			this.options.type = 'Jalali';
-			jalalize();
-			this.view(this.options.view);
-		} else if (type === 'Gregorian' && this.options.type !== 'Gregorian') {
-			this.options.type = 'Gregorian';
-			unjalalize();
-			this.view(this.options.view);
-		}
-	}
+    Calendar.prototype.view = function(view) {
+        if(view) {
+            if(!this.options.views[view].enable) {
+                return;
+            }
+            this.options.view = view;
+        }
 
-	Calendar.prototype.view = function(view) {
-		if(view) {
-			if(!this.options.views[view].enable) {
-				return;
-			}
-			this.options.view = view;
-		}
+        this._init_position();
+        this._loadEvents();
+        this._render();
 
+        this.options.onAfterViewLoad.call(this, this.options.view);
+    };
 
-		this._init_position();
-		this._loadEvents(function(calendar){
-			calendar._render();
-			calendar.options.onAfterViewLoad.call(this, calendar.options.view);
-		});
-		this._render();
+    Calendar.prototype.navigate = function(where, next) {
+        var to = $.extend({}, this.options.position);
+        if(where == 'next') {
+            switch(this.options.view) {
+                case 'year':
+                    to.start.setJalaliFullYear(this.options.position.start.getJalaliFullYear() + 1);
+                    break;
+                case 'month':
+                    to.start.setJalaliMonth(this.options.position.start.getJalaliMonth() + 1);
+                    break;
+                case 'week':
+                    to.start.setDate(this.options.position.start.getDate() + 7);
+                    break;
+                case 'day':
+                    to.start.setDate(this.options.position.start.getDate() + 1);
+                    break;
+            }
+        } else if(where == 'prev') {
+            switch(this.options.view) {
+                case 'year':
+                    to.start.setJalaliFullYear(this.options.position.start.getJalaliFullYear() - 1);
+                    break;
+                case 'month':
+                    var prevMonth = this.options.position.start.getJalaliMonth() - 1;
+                    to.start.setJalaliMonth(prevMonth ? prevMonth : 12);
+                    if (!prevMonth) {
+                        to.start.setJalaliFullYear(to.start.getJalaliFullYear() - 1);
+                    }
+                    break;
+                case 'week':
+                    to.start.setDate(this.options.position.start.getDate() - 7);
+                    break;
+                case 'day':
+                    to.start.setDate(this.options.position.start.getDate() - 1);
+                    break;
+            }
+        } else if(where == 'today') {
+            to.start.setTime(new Date().getTime());
+        } else if(where == 'date') {
+            to.start.setTime(next.format('x'));
+        } else {
+            $.error(this.locale.error_where.format(where))
+        }
+        this.options.day = to.start.getFullYear() + '-' + to.start.getMonthFormatted() + '-' + to.start.getDateFormatted();
+        this.view();
+        if(_.isFunction(next)) {
+            next();
+        }
+    };
 
-		this.options.onAfterViewLoad.call(this, this.options.view);
-	};
+    Calendar.prototype._init_position = function () {
 
-	Calendar.prototype.navigate = function(where, next) {
-		var to = $.extend({}, this.options.position);
-		if(where == 'next') {
-			switch(this.options.view) {
-				case 'year':
-					to.start.setFullYear(this.options.position.start.getFullYear() + 1);
-					break;
-				case 'month':
-					to.start.setMonth(this.options.position.start.getMonth() + 1);
-					break;
-				case 'week':
-					to.start.setDate(this.options.position.start.getDate() + 7);
-					break;
-				case 'day':
-					to.start.setDate(this.options.position.start.getDate() + 1);
-					break;
-				case 'agenda':
-					to.start.setDate(this.options.position.start.getDate() + 1);
-					break;
-			}
-		} else if(where == 'prev') {
-			switch(this.options.view) {
-				case 'year':
-					to.start.setFullYear(this.options.position.start.getFullYear() - 1);
-					break;
-				case 'month':
-					to.start.setMonth(this.options.position.start.getMonth() - 1);
-					break;
-				case 'week':
-					to.start.setDate(this.options.position.start.getDate() - 7);
-					break;
-				case 'day':
-					to.start.setDate(this.options.position.start.getDate() - 1);
-					break;
-				case 'agenda':
-					to.start.setDate(this.options.position.start.getDate() - 1);
-					break;
-			}
-		} else if(where == 'today') {
-			to.start.setTime(new Date().getTime());
-		} else if(where == 'date') {
-			to.start.setTime(next.format('x'));
-		}
-		else {
-			$.error(this.locale.error_where.format(where))
-		}
-		this.options.day = to.start.getFullYear() + '-' + to.start.getMonthFormatted() + '-' + to.start.getDateFormatted();
-		this.view();
-		if(_.isFunction(next)) {
-			next();
-		}
-	};
+        var year, month, day;
 
-	Calendar.prototype._init_position = function() {
-		var year, month, day;
+        if(this.options.day == 'now') {
+            var date = new Date();
+            year = date.getFullYear();
+            month = date.getMonth();
+            day = date.getDate();
 
-		if(this.options.day == 'now') {
-			var date = new Date();
-			year = date.getFullYear();
-			month = date.getMonth();
-			day = date.getDate();
-		} else if(this.options.day.match(/^\d{4}-\d{2}-\d{2}$/g)) {
-			var list = this.options.day.split('-');
-			year = parseInt(list[0], 10);
-			month = parseInt(list[1], 10) - 1;
-			day = parseInt(list[2], 10);
-		}
-		else {
-			$.error(this.locale.error_dateformat.format(this.options.day));
-		}
+        } else if(this.options.day.match(/^\d{4}-\d{2}-\d{2}$/g)) {
+            var list = this.options.day.split('-');
+            year = parseInt(list[0], 10);
+            month = parseInt(list[1], 10) - 1;
+            day = parseInt(list[2], 10);
+        }
+        else {
+            $.error(this.locale.error_dateformat.format(this.options.day));
+        }
 
-		switch(this.options.view) {
-			case 'year':
-				this.options.position.start.setTime(new Date(year, 0, 1).getTime());
-				this.options.position.end.setTime(new Date(year + 1, 0, 1).getTime());
-				break;
-			case 'month':
-				this.options.position.start.setTime(new Date(year, month, 1).getTime());
-				this.options.position.end.setTime(new Date(year, month + 1, 1).getTime());
-				break;
-			case 'day':
-				this.options.position.start.setTime(new Date(year, month, day).getTime());
-				this.options.position.end.setTime(new Date(year, month, day + 1).getTime());
-				break;
-			case 'week':
-				var curr = new Date(year, month, day);
-				var first;
-				if(getExtentedOption(this, 'first_day') == 1) {
-					first = curr.getDate() - ((curr.getDay() + 6) % 7);
-				}
-				else {
-					first = curr.getDate() - curr.getDay();
-				}
-				this.options.position.start.setTime(new Date(year, month, first).getTime());
-				this.options.position.end.setTime(new Date(year, month, first + 7).getTime());
-				break;
-			case 'agenda':
-				this.options.position.start.setTime(new Date(year, month, day).getTime());
-				this.options.position.end.setTime(new Date(year, month, day + 1).getTime());
-				break;
-			default:
-				$.error(this.locale.error_noview.format(this.options.view))
-		}
-		return this;
-	};
+        var todayJal = moment(new Date(year, month, day));
 
-	Calendar.prototype.getTitle = function() {
-		var p = this.options.position.start;
-		switch(this.options.view) {
-			case 'year':
-				return this.locale.title_year.format(p.getFullYear());
-				break;
-			case 'month':
-				return this.locale.title_month.format(this.locale['m' + p.getMonth()], p.getFullYear());
-				break;
-			case 'week':
-				return this.locale.title_week.format(p.getWeek(), p.getFullYear());
-				break;
-			case 'day':
-				return this.locale.title_day.format(this.locale['d' + p.getDay()], p.getDate(), this.locale['m' + p.getMonth()], p.getFullYear());
-				break;
-			case 'events':
-				return this.locale.title_day.format(this.locale['d' + p.getDay()], p.getDate(), this.locale['m' + p.getMonth()], p.getFullYear());
-				break;
-		}
-		return;
-	};
+        console.log("" + year + month + day + " --- " + todayJal.toDate());
+
+        var startJal, stopJal;
+        switch(this.options.view) {
+            case 'year':
+                startJal = todayJal.clone().startOf('jYear');
+                stopJal = startJal.clone().add(1, "jYear");
+
+                this.options.position.start.setTime(startJal.format("x"));
+                this.options.position.end.setTime(stopJal.format("x"));
+                //console.log('start: ' + this.options.position.start + ', stop:' + this.options.position.end);
+                break;
+            case 'month':
+                startJal = todayJal.clone().startOf('jMonth');
+                stopJal = startJal.clone().add(1, "jMonth");
+
+                this.options.position.start.setTime(startJal.format("x"));
+                this.options.position.end.setTime(stopJal.format("x"));
+                //console.log('start: ' + this.options.position.start + ', stop:' + this.options.position.end);
+                break;
+            case 'day':
+                this.options.position.start.setTime(new Date(year, month, day).getTime());
+                this.options.position.end.setTime(new Date(year, month, day + 1).getTime());
+                break;
+            case 'week':
+                var curr = new Date(year, month, day);
+                var first;
+                if(getExtentedOption(this, 'first_day') == 1) {
+                    first = curr.getDate() - ((curr.getDay() + 6) % 7);
+                }
+                else {
+                    first = curr.getDate() - curr.getDay();
+                }
+                this.options.position.start.setTime(new Date(year, month, first).getTime());
+                this.options.position.end.setTime(new Date(year, month, first + 7).getTime());
+                break;
+            case 'agenda':
+                this.options.position.start.setTime(new Date(year, month, day).getTime());
+                this.options.position.end.setTime(new Date(year, month, day + 1).getTime());
+                break;
+            default:
+                $.error(this.locale.error_noview.format(this.options.view))
+        }
+        return this;
+    };
+
+    Calendar.prototype.getTitle = function () {
+        var p = this.options.position.start;
+        switch(this.options.view) {
+            case 'year':
+                return this.locale.title_year.format(p.getJalaliFullYear());
+                break;
+            case 'month':
+                return this.locale.title_month.format(this.locale['jm' + (p.getJalaliMonth() - 1)], p.getJalaliFullYear());
+                break;
+            case 'week':
+                return this.locale.title_week.format(p.getWeek() + 40, p.getJalaliFullYear());
+                break;
+            case 'day':
+                return this.locale.title_day.format(this.locale['d' + p.getDay()], p.getJalaliDate(), this.locale['jm' + (p.getJalaliMonth() - 1)], p.getJalaliFullYear());
+                break;
+            case 'agenda':
+                return this.locale.title_day.format(this.locale['d' + p.getDay()], p.getJalaliDate(), this.locale['jm' + (p.getJalaliMonth() - 1)], p.getJalaliFullYear());
+                break;
+        }
+        return;
+    };
 
 	Calendar.prototype.isToday = function() {
 		var now = new Date().getTime();
@@ -1298,60 +1302,33 @@ if(!String.prototype.formatNum) {
 		var loader;
 		switch($.type(source)) {
 			case 'function':
-				loader = function(callback) {
-					return callback(source(self.options.position.start, self.options.position.end, browser_timezone));
+				loader = function() {
+                    return source(self.options.position.start, self.options.position.end, browser_timezone);
 				};
 				break;
 			case 'array':
-				loader = function(callback) {
-					return callback([].concat(source));
+				loader = function() {
+					return [].concat(source);
 				};
-				break;
-			case 'string':
-				if(source.length) {
-					loader = function(callback) {
-						var events = [];
-						var params = {from: self.options.position.start.getTime(), to: self.options.position.end.getTime()};
-						if(browser_timezone.length) {
-							params.browser_timezone = browser_timezone;
-						}
-						$.ajax({
-							url:      buildEventsUrl(source, params),
-							dataType: 'json',
-							type:     'GET',
-							async:    true
-						}).done(function(json) {
-							if(!json.success) {
-								$.error(json.error);
-							}
-							if(json.result) {
-								events = json.result;
-							}
-							callback(events);
-						});
-					};
-				}
 				break;
 		}
 		if(!loader) {
 			$.error(this.locale.error_loadurl);
 		}
-		this.options.onBeforeEventsLoad.call(this, function() {
-			loader(function(events){
-				self.options.events = events;
-
-				self.options.events.sort(function(a, b) {
-					var delta;
-					delta = a.start - b.start;
-					if(delta == 0) {
-						delta = a.end - b.end;
-					}
-					return delta;
-				});
-				self.options.onAfterEventsLoad.call(self, self.options.events);
-				callback(self);
-			});
-		});
+        this.options.onBeforeEventsLoad.call(this, function() {
+            if (!self.options.events.length || !self.options.events_cache) {
+                self.options.events = loader();
+                self.options.events.sort(function (a, b) {
+                    var delta;
+                    delta = a.start - b.start;
+                    if (delta == 0) {
+                        delta = a.end - b.end;
+                    }
+                    return delta;
+                });
+            }
+            self.options.onAfterEventsLoad.call(self, self.options.events);
+        });
 	};
 
 	Calendar.prototype._templatePath = function(name) {
@@ -1367,16 +1344,7 @@ if(!String.prototype.formatNum) {
 		if(this.options.templates[name]) {
 			return;
 		}
-		var self = this;
-		$.ajax({
-			url:      self._templatePath(name),
-			dataType: 'html',
-			type:     'GET',
-			async:    false,
-			cache:    this.options.tmpl_cache
-		}).done(function(html) {
-			self.options.templates[name] = _.template(html);
-		});
+        this.options.templates[name] = _.template($('#' + this._templatePath(name)).html());
 	};
 
 	Calendar.prototype._update = function() {
@@ -1432,40 +1400,60 @@ if(!String.prototype.formatNum) {
 	Calendar.prototype._update_agenda = function() {
 	};
 
-	Calendar.prototype._update_month = function() {
-		this._update_month_year();
+    Calendar.prototype._update_month = function() {
+        this._update_month_year();
 
-		var self = this;
+        var self = this;
 
-		var week = $(document.createElement('div')).attr('id', 'cal-week-box');
-		var start = this.options.position.start.getFullYear() + '-' + this.options.position.start.getMonthFormatted() + '-';
-		$('.cal-month-box .cal-row-fluid')
-			.on('mouseenter', function() {
-				var p = new Date(self.options.position.start);
-				var child = $('.cal-cell1:first-child .cal-month-day', this);
-				var day = (child.hasClass('cal-month-first-row') ? 1 : $('[data-cal-date]', child).text());
-				p.setDate(parseInt(day));
-				day = (day < 10 ? '0' + day : day);
-				week.html(self.locale.week.format(p.getWeek()));
-				week.attr('data-cal-week', start + day).show().appendTo(child);
-			})
-			.on('mouseleave', function() {
-				week.hide();
-			})
-		;
+        var week = $(document.createElement('div')).attr('id', 'cal-week-box');
 
-		week.click(function() {
-			self.options.day = $(this).data('cal-week');
-			self.view('week');
-		});
+        // gregorian string representation of statr of jalali week
+        var start;
 
-		$('a.event').mouseenter(function() {
-			$('a[data-event-id="' + $(this).data('event-id') + '"]').closest('.cal-cell1').addClass('day-highlight dh-' + $(this).data('event-class'));
-		});
-		$('a.event').mouseleave(function() {
-			$('div.cal-cell1').removeClass('day-highlight dh-' + $(this).data('event-class'));
-		});
-	};
+        $('.cal-month-box .cal-row-fluid')
+
+            .on('mouseenter', function() {
+                var p = new Date(self.options.position.start); // clone month start date
+                //console.log('p1: ' + p);
+                var child = $('.cal-cell1:first-child .cal-month-day', this);
+
+                // jalali date of first day in hovered week
+                var day = (child.hasClass('cal-month-first-row') ? 1 : $('[data-cal-date]', child).text());
+                //console.log('day: ' + day);
+
+                p.setJalaliDate(parseInt(day));
+                //console.log('p2: ' + p);
+
+
+                week.html(self.locale.week.format(p.getJalaliWeek()));
+
+                // set data-cal-week to gregorian representation of start of jalali week
+                var jalaliWeekStartInGregorian = JalaliDate.jalaliToGregorian(p.getJalaliFullYear(), p.getJalaliMonth(), day);
+
+                //console.log('weel start source: ' + p.getJalaliFullYear() + ' ' + p.getJalaliMonth() + ' ' + day);
+                //console.log('week start: ' + jalaliWeekStartInGregorian);
+                week.attr('data-cal-week', jalaliWeekStartInGregorian[0] + '-' +
+                    (jalaliWeekStartInGregorian[1] < 10 ? '0' + (jalaliWeekStartInGregorian[1]) : jalaliWeekStartInGregorian[1]) + '-' +
+                    (jalaliWeekStartInGregorian[2] < 10 ? '0' + jalaliWeekStartInGregorian[2] : jalaliWeekStartInGregorian[2]))
+                    .show().appendTo(child);
+            })
+            .on('mouseleave', function() {
+                week.hide();
+            })
+        ;
+
+        week.click(function() {
+            self.options.day = $(this).data('cal-week');
+            self.view('week');
+        });
+
+        $('a.event').mouseenter(function() {
+            $('a[data-event-id="' + $(this).data('event-id') + '"]').closest('.cal-cell1').addClass('day-highlight dh-' + $(this).data('event-class'));
+        });
+        $('a.event').mouseleave(function() {
+            $('div.cal-cell1').removeClass('day-highlight dh-' + $(this).data('event-class'));
+        });
+    };
 
 	Calendar.prototype._update_month_year = function() {
 		if(!this.options.views[this.options.view].slide_events) {
@@ -1503,382 +1491,28 @@ if(!String.prototype.formatNum) {
 		});
 	};
 
-	Calendar.prototype.getEventsBetween = function(start, end) {
-		var events = [];
-		$.each(this.options.events, function() {
-			if(this.start == null) {
-				return true;
-			}
-			var event_end = this.end || this.start;
-			if((parseInt(this.start) < end) && (parseInt(event_end) >= start)) {
-				events.push(this);
-			}
-		});
-		return events;
-	};
+    Calendar.prototype.getEventsBetween = function(start, end) {
+        var events = [];
+        var period_start = moment(start / 1000, "X");
+        var period_end = moment(end / 1000, "X")
+        //console.log("X. PS: " + period_start.format() + "(" + start + "), PE:" + period_end.format() + "(" + end + ")");
 
-	// Jalali Calendar extension -----------------------------------------------------------------------------------------
+        $.each(this.options.events, function() {
+            if(this.start == null) {
+                return true;
+            }
+            // Convert to a local date, without the timezone
+            var event_start = moment(moment(this.start / 1000, "X").tz(timezone).format("YYYY-MM-DD HH:mm:ss"));
+            var event_end = this.end || this.start;
+            event_end = moment(moment(event_end / 1000, "X").tz(timezone).format("YYYY-MM-DD HH:mm:ss"));
+            //console.log("ES: " + event_start.format() + "(" + parseInt(this.start) + "), EE: " + event_end.format() + " (" + parseInt(this.end) + ")");
+            if (event_start.isBefore(period_end) && event_end.isSameOrAfter(period_start)) {
 
-	var stash = {};
-	function jalalize () {
-
-		stash['getTitle'] = Calendar.prototype.getTitle;
-		Calendar.prototype.getTitle = function () {
-			var p = this.options.position.start;
-			switch(this.options.view) {
-				case 'year':
-					return this.locale.title_year.format(p.getJalaliFullYear());
-					break;
-				case 'month':
-					return this.locale.title_month.format(this.locale['jm' + (p.getJalaliMonth() - 1)], p.getJalaliFullYear());
-					break;
-				case 'week':
-					return this.locale.title_week.format(p.getWeek() + 40, p.getJalaliFullYear());
-					break;
-				case 'day':
-					return this.locale.title_day.format(this.locale['d' + p.getDay()], p.getJalaliDate(), this.locale['jm' + (p.getJalaliMonth() - 1)], p.getJalaliFullYear());
-					break;
-			}
-			return;
-		};
-
-		stash['_month'] = Calendar.prototype._month;
-		Calendar.prototype._month = function(month) {
-			this._loadTemplate('year-month');
-
-			var t = {cal: this};
-			t.month_name = this.locale['jm' + month];
-
-			var jStart = JalaliDate.jalaliToGregorian(this.options.position.start.getJalaliFullYear(), month +1, 1);
-			var jStop = JalaliDate.jalaliToGregorian(this.options.position.start.getJalaliFullYear(), month + 2, 1);
-			t.data_day = jStart[0] + '-' + (jStart[1] < 10 ? '0' + jStart[1] : jStart[1]) + '-' + (jStart[2] < 10 ? '0' + jStart[2] : jStart[2]);
-			var curdate = new Date(jStart[0], jStart[1] - 1, jStart[2], 0, 0, 0);
-			t.start = parseInt(curdate.getTime());
-			t.end = parseInt(new Date(jStop[0], jStop[1] - 1, jStop[2], 0, 0, 0).getTime());
-			t.events = this.getEventsBetween(t.start, t.end);
-			return this.options.templates['year-month'](t);
-		};
-
-		stash['_day'] = Calendar.prototype._day;
-		Calendar.prototype._day = function(week, day) {
-			this._loadTemplate('month-day');
-
-			var t = {tooltip: '', cal: this};
-			var cls = this.options.classes.months.outmonth;
-
-			var firstday = this.options.position.start.getDay();
-			if(getExtentedOption(this, 'first_day') == 2) {
-				firstday++;
-			} else {
-				firstday = (firstday == 0 ? 7 : firstday);
-			}
-
-			day = (day - firstday) + 1;
-			var curdate = new Date(this.options.position.start.getFullYear(),
-				this.options.position.start.getMonth(),
-				this.options.position.start.getDate() + day - 1);
-
-			// if day of the current month
-			if(day > 0) {
-				cls = this.options.classes.months.inmonth;
-			}
-			// stop cycling table rows;
-			var daysinmonth = (new Date(this.options.position.end.getTime() - 1)).getJalaliDate();
-			if((day + 1) > daysinmonth) {
-				this.stop_cycling = true;
-			}
-			// if day of the next month
-			if(day > daysinmonth) {
-				day = day - daysinmonth;
-				cls = this.options.classes.months.outmonth;
-			}
-
-			cls = $.trim(cls + " " + this._getDayClass("months", curdate));
-			//console.log(curdate);
-
-			if(day <= 0) {
-				var daysinprevmonth = JalaliDate.j_days_in_month[new Date(this.options.position.start.getTime() - 1).getJalaliMonth() - 1];
-				day = daysinprevmonth - Math.abs(day);
-				cls += ' cal-month-first-row';
-			}
-
-			var holiday = this._getHoliday(curdate);
-			if(holiday !== false) {
-				t.tooltip = holiday;
-			}
-
-			t.data_day = curdate.getFullYear() + '-' + curdate.getMonthFormatted() + '-' + (curdate.getDate() < 10 ? '0' + curdate.getDate() : curdate.getDate());
-			t.cls = cls;
-			t.day = day;
-
-			t.start = parseInt(curdate.getTime());
-			t.end = parseInt(t.start + 86400000);
-			t.events = this.getEventsBetween(t.start, t.end);
-			return this.options.templates['month-day'](t);
-		};
-
-		stash['_init_position'] = Calendar.prototype._init_position;
-		Calendar.prototype._init_position = function () {
-
-			var year, month, day;
-
-			if(this.options.day == 'now') {
-				var date = new Date();
-				year = date.getFullYear();
-				month = date.getMonth();
-				day = date.getDate();
-
-			} else if(this.options.day.match(/^\d{4}-\d{2}-\d{2}$/g)) {
-				var list = this.options.day.split('-');
-				year = parseInt(list[0], 10);
-				month = parseInt(list[1], 10);// - 1;
-				day = parseInt(list[2], 10);
-			}
-			else {
-				$.error(this.locale.error_dateformat.format(this.options.day));
-			}
-
-			var todayJal = JalaliDate.gregorianToJalali(year, month, day);
-			var startJal, stopJal, startJalInGreg, stopJalInGreg;
-			switch(this.options.view) {
-				case 'year':
-					startJal = [todayJal[0], 1, 1];
-					stopJal = [todayJal[0] + 1, 1, 1];
-					startJalInGreg = JalaliDate.jalaliToGregorian(startJal[0], startJal[1], startJal[2]);
-					stopJalInGreg = JalaliDate.jalaliToGregorian(stopJal[0], stopJal[1], stopJal[2]);
-					this.options.position.start.setTime(new Date(startJalInGreg[0], startJalInGreg[1] - 1, startJalInGreg[2]).getTime());
-					this.options.position.end.setTime(new Date(stopJalInGreg[0], stopJalInGreg[1] - 1, stopJalInGreg[2]).getTime());
-					//console.log('start: ' + this.options.position.start + ', stop:' + this.options.position.end);
-					break;
-				case 'month':
-					startJal = [todayJal[0], todayJal[1], 1];
-					stopJal = [todayJal[0], todayJal[1] + 1, 1];
-					startJalInGreg = JalaliDate.jalaliToGregorian(startJal[0], startJal[1], startJal[2]);
-					stopJalInGreg = JalaliDate.jalaliToGregorian(stopJal[0], stopJal[1], stopJal[2]);
-					this.options.position.start.setTime(new Date(startJalInGreg[0], startJalInGreg[1] - 1, startJalInGreg[2]).getTime());
-					this.options.position.end.setTime(new Date(stopJalInGreg[0], stopJalInGreg[1] - 1, stopJalInGreg[2]).getTime());
-
-					break;
-				case 'day':
-					this.options.position.start.setTime(new Date(year, month - 1, day).getTime());
-					this.options.position.end.setTime(new Date(year, month - 1, day + 1).getTime());
-					break;
-				case 'week':
-					var curr = new Date(year, month - 1, day);
-					var first;
-					if(getExtentedOption(this, 'first_day') == 1) {
-						first = curr.getDate() - ((curr.getDay() + 6) % 7);
-					} else {
-						first = curr.getDate() - curr.getDay();
-					}
-					this.options.position.start.setTime(new Date(year, month - 1, first).getTime());
-					this.options.position.end.setTime(new Date(year, month - 1, first + 7).getTime());
-					break;
-				default:
-					$.error(this.locale.error_noview.format(this.options.view))
-			}
-			return this;
-		};
-
-		stash['navigate'] = Calendar.prototype.navigate;
-		Calendar.prototype.navigate = function(where, next) {
-			var to = $.extend({}, this.options.position);
-			if(where == 'next') {
-				switch(this.options.view) {
-					case 'year':
-						to.start.setJalaliFullYear(this.options.position.start.getJalaliFullYear() + 1);
-						break;
-					case 'month':
-						to.start.setJalaliMonth(this.options.position.start.getJalaliMonth() + 1);
-						break;
-					case 'week':
-						to.start.setDate(this.options.position.start.getDate() + 7);
-						break;
-					case 'day':
-						to.start.setDate(this.options.position.start.getDate() + 1);
-						break;
-				}
-			} else if(where == 'prev') {
-				switch(this.options.view) {
-					case 'year':
-						to.start.setJalaliFullYear(this.options.position.start.getJalaliFullYear() - 1);
-						break;
-					case 'month':
-						var prevMonth = this.options.position.start.getJalaliMonth() - 1;
-						to.start.setJalaliMonth(prevMonth ? prevMonth : 12);
-						if (!prevMonth) {
-							to.start.setJalaliFullYear(to.start.getJalaliFullYear() - 1);
-						}
-						break;
-					case 'week':
-						to.start.setDate(this.options.position.start.getDate() - 7);
-						break;
-					case 'day':
-						to.start.setDate(this.options.position.start.getDate() - 1);
-						break;
-				}
-			} else if(where == 'today') {
-				to.start.setTime(new Date().getTime());
-			} else {
-				$.error(this.locale.error_where.format(where))
-			}
-			this.options.day = to.start.getFullYear() + '-' + to.start.getMonthFormatted() + '-' + to.start.getDateFormatted();
-			this.view();
-			if(_.isFunction(next)) {
-				next();
-			}
-		};
-
-		stash['_update_month'] = Calendar.prototype._update_month;
-		Calendar.prototype._update_month = function() {
-			this._update_month_year();
-
-			var self = this;
-
-			var week = $(document.createElement('div')).attr('id', 'cal-week-box');
-
-			// gregorian string representation of statr of jalali week
-			var start;
-
-			$('.cal-month-box .cal-row-fluid')
-
-				.on('mouseenter', function() {
-					var p = new Date(self.options.position.start); // clone month start date
-					//console.log('p1: ' + p);
-					var child = $('.cal-cell1:first-child .cal-month-day', this);
-
-					// jalali date of first day in hovered week
-					var day = (child.hasClass('cal-month-first-row') ? 1 : $('[data-cal-date]', child).text());
-					//console.log('day: ' + day);
-
-					p.setJalaliDate(parseInt(day));
-					//console.log('p2: ' + p);
-
-
-					week.html(self.locale.week.format(p.getJalaliWeek()));
-
-					// set data-cal-week to gregorian representation of start of jalali week
-					var jalaliWeekStartInGregorian = JalaliDate.jalaliToGregorian(p.getJalaliFullYear(), p.getJalaliMonth(), day);
-
-					//console.log('weel start source: ' + p.getJalaliFullYear() + ' ' + p.getJalaliMonth() + ' ' + day);
-					//console.log('week start: ' + jalaliWeekStartInGregorian);
-					week.attr('data-cal-week', jalaliWeekStartInGregorian[0] + '-' +
-					(jalaliWeekStartInGregorian[1] < 10 ? '0' + (jalaliWeekStartInGregorian[1]) : jalaliWeekStartInGregorian[1]) + '-' +
-					(jalaliWeekStartInGregorian[2] < 10 ? '0' + jalaliWeekStartInGregorian[2] : jalaliWeekStartInGregorian[2]))
-						.show().appendTo(child);
-				})
-				.on('mouseleave', function() {
-					week.hide();
-				})
-			;
-
-			week.click(function() {
-				self.options.day = $(this).data('cal-week');
-				self.view('week');
-			});
-
-			$('a.event').mouseenter(function() {
-				$('a[data-event-id="' + $(this).data('event-id') + '"]').closest('.cal-cell1').addClass('day-highlight dh-' + $(this).data('event-class'));
-			});
-			$('a.event').mouseleave(function() {
-				$('div.cal-cell1').removeClass('day-highlight dh-' + $(this).data('event-class'));
-			});
-		};
-
-		stash['_calculate_hour_minutes'] = Calendar.prototype._calculate_hour_minutes;
-		Calendar.prototype._calculate_hour_minutes = function(data) {
-			var $self = this;
-			var time_split = parseInt(this.options.time_split);
-			var time_split_count = 60 / time_split;
-			var time_split_hour = Math.min(time_split_count, 1);
-
-			if(((time_split_count >= 1) && (time_split_count % 1 != 0)) || ((time_split_count < 1) && (1440 / time_split % 1 != 0))) {
-				$.error(this.locale.error_timedevide);
-			}
-
-			var time_start = this.options.time_start.split(":");
-			var time_end = this.options.time_end.split(":");
-
-			data.hours = (parseInt(time_end[0]) - parseInt(time_start[0])) * time_split_hour;
-			var lines = data.hours * time_split_count - parseInt(time_start[1]) / time_split;
-			var ms_per_line = (60000 * time_split);
-
-			var start = new Date(this.options.position.start.getTime());
-			start.setHours(time_start[0]);
-			start.setMinutes(time_start[1]);
-			var end = new Date(this.options.position.end.getTime());
-			end.setHours(time_end[0]);
-			end.setMinutes(time_end[1]);
-
-			data.all_day = [];
-			data.by_hour = [];
-			data.after_time = [];
-			data.before_time = [];
-			$.each(data.events, function(k, e) {
-				var s = new Date(parseInt(e.start));
-				var f = new Date(parseInt(e.end));
-
-				e.start_hour = s.getHours().toString().formatNum(2) + ':' + s.getMinutes().toString().formatNum(2);
-				e.end_hour = f.getHours().toString().formatNum(2) + ':' + f.getMinutes().toString().formatNum(2);
-
-				if(e.start < start.getTime()) {
-					e.start_hour = s.getJalaliDate() + ' ' + $self.locale['jms' + (s.getJalaliMonth() - 1)] + ' ' + e.start_hour;
-				}
-
-				if(e.end > end.getTime()) {
-					e.end_hour = f.getJalaliDate() + ' ' + $self.locale['jms' + (s.getJalaliMonth() - 1)] + ' ' + e.end_hour;
-				}
-
-				if(e.start < start.getTime() && e.end > end.getTime()) {
-					data.all_day.push(e);
-					return;
-				}
-
-				if(e.end < start.getTime()) {
-					data.before_time.push(e);
-					return;
-				}
-
-				if(e.start > end.getTime()) {
-					data.after_time.push(e);
-					return;
-				}
-
-				var event_start = start.getTime() - e.start;
-
-				if(event_start >= 0) {
-					e.top = 0;
-				} else {
-					e.top = Math.abs(event_start) / ms_per_line;
-				}
-
-				var lines_left = Math.abs(lines - e.top);
-				var lines_in_event = (e.end - e.start) / ms_per_line;
-				if(event_start >= 0) {
-					lines_in_event = (e.end - start.getTime()) / ms_per_line;
-				}
-
-
-				e.lines = lines_in_event;
-				if(lines_in_event > lines_left) {
-					e.lines = lines_left;
-				}
-
-				data.by_hour.push(e);
-			});
-
-			//var d = new Date('2013-03-14 13:20:00');
-			//warn(d.getTime());
-		};
-	}
-
-	function unjalalize (calendar) {
-		for (var f in stash) {
-			Calendar.prototype[f] = stash[f];
-		}
-	}
-
-	// Jalali Calendar extension end -------------------------------------------------------------------------------------
+                events.push(this);
+            }
+        });
+        return events;
+    };
 
 	function showEventsList(event, that, slider, self) {
 
@@ -1942,9 +1576,6 @@ if(!String.prototype.formatNum) {
 	}
 
 	$.fn.calendar = function(params) {
-		if (params.type === 'Jalali') {
-			jalalize(calendar);
-		}
 		return new Calendar(params, this);
 	}
 }(jQuery));

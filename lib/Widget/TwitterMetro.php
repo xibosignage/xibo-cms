@@ -318,7 +318,7 @@ class TwitterMetro extends TwitterBase
         $searchTerm .= ($this->getOption('removeRetweets')) ? ' -filter:retweets' : '';
         
         // Connect to twitter and get the twitter feed.
-        $cache = $this->getPool()->getItem(md5($searchTerm . $this->getOption('resultType') . $this->getOption('tweetCount', 60) . $geoCode));
+        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($searchTerm . $this->getOption('resultType') . $this->getOption('tweetCount', 60) . $geoCode)));
 
         $data = $cache->get();
 
@@ -619,14 +619,16 @@ class TwitterMetro extends TwitterBase
         // Replace the head content
         $headContent = '';
 
-        $backgroundColor = $this->getOption('backgroundColor');
-        if ($backgroundColor != '') {
-            $headContent .= '<style type="text/css">body, .page, .item { background-color: ' . $backgroundColor . ' }</style>';
-        }
-
         // Add our fonts.css file
         $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
         <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
+        
+        $backgroundColor = $this->getOption('backgroundColor');
+        if ($backgroundColor != '') {
+            $headContent .= '<style type="text/css">body { background-color: ' . $backgroundColor . ' }</style>';
+        } else {
+          $headContent .= '<style type="text/css"> body { background-color: transparent }</style>';
+        }
         
         // Add the CSS if it isn't empty
         $css = $templateData['styleSheet'];
@@ -679,7 +681,7 @@ class TwitterMetro extends TwitterBase
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
     }

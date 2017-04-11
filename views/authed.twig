@@ -168,7 +168,7 @@
                                     <li><a href="{{ urlFor("welcome.wizard") }}">{% trans "Reshow welcome" %}</a></li>
                                     <li><a class="XiboHelpButton" href="{{ help.page }}">{% trans "Help" %}</a></li>
                                     <li class="divider"></li>
-                                    <li><a title="Logout" href="{{ urlFor("logout") }}">{% trans "Logout" %}</a></li>
+                                    <li><a title="{% trans "Logout" %}" href="{{ logoutUrl }}">{% trans "Logout" %}</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -262,7 +262,10 @@
 
     <script type="text/x-handlebars-template" id="multiselect-button-template">
         <div class="btn-group">
-            <button class="btn dropdown-toggle" data-toggle="dropdown">
+            <button class="btn select-all" data-toggle="selectAll">
+                {{ selectAll }}
+            </button>
+            <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
                 <span class="fa fa-caret-down"></span>
                 {{ withSelected }}
             </button>

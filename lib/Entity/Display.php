@@ -24,6 +24,7 @@ namespace Xibo\Entity;
 
 
 use Respect\Validation\Validator as v;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\DeadlockException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
@@ -364,6 +365,7 @@ class Display implements \JsonSerializable
         $this->setCommonDependencies($store, $log);
         $this->excludeProperty('mediaInventoryXml');
         $this->setPermissionsClass('Xibo\Entity\DisplayGroup');
+        $this->setCanChangeOwner(false);
 
         $this->config = $config;
         $this->displayGroupFactory = $displayGroupFactory;
@@ -611,7 +613,7 @@ class Display implements \JsonSerializable
 
         $displayGroup = $this->displayGroupFactory->createEmpty();
         $displayGroup->displayGroup = $this->display;
-        $displayGroup->setOwner($this);
+        $displayGroup->setDisplaySpecificDisplay($this);
         $displayGroup->save();
     }
 
@@ -644,7 +646,6 @@ class Display implements \JsonSerializable
                     MacAddress = :macAddress,
                     LastChanged = :lastChanged,
                     NumberOfMacAddressChanges = :numberOfMacAddressChanges,
-                    currentLayoutId = :currentLayoutId,
                     screenShotRequested = :screenShotRequested,
                     storageAvailableSpace = :storageAvailableSpace,
                     storageTotalSpace = :storageTotalSpace,
@@ -682,7 +683,6 @@ class Display implements \JsonSerializable
             'macAddress' => $this->macAddress,
             'lastChanged' => $this->lastChanged,
             'numberOfMacAddressChanges' => $this->numberOfMacAddressChanges,
-            'currentLayoutId' => $this->currentLayoutId,
             'screenShotRequested' => $this->screenShotRequested,
             'storageAvailableSpace' => $this->storageAvailableSpace,
             'storageTotalSpace' => $this->storageTotalSpace,
@@ -777,5 +777,28 @@ class Display implements \JsonSerializable
         }
 
         return $this->_config;
+    }
+
+    /**
+     * @param PoolInterface $pool
+     */
+    public function setCurrentLayoutId($pool)
+    {
+        $item = $pool->getItem($this->getCacheKey() . '/currentLayoutId');
+
+        $data = $item->get();
+
+        if ($item->isHit()) {
+            $this->currentLayoutId = $data;
+
+            try {
+                $this->currentLayout = $this->layoutFactory->getById($this->currentLayoutId)->layout;
+            }
+            catch (NotFoundException $notFoundException) {
+                // This is ok
+            }
+        } else {
+            $this->getLog()->debug('Cache miss for setCurrentLayoutId on display ' . $this->display);
+        }
     }
 }

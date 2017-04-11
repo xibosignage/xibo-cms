@@ -73,6 +73,7 @@ class Theme extends Middleware
 
         $app->view()->appendData(array(
             'baseUrl' => $app->urlFor('home'),
+            'logoutUrl' => $app->urlFor((empty($app->logoutRoute)) ? 'logout' : $app->logoutRoute),
             'route' => $routeName,
             'theme' => $app->configService,
             'settings' => $settings,
@@ -91,7 +92,8 @@ class Theme extends Middleware
                 'validExt' => implode('|', $app->moduleFactory->getValidExtensions()),
                 'validImageExt' => implode('|', $app->moduleFactory->getValidExtensions(['type' => 'image']))
             ],
-            'ckeditorConfig' => $app->container->get('\Xibo\Controller\Library')->setApp($app, false)->fontCKEditorConfig()
+            'ckeditorConfig' => $app->container->get('\Xibo\Controller\Library')->setApp($app, false)->fontCKEditorConfig(),
+            'version' => VERSION
         ));
     }
 }

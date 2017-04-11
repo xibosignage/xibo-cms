@@ -4,14 +4,11 @@ var text_callback = function(dialog, extra) {
         extra = $('.bootbox').data().extra;
     }
 
+    // Choose a complementary color
+    var color = $c.complement($("#layout").data().backgroundColor);
+
     // Set the text template based on the selected template id
     if ($("#ta_text").val() == "" && !$("#overrideTemplate").is(":checked")) {
-        // Set something sensible based on the color of the layout background
-        var color = $c.complement($("#layout").data().backgroundColor);
-        
-        // Apply the complementary color and a not to small font-size to the first paragraph of the editor
-        $("#ta_text").val('<p style="color:' + color + ';"></p>');
-
         // Get the current template selected
         var templateId = $("#templateId").val();
             
@@ -38,7 +35,6 @@ var text_callback = function(dialog, extra) {
         // Check to see if the override template check box is unchecked
         if (!$("#overrideTemplate").is(":checked")) {
 
-            var color = $c.complement($("#layout").data().backgroundColor);
             var templateId = $("#templateId").val();
             
             $.each(extra, function(index, value) {
@@ -59,32 +55,45 @@ var text_callback = function(dialog, extra) {
         }
     });
 
+    // Apply some CSS to set a scale for these editors
+    var $layout = $("#layout");
+    var scale = $layout.attr('designer_scale');
+    var regionWidth = $("#region_" + $layout.data().currentRegionId).attr("width");
+    var regionHeight = $("#region_" + $layout.data().currentRegionId).attr("height");
+    var applyContentsToIframe = function() {
+        $("#cke_ta_text iframe").contents().find("head").append("" +
+            "<style>" +
+            "body {" +
+            "width: " + regionWidth + "px; " +
+            "height: " + regionHeight + "px; border:2px solid red; " +
+            "background: " + $('#layout').css('background-color') + "; " +
+            "transform: scale(" + scale + "); " +
+            "transform-origin: 0 0; }" +
+            "h1, h2, h3, h4, p { margin-top: 0;}" +
+            "</style>");
+    }
+
     // Conjure up a text editor
     CKEDITOR.replace("ta_text", CKEDITOR_DEFAULT_CONFIG);
-    
-    CKEDITOR.instances["ta_text"].on('instanceReady', function() {
-        var scale = $('#layout').attr('designer_scale');
 
-        $("#cke_ta_text .cke_contents").css({
-            background: $('#layout').css('background-color')
-        });
-        
-        $("#cke_ta_text iframe").css({
-            "background": "transparent"
-        });
-        
+    // Bind to instance ready so that we can adjust some things about the editor.
+    CKEDITOR.instances["ta_text"].on('instanceReady', function() {
+        // Apply scaling to this editor instance
+        applyContentsToIframe();
+
         // Reapply the background style after switching to source view and back to the normal editing view
-        CKEDITOR.instances["ta_text"].on('contentDom', function() {
-            var scale = $('#layout').attr('designer_scale');
-            
-            $("#cke_ta_text .cke_contents").css({
-                background: $('#layout').css('background-color')
-            });
-        
-            $("#cke_ta_text iframe").css({
-                "background": "transparent"
-            });
+        CKEDITOR.instances["ta_text"].on('contentDom', applyContentsToIframe);
+
+        /* This just doesn't seem possible unfortunately.
+        // Set up default font and colour for new elements
+        CKEDITOR.instances["ta_text"].dataProcessor.htmlFilter.addRules({
+            elements: {
+                p: function (e) {
+                    e.attributes.style = "font-size: 36px; color: " + color;
+                }
+            }
         });
+        */
 
         // We need to convert any library references [123] to their full URL counterparts
         // we leave well alone non-library references.
@@ -100,41 +109,34 @@ var text_callback = function(dialog, extra) {
         CKEDITOR.instances["ta_text"].setData(data);
     });
 
+    // Create a no data message editor if one is present
     if ($("#noDataMessage").length > 0) {
         CKEDITOR.replace("noDataMessage", CKEDITOR_DEFAULT_CONFIG);
         CKEDITOR.instances["noDataMessage"].on('instanceReady', function () {
-
-            $("#cke_noDataMessage .cke_contents").css({
-                background: $('#layout').css('background-color')
-            });
-
-            $("#cke_noDataMessage iframe").css({
-                "background": "transparent"
-            });
+            // Apply scaling to this editor instance
+            applyContentsToIframe();
 
             // Reapply the background style after switching to source view and back to the normal editing view
-            CKEDITOR.instances["noDataMessage"].on('contentDom', function () {
-
-                $("#cke_noDataMessage .cke_contents").css({
-                    background: $('#layout').css('background-color')
-                });
-
-                $("#cke_noDataMessage iframe").css({
-                    "background": "transparent"
-                });
-            });
+            CKEDITOR.instances["noDataMessage"].on('contentDom', applyContentsToIframe);
         });
     }
 
     // Make sure when we close the dialog we also destroy the editor
-    dialog.on("hide", function() {
-        if (CKEDITOR.instances["ta_text"] != undefined) {
-            CKEDITOR.instances["ta_text"].destroy();
+    dialog.on("hide.bs.modal", function() {
+        try {
+            if (CKEDITOR.instances["ta_text"] !== undefined) {
+                CKEDITOR.instances["ta_text"].destroy();
+            }
+
+            if (CKEDITOR.instances["noDataMessage"] !== undefined) {
+                CKEDITOR.instances["noDataMessage"].destroy();
+            }
+        } catch (e) {
+            console.log("Unable to remove CKEditor instance. " + e);
         }
 
-        if (CKEDITOR.instances["noDataMessage"] != undefined) {
-            CKEDITOR.instances["noDataMessage"].destroy();
-        }
+        // Remove colour picker
+        $("#backgroundColor").colorpicker('destroy');
     });
 
     // Do we have any items to click on that we might want to insert? (these will be our items and not CKEditor ones)

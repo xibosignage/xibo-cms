@@ -23,6 +23,7 @@ trait EntityTrait
     private $hash = null;
     private $loaded = false;
     private $permissionsClass = null;
+    private $canChangeOwner = true;
 
     public $buttons = [];
     private $jsonExclude = ['buttons', 'jsonExclude', 'originalValues'];
@@ -148,7 +149,7 @@ trait EntityTrait
     /**
      * Get all changed properties for this entity
      */
-    protected function getChangedProperties()
+    public function getChangedProperties()
     {
         $changedProperties = [];
 
@@ -222,5 +223,41 @@ trait EntityTrait
     protected function setPermissionsClass($class)
     {
         $this->permissionsClass = $class;
+    }
+
+    /**
+     * Can the owner change?
+     * @return bool
+     */
+    public function canChangeOwner()
+    {
+        return $this->canChangeOwner && method_exists($this, 'setOwner');
+    }
+
+    /**
+     * @param bool $bool Can the owner be changed?
+     */
+    protected function setCanChangeOwner($bool)
+    {
+        $this->canChangeOwner = $bool;
+    }
+
+    /**
+     * @param $entityId
+     * @param $message
+     * @param array[Optional] $changedProperties
+     */
+    protected function audit($entityId, $message, $changedProperties = null)
+    {
+        if ($changedProperties === null) {
+            // No properties provided, so we should work them out
+            // If we have originals, then get changed, otherwise get the current object state
+            $changedProperties = (count($this->originalValues) <= 0) ? $this->toArray() : $this->getChangedProperties();
+        }
+
+        $class = substr(get_class($this), strrpos(get_class($this), '\\') + 1);
+
+        if (count($changedProperties) > 0)
+            $this->getLog()->audit($class, $entityId, $message, $changedProperties);
     }
 }

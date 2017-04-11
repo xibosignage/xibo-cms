@@ -151,10 +151,15 @@ class Display extends Base
      */
     function displayPage()
     {
+        // Build a list of display profiles
+        $displayProfiles = $this->displayProfileFactory->query();
+        $displayProfiles[] = ['displayProfileId' => -1, 'name' => __('Default')];
+
         // Call to render the template
         $this->getState()->template = 'display-page';
         $this->getState()->setData([
-            'displayGroups' => $this->displayGroupFactory->query()
+            'displayGroups' => $this->displayGroupFactory->query(),
+            'displayProfiles' => $displayProfiles
         ]);
     }
 
@@ -382,6 +387,13 @@ class Display extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="displayProfileId",
+     *      in="formData",
+     *      description="Filter by Display Profile",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -405,10 +417,17 @@ class Display extends Base
             'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
             'clientVersion' => $this->getSanitizer()->getString('clientVersion'),
             'authorised' => $this->getSanitizer()->getInt('authorised'),
+            'displayProfileId' => $this->getSanitizer()->getInt('displayProfileId'),
         ];
 
         // Get a list of displays
         $displays = $this->displayFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+
+        // Get all Display Profiles
+        $displayProfiles = [];
+        foreach ($this->displayProfileFactory->query() as $displayProfile) {
+            $displayProfiles[$displayProfile->displayProfileId] = $displayProfile->name;
+        }
 
         // validate displays so we get a realistic view of the table
         $this->validateDisplays($displays);
@@ -421,8 +440,15 @@ class Display extends Base
                 $display->excludeProperty('displayGroups');
             }
 
+            // Current layout from cache
+            $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+            $display->setCurrentLayoutId($this->pool);
+
             if ($this->isApi())
                 break;
+
+            // Add in the display profile information
+            $display->displayProfile = (!array_key_exists($display->displayProfileId, $displayProfiles)) ? __('Default') : $displayProfiles[$display->displayProfileId];
 
             $display->includeProperty('buttons');
 
@@ -593,6 +619,9 @@ class Display extends Base
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
+        // Time format for display
+        $timeFormat = $this->getDate()->extractTimeFormat($this->getConfig()->GetSetting('DATE_FORMAT'));
+
         // Dates
         $display->auditingUntilIso = $this->getDate()->getLocalDate($display->auditingUntil);
 
@@ -612,7 +641,15 @@ class Display extends Base
                         $profile[$i]['valueString'] = $option['value'];
                 }
             } else if ($profile[$i]['fieldType'] == 'timePicker') {
-                $profile[$i]['valueString'] = ($profile[$i]['value'] == null || $profile[$i]['value'] == '0' ) ? '00:00' : $this->getDate()->parse($profile[$i]['value'], 'H:i')->format('H:i');
+                // Determine the value and its format
+                if ($profile[$i]['value'] == null || $profile[$i]['value'] == '0') {
+                    // Empty (new profile)
+                    $profile[$i]['valueString'] = $this->getDate()->parse('00:00', 'H:i')->format($timeFormat);
+                } else {
+                    // A format has been set
+                    $format = (strlen($profile[$i]['value']) == 5) ? 'H:i' : 'H:i:s';
+                    $profile[$i]['valueString'] = $this->getDate()->parse($profile[$i]['value'], $format)->format($timeFormat);
+                }
             }
         }
 

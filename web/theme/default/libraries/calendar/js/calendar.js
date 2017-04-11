@@ -532,8 +532,8 @@ if(!String.prototype.formatNum) {
 			var s = new Date(parseInt(e.start));
 			var f = new Date(parseInt(e.end));
 
-			e.start_hour = $self._format_time(s);
-			e.end_hour = $self._format_time(f);
+			e.start_hour = moment($self._format_time(s), "HH:mm").format(jsTimeFormat);
+			e.end_hour = moment($self._format_time(f), "HH:mm").format(jsTimeFormat);
 
 			if(e.start < start.getTime()) {
 				warn(1);
@@ -598,8 +598,11 @@ if(!String.prototype.formatNum) {
 		var time_split = parseInt(this.options.time_split);
 		var h = "" + (parseInt(time_start[0]) + hour * Math.max(time_split / 60, 1));
 		var m = "" + time_split * part;
+		
+		var time = this._format_hour(h.formatNum(2) + ":" + m.formatNum(2));
 
-		return this._format_hour(h.formatNum(2) + ":" + m.formatNum(2));
+		// Return formatted time
+		return moment(time, "HH:mm").format(jsTimeFormat);
 	};
 
 	Calendar.prototype._week = function(event) {
@@ -737,7 +740,7 @@ if(!String.prototype.formatNum) {
 		for (var i = 0; i < ev.length; i++) {
 
 			// Add if it's a normal layout (1) or an overlay (3)
-			if(ev[i].eventTypeId == type) {
+			if(ev[i].eventTypeId == type && ev[i].layoutId != 0) {
 				var layout = la[ev[i].layoutId];
 				var event = ev[i];
 				var elementPriority = 0;
@@ -759,8 +762,8 @@ if(!String.prototype.formatNum) {
 					layoutId: event.layoutId,
 					layoutName: layout.layout,
 					layoutStatus: layout.status,
-					eventFromDt: moment(event.fromDt, "X").format(jsDateFormat),
-					eventToDt: moment(event.toDt, "X").format(jsDateFormat),
+					eventFromDt: moment(event.fromDt, "X").tz(timezone).format(jsDateFormat),
+					eventToDt: moment(event.toDt, "X").tz(timezone).format(jsDateFormat),
 					eventDayPartId: event.dayPartId,
 					layoutDuration: layout.duration,
 					layoutDisplayOrder: event.displayOrder,
@@ -831,8 +834,8 @@ if(!String.prototype.formatNum) {
 		var t = {};
 		
 		var targetEvent = {};
-	    var displayGroupLink = '/displaygroup/view';
-	    var campaignLink = '/campaign/view';
+	    var displayGroupLink = '';
+			var campaignLink = '';
 
 	    var results = data.results[data.selectedDisplayGroup];
 	    
@@ -1210,6 +1213,17 @@ if(!String.prototype.formatNum) {
 
 	Calendar.prototype._update_day = function() {
 		$('#cal-day-panel').height($('#cal-day-panel-hour').height());
+		
+		// Adjust Row time title to the used time format
+		// Get an example of time format to get the length of it ( 10pm because it's the bigger size both for 24 an 12 format)
+		var exampleTimeLength = this._hour(22, 0).length;
+		
+		// Calculate adjustment usign 9 pixels per char and a margin of 20 px
+		var adjustment = (exampleTimeLength * 9) + 20;
+		
+		// Apply the new calculated value to the DOM objects
+		$('#cal-day-panel').css('padding-left', parseInt(adjustment) + 'px');
+		$('#cal-day-panel-hour').css('margin-left', -parseInt(adjustment) + 'px');
 	};
 
 	Calendar.prototype._update_week = function() {

@@ -132,6 +132,9 @@ class Settings extends Base
                 // If we are less that the current date, then show as empty
                 if (intval($setting['value']) >= time()) {
                     $setting['value'] = $this->getDate()->getLocalDate($setting['value']);
+                } else if ($setting['userChange'] == 0) {
+                    // Set to be now, plus 1 hour
+                    $setting['value'] = $this->getDate()->getLocalDate($this->getDate()->parse()->addHour(1));
                 } else {
                     $setting['value'] = null;
                 }
@@ -210,6 +213,11 @@ class Settings extends Base
         // Get all of the settings in an array
         $settings = $this->settingsFactory->query(null, ['userChange' => 1, 'userSee' => 1]);
 
+        // Handle changes to log level
+        $currentLogLevel = null;
+        $newLogLevel = null;
+        $newElevateUntil = null;
+
         // Go through each setting, validate it and add it to the array
         foreach ($settings as $setting) {
             // Check to see if we have a setting that matches in the provided POST vars.
@@ -264,9 +272,20 @@ class Settings extends Base
             } else if ($setting['setting'] == 'DEFAULT_LONG') {
                 if (!v::longitude()->validate($value))
                     throw new \InvalidArgumentException(__('The longitude entered is not valid.'));
+            } else if ($setting['setting'] == 'audit') {
+                $currentLogLevel = $setting['value'];
+                $newLogLevel = $value;
+            } else if ($setting['setting'] == 'ELEVATE_LOG_UNTIL') {
+                $newElevateUntil = $value;
             }
 
             $this->getConfig()->ChangeSetting($setting['setting'], $value);
+        }
+
+        // Have we changed log level? If so, were we also provided the elevate until setting?
+        if ($newElevateUntil === null && $currentLogLevel != $newLogLevel) {
+            // We haven't provided an elevate until (meaning it is not visible)
+            $this->getConfig()->ChangeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addHour(1)->format('U'));
         }
 
         // Return

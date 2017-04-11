@@ -485,7 +485,7 @@ class ForecastIo extends ModuleWidget
         // Query the API and Dump the Results.
         $apiOptions = array('units' => $this->getOption('units', 'auto'), 'lang' => $this->getOption('lang', 'en'), 'exclude' => 'minutely,hourly');
 
-        $cache = $this->getPool()->getItem('forecast/' . md5($defaultLat . $defaultLong . implode('.', $apiOptions)));
+        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($defaultLat . $defaultLong . implode('.', $apiOptions))));
         $data = $cache->get();
 
         if ($cache->isMiss()) {
@@ -721,7 +721,7 @@ class ForecastIo extends ModuleWidget
             <link href="' . $this->getResourceUrl('forecastio/weather-icons.min.css') . '" rel="stylesheet" media="screen">
             <link href="' . $this->getResourceUrl('forecastio/font-awesome.min.css')  . '" rel="stylesheet" media="screen">
             <link href="' . $this->getResourceUrl('forecastio/animate.css')  . '" rel="stylesheet" media="screen">
-            
+            <style type="text/css"> body { background-color: transparent }</style>
             <style type="text/css">
                 ' . $this->parseLibraryReferences($isPreview, $styleSheet) . '
             </style>
@@ -803,7 +803,7 @@ class ForecastIo extends ModuleWidget
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         // Return that content.
         return $this->renderTemplate($data);

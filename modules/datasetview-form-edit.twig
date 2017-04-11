@@ -245,7 +245,7 @@
 
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
-                        {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate"), helpText) }}
+                        {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", "1"), helpText) }}
 
                         {% set title %}{% trans "Enter a style sheet for the table" %}{% endset %}
                         {{ forms.textarea("styleSheet", "", module.getRawNode("styleSheet", module.defaultStyleSheet()), title, "template-override-controls", "", 10) }}

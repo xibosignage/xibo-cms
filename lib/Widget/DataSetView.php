@@ -195,7 +195,7 @@ class DataSetView extends ModuleWidget
      * @SWG\Post(
      *  path="/playlist/widget/dataSetView/{playlistId}",
      *  operationId="WidgetdataSetViewAdd",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Add a dataSetView Widget",
      *  description="Add a new dataSetView Widget to the specified playlist",
      *  @SWG\Parameter(
@@ -373,7 +373,7 @@ class DataSetView extends ModuleWidget
         $this->setOption('filter', $this->getSanitizer()->getParam('filter', null));
         $this->setOption('ordering', $this->getSanitizer()->getString('ordering'));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
-        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate', 1));
         $this->setOption('useOrderingClause', $this->getSanitizer()->getCheckbox('useOrderingClause'));
         $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
         $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
@@ -480,7 +480,8 @@ class DataSetView extends ModuleWidget
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
     
         // Get CSS from the original template or from the input field
-        if( $this->getOption('overrideTemplate') == 0 ) {
+        $styleSheet = '';
+        if ($this->getOption('overrideTemplate', 1) == 0) {
             
             $template = $this->getTemplateById($this->getOption('templateId'));
             
@@ -488,7 +489,7 @@ class DataSetView extends ModuleWidget
                 $styleSheet = $template['css'];
                     
         } else {
-                $styleSheet = $this->getRawNode('styleSheet', '');
+            $styleSheet = $this->getRawNode('styleSheet', '');
         }
         
         // Get the embedded HTML out of RAW
@@ -537,7 +538,7 @@ class DataSetView extends ModuleWidget
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
     }

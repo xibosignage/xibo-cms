@@ -2,7 +2,7 @@
 /*
  * Spring Signage Ltd - http://www.springsignage.com
  * Copyright (C) 2015 Spring Signage Ltd
- * (VideoWidgetTestCase.php)
+ * (PdfWidgetTest.php)
  */
 
 namespace Xibo\Tests\Integration\Widget;
@@ -10,14 +10,13 @@ namespace Xibo\Tests\Integration\Widget;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboLibrary;
+use Xibo\OAuth2\Client\Entity\XiboPdf;
 use Xibo\OAuth2\Client\Entity\XiboPlaylist;
 use Xibo\OAuth2\Client\Entity\XiboRegion;
-use Xibo\OAuth2\Client\Entity\XiboVideo;
 use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Tests\Integration\Widget\WidgetTestCase;
 
-class VideoWidgetTestCase extends WidgetTestCase
+class PdfWidgetTest extends LocalWebTestCase
 {
 	protected $startLayouts;
     /**
@@ -78,56 +77,38 @@ class VideoWidgetTestCase extends WidgetTestCase
     public function testEdit()
     {
         # Create layout 
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Video edit Layout', 'phpunit description', '', 9);
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('PDF edit Layout', 'phpunit description', '', 9);
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Upload new media
-        $media = (new XiboLibrary($this->getEntityProvider()))->create('API video', PROJECT_ROOT . '/tests/resources/HLH264.mp4');
+        $media = (new XiboLibrary($this->getEntityProvider()))->create('API PDF', PROJECT_ROOT . '/tests/resources/sampleDocument.pdf');
         # Assign media to a playlist
         $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], 10, $region->playlists[0]['playlistId']);
         $name = 'Edited Name';
         $duration = 80;
-        $scaleTypeId = 'stretch';
-        $mute = 1;
-        $loop = 0;
         $widget = $playlist->widgets[0];
         $response = $this->client->put('/playlist/widget/' . $widget->widgetId, [
             'name' => $name,
             'duration' => $duration,
-            'useDuration' => $useDuration,
-            'scaleTypeId' => $scaleTypeId,
-            'mute' => $mute,
-            'loop' => $loop,
             ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $widgetOptions = (new XiboVideo($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $widgetOptions = (new XiboPdf($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
         $this->assertSame($name, $widgetOptions->name);
         $this->assertSame($duration, $widgetOptions->duration);
         $this->assertSame($media->mediaId, intval($widgetOptions->mediaIds[0]));
-        foreach ($widgetOptions->widgetOptions as $option) {
-            if ($option['option'] == 'scaleTypeId') {
-                $this->assertSame($scaleTypeId, $option['value']);
-            }
-            if ($option['option'] == 'mute') {
-                $this->assertSame($mute, intval($option['value']));
-            }
-            if ($option['option'] == 'loop') {
-                $this->assertSame($loop, intval($option['value']));
-            }
-        }
     }
 
     public function testDelete()
     {
         # Create layout 
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Video delete Layout', 'phpunit description', '', 9);
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('PDF delete Layout', 'phpunit description', '', 9);
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Upload new media
-        $media = (new XiboLibrary($this->getEntityProvider()))->create('API video', PROJECT_ROOT . '/tests/resources/HLH264.mp4');
+        $media = (new XiboLibrary($this->getEntityProvider()))->create('API video', PROJECT_ROOT . '/tests/resources/sampleDocument.pdf');
         # Assign media to a region
         $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], 10, $region->playlists[0]['playlistId']);
         $widget = $playlist->widgets[0];

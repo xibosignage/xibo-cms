@@ -278,12 +278,15 @@ class MaintenanceRegularTask implements TaskInterface
               INNER JOIN `display`
               ON display.displayId = requiredfile.displayId
            WHERE `bytesRequested` > 0
-              AND bytesRequested >= `size` * :factor
-              AND type <> :excludedType
+              AND `requiredfile`.bytesRequested >= `requiredfile`.`size` * :factor
+              AND `requiredfile`.type <> :excludedType
+              AND display.lastAccessed > :lastAccessed
+              AND `requiredfile`.complete = 0
             GROUP BY display.displayId, display.display
         ', [
             'factor' => 3,
-            'excludedType' => 'W'
+            'excludedType' => 'W',
+            'lastAccessed' => $this->date->parse()->subDay()->format('U')
         ]);
 
         foreach ($items as $item) {

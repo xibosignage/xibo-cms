@@ -558,7 +558,8 @@ class Widget implements \JsonSerializable
             'saveWidgetOptions' => true,
             'saveWidgetAudio' => true,
             'notify' => true,
-            'notifyDisplays' => false
+            'notifyDisplays' => false,
+            'audit' => true
         ], $options);
 
         $this->getLog()->debug('Saving widgetId %d with options. %s', $this->getId(), json_encode($options, JSON_PRETTY_PRINT));
@@ -613,6 +614,24 @@ class Widget implements \JsonSerializable
 
         if ($options['notify'])
             $this->notify($options);
+
+        if ($options['audit']) {
+            $changedProperties = $this->getChangedProperties();
+            $changedItems = [];
+
+            foreach ($this->widgetOptions as $widgetOption) {
+                $itemsProperties = $widgetOption->getChangedProperties();
+
+                if (count($itemsProperties) > 0)
+                    $changedItems[] = $itemsProperties;
+            }
+
+            if (count($changedItems) > 0) {
+                $changedProperties['widgetOptions'] = $changedItems;
+            }
+
+            $this->audit($this->widgetId, 'Saved', $changedProperties);
+        }
     }
 
     /**

@@ -16,7 +16,7 @@ class Audio extends ModuleWidget
      * @SWG\Post(
      *  path="/playlist/widget/audio/{playlistId}",
      *  operationId="WidgetAudioEdit",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Parameters for editing existing audio widget on a layout",
      *  description="Parameters for editing existing audio widget on a layout, for adding new audio, please refer to POST /library documentation",
      *  @SWG\Parameter(

@@ -2,21 +2,18 @@
 /*
  * Spring Signage Ltd - http://www.springsignage.com
  * Copyright (C) 2015 Spring Signage Ltd
- * (ShellCommandWidgetTestCase.php)
+ * (ShellCommandWidgetTest.php)
  */
 
 namespace Xibo\Tests\Integration\Widget;
 
-use Xibo\Helper\Random;
+use Xibo\OAuth2\Client\Entity\XiboCommand;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboRegion;
-use Xibo\OAuth2\Client\Entity\XiboCommand;
 use Xibo\OAuth2\Client\Entity\XiboShellCommand;
-use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Tests\Integration\Widget\WidgetTestCase;
 
-class ShellCommandWidgetTestCase extends WidgetTestCase
+class ShellCommandWidgetTest extends LocalWebTestCase
 {
 	protected $startLayouts;
     protected $startCommands;
@@ -81,7 +78,7 @@ class ShellCommandWidgetTestCase extends WidgetTestCase
      */
     public function testAdd($name, $duration, $useDuration, $windowsCommand, $linuxCommand, $launchThroughCmd, $terminateCommand, $useTaskkill, $commandCode)
     {
-        $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunit code');
+        $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunitcode');
         # Create layout
         $layout = (new XiboLayout($this->getEntityProvider()))->create('ShellCommand add Layout', 'phpunit description', '', 9);
         # Add region to our layout
@@ -116,8 +113,8 @@ class ShellCommandWidgetTestCase extends WidgetTestCase
     {
         # Sets of data used in testAdd
         return [
-            'Windows new command' => ['Api Windows command', 20, 1,'-reboot', NULL, 1, null, 1, null],
-            'Android new command' => ['Api Android command', 30, 1, null, '-reboot', null, 1, null, null],
+            'Windows new command' => ['Api Windows command', 20, 1,'reboot', NULL, 1, null, 1, null],
+            'Android new command' => ['Api Android command', 30, 1, null, 'reboot', null, 1, null, null],
             'Previously created command' => ['Api shell command', 50, 1, null, null, 1, 1, 1, 'phpunit code']
         ];
     }
@@ -129,7 +126,7 @@ class ShellCommandWidgetTestCase extends WidgetTestCase
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create a command with wrapper
-        $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunit code');
+        $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunitcode');
         # Create a shell command widget with wrapper
         $shellCommand = (new XiboShellCommand($this->getEntityProvider()))->create('Api shell command', 0, 1, null, null, 1, 1, 1, 'test code', $region->playlists[0]['playlistId']);
         $nameNew = 'Edited Name';

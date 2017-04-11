@@ -21,8 +21,6 @@
  */
 namespace Xibo\Widget;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\ModuleFactory;
 
@@ -341,8 +339,19 @@ class Currencies extends YahooBase
         $items = $this->getOption('items');
         $base = $this->getOption('base');
         
+        // Get current item template
+        if( $this->getOption('overrideTemplate') == 0 ) {
+            $template = $this->getTemplateById($this->getOption('templateId'));
+            
+            if (isset($template)) {
+                $itemTemplate = $template['item'];
+            }    
+        } else {
+            $itemTemplate = $this->getRawNode('itemTemplate');
+        }
+        
         // Use the template to see if we need the xchange or quotes table 
-        $useVariation = stripos($this->getRawNode('itemTemplate'), '[ChangePercentage]') > -1;
+        $useVariation = stripos($itemTemplate, '[ChangePercentage]') > -1;
         if($useVariation){
             $resultIdentifier = "quote";
             $yql = "select * from yahoo.finance.quotes where symbol in ([Item])";
@@ -382,7 +391,7 @@ class Currencies extends YahooBase
         $yql = str_replace('[Item]', implode(',', $itemsJoined), $yql);
 
         // Fire off a request for the data
-        $cache = $this->getPool()->getItem('finance/' . md5($yql));
+        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($yql)));
 
         $data = $cache->get();
 
@@ -731,7 +740,9 @@ class Currencies extends YahooBase
         
         $backgroundColor = $this->getOption('backgroundColor');
         if ($backgroundColor != '') {
-            $headContent .= '<style type="text/css"> .container-main, .page, .item { background-color: ' . $backgroundColor . ' }</style>';
+            $headContent .= '<style type="text/css"> body { background-color: ' . $backgroundColor . ' }</style>';
+        } else {
+          $headContent .= '<style type="text/css"> body { background-color: transparent }</style>';
         }
         
         // Add the CSS if it isn't empty, and replace the wallpaper
@@ -769,7 +780,7 @@ class Currencies extends YahooBase
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
     }

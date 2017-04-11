@@ -359,7 +359,8 @@ class Region implements \JsonSerializable
         $options = array_merge([
             'saveRegionOptions' => true,
             'manageRegionAssignments' => true,
-            'validate' => true
+            'validate' => true,
+            'audit' => true
         ], $options);
 
         $this->getLog()->debug('Saving %s. Options = %s', $this, json_encode($options, JSON_PRETTY_PRINT));
@@ -386,6 +387,9 @@ class Region implements \JsonSerializable
             // Manage the assignments to regions
             $this->manageAssignments();
         }
+
+        if ($options['audit'])
+            $this->audit($this->regionId, 'Saved');
     }
 
     /**

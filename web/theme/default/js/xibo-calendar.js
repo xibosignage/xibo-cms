@@ -172,9 +172,9 @@ $(document).ready(function() {
                         
                     var url = calendarOptions.agendaLink.replace(":id", selectedDisplayGroup);
                                     
-                    var dateMoment = moment(this.options.position.start.getTime());
+                    var dateMoment = moment(this.options.position.start.getTime() / 1000, "X");
                     var timeFromSlider = ( $('#timePickerSlider').length ) ? $('#timePicker').slider('getValue') : 0
-                    var timeMoment = moment(timeFromSlider*60*1000);
+                    var timeMoment = moment(timeFromSlider*60, "X");
                     
                     // Add hour to date to get the selected date
                     var dateSelected = moment(dateMoment + timeMoment);
@@ -278,7 +278,7 @@ $(document).ready(function() {
                         tooltip: 'always',
                         step: 5,
                         formatter: function(value) {
-                            return moment(value*60*1000).format(jsTimeFormat);
+                            return moment(value*60, "X").format(jsTimeFormat);
                         }
                     }).off('slideStop').on('slideStop', function(ev) {
                         calendar.view();
@@ -289,7 +289,7 @@ $(document).ready(function() {
                 
                 // Sync the date of the date picker to the current calendar date
                 if (this.options.position.start != undefined && this.options.position.start != ""){
-                    $("#dateInput .form-control").datetimepicker('update', moment(this.options.position.start.getTime()).toDate());
+                    $("#dateInput .form-control").datetimepicker('update', moment(this.options.position.start.getTime() / 1000, "X").format(systemDateFormat));
                 }
                     
                 if (typeof this.getTitle === "function")
@@ -357,10 +357,8 @@ $(document).ready(function() {
             minView: 2,
             todayHighlight: true
         }).change(function() {
-            var value = moment($("#dateInput .form-control").val(), jsDateFormat);
-            calendar.navigate("date", value);
-        });
-        
+            calendar.navigate("date", moment($("#dateInput .form-control").val(), jsDateFormat));
+        }).datetimepicker('update', moment(calendar.options.position.start.getTime() / 1000, "X").format(systemDateFormat));
     }
 });
 
@@ -429,13 +427,13 @@ var processScheduleFormElements = function(el) {
             break;
         
         case 'eventTypeId':
-            //console.log('Process: eventTypeId, val = ' + fieldVal);
+            console.log('Process: eventTypeId, val = ' + fieldVal);
             
-            var layoutControlDisplay = (fieldVal == "2") ? "none" : "block";
-            var endTimeControlDisplay = (fieldVal == "2") ? "none" : "block";
-            var startTimeControlDisplay = (fieldVal == "2") ? "block" : "block";
-            var dayPartControlDisplay = (fieldVal == "2") ? "none" : "block";
-            var commandControlDisplay = (fieldVal == "2") ? "block" : "none";
+            var layoutControlDisplay = (fieldVal == 2) ? "none" : "block";
+            var endTimeControlDisplay = (fieldVal == 2) ? "none" : "block";
+            var startTimeControlDisplay = (fieldVal == 2) ? "block" : "block";
+            var dayPartControlDisplay = (fieldVal == 2) ? "none" : "block";
+            var commandControlDisplay = (fieldVal == 2) ? "block" : "none";
             
             $(".layout-control").css('display', layoutControlDisplay);
             $(".endtime-control").css('display', endTimeControlDisplay);
@@ -462,10 +460,13 @@ var processScheduleFormElements = function(el) {
             break;
         
         case 'dayPartId':
-            //console.log('Process: dayPartId, val = ' + fieldVal);
+            console.log('Process: dayPartId, val = ' + fieldVal + ', visibility = ' + el.is(":visible"));
+
+            if (!el.is(":visible"))
+                return;
             
             var endTimeControlDisplay = (fieldVal != 0) ? "none" : "block";
-            var startTimeControlDisplay = (fieldVal == "1") ? "none" : "block";
+            var startTimeControlDisplay = (fieldVal == 1) ? "none" : "block";
 
             var $startTime = $(".starttime-control");
             var $endTime = $(".endtime-control");
@@ -503,40 +504,61 @@ var setupScheduleNowForm = function(form) {
     }
 
     var evaluateDates = $.debounce(500, function() {
-        var hours = $(form).find("#hours").val();
-        var minutes = $(form).find("#minutes").val();
-        var seconds = $(form).find("#seconds").val();
-
-        //var fromDt = moment().add(-24, "hours");
-        var fromDt = moment();
-        var toDt = moment();
-
-        // Use Hours, Minutes and Seconds to generate a from date
-        var $messageDiv = $('.scheduleNowMessage');
-
-        if (hours != "")
-            toDt.add(hours, "hours");
-
-        if (minutes != "")
-            toDt.add(minutes, "minutes");
-
-        if (seconds != "")
-            toDt.add(seconds, "seconds");
-
-        // Update the message div
-        $messageDiv.html($messageDiv.data().template.replace("[fromDt]", fromDt.format(jsDateFormat)).replace("[toDt]", toDt.format(jsDateFormat))).removeClass("hidden");
-
-        // Update the final submit fields
-        $("#fromDt").val(fromDt.format(systemDateFormat));
-        $("#toDt").val(toDt.format(systemDateFormat));
+      scheduleNowFormEvaluateDates(form);
     });
-
+    
     // Bind to the H:i:s fields
     $(form).find("#hours").on("keyup", evaluateDates);
     $(form).find("#minutes").on("keyup", evaluateDates);
     $(form).find("#seconds").on("keyup", evaluateDates);
 };
 
+/**
+ * Evaluate dates on schedule form and fill the date input fields
+ */
+var scheduleNowFormEvaluateDates = function(form) {
+  
+    var hours = $(form).find("#hours").val();
+    var minutes = $(form).find("#minutes").val();
+    var seconds = $(form).find("#seconds").val();
+
+    //var fromDt = moment().add(-24, "hours");
+    var fromDt = moment();
+    var toDt = moment();
+
+    // Use Hours, Minutes and Seconds to generate a from date
+    var $messageDiv = $('.scheduleNowMessage');
+
+    if (hours != "")
+        toDt.add(hours, "hours");
+
+    if (minutes != "")
+        toDt.add(minutes, "minutes");
+
+    if (seconds != "")
+        toDt.add(seconds, "seconds");
+
+    // Update the message div
+    $messageDiv.html($messageDiv.data().template.replace("[fromDt]", fromDt.format(jsDateFormat)).replace("[toDt]", toDt.format(jsDateFormat))).removeClass("hidden");
+
+    // Update the final submit fields
+    $("#fromDt").val(fromDt.format(systemDateFormat));
+    $("#toDt").val(toDt.format(systemDateFormat));
+};
+
+/**
+ * Call evaluate values and then submit schedule now form
+ */
+
+var scheduleNowFormSubmit = function(form) {
+  
+  // Evaluate dates 
+  scheduleNowFormEvaluateDates(form);
+  
+  // Submit the form
+  form.submit();
+};
+  
 /**
  * Select the elements linked to the clicked element
  */

@@ -21,8 +21,6 @@
  */
 namespace Xibo\Widget;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\ModuleFactory;
 
@@ -354,7 +352,7 @@ class Finance extends YahooBase
         $yql = str_replace('[Item]', implode(',', $items), $yql);
 
         // Fire off a request for the data
-        $cache = $this->getPool()->getItem('finance/' . md5($yql));
+        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($yql)));
 
         $data = $cache->get();
 
@@ -555,7 +553,7 @@ class Finance extends YahooBase
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
     }

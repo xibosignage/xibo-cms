@@ -52,7 +52,7 @@ class Text extends ModuleWidget
      * @SWG\Post(
      *  path="/playlist/widget/text/{playlistId}",
      *  operationId="WidgetTextAdd",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Add a Text Widget",
      *  description="Add a new Text Widget to the specified playlist",
      *  @SWG\Parameter(
@@ -316,17 +316,18 @@ class Text extends ModuleWidget
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
     }
 
+    /** @inheritdoc */
     public function hoverPreview()
     {
         // Default Hover window contains a thumbnail, media type and duration
         $output = parent::hoverPreview();
 
-        $output .= '<div class="hoverPreview">';
+        $output .= '<div class="hoverPreview" data-scale="true">';
         $output .= '    ' . $this->getRawNode('text', null);;
         $output .= '</div>';
 

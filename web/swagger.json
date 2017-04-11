@@ -11,7 +11,7 @@
             "name": "AGPLv3 or later",
             "url": "http://www.gnu.org/licenses/"
         },
-        "version": "1.8.0-alpha3"
+        "version": "1.8.0"
     },
     "basePath": "/api",
     "schemes": [
@@ -1247,6 +1247,13 @@
                         "name": "authorised",
                         "in": "formData",
                         "description": "Filter by authorised flag",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "displayProfileId",
+                        "in": "formData",
+                        "description": "Filter by Display Profile",
                         "required": false,
                         "type": "integer"
                     }
@@ -2566,14 +2573,14 @@
                         "name": "backgroundzIndex",
                         "in": "formData",
                         "description": "The Layer Number to use for the background.",
-                        "required": false,
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "resolutionId",
                         "in": "formData",
                         "description": "The Resolution ID to use on this Layout.",
-                        "required": true,
+                        "required": false,
                         "type": "integer"
                     }
                 ],
@@ -2887,6 +2894,34 @@
                         "description": "The Uploaded File",
                         "required": true,
                         "type": "file"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Media Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "oldMediaId",
+                        "in": "formData",
+                        "description": "Id of an existing media file which should be replaced with the new upload",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "updateInLayouts",
+                        "in": "formData",
+                        "description": "Flag (0, 1), set to 1 to update this media in all layouts (use with oldMediaId) ",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "removeOldRevisions",
+                        "in": "formData",
+                        "description": "Flag (0 , 1), to either remove or leave the old file revisions (use with oldMediaId)",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -2929,7 +2964,7 @@
                     {
                         "name": "retired",
                         "in": "formData",
-                        "description": "Flag indicating if this Layout is retired",
+                        "description": "Flag indicating if this media is retired",
                         "required": true,
                         "type": "integer"
                     },
@@ -2995,6 +3030,15 @@
                 "summary": "Tidy Library",
                 "description": "Routine tidy of the library, removing unused files.",
                 "operationId": "libraryTidy",
+                "parameters": [
+                    {
+                        "name": "tidyGenericFiles",
+                        "in": "formData",
+                        "description": "Also delete generic files?",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation"
@@ -3141,6 +3185,198 @@
                                 "type": "string"
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/{widgetId}": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Edit a Widget",
+                "description": "Edit a Widget, please refer to individual widget Add documentation for module specific parameters",
+                "operationId": "WidgetEdit",
+                "parameters": [
+                    {
+                        "name": "widgetId",
+                        "in": "path",
+                        "description": "The widget ID to edit",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the edited widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Delete a Widget",
+                "description": "Deleted a specified widget",
+                "operationId": "WidgetDelete",
+                "parameters": [
+                    {
+                        "name": "widgetId",
+                        "in": "path",
+                        "description": "The widget ID to delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/playlist/widget/{type}/{widgetId]": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Adds In/Out transition",
+                "description": "Adds In/Out transition to a specified widget",
+                "operationId": "WidgetEditTransition",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "description": "Transition type, available options: in, out",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "widgetId",
+                        "in": "path",
+                        "description": "The widget ID to add the transition to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "transitionType",
+                        "in": "formData",
+                        "description": "Type of a transition, available Options: fly, fadeIn, fadeOut",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "transitionDuration",
+                        "in": "formData",
+                        "description": "Duration of this transition in milliseconds",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "transitionDirection",
+                        "in": "formData",
+                        "description": "The direction for this transition, only appropriate for transitions that move, such as fly. Available options: N, NE, E, SE, S, SW, W, NW",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/{widgetId}/audio": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Parameters for edting/adding audio file to a specific widget",
+                "description": "Parameters for edting/adding audio file to a specific widget",
+                "operationId": "WidgetAssignedAudioEdit",
+                "parameters": [
+                    {
+                        "name": "widgetId",
+                        "in": "path",
+                        "description": "Id of a widget to which you want to add audio or edit existing audio",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "mediaId",
+                        "in": "formData",
+                        "description": "Id of a audio file in CMS library you wish to add to a widget",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "volume",
+                        "in": "formData",
+                        "description": "Volume percentage(0-100) for this audio to play at",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "loop",
+                        "in": "formData",
+                        "description": "Flag (0, 1) Should the audio loop if it finishes before the widget has finished?",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Delete assigned audio widget",
+                "description": "Delete assigned audio widget from specified widget ID",
+                "operationId": "WidgetAudioDelete",
+                "parameters": [
+                    {
+                        "name": "widgetId",
+                        "in": "path",
+                        "description": "Id of a widget from which you want to delete the audio from",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
                     }
                 }
             }
@@ -3853,6 +4089,36 @@
                 }
             }
         },
+        "/schedule/:displayGroupId/events": {
+            "get": {
+                "tags": [
+                    "schedule"
+                ],
+                "summary": "Event List",
+                "operationId": "scheduleCalendarData",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The DisplayGroupId to return the event list for.",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "date",
+                        "in": "formData",
+                        "description": "Date in Y-m-d H:i:s",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful response"
+                    }
+                }
+            }
+        },
         "/schedule": {
             "post": {
                 "tags": [
@@ -3911,6 +4177,13 @@
                         "name": "dayPartId",
                         "in": "formData",
                         "description": "The Day Part for this event. Overrides supported are 0(custom) and 1(always). Defaulted to 0.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "syncTimezone",
+                        "in": "formData",
+                        "description": "Should this schedule be synced to the resulting Display timezone?",
                         "required": false,
                         "type": "integer"
                     },
@@ -4054,6 +4327,13 @@
                         "name": "dayPartId",
                         "in": "formData",
                         "description": "The Day Part for this event. Overrides supported are 0(custom) and 1(always). Defaulted to 0.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "syncTimezone",
+                        "in": "formData",
+                        "description": "Should this schedule be synced to the resulting Display timezone?",
                         "required": false,
                         "type": "integer"
                     },
@@ -4719,6 +4999,2260 @@
                     }
                 }
             }
+        },
+        "/playlist/widget/audio/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Parameters for editing existing audio widget on a layout",
+                "description": "Parameters for editing existing audio widget on a layout, for adding new audio, please refer to POST /library documentation",
+                "operationId": "WidgetAudioEdit",
+                "parameters": [
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "Edit Only - (0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "Edit Only - The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Edit Only - The Widget name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "mute",
+                        "in": "formData",
+                        "description": "Edit only - Flag (0, 1) Should the audio be muted?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "loop",
+                        "in": "formData",
+                        "description": "Edit only - Flag (0, 1) Should the audio loop (only for duration > 0 )?",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/clock/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a Clock Widget",
+                "description": "Add a new Clock Widget to the specified playlist",
+                "operationId": "WidgetClockAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add a Clock widget to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "themeId",
+                        "in": "formData",
+                        "description": "Flag (0 , 1) for Analogue clock the light and dark theme",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "clockTypeId",
+                        "in": "formData",
+                        "description": "Type of a clock widget 1-Analogue, 2-Digital, 3-Flip clock",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "offset",
+                        "in": "formData",
+                        "description": "The offset in minutes that should be applied to the current time, if a counter is selected then date/time to run from in the format Y-m-d H:i:s",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "format",
+                        "in": "formData",
+                        "description": "For digital clock, format in which the time should be displayed example [HH:mm]",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "showSeconds",
+                        "in": "formData",
+                        "description": "For Flip Clock, should the clock show seconds or not",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "ClockFace",
+                        "in": "formData",
+                        "description": "For Flip Clock, supported options: TwelveHourClock TwentyFourHourClock HourlyCounter MinuteCounter DailyCounter",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/currencies/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a Currencies Widget",
+                "description": "Add a new Currencies Widget to the specified playlist",
+                "operationId": "WidgetCurrenciesAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add a Currencies widget",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "base",
+                        "in": "formData",
+                        "description": "The base currency",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "items",
+                        "in": "formData",
+                        "description": "Items wanted",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "effect",
+                        "in": "formData",
+                        "description": "Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "speed",
+                        "in": "formData",
+                        "description": "The transition speed of the selected effect in milliseconds (1000 = normal)",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "backgroundColor",
+                        "in": "formData",
+                        "description": "A HEX color to use as the background color of this widget",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "noRecordsMessage",
+                        "in": "formData",
+                        "description": "A message to display when there are no records returned by the search query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dateFormat",
+                        "in": "formData",
+                        "description": "The format to apply to all dates returned by he widget",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "updateInterval",
+                        "in": "formData",
+                        "description": "Update interval in minutes, should be kept as high as possible, if data change once per hour, this should be set to 60",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "durationIsPerPage",
+                        "in": "formData",
+                        "description": "A flag (0, 1), The duration specified is per page/item, otherwise the widget duration is divided between the number of pages/items",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "templateId",
+                        "in": "formData",
+                        "description": "Use pre-configured templates, available options: currencies1, currencies2",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "overrideTemplate",
+                        "in": "formData",
+                        "description": "flag (0, 1) set to 0 and use templateId or set to 1 and provide whole template in the next parameters",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "widgetOriginalWidth",
+                        "in": "formData",
+                        "description": "This is the intended Width of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "widgetOriginalHeight",
+                        "in": "formData",
+                        "description": "This is the intended Height of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "maxItemsPerPage",
+                        "in": "formData",
+                        "description": "This is the intended number of items on each page",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "mainTemplate",
+                        "in": "formData",
+                        "description": "Main template, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "itemtemplate",
+                        "in": "formData",
+                        "description": "Template for each item, replaces [itemsTemplate] in main template, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "styleSheet",
+                        "in": "formData",
+                        "description": "Optional StyleSheet Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "javaScript",
+                        "in": "formData",
+                        "description": "Optional JavaScript, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/dataSetView/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a dataSetView Widget",
+                "description": "Add a new dataSetView Widget to the specified playlist",
+                "operationId": "WidgetdataSetViewAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add a Widget to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dataSetId",
+                        "in": "formData",
+                        "description": "Create dataSetView Widget using provided dataSetId of an existing dataSet",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "columns",
+                        "in": "formData",
+                        "description": " EDIT only - Array of dataSetColumn IDs to assign",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "EDIT Only - The dataSetView Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "Edit Only - (0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "updateInterval",
+                        "in": "formData",
+                        "description": "EDIT Only - Update interval in minutes",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "rowsPerPage",
+                        "in": "formData",
+                        "description": "EDIT Only - Number of rows per page, 0 for no pages",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "showHeadings",
+                        "in": "formData",
+                        "description": "EDIT Only - Should the table show Heading? (0,1)",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "upperLimit",
+                        "in": "formData",
+                        "description": "EDIT Only - Upper low limit for this dataSet, 0 for nor limit",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "lowerLimit",
+                        "in": "formData",
+                        "description": "EDIT Only - Lower low limit for this dataSet, 0 for nor limit",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "filter",
+                        "in": "formData",
+                        "description": "EDIT Only - SQL clause for filter this dataSet",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ordering",
+                        "in": "formData",
+                        "description": "EDIT Only - SQL clause for how this dataSet should be ordered",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "templateId",
+                        "in": "formData",
+                        "description": "EDIT Only - Template you'd like to apply, options available: empty, light-green",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "overrideTemplate",
+                        "in": "formData",
+                        "description": "EDIT Only - flag (0, 1) override template checkbox",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useOrderingClause",
+                        "in": "formData",
+                        "description": "EDIT Only - flag (0,1) Use advanced order clause - set to 1 if ordering is provided",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useFilteringClause",
+                        "in": "formData",
+                        "description": "EDIT Only - flag (0,1) Use advanced filter clause - set to 1 if filter is provided",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "noDataMessage",
+                        "in": "formData",
+                        "description": "EDIT Only - A message to display when no data is returned from the source",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/embedded/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a Embedded Widget",
+                "description": "Add a new Embedded Widget to the specified playlist",
+                "operationId": "WidgetEmbeddedAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add an Embedded Widget",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "transparency",
+                        "in": "formData",
+                        "description": "Flag (0,1) - Should the HTML be shown with transparent background? - not available on Windows Clients",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "scaleContent",
+                        "in": "formData",
+                        "description": "Flag (0,1) - Should the embedded content be scaled along with the layout?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "embedHtml",
+                        "in": "formData",
+                        "description": "HTML to embed",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "embedScript",
+                        "in": "formData",
+                        "description": "HEAD content to Embed (including script tags)",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "embedStyle",
+                        "in": "formData",
+                        "description": "Custom Style Sheets (CSS)",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/finance/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a Finance Widget",
+                "description": "Add a new Finance Widget to the specified playlist",
+                "operationId": "WidgetFinanceAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add a Finance widget",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "item",
+                        "in": "formData",
+                        "description": "Items wanted, can be comma separated (example EURUSD, GBPUSD), pass only with overrideTemplate set to 1",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "effect",
+                        "in": "formData",
+                        "description": "Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind, marqueeUp, marqueeDown, marqueeRight, marqueeLeft",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "speed",
+                        "in": "formData",
+                        "description": "The transition speed of the selected effect in milliseconds (1000 = normal) or the Marquee speed in a low to high scale (normal = 1)",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "backgroundColor",
+                        "in": "formData",
+                        "description": "A HEX color to use as the background color of this widget",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "noRecordsMessage",
+                        "in": "formData",
+                        "description": "A message to display when there are no records returned by the search query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dateFormat",
+                        "in": "formData",
+                        "description": "The format to apply to all dates returned by he widget",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "updateInterval",
+                        "in": "formData",
+                        "description": "Update interval in minutes, should be kept as high as possible, if data change once per hour, this should be set to 60",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "templateId",
+                        "in": "formData",
+                        "description": "Use pre-configured templates, available options: currency-simple, stock-simple",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "durationIsPerItem",
+                        "in": "formData",
+                        "description": "A flag (0, 1), The duration specified is per item, otherwise the widget duration is divided between the number of items",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "overrideTemplate",
+                        "in": "formData",
+                        "description": "flag (0, 1) set to 0 and use templateId or set to 1 and provide whole template in the next parameters",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "yql",
+                        "in": "formData",
+                        "description": "The YQL query to use for data, pass only with overrideTemplate set to 1",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "resultIdentifier",
+                        "in": "formData",
+                        "description": "The name of the result identifier returned by the YQL, pass only with overrideTemplate set to 1",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "template",
+                        "in": "formData",
+                        "description": "Main template, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "styleSheet",
+                        "in": "formData",
+                        "description": "Optional StyleSheet Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "javaScript",
+                        "in": "formData",
+                        "description": "Optional JavaScript, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/forecastIo/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a Weather Widget",
+                "description": "Add a new Weather Widget to the specified playlist",
+                "operationId": "WidgetWeatherAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add a Weather widget",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDisplayLocation",
+                        "in": "formData",
+                        "description": "Flag (0, 1) Use the location configured on display",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "longitude",
+                        "in": "formData",
+                        "description": "The longitude for this weather widget, only pass if useDisplayLocation set to 0",
+                        "required": false,
+                        "type": "number"
+                    },
+                    {
+                        "name": "latitude",
+                        "in": "formData",
+                        "description": "The latitude for this weather widget, only pass if useDisplayLocation set to 0",
+                        "required": false,
+                        "type": "number"
+                    },
+                    {
+                        "name": "templateId",
+                        "in": "formData",
+                        "description": "Use pre-configured templates, available options: weather-module0-5day, weather-module0-singleday, weather-module0-singleday2, weather-module1l, weather-module1p, weather-module2l, weather-module2p, weather-module3l, weather-module3p, weather-module4l, weather-module4p, weather-module5l, weather-module6v, weather-module6h",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "units",
+                        "in": "formData",
+                        "description": "Units you would like to use, available options: auto, ca, si, uk2, us",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "updateInterval",
+                        "in": "formData",
+                        "description": "Update interval in minutes, should be kept as high as possible, if data change once per hour, this should be set to 60",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "lang",
+                        "in": "formData",
+                        "description": "Language you'd like to use, supported languages ar, az, be, bs, cs, de, en, el, es, fr, hr, hu, id, it, is, kw, nb, nl, pl, pt, ru, sk, sr, sv, tet, tr, uk, x-pig-latin, zh, zh-tw",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dayConditionsOnly",
+                        "in": "formData",
+                        "description": "Flag (0, 1) Would you like to only show the Daytime weather conditions",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "overrideTemplate",
+                        "in": "formData",
+                        "description": "flag (0, 1) set to 0 and use templateId or set to 1 and provide whole template in the next parameters",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "widgetOriginalWidth",
+                        "in": "formData",
+                        "description": "This is the intended Width of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "widgetOriginalHeight",
+                        "in": "formData",
+                        "description": "This is the intended Height of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "currentTemplate",
+                        "in": "formData",
+                        "description": "Current template, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dailyTemplate",
+                        "in": "formData",
+                        "description": "Replaces [dailyForecast] in main template, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "styleSheet",
+                        "in": "formData",
+                        "description": "Optional StyleSheet, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "styleSheet",
+                        "in": "formData",
+                        "description": "Optional JavaScript, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/googleTraffic/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a Google Traffic Widget",
+                "description": "Add a new Google traffic Widget to the specified playlist",
+                "operationId": "WidgetGoogleTrafficAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add a Widget",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "zoom",
+                        "in": "formData",
+                        "description": "How far should the map be zoomed in? The higher the number the closer the zoom, 1 represents entire globe",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDisplayLocation",
+                        "in": "formData",
+                        "description": "Flag (0, 1) Use the location configured on display",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "longitude",
+                        "in": "formData",
+                        "description": "The longitude for this weather widget, only pass if useDisplayLocation set to 0",
+                        "required": false,
+                        "type": "number"
+                    },
+                    {
+                        "name": "latitude",
+                        "in": "formData",
+                        "description": "The latitude for this weather widget, only pass if useDisplayLocation set to 0",
+                        "required": false,
+                        "type": "number"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/hls/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a HLS Widget",
+                "description": "Add a new HLS Widget to the specified playlist",
+                "operationId": "WidgetHlsAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add a Widget to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "Edit Only - (0, 1) Select only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "uri",
+                        "in": "formData",
+                        "description": "URL to HLS video stream",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "mute",
+                        "in": "formData",
+                        "description": "Flag (0, 1) Should the video be muted?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "transparency",
+                        "in": "formData",
+                        "description": "Flag (0, 1), This causes some android devices to switch to a hardware accelerated web view",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/image/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Parameters for editing existing image on a layout",
+                "description": "Parameters for editing existing image on a layout, for adding new images, please refer to POST /library documentation",
+                "operationId": "WidgetImageEdit",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Edit only - Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "Edit Only - The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "Edit only (0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "scaleTypeId",
+                        "in": "formData",
+                        "description": "Edit only - Select scale type available options: center, stretch",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignId",
+                        "in": "formData",
+                        "description": "Edit only - Horizontal alignment - left, center, bottom",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "valignId",
+                        "in": "formData",
+                        "description": "Edit only - Vertical alignment - top, middle, bottom",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/localVideo/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a Local Video Widget",
+                "description": "Add a new Local Video Widget to the specified playlist",
+                "operationId": "WidgetLocalVideoAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add a Widget to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "uri",
+                        "in": "formData",
+                        "description": "A local file path or URL to the video. This can be RTSP stream.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "scaleTypeId",
+                        "in": "formData",
+                        "description": "How should the video be scaled, available options: aspect, stretch",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "mute",
+                        "in": "formData",
+                        "description": "Flag (0, 1) Should the video be muted?",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/pdf/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Parameters for editing existing pdf on a layout",
+                "description": "Parameters for editing existing pdf on a layout, for adding new files, please refer to POST /library documentation",
+                "operationId": "WidgetPdfEdit",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Edit only - Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "Edit Only - The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/shellCommand/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a Shell Command Widget",
+                "description": "Add a new Shell Command Widget to the specified playlist",
+                "operationId": "WidgetShellCommandAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add a Widget to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "windowsCommand",
+                        "in": "formData",
+                        "description": "Enter a Windows command line compatible command",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "linuxCommand",
+                        "in": "formData",
+                        "description": "Enter a Android / Linux command line compatible command",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "launchThroughCmd",
+                        "in": "formData",
+                        "description": "flag (0,1) Windows only, Should the player launch this command through the windows command line (cmd.exe)? This is useful for batch files, if you try to terminate this command only the command line will be terminated",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "terminateCommand",
+                        "in": "formData",
+                        "description": "flag (0,1) Should the player forcefully terminate the command after the duration specified, 0 to let the command terminate naturally",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useTaskkill",
+                        "in": "formData",
+                        "description": "flag (0,1) Windows only, should the player use taskkill to terminate commands",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "commandCode",
+                        "in": "formData",
+                        "description": "Enter a reference code for exiting command in CMS",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/stocks/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a Stocks Widget",
+                "description": "Add a new Stocks Widget to the specified playlist",
+                "operationId": "WidgetStocksAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add a Stocks widget",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "items",
+                        "in": "formData",
+                        "description": "Items wanted, can be comma separated",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "effect",
+                        "in": "formData",
+                        "description": "Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "speed",
+                        "in": "formData",
+                        "description": "The transition speed of the selected effect in milliseconds (1000 = normal)",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "backgroundColor",
+                        "in": "formData",
+                        "description": "A HEX color to use as the background color of this widget",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "noRecordsMessage",
+                        "in": "formData",
+                        "description": "A message to display when there are no records returned by the search query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dateFormat",
+                        "in": "formData",
+                        "description": "The format to apply to all dates returned by he widget",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "updateInterval",
+                        "in": "formData",
+                        "description": "Update interval in minutes, should be kept as high as possible, if data change once per hour, this should be set to 60",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "templateId",
+                        "in": "formData",
+                        "description": "Use pre-configured templates, available options: stocks1, stocks2",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "durationIsPerPage",
+                        "in": "formData",
+                        "description": "A flag (0, 1), The duration specified is per page, otherwise the widget duration is divided between the number of pages/items",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "overrideTemplate",
+                        "in": "formData",
+                        "description": "flag (0, 1) set to 0 and use templateId or set to 1 and provide whole template in the next parameters",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "maxItemsPerPage",
+                        "in": "formData",
+                        "description": "This is the intended number of items on each page",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "mainTemplate",
+                        "in": "formData",
+                        "description": "Main template, Pass only with overrideTemplate set to 1",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "itemtemplate",
+                        "in": "formData",
+                        "description": "Template for each item, replaces [itemsTemplate] in main template, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "styleSheet",
+                        "in": "formData",
+                        "description": "Optional StyleSheet Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "javaScript",
+                        "in": "formData",
+                        "description": "Optional JavaScript, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/text/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a Text Widget",
+                "description": "Add a new Text Widget to the specified playlist",
+                "operationId": "WidgetTextAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add a Widget to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "effect",
+                        "in": "formData",
+                        "description": "Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind, marqueeUp, marqueeDown, marqueeRight, marqueeLeft",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "speed",
+                        "in": "formData",
+                        "description": "The transition speed of the selected effect in milliseconds (1000 = normal) or the Marquee speed in a low to high scale (normal = 1)",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "backgroundcolor",
+                        "in": "formData",
+                        "description": "A HEX color to use as the background color of this widget",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "marqueeInlineSelector",
+                        "in": "formData",
+                        "description": "The selector to use for stacking marquee items in a line when scrolling left/right",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "text",
+                        "in": "formData",
+                        "description": "Enter the text to display",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "javaScript",
+                        "in": "formData",
+                        "description": "Optional JavaScript",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/ticker/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a ticker Widget",
+                "description": "Add a new ticker Widget to the specified playlist",
+                "operationId": "WidgetTickerAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add a Widget to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "sourceId",
+                        "in": "formData",
+                        "description": "Add only - 1 for rss feed, 2 for dataset",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "uri",
+                        "in": "formData",
+                        "description": "For sourceId=1, the link for the rss feed",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dataSetId",
+                        "in": "formData",
+                        "description": "For sourceId=2, Create ticker Widget using provided dataSetId of an existing dataSet",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "updateInterval",
+                        "in": "formData",
+                        "description": "EDIT Only - Update interval in minutes",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "effect",
+                        "in": "formData",
+                        "description": "Edit only - Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind, marqueeUp, marqueeDown, marqueeRight, marqueeLeft",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "speed",
+                        "in": "formData",
+                        "description": "Edit only - The transition speed of the selected effect in milliseconds (1000 = normal) or the Marquee speed in a low to high scale (normal = 1)",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "copyright",
+                        "in": "formData",
+                        "description": "EDIT Only and SourceId=1 - Copyright information to display as the last item in this feed. can be styled with the #copyright CSS selector",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "numItems",
+                        "in": "formData",
+                        "description": "EDIT Only and SourceId=1 - The number of RSS items you want to display",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "takeItemsFrom",
+                        "in": "formData",
+                        "description": "EDIT Only and SourceId=1 - Take the items form the beginning or the end of the list, available options: start, end",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "durationIsPerItem",
+                        "in": "formData",
+                        "description": "A flag (0, 1), The duration specified is per item, otherwise it is per feed",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "itemsSideBySide",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should items be shown side by side",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "upperLimit",
+                        "in": "formData",
+                        "description": "EDIT Only, SourceId=2 - Upper low limit for this dataSet, 0 for nor limit",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "lowerLimit",
+                        "in": "formData",
+                        "description": "EDIT Only, SourceId=2 - Lower low limit for this dataSet, 0 for nor limit",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "itemsPerPage",
+                        "in": "formData",
+                        "description": "EDIT Only - When in single mode, how many items per page should be shown",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dateFormat",
+                        "in": "formData",
+                        "description": "EDIT Only - The date format to apply to all dates returned by the ticker",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "allowedAttributes",
+                        "in": "formData",
+                        "description": "EDIT Only and SourceId=1 - A comma separated list of attributes that should not be stripped from the feed",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "stripTags",
+                        "in": "formData",
+                        "description": "EDIT Only and SourceId=1 - A comma separated list of attributes that should be stripped from the feed",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "backgroundColor",
+                        "in": "formData",
+                        "description": "Edit only - A HEX color to use as the background color of this widget",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "disableDateSort",
+                        "in": "formData",
+                        "description": "EDIT Only, SourceId=1 - Should the date sort applied to the feed be disabled?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "textDirection",
+                        "in": "formData",
+                        "description": "EDIT Only, SourceId=1 - Which direction does the text in the feed use? Available options: ltr, rtl",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "noDataMessage",
+                        "in": "formData",
+                        "description": "EDIT Only - A message to display when no data is returned from the source",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "templateId",
+                        "in": "formData",
+                        "description": "EDIT Only, SourceId=1 - Template you'd like to apply, options available: title-only, prominent-title-with-desc-and-name-separator, media-rss-with-title, media-rss-wth-left-hand-text",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "overrideTemplate",
+                        "in": "formData",
+                        "description": "EDIT Only, SourceId=1 - flag (0, 1) override template checkbox",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "template",
+                        "in": "formData",
+                        "description": "Template for each item, replaces [itemsTemplate] in main template, Pass only with overrideTemplate set to 1 or with sourceId=2 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "css",
+                        "in": "formData",
+                        "description": "Optional StyleSheet Pass only with overrideTemplate set to 1 or with sourceId=2 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "javaScript",
+                        "in": "formData",
+                        "description": "Optional JavaScript, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "filter",
+                        "in": "formData",
+                        "description": "EDIT Only, SourceId=2 - SQL clause for filter this dataSet",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ordering",
+                        "in": "formData",
+                        "description": "EDIT Only, SourceId=2- SQL clause for how this dataSet should be ordered",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "useOrderingClause",
+                        "in": "formData",
+                        "description": "EDIT Only, SourceId=2 - flag (0,1) Use advanced order clause - set to 1 if ordering is provided",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useFilteringClause",
+                        "in": "formData",
+                        "description": "EDIT Only, SourceId=2 - flag (0,1) Use advanced filter clause - set to 1 if filter is provided",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/twitter/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a Twitter Widget",
+                "description": "Add a new Twitter Widget to the specified playlist",
+                "operationId": "WidgetTwitterAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add a Twitter widget",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "searchTerm",
+                        "in": "formData",
+                        "description": "Twitter search term, you can test your search term in twitter.com search box first",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "effect",
+                        "in": "formData",
+                        "description": "Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "speed",
+                        "in": "formData",
+                        "description": "The transition speed of the selected effect in milliseconds (1000 = normal)",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "backgroundColor",
+                        "in": "formData",
+                        "description": "A HEX color to use as the background color of this widget",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "noTweetsMessage",
+                        "in": "formData",
+                        "description": "A message to display when there are no tweets returned by the search query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dateFormat",
+                        "in": "formData",
+                        "description": "The format to apply to all dates returned by he widget",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "resultType",
+                        "in": "formData",
+                        "description": "1 - Mixed, 2 -Recent 3 - Popular, Recent shows only recent tweets, Popular the most popular tweets and Mixed included both popular and recent",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "tweetDistance",
+                        "in": "formData",
+                        "description": "Distance in miles that the tweets should be returned from. Set 0 for no restrictions",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "tweetCount",
+                        "in": "formData",
+                        "description": "The number of tweets to return",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "removeUrls",
+                        "in": "formData",
+                        "description": "Flag (0, 1) Should the URLs be removed from the tweet text?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "removeMentions",
+                        "in": "formData",
+                        "description": "Flag (0, 1) Should mentions (@someone) be removed from the tweet text?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "removeHashtags",
+                        "in": "formData",
+                        "description": "Flag (0, 1) Should the hashtags (#something) be removed from the tweet text",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "updateInterval",
+                        "in": "formData",
+                        "description": "Update interval in minutes, should be kept as high as possible, if data change once per hour, this should be set to 60",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "durationIsPerItem",
+                        "in": "formData",
+                        "description": "A flag (0, 1), The duration specified is per page/item, otherwise the widget duration is divided between the number of pages/items",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "itemsPerPage",
+                        "in": "formData",
+                        "description": "EDIT Only - When in single mode, how many items per page should be shown",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "templateId",
+                        "in": "formData",
+                        "description": "Use pre-configured templates, available options: full-timeline-np, full-timeline, tweet-only, tweet-with-profileimage-left, tweet-with-profileimage-right, tweet-1, tweet-2, tweet-4. tweet-6NP, tweet-6PL, tweet-7, tweet-8",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "overrideTemplate",
+                        "in": "formData",
+                        "description": "flag (0, 1) set to 0 and use templateId or set to 1 and provide whole template in the next parameters",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "widgetOriginalWidth",
+                        "in": "formData",
+                        "description": "This is the intended Width of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "widgetOriginalHeight",
+                        "in": "formData",
+                        "description": "This is the intended Height of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "widgetOriginalPadding",
+                        "in": "formData",
+                        "description": "This is the intended Padding of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "resultContent",
+                        "in": "formData",
+                        "description": "Indented content Type, available Options: 1 - All Tweets 2 - Tweets with the text only content 3 - Tweets with the text and image content. Pass only with overrideTemplate set to 1",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "template",
+                        "in": "formData",
+                        "description": "Main template, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "styleSheet",
+                        "in": "formData",
+                        "description": "Optional StyleSheet Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "javaScript",
+                        "in": "formData",
+                        "description": "Optional JavaScript, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/video/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Parameters for editing existing video on a layout",
+                "description": "Parameters for editing existing video on a layout, for adding new videos, please refer to POST /library documentation",
+                "operationId": "WidgetVideoEdit",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Edit only - Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "Edit Only - (0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "Edit Only - The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "scaleTypeId",
+                        "in": "formData",
+                        "description": "How should the video be scaled, available options: aspect, stretch",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "mute",
+                        "in": "formData",
+                        "description": "Edit only - Flag (0, 1) Should the video be muted?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "loop",
+                        "in": "formData",
+                        "description": "Edit only - Flag (0, 1) Should the video loop (only for duration > 0 )?",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/webpage/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a Web page Widget",
+                "description": "Add a new Web page Widget to the specified playlist",
+                "operationId": "WidgetWebpageAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add a Web page to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Web page Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "transparency",
+                        "in": "formData",
+                        "description": " flag (0,1) should the HTML be shown with a transparent background?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "uri",
+                        "in": "formData",
+                        "description": " string containing the location (URL) of the web page",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "scaling",
+                        "in": "formData",
+                        "description": "For Manual position the percentage to scale the Web page (0-100)",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "offsetLeft",
+                        "in": "formData",
+                        "description": "For Manual position, the starting point from the left in pixels",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "offsetTop",
+                        "in": "formData",
+                        "description": "For Manual position, the starting point from the Top in pixels",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "pageWidth",
+                        "in": "formData",
+                        "description": "For Manual Position and Best Fit, The width of the page - if empty it will use region width",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "pageHeight",
+                        "in": "formData",
+                        "description": "For Manual Position and Best Fit, The height of the page - if empty it will use region height",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "modeId",
+                        "in": "formData",
+                        "description": "The mode option for Web page, 1- Open Natively, 2- Manual Position, 3- Best Ft",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -4793,6 +7327,10 @@
                 },
                 "name": {
                     "description": "Application Name",
+                    "type": "string"
+                },
+                "owner": {
+                    "description": "Application Owner",
                     "type": "string"
                 },
                 "expires": {
@@ -5977,6 +8515,10 @@
                 "dayPartId": {
                     "description": "The Day Part Id",
                     "type": "integer"
+                },
+                "syncTimezone": {
+                    "description": "Flag indicating whether the event will sync to the Display timezone",
+                    "type": "integer"
                 }
             }
         },
@@ -6429,6 +8971,10 @@
         {
             "name": "playlist",
             "description": "Playlists"
+        },
+        {
+            "name": "widget",
+            "description": "Widgets"
         },
         {
             "name": "campaign",

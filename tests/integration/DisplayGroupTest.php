@@ -807,7 +807,7 @@ class DisplayGroupTest extends LocalWebTestCase
         $name = Random::generateString(8, 'phpunit');
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
         # Create new command
-        $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunit code');
+        $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunitcode');
         # Send command to display group
         $this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/action/command' , [
 		'commandId' => $command->commandId

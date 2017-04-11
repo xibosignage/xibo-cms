@@ -168,7 +168,6 @@ CREATE TABLE IF NOT EXISTS `display` (
   `client_version` varchar(15) DEFAULT NULL,
   `client_code` smallint(6) DEFAULT NULL,
   `displayprofileid` int(11) DEFAULT NULL,
-  `currentLayoutId` int(11) DEFAULT NULL,
   `screenShotRequested` tinyint(4) NOT NULL DEFAULT '0',
   `storageAvailableSpace` bigint(20) DEFAULT NULL,
   `storageTotalSpace` bigint(20) DEFAULT NULL,

@@ -177,7 +177,7 @@ class Ticker extends ModuleWidget
      * @SWG\Post(
      *  path="/playlist/widget/ticker/{playlistId}",
      *  operationId="WidgetTickerAdd",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Add a ticker Widget",
      *  description="Add a new ticker Widget to the specified playlist",
      *  @SWG\Parameter(
@@ -540,10 +540,13 @@ class Ticker extends ModuleWidget
             }
 
             $this->setOption('filterClauses', json_encode($filterClauseMapping));
-        }
 
-        if( $this->getOption('overrideTemplate') == 1 ){
-            // Text Template
+            // DataSet Tickers always have Templates provided.
+            $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
+            $this->setRawNode('css', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('css', null)));
+
+        } else if ($this->getOption('overrideTemplate') == 1) {
+            // Feed tickers should only use the template if they have override set.
             $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
             $this->setRawNode('css', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('css', null)));
         }
@@ -611,18 +614,26 @@ class Ticker extends ModuleWidget
         $takeItemsFrom = $this->getOption('takeItemsFrom', 'start');
         $itemsPerPage = $this->getOption('itemsPerPage', 0);
 
+        // Text/CSS subsitution variables.
+        $text = null;
+        $css = null;
+
         // Get CSS and HTML template from the original template or from the input field
-        if( $this->getOption('overrideTemplate') == 0 ) {
-            
+        if ($this->getOption('sourceId') != 2 && $this->getOption('overrideTemplate') == 0) {
+            // Feed tickers without override set.
             $template = $this->getTemplateById($this->getOption('templateId'));
             
             if (isset($template)) {
                 $text = $template['template'];
                 $css = $template['css'];
-            }
-        } else {
+            } else {
                 $text = $this->getRawNode('template', '');
                 $css = $this->getRawNode('css', '');
+            }
+        } else {
+            // DataSet tickers or feed tickers without overrides.
+            $text = $this->getRawNode('template', '');
+            $css = $this->getRawNode('css', '');
         }
         
         // Parse library references on the template
@@ -754,7 +765,7 @@ class Ticker extends ModuleWidget
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
     }
@@ -767,7 +778,7 @@ class Ticker extends ModuleWidget
         // Create a key to use as a caching key for this item.
         // the rendered feed will be cached, so it is important the key covers all options.
         $feedUrl = urldecode($this->getOption('uri'));
-        $cache = $this->getPool()->getItem(md5(json_encode($this->widget->widgetOptions)));
+        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($isPreview . ' ' . json_encode($this->widget->widgetOptions))));
 
         $items = $cache->get();
 
@@ -885,12 +896,15 @@ class Ticker extends ModuleWidget
                                 default:
                                     // Default behaviour just tries to get the content from the tag provided.
                                     // it uses the attribute as a namespace if one has been provided
-                                    $tags = $item->getTag($tag, $attribute);
+                                    if ($attribute != null)
+                                        $tags = $item->getTag($tag, $attribute);
+                                    else
+                                        $tags = $item->getTag($tag);
 
-                                    if (count($tags) > 0)
+                                    if (count($tags) > 0 && !empty($tags[0]))
                                         $link = $tags[0];
                                     else
-                                        $this->getLog()->debug('Tag not found for ' . $tag . ' attribute ' . $attribute);
+                                        $this->getLog()->debug('Tag not found for [' . $tag . '] attribute [' . $attribute . ']');
                             }
 
                             $this->getLog()->debug('Resolved link: ' . $link);
@@ -905,7 +919,7 @@ class Ticker extends ModuleWidget
                                 $this->assignMedia($file->mediaId);
 
                                 $replace = ($isPreview)
-                                    ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" ' . $attribute . '/>'
+                                    ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" ' . $attribute . '/>'
                                     : '<img src="' . $file->storedAs . '" ' . $attribute . ' />';
                             }
                         } else {
@@ -977,7 +991,7 @@ class Ticker extends ModuleWidget
                                         $this->assignMedia($file->mediaId);
 
                                         $replace = ($isPreview)
-                                            ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
+                                            ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                                             : '<img src="' . $file->storedAs . '" />';
                                     } else {
                                         $this->getLog()->debug('No image found for image tag using getEnclosureUrl');
@@ -1212,7 +1226,7 @@ class Ticker extends ModuleWidget
                             $this->assignMedia($file->mediaId);
 
                             $replace = ($isPreview)
-                                ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
+                                ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                                 : '<img src="' . $file->storedAs . '" />';
 
                         } else if ($mappings[$header]['dataTypeId'] == 5) {
@@ -1230,7 +1244,7 @@ class Ticker extends ModuleWidget
                             $this->assignMedia($file->mediaId);
 
                             $replace = ($isPreview)
-                                ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
+                                ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                                 : '<img src="' . $file->storedAs . '" />';
                         }
                     }

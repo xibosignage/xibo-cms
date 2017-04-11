@@ -452,12 +452,24 @@ class User implements \JsonSerializable
      */
     public function setNewPassword($password, $oldPassword = null)
     {
+        // Validate the old password if one is provided
         if ($oldPassword != null) {
             $this->checkPassword($oldPassword);
         }
 
+        // Test against a policy if one exists
         $this->testPasswordAgainstPolicy($password);
 
+        // Set the hash
+        $this->setNewPasswordHash($password);
+    }
+
+    /**
+     * Set a new password and hash
+     * @param string $password
+     */
+    private function setNewPasswordHash($password)
+    {
         $this->password = password_hash($password, PASSWORD_DEFAULT);
         $this->CSPRNG = 2;
     }
@@ -511,7 +523,11 @@ class User implements \JsonSerializable
     {
         if (($this->CSPRNG == 0 || $this->CSPRNG == 1) || ($this->CSPRNG == 2 && password_needs_rehash($this->password, PASSWORD_DEFAULT))) {
             $this->getLog()->debug('Converting password to use latest hash');
-            $this->setNewPassword($password);
+
+            // Set the hash
+            $this->setNewPasswordHash($password);
+
+            // Save
             $this->save(['validate' => false, 'passwordUpdate' => true]);
         }
     }
@@ -983,8 +999,8 @@ class User implements \JsonSerializable
                     // Create a new permission record with the max of current and new
                     $new = $this->permissionFactory->createEmpty();
                     $new->view = max($permission->view, $old->view);
-                    $new->edit = max($permission->view, $old->view);
-                    $new->delete = max($permission->view, $old->view);
+                    $new->edit = max($permission->edit, $old->edit);
+                    $new->delete = max($permission->delete, $old->delete);
 
                     $this->permissionCache[$entity][$permission->objectId] = $new;
                 }

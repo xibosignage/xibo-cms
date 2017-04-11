@@ -34,7 +34,7 @@
  */
 
 // Include gulp
-var version = '1.8.0-rc2';
+var version = '1.8.1';
 var gulp = require("gulp");
 var del = require("del");
 var composer = require("gulp-composer");
@@ -79,6 +79,7 @@ gulp.task('build-php-archive', function() {
             '**/*',
             '*/.htaccess',
             '!composer.*',
+            '!docker-compose.yml',
             '!*.json*',
             '!Vagrantfile',
             '!phpunit.xml',

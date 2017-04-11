@@ -142,13 +142,11 @@ class MediaFactory extends BaseFactory
         }
 
         try {
-            $media = $this->getByName($name);
+            $media = $this->getByNameAndType($name, 'module');
 
             // Reassert the new file (which we might want to download)
             $media->fileName = $file;
-
-            if ($media->mediaType != 'module')
-                throw new NotFoundException();
+            $media->storedAs = $name;
         }
         catch (NotFoundException $e) {
             $media = $this->createEmpty();
@@ -157,7 +155,7 @@ class MediaFactory extends BaseFactory
             $media->mediaType = 'module';
             $media->expires = 0;
             $media->storedAs = $name;
-            $media->ownerId = 1;
+            $media->ownerId = $this->getUserFactory()->getSystemUser()->getOwnerId();
             $media->moduleSystemFile = $systemFile;
         }
 
@@ -201,6 +199,8 @@ class MediaFactory extends BaseFactory
 
         $media = $this->createModuleFile($name, $uri);
         $media->isRemote = true;
+
+        // We update the desired expiry here - isSavedRequired is tested agains the original value
         $media->expires = $expiry;
 
         // Save the file, but do not download yet.
@@ -250,7 +250,7 @@ class MediaFactory extends BaseFactory
                 try {
                     $item->saveFile();
                 } catch (\Exception $e) {
-                    $this->getLog()->error('Unable to save:' . $item->mediaId);
+                    $this->getLog()->error('Unable to save:' . $item->mediaId . '. ' . $e->getMessage());
                 }
             },
             'rejected' => function ($reason, $index) use ($log) {
@@ -304,6 +304,23 @@ class MediaFactory extends BaseFactory
     public function getByName($name)
     {
         $media = $this->query(null, array('disableUserCheck' => 1, 'nameExact' => $name, 'allModules' => 1));
+
+        if (count($media) <= 0)
+            throw new NotFoundException(__('Cannot find media'));
+
+        return $media[0];
+    }
+
+    /**
+     * Get by Media Name
+     * @param string $name
+     * @param string $type
+     * @return Media
+     * @throws NotFoundException
+     */
+    public function getByNameAndType($name, $type)
+    {
+        $media = $this->query(null, array('disableUserCheck' => 1, 'nameExact' => $name, 'type' => $type, 'allModules' => 1));
 
         if (count($media) <= 0)
             throw new NotFoundException(__('Cannot find media'));
@@ -419,7 +436,9 @@ class MediaFactory extends BaseFactory
         $body = " FROM media ";
         $body .= "   LEFT OUTER JOIN media parentmedia ";
         $body .= "   ON parentmedia.MediaID = media.MediaID ";
-        $body .= "   INNER JOIN `user` ON `user`.userId = `media`.userId ";
+
+        // Media might be linked to the system user (userId 0)
+        $body .= "   LEFT OUTER JOIN `user` ON `user`.userId = `media`.userId ";
 
         if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
             $body .= '
@@ -445,6 +464,7 @@ class MediaFactory extends BaseFactory
             $body .= '
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`)
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkmediadisplaygroup`)
+                AND media.mediaId NOT IN (SELECT backgroundImageId FROM `layout`)
                 AND media.type <> \'module\'
                 AND media.type <> \'font\'
             ';

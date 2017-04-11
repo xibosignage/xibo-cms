@@ -322,6 +322,7 @@ class State extends Middleware
             $pool = new Pool($composite);
             $pool->setLogger($logWriter);
             $pool->setNamespace($configService->getCacheNamespace());
+            $configService->setPool($pool);
             return $pool;
         });
     }
@@ -941,6 +942,7 @@ class State extends Middleware
                 $container->helpService,
                 $container->dateService,
                 $container->configService,
+                $container->store,
                 $container->upgradeFactory
             );
         });
@@ -1179,7 +1181,8 @@ class State extends Middleware
                 $container->moduleFactory,
                 $container->resolutionFactory,
                 $container->widgetFactory,
-                $container->widgetOptionFactory
+                $container->widgetOptionFactory,
+                $container->playlistFactory
             );
         });
 

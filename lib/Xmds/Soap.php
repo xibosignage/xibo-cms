@@ -688,6 +688,15 @@ class Soap
             }
         }
 
+        // Set any remaining required files to have 0 bytes requested (as we've generated a new nonce)
+        try {
+            $this->getStore()->update('UPDATE `requiredfile` SET bytesRequested = 0 WHERE displayId = :displayId', [
+                'displayId' => $this->display->displayId
+            ]);
+        } catch (DeadlockException $deadlockException) {
+            $this->getLog()->error('Deadlock when updating required files bytesRequested - ignoring and continuing with request');
+        }
+
         // Phone Home?
         $this->phoneHome();
 
@@ -1156,7 +1165,6 @@ class Soap
         $discardedLogs = 0;
 
         // Get the display timezone to use when adjusting log dates.
-        $timeZone = $this->display->getSetting('displayTimeZone', '');
         $defaultTimeZone = $this->getConfig()->GetSetting('defaultTimezone');
 
         // Store processed logs in an array
@@ -1208,7 +1216,7 @@ class Soap
             }
 
             // Adjust the date according to the display timezone
-            $date = ($timeZone != null) ? Date::createFromFormat('Y-m-d H:i:s', $date, $timeZone)->tz($defaultTimeZone) : Date::createFromFormat('Y-m-d H:i:s', $date);
+            $date = ($this->display->timeZone != null) ? Date::createFromFormat('Y-m-d H:i:s', $date, $this->display->timeZone)->tz($defaultTimeZone) : Date::createFromFormat('Y-m-d H:i:s', $date);
             $date = $this->getDate()->getLocalDate($date);
 
             // Get the date and the message (all log types have these)
@@ -1236,12 +1244,18 @@ class Soap
             if ($message == '')
                 $message = $node->textContent;
 
+            // Trim the page if it is over 50 characters.
+            $page = $thread . $method . $type;
+
+            if (strlen($page) >= 50)
+                $page = substr($page, 0, 49);
+
             $logs[] = [
                 $this->logProcessor->getUid(),
                 $date,
                 'PLAYER',
                 $levelName,
-                $thread . $method . $type,
+                $page,
                 'POST',
                 $message . $scheduleId . $layoutId . $mediaId,
                 0,
@@ -1347,6 +1361,12 @@ class Soap
             // MediaId is actually the widgetId (since 1.8) and the mediaId is looked up by this service
             $widgetId = $node->getAttribute('mediaid');
             $mediaId = 0;
+
+            // Ignore old "background" stat records.
+            if ($widgetId === 'background') {
+                $this->getLog()->info('Ignoring old "background" stat record.');
+                continue;
+            }
 
             // The mediaId (really widgetId) might well be null
             if ($widgetId == 'null' || $widgetId == '')

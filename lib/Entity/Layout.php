@@ -488,6 +488,7 @@ class Layout implements \JsonSerializable
 
     /**
      * Load Playlists
+     * @param array $options
      */
     public function loadPlaylists($options = [])
     {
@@ -572,7 +573,7 @@ class Layout implements \JsonSerializable
         $this->getLog()->debug('Save finished for %s', $this);
 
         if ($options['audit'])
-            $this->getLog()->audit('Layout', $this->layoutId, 'Saved', $this->getChangedProperties());
+            $this->audit($this->layoutId, 'Saved');
     }
 
     /**
@@ -660,7 +661,7 @@ class Layout implements \JsonSerializable
             throw new InvalidArgumentException(__("Description can not be longer than 254 characters"), 'description');
 
         // Check for duplicates
-        $duplicates = $this->layoutFactory->query(null, array('userId' => $this->ownerId, 'layoutExact' => $this->layout, 'notLayoutId' => $this->layoutId));
+        $duplicates = $this->layoutFactory->query(null, array('userId' => $this->ownerId, 'layoutExact' => $this->layout, 'notLayoutId' => $this->layoutId, 'disableUserCheck' => 1));
 
         if (count($duplicates) > 0)
             throw new DuplicateEntityException(sprintf(__("You already own a layout called '%s'. Please choose another name."), $this->layout));

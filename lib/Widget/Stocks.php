@@ -21,8 +21,6 @@
  */
 namespace Xibo\Widget;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\ModuleFactory;
 
@@ -340,7 +338,7 @@ class Stocks extends YahooBase
         $yql = str_replace('[Item]', implode(',', $itemsJoined), $yql);
 
         // Fire off a request for the data
-        $cache = $this->getPool()->getItem('finance/' . md5($yql));
+        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($yql)));
 
         $data = $cache->get();
 
@@ -595,7 +593,9 @@ class Stocks extends YahooBase
         
         $backgroundColor = $this->getOption('backgroundColor');
         if ($backgroundColor != '') {
-            $headContent .= '<style type="text/css"> .container-main, .page, .item { background-color: ' . $backgroundColor . ' }</style>';
+            $headContent .= '<style type="text/css"> body { background-color: ' . $backgroundColor . ' }</style>';
+        } else {
+          $headContent .= '<style type="text/css"> body { background-color: transparent }</style>';
         }
         
         // Add the CSS if it isn't empty, and replace the wallpaper
@@ -633,7 +633,7 @@ class Stocks extends YahooBase
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
     }

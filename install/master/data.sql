@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.8.0-rc3', 5, 2, 130);
+('1.8.1', 5, 2, 132);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`, `isSystemNotification`) VALUES
 (1, 'Users', 0, 0, 0),
@@ -230,7 +230,12 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (91, 'RESTING_LOG_LEVEL', 'Error', 'dropdown', 'Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems "error" is recommended.', 'Emergency|Alert|Critical|Error', 'troubleshooting', 1, 'Resting Log Level', '', 19, 'error', 1, 'word'),
 (92, 'TASK_CONFIG_LOCKED_CHECKB', 'Unchecked', 'dropdown', 'Is the task config locked? Useful for Service providers.', 'Checked|Unchecked', 'defaults', 0, 'Lock Task Config', '', 30, 'Unchecked', 0, 'word'),
 (93, 'WHITELIST_LOAD_BALANCERS', '', 'text', 'If the CMS is behind a load balancer, what are the load balancer IP addresses, comma delimited.', '', 'network', 1, 'Whitelist Load Balancers', '', 100, '', 1, 'string'),
-(94, 'DEFAULT_LAYOUT', '1', 'text', 'The default layout to assign for new displays and displays which have their current default deleted.', '1', 'displays', 1, 'Default Layout', '', 4, '', 1, 'int');
+(94, 'DEFAULT_LAYOUT', '1', 'text', 'The default layout to assign for new displays and displays which have their current default deleted.', '1', 'displays', 1, 'Default Layout', '', 4, '', 1, 'int'),
+(95, 'DISPLAY_PROFILE_STATS_DEFAULT', '0', 'checkbox', NULL, NULL, 'displays', 1, 'Default setting for Statistics Enabled?', '', 70, '0', 1, 'checkbox'),
+(96, 'DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED', '1', 'checkbox', NULL, NULL, 'displays', 1, 'Enable the option to report the current layout status?', '', 80, '0', 1, 'checkbox'),
+(97, 'DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED', '1', 'checkbox', NULL, NULL, 'displays', 1, 'Enable the option to set the screenshot interval?', '', 90, '0', 1, 'checkbox'),
+(98, 'DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', '200', 'number', 'The default size in pixels for the Display Screenshots', NULL, 'displays', 1, 'Display Screenshot Default Size', '', 100, '200', 1, 'int'),
+(99, 'LATEST_NEWS_URL', 'http://xibo.org.uk/feed', 'text', 'RSS/Atom Feed to be displayed on the Status Dashboard', '', 'general', 0, 'Latest News URL', '', 111, '', 0, 'string');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),

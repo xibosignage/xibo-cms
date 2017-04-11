@@ -8,9 +8,6 @@
 
 namespace Xibo\Helper;
 
-
-use Slim\Slim;
-
 /**
  * Class HttpsDetect
  * @package Xibo\Helper
@@ -18,14 +15,13 @@ use Slim\Slim;
 class HttpsDetect
 {
     /**
-     * @param Slim $slim
      * @return string
      */
-    public function getUrl($slim)
+    public function getUrl()
     {
-        $url = $this->getScheme() . '://' . $slim->request()->getHost();
-        if (($this->getScheme() === 'https' && $slim->request()->getPort() !== 443) || ($this->getScheme() === 'http' && $slim->request()->getPort() !== 80)) {
-            $url .= sprintf(':%s', $slim->request()->getPort());
+        $url = $this->getScheme() . '://' . $this->getHost();
+        if (($this->getScheme() === 'https' && $this->getPort() !== 443) || ($this->getScheme() === 'http' && $this->getPort() !== 80)) {
+            $url .= sprintf(':%s', $this->getPort());
         }
 
         return $url;
@@ -36,13 +32,47 @@ class HttpsDetect
      */
     public function getScheme()
     {
-        return ($this->detect()) ? 'https' : 'http';
+        return ($this->isHttps()) ? 'https' : 'http';
     }
 
     /**
+     * Get Host
+     * @return string
+     */
+    public function getHost()
+    {
+        if (isset($_SERVER['HTTP_HOST'])) {
+            if (strpos($_SERVER['HTTP_HOST'], ':') !== false) {
+                $hostParts = explode(':', $_SERVER['HTTP_HOST']);
+
+                return $hostParts[0];
+            }
+
+            return $_SERVER['HTTP_HOST'];
+        }
+
+        return $_SERVER['SERVER_NAME'];
+    }
+
+    /**
+     * Get Port
+     * @return int
+     */
+    public function getPort()
+    {
+        if (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], ':') !== false) {
+            $hostParts = explode(':', $_SERVER['HTTP_HOST']);
+            return $hostParts[1];
+        }
+
+        return ($this->isHttps() ? 443 : 80);
+    }
+
+    /**
+     * Is HTTPs?
      * @return bool
      */
-    public function detect()
+    public function isHttps()
     {
         return (
             (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ||

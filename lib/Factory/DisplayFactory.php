@@ -181,8 +181,6 @@ class DisplayFactory extends BaseFactory
                   display.client_version AS clientVersion,
                   display.client_code AS clientCode,
                   display.displayProfileId,
-                  display.currentLayoutId,
-                  currentLayout.layout AS currentLayout,
                   display.screenShotRequested,
                   display.storageAvailableSpace,
                   display.storageTotalSpace,
@@ -204,8 +202,6 @@ class DisplayFactory extends BaseFactory
                         AND `displaygroup`.isDisplaySpecific = 1
                     LEFT OUTER JOIN layout 
                     ON layout.layoutid = display.defaultlayoutid
-                    LEFT OUTER JOIN layout currentLayout 
-                    ON currentLayout.layoutId = display.currentLayoutId
             ';
 
         // Restrict to members of a specific display group
@@ -221,12 +217,22 @@ class DisplayFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'displaygroup.displaygroupid', null, $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'displaygroup.displayGroupId', null, $filterBy);
 
         // Filter by Display ID?
         if ($this->getSanitizer()->getInt('displayId', $filterBy) !== null) {
             $body .= ' AND display.displayid = :displayId ';
             $params['displayId'] = $this->getSanitizer()->getInt('displayId', $filterBy);
+        }
+
+        // Display Profile
+        if ($this->getSanitizer()->getInt('displayProfileId', $filterBy) !== null) {
+            if ($this->getSanitizer()->getInt('displayProfileId', $filterBy) == -1) {
+                $body .= ' AND IFNULL(displayProfileId, 0) = 0 ';
+            } else {
+                $body .= ' AND `display`.displayProfileId = :displayProfileId ';
+                $params['displayProfileId'] = $this->getSanitizer()->getInt('displayProfileId', $filterBy);
+            }
         }
 
         // Filter by Wake On LAN

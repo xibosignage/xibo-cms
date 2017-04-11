@@ -161,6 +161,7 @@ class Maintenance extends Base
     {
         $tidyOldRevisions = $this->getSanitizer()->getCheckbox('tidyOldRevisions');
         $cleanUnusedFiles = $this->getSanitizer()->getCheckbox('cleanUnusedFiles');
+        $tidyGenericFiles = $this->getSanitizer()->getCheckbox('tidyGenericFiles');
 
         if ($this->getConfig()->GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
             throw new AccessDeniedException(__('Sorry this function is disabled.'));
@@ -195,8 +196,10 @@ class Maintenance extends Base
         foreach ($this->store->select($sql, []) as $row) {
             $media[$row['storedAs']] = $row;
 
+            $type = $this->getSanitizer()->getString('type', $row);
+
             // Ignore any module files or fonts
-            if ($row['type'] == 'module' || $row['type'] == 'font')
+            if ($type == 'module' || $type == 'font' || ($type == 'genericfile' && $tidyGenericFiles != 1))
                 continue;
 
             // Collect media revisions that aren't used

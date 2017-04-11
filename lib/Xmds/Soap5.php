@@ -30,7 +30,7 @@ class Soap5 extends Soap4
      * @return string
      * @throws \SoapFault
      */
-    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel, $xmrPubKey)
+    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel = null, $xmrPubKey = null)
     {
         $this->logProcessor->setRoute('RegisterDisplay');
 
@@ -116,7 +116,8 @@ class Soap5 extends Soap4
 
                 // Add some special settings
                 $nodeName = ($clientType == 'windows') ? 'DisplayName' : 'displayName';
-                $node = $return->createElement($nodeName, $display->display);
+                $node = $return->createElement($nodeName);
+                $node->appendChild($return->createTextNode($display->display));
                 $node->setAttribute('type', 'string');
                 $displayElement->appendChild($node);
 

@@ -38,7 +38,7 @@ class Embedded extends ModuleWidget
      * @SWG\Post(
      *  path="/playlist/widget/embedded/{playlistId}",
      *  operationId="WidgetEmbeddedAdd",
-     *  tags={"Widget"},
+     *  tags={"widget"},
      *  summary="Add a Embedded Widget",
      *  description="Add a new Embedded Widget to the specified playlist",
      *  @SWG\Parameter(
@@ -230,7 +230,7 @@ class Embedded extends ModuleWidget
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
     }

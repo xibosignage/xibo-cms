@@ -397,6 +397,22 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
+     * Get module by InstallName
+     * @param string $installName
+     * @return Module
+     * @throws NotFoundException
+     */
+    public function getByInstallName($installName)
+    {
+        $modules = $this->query(null, ['installName' => $installName]);
+
+        if (count($modules) <= 0)
+            throw new NotFoundException();
+
+        return $modules[0];
+    }
+
+    /**
      * Get Enabled
      * @return Module[]
      */
@@ -523,6 +539,11 @@ class ModuleFactory extends BaseFactory
             if ($this->getSanitizer()->getString('name', $filterBy) != '') {
                 $params['name'] = $this->getSanitizer()->getString('name', $filterBy);
                 $body .= ' AND name = :name ';
+            }
+
+            if ($this->getSanitizer()->getString('installName', $filterBy) != null) {
+                $params['installName'] = $this->getSanitizer()->getString('installName', $filterBy);
+                $body .= ' AND installName = :installName ';
             }
 
             if ($this->getSanitizer()->getString('type', $filterBy) != '') {
