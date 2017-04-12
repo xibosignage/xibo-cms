@@ -30,8 +30,8 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class ConfigService implements ConfigServiceInterface
 {
-    public static $WEBSITE_VERSION_NAME = '1.8.0';
-    public static $WEBSITE_VERSION = 131;
+    public static $WEBSITE_VERSION_NAME = '1.8.1';
+    public static $WEBSITE_VERSION = 132;
     public static $VERSION_REQUIRED = '5.5';
     public static $VERSION_UNSUPPORTED = '7.0';
 
@@ -316,6 +316,8 @@ class ConfigService implements ConfigServiceInterface
 
             if ($setting == 'ELEVATE_LOG_UNTIL' && intval($data) > time())
                 $item->expiresAfter(intval($data) - time());
+            else if ($setting == 'LIBRARY_SIZE_LIMIT_KB' || $setting == 'MONTHLY_XMDS_TRANSFER_LIMIT_KB' || $setting == 'MAX_LICENSED_DISPLAYS')
+                $item->expiresAfter(60 * 5);
 
             $this->getPool()->saveDeferred($item->set($data));
         }

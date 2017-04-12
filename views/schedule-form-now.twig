@@ -16,7 +16,7 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#scheduleNowForm").submit()
+    {% trans "Save" %}, scheduleNowFormSubmit($("#scheduleNowForm"))
 {% endblock %}
 
 {% block callBack %}setupScheduleNowForm{% endblock %}

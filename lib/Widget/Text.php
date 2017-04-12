@@ -321,12 +321,13 @@ class Text extends ModuleWidget
         return $this->renderTemplate($data);
     }
 
+    /** @inheritdoc */
     public function hoverPreview()
     {
         // Default Hover window contains a thumbnail, media type and duration
         $output = parent::hoverPreview();
 
-        $output .= '<div class="hoverPreview">';
+        $output .= '<div class="hoverPreview" data-scale="true">';
         $output .= '    ' . $this->getRawNode('text', null);;
         $output .= '</div>';
 

@@ -736,15 +736,15 @@ class Media implements \JsonSerializable
 
             // We could be a fresh file entirely, or we could be a clone
             if ($this->cloned) {
-                $this->getLog()->debug('Copying cloned file');
+                $this->getLog()->debug('Copying cloned file: ' . $libraryFolder . $this->fileName);
                 // Copy the file into the library
                 if (!@copy($libraryFolder . $this->fileName, $libraryFolder . $saveName))
                     throw new ConfigurationException(__('Problem copying file in the Library Folder'));
 
             } else {
-                $this->getLog()->debug('Moving temporary file');
+                $this->getLog()->debug('Moving temporary file: ' . $libraryFolder . 'temp/' . $this->fileName);
                 // Move the file into the library
-                if (!@rename($libraryFolder . 'temp/' . $this->fileName, $libraryFolder . $saveName))
+                if (!$this->moveFile($libraryFolder . 'temp/' . $this->fileName, $libraryFolder . $saveName))
                     throw new ConfigurationException(__('Problem moving uploaded file into the Library Folder'));
             }
 
@@ -759,13 +759,13 @@ class Media implements \JsonSerializable
             }
 
             if ($this->isRemote) {
-                $this->getLog()->debug('Moving temporary file');
+                $this->getLog()->debug('Moving temporary file: ' . $libraryFolder . 'temp/' . $this->name);
 
                 // Move the file into the library
-                if (!@rename($libraryFolder . 'temp/' . $this->name, $libraryFolder . $this->storedAs))
+                if (!$this->moveFile($libraryFolder . 'temp/' . $this->name, $libraryFolder . $this->storedAs))
                     throw new ConfigurationException(__('Problem moving downloaded file into the Library Folder'));
             } else {
-                $this->getLog()->debug('Copying specified file');
+                $this->getLog()->debug('Copying specified file: ' . $this->fileName);
 
                 if (!@copy($this->fileName, $libraryFolder . $this->storedAs)) {
                     $this->getLog()->error('Cannot copy %s to %s', $this->fileName, $libraryFolder . $this->storedAs);
@@ -799,28 +799,35 @@ class Media implements \JsonSerializable
             return;
         }
 
-        $this->unlink($this->storedAs);
-    }
-
-    /**
-     * Unlink a file
-     * @param string $fileName
-     */
-    public function unlink($fileName)
-    {
         // Library location
         $libraryLocation = $this->config->GetSetting("LIBRARY_LOCATION");
 
         // 3 things to check for..
         // the actual file, the thumbnail, the background
-        if (file_exists($libraryLocation . $fileName))
-            unlink($libraryLocation . $fileName);
+        if (file_exists($libraryLocation . $this->storedAs))
+            unlink($libraryLocation . $this->storedAs);
 
-        if (file_exists($libraryLocation . 'tn_' . $fileName))
-            unlink($libraryLocation . 'tn_' . $fileName);
+        if (file_exists($libraryLocation . 'tn_' . $this->storedAs))
+            unlink($libraryLocation . 'tn_' . $this->storedAs);
 
-        if (file_exists($libraryLocation . 'bg_' . $fileName))
-            unlink($libraryLocation . 'bg_' . $fileName);
+        if (file_exists($libraryLocation . 'bg_' . $this->storedAs))
+            unlink($libraryLocation . 'bg_' . $this->storedAs);
+    }
+
+    /**
+     * Workaround for moving files across file systems
+     * @param $from
+     * @param $to
+     * @return bool
+     */
+    private function moveFile($from, $to)
+    {
+        $return = copy($from, $to);
+
+        if (!@unlink($from))
+            $this->getLog()->error('Cannot delete file: ' . $to);
+
+        return $return;
     }
 
     /**

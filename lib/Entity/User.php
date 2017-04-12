@@ -999,8 +999,8 @@ class User implements \JsonSerializable
                     // Create a new permission record with the max of current and new
                     $new = $this->permissionFactory->createEmpty();
                     $new->view = max($permission->view, $old->view);
-                    $new->edit = max($permission->view, $old->view);
-                    $new->delete = max($permission->view, $old->view);
+                    $new->edit = max($permission->edit, $old->edit);
+                    $new->delete = max($permission->delete, $old->delete);
 
                     $this->permissionCache[$entity][$permission->objectId] = $new;
                 }

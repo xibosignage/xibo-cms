@@ -488,6 +488,7 @@ class Layout implements \JsonSerializable
 
     /**
      * Load Playlists
+     * @param array $options
      */
     public function loadPlaylists($options = [])
     {
