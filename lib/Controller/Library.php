@@ -543,7 +543,7 @@ class Library extends Base
      *  summary="Add Media",
      *  description="Add Media to the Library",
      *  @SWG\Parameter(
-     *      name="file",
+     *      name="files",
      *      in="formData",
      *      description="The Uploaded File",
      *      type="file",
