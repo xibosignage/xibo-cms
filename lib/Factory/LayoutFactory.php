@@ -29,6 +29,7 @@ use Xibo\Entity\DataSetColumn;
 use Xibo\Entity\Layout;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -573,9 +574,9 @@ class LayoutFactory extends BaseFactory
             $temporaryFileName = $libraryLocation . $file['file'];
 
             // Get the file from the ZIP
-            $fileContents = $zip->getFromName('library/' . $file['file']);
+            $fileStream = $zip->getStream('library/' . $file['file']);
 
-            if ($fileContents === false) {
+            if ($fileStream === false) {
                 // Log out the entire ZIP file and all entries.
                 $log = 'Problem getting library/' . $file['file'] . '. Files: ';
                 for ($i = 0; $i < $zip->numFiles; $i++) {
@@ -587,8 +588,17 @@ class LayoutFactory extends BaseFactory
                 throw new \InvalidArgumentException(__('Empty file in ZIP'));
             }
 
-            if (file_put_contents($temporaryFileName, $fileContents) === false)
-                throw new \InvalidArgumentException(__('Cannot save media file from ZIP file'));
+            // Open a file pointer to stream into
+            if (!$temporaryFileStream = fopen($temporaryFileName, 'w'))
+                throw new InvalidArgumentException(__('Cannot save media file from ZIP file'), 'temp');
+
+            // Loop over the file and write into the stream
+            while (!feof($fileStream)) {
+                fwrite($temporaryFileStream, fread($fileStream, 8192));
+            }
+
+            fclose($fileStream);
+            fclose($temporaryFileStream);
 
             // Check we don't already have one
             $newMedia = false;
