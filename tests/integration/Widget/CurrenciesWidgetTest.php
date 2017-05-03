@@ -201,7 +201,7 @@ class CurrenciesWidgetTest extends LocalWebTestCase
     public function testDelete()
     {
         # Create layout 
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Clock delete Layout', 'phpunit description', '', 9);
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('Currencies delete Layout', 'phpunit description', '', 9);
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create a currencies with wrapper
