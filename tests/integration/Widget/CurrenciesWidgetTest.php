@@ -54,6 +54,7 @@ class CurrenciesWidgetTest extends LocalWebTestCase
     }
     /**
      * @dataProvider provideSuccessCases
+     * @group broken
      */
     public function testAdd($isOverride, $templateId, $name, $duration, $useDuration, $base, $items, $reverseConversion, $effect, $speed, $backgroundColor, $noRecordsMessage, $dateFormat, $updateInterval, $durationIsPerPage, $widgetOriginalWidth, $widgetOriginalHeight, $maxItemsPerPage, $mainTemplate, $itemTemplate, $styleSheet, $javaScript)
     {
@@ -148,6 +149,9 @@ class CurrenciesWidgetTest extends LocalWebTestCase
         ];
     }
 
+    /**
+     * @group broken
+     */
     public function testEdit()
     {
         # Create layout 
@@ -198,6 +202,10 @@ class CurrenciesWidgetTest extends LocalWebTestCase
             }
         }
     }
+
+    /**
+     * @group broken
+     */
     public function testDelete()
     {
         # Create layout 
