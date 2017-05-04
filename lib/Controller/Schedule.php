@@ -397,7 +397,7 @@ class Schedule extends Base
         }
 
         // Get list of events
-        $scheduleForXmds = $this->scheduleFactory->getForXmds(($display === null) ? null : $display->displayId, $date->format('U'), $date->format('U'), $options);
+        $scheduleForXmds = $this->scheduleFactory->getForXmds(($display === null) ? null : $display->displayId, $date, $date, $options);
 
         $this->getLog()->debug(count($scheduleForXmds) . ' events returned for displaygroup and date');
 
@@ -784,6 +784,9 @@ class Schedule extends Base
                 $schedule->fromDt = $fromDt->startOfDay()->format('U');
                 $schedule->toDt = null;
 
+                if ($recurrenceRange != null)
+                    $schedule->recurrenceRange = $recurrenceRange->format('U');
+
             } else if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
                 // In some circumstances we want to trim the seconds from the provided dates.
                 // this happens when the date format provided does not include seconds and when the add
@@ -1050,6 +1053,9 @@ class Schedule extends Base
                 $schedule->fromDt = $fromDt->startOfDay()->format('U');
                 $schedule->toDt = null;
 
+                if ($recurrenceRange != null)
+                    $schedule->recurrenceRange = $recurrenceRange->format('U');
+
             } else if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
                 // In some circumstances we want to trim the seconds from the provided dates.
                 // this happens when the date format provided does not include seconds and when the add
@@ -1138,8 +1144,10 @@ class Schedule extends Base
         if (!$this->isEventEditable($schedule->displayGroups))
             throw new AccessDeniedException();
 
-        $schedule->setDisplayFactory($this->displayFactory);
-        $schedule->delete();
+        $schedule
+            ->setDisplayFactory($this->displayFactory)
+            ->setDateService($this->getDate())
+            ->delete();
 
         // Return
         $this->getState()->hydrate([

@@ -801,7 +801,7 @@ class Soap
 
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
-            $events = $this->scheduleFactory->getForXmds($this->display->displayId, $fromFilter->format('U'), $toFilter->format('U'), $options);
+            $events = $this->scheduleFactory->getForXmds($this->display->displayId, $fromFilter, $toFilter, $options);
 
             // If our dependents are nodes, then build a list of layouts we can use to query for nodes
             $layoutDependents = [];

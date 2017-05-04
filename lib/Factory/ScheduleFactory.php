@@ -9,6 +9,7 @@
 namespace Xibo\Factory;
 
 
+use Jenssegers\Date\Date;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Schedule;
 use Xibo\Exception\NotFoundException;
@@ -116,18 +117,23 @@ class ScheduleFactory extends BaseFactory
     }
 
     /**
-     * @param $displayId
-     * @param $fromDt
-     * @param $toDt
-     * @param $options
+     * @param int $displayId
+     * @param Date $fromDt
+     * @param Date $toDt
+     * @param array $options
      * @return array
      */
     public function getForXmds($displayId, $fromDt, $toDt, $options = [])
     {
         $options = array_merge(['dependentsAsNodes' => false, 'useGroupId' => false], $options);
+
+        // We dial the fromDt back to the top of the day, so that we include dayPart events that start on this
+        // day
+        $adjustedFromDt = clone $fromDt;
+
         $params = array(
-            'fromDt' => $fromDt,
-            'toDt' => $toDt
+            'fromDt' => $adjustedFromDt->startOfDay()->format('U'),
+            'toDt' => $toDt->format('U')
         );
 
         $this->getLog()->debug('Get events for XMDS - with options: ' . json_encode($options));
@@ -222,7 +228,7 @@ class ScheduleFactory extends BaseFactory
         // Ranged request
         $SQL .= ' 
             AND (
-                  (schedule.FromDT <= :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                  (schedule.FromDT <= :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :fromDt) 
                   OR `schedule`.recurrence_range >= :fromDt 
                   OR (
                     IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
