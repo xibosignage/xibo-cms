@@ -13,8 +13,13 @@ use Xibo\Entity\Task;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TaskFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -36,6 +41,21 @@ class Maintenance extends Base
     /** @var  MediaFactory */
     private $mediaFactory;
 
+    /** @var  LayoutFactory */
+    private $layoutFactory;
+
+    /** @var  WidgetFactory */
+    private $widgetFactory;
+
+    /** @var  DisplayGroupFactory */
+    private $displayGroupFactory;
+
+    /** @var  DisplayFactory */
+    private $displayFactory;
+
+    /** @var  ScheduleFactory */
+    private $scheduleFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -48,13 +68,23 @@ class Maintenance extends Base
      * @param StorageServiceInterface $store
      * @param TaskFactory $taskFactory
      * @param MediaFactory $mediaFactory
+     * @param LayoutFactory $layoutFactory
+     * @param WidgetFactory $widgetFactory
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param DisplayFactory $displayFactory
+     * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $taskFactory, $mediaFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $taskFactory, $mediaFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
         $this->taskFactory = $taskFactory;
         $this->store = $store;
         $this->mediaFactory = $mediaFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->widgetFactory = $widgetFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
+        $this->displayFactory = $displayFactory;
+        $this->scheduleFactory = $scheduleFactory;
     }
 
     /**
@@ -248,13 +278,17 @@ class Maintenance extends Base
                 // It exists but isn't being used any more
                 $this->getLog()->debug('Deleting unused revision media: ' . $media[$file]['mediaid']);
 
-                $this->mediaFactory->getById($media[$file]['mediaid'])->delete();
+                $this->mediaFactory->getById($media[$file]['mediaid'])
+                    ->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory)
+                    ->delete();
             }
             else if (array_key_exists($file, $unusedMedia)) {
                 // It exists but isn't being used any more
                 $this->getLog()->debug('Deleting unused media: ' . $media[$file]['mediaid']);
 
-                $this->mediaFactory->getById($media[$file]['mediaid'])->delete();
+                $this->mediaFactory->getById($media[$file]['mediaid'])
+                    ->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory)
+                    ->delete();
             }
             else {
                 $i--;

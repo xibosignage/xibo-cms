@@ -212,7 +212,7 @@ class Stats extends Base
         $displayId = $this->getSanitizer()->getInt('displayId');
         $layoutIds = $this->getSanitizer()->getIntArray('layoutId');
         $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
-        $type = $this->getSanitizer()->getString('type');
+        $type = strtolower($this->getSanitizer()->getString('type'));
 
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)

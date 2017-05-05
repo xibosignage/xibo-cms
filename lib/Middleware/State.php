@@ -673,7 +673,12 @@ class State extends Middleware
                 $container->configService,
                 $container->store,
                 $container->taskFactory,
-                $container->mediaFactory
+                $container->mediaFactory,
+                $container->layoutFactory,
+                $container->widgetFactory,
+                $container->displayGroupFactory,
+                $container->displayFactory,
+                $container->scheduleFactory
             );
         });
 
