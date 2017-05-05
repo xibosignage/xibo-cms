@@ -32,7 +32,7 @@ class Image extends ModuleWidget
     public function validate()
     {
         // Validate
-        if (!v::int()->min(1)->validate($this->getDuration()))
+        if (!v::int()->min(1, true)->validate($this->getDuration()))
             throw new \InvalidArgumentException(__('You must enter a duration.'));
     }
 
