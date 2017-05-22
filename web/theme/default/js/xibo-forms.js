@@ -476,8 +476,9 @@ var backGroundFormSetup = function(dialog) {
                         if (backgroundChanged)
                             window.location.reload();
                     } else {
-                        // On the layout page - call render
-                        if (backgroundChanged && table != undefined)
+                        // We assume we're on the layout page - call render
+                        // If we're not, table is a Chrome/Safari/FireBug global function
+                        if (backgroundChanged && typeof(table) !== 'undefined' && table.hasOwnProperty('ajax'))
                             table.ajax.reload(null, false);
                     }
                 }
