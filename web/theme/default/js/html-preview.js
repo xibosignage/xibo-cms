@@ -193,7 +193,7 @@ function Layout(id, options, preload, layoutPreview) {
             /* Extract the image ID from the filename */
             self.bgId = self.bgImage.substring(0, self.bgImage.indexOf('.'));
 
-            var tmpUrl = options.libraryDownloadUrl.replace(":id", self.bgId).replace(":type", "image") + '?preview=1';
+            var tmpUrl = options.layoutBackgroundDownloadUrl.replace(":id", self.id) + '?preview=1';
             
             preload.addFiles(tmpUrl + "&width=" + self.sWidth + "&height=" + self.sHeight + "&dynamic&proportional=0");
             layout.css("background", "url('" + tmpUrl + "&width=" + self.sWidth + "&height=" + self.sHeight + "&dynamic&proportional=0')");

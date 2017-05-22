@@ -27,6 +27,7 @@ use Xibo\Entity\Region;
 use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
@@ -1392,5 +1393,68 @@ class Layout extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Upgraded %s'), $layout->layout)
         ]);
+    }
+
+
+
+    /**
+     * Gets a file from the library
+     * @param int $layoutId
+     * @throws NotFoundException
+     * @throws AccessDeniedException
+     *
+     * @SWG\Get(
+     *  path="/library/download/{mediaId}/{type}",
+     *  operationId="libraryDownload",
+     *  tags={"library"},
+     *  summary="Download Media",
+     *  description="Download a Media file from the Library",
+     *  produces={"application/octet-stream"},
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(type="file"),
+     *      @SWG\Header(
+     *          header="X-Sendfile",
+     *          description="Apache Send file header - if enabled.",
+     *          type="string"
+     *      ),
+     *      @SWG\Header(
+     *          header="X-Accel-Redirect",
+     *          description="nginx send file header - if enabled.",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     */
+    public function downloadBackground($layoutId)
+    {
+        $this->getLog()->debug('Layout Download background request for layoutId ' . $layoutId);
+
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        if (!$this->getUser()->checkViewable($layout))
+            throw new AccessDeniedException();
+
+        if ($layout->backgroundImageId == null)
+            throw new NotFoundException();
+
+        // This media may not be viewable, but we won't check it because the user has permission to view the
+        // layout that it is assigned to.
+        $media = $this->mediaFactory->getById($layout->backgroundImageId);
+
+        // Make a media module
+        $widget = $this->moduleFactory->createWithMedia($media);
+
+        $widget->getResource();
+
+        $this->setNoOutput(true);
     }
 }

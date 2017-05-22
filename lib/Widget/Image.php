@@ -128,9 +128,11 @@ class Image extends ModuleWidget
         $align = $this->getOption('align', 'center');
         $vAlign = $this->getOption('valign', 'middle');
 
+        $url = $this->getApp()->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]) . '?preview=1&width=' . $width . '&height=' . $height . '&proportional=' . $proportional ;
+
         $html = '<div style="display:table; width:100%; height: ' . $height . 'px">
             <div style="text-align:' . $align . '; display: table-cell; vertical-align: ' . $vAlign . ';">
-                <img src="' . $this->getApp()->urlFor('library.download', ['id' => $this->getMediaId()]) . '?preview=1&width=' . $width . '&height=' . $height . '&proportional=' . $proportional . '" />
+                <img src="' . $url . '" />
             </div>
         </div>';
 
@@ -149,7 +151,7 @@ class Image extends ModuleWidget
 
         try {
             $output .= '<div class="hoverPreview">';
-            $output .= '    <img src="' . $this->getApp()->urlFor('library.download', ['id' => $this->getMediaId()]) . '?preview=1&width=200&height=200&proportional=1" alt="Hover Preview">';
+            $output .= '    <img src="' . $this->getApp()->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]) . '?preview=1&width=200&height=200&proportional=1" alt="Hover Preview">';
             $output .= '</div>';
         } catch (NotFoundException $e) {
             $this->getLog()->error('Cannot find image to show in HoverPreview. WidgetId: %d', $this->getWidgetId());
