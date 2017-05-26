@@ -234,6 +234,7 @@ $app->get('/displaygroup/form/media/:id', '\Xibo\Controller\DisplayGroup:mediaFo
 $app->get('/displaygroup/form/layout/:id', '\Xibo\Controller\DisplayGroup:layoutsForm')->name('displayGroup.layout.form');
 $app->get('/displaygroup/form/version/:id', '\Xibo\Controller\DisplayGroup:versionForm')->name('displayGroup.version.form');
 $app->get('/displaygroup/form/command/:id', '\Xibo\Controller\DisplayGroup:commandForm')->name('displayGroup.command.form');
+$app->get('/displaygroup/form/collect/:id', '\Xibo\Controller\DisplayGroup:collectNowForm')->name('displayGroup.collectNow.form');
 
 //
 // displayprofile

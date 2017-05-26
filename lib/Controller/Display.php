@@ -556,6 +556,21 @@ class Display extends Base
                     )
                 );
 
+                // Collect Now
+                $display->buttons[] = array(
+                    'id' => 'display_button_collectNow',
+                    'url' => $this->urlFor('displayGroup.collectNow.form', ['id' => $display->displayGroupId]),
+                    'text' => __('Collect Now'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor('displayGroup.action.collectNow', ['id' => $display->displayGroupId])),
+                        array('name' => 'commit-method', 'value' => 'post'),
+                        array('name' => 'id', 'value' => 'display_button_collectNow'),
+                        array('name' => 'text', 'value' => __('Collect Now')),
+                        array('name' => 'rowtitle', 'value' => $display->display)
+                    )
+                );
+
                 $display->buttons[] = ['divider' => true];
             }
 
