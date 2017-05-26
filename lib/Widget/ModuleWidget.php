@@ -26,6 +26,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\User;
 use Xibo\Exception\ControllerNotImplemented;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DataSetColumnFactory;
@@ -782,6 +783,7 @@ abstract class ModuleWidget implements ModuleInterface
      * Get the the Transition for this media
      * @param string $type Either "in" or "out"
      * @return string
+     * @throws InvalidArgumentException
      */
     public function getTransition($type)
     {

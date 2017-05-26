@@ -1098,9 +1098,18 @@ class Display extends Base
         if (!$this->getUser()->checkViewable($display))
             throw new AccessDeniedException();
 
+        // Work out the next collection time based on the last accessed date/time and the collection interval
+        if ($display->lastAccessed == 0) {
+            $nextCollect = __('once it has connected for the first time');
+        } else {
+            $collectionInterval = $display->getSetting('collectionInterval', 5);
+            $nextCollect = $this->getDate()->parse($display->lastAccessed, 'U')->addMinutes($collectionInterval)->diffForHumans();
+        }
+
         $this->getState()->template = 'display-form-request-screenshot';
         $this->getState()->setData([
             'display' => $display,
+            'nextCollect' => $nextCollect,
             'help' =>  $this->getHelp()->link('Display', 'ScreenShot')
         ]);
     }
