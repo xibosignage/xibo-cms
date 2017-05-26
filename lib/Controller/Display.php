@@ -1165,7 +1165,8 @@ class Display extends Base
         $display->screenShotRequested = 1;
         $display->save(['validate' => false, 'audit' => false]);
 
-        $this->playerAction->sendAction($display, new ScreenShotAction());
+        if (!empty($display->xmrChannel))
+            $this->playerAction->sendAction($display, new ScreenShotAction());
 
         // Return
         $this->getState()->hydrate([
