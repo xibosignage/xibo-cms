@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
@@ -230,7 +231,7 @@ class Stats extends Base
         }
 
         if (count($display_ids) <= 0)
-            trigger_error(__('No displays with View permissions'), E_USER_ERROR);
+            throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
 
         // Media on Layouts Ran
         $select = '
@@ -382,7 +383,7 @@ class Stats extends Base
         }
 
         if (count($displayIds) <= 0)
-            trigger_error(__('No displays with View permissions'), E_USER_ERROR);
+            throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
 
         // Get some data for a bandwidth chart
         $params = array(
@@ -460,7 +461,7 @@ class Stats extends Base
         }
 
         if (count($displayIds) <= 0)
-            trigger_error(__('No displays with View permissions'), E_USER_ERROR);
+            throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
 
         // Get some data for a bandwidth chart
         $dbh = $this->store->getConnection();

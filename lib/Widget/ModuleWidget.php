@@ -795,8 +795,7 @@ abstract class ModuleWidget implements ModuleInterface
                 break;
 
             default:
-                $code = '';
-                trigger_error(_('Unknown transition type'), E_USER_ERROR);
+                throw new InvalidArgumentException(__('Unknown transition type'), 'type');
         }
 
         if ($code == '')

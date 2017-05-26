@@ -371,7 +371,6 @@ class ConfigService implements ConfigServiceInterface
 
             return $row;
         } catch (\Exception $e) {
-            trigger_error($e->getMessage());
             throw new \Exception(__('No Version information - please contact technical support'));
         }
     }
