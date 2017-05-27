@@ -1,0 +1,10 @@
+{
+  "dbVersion": 133,
+  "appVersion": "1.8.2",
+  "steps": [
+    {
+      "step": "Add an index to the link table between Regions and Playlists",
+      "action": "CREATE INDEX idx_lkregionplaylist_playlistId ON lkregionplaylist (playlistId);"
+    }
+  ]
+}
