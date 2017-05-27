@@ -59,7 +59,7 @@
                         {{ forms.time("startTime", title, "00:00", helpText) }}
 
                         {% set title %}{% trans "End Time" %}{% endset %}
-                        {% set helpText %}{% trans "Enter the end time for this daypart. If the end time is after the start time, then the daypart will cross midnight." %}{% endset %}
+                        {% set helpText %}{% trans "Enter the end time for this daypart. If the end time is before the start time, then the daypart will cross midnight." %}{% endset %}
                         {{ forms.time("endTime", title, "00:00", helpText) }}
 
                     </div>
