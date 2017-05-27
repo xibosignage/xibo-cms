@@ -25,6 +25,7 @@ use Xibo\Entity\Widget;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\DeadlockException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\BandwidthFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DayPartFactory;
@@ -403,7 +404,13 @@ class Soap
                     $schedule
                         ->setDateService($this->getDate())
                         ->setDayPartFactory($this->dayPartFactory);
-                    $scheduleEvents = $schedule->getEvents($fromFilter, $toFilter);
+
+                    try {
+                        $scheduleEvents = $schedule->getEvents($fromFilter, $toFilter);
+                    } catch (XiboException $e) {
+                        $this->getLog()->error('Unable to getEvents for ' . $schedule->eventId);
+                        continue;
+                    }
 
                     if (count($scheduleEvents) <= 0)
                         continue;
@@ -850,7 +857,13 @@ class Soap
                 $schedule
                     ->setDateService($this->getDate())
                     ->setDayPartFactory($this->dayPartFactory);
-                $scheduleEvents = $schedule->getEvents($fromFilter, $toFilter);
+
+                try {
+                    $scheduleEvents = $schedule->getEvents($fromFilter, $toFilter);
+                } catch (XiboException $e) {
+                    $this->getLog()->error('Unable to getEvents for ' . $schedule->eventId);
+                    continue;
+                }
 
                 $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
 

@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DayPartFactory;
@@ -241,7 +242,13 @@ class Schedule extends Base
             $row
                 ->setDateService($this->getDate())
                 ->setDayPartFactory($this->dayPartFactory);
-            $scheduleEvents = $row->getEvents($start, $end);
+
+            try {
+                $scheduleEvents = $row->getEvents($start, $end);
+            } catch (XiboException $e) {
+                $this->getLog()->error('Unable to getEvents for ' . $row->eventId);
+                continue;
+            }
 
             if (count($scheduleEvents) <= 0)
                 continue;
@@ -421,7 +428,12 @@ class Schedule extends Base
             $this->getLog()->debug('EventId ' . $schedule->eventId . ' exists in the schedule window, checking its instances for activity');
 
             // Get scheduled events based on recurrence
-            $scheduleEvents = $schedule->getEvents($date, $date);
+            try {
+                $scheduleEvents = $schedule->getEvents($date, $date);
+            } catch (XiboException $e) {
+                $this->getLog()->error('Unable to getEvents for ' . $schedule->eventId);
+                continue;
+            }
 
             // If this event is active, collect extra information and add to the events list
             if (count($scheduleEvents) > 0) {

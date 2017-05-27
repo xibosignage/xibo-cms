@@ -117,6 +117,17 @@ class ScheduleFactory extends BaseFactory
     }
 
     /**
+     * Get by DayPartId
+     * @param int $dayPartId
+     * @return Schedule[]
+     * @throws NotFoundException
+     */
+    public function getByDayPartId($dayPartId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'dayPartId' => $dayPartId]);
+    }
+
+    /**
      * @param int $displayId
      * @param Date $fromDt
      * @param Date $toDt
