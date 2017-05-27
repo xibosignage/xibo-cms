@@ -87,6 +87,19 @@ class PageFactory extends BaseFactory
         return $pages[0];
     }
 
+    /**
+     * @return Page[]
+     */
+    public function getForHomepage()
+    {
+        return $this->query(null, ['asHome' => 1]);
+    }
+
+    /**
+     * @param null $sortOrder
+     * @param array $filterBy
+     * @return Page[]
+     */
     public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder == null)

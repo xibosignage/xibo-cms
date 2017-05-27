@@ -623,7 +623,7 @@ class User extends Base
         $this->getState()->setData([
             'user' => $user,
             'options' => [
-                'homepage' => $this->pageFactory->query(),
+                'homepage' => $this->pageFactory->getForHomepage(),
                 'userTypes' => $this->userTypeFactory->query()
             ],
             'help' => [
