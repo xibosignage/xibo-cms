@@ -1204,7 +1204,10 @@ class Layout extends Base
         if (!$this->getUser()->checkViewable($layout))
             throw new AccessDeniedException();
 
-        $fileName = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/export_' . $layout->layout . '.zip';
+        // Make sure our file name is reasonable
+        $layoutName = preg_replace('/[^a-z0-9]+/', '-', strtolower($layout->layout));
+
+        $fileName = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/export_' . $layoutName . '.zip';
         $layout->toZip($this->dataSetFactory, $fileName, ['includeData' => ($this->getSanitizer()->getCheckbox('includeData')== 1)]);
 
         if (ini_get('zlib.output_compression')) {
