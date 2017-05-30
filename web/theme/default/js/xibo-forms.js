@@ -1,59 +1,13 @@
-var text_callback = function(dialog, extra) {
+var text_callback = function(dialog, extraData) {
 
-    if (extra == null) {
+    var extra = extraData;
+
+    if (extraData === undefined || extraData === null) {
         extra = $('.bootbox').data().extra;
     }
 
     // Choose a complementary color
     var color = $c.complement($("#layout").data().backgroundColor);
-
-    // Set the text template based on the selected template id
-    if ($("#ta_text").val() == "" && !$("#overrideTemplate").is(":checked")) {
-        // Get the current template selected
-        var templateId = $("#templateId").val();
-            
-        $.each(extra, function(index, value) {
-            if (value.id == templateId) {
-                // Substitute the #Color# references with the suggested complimentary color
-                $("#ta_text").val(value.template.replace(/#Color#/g, color));
-                $("#ta_css").val(value.css);
-
-                // Go through each property
-                $.each(value, function (key, value) {
-
-                    if (key != "template" && key != "css") {
-                        // Try to match a field
-                        $("#" + key).val(value);
-                    }
-                });
-            }
-        });
-    }
-
-    // Register an onchange listener to do the same if the template is changed
-    $("#templateId").on('change', function() {
-        // Check to see if the override template check box is unchecked
-        if (!$("#overrideTemplate").is(":checked")) {
-
-            var templateId = $("#templateId").val();
-            
-            $.each(extra, function(index, value) {
-                if (value.id == templateId) {
-                    CKEDITOR.instances["ta_text"].setData(value.template.replace(/#Color#/g, color));
-                    $("#ta_css").val(value.css);
-
-                    // Go through each property
-                    $.each(value, function (key, value) {
-
-                        if (key != "template" && key != "css") {
-                            // Try to match a field
-                            $("#" + key).val(value);
-                        }
-                    });
-                }
-            });
-        }
-    });
 
     // Apply some CSS to set a scale for these editors
     var $layout = $("#layout");
@@ -73,6 +27,33 @@ var text_callback = function(dialog, extra) {
             "</style>");
     }
 
+    var applyTemplateContentIfNecessary = function(data, extra) {
+        // Check to see if the override template check box is unchecked
+        if (!$("#overrideTemplate").is(":checked")) {
+            // Get the currently selected templateId
+            var templateId = $("#templateId").val();
+
+            // Parse each field
+            $.each(extra, function(index, value) {
+                if (value.id == templateId) {
+                    data = value.template.replace(/#Color#/g, color);
+                    $("#ta_css").val(value.css);
+
+                    // Go through each property
+                    $.each(value, function (key, value) {
+
+                        if (key != "template" && key != "css") {
+                            // Try to match a field
+                            $("#" + key).val(value);
+                        }
+                    });
+                }
+            });
+        }
+
+        return data;
+    }
+
     // Conjure up a text editor
     CKEDITOR.replace("ta_text", CKEDITOR_DEFAULT_CONFIG);
 
@@ -84,22 +65,22 @@ var text_callback = function(dialog, extra) {
         // Reapply the background style after switching to source view and back to the normal editing view
         CKEDITOR.instances["ta_text"].on('contentDom', applyContentsToIframe);
 
-        /* This just doesn't seem possible unfortunately.
-        // Set up default font and colour for new elements
-        CKEDITOR.instances["ta_text"].dataProcessor.htmlFilter.addRules({
-            elements: {
-                p: function (e) {
-                    e.attributes.style = "font-size: 36px; color: " + color;
-                }
-            }
-        });
-        */
+        // Get the template data
+        var data = CKEDITOR.instances["ta_text"].getData();
+
+        // Default config for fonts
+        if (data == "" && !$("#overrideTemplate").is(":checked")) {
+            data = "<span style=\"font-size: 48px;\"><span style=\"color: " + color + ";\">" + translations.enterText + "</span></span>";
+        }
+
+        // Handle initial template set up
+        data = applyTemplateContentIfNecessary(data, extra);
 
         // We need to convert any library references [123] to their full URL counterparts
         // we leave well alone non-library references.
-        var regex = /\[[0-9]+\]/gi;
+        var regex = /\[[0-9]+]/gi;
 
-        var data = CKEDITOR.instances["ta_text"].getData().replace(regex, function (match) {
+        data = data.replace(regex, function (match) {
             var inner = match.replace("]", "").replace("[", "");
             var replacement = CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.replace(":id", inner);
             //console.log("match = " + match + ". replacement = " + replacement);
@@ -107,6 +88,11 @@ var text_callback = function(dialog, extra) {
         });
 
         CKEDITOR.instances["ta_text"].setData(data);
+    });
+
+    // Register an onchange listener to manipulate the template content if the selector is changed.
+    $("#templateId").on('change', function() {
+        CKEDITOR.instances["ta_text"].setData(applyTemplateContentIfNecessary(CKEDITOR.instances["ta_text"].getData(), extra));
     });
 
     // Create a no data message editor if one is present
