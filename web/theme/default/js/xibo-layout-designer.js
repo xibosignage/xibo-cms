@@ -60,7 +60,8 @@ $(document).ready(function(){
         .hover(function() {
             var $region = $(this);
 
-            $region.zIndex(900);
+            //This brings the region forward if it's hovered over
+            $region.css("zIndex", 900);
 
             if (!hideControls) {
                 layout.find(".regionInfo").show();
@@ -72,7 +73,7 @@ $(document).ready(function(){
                 var $resetRegion = $(this);
 
                 // Reset to the original z-index
-                $resetRegion.zIndex($resetRegion.attr("zindex"));
+                $resetRegion.css("zIndex", $resetRegion.attr("zindex"));
             });
 
             layout.find(".regionInfo").hide();
