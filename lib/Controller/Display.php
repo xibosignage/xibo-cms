@@ -674,10 +674,16 @@ class Display extends Base
             $timeZones[] = ['id' => $key, 'value' => $value];
         }
 
+        $layouts = $this->layoutFactory->query(null, ['retired' => 0]);
+
+        if ($display->defaultLayoutId != null) {
+            $layouts = array_merge([$this->layoutFactory->getById($display->defaultLayoutId)], $layouts);
+        }
+
         $this->getState()->template = 'display-form-edit';
         $this->getState()->setData([
             'display' => $display,
-            'layouts' => $this->layoutFactory->query(),
+            'layouts' => $layouts,
             'profiles' => $this->displayProfileFactory->query(NULL, array('type' => $display->clientType)),
             'settings' => $profile,
             'timeZones' => $timeZones,
