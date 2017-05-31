@@ -421,6 +421,10 @@ class Schedule implements \JsonSerializable
             // No event type selected
             throw new InvalidArgumentException(__('Please select the Event Type'), 'eventTypeId');
         }
+
+        // Make sure we have a sensible recurrence setting
+        if ($this->dayPartId !== self::$DAY_PART_CUSTOM && ($this->recurrenceType == 'Minute' || $this->recurrenceType == 'Hour'))
+            throw new InvalidArgumentException(__('Repeats selection is invalid for Always or Daypart events'), 'recurrencyType');
     }
 
     /**
@@ -438,7 +442,7 @@ class Schedule implements \JsonSerializable
             $this->validate();
 
         // Handle "always" day parts
-        if ($this->dayPartId == \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+        if ($this->dayPartId == self::$DAY_PART_ALWAYS) {
             $this->fromDt = self::$DATE_MIN;
             $this->toDt = self::$DATE_MAX;
         }
@@ -682,6 +686,10 @@ class Schedule implements \JsonSerializable
 
         // If we don't have any recurrence, we are done
         if (empty($this->recurrenceType) || empty($this->recurrenceDetail))
+            return;
+
+        // Detect invalid recurrences and quit early
+        if ($this->dayPartId !== self::$DAY_PART_CUSTOM && ($this->recurrenceType == 'Minute' || $this->recurrenceType == 'Hour'))
             return;
 
         // Check the cache
