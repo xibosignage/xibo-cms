@@ -672,6 +672,10 @@ class Layout implements \JsonSerializable
 
         if (count($duplicates) > 0)
             throw new DuplicateEntityException(sprintf(__("You already own a layout called '%s'. Please choose another name."), $this->layout));
+
+        // Check zindex is positive
+        if ($this->backgroundzIndex < 0)
+            throw new InvalidArgumentException(__('Layer must be 0 or a positive number'), 'backgroundzIndex');
     }
 
     /**

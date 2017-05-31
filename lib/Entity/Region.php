@@ -22,6 +22,7 @@
 namespace Xibo\Entity;
 
 
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
@@ -345,6 +346,10 @@ class Region implements \JsonSerializable
     {
         if ($this->width <= 0 || $this->height <= 0)
             throw new \InvalidArgumentException(__('The Region dimensions cannot be empty or negative'));
+
+        // Check zindex is positive
+        if ($this->zIndex < 0)
+            throw new InvalidArgumentException(__('Layer must be 0 or a positive number'), 'zIndex');
     }
 
     /**
