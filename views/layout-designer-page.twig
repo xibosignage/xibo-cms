@@ -515,6 +515,9 @@
 
                 timelineWidgetTabel.on('draw', dataTableDraw);
                 timelineWidgetTabel.on('processing.dt', dataTableProcessing);
+
+                // Hook up the library Upload Buttons
+                $(".libraryUploadForm").click(libraryUploadClick);
             }
 
             function DeleteRegion(form, regionId) {
