@@ -215,12 +215,9 @@ class Region implements \JsonSerializable
      */
     public function setOwner($ownerId)
     {
-        $this->ownerId = $ownerId;
+        $this->load();
 
-        foreach ($this->playlists as $playlist) {
-            /* @var Playlist $playlist */
-            $playlist->setOwner($ownerId);
-        }
+        $this->ownerId = $ownerId;
     }
 
     /**
