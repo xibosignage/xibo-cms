@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Widget;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 
 /**
@@ -81,25 +82,33 @@ class Font extends ModuleWidget
     {
         parent::preProcess($media, $filePath);
 
-        // Load the file and check it allows embedding.
-        $font = \FontLib\Font::load($filePath);
+        try {
+            // Load the file and check it allows embedding.
+            $font = \FontLib\Font::load($filePath);
 
-        if ($font == null)
-            throw new \InvalidArgumentException(__('Font file unreadable'));
+            if ($font == null)
+                throw new InvalidArgumentException(__('Font file unreadable'), 'filePath');
 
-        // Reset the media name to be the font file name
-        $media->name = $font->getFontName() . ' ' . $font->getFontSubfamily();
+            // Reset the media name to be the font file name
+            $media->name = $font->getFontName() . ' ' . $font->getFontSubfamily();
 
-        // Font type
-        $embed = intval($font->getData('OS/2', 'fsType'));
+            // Font type
+            $embed = intval($font->getData('OS/2', 'fsType'));
 
-        $this->getLog()->debug('Font name adjusted to %s and embeddable flag is %s', $media->name, $embed);
+            $this->getLog()->debug('Font name adjusted to %s and embeddable flag is %s', $media->name, $embed);
 
-        if ($embed != 0 && $embed != 8)
-            throw new \InvalidArgumentException(__('Font file is not embeddable due to its permissions'));
+            if ($embed != 0 && $embed != 8)
+                throw new InvalidArgumentException(__('Font file is not embeddable due to its permissions'), 'embed');
 
-        // Free up the file
-        $font->close();
+            // Free up the file
+            $font->close();
+        } catch (InvalidArgumentException $invalidArgumentException) {
+            throw $invalidArgumentException;
+        } catch (\Exception $exception) {
+            $this->getLog()->debug($exception->getTraceAsString());
+            $this->getLog()->error('Unknown error installing font: ' . $exception->getMessage());
+            throw new InvalidArgumentException(__('Cannot install font, unknown error'), 'font');
+        }
     }
 
     /**
