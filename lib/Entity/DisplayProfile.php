@@ -202,8 +202,15 @@ class DisplayProfile implements \JsonSerializable
         $this->getLog()->debug('Config loaded [%d]: %s', count($this->config), json_encode($this->config, JSON_PRETTY_PRINT));
 
         $this->configDefault = $this->loadFromFile();
-        $this->configTabs = $this->configDefault[$this->type]['tabs'];
-        $this->configDefault = $this->configDefault[$this->type]['settings'];
+
+        if (array_key_exists($this->type, $this->configDefault)) {
+            $this->configTabs = $this->configDefault[$this->type]['tabs'];
+            $this->configDefault = $this->configDefault[$this->type]['settings'];
+        } else {
+            $this->getLog()->debug('Unknown type for Display Profile: ' . $this->type);
+            $this->configTabs = $this->configDefault['unknown']['tabs'];
+            $this->configDefault = $this->configDefault['unknown']['settings'];
+        }
 
         // We've loaded a profile
         // dispatch an event with a reference to this object, allowing subscribers to modify the config before we
