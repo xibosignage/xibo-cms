@@ -257,7 +257,7 @@ class Maintenance extends Base
                 continue;
 
             // Ignore thumbnails
-            if (strstr($file, 'tn_') || strstr($file, 'bg_'))
+            if (strstr($file, 'tn_'))
                 continue;
 
             // Ignore XLF files

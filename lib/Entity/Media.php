@@ -809,9 +809,6 @@ class Media implements \JsonSerializable
 
         if (file_exists($libraryLocation . 'tn_' . $this->storedAs))
             unlink($libraryLocation . 'tn_' . $this->storedAs);
-
-        if (file_exists($libraryLocation . 'bg_' . $this->storedAs))
-            unlink($libraryLocation . 'bg_' . $this->storedAs);
     }
 
     /**

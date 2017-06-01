@@ -398,7 +398,7 @@ class Library extends Base
 
             if ($media->mediaType == 'image') {
                 $download = $this->urlFor('library.download', ['id' => $media->mediaId]) . '?preview=1';
-                $media->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56" /></i></a>';
+                $media->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56&cache=1" /></i></a>';
             }
 
             $media->fileSizeFormatted = ByteFormatter::format($media->fileSize);
