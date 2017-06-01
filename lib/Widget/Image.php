@@ -20,6 +20,7 @@
  */
 namespace Xibo\Widget;
 
+use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\NotFoundException;
@@ -167,7 +168,7 @@ class Image extends ModuleWidget
      */
     public function getResource($displayId = 0)
     {
-        $this->getLog()->debug('Image Module: GetResource for %d', $this->getMediaId());
+        $this->getLog()->debug('Image Module: GetResource for ' . $this->getMediaId());
 
         $media = $this->mediaFactory->getById($this->getMediaId());
         $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
@@ -185,29 +186,45 @@ class Image extends ModuleWidget
         if ($this->getSanitizer()->getInt('preview', 0) == 1) {
 
             // Preview (we output the file to the browser with image headers
-            Img::configure(array('driver' => 'gd'));
+            try {
+                Img::configure(array('driver' => 'gd'));
 
-            $this->getLog()->debug('Preview Requested with Width and Height %d x %d', $width, $height);
+                $this->getLog()->debug('Preview Requested with Width and Height %d x %d', $width, $height);
+                $this->getLog()->debug('Loading ' . $filePath);
 
-            // Output a thumbnail?
-            if ($width != 0 || $height != 0) {
-                // Make a thumb
-                $img = Img::make($filePath)->resize($width, $height, function($constraint) use ($proportional) {
-                    if ($proportional)
-                        $constraint->aspectRatio();
-                });
-            }
-            else {
-                // Load the whole image
-                $this->getLog()->debug('Loading %s', $filePath);
-                $eTag = $media->md5;
+                // Load the image
                 $img = Img::make($filePath);
+
+                // Output a thumbnail?
+                if ($width != 0 || $height != 0) {
+                    // Make a thumb
+                    $img->resize($width, $height, function ($constraint) use ($proportional) {
+                        if ($proportional)
+                            $constraint->aspectRatio();
+                    });
+                }
+
+                $this->getLog()->debug('Outputting Image Response');
+
+                // Output the file
+                echo $img->response();
+
+            } catch (NotReadableException $notReadableException) {
+                $this->getLog()->debug($notReadableException->getTraceAsString());
+                $this->getLog()->error('Image not readable: ' . $notReadableException->getMessage());
+
+                // Output the thumbnail
+                $img = Img::make(PROJECT_ROOT . '/web/' . $this->getConfig()->uri('img/error.png', true));
+
+                if ($width != 0 || $height != 0) {
+                    $img->resize($width, $height, function ($constraint) use ($proportional) {
+                        if ($proportional)
+                            $constraint->aspectRatio();
+                    });
+                }
+
+                echo $img->response();
             }
-
-            $this->getLog()->debug('Outputting Image Response');
-
-            // Output the file
-            echo $img->response();
         }
         else {
             // Download the file

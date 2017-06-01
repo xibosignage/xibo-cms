@@ -973,6 +973,8 @@ abstract class ModuleWidget implements ModuleInterface
     {
         $media = $this->mediaFactory->getById($this->getMediaId());
 
+        $this->getLog()->debug('Download for mediaId ' . $media->mediaId);
+
         // This widget is expected to output a file - usually this is for file based media
         // Get the name with library
         $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
