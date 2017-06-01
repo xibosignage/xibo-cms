@@ -262,8 +262,14 @@ class DataSetColumn extends Base
         $column->dataSetColumnTypeId = $this->getSanitizer()->getInt('dataSetColumnTypeId');
         $column->formula = $this->getSanitizer()->getParam('formula', null);
 
+        // Assign the column to set the column order if necessary
         $dataSet->assignColumn($column);
-        $dataSet->save();
+
+        // Save the column
+        $column->save();
+
+        // Notify the change
+        $dataSet->notify();
 
         // Return
         $this->getState()->hydrate([

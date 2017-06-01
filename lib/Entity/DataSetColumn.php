@@ -9,6 +9,7 @@
 namespace Xibo\Entity;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetColumnTypeFactory;
 use Xibo\Factory\DataTypeFactory;
 use Xibo\Service\LogServiceInterface;
@@ -85,6 +86,9 @@ class DataSetColumn implements \JsonSerializable
      */
     public $dataSetColumnType;
 
+    /** @var  DataSetColumnFactory */
+    private $dataSetColumnFactory;
+
     /** @var  DataTypeFactory */
     private $dataTypeFactory;
 
@@ -101,14 +105,16 @@ class DataSetColumn implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param DataSetColumnFactory $dataSetColumnFactory
      * @param DataTypeFactory $dataTypeFactory
      * @param DataSetColumnTypeFactory $dataSetColumnTypeFactory
      */
-    public function __construct($store, $log, $dataTypeFactory, $dataSetColumnTypeFactory)
+    public function __construct($store, $log, $dataSetColumnFactory, $dataTypeFactory, $dataSetColumnTypeFactory)
     {
         $this->excludeProperty('priorDatasetColumnId');
         $this->setCommonDependencies($store, $log);
 
+        $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->dataTypeFactory = $dataTypeFactory;
         $this->dataSetColumnTypeFactory = $dataSetColumnTypeFactory;
     }
@@ -148,6 +154,14 @@ class DataSetColumn implements \JsonSerializable
 
         if ($this->heading == '')
             throw new InvalidArgumentException(__('Please provide a column heading.'), 'heading');
+
+        // Make sure this column name is unique
+        $columns = $this->dataSetColumnFactory->getByDataSetId($this->dataSetId);
+
+        foreach ($columns as $column) {
+            if ($column->heading == $this->heading && ($this->dataSetColumnId == null || $column->dataSetColumnId != $this->dataSetColumnId))
+                throw new InvalidArgumentException(__('A column already exists with this name, please choose another'), 'heading');
+        }
 
         // Check the actual values
         try {
@@ -245,7 +259,8 @@ class DataSetColumn implements \JsonSerializable
 
         // Add Column to Underlying Table
         if ($this->dataSetColumnTypeId == 1) {
-            $this->getStore()->update('ALTER TABLE `dataset_' . $this->dataSetId . '` ADD `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL', []);
+            // Use a separate connection for DDL (it operates outside transactions)
+            $this->getStore()->isolated('ALTER TABLE `dataset_' . $this->dataSetId . '` ADD `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL', []);
         }
     }
 
@@ -277,12 +292,11 @@ class DataSetColumn implements \JsonSerializable
         ]);
 
         if ($options['rebuilding'] && $this->dataSetColumnTypeId == 1) {
-            $this->getStore()->update('ALTER TABLE `dataset_' . $this->dataSetId . '` ADD `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL', []);
+            $this->getStore()->isolated('ALTER TABLE `dataset_' . $this->dataSetId . '` ADD `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL', []);
 
         } else if ($this->dataSetColumnTypeId == 1 && $this->hasPropertyChanged('heading')) {
             $sql = 'ALTER TABLE `dataset_' . $this->dataSetId . '` CHANGE `' . $this->getOriginalValue('heading') . '` `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL DEFAULT NULL';
-            $this->getLog()->debug($sql);
-            $this->getStore()->update($sql, []);
+            $this->getStore()->isolated($sql, []);
         }
     }
 
