@@ -455,6 +455,9 @@ class Display implements \JsonSerializable
         if (!v::string()->notEmpty()->validate($this->display))
             throw new InvalidArgumentException(__('Can not have a display without a name'), 'name');
 
+        if (!v::string()->notEmpty()->validate($this->license))
+            throw new InvalidArgumentException(__('Can not have a display without a hardware key'), 'license');
+
         if ($this->wakeOnLanEnabled == 1 && $this->wakeOnLanTime == '')
             throw new InvalidArgumentException(__('Wake on Lan is enabled, but you have not specified a time to wake the display'), 'wakeonlan');
 
