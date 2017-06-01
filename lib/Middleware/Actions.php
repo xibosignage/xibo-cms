@@ -93,48 +93,49 @@ class Actions extends Middleware
             if ($app->configService->isUpgradePending())
                 return;
 
-            try {
+            // Only process notifications if we are a full request
+            if (!$app->request()->isAjax()) {
+                try {
+                    $app->user->routeAuthentication('/drawer');
 
-                $app->user->routeAuthentication('/drawer');
+                    // Notifications
+                    $notifications = [];
+                    $extraNotifications = 0;
 
-                // Notifications
-                $notifications = [];
-                $extraNotifications = 0;
+                    /** @var UserNotificationFactory $factory */
+                    $factory = $app->userNotificationFactory;
 
-                /** @var UserNotificationFactory $factory */
-                $factory = $app->userNotificationFactory;
+                    if ($app->user->userTypeId == 1 && file_exists(PROJECT_ROOT . '/web/install/index.php')) {
+                        $app->logService->notice('Install.php exists and shouldn\'t');
 
-                if ($app->user->userTypeId == 1 && file_exists(PROJECT_ROOT . '/web/install/index.php')) {
-                    $app->logService->notice('Install.php exists and shouldn\'t');
+                        $notifications[] = $factory->create(__('There is a problem with this installation. "install.php" should be deleted.'));
+                        $extraNotifications++;
+                    }
 
-                    $notifications[] = $factory->create(__('There is a problem with this installation. "install.php" should be deleted.'));
-                    $extraNotifications++;
-                }
+                    // Language match?
+                    if (Translate::getRequestedLanguage() != Translate::GetLocale()) {
+                        $notifications[] = $factory->create(__('Your requested language %s could not be loaded.', Translate::getRequestedLanguage()));
+                        $extraNotifications++;
+                    }
 
-                // Language match?
-                if (Translate::getRequestedLanguage() != Translate::GetLocale()) {
-                    $notifications[] = $factory->create(__('Your requested language %s could not be loaded.', Translate::getRequestedLanguage()));
-                    $extraNotifications++;
-                }
+                    // User notifications
+                    $notifications = array_merge($notifications, $factory->getMine());
 
-                // User notifications
-                $notifications = array_merge($notifications, $factory->getMine());
-
-                // If we aren't already in a notification interrupt, then check to see if we should be
-                if ($resource != '/drawer/notification/interrupt/:id' && !$app->request()->isAjax()) {
-                    foreach ($notifications as $notification) {
-                        /** @var UserNotification $notification */
-                        if ($notification->isInterrupt == 1 && $notification->read == 0) {
-                            $app->flash('interruptedUrl', $app->request()->getResourceUri());
-                            $app->redirectTo('notification.interrupt', ['id' => $notification->notificationId]);
+                    // If we aren't already in a notification interrupt, then check to see if we should be
+                    if ($resource != '/drawer/notification/interrupt/:id' && !$app->request()->isAjax()) {
+                        foreach ($notifications as $notification) {
+                            /** @var UserNotification $notification */
+                            if ($notification->isInterrupt == 1 && $notification->read == 0) {
+                                $app->flash('interruptedUrl', $app->request()->getResourceUri());
+                                $app->redirectTo('notification.interrupt', ['id' => $notification->notificationId]);
+                            }
                         }
                     }
-                }
 
-                $app->view()->appendData(['notifications' => $notifications, 'notificationCount' => $factory->countMyUnread() + $extraNotifications]);
-            }
-            catch (AccessDeniedException $e) {
-                // Drawer not available
+                    $app->view()->appendData(['notifications' => $notifications, 'notificationCount' => $factory->countMyUnread() + $extraNotifications]);
+                } catch (AccessDeniedException $e) {
+                    // Drawer not available
+                }
             }
         });
 
