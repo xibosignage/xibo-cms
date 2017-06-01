@@ -323,6 +323,9 @@ class DataSetColumn implements \JsonSerializable
                 break;
 
             case 1:
+                $dataType = 'TEXT';
+                break;
+
             case 4:
             default:
                 $dataType = 'VARCHAR(1000)';
