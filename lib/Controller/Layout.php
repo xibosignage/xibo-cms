@@ -28,6 +28,7 @@ use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
@@ -98,6 +99,9 @@ class Layout extends Base
     /** @var  DataSetFactory */
     private $dataSetFactory;
 
+    /** @var  CampaignFactory */
+    private $campaignFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -117,8 +121,9 @@ class Layout extends Base
      * @param TagFactory $tagFactory
      * @param MediaFactory $mediaFactory
      * @param DataSetFactory $dataSetFactory
+     * @param CampaignFactory $campaignFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -132,6 +137,7 @@ class Layout extends Base
         $this->tagFactory = $tagFactory;
         $this->mediaFactory = $mediaFactory;
         $this->dataSetFactory = $dataSetFactory;
+        $this->campaignFactory = $campaignFactory;
     }
 
     /**
@@ -718,12 +724,23 @@ class Layout extends Base
                 'text' => __('Preview Layout')
             );
 
+            $layout->buttons[] = ['divider' => true];
+
             // Schedule Now
             $layout->buttons[] = array(
                 'id' => 'layout_button_schedulenow',
                 'url' => $this->urlFor('schedule.now.form', ['id' => $layout->campaignId, 'from' => 'Campaign']),
                 'text' => __('Schedule Now')
             );
+
+            // Assign to Campaign
+            if ($this->getUser()->routeViewable('/campaign')) {
+                $layout->buttons[] = array(
+                    'id' => 'layout_button_assignTo_campaign',
+                    'url' => $this->urlFor('layout.assignTo.campaign.form', ['id' => $layout->layoutId]),
+                    'text' => __('Assign to Campaign')
+                );
+            }
 
             $layout->buttons[] = ['divider' => true];
 
@@ -1459,5 +1476,26 @@ class Layout extends Base
         $widget->getResource();
 
         $this->setNoOutput(true);
+    }
+
+    /**
+     * Assign to Campaign Form
+     * @param $layoutId
+     */
+    public function assignToCampaignForm($layoutId)
+    {
+        // Get the layout
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($layout))
+            throw new AccessDeniedException();
+
+        // Render the form
+        $this->getState()->template = 'layout-form-assign-to-campaign';
+        $this->getState()->setData([
+            'layout' => $layout,
+            'campaigns' => $this->campaignFactory->query()
+        ]);
     }
 }

@@ -25,7 +25,6 @@ use Slim\Helper\Set;
 use Slim\Middleware;
 use Slim\Slim;
 use Stash\Driver\Composite;
-use Stash\Driver\FileSystem;
 use Stash\Pool;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Exception\InstanceSuspendedException;
@@ -600,7 +599,8 @@ class State extends Middleware
                 $container->userGroupFactory,
                 $container->tagFactory,
                 $container->mediaFactory,
-                $container->dataSetFactory
+                $container->dataSetFactory,
+                $container->campaignFactory
             );
         });
 

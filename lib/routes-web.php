@@ -113,6 +113,7 @@ $app->get('/layout/form/delete/:id', '\Xibo\Controller\Layout:deleteForm')->name
 $app->get('/layout/form/retire/:id', '\Xibo\Controller\Layout:retireForm')->name('layout.retire.form');
 $app->get('/layout/form/upgrade/:id', '\Xibo\Controller\Layout:upgradeForm')->name('layout.upgrade.form');
 $app->get('/layout/form/export/:id', '\Xibo\Controller\Layout:exportForm')->name('layout.export.form');
+$app->get('/layout/form/campaign/assign/:id', '\Xibo\Controller\Layout:assignToCampaignForm')->name('layout.assignTo.campaign.form');
 
 //
 // regions
