@@ -605,8 +605,8 @@ class MediaFactory extends BaseFactory
         }
 
         // Duration
-        if ($this->getSanitizer()->getInt('duration', $filterBy) != null) {
-            $duration = $this->parseComparisonOperator($this->getSanitizer()->getInt('duration', $filterBy));
+        if ($this->getSanitizer()->getString('duration', $filterBy) != null) {
+            $duration = $this->parseComparisonOperator($this->getSanitizer()->getString('duration', $filterBy));
 
             $body .= ' AND `media`.duration ' . $duration['operator'] . ' :duration ';
             $params['duration'] = $duration['variable'];
