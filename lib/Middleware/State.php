@@ -310,7 +310,7 @@ class State extends Middleware
             $realPath = realpath($configService->GetSetting('LIBRARY_LOCATION'));
             $cachePath = ($realPath) ? $realPath . '/cache/' : $configService->GetSetting('LIBRARY_LOCATION') . 'cache/';
 
-            $drivers[] = new FileSystem(['path' => $cachePath]);
+            $drivers[] = new \Stash\Driver\FileSystem(['path' => $cachePath]);
         }
 
         // Create a composite driver
