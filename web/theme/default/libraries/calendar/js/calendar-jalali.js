@@ -701,16 +701,28 @@ if(!String.prototype.formatNum) {
         var time_start = this.options.time_start.split(":");
         var time_end = this.options.time_end.split(":");
 
-        data.hours = (parseInt(time_end[0]) - parseInt(time_start[0])) * time_split_hour;
+        if (time_end[0] === "00" && time_end[1] === "00") {
+            data.hours = 24 * time_split_hour;
+        } else {
+            data.hours = (parseInt(time_end[0]) - parseInt(time_start[0])) * time_split_hour;
+        }
         var lines = data.hours * time_split_count - parseInt(time_start[1]) / time_split;
         var ms_per_line = (60000 * time_split);
 
         var start = new Date(this.options.position.start.getTime());
         start.setHours(time_start[0]);
         start.setMinutes(time_start[1]);
+
         var end = new Date(this.options.position.end.getTime());
-        end.setHours(time_end[0]);
-        end.setMinutes(time_end[1]);
+        if (time_end[0] === "00" && time_end[1] === "00") {
+            end.setHours(time_end[0]);
+            end.setMinutes(time_end[1]);
+            end.setTime(end.getTime()+86400000);
+        }
+        else {
+            end.setHours(time_end[0]);
+            end.setMinutes(time_end[1]);
+        }
 
         data.all_day = [];
         data.by_hour = [];

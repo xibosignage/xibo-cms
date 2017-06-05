@@ -61,7 +61,7 @@ $(document).ready(function() {
 
         var options = {
             time_start: '00:00',
-            time_end: '23:59',
+            time_end: '00:00',
             events_source: function () { return events; },
             view: 'month',
             tmpl_path: function (name) {
