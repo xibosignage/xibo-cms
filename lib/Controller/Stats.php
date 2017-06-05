@@ -374,6 +374,7 @@ class Stats extends Base
         $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getSanitizer()->getDate('availabilityFromDt'));
         $toDt = $this->getSanitizer()->getDate('toDt', $this->getSanitizer()->getDate('availabilityToDt'));
         $displayId = $this->getSanitizer()->getInt('displayId');
+        $onlyLoggedIn = $this->getSanitizer()->getCheckbox('onlyLoggedIn') == 1;
 
         // Get an array of display id this user has access to.
         $displayIds = array();
@@ -393,17 +394,21 @@ class Stats extends Base
 
         $SQL = '
             SELECT display.display,
-                SUM(LEAST(end, :end) - GREATEST(start, :start)) AS duration
+                SUM(LEAST(IFNULL(`end`, :end), :end) - GREATEST(`start`, :start)) AS duration
               FROM `displayevent`
                 INNER JOIN `display`
                 ON display.displayId = `displayevent`.displayId
-             WHERE start <= :end
-                AND end >= :start
+             WHERE `start` <= :end
+                AND IFNULL(`end`, :end) >= :start
                 AND display.displayId IN (' . implode(',', $displayIds) . ') ';
 
         if ($displayId != 0) {
             $SQL .= ' AND display.displayId = :displayId ';
             $params['displayId'] = $displayId;
+        }
+
+        if ($onlyLoggedIn) {
+            $SQL .= ' AND `display`.loggedIn = 1 ';
         }
 
         $SQL .= '
@@ -435,7 +440,7 @@ class Stats extends Base
         foreach ($rows as $row) {
             $output[] = array(
                 'label' => $this->getSanitizer()->string($row['display']),
-                'value' => $this->getSanitizer()->double($row['duration']) / $divisor
+                'value' => round($this->getSanitizer()->double($row['duration']) / $divisor, 2)
             );
         }
 
