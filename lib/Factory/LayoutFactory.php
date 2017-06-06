@@ -385,6 +385,7 @@ class LayoutFactory extends BaseFactory
 
             // Populate Playlists (XLF doesn't contain any playlists)
             $playlist = $region->playlists[0];
+            $playlist->ownerId = $regionOwnerId;
 
             // Get all widgets
             foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media') as $mediaNode) {
@@ -524,11 +525,26 @@ class LayoutFactory extends BaseFactory
         // Construct the Layout
         $layout = $this->loadByXlf($zip->getFromName('layout.xml'));
 
-        $this->getLog()->debug('Layout Loaded: %s.', $layout);
+        $this->getLog()->debug('Layout Loaded: ' . $layout);
 
         // Override the name/description
         $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);
         $layout->description = (isset($layoutDetails['description']) ? $layoutDetails['description'] : '');
+
+        // Check that the resolution we have in this layout exists, and if not create it.
+        try {
+            if ($layout->schemaVersion < 2)
+                $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
+            else
+                $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
+
+        } catch (NotFoundException $notFoundException) {
+            $this->getLog()->info('Import is for an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
+
+            $resolution = $this->resolutionFactory->create($layout->width . ' x ' . $layout->height, $layout->width, $layout->height);
+            $resolution->userId = $this->getUser()->userId;
+            $resolution->save();
+        }
 
         // Update region names
         if (isset($layoutDetails['regions']) && count($layoutDetails['regions']) > 0) {
@@ -555,7 +571,7 @@ class LayoutFactory extends BaseFactory
         $layout->tags[] = $this->tagFactory->tagFromString('imported');
 
         // Set the owner
-        $layout->setOwner($userId);
+        $layout->setOwner($userId, true);
 
         // Track if we've added any fonts
         $fontsAdded = false;
@@ -668,10 +684,10 @@ class LayoutFactory extends BaseFactory
 
         if ($dataSets !== false) {
 
-            $this->getLog()->debug('There are DataSets to import.');
-
             $dataSets = json_decode($dataSets, true);
-            
+
+            $this->getLog()->debug('There are ' . count($dataSets) . ' DataSets to import.');
+
             foreach ($dataSets as $item) {
                 // Hydrate a new dataset object with this json object
                 $dataSet = $libraryController->getDataSetFactory()->createEmpty()->hydrate($item);

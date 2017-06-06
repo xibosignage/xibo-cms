@@ -351,8 +351,9 @@ class Layout implements \JsonSerializable
     /**
      * Sets the Owner of the Layout (including children)
      * @param int $ownerId
+     * @param bool $cascade Cascade ownership change down to Playlist records
      */
-    public function setOwner($ownerId)
+    public function setOwner($ownerId, $cascade = false)
     {
         $this->ownerId = $ownerId;
 
@@ -360,7 +361,7 @@ class Layout implements \JsonSerializable
 
         foreach ($this->regions as $region) {
             /* @var Region $region */
-            $region->setOwner($ownerId);
+            $region->setOwner($ownerId, $cascade);
         }
     }
 

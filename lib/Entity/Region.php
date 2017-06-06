@@ -213,12 +213,20 @@ class Region implements \JsonSerializable
     /**
      * Sets the Owner
      * @param int $ownerId
+     * @param bool $cascade Cascade ownership change down to Playlist records
      */
-    public function setOwner($ownerId)
+    public function setOwner($ownerId, $cascade = false)
     {
         $this->load();
 
         $this->ownerId = $ownerId;
+
+        if ($cascade) {
+            foreach ($this->playlists as $playlist) {
+                /* @var Playlist $playlist */
+                $playlist->setOwner($ownerId);
+            }
+        }
     }
 
     /**
