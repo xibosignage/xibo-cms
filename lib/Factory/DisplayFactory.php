@@ -298,6 +298,77 @@ class DisplayFactory extends BaseFactory
             $params['excludeDisplayGroupId'] = $this->getSanitizer()->getInt('exclude_displaygroupid', $filterBy);
         }
 
+        // Media ID
+        if ($this->getSanitizer()->getInt('mediaId', $filterBy) !== null) {
+            $body .= '
+                AND display.displayId IN (
+                    SELECT `lkdisplaydg`.displayId
+                       FROM `lkmediadisplaygroup`
+                        INNER JOIN `lkdgdg`
+                        ON `lkdgdg`.parentId = `lkmediadisplaygroup`.displayGroupId
+                        INNER JOIN `lkdisplaydg`
+                        ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
+                     WHERE `lkmediadisplaygroup`.mediaId = :mediaId
+                    UNION
+                    SELECT `lkdisplaydg`.displayId
+                      FROM `campaign`
+                        INNER JOIN `schedule`
+                        ON `schedule`.CampaignID = campaign.CampaignID
+                        INNER JOIN `lkscheduledisplaygroup`
+                        ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
+                        INNER JOIN `lkcampaignlayout`
+                        ON lkcampaignlayout.CampaignID = campaign.CampaignID
+                        INNER JOIN `lkdgdg`
+                        ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
+                        INNER JOIN `lkdisplaydg`
+                        ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
+                     WHERE `lkcampaignlayout`.layoutId IN (                    
+                        SELECT `region`.layoutId
+                          FROM `lkwidgetmedia`
+                           INNER JOIN `widget`
+                           ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                           INNER JOIN `lkregionplaylist`
+                           ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                           INNER JOIN `region`
+                           ON `region`.regionId = `lkregionplaylist`.regionId
+                           INNER JOIN layout
+                           ON layout.LayoutID = region.layoutId
+                         WHERE lkwidgetmedia.mediaId = :mediaId
+                        UNION
+                        SELECT `layout`.layoutId
+                          FROM `layout`
+                         WHERE `layout`.backgroundImageId = :mediaId
+                       )
+                    UNION
+                    SELECT `lkdisplaydg`.displayId
+                      FROM `lklayoutdisplaygroup`
+                        INNER JOIN `lkdgdg`
+                        ON `lkdgdg`.parentId = `lklayoutdisplaygroup`.displayGroupId
+                        INNER JOIN `lkdisplaydg`
+                        ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
+                     WHERE `lklayoutdisplaygroup`.layoutId IN (
+                         SELECT `region`.layoutId
+                              FROM `lkwidgetmedia`
+                               INNER JOIN `widget`
+                               ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                               INNER JOIN `lkregionplaylist`
+                               ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                               INNER JOIN `region`
+                               ON `region`.regionId = `lkregionplaylist`.regionId
+                               INNER JOIN layout
+                               ON layout.LayoutID = region.layoutId
+                             WHERE lkwidgetmedia.mediaId = :mediaId
+                            UNION
+                            SELECT `layout`.layoutId
+                              FROM `layout`
+                             WHERE `layout`.backgroundImageId = :mediaId
+                        )
+                )
+            ';
+
+            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))

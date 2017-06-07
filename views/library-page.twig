@@ -289,5 +289,61 @@
                 });
             });
         }
+
+        ///
+        /// Library Usage Form
+        ///
+        function usageFormOpen(dialog) {
+            var usageTable = $("#usageReportTable").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true,
+                stateSave: true,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("library.usage") }}".replace(":id", $("#usageReportTable").data().mediaId),
+                    "data": function(dataDisplay) {
+                        $.extend(dataDisplay, $(dialog).find("#usageReportForm").serializeObject());
+                        return dataDisplay;
+                    }
+                },
+                "columns": [
+                    { "data": "displayId"},
+                    { "data": "display" },
+                    {
+                        "data": "mediaInventoryStatus",
+                        "render": function (data, type, row) {
+                            if (type !== "display")
+                                return data;
+
+                            var icon = "";
+                            if (data === 1)
+                                icon = "fa-check";
+                            else if (data === 0)
+                                icon = "fa-times";
+                            else
+                                icon = "fa-cloud-download";
+
+                            return "<span class='fa " + icon + "'></span>";
+                        }
+                    },
+                    { "data": "loggedIn", "render": dataTableTickCrossColumn},
+                    {
+                        "name": "clientVersion",
+                        "data": function (data, type) {
+                            if (type !== "display")
+                                return data.clientVersion;
+
+                            return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
+                        },
+                        "visible": true
+                    },
+                ]
+            });
+
+            usageTable.on('draw', dataTableDraw);
+            usageTable.on('processing.dt', dataTableProcessing);
+        }
     </script>
 {% endblock %}

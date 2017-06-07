@@ -444,6 +444,14 @@ class Library extends Base
                 'url' => $this->urlFor('library.download', ['id' => $media->mediaId]) . '?attachment=' . $media->fileName,
                 'text' => __('Download')
             );
+
+            $media->buttons[] = ['divider' => true];
+
+            $media->buttons[] = array(
+                'id' => 'usage_report_button',
+                'url' => $this->urlFor('library.usage.form', ['id' => $media->mediaId]),
+                'text' => __('Usage Report')
+            );
         }
 
         $this->getState()->template = 'grid';
@@ -1304,5 +1312,52 @@ class Library extends Base
             'id' => $media->mediaId,
             'data' => $media
         ]);
+    }
+
+    /**
+     * Library Usage Report Form
+     * @param int $mediaId
+     */
+    public function usageForm($mediaId)
+    {
+        $media = $this->mediaFactory->getById($mediaId);
+
+        if (!$this->getUser()->checkViewable($media))
+            throw new AccessDeniedException();
+
+        $this->getState()->template = 'library-usage-form';
+        $this->getState()->setData([
+            'media' => $media
+        ]);
+    }
+
+    /**
+     * @SWG\Get(
+     *  path="/library/usage/{mediaId}",
+     *  operationId="libraryUsageReport",
+     *  tags={"library"},
+     *  summary="Get Library Item Usage Report",
+     *  description="Get the records for the library item usage report",
+     *  @SWG\Response(
+     *     response=200,
+     *     description="successful operation"
+     *  )
+     * )
+     *
+     * @param int $mediaId
+     */
+    public function usage($mediaId)
+    {
+        $media = $this->mediaFactory->getById($mediaId);
+
+        if (!$this->getUser()->checkViewable($media))
+            throw new AccessDeniedException();
+
+        // Get a list of displays that this mediaId is used on
+        $displays = $this->displayFactory->query($this->gridRenderSort(), $this->gridRenderFilter(['mediaId' => $mediaId]));
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $this->mediaFactory->countLast();
+        $this->getState()->setData($displays);
     }
 }
