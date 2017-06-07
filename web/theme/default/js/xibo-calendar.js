@@ -503,6 +503,14 @@ var setupScheduleNowForm = function(form) {
         $(form).find(".schedule-now-seconds-field").hide();
     }
 
+    $(form).find("#always").on("change", function() {
+        var always = $(form).find("#always").is(':checked');
+
+        $(form).find("#dayPartId").val(always ? 1 : 0);
+
+        $(form).find(".duration-part").toggle();
+    })
+
     var evaluateDates = $.debounce(500, function() {
       scheduleNowFormEvaluateDates(form);
     });
@@ -517,33 +525,37 @@ var setupScheduleNowForm = function(form) {
  * Evaluate dates on schedule form and fill the date input fields
  */
 var scheduleNowFormEvaluateDates = function(form) {
-  
-    var hours = $(form).find("#hours").val();
-    var minutes = $(form).find("#minutes").val();
-    var seconds = $(form).find("#seconds").val();
 
-    //var fromDt = moment().add(-24, "hours");
-    var fromDt = moment();
-    var toDt = moment();
+    var always = $(form).find("#always").is(':checked');
 
-    // Use Hours, Minutes and Seconds to generate a from date
-    var $messageDiv = $('.scheduleNowMessage');
+    if (!always) {
+        var hours = $(form).find("#hours").val();
+        var minutes = $(form).find("#minutes").val();
+        var seconds = $(form).find("#seconds").val();
 
-    if (hours != "")
-        toDt.add(hours, "hours");
+        //var fromDt = moment().add(-24, "hours");
+        var fromDt = moment();
+        var toDt = moment();
 
-    if (minutes != "")
-        toDt.add(minutes, "minutes");
+        // Use Hours, Minutes and Seconds to generate a from date
+        var $messageDiv = $('.scheduleNowMessage');
 
-    if (seconds != "")
-        toDt.add(seconds, "seconds");
+        if (hours != "")
+            toDt.add(hours, "hours");
 
-    // Update the message div
-    $messageDiv.html($messageDiv.data().template.replace("[fromDt]", fromDt.format(jsDateFormat)).replace("[toDt]", toDt.format(jsDateFormat))).removeClass("hidden");
+        if (minutes != "")
+            toDt.add(minutes, "minutes");
 
-    // Update the final submit fields
-    $("#fromDt").val(fromDt.format(systemDateFormat));
-    $("#toDt").val(toDt.format(systemDateFormat));
+        if (seconds != "")
+            toDt.add(seconds, "seconds");
+
+        // Update the message div
+        $messageDiv.html($messageDiv.data().template.replace("[fromDt]", fromDt.format(jsDateFormat)).replace("[toDt]", toDt.format(jsDateFormat))).removeClass("hidden");
+
+        // Update the final submit fields
+        $("#fromDt").val(fromDt.format(systemDateFormat));
+        $("#toDt").val(toDt.format(systemDateFormat));
+    }
 };
 
 /**
