@@ -874,27 +874,29 @@ if(!String.prototype.formatNum) {
 		
 	    // Display groups
 		t.displayGroups = [];
-		
-		//		Assigned display Group
-	    var assignedDisplayGroup = targetEvent.displayGroupId;
-	    if (typeof results.displayGroups[assignedDisplayGroup] != 'undefined'){
-			t.displayGroups.push( { link: displayGroupLink, name: results.displayGroups[assignedDisplayGroup].displayGroup } );
-		}
+
+        // Assigned display group
+        var assignedDisplayGroup = targetEvent.displayGroupId;
+
+        // Add the final display group ( if it's not the directly assigned one)
+        if (data.selectedDisplayGroup != assignedDisplayGroup) {
+            if (typeof results.displayGroups[data.selectedDisplayGroup] != 'undefined'){
+                t.displayGroups.push( { link: displayGroupLink, name: results.displayGroups[data.selectedDisplayGroup].displayGroup } );
+            }
+        }
 	    
-	    // 		Add intermediate display groups
-	    for (var i = 0; i < targetEvent.intermediateDisplayGroupIds.length; i++) {
+	    // Add intermediate display groups
+	    for (var i = targetEvent.intermediateDisplayGroupIds.length; i >= 0; i--) {
 	        var displayGroupId = targetEvent.intermediateDisplayGroupIds[i];
 	        if (typeof results.displayGroups[displayGroupId] != 'undefined'){
 				t.displayGroups.push( { link: displayGroupLink, name: results.displayGroups[displayGroupId].displayGroup } );
 	        }
 	    }
-	    
-	    // 		Add the final display group ( if it's not the directly assigned one)
-	    if (data.selectedDisplayGroup != assignedDisplayGroup) {
-	        if (typeof results.displayGroups[data.selectedDisplayGroup] != 'undefined'){
-	            t.displayGroups.push( { link: displayGroupLink, name: results.displayGroups[data.selectedDisplayGroup].displayGroup } );
-	        }
-	    }
+
+        // Assigned display Group
+        if (typeof results.displayGroups[assignedDisplayGroup] != 'undefined'){
+            t.displayGroups.push( { link: displayGroupLink, name: results.displayGroups[assignedDisplayGroup].displayGroup } );
+        }
 		
 		return this.options.templates['breadcrumb-trail'](t);
 	};
