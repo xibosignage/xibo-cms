@@ -628,7 +628,8 @@ class State extends Middleware
                 $container->regionFactory,
                 $container->dataSetFactory,
                 $container->displayFactory,
-                $container->scheduleFactory
+                $container->scheduleFactory,
+                $container->dayPartFactory
             );
         });
 

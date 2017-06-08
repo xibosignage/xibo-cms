@@ -26,7 +26,9 @@ use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\LibraryFullException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -122,6 +124,9 @@ class Library extends Base
     /** @var ScheduleFactory  */
     private $scheduleFactory;
 
+    /** @var  DayPartFactory */
+    private $dayPartFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -147,8 +152,9 @@ class Library extends Base
      * @param DataSetFactory $dataSetFactory
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
+     * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -168,6 +174,7 @@ class Library extends Base
         $this->dataSetFactory = $dataSetFactory;
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
+        $this->dayPartFactory = $dayPartFactory;
     }
 
     /**
@@ -1325,9 +1332,13 @@ class Library extends Base
         if (!$this->getUser()->checkViewable($media))
             throw new AccessDeniedException();
 
-        $this->getState()->template = 'library-usage-form';
+        // Get a list of displays that this mediaId is used on
+        $displays = $this->displayFactory->query($this->gridRenderSort(), $this->gridRenderFilter(['disableUserCheck' => 1, 'mediaId' => $mediaId]));
+
+        $this->getState()->template = 'library-form-usage';
         $this->getState()->setData([
-            'media' => $media
+            'media' => $media,
+            'countDisplays' => count($displays)
         ]);
     }
 
@@ -1353,8 +1364,61 @@ class Library extends Base
         if (!$this->getUser()->checkViewable($media))
             throw new AccessDeniedException();
 
-        // Get a list of displays that this mediaId is used on
+        // Get a list of displays that this mediaId is used on by direct assignment
         $displays = $this->displayFactory->query($this->gridRenderSort(), $this->gridRenderFilter(['mediaId' => $mediaId]));
+
+        // if we've been provided a date, then we need to assess the schedules
+        $mediaDate = $this->getSanitizer()->getDate('mediaEventDate');
+        $toDate = $mediaDate->copy()->addDay();
+
+        if ($mediaDate !== null) {
+            // Get a list of scheduled events that this mediaId is used on, based on the date provided
+            $events = $this->scheduleFactory->query(null, [
+                'futureSchedulesFrom' => $mediaDate->format('U'),
+                'futureSchedulesTo' => $toDate->format('U')
+            ]);
+
+            foreach ($events as $row) {
+                /* @var \Xibo\Entity\Schedule $row */
+
+                // Generate this event
+                $row
+                    ->setDateService($this->getDate())
+                    ->setDayPartFactory($this->dayPartFactory);
+
+                try {
+                    $scheduleEvents = $row->getEvents($mediaDate, $toDate);
+                } catch (XiboException $e) {
+                    $this->getLog()->error('Unable to getEvents for ' . $row->eventId);
+                    continue;
+                }
+
+                if (count($scheduleEvents) <= 0)
+                    continue;
+
+                $this->getLog()->debug('EventId ' . $row->eventId . ' as events: ' . json_encode($scheduleEvents));
+
+                // Load the display groups
+                $row->load();
+
+                foreach ($row->displayGroups as $displayGroup) {
+                    foreach ($this->displayFactory->getByDisplayGroupId($displayGroup->displayGroupId) as $display) {
+                        $found = false;
+
+                        // Check to see if our ID is already in our list
+                        foreach ($displays as $existing) {
+                            if ($existing->displayId === $display->displayId) {
+                                $found = true;
+                                break;
+                            }
+                        }
+
+                        if (!$found)
+                            $displays[] = $display;
+                    }
+                }
+            }
+        }
 
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->mediaFactory->countLast();

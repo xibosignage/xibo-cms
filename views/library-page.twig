@@ -311,6 +311,7 @@
                 "columns": [
                     { "data": "displayId"},
                     { "data": "display" },
+                    { "data": "description" },
                     {
                         "data": "mediaInventoryStatus",
                         "render": function (data, type, row) {
@@ -327,23 +328,28 @@
 
                             return "<span class='fa " + icon + "'></span>";
                         }
-                    },
-                    { "data": "loggedIn", "render": dataTableTickCrossColumn},
-                    {
-                        "name": "clientVersion",
-                        "data": function (data, type) {
-                            if (type !== "display")
-                                return data.clientVersion;
-
-                            return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
-                        },
-                        "visible": true
-                    },
+                    }
                 ]
             });
 
             usageTable.on('draw', dataTableDraw);
             usageTable.on('processing.dt', dataTableProcessing);
+
+            $("#mediaEventDateLink").datetimepicker({
+                format: bootstrapDateFormatDateOnly,
+                autoclose: true,
+                language: language,
+                calendarType: calendarType,
+                minView: 2,
+                todayHighlight: true
+            });
+
+            $("#dateClearButton").on("click", function () {
+                $("#mediaEventDateLink").val("")
+                $("#mediaEventDate").val("");
+                $("#mediaEventDateLink").datetimepicker("update");
+                usageTable.ajax.reload();
+            });
         }
     </script>
 {% endblock %}

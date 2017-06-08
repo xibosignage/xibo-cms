@@ -128,7 +128,7 @@ class DisplayFactory extends BaseFactory
 
     /**
      * @param int $displayGroupId
-     * @return array[Display]
+     * @return Display[]
      * @throws NotFoundException
      */
     public function getByDisplayGroupId($displayGroupId)
@@ -139,7 +139,7 @@ class DisplayFactory extends BaseFactory
     /**
      * @param array $sortOrder
      * @param array $filterBy
-     * @return array[Display]
+     * @return Display[]
      */
     public function query($sortOrder = null, $filterBy = null)
     {
@@ -298,8 +298,9 @@ class DisplayFactory extends BaseFactory
             $params['excludeDisplayGroupId'] = $this->getSanitizer()->getInt('exclude_displaygroupid', $filterBy);
         }
 
-        // Media ID
+        // Media ID - direct assignment
         if ($this->getSanitizer()->getInt('mediaId', $filterBy) !== null) {
+
             $body .= '
                 AND display.displayId IN (
                     SELECT `lkdisplaydg`.displayId
@@ -309,36 +310,6 @@ class DisplayFactory extends BaseFactory
                         INNER JOIN `lkdisplaydg`
                         ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
                      WHERE `lkmediadisplaygroup`.mediaId = :mediaId
-                    UNION
-                    SELECT `lkdisplaydg`.displayId
-                      FROM `campaign`
-                        INNER JOIN `schedule`
-                        ON `schedule`.CampaignID = campaign.CampaignID
-                        INNER JOIN `lkscheduledisplaygroup`
-                        ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
-                        INNER JOIN `lkcampaignlayout`
-                        ON lkcampaignlayout.CampaignID = campaign.CampaignID
-                        INNER JOIN `lkdgdg`
-                        ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
-                        INNER JOIN `lkdisplaydg`
-                        ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
-                     WHERE `lkcampaignlayout`.layoutId IN (                    
-                        SELECT `region`.layoutId
-                          FROM `lkwidgetmedia`
-                           INNER JOIN `widget`
-                           ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                           INNER JOIN `lkregionplaylist`
-                           ON `lkregionplaylist`.playlistId = `widget`.playlistId
-                           INNER JOIN `region`
-                           ON `region`.regionId = `lkregionplaylist`.regionId
-                           INNER JOIN layout
-                           ON layout.LayoutID = region.layoutId
-                         WHERE lkwidgetmedia.mediaId = :mediaId
-                        UNION
-                        SELECT `layout`.layoutId
-                          FROM `layout`
-                         WHERE `layout`.backgroundImageId = :mediaId
-                       )
                     UNION
                     SELECT `lkdisplaydg`.displayId
                       FROM `lklayoutdisplaygroup`
