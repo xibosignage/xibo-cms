@@ -579,7 +579,7 @@ class Library extends Base
      *      required=false
      *  ),
      *  @SWG\Parameter(
-     *      name="removeOldRevisions",
+     *      name="deleteOldRevisions",
      *      in="formData",
      *      description="Flag (0 , 1), to either remove or leave the old file revisions (use with oldMediaId)",
      *      type="integer",
