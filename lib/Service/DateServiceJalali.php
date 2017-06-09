@@ -48,27 +48,26 @@ class DateServiceJalali implements DateServiceInterface
     public function parse($string = null, $format = null)
     {
         // Get a local date (jalali date)
-        if ($string === null)
+        if ($string === null) {
             $string = $this->getLocalDate();
-
-        if ($format == 'U') {
-            // We are a timestamp, create a date out of the time stamp directly
-            return \Jenssegers\Date\Date::createFromFormat($format, $string);
+            $format = null;
         }
 
-        // If we are Jalali, then we want to convert from Jalali back to Gregorian.
-        // Split the time stamp into its component parts and pass it to the conversion.
-        $date = trim($string);
+        if ($format === null)
+            $format = $this->getSystemFormat();
 
-        $split = (stripos($date, ' ') > 0) ? explode(' ', $date) : array($date, '');
+        // We are a timestamp, create a date out of the time stamp directly, timestamps are always calendar agnostic
+        if ($format == 'U') {
+            return \Jenssegers\Date\Date::createFromFormat($format, $string);
+        } else {
+            // If we are Jalali, then we want to convert from Jalali back to Gregorian.
+            $jDate = \Jenssegers\Date\Date::createFromFormat($format, $string);
 
-        $dateSplit = explode('-', $split[0]);
-        $timeSplit = explode(':', $split[1]);
+            $date = \jDateTime::toGregorian($jDate->year, $jDate->month, $jDate->day);
 
-        $date = \jDateTime::toGregorian($dateSplit[0], $dateSplit[1], $dateSplit[2]);
-
-        // Create a date out of that string.
-        return \Jenssegers\Date\Date::create($date[0], $date[1], $date[2], $timeSplit[0], $timeSplit[1]);
+            // Create a date out of that string.
+            return \Jenssegers\Date\Date::create($date[0], $date[1], $date[2], $jDate->hour, $jDate->minute, $jDate->second);
+        }
     }
 
     /**
