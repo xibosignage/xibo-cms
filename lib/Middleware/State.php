@@ -1270,7 +1270,7 @@ class State extends Middleware
                 $container->store,
                 $container->logService,
                 $container->sanitizerService,
-                $container->date,
+                $container->dateService,
                 $container->permissionFactory,
                 $container->widgetFactory
             );
@@ -1281,6 +1281,7 @@ class State extends Middleware
                 $container->store,
                 $container->logService,
                 $container->sanitizerService,
+                $container->dateService,
                 $container->permissionFactory,
                 $container->regionOptionFactory,
                 $container->playlistFactory

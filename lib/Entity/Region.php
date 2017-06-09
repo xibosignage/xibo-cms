@@ -28,6 +28,7 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\RegionOptionFactory;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -133,6 +134,9 @@ class Region implements \JsonSerializable
      */
     public $tempId = null;
 
+    /**  @var DateServiceInterface */
+    private $dateService;
+
     /**
      * @var RegionFactory
      */
@@ -157,14 +161,16 @@ class Region implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param DateServiceInterface $date
      * @param RegionFactory $regionFactory
      * @param PermissionFactory $permissionFactory
      * @param RegionOptionFactory $regionOptionFactory
      * @param PlaylistFactory $playlistFactory
      */
-    public function __construct($store, $log, $regionFactory, $permissionFactory, $regionOptionFactory, $playlistFactory)
+    public function __construct($store, $log, $date, $regionFactory, $permissionFactory, $regionOptionFactory, $playlistFactory)
     {
         $this->setCommonDependencies($store, $log);
+        $this->dateService = $date;
         $this->regionFactory = $regionFactory;
         $this->permissionFactory = $permissionFactory;
         $this->regionOptionFactory = $regionOptionFactory;
@@ -409,7 +415,8 @@ class Region implements \JsonSerializable
     public function delete($options = [])
     {
         $options = array_merge([
-            'deleteOrphanedPlaylists' => true
+            'deleteOrphanedPlaylists' => true,
+            'notify' => true
         ], $options);
 
         // We must ensure everything is loaded before we delete
@@ -456,6 +463,10 @@ class Region implements \JsonSerializable
 
         // Delete this region
         $this->getStore()->update('DELETE FROM `region` WHERE regionId = :regionId', array('regionId' => $this->regionId));
+
+        // Notify Layout
+        if ($options['notify'])
+            $this->notifyLayout();
     }
 
     // Add / Update
@@ -566,5 +577,15 @@ class Region implements \JsonSerializable
 
 
         $this->getStore()->update($sql, $params);
+    }
+
+    public function notifyLayout()
+    {
+        $this->getStore()->update('
+            UPDATE `layout` SET `status` = 3, `modifiedDT` = :modifiedDt WHERE layoutId = :layoutId
+        ', [
+            'layoutId' => $this->layoutId,
+            'modifiedDt' => $this->dateService->getLocalDate()
+        ]);
     }
 }
