@@ -670,7 +670,7 @@ class Layout extends Base
             $layout->thumbnail = '';
 
             if ($layout->backgroundImageId != 0) {
-                $download = $this->urlFor('library.download', ['id' => $layout->backgroundImageId]) . '?preview=1';
+                $download = $this->urlFor('layout.download.background', ['id' => $layout->layoutId]) . '?preview=1';
                 $layout->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56" /></i></a>';
             }
 
@@ -1422,37 +1422,6 @@ class Layout extends Base
      * @param int $layoutId
      * @throws NotFoundException
      * @throws AccessDeniedException
-     *
-     * @SWG\Get(
-     *  path="/library/download/{mediaId}/{type}",
-     *  operationId="libraryDownload",
-     *  tags={"library"},
-     *  summary="Download Media",
-     *  description="Download a Media file from the Library",
-     *  produces={"application/octet-stream"},
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="path",
-     *      description="The Layout ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(type="file"),
-     *      @SWG\Header(
-     *          header="X-Sendfile",
-     *          description="Apache Send file header - if enabled.",
-     *          type="string"
-     *      ),
-     *      @SWG\Header(
-     *          header="X-Accel-Redirect",
-     *          description="nginx send file header - if enabled.",
-     *          type="string"
-     *      )
-     *  )
-     * )
      */
     public function downloadBackground($layoutId)
     {
