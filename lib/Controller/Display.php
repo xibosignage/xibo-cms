@@ -687,6 +687,7 @@ class Display extends Base
             'profiles' => $this->displayProfileFactory->query(NULL, array('type' => $display->clientType)),
             'settings' => $profile,
             'timeZones' => $timeZones,
+            'displayLockName' => ($this->getConfig()->GetSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit')
         ]);
     }
@@ -885,7 +886,9 @@ class Display extends Base
         $defaultLayoutId = $display->defaultLayoutId;
 
         // Update properties
-        $display->display = $this->getSanitizer()->getString('display');
+        if ($this->getConfig()->GetSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 0)
+            $display->display = $this->getSanitizer()->getString('display');
+
         $display->description = $this->getSanitizer()->getString('description');
         $display->auditingUntil = $this->getSanitizer()->getDate('auditingUntil');
         $display->defaultLayoutId = $this->getSanitizer()->getInt('defaultLayoutId');
