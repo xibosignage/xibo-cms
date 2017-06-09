@@ -1369,10 +1369,11 @@ class Library extends Base
 
         // if we've been provided a date, then we need to assess the schedules
         $mediaDate = $this->getSanitizer()->getDate('mediaEventDate');
-        $toDate = $mediaDate->copy()->addDay();
 
         if ($mediaDate !== null) {
             // Get a list of scheduled events that this mediaId is used on, based on the date provided
+            $toDate = $mediaDate->copy()->addDay();
+
             $events = $this->scheduleFactory->query(null, [
                 'futureSchedulesFrom' => $mediaDate->format('U'),
                 'futureSchedulesTo' => $toDate->format('U')
