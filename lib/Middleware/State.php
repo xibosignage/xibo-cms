@@ -95,6 +95,15 @@ class State extends Middleware
             if ($requestEtag) {
                 $app->request()->headers->set('IF_NONE_MATCH', str_replace('-gzip', '', $requestEtag));
             }
+
+            // Handle correctly outputting cache headers for AJAX requests
+            // IE cache busting
+            if ($app->getName() === 'web' && $app->request()->isAjax() && $app->request()->isGet()) {
+                $app->response()->headers->set('Cache-control', 'no-cache');
+                $app->response()->headers->set('Cache-control', 'no-store');
+                $app->response()->headers->set('Pragma', 'no-cache');
+                $app->response()->headers->set('Expires', '0');
+            }
         });
 
         // Attach a hook to be called after the route has been dispatched
