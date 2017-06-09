@@ -278,7 +278,7 @@ $(document).ready(function() {
                         tooltip: 'always',
                         step: 5,
                         formatter: function(value) {
-                            return moment(value*60, "X").format(jsTimeFormat);
+                            return moment().startOf("day").minute(value).format(jsTimeFormat);
                         }
                     }).off('slideStop').on('slideStop', function(ev) {
                         calendar.view();
