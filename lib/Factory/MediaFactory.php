@@ -461,6 +461,7 @@ class MediaFactory extends BaseFactory
 
         // Unused only?
         if ($this->getSanitizer()->getInt('unusedOnly', $filterBy) !== null) {
+
             $body .= '
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`)
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkmediadisplaygroup`)
@@ -468,6 +469,35 @@ class MediaFactory extends BaseFactory
                 AND media.type <> \'module\'
                 AND media.type <> \'font\'
             ';
+
+            // DataSets with library images
+            $dataSetSql = '
+                SELECT dataset.dataSetId, datasetcolumn.heading
+                  FROM dataset
+                    INNER JOIN datasetcolumn
+                    ON datasetcolumn.DataSetID = dataset.DataSetID
+                 WHERE DataTypeID = 5;
+            ';
+
+            $dataSets = $this->getStore()->select($dataSetSql, []);
+
+            $body .= ' AND media.mediaID NOT IN (';
+
+            $first = true;
+            foreach ($dataSets as $dataSet) {
+
+                if (!$first)
+                    $body .= ' UNION ALL ';
+
+                $first = false;
+
+                $dataSetId = $this->getSanitizer()->getInt('dataSetId', $dataSet);
+                $heading = $this->getSanitizer()->getString('heading', $dataSet);
+
+                $body .= ' SELECT ' . $heading . ' AS mediaId FROM `dataset_' . $dataSetId . '`';
+            }
+
+            $body .= ') ';
         }
 
         if ($this->getSanitizer()->getString('name', $filterBy) != '') {
