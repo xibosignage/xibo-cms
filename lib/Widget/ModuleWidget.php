@@ -1054,7 +1054,7 @@ abstract class ModuleWidget implements ModuleInterface
     public function templatesAvailable()
     {
         if (!isset($this->module->settings['templates'])) {
-            
+
             $this->module->settings['templates'] = [];
 
             // Scan the folder for template files
@@ -1062,12 +1062,12 @@ abstract class ModuleWidget implements ModuleInterface
                 // Read the contents, json_decode and add to the array
                 $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
             }
-            
+
         }
-            
+
         return $this->module->settings['templates'];
-    }    
-    
+    }
+
     /**
      * Get by Template Id
      * @param int $templateId
@@ -1076,13 +1076,13 @@ abstract class ModuleWidget implements ModuleInterface
     public function getTemplateById($templateId)
     {
         $templates = $this->templatesAvailable();
-        
+
         foreach ($templates as $item) {
             if( $item['id'] == $templateId ) {
                 $template = $item;
             }
         }
-        
+
         return $template;
     }
 
@@ -1153,4 +1153,139 @@ abstract class ModuleWidget implements ModuleInterface
     {
         return $this->statusMessage;
     }
+
+    //<editor-fold desc="GetResource Helpers">
+
+    private $data;
+
+    /**
+     * Initialise getResource
+     * @return $this
+     */
+    protected function initialiseGetResource()
+    {
+        $this->data['isPreview'] = ($this->getSanitizer()->getCheckbox('preview') == 1);
+        $this->data['javaScript'] = '';
+        $this->data['styleSheet'] = '';
+        $this->data['head'] = '';
+        $this->data['body'] = '';
+        $this->data['controlMeta'] = '';
+        return $this;
+    }
+
+    /**
+     * @return bool Is Preview
+     */
+    protected function isPreview()
+    {
+        return $this->data['isPreview'];
+    }
+
+    /**
+     * Finalise getResource
+     * @param string $templateName an optional template name
+     * @return string the rendered template
+     */
+    protected function finaliseGetResource($templateName = 'get-resource')
+    {
+        return $this
+            ->appendJavaScript('var options = ' . $this->data['options'] . '; var items = ' . $this->data['items'] . ';')
+            ->renderTemplate($this->data, $templateName);
+    }
+
+    /**
+     * Append the view port width - usually the region width
+     * @param int $width
+     * @return $this
+     */
+    protected function appendViewPortWidth($width)
+    {
+        $this->data['viewPortWidth'] = ($this->data['isPreview']) ? $width : '[[ViewPortWidth]]';
+        return $this;
+    }
+
+    /**
+     * Append CSS File
+     * @param string $uri The URI, according to whether this is a CMS preview or not
+     * @return $this
+     */
+    protected function appendCssFile($uri)
+    {
+        $this->data['styleSheet'] .= '<link href="' . $uri . '" rel="stylesheet" media="screen" />';
+        return $this;
+    }
+
+    /**
+     * Append CSS content
+     * @param string $css
+     * @return $this
+     */
+    protected function appendCss($css)
+    {
+        if (!empty($css))
+            $this->data['styleSheet'] .= '<style type="text/css">' . $css . '</style>';
+
+        return $this;
+    }
+
+    /**
+     * Append JavaScript file
+     * @param string $uri
+     * @return $this
+     */
+    protected function appendJavaScriptFile($uri)
+    {
+        $this->data['javaScript'] .= '<script type="text/javascript" src="' . $this->getResourceUrl($uri) . '"></script>';
+        return $this;
+    }
+
+    /**
+     * Append JavaScript
+     * @param string $javasScript
+     * @return $this
+     */
+    protected function appendJavaScript($javasScript)
+    {
+        if (!empty($javasScript))
+            $this->data['javaScript'] .= '<script type="text/javascript">' . $javasScript . '</script>';
+
+        return $this;
+    }
+
+    /**
+     * Append Body
+     * @param string $body
+     * @return $this
+     */
+    protected function appendBody($body)
+    {
+        if (!empty($body))
+            $this->data['body'] .= $body;
+
+        return $this;
+    }
+
+    /**
+     * Append Options
+     * @param array $options
+     * @return $this
+     */
+    protected function appendOptions($options)
+    {
+        $this->data['options'] = json_encode($options);
+        return $this;
+    }
+
+    /**
+     * Append Items
+     * @param array $items
+     * @return $this
+     */
+    protected function appendItems($items)
+    {
+        $this->data['items'] = json_encode($items);
+        return $this;
+    }
+
+    //</editor-fold>
 }
