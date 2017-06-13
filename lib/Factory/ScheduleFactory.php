@@ -14,6 +14,7 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Schedule;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -32,6 +33,9 @@ class ScheduleFactory extends BaseFactory
     /** @var PoolInterface  */
     private $pool;
 
+    /** @var  DateServiceInterface */
+    private $dateService;
+
     /**
      * @var DisplayGroupFactory
      */
@@ -44,13 +48,15 @@ class ScheduleFactory extends BaseFactory
      * @param SanitizerServiceInterface $sanitizerService
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
+     * @param DateServiceInterface $date
      * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($store, $log, $sanitizerService, $config, $pool, $displayGroupFactory)
+    public function __construct($store, $log, $sanitizerService, $config, $pool, $date, $displayGroupFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->config = $config;
         $this->pool = $pool;
+        $this->dateService = $date;
         $this->displayGroupFactory = $displayGroupFactory;
     }
 
@@ -65,6 +71,7 @@ class ScheduleFactory extends BaseFactory
             $this->getLog(),
             $this->config,
             $this->pool,
+            $this->dateService,
             $this->displayGroupFactory
         );
     }

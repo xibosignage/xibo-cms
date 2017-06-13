@@ -238,7 +238,7 @@ class DayPart implements \JsonSerializable
         $schedules = $this->scheduleFactory->getByDayPartId($this->dayPartId);
 
         foreach ($schedules as $schedule) {
-            $schedule->setDateService($this->getDate())->delete();
+            $schedule->delete();
         }
 
         // Delete the daypart
@@ -306,7 +306,6 @@ class DayPart implements \JsonSerializable
         foreach ($schedules as $schedule) {
             /** @var Schedule $schedule */
             $schedule
-                ->setDateService($this->getDate())
                 ->setDisplayFactory($this->displayFactory)
                 ->load();
 

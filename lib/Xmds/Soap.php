@@ -401,9 +401,7 @@ class Soap
 
                 if ($row['scheduleId'] != 0) {
                     $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
-                    $schedule
-                        ->setDateService($this->getDate())
-                        ->setDayPartFactory($this->dayPartFactory);
+                    $schedule->setDayPartFactory($this->dayPartFactory);
 
                     try {
                         $scheduleEvents = $schedule->getEvents($fromFilter, $toFilter);
@@ -855,9 +853,7 @@ class Soap
             foreach ($events as $row) {
 
                 $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
-                $schedule
-                    ->setDateService($this->getDate())
-                    ->setDayPartFactory($this->dayPartFactory);
+                $schedule->setDayPartFactory($this->dayPartFactory);
 
                 try {
                     $scheduleEvents = $schedule->getEvents($fromFilter, $toFilter);

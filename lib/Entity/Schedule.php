@@ -224,13 +224,15 @@ class Schedule implements \JsonSerializable
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
+     * @param DateServiceInterface $date
      * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($store, $log, $config, $pool, $displayGroupFactory)
+    public function __construct($store, $log, $config, $pool, $date, $displayGroupFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->config = $config;
         $this->pool = $pool;
+        $this->dateService = $date;
         $this->displayGroupFactory = $displayGroupFactory;
 
         $this->excludeProperty('lastRecurrenceWatermark');
@@ -263,6 +265,7 @@ class Schedule implements \JsonSerializable
 
     /**
      * @param DateServiceInterface $dateService
+     * @deprecated dateService is set by the factory
      * @return $this
      */
     public function setDateService($dateService)

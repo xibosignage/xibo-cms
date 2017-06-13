@@ -1383,9 +1383,7 @@ class Library extends Base
                 /* @var \Xibo\Entity\Schedule $row */
 
                 // Generate this event
-                $row
-                    ->setDateService($this->getDate())
-                    ->setDayPartFactory($this->dayPartFactory);
+                $row->setDayPartFactory($this->dayPartFactory);
 
                 try {
                     $scheduleEvents = $row->getEvents($mediaDate, $toDate);

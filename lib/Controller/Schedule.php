@@ -239,9 +239,7 @@ class Schedule extends Base
             /* @var \Xibo\Entity\Schedule $row */
 
             // Generate this event
-            $row
-                ->setDateService($this->getDate())
-                ->setDayPartFactory($this->dayPartFactory);
+            $row->setDayPartFactory($this->dayPartFactory);
 
             try {
                 $scheduleEvents = $row->getEvents($start, $end);
@@ -421,7 +419,6 @@ class Schedule extends Base
             // Assess schedules
             $schedule = $this->scheduleFactory->createEmpty()->hydrate($event, ['intProperties' => ['isPriority', 'syncTimezone', 'displayOrder']]);
             $schedule
-                ->setDateService($this->getDate())
                 ->setDayPartFactory($this->dayPartFactory)
                 ->load();
 
@@ -825,7 +822,7 @@ class Schedule extends Base
         }
 
         // Ready to do the add
-        $schedule->setDisplayFactory($this->displayFactory)->setDateService($this->getDate());
+        $schedule->setDisplayFactory($this->displayFactory);
         $schedule->save();
 
         // Return
@@ -1095,7 +1092,7 @@ class Schedule extends Base
         }
 
         // Ready to do the add
-        $schedule->setDisplayFactory($this->displayFactory)->setDateService($this->getDate());
+        $schedule->setDisplayFactory($this->displayFactory);
         $schedule->save();
 
         // Return
@@ -1158,7 +1155,6 @@ class Schedule extends Base
 
         $schedule
             ->setDisplayFactory($this->displayFactory)
-            ->setDateService($this->getDate())
             ->delete();
 
         // Return
