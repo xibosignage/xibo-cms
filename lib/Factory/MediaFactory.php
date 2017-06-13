@@ -481,23 +481,26 @@ class MediaFactory extends BaseFactory
 
             $dataSets = $this->getStore()->select($dataSetSql, []);
 
-            $body .= ' AND media.mediaID NOT IN (';
+            if (count($dataSets) > 0) {
 
-            $first = true;
-            foreach ($dataSets as $dataSet) {
+                $body .= ' AND media.mediaID NOT IN (';
 
-                if (!$first)
-                    $body .= ' UNION ALL ';
+                $first = true;
+                foreach ($dataSets as $dataSet) {
 
-                $first = false;
+                    if (!$first)
+                        $body .= ' UNION ALL ';
 
-                $dataSetId = $this->getSanitizer()->getInt('dataSetId', $dataSet);
-                $heading = $this->getSanitizer()->getString('heading', $dataSet);
+                    $first = false;
 
-                $body .= ' SELECT ' . $heading . ' AS mediaId FROM `dataset_' . $dataSetId . '`';
+                    $dataSetId = $this->getSanitizer()->getInt('dataSetId', $dataSet);
+                    $heading = $this->getSanitizer()->getString('heading', $dataSet);
+
+                    $body .= ' SELECT ' . $heading . ' AS mediaId FROM `dataset_' . $dataSetId . '`';
+                }
+
+                $body .= ') ';
             }
-
-            $body .= ') ';
         }
 
         if ($this->getSanitizer()->getString('name', $filterBy) != '') {
