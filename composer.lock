@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "1fb632b964f07d9dc882bf8500a0f4fd",
+    "content-hash": "fc4c5cf71a441d59ce60f8ae295e7149",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -354,12 +354,12 @@
             "version": "v0.1.26",
             "source": {
                 "type": "git",
-                "url": "https://github.com/fguillot/picoFeed.git",
+                "url": "https://github.com/miniflux/picoFeed.git",
                 "reference": "7ea5d54c7efd6d5582b8d2fae858b9f91118c5ca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/fguillot/picoFeed/zipball/7ea5d54c7efd6d5582b8d2fae858b9f91118c5ca",
+                "url": "https://api.github.com/repos/miniflux/picoFeed/zipball/7ea5d54c7efd6d5582b8d2fae858b9f91118c5ca",
                 "reference": "7ea5d54c7efd6d5582b8d2fae858b9f91118c5ca",
                 "shasum": ""
             },
@@ -2964,12 +2964,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PeterMis/oauth2-xibo-cms.git",
-                "reference": "e5e5fa23ec944748dc2450cd48a237d236419c53"
+                "reference": "6a8d2ca2f4dbc191e7b377c9c9a691ff887ae6f6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PeterMis/oauth2-xibo-cms/zipball/e5e5fa23ec944748dc2450cd48a237d236419c53",
-                "reference": "e5e5fa23ec944748dc2450cd48a237d236419c53",
+                "url": "https://api.github.com/repos/PeterMis/oauth2-xibo-cms/zipball/6a8d2ca2f4dbc191e7b377c9c9a691ff887ae6f6",
+                "reference": "6a8d2ca2f4dbc191e7b377c9c9a691ff887ae6f6",
                 "shasum": ""
             },
             "require": {
@@ -3009,20 +3009,20 @@
             "support": {
                 "source": "https://github.com/PeterMis/oauth2-xibo-cms/tree/master"
             },
-            "time": "2017-02-16 14:28:04"
+            "time": "2017-05-03 15:07:16"
         },
         {
             "name": "xibosignage/xibo-xmr",
-            "version": "0.2",
+            "version": "0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/xibosignage/xibo-xmr.git",
-                "reference": "175a02b7cb95d946bfb781a1d54be5505a5ed74a"
+                "reference": "ead342d4a6890ebd65889a736c87dbffd57705a2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/xibosignage/xibo-xmr/zipball/175a02b7cb95d946bfb781a1d54be5505a5ed74a",
-                "reference": "175a02b7cb95d946bfb781a1d54be5505a5ed74a",
+                "url": "https://api.github.com/repos/xibosignage/xibo-xmr/zipball/ead342d4a6890ebd65889a736c87dbffd57705a2",
+                "reference": "ead342d4a6890ebd65889a736c87dbffd57705a2",
                 "shasum": ""
             },
             "require": {
@@ -3059,7 +3059,7 @@
                 "spring signage",
                 "xibo"
             ],
-            "time": "2016-04-21T08:56:42+00:00"
+            "time": "2017-01-13T15:11:16+00:00"
         },
         {
             "name": "zendframework/zendxml",
