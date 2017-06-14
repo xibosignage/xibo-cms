@@ -584,6 +584,9 @@ class TwitterMetro extends TwitterBase
             return '';
         }
 
+        // Lock the request
+        $this->concurrentRequestLock();
+
         $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
         
@@ -688,6 +691,8 @@ class TwitterMetro extends TwitterBase
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
             $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
+
+        $this->concurrentRequestRelease();
 
         return $this->renderTemplate($data);
     }

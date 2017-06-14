@@ -423,7 +423,7 @@ class Twitter extends TwitterBase
     /**
      * @param int $displayId
      * @param bool $isPreview
-     * @return array
+     * @return array|false
      * @throws ConfigurationException
      */
     protected function getTwitterFeed($displayId = 0, $isPreview = true)
@@ -720,6 +720,9 @@ class Twitter extends TwitterBase
             return '';
         }
 
+        // Lock the request
+        $this->concurrentRequestLock();
+
         $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
@@ -841,6 +844,8 @@ class Twitter extends TwitterBase
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
             $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
+
+        $this->concurrentRequestRelease();
 
         return $this->renderTemplate($data);
     }

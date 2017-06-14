@@ -22,6 +22,8 @@ namespace Xibo\Widget;
 
 use Slim\Slim;
 use Stash\Interfaces\PoolInterface;
+use Stash\Invalidation;
+use Stash\Item;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\User;
@@ -358,6 +360,41 @@ abstract class ModuleWidget implements ModuleInterface
     {
         $this->getPool()->deleteItem($this->getCacheKeyPrefix());
     }
+
+    // <editor-fold desc="request locking">
+
+    /** @var  Item */
+    private $lock;
+
+    /**
+     * Hold a lock on concurrent requests
+     *  blocks if the request is locked
+     * @param $ttl
+     * @param $wait
+     * @param $tries
+     */
+    public function concurrentRequestLock($ttl = 30, $wait = 5000, $tries = 3)
+    {
+        $this->lock = $this->getPool()->getItem('locks/widget/' . $this->widget->widgetId);
+        $this->lock->setInvalidationMethod(Invalidation::SLEEP, $wait, $tries);
+
+        $this->lock->get();
+        $this->lock->lock($ttl);
+    }
+
+    /**
+     * Release a lock on concurrent requests
+     */
+    public function concurrentRequestRelease()
+    {
+        $this->lock->set(time());
+        $this->lock->expiresAfter(1); // Expire straight away
+
+        // Release lock
+        $this->getPool()->saveDeferred($this->lock);
+    }
+
+    // </editor-fold>
 
     /**
      * Set the Widget

@@ -1052,6 +1052,9 @@ class Ticker extends ModuleWidget
 
     private function getDataSetItems($displayId, $isPreview, $text)
     {
+        // Lock the request
+        $this->concurrentRequestLock();
+
         // Extra fields for data sets
         $dataSetId = $this->getOption('dataSetId');
         $upperLimit = $this->getOption('upperLimit');
@@ -1268,11 +1271,15 @@ class Ticker extends ModuleWidget
                 $this->assignMedia($media->mediaId);
             });
 
+            $this->concurrentRequestRelease();
+
             return $items;
         }
         catch (NotFoundException $e) {
             $this->getLog()->debug('getDataSetItems failed for id=%d. Widget=%d. Due to %s - this might be OK if we have a no-data message', $dataSetId, $this->getWidgetId(), $e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
+
+            $this->concurrentRequestRelease();
             return [];
         }
     }
