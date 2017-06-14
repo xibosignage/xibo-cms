@@ -397,6 +397,8 @@ class Currencies extends YahooBase
 
         if ($cache->isMiss()) {
 
+            $cache->lock();
+
             $this->getLog()->debug('Querying API for ' . $yql);
 
             if (!$data = $this->request($yql)) {

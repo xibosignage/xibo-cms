@@ -216,8 +216,10 @@ class MediaFactory extends BaseFactory
 
     /**
      * Process the queue of downloads
+     * @param null|callable $success success callable
+     * @param null|callable $failure failure callable
      */
-    public function processDownloads()
+    public function processDownloads($success = null, $failure = null)
     {
         if (count($this->remoteDownloadQueue) <= 0)
             return;
@@ -242,15 +244,27 @@ class MediaFactory extends BaseFactory
 
         $pool = new Pool($client, $downloads(), [
             'concurrency' => 5,
-            'fulfilled' => function ($response, $index) use ($log, $queue) {
+            'fulfilled' => function ($response, $index) use ($log, $queue, $success, $failure) {
                 /** @var Media $item */
                 $item = $queue[$index];
 
                 // File is downloaded, call save to move it appropriately
                 try {
                     $item->saveFile();
+
+                    // If a success callback has been provided, call it
+                    if ($success !== null && is_callable($success))
+                        $success($item);
+
                 } catch (\Exception $e) {
                     $this->getLog()->error('Unable to save:' . $item->mediaId . '. ' . $e->getMessage());
+
+                    // Remove it
+                    $item->delete(['rollback' => true]);
+
+                    // If a failure callback has been provided, call it
+                    if ($failure !== null && is_callable($failure))
+                        $failure($item);
                 }
             },
             'rejected' => function ($reason, $index) use ($log) {

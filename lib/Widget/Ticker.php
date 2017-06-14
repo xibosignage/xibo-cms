@@ -25,6 +25,7 @@ use PicoFeed\Parser\Item;
 use PicoFeed\PicoFeedException;
 use PicoFeed\Reader\Reader;
 use Respect\Validation\Validator as v;
+use Stash\Invalidation;
 use Xibo\Controller\Library;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\NotFoundException;
@@ -778,17 +779,23 @@ class Ticker extends ModuleWidget
         // Create a key to use as a caching key for this item.
         // the rendered feed will be cached, so it is important the key covers all options.
         $feedUrl = urldecode($this->getOption('uri'));
+        /** @var \Stash\Item $cache */
         $cache = $this->getPool()->getItem($this->makeCacheKey(md5($isPreview . ' ' . json_encode($this->widget->widgetOptions))));
+        $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
+
+        $this->getLog()->debug('Ticker with RSS source ' . $feedUrl . '. Cache key: ' . $cache->getKey());
 
         $items = $cache->get();
 
-        $this->getLog()->debug('Ticker with RSS source %s. Cache key: %s.', $feedUrl, $cache->getKey());
-
         // Check our cache to see if the key exists
+        // Ticker cache holds the entire rendered contents of the feed
         if ($cache->isHit()) {
             // Our local cache is valid
             return $items;
         }
+
+        // Lock this cache item (120 seconds)
+        $cache->lock(120);
 
         // Our local cache is not valid
         // Store our formatted items
@@ -915,9 +922,6 @@ class Ticker extends ModuleWidget
                                 // Grab the profile image
                                 $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expires);
 
-                                // Tag this layout with this file
-                                $this->assignMedia($file->mediaId);
-
                                 $replace = ($isPreview)
                                     ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" ' . $attribute . '/>'
                                     : '<img src="' . $file->storedAs . '" ' . $attribute . ' />';
@@ -987,9 +991,6 @@ class Ticker extends ModuleWidget
                                         // Grab the image
                                         $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expires);
 
-                                        // Tag this layout with this file
-                                        $this->assignMedia($file->mediaId);
-
                                         $replace = ($isPreview)
                                             ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                                             : '<img src="' . $file->storedAs . '" />';
@@ -1017,8 +1018,14 @@ class Ticker extends ModuleWidget
                 $items[] = $rowString;
             }
 
-            // Process the download queue
-            $this->mediaFactory->processDownloads();
+            // Process queued downloads
+            $this->mediaFactory->processDownloads(function($media) {
+                // Success
+                $this->getLog()->debug('Successfully downloaded ' . $media->mediaId);
+
+                // Tag this layout with this file
+                $this->assignMedia($media->mediaId);
+            });
 
             // Copyright information?
             if ($this->getOption('copyright', '') != '') {
@@ -1222,9 +1229,6 @@ class Ticker extends ModuleWidget
                             // Download the image, alter the replace to wrap in an image tag
                             $file = $this->mediaFactory->queueDownload('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)), $expires);
 
-                            // Tag this layout with this file
-                            $this->assignMedia($file->mediaId);
-
                             $replace = ($isPreview)
                                 ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                                 : '<img src="' . $file->storedAs . '" />';
@@ -1255,7 +1259,14 @@ class Ticker extends ModuleWidget
                 $items[] = $rowString;
             }
 
-            $this->mediaFactory->processDownloads();
+            // Process queued downloads
+            $this->mediaFactory->processDownloads(function($media) {
+                // Success
+                $this->getLog()->debug('Successfully downloaded ' . $media->mediaId);
+
+                // Tag this layout with this file
+                $this->assignMedia($media->mediaId);
+            });
 
             return $items;
         }

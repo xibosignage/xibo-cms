@@ -560,10 +560,21 @@ class Media implements \JsonSerializable
 
     /**
      * Delete
+     * @param array $options
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function delete()
+    public function delete($options = [])
     {
+        $options = array_merge([
+            'rollback' => false
+        ], $options);
+
+        if ($options['rollback']) {
+            $this->deleteRecord();
+            $this->deleteFile();
+            return;
+        }
+
         $this->load(['deleting' => true]);
 
         // If there is a parent, bring it back
@@ -636,8 +647,7 @@ class Media implements \JsonSerializable
             $layout->save(Layout::$saveOptionsMinimum);
         }
 
-        $this->getStore()->update('DELETE FROM media WHERE MediaID = :mediaId', ['mediaId' => $this->mediaId]);
-
+        $this->deleteRecord();
         $this->deleteFile();
 
         // Update any background images
@@ -706,6 +716,14 @@ class Media implements \JsonSerializable
             'apiRef' => $this->apiRef,
             'mediaId' => $this->mediaId
         ]);
+    }
+
+    /**
+     * Delete record
+     */
+    private function deleteRecord()
+    {
+        $this->getStore()->update('DELETE FROM media WHERE MediaID = :mediaId', ['mediaId' => $this->mediaId]);
     }
 
     /**

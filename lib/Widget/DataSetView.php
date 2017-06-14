@@ -764,9 +764,6 @@ class DataSetView extends ModuleWidget
                         // Grab the external image
                         $file = $this->mediaFactory->queueDownload('datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)), $expires);
 
-                        // Tag this layout with this file
-                        $this->assignMedia($file->mediaId);
-
                         $replace = ($isPreview)
                             ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                             : '<img src="' . $file->storedAs . '" />';
@@ -783,9 +780,6 @@ class DataSetView extends ModuleWidget
                             continue;
                         }
 
-                        // Tag this layout with this file
-                        $this->assignMedia($file->mediaId);
-
                         $replace = ($isPreview)
                             ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                             : '<img src="' . $file->storedAs . '" />';
@@ -794,7 +788,14 @@ class DataSetView extends ModuleWidget
                     $table .= '<td class="DataSetColumn" id="column_' . ($i + 1) . '"><span class="DataSetCellSpan" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $replace . '</span></td>';
                 }
 
-                $this->mediaFactory->processDownloads();
+                // Process queued downloads
+                $this->mediaFactory->processDownloads(function($media) {
+                    // Success
+                    $this->getLog()->debug('Successfully downloaded ' . $media->mediaId);
+
+                    // Tag this layout with this file
+                    $this->assignMedia($media->mediaId);
+                });
 
                 $table .= '</tr>';
 
