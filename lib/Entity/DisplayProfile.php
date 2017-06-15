@@ -1216,6 +1216,28 @@ class DisplayProfile implements \JsonSerializable
                         'groupClass' => NULL
                     ],
                     [
+                        'name' => 'downloadStartWindow',
+                        'tabId' => 'general',
+                        'title' => __('Download Window Start Time'),
+                        'type' => 'string',
+                        'fieldType' => 'timePicker',
+                        'default' => '00:00',
+                        'helpText' => __('The start of the time window to connect to the CMS and download updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'downloadEndWindow',
+                        'tabId' => 'general',
+                        'title' => __('Download Window End Time'),
+                        'type' => 'string',
+                        'fieldType' => 'timePicker',
+                        'default' => '00:00',
+                        'helpText' => __('The end of the time window to connect to the CMS and download updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
                         'name' => 'actionBarMode',
                         'tabId' => 'advanced',
                         'title' => __('Action Bar Mode'),
@@ -1259,24 +1281,14 @@ class DisplayProfile implements \JsonSerializable
                         'groupClass' => NULL
                     ],
                     [
-                        'name' => 'downloadStartWindow',
-                        'tabId' => 'general',
-                        'title' => __('Download Window Start Time'),
-                        'type' => 'string',
-                        'fieldType' => 'timePicker',
-                        'default' => '00:00',
-                        'helpText' => __('The start of the time window to connect to the CMS and download updates.'),
-                        'enabled' => true,
-                        'groupClass' => NULL
-                    ],
-                    [
-                        'name' => 'downloadEndWindow',
-                        'tabId' => 'general',
-                        'title' => __('Download Window End Time'),
-                        'type' => 'string',
-                        'fieldType' => 'timePicker',
-                        'default' => '00:00',
-                        'helpText' => __('The end of the time window to connect to the CMS and download updates.'),
+                        'name' => 'mediaInventoryTimer',
+                        'tabId' => 'advanced',
+                        'title' => __('Send progress while downloading'),
+                        'type' => 'int',
+                        'fieldType' => 'text',
+                        'default' => 0,
+                        'helpText' => __('How often, in minutes, should the Display send its download progress while it is downloading new content?'),
+                        'validation' => 'numeric',
                         'enabled' => true,
                         'groupClass' => NULL
                     ],
