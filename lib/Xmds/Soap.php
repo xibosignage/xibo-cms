@@ -1226,8 +1226,16 @@ class Soap
             }
 
             // Adjust the date according to the display timezone
-            $date = ($this->display->timeZone != null) ? Date::createFromFormat('Y-m-d H:i:s', $date, $this->display->timeZone)->tz($defaultTimeZone) : Date::createFromFormat('Y-m-d H:i:s', $date);
-            $date = $this->getDate()->getLocalDate($date);
+            try {
+                $date = ($this->display->timeZone != null) ? Date::createFromFormat('Y-m-d H:i:s', $date, $this->display->timeZone)->tz($defaultTimeZone) : Date::createFromFormat('Y-m-d H:i:s', $date);
+                $date = $this->getDate()->getLocalDate($date);
+            } catch (\Exception $e) {
+                // Protect against the date format being inreadable
+                $this->getLog()->debug('Date format unreadable on log message: ' . $date);
+
+                // Use now instead
+                $date = $this->getDate()->getLocalDate();
+            }
 
             // Get the date and the message (all log types have these)
             foreach ($node->childNodes as $nodeElements) {
