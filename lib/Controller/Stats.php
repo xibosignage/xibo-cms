@@ -315,7 +315,7 @@ class Stats extends Base
             $params['displayId'] = $displayId;
         }
 
-        $body .= 'GROUP BY stat.type, display.Display, layout.Layout, layout.layoutId, stat.mediaId, IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ';
+        $body .= 'GROUP BY stat.type, display.Display, layout.Layout, layout.layoutId, stat.mediaId, stat.widgetId, IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ';
 
         // Sorting?
         $filterBy = $this->gridRenderFilter();
