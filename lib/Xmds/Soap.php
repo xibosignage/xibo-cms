@@ -285,6 +285,7 @@ class Soap
         $playerNonce = Random::generateString(32);
         $playerNonceCache = $this->pool->getItem('/display/nonce/' . $this->display->displayId);
         $playerNonceCache->set($playerNonce);
+        $playerNonceCache->expiresAfter(86400);
         $this->pool->saveDeferred($playerNonceCache);
 
         // Get all required files for this display.
@@ -1535,8 +1536,11 @@ class Soap
 
         // Only call save if this property has actually changed.
         if ($this->display->hasPropertyChanged('mediaInventoryStatus')) {
+            $this->getLog()->debug('Media Inventory status changed to ' . $this->display->mediaInventoryStatus);
+
             // If we are complete, then drop the player nonce cache
             if ($this->display->mediaInventoryStatus == 1) {
+                $this->getLog()->debug('Media Inventory tells us that all downloads are complete, clearing the nonce for this display');
                 $this->pool->deleteItem('/display/nonce/' . $this->display->displayId);
             }
 
