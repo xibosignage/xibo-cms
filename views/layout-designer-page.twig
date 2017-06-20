@@ -341,6 +341,7 @@
                     message: template(templateOptions),
                     title: "{% trans "Upload media" %}",
                     buttons: buttons,
+                    animate: false,
                     updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}true{% else %}false{% endif %},
                     deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == "Checked" %}true{% else %}false{% endif %}
                 }).on('shown.bs.modal', function () {
