@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Region;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -35,6 +36,9 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class RegionFactory extends BaseFactory
 {
+    /** @var DateServiceInterface */
+    private $dateService;
+
     /**
      * @var RegionOptionFactory
      */
@@ -55,14 +59,15 @@ class RegionFactory extends BaseFactory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param DateServiceInterface $date
      * @param PermissionFactory $permissionFactory
      * @param RegionOptionFactory $regionOptionFactory
      * @param PlaylistFactory $playlistFactory
      */
-    public function __construct($store, $log, $sanitizerService, $permissionFactory, $regionOptionFactory, $playlistFactory)
+    public function __construct($store, $log, $sanitizerService, $date, $permissionFactory, $regionOptionFactory, $playlistFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
-
+        $this->dateService = $date;
         $this->permissionFactory = $permissionFactory;
         $this->regionOptionFactory = $regionOptionFactory;
         $this->playlistFactory = $playlistFactory;
@@ -76,6 +81,7 @@ class RegionFactory extends BaseFactory
         return new Region(
             $this->getStore(),
             $this->getLog(),
+            $this->dateService,
             $this,
             $this->permissionFactory,
             $this->regionOptionFactory,

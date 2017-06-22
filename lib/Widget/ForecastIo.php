@@ -489,6 +489,8 @@ class ForecastIo extends ModuleWidget
         $data = $cache->get();
 
         if ($cache->isMiss()) {
+            $cache->lock();
+
             $this->getLog()->notice('Getting Forecast from the API');
             if (!$data = $this->get($defaultLat, $defaultLong, null, $apiOptions)) {
                 return false;

@@ -85,6 +85,11 @@
                 {% set title %}{% trans "Mute?" %}{% endset %}
                 {% set helpText %}{% trans "Should the video be muted?" %}{% endset %}
                 {{ forms.checkbox("mute", title, module.getOption("mute", 0), helpText, "mute-fields") }}
+
+                <div class="alert alert-info">
+                    {% set message %}{% trans "Please note that video scaling and video streaming via RTSP is only supported by Xibo for Android at the current time. The HLS streaming Widget can be used to show compatible video streams on Windows." %}{% endset %}
+                    {{ forms.message(message) }}
+                </div>
             </form>
         </div>
     </div>

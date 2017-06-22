@@ -1112,6 +1112,7 @@ CREATE TABLE `task` (
   `options` TEXT,
   `schedule` VARCHAR(254),
   `lastRunDt` INT(11),
+  `lastRunStartDt` INT(11),
   `lastRunMessage` VARCHAR(254),
   `lastRunStatus` TINYINT(4) DEFAULT '0' NOT NULL,
   `lastRunDuration` SMALLINT(6),

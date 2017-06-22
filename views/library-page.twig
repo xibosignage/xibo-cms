@@ -289,5 +289,67 @@
                 });
             });
         }
+
+        ///
+        /// Library Usage Form
+        ///
+        function usageFormOpen(dialog) {
+            var usageTable = $("#usageReportTable").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true,
+                stateSave: true,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("library.usage") }}".replace(":id", $("#usageReportTable").data().mediaId),
+                    "data": function(dataDisplay) {
+                        $.extend(dataDisplay, $(dialog).find("#usageReportForm").serializeObject());
+                        return dataDisplay;
+                    }
+                },
+                "columns": [
+                    { "data": "displayId"},
+                    { "data": "display" },
+                    { "data": "description" },
+                    {
+                        "data": "mediaInventoryStatus",
+                        "render": function (data, type, row) {
+                            if (type !== "display")
+                                return data;
+
+                            var icon = "";
+                            if (data === 1)
+                                icon = "fa-check";
+                            else if (data === 0)
+                                icon = "fa-times";
+                            else
+                                icon = "fa-cloud-download";
+
+                            return "<span class='fa " + icon + "'></span>";
+                        }
+                    }
+                ]
+            });
+
+            usageTable.on('draw', dataTableDraw);
+            usageTable.on('processing.dt', dataTableProcessing);
+
+            $("#mediaEventDateLink").datetimepicker({
+                format: bootstrapDateFormatDateOnly,
+                autoclose: true,
+                language: language,
+                calendarType: calendarType,
+                minView: 2,
+                todayHighlight: true
+            });
+
+            $("#dateClearButton").on("click", function () {
+                $("#mediaEventDateLink").val("")
+                $("#mediaEventDate").val("");
+                $("#mediaEventDateLink").datetimepicker("update");
+                usageTable.ajax.reload();
+            });
+        }
     </script>
 {% endblock %}

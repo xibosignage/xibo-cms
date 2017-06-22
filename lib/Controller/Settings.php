@@ -181,7 +181,7 @@ class Settings extends Base
                 'name' => $setting['setting'],
                 'type' => $setting['type'],
                 'fieldType' => $setting['fieldType'],
-                'helpText' => __($setting['helptext']),
+                'helpText' => str_replace('<br />', PHP_EOL, __($setting['helptext'])),
                 'title' => __($setting['title']),
                 'options' => $options,
                 'validation' => $setting['validation'],

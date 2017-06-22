@@ -84,6 +84,9 @@
                             {% endif %}
                         {% endfor %}
 
+                        {# Add a blank campaign record #}
+                        {% set campaignOptions = [{id: "", value: ""}]|merge(campaignOptions) %}
+
                         {# Add a blank layout record #}
                         {% set layoutOptions = [{id: "", value: ""}]|merge(layoutOptions) %}
 

@@ -281,6 +281,22 @@
                 XiboDialogClose();
             }, 1000);
         }
+
+        function assignLayoutToCampaignFormSubmit() {
+            var form = $("#layoutAssignCampaignForm");
+
+            var url = form.prop("action").replace(":id", form.find("#campaignId").val());
+
+            $.ajax({
+                type: form.attr("method"),
+                url: url,
+                data: {layoutId: [{layoutId: form.data().layoutId}]},
+                cache: false,
+                dataType:"json",
+                success: XiboSubmitResponse
+            });
+        }
+
     </script>
 {% endblock %}
 

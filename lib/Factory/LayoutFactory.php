@@ -29,6 +29,7 @@ use Xibo\Entity\DataSetColumn;
 use Xibo\Entity\Layout;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -384,6 +385,7 @@ class LayoutFactory extends BaseFactory
 
             // Populate Playlists (XLF doesn't contain any playlists)
             $playlist = $region->playlists[0];
+            $playlist->ownerId = $regionOwnerId;
 
             // Get all widgets
             foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media') as $mediaNode) {
@@ -523,11 +525,26 @@ class LayoutFactory extends BaseFactory
         // Construct the Layout
         $layout = $this->loadByXlf($zip->getFromName('layout.xml'));
 
-        $this->getLog()->debug('Layout Loaded: %s.', $layout);
+        $this->getLog()->debug('Layout Loaded: ' . $layout);
 
         // Override the name/description
         $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);
         $layout->description = (isset($layoutDetails['description']) ? $layoutDetails['description'] : '');
+
+        // Check that the resolution we have in this layout exists, and if not create it.
+        try {
+            if ($layout->schemaVersion < 2)
+                $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
+            else
+                $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
+
+        } catch (NotFoundException $notFoundException) {
+            $this->getLog()->info('Import is for an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
+
+            $resolution = $this->resolutionFactory->create($layout->width . ' x ' . $layout->height, $layout->width, $layout->height);
+            $resolution->userId = $this->getUser()->userId;
+            $resolution->save();
+        }
 
         // Update region names
         if (isset($layoutDetails['regions']) && count($layoutDetails['regions']) > 0) {
@@ -554,7 +571,7 @@ class LayoutFactory extends BaseFactory
         $layout->tags[] = $this->tagFactory->tagFromString('imported');
 
         // Set the owner
-        $layout->setOwner($userId);
+        $layout->setOwner($userId, true);
 
         // Track if we've added any fonts
         $fontsAdded = false;
@@ -573,9 +590,9 @@ class LayoutFactory extends BaseFactory
             $temporaryFileName = $libraryLocation . $file['file'];
 
             // Get the file from the ZIP
-            $fileContents = $zip->getFromName('library/' . $file['file']);
+            $fileStream = $zip->getStream('library/' . $file['file']);
 
-            if ($fileContents === false) {
+            if ($fileStream === false) {
                 // Log out the entire ZIP file and all entries.
                 $log = 'Problem getting library/' . $file['file'] . '. Files: ';
                 for ($i = 0; $i < $zip->numFiles; $i++) {
@@ -587,8 +604,17 @@ class LayoutFactory extends BaseFactory
                 throw new \InvalidArgumentException(__('Empty file in ZIP'));
             }
 
-            if (file_put_contents($temporaryFileName, $fileContents) === false)
-                throw new \InvalidArgumentException(__('Cannot save media file from ZIP file'));
+            // Open a file pointer to stream into
+            if (!$temporaryFileStream = fopen($temporaryFileName, 'w'))
+                throw new InvalidArgumentException(__('Cannot save media file from ZIP file'), 'temp');
+
+            // Loop over the file and write into the stream
+            while (!feof($fileStream)) {
+                fwrite($temporaryFileStream, fread($fileStream, 8192));
+            }
+
+            fclose($fileStream);
+            fclose($temporaryFileStream);
 
             // Check we don't already have one
             $newMedia = false;
@@ -658,10 +684,10 @@ class LayoutFactory extends BaseFactory
 
         if ($dataSets !== false) {
 
-            $this->getLog()->debug('There are DataSets to import.');
-
             $dataSets = json_decode($dataSets, true);
-            
+
+            $this->getLog()->debug('There are ' . count($dataSets) . ' DataSets to import.');
+
             foreach ($dataSets as $item) {
                 // Hydrate a new dataset object with this json object
                 $dataSet = $libraryController->getDataSetFactory()->createEmpty()->hydrate($item);

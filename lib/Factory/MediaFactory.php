@@ -216,8 +216,10 @@ class MediaFactory extends BaseFactory
 
     /**
      * Process the queue of downloads
+     * @param null|callable $success success callable
+     * @param null|callable $failure failure callable
      */
-    public function processDownloads()
+    public function processDownloads($success = null, $failure = null)
     {
         if (count($this->remoteDownloadQueue) <= 0)
             return;
@@ -242,15 +244,27 @@ class MediaFactory extends BaseFactory
 
         $pool = new Pool($client, $downloads(), [
             'concurrency' => 5,
-            'fulfilled' => function ($response, $index) use ($log, $queue) {
+            'fulfilled' => function ($response, $index) use ($log, $queue, $success, $failure) {
                 /** @var Media $item */
                 $item = $queue[$index];
 
                 // File is downloaded, call save to move it appropriately
                 try {
                     $item->saveFile();
+
+                    // If a success callback has been provided, call it
+                    if ($success !== null && is_callable($success))
+                        $success($item);
+
                 } catch (\Exception $e) {
                     $this->getLog()->error('Unable to save:' . $item->mediaId . '. ' . $e->getMessage());
+
+                    // Remove it
+                    $item->delete(['rollback' => true]);
+
+                    // If a failure callback has been provided, call it
+                    if ($failure !== null && is_callable($failure))
+                        $failure($item);
                 }
             },
             'rejected' => function ($reason, $index) use ($log) {
@@ -461,13 +475,46 @@ class MediaFactory extends BaseFactory
 
         // Unused only?
         if ($this->getSanitizer()->getInt('unusedOnly', $filterBy) !== null) {
+
             $body .= '
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`)
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkmediadisplaygroup`)
-                AND media.mediaId NOT IN (SELECT backgroundImageId FROM `layout`)
+                AND media.mediaId NOT IN (SELECT backgroundImageId FROM `layout` WHERE backgroundImageId IS NOT NULL)
                 AND media.type <> \'module\'
                 AND media.type <> \'font\'
             ';
+
+            // DataSets with library images
+            $dataSetSql = '
+                SELECT dataset.dataSetId, datasetcolumn.heading
+                  FROM dataset
+                    INNER JOIN datasetcolumn
+                    ON datasetcolumn.DataSetID = dataset.DataSetID
+                 WHERE DataTypeID = 5;
+            ';
+
+            $dataSets = $this->getStore()->select($dataSetSql, []);
+
+            if (count($dataSets) > 0) {
+
+                $body .= ' AND media.mediaID NOT IN (';
+
+                $first = true;
+                foreach ($dataSets as $dataSet) {
+
+                    if (!$first)
+                        $body .= ' UNION ALL ';
+
+                    $first = false;
+
+                    $dataSetId = $this->getSanitizer()->getInt('dataSetId', $dataSet);
+                    $heading = $this->getSanitizer()->getString('heading', $dataSet);
+
+                    $body .= ' SELECT ' . $heading . ' AS mediaId FROM `dataset_' . $dataSetId . '`';
+                }
+
+                $body .= ') ';
+            }
         }
 
         if ($this->getSanitizer()->getString('name', $filterBy) != '') {
@@ -605,8 +652,8 @@ class MediaFactory extends BaseFactory
         }
 
         // Duration
-        if ($this->getSanitizer()->getInt('duration', $filterBy) != null) {
-            $duration = $this->parseComparisonOperator($this->getSanitizer()->getInt('duration', $filterBy));
+        if ($this->getSanitizer()->getString('duration', $filterBy) != null) {
+            $duration = $this->parseComparisonOperator($this->getSanitizer()->getString('duration', $filterBy));
 
             $body .= ' AND `media`.duration ' . $duration['operator'] . ' :duration ';
             $params['duration'] = $duration['variable'];

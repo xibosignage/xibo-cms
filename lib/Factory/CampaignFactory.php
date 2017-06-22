@@ -164,7 +164,8 @@ class CampaignFactory extends BaseFactory
                 SELECT COUNT(*)
                 FROM lkcampaignlayout
                 WHERE lkcampaignlayout.campaignId = `campaign`.campaignId
-            ) AS numberLayouts
+            ) AS numberLayouts,
+            MAX(CASE WHEN `campaign`.IsLayoutSpecific = 1 THEN `layout`.retired ELSE 0 END) AS retired
         ';
 
         // Didn't exist before 129
@@ -292,6 +293,16 @@ class CampaignFactory extends BaseFactory
         }
 
         $group = 'GROUP BY `campaign`.CampaignID, Campaign, IsLayoutSpecific, `campaign`.userId ';
+
+        if ($this->getSanitizer()->getInt('retired', -1, $filterBy) != -1) {
+            $group .= ' HAVING retired = :retired ';
+            $params['retired'] = $this->getSanitizer()->getInt('retired', $filterBy);
+
+            if ($this->getSanitizer()->getInt('includeCampaignId', $filterBy) !== null) {
+                $group .= ' OR campaign.campaignId = :includeCampaignId ';
+                $params['includeCampaignId'] = $this->getSanitizer()->getInt('includeCampaignId', $filterBy);
+            }
+        }
 
         // Sorting?
         $order = '';

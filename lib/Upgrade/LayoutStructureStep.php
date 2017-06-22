@@ -159,6 +159,7 @@ class LayoutStructureStep implements Step
                 }
             } catch (\Exception $e) {
                 $this->log->critical('Error upgrading Layout, this should be checked post-upgrade. ID: ' . $oldLayoutId);
+                $this->log->error($e->getMessage() . ' - ' . $e->getTraceAsString());
             }
         }
 

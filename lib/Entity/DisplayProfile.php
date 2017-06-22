@@ -202,8 +202,15 @@ class DisplayProfile implements \JsonSerializable
         $this->getLog()->debug('Config loaded [%d]: %s', count($this->config), json_encode($this->config, JSON_PRETTY_PRINT));
 
         $this->configDefault = $this->loadFromFile();
-        $this->configTabs = $this->configDefault[$this->type]['tabs'];
-        $this->configDefault = $this->configDefault[$this->type]['settings'];
+
+        if (array_key_exists($this->type, $this->configDefault)) {
+            $this->configTabs = $this->configDefault[$this->type]['tabs'];
+            $this->configDefault = $this->configDefault[$this->type]['settings'];
+        } else {
+            $this->getLog()->debug('Unknown type for Display Profile: ' . $this->type);
+            $this->configTabs = $this->configDefault['unknown']['tabs'];
+            $this->configDefault = $this->configDefault['unknown']['settings'];
+        }
 
         // We've loaded a profile
         // dispatch an event with a reference to this object, allowing subscribers to modify the config before we
@@ -701,6 +708,17 @@ class DisplayProfile implements \JsonSerializable
                         'default' => 0,
                         'helpText' => __('The duration between status screen shots in minutes. 0 to disable. Warning: This is bandwidth intensive.'),
                         'enabled' => ($this->configService->GetSetting('DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED', 0) == 1),
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'ScreenShotSize',
+                        'tabId' => 'advanced',
+                        'title' => __('Screen Shot Size'),
+                        'type' => 'int',
+                        'fieldType' => 'number',
+                        'default' => $this->configService->GetSetting('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', 200),
+                        'helpText' => __('The size of the largest dimension. Empty or 0 means the screen size.'),
+                        'enabled' => true,
                         'groupClass' => NULL
                     ),
                     array(

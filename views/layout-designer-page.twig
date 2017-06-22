@@ -26,7 +26,7 @@
     {% if layout.backgroundImageId == 0 %}
         {% set backgroundCss = layout.backgroundColor %}
     {% else %}
-        {% set backgroundCss %}url('{{ urlFor("library.download", {id: layout.backgroundImageId}) }}?preview=1&width={{ width }}&height={{ height }}&proportional=0') top center no-repeat; background-color: {{ layout.backgroundColor }}{% endset %}
+        {% set backgroundCss %}url('{{ urlFor("layout.download.background", {id: layout.layoutId}) }}?preview=1&width={{ width }}&height={{ height }}&proportional=0') top center no-repeat; background-color: {{ layout.backgroundColor }}{% endset %}
     {% endif %}
 
 
@@ -235,7 +235,7 @@
 {% endblock %}
 
     {% block javaScript %}
-        <script src="{{ theme.uri("js/xibo-layout-designer.js") }}"></script>
+        <script src="{{ theme.uri("js/xibo-layout-designer.js") }}?{{ version }}"></script>
         <script type="text/javascript">
             var translation = {
                 savePositionsFirst: "{% autoescape "js" %}{{ "Please save the pending position changes first by clicking Save Positions or cancel by clicking Undo."|trans }}{% endautoescape %}"
@@ -271,12 +271,23 @@
                         {
                             "name": "mediaId",
                             "data": null,
-                            "render": {"_": "thumbnail", "display": "thumbnail", "sort": "mediaId"}
+                            "render": function (data, type, row, meta) {
+                                if (type === "display") {
+                                    // Return only the image part of the data
+                                    if (data.thumbnailUrl === '')
+                                        return '';
+                                    else
+                                        return '<img src="' + data.thumbnailUrl + '"/>';
+                                    return data;
+                                } else {
+                                    return row.mediaId;
+                                }
+                            }
                         },
                         {
                             "sortable": false,
                             "data": function (data, type, row, meta) {
-                                if (type != "display")
+                                if (type !== "display")
                                     return "";
 
                                 // Create a click-able span
@@ -341,6 +352,7 @@
                     message: template(templateOptions),
                     title: "{% trans "Upload media" %}",
                     buttons: buttons,
+                    animate: false,
                     updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}true{% else %}false{% endif %},
                     deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == "Checked" %}true{% else %}false{% endif %}
                 }).on('shown.bs.modal', function () {
@@ -515,6 +527,9 @@
 
                 timelineWidgetTabel.on('draw', dataTableDraw);
                 timelineWidgetTabel.on('processing.dt', dataTableProcessing);
+
+                // Hook up the library Upload Buttons
+                $(".libraryUploadForm").click(libraryUploadClick);
             }
 
             function DeleteRegion(form, regionId) {
