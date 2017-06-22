@@ -508,7 +508,6 @@ class DisplayGroupTest extends LocalWebTestCase
         $this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/display/assign', [
                             'displayId' => [$display->displayId]
                              ]);
-
         $response = json_decode($this->client->response->body());
         $this->assertSame(204, $response->status, $this->client->response->body());
         # Get a list of all Displays in the group
@@ -519,6 +518,38 @@ class DisplayGroupTest extends LocalWebTestCase
         # Clean up
         $displayGroup->delete();
         $display->delete();
+    }
+
+    /**
+     * Try to assign display to isDisplaySpecific displayGroupId
+     * @return mixed
+     */
+    public function testAssignDisplayFailure()
+    {
+        # Create a Display in the system
+        $hardwareId = Random::generateString(12, 'phpunit');
+        $response = $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 'PHPUnit Test Display');
+        # Now find the Id of that Display
+        $displays = (new XiboDisplay($this->getEntityProvider()))->get();
+        $display = null;
+        
+        foreach ($displays as $disp) {
+            if ($disp->license == $hardwareId) {
+                $display = $disp;
+            }
+        }
+        
+        if ($display === null) {
+            $this->fail('Display was not added correctly');
+        }
+        # Create a DisplayGroup to add the display to
+        $name = Random::generateString(8, 'phpunit');
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
+        # Call assign display to display group
+        $this->client->post('/displaygroup/' . $display->displayGroupId . '/display/assign', [
+                            'displayId' => [$display->displayId]
+                             ]);
+        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
     }
 
     /**
@@ -560,6 +591,40 @@ class DisplayGroupTest extends LocalWebTestCase
         # Clean up
         $displayGroup->delete();
         $display->delete();
+    }
+
+    /**
+     * Try to unassign display from isDisplaySpecific displayGroupId
+     */
+    public function testUnassignDisplayFailure()
+    {
+        # Create a Display in the system
+        $hardwareId = Random::generateString(12, 'phpunit');
+        $response = $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 'PHPUnit Test Display');
+        # Now find the Id of that Display
+        $displays = (new XiboDisplay($this->getEntityProvider()))->get();
+        $display = null;
+        
+        foreach ($displays as $disp) {
+            if ($disp->license == $hardwareId) {
+                $display = $disp;
+            }
+        }
+        
+        if ($display === null) {
+            $this->fail('Display was not added correctly');
+        }
+
+        # Create display group
+        $name = Random::generateString(8, 'phpunit');
+        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
+        # Assign display to display group - should be successful
+        $displayGroup->assignDisplay([$display->displayId]);
+        # Unassign display from isDisplaySpecific display group - should fail
+        $this->client->post('/displaygroup/' . $display->displayGroupId . '/display/unassign', [
+        'displayId' => [$display->displayId]
+        ]);
+        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
     }
 
     /**
