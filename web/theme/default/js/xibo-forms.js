@@ -730,7 +730,7 @@ function membersFormSubmit(id) {
 }
 
 // Callback for the media form
-function mediaFormCallBack() {
+function mediaDisplayGroupFormCallBack() {
 
     var container = $("#FileAssociationsAssign");
     if (container.data().media == undefined)

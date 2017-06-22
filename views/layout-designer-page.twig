@@ -271,12 +271,23 @@
                         {
                             "name": "mediaId",
                             "data": null,
-                            "render": {"_": "thumbnail", "display": "thumbnail", "sort": "mediaId"}
+                            "render": function (data, type, row, meta) {
+                                if (type === "display") {
+                                    // Return only the image part of the data
+                                    if (data.thumbnailUrl === '')
+                                        return '';
+                                    else
+                                        return '<img src="' + data.thumbnailUrl + '"/>';
+                                    return data;
+                                } else {
+                                    return row.mediaId;
+                                }
+                            }
                         },
                         {
                             "sortable": false,
                             "data": function (data, type, row, meta) {
-                                if (type != "display")
+                                if (type !== "display")
                                     return "";
 
                                 // Create a click-able span
