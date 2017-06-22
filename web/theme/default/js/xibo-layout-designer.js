@@ -70,7 +70,7 @@ $(document).ready(function(){
                 regionHoverInterval = setTimeout(function () {
                         //console.log("zIndex adjustment: region " + $region.attr("regionId"));
 
-                        $region.zIndex(900);
+                        $region.css("zIndex", 900);
                         regionHoverInterval = null;
                         regionHoverIntervalReset = true;
                     }, 500
@@ -83,6 +83,7 @@ $(document).ready(function(){
             }
         }, function() {
 
+
             //console.log("Hover OFF: Interval Reset is " + regionHoverIntervalReset);
 
             if (regionHoverIntervalReset) {
@@ -91,7 +92,7 @@ $(document).ready(function(){
                     var $resetRegion = $(this);
 
                     // Reset to the original z-index
-                    $resetRegion.zIndex($resetRegion.attr("zindex"));
+                    $resetRegion.css("zIndex", $resetRegion.attr("zindex"));
                 });
             }
 
