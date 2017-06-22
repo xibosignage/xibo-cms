@@ -116,7 +116,8 @@ class Task implements \JsonSerializable
     public function save($options = [])
     {
         $options = array_merge([
-            'validate' => true
+            'validate' => true,
+            'connection' => 'default'
         ], $options);
 
         if ($options['validate'])
@@ -129,7 +130,7 @@ class Task implements \JsonSerializable
             if ($this->getOriginalValue('isActive') != $this->isActive)
                 $this->status = Task::$STATUS_IDLE;
 
-            $this->edit();
+            $this->edit($options);
         }
     }
 
@@ -168,9 +169,14 @@ class Task implements \JsonSerializable
         ]);
     }
 
-    private function edit()
+    /**
+     * @param array $options
+     */
+    private function edit($options)
     {
-        $this->getStore()->update('
+        $connection = $this->getStore()->getConnection($options['connection']);
+
+        $command = $connection->prepare('
             UPDATE `task` SET 
               `name` = :name, 
               `status` = :status, 
@@ -187,7 +193,9 @@ class Task implements \JsonSerializable
               `isActive` = :isActive,
               `runNow` = :runNow
              WHERE `taskId` = :taskId
-        ', [
+        ');
+
+        $command->execute([
             'taskId' => $this->taskId,
             'name' => $this->name,
             'status' => $this->status,
