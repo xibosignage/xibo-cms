@@ -75,70 +75,73 @@ class SessionFactory extends BaseFactory
         $entries = array();
         $params = array();
 
-        try {
-            $select = '
-            SELECT `session`.session_id AS sessionId, session.userId, user.userName, isExpired, session.lastAccessed, remoteAddr AS remoteAddress, userAgent, `session`.session_expiration AS expiresAt ';
+        $select = '
+            SELECT `session`.session_id AS sessionId, 
+                session.userId, 
+                user.userName, 
+                isExpired, 
+                session.lastAccessed, 
+                remoteAddr AS remoteAddress, 
+                userAgent, 
+                `session`.session_expiration AS expiresAt
+        ';
 
-            $body = '
-              FROM `session`
-                LEFT OUTER JOIN user ON user.userID = session.userID
-             WHERE 1 = 1
-            ';
+        $body = '
+          FROM `session`
+            LEFT OUTER JOIN user ON user.userID = session.userID
+         WHERE 1 = 1
+        ';
 
-            if ($this->getSanitizer()->getString('sessionId', $filterBy) != '') {
-                $body .= ' AND session.session_id = :sessionId ';
-                $params['sessionId'] = $this->getSanitizer()->getString('sessionId', $filterBy);
-            }
+        if ($this->getSanitizer()->getString('sessionId', $filterBy) != null) {
+            $body .= ' AND session.session_id = :sessionId ';
+            $params['sessionId'] = $this->getSanitizer()->getString('sessionId', $filterBy);
+        }
 
-            if ($this->getSanitizer()->getString('fromDt', $filterBy) != '') {
-                $body .= ' AND session.LastAccessed < :lastAccessed ';
-                $params['lastAccessed'] = $this->date->getLocalDate($this->getSanitizer()->getDate('fromDt', $filterBy)->setTime(0, 0, 0));
-            }
+        if ($this->getSanitizer()->getString('fromDt', $filterBy) != null) {
+            $body .= ' AND session.LastAccessed >= :lastAccessed ';
+            $params['lastAccessed'] = $this->date->getLocalDate($this->getSanitizer()->getDate('fromDt', $filterBy)->setTime(0, 0, 0));
+        }
+
+        if ($this->getSanitizer()->getString('type', $filterBy) != null) {
 
             if ($this->getSanitizer()->getString('type', $filterBy) == 'active') {
                 $body .= ' AND IsExpired = 0 ';
             }
 
-            if ($this->getSanitizer()->getString('type', $filterBy) == 'active') {
+            if ($this->getSanitizer()->getString('type', $filterBy) == 'expired') {
                 $body .= ' AND IsExpired = 1 ';
             }
 
-            if ($this->getSanitizer()->getString('type', $filterBy) == 'active') {
-                $body .= ' AND session.userID IS NULL ';
+            if ($this->getSanitizer()->getString('type', $filterBy) == 'guest') {
+                $body .= ' AND IFNULL(session.userID, 0) = 0 ';
             }
-
-            // Sorting?
-            $order = '';
-            if (is_array($sortOrder))
-                $order .= 'ORDER BY ' . implode(',', $sortOrder);
-
-            $limit = '';
-            // Paging
-            if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-                $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
-            }
-
-            $sql = $select . $body . $order . $limit;
-
-
-
-            foreach ($this->getStore()->select($sql, $params) as $row) {
-                $entries[] = $this->createEmpty()->hydrate($row, ['stringProperties' => ['sessionId']]);
-            }
-
-            // Paging
-            if ($limit != '' && count($entries) > 0) {
-                $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
-                $this->_countLast = intval($results[0]['total']);
-            }
-
-            return $entries;
-
-        } catch (\Exception $e) {
-
-            $this->getLog()->error($e);
-
-            throw new NotFoundException();
         }
+
+        // Sorting?
+        $order = '';
+        if (is_array($sortOrder))
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        $limit = '';
+        // Paging
+        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        }
+
+        $sql = $select . $body . $order . $limit;
+
+
+
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $this->createEmpty()->hydrate($row, ['stringProperties' => ['sessionId']]);
+        }
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
+        }
+
+        return $entries;
     }
 }

@@ -75,7 +75,7 @@ class DayPartFactory extends BaseFactory
      */
     public function getById($dayPartId)
     {
-        $dayParts = $this->query(null, ['dayPartId' => $dayPartId]);
+        $dayParts = $this->query(null, ['dayPartId' => $dayPartId, 'disableUserCheck' => 1]);
 
         if (count($dayParts) <= 0)
             throw new NotFoundException();

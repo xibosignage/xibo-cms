@@ -22,6 +22,7 @@ namespace Xibo\Controller;
 
 use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
@@ -496,6 +497,8 @@ class Campaign extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws InvalidArgumentException
      */
     public function assignLayout($campaignId)
     {
@@ -505,6 +508,10 @@ class Campaign extends Base
 
         if (!$this->getUser()->checkEditable($campaign))
             throw new AccessDeniedException();
+
+        // Make sure this is a non-layout specific campaign
+        if ($campaign->isLayoutSpecific == 1)
+            throw new InvalidArgumentException(__('You cannot change the assignment of a Layout Specific Campaign'),'campaignId');
 
         $campaign->setChildObjectDependencies($this->layoutFactory);
 
@@ -598,6 +605,8 @@ class Campaign extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws InvalidArgumentException
      */
     public function unassignLayout($campaignId)
     {
@@ -605,6 +614,10 @@ class Campaign extends Base
 
         if (!$this->getUser()->checkEditable($campaign))
             throw new AccessDeniedException();
+
+        // Make sure this is a non-layout specific campaign
+        if ($campaign->isLayoutSpecific == 1)
+            throw new InvalidArgumentException(__('You cannot change the assignment of a Layout Specific Campaign'),'campaignId');
 
         $campaign->setChildObjectDependencies($this->layoutFactory);
 
@@ -657,6 +670,7 @@ class Campaign extends Base
                                       'getXlfUrl' => $this->urlFor('layout.getXlf', ['id' => $layout->layoutId]),
                                       'getResourceUrl' => $this->urlFor('module.getResource'),
                                       'libraryDownloadUrl' => $this->urlFor('library.download'),
+                                      'layoutBackgroundDownloadUrl' => $this->urlFor('layout.download.background'),
                                       'loaderUrl' => $this->getConfig()->uri('img/loader.gif')]
                                  ];
         }

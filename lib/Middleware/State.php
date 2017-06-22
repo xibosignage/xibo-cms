@@ -25,7 +25,6 @@ use Slim\Helper\Set;
 use Slim\Middleware;
 use Slim\Slim;
 use Stash\Driver\Composite;
-use Stash\Driver\FileSystem;
 use Stash\Pool;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Exception\InstanceSuspendedException;
@@ -95,6 +94,15 @@ class State extends Middleware
             $requestEtag = $app->request()->headers->get('IF_NONE_MATCH');
             if ($requestEtag) {
                 $app->request()->headers->set('IF_NONE_MATCH', str_replace('-gzip', '', $requestEtag));
+            }
+
+            // Handle correctly outputting cache headers for AJAX requests
+            // IE cache busting
+            if ($app->getName() === 'web' && $app->request()->isAjax() && $app->request()->isGet()) {
+                $app->response()->headers->set('Cache-control', 'no-cache');
+                $app->response()->headers->set('Cache-control', 'no-store');
+                $app->response()->headers->set('Pragma', 'no-cache');
+                $app->response()->headers->set('Expires', '0');
             }
         });
 
@@ -311,7 +319,7 @@ class State extends Middleware
             $realPath = realpath($configService->GetSetting('LIBRARY_LOCATION'));
             $cachePath = ($realPath) ? $realPath . '/cache/' : $configService->GetSetting('LIBRARY_LOCATION') . 'cache/';
 
-            $drivers[] = new FileSystem(['path' => $cachePath]);
+            $drivers[] = new \Stash\Driver\FileSystem(['path' => $cachePath]);
         }
 
         // Create a composite driver
@@ -600,7 +608,8 @@ class State extends Middleware
                 $container->userGroupFactory,
                 $container->tagFactory,
                 $container->mediaFactory,
-                $container->dataSetFactory
+                $container->dataSetFactory,
+                $container->campaignFactory
             );
         });
 
@@ -628,7 +637,8 @@ class State extends Middleware
                 $container->regionFactory,
                 $container->dataSetFactory,
                 $container->displayFactory,
-                $container->scheduleFactory
+                $container->scheduleFactory,
+                $container->dayPartFactory
             );
         });
 
@@ -673,7 +683,12 @@ class State extends Middleware
                 $container->configService,
                 $container->store,
                 $container->taskFactory,
-                $container->mediaFactory
+                $container->mediaFactory,
+                $container->layoutFactory,
+                $container->widgetFactory,
+                $container->displayGroupFactory,
+                $container->displayFactory,
+                $container->scheduleFactory
             );
         });
 
@@ -1264,7 +1279,7 @@ class State extends Middleware
                 $container->store,
                 $container->logService,
                 $container->sanitizerService,
-                $container->date,
+                $container->dateService,
                 $container->permissionFactory,
                 $container->widgetFactory
             );
@@ -1275,6 +1290,7 @@ class State extends Middleware
                 $container->store,
                 $container->logService,
                 $container->sanitizerService,
+                $container->dateService,
                 $container->permissionFactory,
                 $container->regionOptionFactory,
                 $container->playlistFactory
@@ -1312,6 +1328,7 @@ class State extends Middleware
                 $container->sanitizerService,
                 $container->configService,
                 $container->pool,
+                $container->dateService,
                 $container->displayGroupFactory
             );
         });

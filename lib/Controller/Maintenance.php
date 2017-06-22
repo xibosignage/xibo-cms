@@ -13,8 +13,13 @@ use Xibo\Entity\Task;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TaskFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -36,6 +41,21 @@ class Maintenance extends Base
     /** @var  MediaFactory */
     private $mediaFactory;
 
+    /** @var  LayoutFactory */
+    private $layoutFactory;
+
+    /** @var  WidgetFactory */
+    private $widgetFactory;
+
+    /** @var  DisplayGroupFactory */
+    private $displayGroupFactory;
+
+    /** @var  DisplayFactory */
+    private $displayFactory;
+
+    /** @var  ScheduleFactory */
+    private $scheduleFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -48,13 +68,23 @@ class Maintenance extends Base
      * @param StorageServiceInterface $store
      * @param TaskFactory $taskFactory
      * @param MediaFactory $mediaFactory
+     * @param LayoutFactory $layoutFactory
+     * @param WidgetFactory $widgetFactory
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param DisplayFactory $displayFactory
+     * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $taskFactory, $mediaFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $taskFactory, $mediaFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
         $this->taskFactory = $taskFactory;
         $this->store = $store;
         $this->mediaFactory = $mediaFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->widgetFactory = $widgetFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
+        $this->displayFactory = $displayFactory;
+        $this->scheduleFactory = $scheduleFactory;
     }
 
     /**
@@ -177,12 +207,31 @@ class Maintenance extends Base
         $unusedMedia = array();
         $unusedRevisions = array();
 
+        // DataSets with library images
+        $dataSetSql = '
+            SELECT dataset.dataSetId, datasetcolumn.heading
+              FROM dataset
+                INNER JOIN datasetcolumn
+                ON datasetcolumn.DataSetID = dataset.DataSetID
+             WHERE DataTypeID = 5;
+        ';
+
+        $dataSets = $this->store->select($dataSetSql, []);
+
         // Run a query to get an array containing all of the media in the library
+        // this must contain ALL media, so that we can delete files in the storage that aren;t in the table
         $sql = '
             SELECT media.mediaid, media.storedAs, media.type, media.isedited,
                 SUM(CASE WHEN IFNULL(lkwidgetmedia.widgetId, 0) = 0 THEN 0 ELSE 1 END) AS UsedInLayoutCount,
                 SUM(CASE WHEN IFNULL(lkmediadisplaygroup.id, 0) = 0 THEN 0 ELSE 1 END) AS UsedInDisplayCount,
-                SUM(CASE WHEN IFNULL(layout.layoutId, 0) = 0 THEN 0 ELSE 1 END) AS UsedInBackgroundImageCount
+                SUM(CASE WHEN IFNULL(layout.layoutId, 0) = 0 THEN 0 ELSE 1 END) AS UsedInBackgroundImageCount,
+        ';
+
+        if (count($dataSets) > 0) {
+            $sql .= ' SUM(CASE WHEN IFNULL(dataSetImages.mediaId, 0) = 0 THEN 0 ELSE 1 END) AS UsedInDataSetCount ';
+        }
+
+        $sql .= '
               FROM `media`
                 LEFT OUTER JOIN `lkwidgetmedia`
                 ON lkwidgetmedia.mediaid = media.mediaid
@@ -190,8 +239,34 @@ class Maintenance extends Base
                 ON lkmediadisplaygroup.mediaid = media.mediaid
                 LEFT OUTER JOIN `layout`
                 ON `layout`.backgroundImageId = `media`.mediaId
+         ';
+
+        if (count($dataSets) > 0) {
+
+            $sql .= ' LEFT OUTER JOIN (';
+
+            $first = true;
+            foreach ($dataSets as $dataSet) {
+
+                if (!$first)
+                    $sql .= ' UNION ALL ';
+
+                $first = false;
+
+                $dataSetId = $this->getSanitizer()->getInt('dataSetId', $dataSet);
+                $heading = $this->getSanitizer()->getString('heading', $dataSet);
+
+                $sql .= ' SELECT ' . $heading . ' AS mediaId FROM `dataset_' . $dataSetId . '`';
+            }
+
+            $sql .= ') dataSetImages 
+                ON dataSetImages.mediaId = `media`.mediaId
+            ';
+        }
+
+        $sql .= '
             GROUP BY media.mediaid, media.storedAs, media.type, media.isedited
-          ';
+        ';
 
         foreach ($this->store->select($sql, []) as $row) {
             $media[$row['storedAs']] = $row;
@@ -203,11 +278,11 @@ class Maintenance extends Base
                 continue;
 
             // Collect media revisions that aren't used
-            if ($tidyOldRevisions && $row['UsedInLayoutCount'] <= 0 && $row['UsedInDisplayCount'] <= 0 && $row['UsedInBackgroundImageCount'] <= 0 && $row['isedited'] > 0) {
+            if ($tidyOldRevisions && $row['UsedInLayoutCount'] <= 0 && $row['UsedInDisplayCount'] <= 0 && $row['UsedInBackgroundImageCount'] <= 0 && $row['UsedInDataSetCount'] <= 0 && $row['isedited'] > 0) {
                 $unusedRevisions[$row['storedAs']] = $row;
             }
             // Collect any files that aren't used
-            else if ($cleanUnusedFiles && $row['UsedInLayoutCount'] <= 0 && $row['UsedInDisplayCount'] <= 0 && $row['UsedInBackgroundImageCount'] <= 0) {
+            else if ($cleanUnusedFiles && $row['UsedInLayoutCount'] <= 0 && $row['UsedInDisplayCount'] <= 0 && $row['UsedInBackgroundImageCount'] <= 0 && $row['UsedInDataSetCount'] <= 0) {
                 $unusedMedia[$row['storedAs']] = $row;
             }
         }
@@ -227,7 +302,7 @@ class Maintenance extends Base
                 continue;
 
             // Ignore thumbnails
-            if (strstr($file, 'tn_') || strstr($file, 'bg_'))
+            if (strstr($file, 'tn_'))
                 continue;
 
             // Ignore XLF files
@@ -248,13 +323,17 @@ class Maintenance extends Base
                 // It exists but isn't being used any more
                 $this->getLog()->debug('Deleting unused revision media: ' . $media[$file]['mediaid']);
 
-                $this->mediaFactory->getById($media[$file]['mediaid'])->delete();
+                $this->mediaFactory->getById($media[$file]['mediaid'])
+                    ->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory)
+                    ->delete();
             }
             else if (array_key_exists($file, $unusedMedia)) {
                 // It exists but isn't being used any more
                 $this->getLog()->debug('Deleting unused media: ' . $media[$file]['mediaid']);
 
-                $this->mediaFactory->getById($media[$file]['mediaid'])->delete();
+                $this->mediaFactory->getById($media[$file]['mediaid'])
+                    ->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory)
+                    ->delete();
             }
             else {
                 $i--;

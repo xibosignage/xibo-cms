@@ -104,6 +104,7 @@ $app->get('/layout/designer/:id', '\Xibo\Controller\Layout:displayDesigner')->na
 $app->get('/layout/preview/:id', '\Xibo\Controller\Preview:show')->name('layout.preview');
 $app->get('/layout/xlf/:id', '\Xibo\Controller\Preview:getXlf')->name('layout.getXlf');
 $app->get('/layout/export/:id', '\Xibo\Controller\Layout:export')->name('layout.export');
+$app->get('/layout/background/:id', '\Xibo\Controller\Layout:downloadBackground')->name('layout.download.background');
 // forms
 $app->get('/layout/form/add', '\Xibo\Controller\Layout:addForm')->name('layout.add.form');
 $app->get('/layout/form/edit/:id', '\Xibo\Controller\Layout:editForm')->name('layout.edit.form');
@@ -112,6 +113,7 @@ $app->get('/layout/form/delete/:id', '\Xibo\Controller\Layout:deleteForm')->name
 $app->get('/layout/form/retire/:id', '\Xibo\Controller\Layout:retireForm')->name('layout.retire.form');
 $app->get('/layout/form/upgrade/:id', '\Xibo\Controller\Layout:upgradeForm')->name('layout.upgrade.form');
 $app->get('/layout/form/export/:id', '\Xibo\Controller\Layout:exportForm')->name('layout.export.form');
+$app->get('/layout/form/campaign/assign/:id', '\Xibo\Controller\Layout:assignToCampaignForm')->name('layout.assignTo.campaign.form');
 
 //
 // regions
@@ -142,6 +144,7 @@ $app->get('/library/view', '\Xibo\Controller\Library:displayPage')->name('librar
 $app->get('/library/form/edit/:id', '\Xibo\Controller\Library:editForm')->name('library.edit.form');
 $app->get('/library/form/delete/:id', '\Xibo\Controller\Library:deleteForm')->name('library.delete.form');
 $app->get('/library/form/tidy', '\Xibo\Controller\Library:tidyForm')->name('library.tidy.form');
+$app->get('/library/form/usage/:id', '\Xibo\Controller\Library:usageForm')->name('library.usage.form');
 $app->get('/library/fontcss', '\Xibo\Controller\Library:fontCss')->name('library.font.css');
 
 //
@@ -204,7 +207,7 @@ $app->get('/resolution/form/delete/:id', '\Xibo\Controller\Resolution:deleteForm
 //
 // dataset
 //
-$app->get('/dataset/view', '\Xibo\Controller\DataSet:displayPage')->name('dataSet.view');
+$app->get('/dataset/view', '\Xibo\Controller\DataSet:displayPage')->name('dataset.view');
 $app->get('/dataset/data/view/:id', '\Xibo\Controller\DataSetData:displayPage')->name('dataSet.view.data');
 $app->get('/dataset/form/add', '\Xibo\Controller\DataSet:addForm')->name('dataSet.add.form');
 $app->get('/dataset/form/edit/:id', '\Xibo\Controller\DataSet:editForm')->name('dataSet.edit.form');
@@ -224,7 +227,7 @@ $app->get('/dataset/data/form/delete/:id/:rowId', '\Xibo\Controller\DataSetData:
 //
 // displaygroup
 //
-$app->get('/displaygroup/view', '\Xibo\Controller\DisplayGroup:displayPage')->name('displayGroup.view');
+$app->get('/displaygroup/view', '\Xibo\Controller\DisplayGroup:displayPage')->name('displaygroup.view');
 $app->get('/displaygroup/form/add', '\Xibo\Controller\DisplayGroup:addForm')->name('displayGroup.add.form');
 $app->get('/displaygroup/form/edit/:id', '\Xibo\Controller\DisplayGroup:editForm')->name('displayGroup.edit.form');
 $app->get('/displaygroup/form/delete/:id', '\Xibo\Controller\DisplayGroup:deleteForm')->name('displayGroup.delete.form');
@@ -233,11 +236,12 @@ $app->get('/displaygroup/form/media/:id', '\Xibo\Controller\DisplayGroup:mediaFo
 $app->get('/displaygroup/form/layout/:id', '\Xibo\Controller\DisplayGroup:layoutsForm')->name('displayGroup.layout.form');
 $app->get('/displaygroup/form/version/:id', '\Xibo\Controller\DisplayGroup:versionForm')->name('displayGroup.version.form');
 $app->get('/displaygroup/form/command/:id', '\Xibo\Controller\DisplayGroup:commandForm')->name('displayGroup.command.form');
+$app->get('/displaygroup/form/collect/:id', '\Xibo\Controller\DisplayGroup:collectNowForm')->name('displayGroup.collectNow.form');
 
 //
 // displayprofile
 //
-$app->get('/displayprofile/view', '\Xibo\Controller\DisplayProfile:displayPage')->name('displayProfile.view');
+$app->get('/displayprofile/view', '\Xibo\Controller\DisplayProfile:displayPage')->name('displayprofile.view');
 $app->get('/displayprofile/form/add', '\Xibo\Controller\DisplayProfile:addForm')->name('displayProfile.add.form');
 $app->get('/displayprofile/form/edit/:id', '\Xibo\Controller\DisplayProfile:editForm')->name('displayProfile.edit.form');
 $app->get('/displayprofile/form/delete/:id', '\Xibo\Controller\DisplayProfile:deleteForm')->name('displayProfile.delete.form');
@@ -329,7 +333,7 @@ $app->get('/stats/form/export', '\Xibo\Controller\Stats:exportForm')->name('stat
 //
 // Audit Log
 //
-$app->get('/audit/view', '\Xibo\Controller\AuditLog:displayPage')->name('auditLog.view');
+$app->get('/audit/view', '\Xibo\Controller\AuditLog:displayPage')->name('auditlog.view');
 $app->get('/audit/form/export', '\Xibo\Controller\AuditLog:exportForm')->name('auditLog.export.form');
 
 //

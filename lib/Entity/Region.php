@@ -22,11 +22,13 @@
 namespace Xibo\Entity;
 
 
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\RegionOptionFactory;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -132,6 +134,9 @@ class Region implements \JsonSerializable
      */
     public $tempId = null;
 
+    /**  @var DateServiceInterface */
+    private $dateService;
+
     /**
      * @var RegionFactory
      */
@@ -156,14 +161,16 @@ class Region implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param DateServiceInterface $date
      * @param RegionFactory $regionFactory
      * @param PermissionFactory $permissionFactory
      * @param RegionOptionFactory $regionOptionFactory
      * @param PlaylistFactory $playlistFactory
      */
-    public function __construct($store, $log, $regionFactory, $permissionFactory, $regionOptionFactory, $playlistFactory)
+    public function __construct($store, $log, $date, $regionFactory, $permissionFactory, $regionOptionFactory, $playlistFactory)
     {
         $this->setCommonDependencies($store, $log);
+        $this->dateService = $date;
         $this->regionFactory = $regionFactory;
         $this->permissionFactory = $permissionFactory;
         $this->regionOptionFactory = $regionOptionFactory;
@@ -212,14 +219,19 @@ class Region implements \JsonSerializable
     /**
      * Sets the Owner
      * @param int $ownerId
+     * @param bool $cascade Cascade ownership change down to Playlist records
      */
-    public function setOwner($ownerId)
+    public function setOwner($ownerId, $cascade = false)
     {
+        $this->load();
+
         $this->ownerId = $ownerId;
 
-        foreach ($this->playlists as $playlist) {
-            /* @var Playlist $playlist */
-            $playlist->setOwner($ownerId);
+        if ($cascade) {
+            foreach ($this->playlists as $playlist) {
+                /* @var Playlist $playlist */
+                $playlist->setOwner($ownerId);
+            }
         }
     }
 
@@ -348,6 +360,10 @@ class Region implements \JsonSerializable
     {
         if ($this->width <= 0 || $this->height <= 0)
             throw new \InvalidArgumentException(__('The Region dimensions cannot be empty or negative'));
+
+        // Check zindex is positive
+        if ($this->zIndex < 0)
+            throw new InvalidArgumentException(__('Layer must be 0 or a positive number'), 'zIndex');
     }
 
     /**
@@ -399,7 +415,8 @@ class Region implements \JsonSerializable
     public function delete($options = [])
     {
         $options = array_merge([
-            'deleteOrphanedPlaylists' => true
+            'deleteOrphanedPlaylists' => true,
+            'notify' => true
         ], $options);
 
         // We must ensure everything is loaded before we delete
@@ -446,6 +463,10 @@ class Region implements \JsonSerializable
 
         // Delete this region
         $this->getStore()->update('DELETE FROM `region` WHERE regionId = :regionId', array('regionId' => $this->regionId));
+
+        // Notify Layout
+        if ($options['notify'])
+            $this->notifyLayout();
     }
 
     // Add / Update
@@ -556,5 +577,15 @@ class Region implements \JsonSerializable
 
 
         $this->getStore()->update($sql, $params);
+    }
+
+    public function notifyLayout()
+    {
+        $this->getStore()->update('
+            UPDATE `layout` SET `status` = 3, `modifiedDT` = :modifiedDt WHERE layoutId = :layoutId
+        ', [
+            'layoutId' => $this->layoutId,
+            'modifiedDt' => $this->dateService->getLocalDate()
+        ]);
     }
 }

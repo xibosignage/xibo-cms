@@ -234,6 +234,14 @@ class DayPart implements \JsonSerializable
      */
     public function delete()
     {
+        // Delete all events using this daypart
+        $schedules = $this->scheduleFactory->getByDayPartId($this->dayPartId);
+
+        foreach ($schedules as $schedule) {
+            $schedule->delete();
+        }
+
+        // Delete the daypart
         $this->getStore()->update('DELETE FROM `daypart` WHERE dayPartId = :dayPartId', ['dayPartId' => $this->dayPartId]);
     }
 
@@ -298,7 +306,6 @@ class DayPart implements \JsonSerializable
         foreach ($schedules as $schedule) {
             /** @var Schedule $schedule */
             $schedule
-                ->setDateService($this->getDate())
                 ->setDisplayFactory($this->displayFactory)
                 ->load();
 

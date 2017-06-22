@@ -393,6 +393,9 @@ class DataSet implements \JsonSerializable
     {
         $this->load();
 
+        // Set the dataSetId
+        $column->dataSetId = $this->dataSetId;
+
         // Set the column order if we need to
         if ($column->columnOrder == 0)
             $column->columnOrder = count($this->columns) + 1;
@@ -514,8 +517,8 @@ class DataSet implements \JsonSerializable
     public function deleteData()
     {
         // The last thing we do is drop the dataSet table
-        $this->getStore()->update('TRUNCATE TABLE `dataset_' . $this->dataSetId . '`', []);
-        $this->getStore()->update('ALTER TABLE `dataset_' . $this->dataSetId . '` AUTO_INCREMENT = 1', []);
+        $this->getStore()->isolated('TRUNCATE TABLE `dataset_' . $this->dataSetId . '`', []);
+        $this->getStore()->isolated('ALTER TABLE `dataset_' . $this->dataSetId . '` AUTO_INCREMENT = 1', []);
     }
 
     /**
@@ -568,7 +571,7 @@ class DataSet implements \JsonSerializable
 
     private function dropTable()
     {
-        $this->getStore()->update('DROP TABLE IF EXISTS dataset_' . $this->dataSetId, []);
+        $this->getStore()->isolated('DROP TABLE IF EXISTS dataset_' . $this->dataSetId, []);
     }
 
     /**

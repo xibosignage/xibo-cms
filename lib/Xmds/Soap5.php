@@ -121,6 +121,11 @@ class Soap5 extends Soap4
                 $node->setAttribute('type', 'string');
                 $displayElement->appendChild($node);
 
+                $nodeName = ($clientType == 'windows') ? 'ScreenShotRequested' : 'screenShotRequested';
+                $node = $return->createElement($nodeName, $display->screenShotRequested);
+                $node->setAttribute('type', 'checkbox');
+                $displayElement->appendChild($node);
+
                 $nodeName = ($clientType == 'windows') ? 'DisplayTimeZone' : 'displayTimeZone';
                 $node = $return->createElement($nodeName, (!empty($display->timeZone)) ? $display->timeZone : '');
                 $node->setAttribute('type', 'string');

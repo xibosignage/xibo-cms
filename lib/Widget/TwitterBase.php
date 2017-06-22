@@ -36,6 +36,8 @@ abstract class TwitterBase extends ModuleWidget
             return $token;
         }
 
+        $cache->lock(10);
+
         $this->getLog()->debug('Bearer Token served from API');
 
         // Shame - we will need to get it.

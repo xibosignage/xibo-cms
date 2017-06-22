@@ -1,8 +1,8 @@
 {#
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+ * Copyright (C) 2017 Spring Signage Ltd
+ * (video-form-edit.twig)
  */
 #}
 
@@ -109,7 +109,10 @@
                 {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
 
                 {% set title %}{% trans "Scale type" %}{% endset %}
-                {% set helpText %}{% trans "How should this video be scaled?" %}{% endset %}
+                {% set helpText %}
+                    {% trans "How should this video be scaled?" %}
+                    {% trans "Please note that video scaling is only supported by Xibo for Android at the current time." %}
+                {% endset %}
                 {% set aspect %}{% trans "Aspect" %}{% endset %}
                 {% set stretch %}{% trans "Stretch" %}{% endset %}
                 {% set options = [

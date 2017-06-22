@@ -118,6 +118,9 @@ class MaintenanceDailyTask implements TaskInterface
                 $upgradeStep->lastTryDate = $this->date->parse()->format('U');
                 $upgradeStep->save();
 
+                // Commit the default connection to ensure we persist this upgrade step status change.
+                $this->store->commitIfNecessary();
+
                 // if we are a step that updates the version table, then exit
                 if ($upgradeStep->type == 'sql' && stripos($upgradeStep->action, 'SET `DBVersion`'))
                     $previousStepSetsDbVersion = true;
