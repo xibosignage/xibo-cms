@@ -711,6 +711,17 @@ class DisplayProfile implements \JsonSerializable
                         'groupClass' => NULL
                     ),
                     array(
+                        'name' => 'ScreenShotSize',
+                        'tabId' => 'advanced',
+                        'title' => __('Screen Shot Size'),
+                        'type' => 'int',
+                        'fieldType' => 'number',
+                        'default' => $this->configService->GetSetting('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', 200),
+                        'helpText' => __('The size of the largest dimension. Empty or 0 means the screen size.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
                         'name' => 'MaxLogFileUploads',
                         'tabId' => 'advanced',
                         'title' => __('Limit the number of log files uploaded concurrently'),
