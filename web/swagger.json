@@ -2889,7 +2889,7 @@
                 "operationId": "libraryAdd",
                 "parameters": [
                     {
-                        "name": "file",
+                        "name": "files",
                         "in": "formData",
                         "description": "The Uploaded File",
                         "required": true,
@@ -2917,7 +2917,7 @@
                         "type": "integer"
                     },
                     {
-                        "name": "removeOldRevisions",
+                        "name": "deleteOldRevisions",
                         "in": "formData",
                         "description": "Flag (0 , 1), to either remove or leave the old file revisions (use with oldMediaId)",
                         "required": false,
@@ -3167,6 +3167,21 @@
                 }
             }
         },
+        "/library/usage/{mediaId}": {
+            "get": {
+                "tags": [
+                    "library"
+                ],
+                "summary": "Get Library Item Usage Report",
+                "description": "Get the records for the library item usage report",
+                "operationId": "libraryUsageReport",
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/about": {
             "get": {
                 "tags": [
@@ -3244,7 +3259,7 @@
                 }
             }
         },
-        "/playlist/widget/{type}/{widgetId]": {
+        "/playlist/widget/transition/{type}/{widgetId}": {
             "put": {
                 "tags": [
                     "widget"
@@ -5207,6 +5222,13 @@
                         "description": "Items wanted",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "name": "reverseConversion",
+                        "in": "formData",
+                        "description": "(0, 1) Select 1 if you'd like your base currency to be used as the comparison currency you've entered",
+                        "required": false,
+                        "type": "integer"
                     },
                     {
                         "name": "effect",
