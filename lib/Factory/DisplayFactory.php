@@ -146,6 +146,11 @@ class DisplayFactory extends BaseFactory
         if ($sortOrder === null)
             $sortOrder = ['display'];
 
+        // SQL function for ST_X/X and ST_Y/Y dependent on MySQL version
+        $version = $this->getStore()->getVersion();
+
+        $functionPrefix = ($version === null || version_compare($version, '5.6.1', '>=')) ? 'ST_' : '';
+
         $entries = array();
         $params = array();
         $select = '
@@ -174,8 +179,8 @@ class DisplayFactory extends BaseFactory
                   display.broadCastAddress,
                   display.secureOn,
                   display.cidr,
-                  ST_X(display.GeoLocation) AS latitude,
-                  ST_Y(display.GeoLocation) AS longitude,
+                  ' . $functionPrefix . 'X(display.GeoLocation) AS latitude,
+                  ' . $functionPrefix . 'Y(display.GeoLocation) AS longitude,
                   display.version_instructions AS versionInstructions,
                   display.client_type AS clientType,
                   display.client_version AS clientVersion,
