@@ -434,6 +434,8 @@ class Task extends Base
     {
         $this->getLog()->debug('XTR poll started');
 
+        $this->pollProcessTimeouts();
+
         // The getting/updating of tasks runs in a separate DB connection
         // Query for a list of tasks to run.
         $db = $this->store->getConnection('xtr');
@@ -443,6 +445,7 @@ class Task extends Base
 
         // Update statements
         $updateSth = $db->prepare('UPDATE `task` SET status = :status WHERE taskId = :taskId');
+        $updateStartSth = $db->prepare('UPDATE `task` SET status = :status, lastRunStartDt = :lastRunStartDt WHERE taskId = :taskId');
         $updateFatalErrorSth = $db->prepare('UPDATE `task` SET status = :status, isActive = :isActive, lastRunMessage = :lastRunMessage WHERE taskId = :taskId');
 
         // We loop until we have gone through without running a task
@@ -470,7 +473,11 @@ class Task extends Base
                     $this->getLog()->info('Running Task ' . $taskId);
 
                     // Set to running
-                    $updateSth->execute(['taskId' => $taskId, 'status' => \Xibo\Entity\Task::$STATUS_RUNNING]);
+                    $updateStartSth->execute([
+                        'taskId' => $taskId,
+                        'status' => \Xibo\Entity\Task::$STATUS_RUNNING,
+                        'lastRunStartDt' => $this->getDate()->getLocalDate(null, 'U')
+                    ]);
                     $this->store->incrementStat('xtr', 'update');
 
                     // Pass to run.
@@ -508,5 +515,35 @@ class Task extends Base
         }
 
         $this->getLog()->debug('XTR poll stopped');
+    }
+
+    private function pollProcessTimeouts()
+    {
+        $db = $this->store->getConnection('xtr');
+
+        // Get timed out tasks and deal with them
+        $command = $db->prepare('
+          SELECT taskId, lastRunStartDt 
+            FROM `task` 
+           WHERE isActive = 1 
+            AND `status` = :status
+            AND lastRunStartDt < :timeout
+        ');
+
+        $updateFatalErrorSth = $db->prepare('UPDATE `task` SET `status` = :status WHERE taskId = :taskId');
+
+        $command->execute([
+            'status' => \Xibo\Entity\Task::$STATUS_RUNNING,
+            'timeout' => $this->getDate()->parse()->subHours(12)->format('U')
+        ]);
+
+        foreach ($command->fetchAll(\PDO::FETCH_ASSOC) as $task) {
+            $this->getLog()->error('Timed out task detected, marking as timed out. TaskId: ' . $task['taskId']);
+
+            $updateFatalErrorSth->execute([
+                'taskId' => intval($task['taskId']),
+                'status' => \Xibo\Entity\Task::$STATUS_TIMEOUT
+            ]);
+        }
     }
 }

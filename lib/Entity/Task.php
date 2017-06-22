@@ -36,6 +36,7 @@ class Task implements \JsonSerializable
     public $options = [];
     public $schedule;
     public $lastRunDt;
+    public $lastRunStartDt;
     public $lastRunMessage;
     public $lastRunStatus;
     public $lastRunDuration;
