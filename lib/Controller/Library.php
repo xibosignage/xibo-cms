@@ -26,7 +26,9 @@ use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\LibraryFullException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -122,6 +124,9 @@ class Library extends Base
     /** @var ScheduleFactory  */
     private $scheduleFactory;
 
+    /** @var  DayPartFactory */
+    private $dayPartFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -147,8 +152,9 @@ class Library extends Base
      * @param DataSetFactory $dataSetFactory
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
+     * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -168,6 +174,7 @@ class Library extends Base
         $this->dataSetFactory = $dataSetFactory;
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
+        $this->dayPartFactory = $dayPartFactory;
     }
 
     /**
@@ -395,10 +402,14 @@ class Library extends Base
 
             // Thumbnail URL
             $media->thumbnail = '';
+            $media->thumbnailUrl = '';
+            $media->downloadUrl = '';
 
             if ($media->mediaType == 'image') {
                 $download = $this->urlFor('library.download', ['id' => $media->mediaId]) . '?preview=1';
-                $media->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56" /></i></a>';
+                $media->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56&cache=1" /></i></a>';
+                $media->thumbnailUrl = $download . '&width=100&height=56&cache=1';
+                $media->downloadUrl = $download;
             }
 
             $media->fileSizeFormatted = ByteFormatter::format($media->fileSize);
@@ -443,6 +454,14 @@ class Library extends Base
                 'linkType' => '_self', 'external' => true,
                 'url' => $this->urlFor('library.download', ['id' => $media->mediaId]) . '?attachment=' . $media->fileName,
                 'text' => __('Download')
+            );
+
+            $media->buttons[] = ['divider' => true];
+
+            $media->buttons[] = array(
+                'id' => 'usage_report_button',
+                'url' => $this->urlFor('library.usage.form', ['id' => $media->mediaId]),
+                'text' => __('Usage Report')
             );
         }
 
@@ -543,7 +562,7 @@ class Library extends Base
      *  summary="Add Media",
      *  description="Add Media to the Library",
      *  @SWG\Parameter(
-     *      name="file",
+     *      name="files",
      *      in="formData",
      *      description="The Uploaded File",
      *      type="file",
@@ -571,7 +590,7 @@ class Library extends Base
      *      required=false
      *  ),
      *  @SWG\Parameter(
-     *      name="removeOldRevisions",
+     *      name="deleteOldRevisions",
      *      in="formData",
      *      description="Flag (0 , 1), to either remove or leave the old file revisions (use with oldMediaId)",
      *      type="integer",
@@ -984,7 +1003,7 @@ class Library extends Base
      */
     public function fontCKEditorConfig()
     {
-        if (DBVERSION < 120)
+        if (DBVERSION < 125)
             return null;
 
         // Regenerate the CSS for fonts
@@ -1304,5 +1323,108 @@ class Library extends Base
             'id' => $media->mediaId,
             'data' => $media
         ]);
+    }
+
+    /**
+     * Library Usage Report Form
+     * @param int $mediaId
+     */
+    public function usageForm($mediaId)
+    {
+        $media = $this->mediaFactory->getById($mediaId);
+
+        if (!$this->getUser()->checkViewable($media))
+            throw new AccessDeniedException();
+
+        // Get a list of displays that this mediaId is used on
+        $displays = $this->displayFactory->query($this->gridRenderSort(), $this->gridRenderFilter(['disableUserCheck' => 1, 'mediaId' => $mediaId]));
+
+        $this->getState()->template = 'library-form-usage';
+        $this->getState()->setData([
+            'media' => $media,
+            'countDisplays' => count($displays)
+        ]);
+    }
+
+    /**
+     * @SWG\Get(
+     *  path="/library/usage/{mediaId}",
+     *  operationId="libraryUsageReport",
+     *  tags={"library"},
+     *  summary="Get Library Item Usage Report",
+     *  description="Get the records for the library item usage report",
+     *  @SWG\Response(
+     *     response=200,
+     *     description="successful operation"
+     *  )
+     * )
+     *
+     * @param int $mediaId
+     */
+    public function usage($mediaId)
+    {
+        $media = $this->mediaFactory->getById($mediaId);
+
+        if (!$this->getUser()->checkViewable($media))
+            throw new AccessDeniedException();
+
+        // Get a list of displays that this mediaId is used on by direct assignment
+        $displays = $this->displayFactory->query($this->gridRenderSort(), $this->gridRenderFilter(['mediaId' => $mediaId]));
+
+        // if we've been provided a date, then we need to assess the schedules
+        $mediaDate = $this->getSanitizer()->getDate('mediaEventDate');
+
+        if ($mediaDate !== null) {
+            // Get a list of scheduled events that this mediaId is used on, based on the date provided
+            $toDate = $mediaDate->copy()->addDay();
+
+            $events = $this->scheduleFactory->query(null, [
+                'futureSchedulesFrom' => $mediaDate->format('U'),
+                'futureSchedulesTo' => $toDate->format('U')
+            ]);
+
+            foreach ($events as $row) {
+                /* @var \Xibo\Entity\Schedule $row */
+
+                // Generate this event
+                $row->setDayPartFactory($this->dayPartFactory);
+
+                try {
+                    $scheduleEvents = $row->getEvents($mediaDate, $toDate);
+                } catch (XiboException $e) {
+                    $this->getLog()->error('Unable to getEvents for ' . $row->eventId);
+                    continue;
+                }
+
+                if (count($scheduleEvents) <= 0)
+                    continue;
+
+                $this->getLog()->debug('EventId ' . $row->eventId . ' as events: ' . json_encode($scheduleEvents));
+
+                // Load the display groups
+                $row->load();
+
+                foreach ($row->displayGroups as $displayGroup) {
+                    foreach ($this->displayFactory->getByDisplayGroupId($displayGroup->displayGroupId) as $display) {
+                        $found = false;
+
+                        // Check to see if our ID is already in our list
+                        foreach ($displays as $existing) {
+                            if ($existing->displayId === $display->displayId) {
+                                $found = true;
+                                break;
+                            }
+                        }
+
+                        if (!$found)
+                            $displays[] = $display;
+                    }
+                }
+            }
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $this->mediaFactory->countLast();
+        $this->getState()->setData($displays);
     }
 }

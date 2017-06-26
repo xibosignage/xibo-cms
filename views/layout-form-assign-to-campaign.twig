@@ -1,0 +1,34 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% set name = layout.layout %}
+    {% trans %}Assign {{ name }} to a Campaign{% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Assign" %}, assignLayoutToCampaignFormSubmit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="layoutAssignCampaignForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("campaign.assign.layout") }}" data-layout-id="{{ layout.layoutId }}">
+                {% set title %}{% trans "Campaign" %}{% endset %}
+                {% set helpText %}{% trans "Please select the Campaign you would like to assign this Layout to. It will be assigned to the end of the Campaign." %}{% endset %}
+                {{ forms.dropdown("campaignId", "single", title, null, campaigns, "campaignId", "campaign", helpText, "selectPicker", "", "b", "", [{name:"data-live-search", value:"true"}]) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

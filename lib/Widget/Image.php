@@ -20,6 +20,7 @@
  */
 namespace Xibo\Widget;
 
+use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\NotFoundException;
@@ -32,7 +33,7 @@ class Image extends ModuleWidget
     public function validate()
     {
         // Validate
-        if (!v::int()->min(1)->validate($this->getDuration()))
+        if (!v::int()->min(1, true)->validate($this->getDuration()))
             throw new \InvalidArgumentException(__('You must enter a duration.'));
     }
 
@@ -128,9 +129,11 @@ class Image extends ModuleWidget
         $align = $this->getOption('align', 'center');
         $vAlign = $this->getOption('valign', 'middle');
 
+        $url = $this->getApp()->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]) . '?preview=1&width=' . $width . '&height=' . $height . '&proportional=' . $proportional ;
+
         $html = '<div style="display:table; width:100%; height: ' . $height . 'px">
             <div style="text-align:' . $align . '; display: table-cell; vertical-align: ' . $vAlign . ';">
-                <img src="' . $this->getApp()->urlFor('library.download', ['id' => $this->getMediaId()]) . '?preview=1&width=' . $width . '&height=' . $height . '&proportional=' . $proportional . '" />
+                <img src="' . $url . '" />
             </div>
         </div>';
 
@@ -149,7 +152,7 @@ class Image extends ModuleWidget
 
         try {
             $output .= '<div class="hoverPreview">';
-            $output .= '    <img src="' . $this->getApp()->urlFor('library.download', ['id' => $this->getMediaId()]) . '?preview=1&width=200&height=200&proportional=1" alt="Hover Preview">';
+            $output .= '    <img src="' . $this->getApp()->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]) . '?preview=1&width=100&height=56&proportional=1&cache=1" alt="Hover Preview">';
             $output .= '</div>';
         } catch (NotFoundException $e) {
             $this->getLog()->error('Cannot find image to show in HoverPreview. WidgetId: %d', $this->getWidgetId());
@@ -165,47 +168,78 @@ class Image extends ModuleWidget
      */
     public function getResource($displayId = 0)
     {
-        $this->getLog()->debug('Image Module: GetResource for %d', $this->getMediaId());
+        $this->getLog()->debug('Image Module: GetResource for ' . $this->getMediaId());
 
         $media = $this->mediaFactory->getById($this->getMediaId());
         $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
         $filePath = $libraryLocation . $media->storedAs;
         $proportional = $this->getSanitizer()->getInt('proportional', 1) == 1;
         $preview = $this->getSanitizer()->getInt('preview', 0) == 1;
+        $cache = $this->getSanitizer()->getInt('cache', 0) == 1;
         $width = intval($this->getSanitizer()->getDouble('width'));
         $height = intval($this->getSanitizer()->getDouble('height'));
 
-        // Work out the eTag first
-        $this->getApp()->etag($media->md5 . $width . $height . $proportional . $preview);
-        $this->getApp()->expires('+1 week');
-
         // Preview or download?
-        if ($this->getSanitizer()->getInt('preview', 0) == 1) {
+        if ($preview) {
+            // Preview (we output the file to the browser with image headers)
+            try {
+                // should we use a cache?
+                if (!$cache || ($cache && !file_exists($libraryLocation . 'tn_' . $media->storedAs))) {
+                    // Not cached, or cache not required, lets load it again
+                    Img::configure(array('driver' => 'gd'));
 
-            // Preview (we output the file to the browser with image headers
-            Img::configure(array('driver' => 'gd'));
+                    $this->getLog()->debug('Preview Requested with Width and Height %d x %d', $width, $height);
+                    $this->getLog()->debug('Loading ' . $filePath);
 
-            $this->getLog()->debug('Preview Requested with Width and Height %d x %d', $width, $height);
+                    // Load the image
+                    $img = Img::make($filePath);
 
-            // Output a thumbnail?
-            if ($width != 0 || $height != 0) {
-                // Make a thumb
-                $img = Img::make($filePath)->resize($width, $height, function($constraint) use ($proportional) {
-                    if ($proportional)
-                        $constraint->aspectRatio();
-                });
+                    // Output a thumbnail?
+                    if ($width != 0 || $height != 0) {
+                        // Make a thumb
+                        $img->resize($width, $height, function ($constraint) use ($proportional) {
+                            if ($proportional)
+                                $constraint->aspectRatio();
+                        });
+                    }
+
+                    $this->getLog()->debug('Outputting Image Response');
+
+                    // Output Etags
+                    $this->getApp()->etag($media->md5 . $width . $height . $proportional . $preview);
+                    $this->getApp()->expires('+1 week');
+
+                    // Should we cache?
+                    if ($cache) {
+                        $this->getLog()->debug('Saving cached copy to tn_');
+
+                        // Save the file
+                        $img->save($libraryLocation . 'tn_' . $media->storedAs);
+                    }
+
+                    // Output the file
+                    echo $img->response();
+
+                } else if ($cache) {
+                    // File exists, output it directly
+                    echo Img::make($libraryLocation . 'tn_' . $media->storedAs)->response();
+                }
+            } catch (NotReadableException $notReadableException) {
+                $this->getLog()->debug($notReadableException->getTraceAsString());
+                $this->getLog()->error('Image not readable: ' . $notReadableException->getMessage());
+
+                // Output the thumbnail
+                $img = Img::make(PROJECT_ROOT . '/web/' . $this->getConfig()->uri('img/error.png', true));
+
+                if ($width != 0 || $height != 0) {
+                    $img->resize($width, $height, function ($constraint) use ($proportional) {
+                        if ($proportional)
+                            $constraint->aspectRatio();
+                    });
+                }
+
+                echo $img->response();
             }
-            else {
-                // Load the whole image
-                $this->getLog()->debug('Loading %s', $filePath);
-                $eTag = $media->md5;
-                $img = Img::make($filePath);
-            }
-
-            $this->getLog()->debug('Outputting Image Response');
-
-            // Output the file
-            echo $img->response();
         }
         else {
             // Download the file

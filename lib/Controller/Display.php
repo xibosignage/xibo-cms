@@ -24,6 +24,7 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\RequiredFile;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -556,6 +557,21 @@ class Display extends Base
                     )
                 );
 
+                // Collect Now
+                $display->buttons[] = array(
+                    'id' => 'display_button_collectNow',
+                    'url' => $this->urlFor('displayGroup.collectNow.form', ['id' => $display->displayGroupId]),
+                    'text' => __('Collect Now'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor('displayGroup.action.collectNow', ['id' => $display->displayGroupId])),
+                        array('name' => 'commit-method', 'value' => 'post'),
+                        array('name' => 'id', 'value' => 'display_button_collectNow'),
+                        array('name' => 'text', 'value' => __('Collect Now')),
+                        array('name' => 'rowtitle', 'value' => $display->display)
+                    )
+                );
+
                 $display->buttons[] = ['divider' => true];
             }
 
@@ -659,13 +675,24 @@ class Display extends Base
             $timeZones[] = ['id' => $key, 'value' => $value];
         }
 
+        $layouts = $this->layoutFactory->query(null, ['retired' => 0]);
+
+        if ($display->defaultLayoutId != null) {
+            try {
+                $layouts = array_merge([$this->layoutFactory->getById($display->defaultLayoutId)], $layouts);
+            } catch (NotFoundException $e) {
+                $this->getLog()->error('Default layoutId ' . $display->defaultLayoutId . ' not found for displayId ' . $display->displayId);
+            }
+        }
+
         $this->getState()->template = 'display-form-edit';
         $this->getState()->setData([
             'display' => $display,
-            'layouts' => $this->layoutFactory->query(),
+            'layouts' => $layouts,
             'profiles' => $this->displayProfileFactory->query(NULL, array('type' => $display->clientType)),
             'settings' => $profile,
             'timeZones' => $timeZones,
+            'displayLockName' => ($this->getConfig()->GetSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit')
         ]);
     }
@@ -864,7 +891,9 @@ class Display extends Base
         $defaultLayoutId = $display->defaultLayoutId;
 
         // Update properties
-        $display->display = $this->getSanitizer()->getString('display');
+        if ($this->getConfig()->GetSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 0)
+            $display->display = $this->getSanitizer()->getString('display');
+
         $display->description = $this->getSanitizer()->getString('description');
         $display->auditingUntil = $this->getSanitizer()->getDate('auditingUntil');
         $display->defaultLayoutId = $this->getSanitizer()->getInt('defaultLayoutId');
@@ -1098,9 +1127,18 @@ class Display extends Base
         if (!$this->getUser()->checkViewable($display))
             throw new AccessDeniedException();
 
+        // Work out the next collection time based on the last accessed date/time and the collection interval
+        if ($display->lastAccessed == 0) {
+            $nextCollect = __('once it has connected for the first time');
+        } else {
+            $collectionInterval = $display->getSetting('collectionInterval', 5);
+            $nextCollect = $this->getDate()->parse($display->lastAccessed, 'U')->addMinutes($collectionInterval)->diffForHumans();
+        }
+
         $this->getState()->template = 'display-form-request-screenshot';
         $this->getState()->setData([
             'display' => $display,
+            'nextCollect' => $nextCollect,
             'help' =>  $this->getHelp()->link('Display', 'ScreenShot')
         ]);
     }
@@ -1141,7 +1179,8 @@ class Display extends Base
         $display->screenShotRequested = 1;
         $display->save(['validate' => false, 'audit' => false]);
 
-        $this->playerAction->sendAction($display, new ScreenShotAction());
+        if (!empty($display->xmrChannel))
+            $this->playerAction->sendAction($display, new ScreenShotAction());
 
         // Return
         $this->getState()->hydrate([

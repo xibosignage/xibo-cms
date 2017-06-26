@@ -425,7 +425,7 @@ class Campaign implements \JsonSerializable
             /** @var Layout $existing */
             $this->getLog()->debug('Comparing existing [' . $existing->layoutId . ', ' . $existing->displayOrder . '] with unassign [' . $layout->layoutId . ', ' . $layout->displayOrder . '].');
 
-            if ($existing->displayOrder == null) {
+            if ($layout->displayOrder == null) {
                 if ($existing->getId() == $layout->getId()) {
                     $found = true;
                     $existingKey = $key;

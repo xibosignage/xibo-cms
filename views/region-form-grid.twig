@@ -46,7 +46,7 @@
             <div class="col-md-10">
                 <div class="XiboGrid" id="{{ random() }}">
                     <div class="">
-                        <div class="FilterDiv" id="">
+                        <div class="FilterDiv hidden" id="">
                             <form class="form-inline">
                                 {% set title %}{% trans "Playlist" %}{% endset %}
                                 {{ inline.dropdown("playlistId", "single", title, playlist.playlistId, region.playlists, "playlistId", "name") }}

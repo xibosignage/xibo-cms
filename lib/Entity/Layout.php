@@ -351,8 +351,9 @@ class Layout implements \JsonSerializable
     /**
      * Sets the Owner of the Layout (including children)
      * @param int $ownerId
+     * @param bool $cascade Cascade ownership change down to Playlist records
      */
-    public function setOwner($ownerId)
+    public function setOwner($ownerId, $cascade = false)
     {
         $this->ownerId = $ownerId;
 
@@ -360,7 +361,7 @@ class Layout implements \JsonSerializable
 
         foreach ($this->regions as $region) {
             /* @var Region $region */
-            $region->setOwner($ownerId);
+            $region->setOwner($ownerId, $cascade);
         }
     }
 
@@ -521,17 +522,27 @@ class Layout implements \JsonSerializable
         if ($options['setBuildRequired'])
             $this->setBuildRequired();
 
-        $this->getLog()->debug('Saving %s with options %s', $this, json_encode($options, JSON_PRETTY_PRINT));
+        $this->getLog()->debug('Saving ' . $this . ' with options ' . json_encode($options, JSON_PRETTY_PRINT));
 
         // New or existing layout
         if ($this->layoutId == null || $this->layoutId == 0) {
             $this->add();
+
+            if ($options['audit'])
+                $this->audit($this->layoutId, 'Added', ['layoutId' => $this->layoutId, 'layout' => $this->layout]);
+
         } else if (($this->hash() != $this->hash && $options['saveLayout']) || $options['setBuildRequired']) {
             $this->update($options);
+
+            if ($options['audit'])
+                $this->audit($this->layoutId, 'Updated');
+
+        } else {
+            $this->getLog()->info('Save layout properties unchanged for layoutId ' . $this->layoutId);
         }
 
         if ($options['saveRegions']) {
-            $this->getLog()->debug('Saving Regions on %s', $this);
+            $this->getLog()->debug('Saving Regions on ' . $this);
 
             // Update the regions
             foreach ($this->regions as $region) {
@@ -544,14 +555,14 @@ class Layout implements \JsonSerializable
         }
 
         if ($options['saveTags']) {
-            $this->getLog()->debug('Saving tags on %s', $this);
+            $this->getLog()->debug('Saving tags on ' . $this);
 
             // Save the tags
             if (is_array($this->tags)) {
                 foreach ($this->tags as $tag) {
                     /* @var Tag $tag */
 
-                    $this->getLog()->debug('Assigning tag %s', $tag->tag);
+                    $this->getLog()->debug('Assigning tag ' . $tag->tag);
 
                     $tag->assignLayout($this->layoutId);
                     $tag->save();
@@ -562,7 +573,7 @@ class Layout implements \JsonSerializable
             if (is_array($this->unassignTags)) {
                 foreach ($this->unassignTags as $tag) {
                     /* @var Tag $tag */
-                    $this->getLog()->debug('Unassigning tag %s', $tag->tag);
+                    $this->getLog()->debug('Unassigning tag ' . $tag->tag);
 
                     $tag->unassignLayout($this->layoutId);
                     $tag->save();
@@ -570,10 +581,7 @@ class Layout implements \JsonSerializable
             }
         }
 
-        $this->getLog()->debug('Save finished for %s', $this);
-
-        if ($options['audit'])
-            $this->audit($this->layoutId, 'Saved');
+        $this->getLog()->debug('Save finished for ' . $this);
     }
 
     /**
@@ -665,6 +673,10 @@ class Layout implements \JsonSerializable
 
         if (count($duplicates) > 0)
             throw new DuplicateEntityException(sprintf(__("You already own a layout called '%s'. Please choose another name."), $this->layout));
+
+        // Check zindex is positive
+        if ($this->backgroundzIndex < 0)
+            throw new InvalidArgumentException(__('Layer must be 0 or a positive number'), 'backgroundzIndex');
     }
 
     /**
@@ -1192,7 +1204,7 @@ class Layout implements \JsonSerializable
             try {
                 file_put_contents($path, $this->toXlf());
             } catch (\Exception $e) {
-                $this->getLog()->error('Cannot build Layout. Unexpected error: ' . $e->getMessage());
+                $this->getLog()->error('Cannot build Layout ' . $this->layoutId . '. Unexpected error: ' . $e->getMessage());
 
                 // Will continue and save the status as 4
                 $this->status = 4;

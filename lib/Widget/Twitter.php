@@ -24,6 +24,7 @@ namespace Xibo\Widget;
 use Emojione\Client;
 use Emojione\Ruleset;
 use Respect\Validation\Validator as v;
+use Stash\Invalidation;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\ModuleFactory;
 
@@ -422,7 +423,7 @@ class Twitter extends TwitterBase
     /**
      * @param int $displayId
      * @param bool $isPreview
-     * @return array
+     * @return array|false
      * @throws ConfigurationException
      */
     protected function getTwitterFeed($displayId = 0, $isPreview = true)
@@ -488,11 +489,16 @@ class Twitter extends TwitterBase
         }
         
         // Connect to twitter and get the twitter feed.
+        /** @var \Stash\Item $cache */
         $cache = $this->getPool()->getItem($this->makeCacheKey(md5($searchTerm . $this->getOption('resultType') . $this->getOption('tweetCount', 15) . $geoCode)));
+        $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
         $data = $cache->get();
 
         if ($cache->isMiss()) {
+
+            // Lock this cache item (for 30 seconds)
+            $cache->lock();
 
             $this->getLog()->debug('Querying API for ' . $searchTerm);
 
@@ -640,9 +646,6 @@ class Twitter extends TwitterBase
                             // Grab the profile image
                             $file = $this->mediaFactory->queueDownload('twitter_' . $tweet->user->id, $tweet->user->profile_image_url, $expires);
 
-                            // Tag this layout with this file
-                            $this->assignMedia($file->mediaId);
-
                             $replace = ($isPreview)
                                 ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                                 : '<img src="' . $file->storedAs . '"  />';
@@ -662,9 +665,6 @@ class Twitter extends TwitterBase
                             
                             if ($photoUrl != '') {
                                 $file = $this->mediaFactory->queueDownload('twitter_photo_' . $tweet->user->id . '_' . $mediaObject->id_str, $photoUrl, $expires);
-
-                                // Tag this layout with this file
-                                $this->assignMedia($file->mediaId);
 
                                 $replace = ($isPreview)
                                     ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
@@ -694,8 +694,14 @@ class Twitter extends TwitterBase
             $return[] = $rowString;
         }
 
-        // Process the download queue
-        $this->mediaFactory->processDownloads();
+        // Process queued downloads
+        $this->mediaFactory->processDownloads(function($media) {
+            // Success
+            $this->getLog()->debug('Successfully downloaded ' . $media->mediaId);
+
+            // Tag this layout with this file
+            $this->assignMedia($media->mediaId);
+        });
 
         // Return the data array
         return $return;
@@ -713,6 +719,9 @@ class Twitter extends TwitterBase
             $this->getLog()->error('Twitter Module not configured. Missing API Keys');
             return '';
         }
+
+        // Lock the request
+        $this->concurrentRequestLock();
 
         $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
@@ -835,6 +844,8 @@ class Twitter extends TwitterBase
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
             $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
+
+        $this->concurrentRequestRelease();
 
         return $this->renderTemplate($data);
     }

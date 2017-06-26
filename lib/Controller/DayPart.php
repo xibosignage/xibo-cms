@@ -134,6 +134,18 @@ class DayPart extends Base
                     )
                 );
             }
+
+            if ($this->getUser()->checkPermissionsModifyable($dayPart)) {
+
+                $dayPart->buttons[] = ['divider' => true];
+
+                // Edit Permissions
+                $dayPart->buttons[] = array(
+                    'id' => 'daypart_button_permissions',
+                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'DayPart', 'id' => $dayPart->dayPartId]),
+                    'text' => __('Permissions')
+                );
+            }
         }
 
         $this->getState()->template = 'grid';
@@ -162,7 +174,7 @@ class DayPart extends Base
     {
         $dayPart = $this->dayPartFactory->getById($dayPartId);
 
-        if ($dayPart->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
+        if (!$this->getUser()->checkEditable($dayPart))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'daypart-form-edit';
@@ -182,11 +194,15 @@ class DayPart extends Base
     {
         $dayPart = $this->dayPartFactory->getById($dayPartId);
 
-        if ($dayPart->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
+        if (!$this->getUser()->checkDeleteable($dayPart))
             throw new AccessDeniedException();
+
+        // Get a count of schedules for this day part
+        $schedules = $this->scheduleFactory->getByDayPartId($dayPartId);
 
         $this->getState()->template = 'daypart-form-delete';
         $this->getState()->setData([
+            'countSchedules' => count($schedules),
             'dayPart' => $dayPart
         ]);
     }
@@ -463,7 +479,7 @@ class DayPart extends Base
         if (!$this->getUser()->checkDeleteable($dayPart))
             throw new AccessDeniedException();
 
-        $dayPart->delete();
+        $dayPart->setDateService($this->getDate())->delete();
 
         // Return
         $this->getState()->hydrate([

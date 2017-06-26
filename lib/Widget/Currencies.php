@@ -154,6 +154,13 @@ class Currencies extends YahooBase
      *      required=true
      *   ),
      *  @SWG\Parameter(
+     *      name="reverseConversion",
+     *      in="formData",
+     *      description="(0, 1) Select 1 if you'd like your base currency to be used as the comparison currency you've entered",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
      *      name="effect",
      *      in="formData",
      *      description="Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind ",
@@ -396,6 +403,8 @@ class Currencies extends YahooBase
         $data = $cache->get();
 
         if ($cache->isMiss()) {
+
+            $cache->lock();
 
             $this->getLog()->debug('Querying API for ' . $yql);
 

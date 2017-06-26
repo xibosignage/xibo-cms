@@ -280,6 +280,12 @@ class DisplayGroup extends Base
                     'url' => $this->urlFor('displayGroup.command.form', ['id' => $group->displayGroupId]),
                     'text' => __('Send Command')
                 );
+
+                $group->buttons[] = array(
+                    'id' => 'displaygroup_button_collectNow',
+                    'url' => $this->urlFor('displayGroup.collectNow.form', ['id' => $group->displayGroupId]),
+                    'text' => __('Collect Now')
+                );
             }
         }
 
@@ -1310,6 +1316,22 @@ class DisplayGroup extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Version set for %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
+     * @param int $displayGroupId
+     */
+    public function collectNowForm($displayGroupId)
+    {
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        $this->getState()->template = 'displaygroup-form-collect-now';
+        $this->getState()->setData([
+            'displayGroup' => $displayGroup
         ]);
     }
 

@@ -294,10 +294,10 @@ class Finance extends YahooBase
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
         
-        if( $this->getOption('overrideTemplate') == 1 ){
+        if ($this->getOption('overrideTemplate') == 1){
             $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
             $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
-            $this->setOption('yql', $this->getSanitizer()->getString('yql'));
+            $this->setOption('yql', $this->getSanitizer()->getParam('yql', null));
             $this->setOption('resultIdentifier', $this->getSanitizer()->getString('resultIdentifier'));
         }
         
@@ -357,6 +357,8 @@ class Finance extends YahooBase
         $data = $cache->get();
 
         if ($cache->isMiss()) {
+
+            $cache->lock();
 
             $this->getLog()->debug('Querying API for ' . $yql);
 

@@ -224,13 +224,15 @@ class Schedule implements \JsonSerializable
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
+     * @param DateServiceInterface $date
      * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($store, $log, $config, $pool, $displayGroupFactory)
+    public function __construct($store, $log, $config, $pool, $date, $displayGroupFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->config = $config;
         $this->pool = $pool;
+        $this->dateService = $date;
         $this->displayGroupFactory = $displayGroupFactory;
 
         $this->excludeProperty('lastRecurrenceWatermark');
@@ -263,6 +265,7 @@ class Schedule implements \JsonSerializable
 
     /**
      * @param DateServiceInterface $dateService
+     * @deprecated dateService is set by the factory
      * @return $this
      */
     public function setDateService($dateService)
@@ -318,15 +321,28 @@ class Schedule implements \JsonSerializable
             return true;
 
         // From Date and To Date are in UNIX format
-        $currentDate = time();
-        $rfLookAhead = intval($currentDate) + intval($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
+        $currentDate = $this->getDate()->parse();
+        $rfLookAhead = clone $currentDate;
+        $rfLookAhead->addSeconds(intval($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD')));
 
-        // If we are a recurring schedule and our recurring date is out after the required files lookahead
-        if ($this->recurrenceType != '')
-            return ($this->fromDt <= $currentDate && ($this->recurrenceRange == 0 || $this->recurrenceRange > $rfLookAhead));
+        // Dial current date back to the start of the day
+        $currentDate->startOfDay();
 
-        // Compare the event dates
-        return ($this->fromDt < $rfLookAhead && $this->toDt > $currentDate);
+        // Test dates
+        if ($this->recurrenceType != '') {
+            // If we are a recurring schedule and our recurring date is out after the required files lookahead
+            $this->getLog()->debug('Checking look ahead based on recurrence');
+            return ($this->fromDt <= $currentDate->format('U') && ($this->recurrenceRange == 0 || $this->recurrenceRange > $rfLookAhead->format('U')));
+        } else if ($this->dayPartId != self::$DAY_PART_CUSTOM) {
+            // Day parting event (non recurring)
+            // only test the from date.
+            $this->getLog()->debug('Checking look ahead based from date ' . $currentDate->toRssString());
+            return ($this->fromDt >= $currentDate->format('U') && $this->fromDt <= $rfLookAhead->format('U'));
+        } else {
+            // Compare the event dates
+            $this->getLog()->debug('Checking look ahead based event dates ' . $currentDate->toRssString() . ' / ' . $rfLookAhead->toRssString());
+            return ($this->fromDt <= $rfLookAhead->format('U') && $this->toDt >= $currentDate->format('U'));
+        }
     }
 
     /**
@@ -408,6 +424,10 @@ class Schedule implements \JsonSerializable
             // No event type selected
             throw new InvalidArgumentException(__('Please select the Event Type'), 'eventTypeId');
         }
+
+        // Make sure we have a sensible recurrence setting
+        if ($this->dayPartId !== self::$DAY_PART_CUSTOM && ($this->recurrenceType == 'Minute' || $this->recurrenceType == 'Hour'))
+            throw new InvalidArgumentException(__('Repeats selection is invalid for Always or Daypart events'), 'recurrencyType');
     }
 
     /**
@@ -425,7 +445,7 @@ class Schedule implements \JsonSerializable
             $this->validate();
 
         // Handle "always" day parts
-        if ($this->dayPartId == \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+        if ($this->dayPartId == self::$DAY_PART_ALWAYS) {
             $this->fromDt = self::$DATE_MIN;
             $this->toDt = self::$DATE_MAX;
         }
@@ -449,11 +469,13 @@ class Schedule implements \JsonSerializable
         // Notify
         // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
         if ($this->inScheduleLookAhead()) {
-            $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify %d display groups', $this->displayGroups);
+            $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . count($this->displayGroups) . ' display groups');
             foreach ($this->displayGroups as $displayGroup) {
                 /* @var DisplayGroup $displayGroup */
                 $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
             }
+        } else {
+            $this->getLog()->debug('Schedule changing is not within the schedule look ahead');
         }
 
         if ($options['audit'])
@@ -667,6 +689,10 @@ class Schedule implements \JsonSerializable
 
         // If we don't have any recurrence, we are done
         if (empty($this->recurrenceType) || empty($this->recurrenceDetail))
+            return;
+
+        // Detect invalid recurrences and quit early
+        if ($this->dayPartId !== self::$DAY_PART_CUSTOM && ($this->recurrenceType == 'Minute' || $this->recurrenceType == 'Hour'))
             return;
 
         // Check the cache

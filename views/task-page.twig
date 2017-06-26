@@ -29,6 +29,7 @@
         {% if settings.TASK_CONFIG_LOCKED_CHECKB == "Unchecked" %}
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ urlFor("task.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Task" %}</a></li>
         {% endif %}
+        <li class="btn btn-success btn-xs"><a class="btns" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -93,22 +94,26 @@
                 {
                     "data": "status",
                     "render": function (data, type, row) {
-                        if (type != "display")
+                        if (type !== "display")
                             return data;
 
                         var icon = "";
                         var title = "";
-                        if (data == 1) {
-                            title = "PID: " + row.pid;
+                        if (data === 1) {
+                            title = "PID: " + row.pid + " (" + moment(row.lastRunStartDt, "X").tz(timezone).format(jsDateFormat) + ")";
                             icon = "fa-cogs";
                         }
-                        else if (data == 3) {
+                        else if (data === 3) {
                             title = "Exit: " + row.lastRunExitCode;
                             icon = "fa-bug";
                         }
+                        else if (data === 5) {
+                            title = "Time out";
+                            icon = "fa-hourglass-o";
+                        }
                         else {
                             title = "";
-                            icon = "fa-power-off";
+                            icon = "fa-clock-o";
                         }
 
                         return "<span class='fa " + icon + "' title='" + title + "'></span>";
@@ -129,25 +134,25 @@
                 {
                     "data": "lastRunStatus",
                     "render": function (data, type, row) {
-                        if (type != "display")
+                        if (type !== "display")
                             return data;
 
                         var icon = "";
-                        if (data == 4)
+                        if (data === 4)
                             icon = "fa-check";
                         else
                             icon = "fa-times";
 
-                        return "<span class='fa " + icon + "' title='" + ((row.lastRunMessage == null) ? "" : row.lastRunMessage) + "'></span>";
+                        return "<span class='fa " + icon + "' title='" + ((row.lastRunMessage === null) ? "" : row.lastRunMessage) + "'></span>";
                     }
                 },
                 {
                     "data": "lastRunDuration",
                     "render": function (data, type, row) {
-                        if (type != "display")
+                        if (type !== "display")
                             return data;
 
-                        return (data == null) ? 0 : moment().startOf("day").seconds(data).format("H:mm:ss");
+                        return (data === null) ? 0 : moment().startOf("day").seconds(data).format("H:mm:ss");
                     }
                 },
                 {
@@ -159,5 +164,9 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
+
+        $("#refreshLog").click(function () {
+            table.ajax.reload();
+        });
     </script>
 {% endblock %}

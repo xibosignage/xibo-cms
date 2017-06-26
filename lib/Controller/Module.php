@@ -180,16 +180,12 @@ class Module extends Base
 
             $module->includeProperty('buttons');
 
-            // If the module config is not locked, present some buttons
-            if ($this->getConfig()->GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
-
-                // Edit button
-                $module->buttons[] = array(
-                    'id' => 'module_button_edit',
-                    'url' => $this->urlFor('module.settings.form', ['id' => $module->moduleId]),
-                    'text' => __('Edit')
-                );
-            }
+            // Edit button
+            $module->buttons[] = array(
+                'id' => 'module_button_edit',
+                'url' => $this->urlFor('module.settings.form', ['id' => $module->moduleId]),
+                'text' => __('Edit')
+            );
 
             // Clear cache
             if ($module->regionSpecific == 1) {
@@ -222,8 +218,7 @@ class Module extends Base
     public function settingsForm($moduleId)
     {
         // Can we edit?
-        if ($this->getConfig()->GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
-            throw new \InvalidArgumentException(__('Module Config Locked'));
+        $moduleConfigLocked = ($this->getConfig()->GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
 
         if (!$this->getUser()->userTypeId == 1)
             throw new AccessDeniedException();
@@ -235,6 +230,7 @@ class Module extends Base
         // Pass to view
         $this->getState()->template = ($moduleFields == null) ? 'module-form-settings' : $moduleFields;
         $this->getState()->setData([
+            'moduleConfigLocked' => $moduleConfigLocked,
             'module' => $module,
             'help' => $this->getHelp()->link('Module', 'Edit')
         ]);
@@ -247,8 +243,7 @@ class Module extends Base
     public function settings($moduleId)
     {
         // Can we edit?
-        if ($this->getConfig()->GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
-            throw new \InvalidArgumentException(__('Module Config Locked'));
+        $moduleConfigLocked = ($this->getConfig()->GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
 
         if (!$this->getUser()->userTypeId == 1)
             throw new AccessDeniedException();
@@ -256,9 +251,11 @@ class Module extends Base
         $module = $this->moduleFactory->createById($moduleId);
         $module->getModule()->defaultDuration = $this->getSanitizer()->getInt('defaultDuration');
         $module->getModule()->validExtensions = $this->getSanitizer()->getString('validExtensions');
-        $module->getModule()->imageUri = $this->getSanitizer()->getString('imageUri');
         $module->getModule()->enabled = $this->getSanitizer()->getCheckbox('enabled');
         $module->getModule()->previewEnabled = $this->getSanitizer()->getCheckbox('previewEnabled');
+
+        if (!$moduleConfigLocked)
+            $module->getModule()->imageUri = $this->getSanitizer()->getString('imageUri');
 
         // Install Files for this module
         $module->installFiles();
@@ -664,7 +661,7 @@ class Module extends Base
     /**
      * Edit Widget transition
      * @SWG\Put(
-     *  path="/playlist/widget/{type}/{widgetId]",
+     *  path="/playlist/widget/transition/{type}/{widgetId}",
      *  operationId="WidgetEditTransition",
      *  tags={"widget"},
      *  summary="Adds In/Out transition",

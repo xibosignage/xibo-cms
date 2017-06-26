@@ -34,7 +34,11 @@
 
                 {% set title %}{% trans "Image Uri" %}{% endset %}
                 {% set helpText %}{% trans "The Image to display for this module. This should be a path relative to the root of the installation." %}{% endset %}
-                {{ forms.input("imageUri", title, module.module.imageUri, helpText) }}
+                {% if moduleConfigLocked %}
+                    {{ forms.disabled("imageUri", title, module.module.imageUri, helpText) }}
+                {% else %}
+                    {{ forms.input("imageUri", title, module.module.imageUri, helpText) }}
+                {% endif %}
 
                 {% set title %}{% trans "Preview Enabled?" %}{% endset %}
                 {% set helpText %}{% trans "When Preview is Enabled users will be able to see a preview in the layout designer." %}{% endset %}
