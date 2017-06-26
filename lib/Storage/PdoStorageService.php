@@ -40,6 +40,9 @@ class PdoStorageService implements StorageServiceInterface
     /** @var array Statistics */
     private static $stats = [];
 
+    /** @var  string */
+    private static $_version;
+
     /**
      * Logger
      * @var LogService
@@ -333,5 +336,23 @@ class PdoStorageService implements StorageServiceInterface
     {
         $currentCount = (isset(self::$stats[$connection][$key])) ? self::$stats[$connection][$key] : 0;
         self::$stats[$connection][$key] = $currentCount + 1;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getVersion()
+    {
+        if (self::$_version === null) {
+
+            $results = $this->select('SELECT version() AS v', []);
+
+            if (count($results) <= 0)
+                return null;
+
+            self::$_version = explode('-', $results[0]['v'])[0];
+        }
+
+        return self::$_version;
     }
 }
