@@ -24,6 +24,7 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\RequiredFile;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -677,7 +678,11 @@ class Display extends Base
         $layouts = $this->layoutFactory->query(null, ['retired' => 0]);
 
         if ($display->defaultLayoutId != null) {
-            $layouts = array_merge([$this->layoutFactory->getById($display->defaultLayoutId)], $layouts);
+            try {
+                $layouts = array_merge([$this->layoutFactory->getById($display->defaultLayoutId)], $layouts);
+            } catch (NotFoundException $e) {
+                $this->getLog()->error('Default layoutId ' . $display->defaultLayoutId . ' not found for displayId ' . $display->displayId);
+            }
         }
 
         $this->getState()->template = 'display-form-edit';

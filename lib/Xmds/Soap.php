@@ -567,6 +567,12 @@ class Soap
             // Make sure its XLF is up to date
             $path = $layout->xlfToDisk(['notify' => false]);
 
+            // If the status is *still* 4, then we skip this layout as it cannot build
+            if ($layout->status === 4) {
+                $this->getLog()->debug('Skipping layoutId ' . $layout->layoutId . ' which wont build');
+                continue;
+            }
+
             // For layouts the MD5 column is the layout xml
             $fileSize = filesize($path);
             $md5 = md5_file($path);
