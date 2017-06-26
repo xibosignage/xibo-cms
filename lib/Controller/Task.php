@@ -445,7 +445,11 @@ class Task extends Base
 
         // Update statements
         $updateSth = $db->prepare('UPDATE `task` SET status = :status WHERE taskId = :taskId');
-        $updateStartSth = $db->prepare('UPDATE `task` SET status = :status, lastRunStartDt = :lastRunStartDt WHERE taskId = :taskId');
+        if (DBVERSION < 133)
+            $updateStartSth = null;
+        else
+            $updateStartSth = $db->prepare('UPDATE `task` SET status = :status, lastRunStartDt = :lastRunStartDt WHERE taskId = :taskId');
+
         $updateFatalErrorSth = $db->prepare('UPDATE `task` SET status = :status, isActive = :isActive, lastRunMessage = :lastRunMessage WHERE taskId = :taskId');
 
         // We loop until we have gone through without running a task
@@ -473,11 +477,18 @@ class Task extends Base
                     $this->getLog()->info('Running Task ' . $taskId);
 
                     // Set to running
-                    $updateStartSth->execute([
-                        'taskId' => $taskId,
-                        'status' => \Xibo\Entity\Task::$STATUS_RUNNING,
-                        'lastRunStartDt' => $this->getDate()->getLocalDate(null, 'U')
-                    ]);
+                    if (DBVERSION < 133) {
+                        $updateSth->execute([
+                            'taskId' => $taskId,
+                            'status' => \Xibo\Entity\Task::$STATUS_RUNNING
+                        ]);
+                    } else {
+                        $updateStartSth->execute([
+                            'taskId' => $taskId,
+                            'status' => \Xibo\Entity\Task::$STATUS_RUNNING,
+                            'lastRunStartDt' => $this->getDate()->getLocalDate(null, 'U')
+                        ]);
+                    }
                     $this->store->incrementStat('xtr', 'update');
 
                     // Pass to run.
@@ -520,6 +531,10 @@ class Task extends Base
     private function pollProcessTimeouts()
     {
         $db = $this->store->getConnection('xtr');
+
+        // Not available before 133 (1.8.2)
+        if (DBVERSION < 133)
+            return;
 
         // Get timed out tasks and deal with them
         $command = $db->prepare('

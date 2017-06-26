@@ -101,8 +101,14 @@ class TaskFactory extends BaseFactory
         $params = array();
         $sql = '
           SELECT `taskId`, `name`, `status`, `pid`, `configFile`, `class`, `options`, `schedule`, 
-              `lastRunDt`, `lastRunStartDt`, `lastRunMessage`, `lastRunStatus`, `lastRunDuration`, `lastRunExitCode`,
+              `lastRunDt`, `lastRunStatus`, `lastRunMessage`, `lastRunDuration`, `lastRunExitCode`,
               `isActive`, `runNow`
+        ';
+
+        if (DBVERSION >= 133)
+            $sql .= ', `lastRunStartDt` ';
+
+        $sql .= '
             FROM `task` 
            WHERE 1 = 1 
         ';
