@@ -311,7 +311,7 @@ function refreshPreview(regionId) {
 var loadTimeLineCallback = function(dialog) {
     // Make this a big modal
     dialog.addClass("modal-big");
-    console.log(dialog);
+
     dialog.on("hidden.bs.modal", function () {
         refreshPreview($("#layout").data("currentRegionId"));
     });

@@ -355,48 +355,54 @@
                     animate: false,
                     updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}true{% else %}false{% endif %},
                     deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == "Checked" %}true{% else %}false{% endif %}
-                }).on('shown.bs.modal', function () {
-                    // Configure the upload form
-                    var url = "{{ urlFor("library.add") }}";
-                    var form = $(this).find("form");
+                });
 
-                    // Initialize the jQuery File Upload widget:
-                    form.fileupload({
+                openUploadFormModelShown($(".modal-body").find("form"));
+            }
+
+            /**
+             * Modal shown
+             */
+            function openUploadFormModelShown(form) {
+                // Configure the upload form
+                var url = "{{ urlFor("library.add") }}";
+
+                // Initialize the jQuery File Upload widget:
+                form.fileupload({
+                    url: url,
+                    disableImageResize: false
+                });
+
+                // Upload server status check for browsers with CORS support:
+                if ($.support.cors) {
+                    $.ajax({
                         url: url,
-                        disableImageResize: false
+                        type: 'HEAD'
+                    }).fail(function () {
+                        $('<span class="alert alert-error"/>')
+                            .text('Upload server currently unavailable - ' + new Date())
+                            .appendTo(form);
                     });
+                }
 
-                    // Upload server status check for browsers with CORS support:
-                    if ($.support.cors) {
-                        $.ajax({
-                            url: url,
-                            type: 'HEAD'
-                        }).fail(function () {
-                            $('<span class="alert alert-error"/>')
-                                    .text('Upload server currently unavailable - ' + new Date())
-                                    .appendTo(form);
-                        });
+                // Enable iframe cross-domain access via redirect option:
+                form.fileupload(
+                    'option',
+                    'redirect',
+                    window.location.href.replace(
+                        /\/[^\/]*$/,
+                        '/cors/result.html?%s'
+                    )
+                );
+
+                form.bind('fileuploadsubmit', function (e, data) {
+                    var inputs = data.context.find(':input');
+                    if (inputs.filter('[required][value=""]').first().focus().length) {
+                        return false;
                     }
+                    data.formData = inputs.serializeArray().concat(form.serializeArray());
 
-                    // Enable iframe cross-domain access via redirect option:
-                    form.fileupload(
-                            'option',
-                            'redirect',
-                            window.location.href.replace(
-                                    /\/[^\/]*$/,
-                                    '/cors/result.html?%s'
-                            )
-                    );
-
-                    form.bind('fileuploadsubmit', function (e, data) {
-                        var inputs = data.context.find(':input');
-                        if (inputs.filter('[required][value=""]').first().focus().length) {
-                            return false;
-                        }
-                        data.formData = inputs.serializeArray().concat(form.serializeArray());
-
-                        inputs.filter("input").prop("disabled", true);
-                    });
+                    inputs.filter("input").prop("disabled", true);
                 });
             }
 
