@@ -53,17 +53,17 @@ class CurrenciesWidgetTest extends LocalWebTestCase
         parent::tearDown();
     }
     /**
-     * @group broken
      * @dataProvider provideSuccessCases
+     * @group broken
      */
-    public function testAdd($overrideTemplate, $templateId, $name, $duration, $useDuration, $base, $items, $effect, $speed, $backgroundColor, $noRecordsMessage, $dateFormat, $updateInterval, $durationIsPerPage, $widgetOriginalWidth, $widgetOriginalHeight, $maxItemsPerPage, $mainTemplate, $itemTemplate, $styleSheet, $javaScript)
+    public function testAdd($isOverride, $templateId, $name, $duration, $useDuration, $base, $items, $reverseConversion, $effect, $speed, $backgroundColor, $noRecordsMessage, $dateFormat, $updateInterval, $durationIsPerPage, $widgetOriginalWidth, $widgetOriginalHeight, $maxItemsPerPage, $mainTemplate, $itemTemplate, $styleSheet, $javaScript)
     {
         # Create layout
         $layout = (new XiboLayout($this->getEntityProvider()))->create('Currencies layout add', 'phpunit description', '', 9);
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         
-        if ($overrideTemplate = 1) {
+        if ($isOverride) {
             $response = $this->client->post('/playlist/widget/currencies/' . $region->playlists[0]['playlistId'], [
                 'templateId' => $templateId,
                 'name' => $name,
@@ -71,12 +71,14 @@ class CurrenciesWidgetTest extends LocalWebTestCase
                 'useDuration' => $useDuration,
                 'base' => $base,
                 'items' => $items,
+                'reverseConversion' => $reverseConversion,
                 'effect' => $effect,
                 'speed' => $speed,
                 'backgroundColor' => $backgroundColor,
                 'noRecordsMessage' => $noRecordsMessage,
                 'dateFormat' => $dateFormat,
                 'updateInterval' => $updateInterval,
+                'overrideTemplate' => 1,
                 'durationIsPerPage' => $durationIsPerPage,
                 'widgetOriginalWidth' => $widgetOriginalWidth,
                 'widgetOriginalHeight' => $widgetOriginalHeight,
@@ -94,35 +96,127 @@ class CurrenciesWidgetTest extends LocalWebTestCase
                 'useDuration' => $useDuration,
                 'base' => $base,
                 'items' => $items,
+                'reverseConversion' => $reverseConversion,
                 'effect' => $effect,
                 'speed' => $speed,
                 'backgroundColor' => $backgroundColor,
                 'noRecordsMessage' => $noRecordsMessage,
                 'dateFormat' => $dateFormat,
                 'updateInterval' => $updateInterval,
+                'overrideTemplate' => 0,
                 'durationIsPerPage' => $durationIsPerPage,
-                'maxItemsPerPage' => $maxItemsPerPage,
             ]);
         }
 
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object);
+        $widgetOptions = (new XiboCurrencies($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $this->assertSame($name, $widgetOptions->name);
+        $this->assertSame($duration, $widgetOptions->duration);
+        foreach ($widgetOptions->widgetOptions as $option) {
+            if ($option['option'] == 'templateId') {
+                $this->assertSame($templateId, $option['value']);
+            }
+            if ($option['option'] == 'base') {
+                $this->assertSame($base, $option['value']);
+            }
+            if ($option['option'] == 'items') {
+                $this->assertSame($items, $option['value']);
+            }
+            if ($option['option'] == 'updateInterval') {
+                $this->assertSame($updateInterval, intval($option['value']));
+            }
+            if ($option['option'] == 'reverseConversion') {
+                $this->assertSame($reverseConversion, intval($option['value']));
+            }
+            if ($option['option'] == 'maxItemsPerPage') {
+                $this->assertSame($maxItemsPerPage, intval($option['value']));
+            }
+        }
 
     }
 
     /**
      * Each array is a test run
-     * Format ($overrideTemplate, $templateId, $name, $duration, $useDuration, $base, $items, $effect, $speed, $backgroundColor, $noRecordsMessage, $dateFormat, $updateInterval, $durationIsPerPage, $widgetOriginalWidth, $widgetOriginalHeight, $maxItemsPerPage, $mainTemplate, $itemTemplate, $styleSheet, $javaScript)
+     * Format ($overrideTemplate, $templateId, $name, $duration, $useDuration, $base, $items, $reverseConversion, $effect, $speed, $backgroundColor, $noRecordsMessage, $dateFormat, $updateInterval, $durationIsPerPage, $widgetOriginalWidth, $widgetOriginalHeight, $maxItemsPerPage, $mainTemplate, $itemTemplate, $styleSheet, $javaScript)
      * @return array
      */
     public function provideSuccessCases()
     {
         # Sets of data used in testAdd
         return [
-            'No override' => [0, 1, 'template 1', 6, 1, 'GBP', 'PLN', NULL, NULL, NULL, 'No messages', NULL, 12, 1, null, null, 5, null, null, null, null],
-            'No override' => [0, 2, 'template 2', 120, 1, 'GBP', 'EUR', NULL, NULL, NULL, 'No messages', NULL, 120, 0, null, null, 2, null, null, null, null],
-            'Override' => [1, NULL, 'override template', 12, 1, 'GBP', 'EUR', NULL, NULL, NULL, 'No messages', NULL, 60, 1, 1000, 800, 5, '<div class="container-main"><div class="container "><div class="row row-header"><div class="col-xs-2 col-xs-offset-7 text-center value">BUY</div><div class="col-xs-2 col-xs-offset-1 value text-center">SELL</div></div><div id="cycle-container">[itemsTemplate]</div></div></div>', '<div class="row row-finance"><div class="col-xs-1 flags"><img class="img-circle center-block " src="[CurrencyFlag]"></div><div class="col-xs-1 value ">[NameShort]</div><div class="col-xs-2 col-xs-offset-5 text-center value">[Bid]</div><div class="col-xs-2 col-xs-offset-1 value text-center">[Ask]</div> </div>','body {     font-family: "Helvetica", "Arial", sans-serif;     line-height: 1; }  .container-main {height: 420px !important;width: 820px !important; }  .container { height: 420px !important; width: 820px !important; float: left;  margin-top: 20px; }  .row-finance { height: 60px;  background: rgba(0, 0, 0, 0.87);  margin-bottom: 20px; }  .row {margin-right: 0; margin-left: 0; }  .row-header { margin-right: -15px; margin-left: -15px; margin-bottom: 20px; }  #cycle-container { margin-left: -15px; margin-right: -15px; }  .value { font-size: 20px; padding-top: 20px; font-weight: bold; color: #fff; }  .down-arrow { font-size: 20px; color: red; padding-top: 17px; }  .up-arrow { font-size: 20px;color: green; padding-top: 17px; } .variant { font-size: 20px; padding-top: 17px; }  .flags { padding-top: 4px; }  .center-block { width: 50px; height: 50px; }', NULL]
+            'No override template 1' => [false, 'currencies1', 'template 1', 6, 1, 'GBP', 'PLN', 0, NULL, NULL, NULL, 'No messages', NULL, 12, 1, null, null, 5, null, null, null, null],
+            'No override template 2 reverse' => [false, 'currencies2', 'template 2', 120, 1, 'GBP', 'EUR', 1, NULL, NULL, NULL, 'No messages', NULL, 120, 0, null, null, 2, null, null, null, null],
+            'Override' => [true, 'currencies1', 'override template', 12, 1, 'GBP', 'EUR', 0, NULL, NULL, NULL, 'No messages', NULL, 60, 1, 1000, 800, 5, '<div class="container-main"><div class="container "><div class="row row-header"><div class="col-xs-2 col-xs-offset-7 text-center value">BUY</div><div class="col-xs-2 col-xs-offset-1 value text-center">SELL</div></div><div id="cycle-container">[itemsTemplate]</div></div></div>', '<div class="row row-finance"><div class="col-xs-1 flags"><img class="img-circle center-block " src="[CurrencyFlag]"></div><div class="col-xs-1 value ">[NameShort]</div><div class="col-xs-2 col-xs-offset-5 text-center value">[Bid]</div><div class="col-xs-2 col-xs-offset-1 value text-center">[Ask]</div> </div>','body {     font-family: "Helvetica", "Arial", sans-serif;     line-height: 1; }  .container-main {height: 420px !important;width: 820px !important; }  .container { height: 420px !important; width: 820px !important; float: left;  margin-top: 20px; }  .row-finance { height: 60px;  background: rgba(0, 0, 0, 0.87);  margin-bottom: 20px; }  .row {margin-right: 0; margin-left: 0; }  .row-header { margin-right: -15px; margin-left: -15px; margin-bottom: 20px; }  #cycle-container { margin-left: -15px; margin-right: -15px; }  .value { font-size: 20px; padding-top: 20px; font-weight: bold; color: #fff; }  .down-arrow { font-size: 20px; color: red; padding-top: 17px; }  .up-arrow { font-size: 20px;color: green; padding-top: 17px; } .variant { font-size: 20px; padding-top: 17px; }  .flags { padding-top: 4px; }  .center-block { width: 50px; height: 50px; }', NULL]
         ];
+    }
+
+    /**
+     * @group broken
+     */
+    public function testEdit()
+    {
+        # Create layout 
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('Currencies edit Layout', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        # Create a currencies with wrapper
+        $currencies = (new XiboCurrencies($this->getEntityProvider()))->create('currencies2', 'Unedited widget', 120, 1, 'GBP', 'EUR', 1, NULL, NULL, NULL, 'No messages', NULL, 50, 1, $region->playlists[0]['playlistId']);
+        $nameNew = 'Edited widget';
+        $durationNew = 80;
+        $templateNew = 'currencies1';
+        $notReverse = 0;
+        $itemsNew = 'USD';
+        # Edit currency widget and change name, duration, template, reverseConversion and items
+        $response = $this->client->put('/playlist/widget/' . $currencies->widgetId, [
+                'templateId' => $templateNew,
+                'name' => $nameNew,
+                'duration' => $durationNew,
+                'useDuration' => $currencies->useDuration,
+                'base' => $currencies->base,
+                'items' => $itemsNew,
+                'reverseConversion' => $notReverse,
+                'effect' => $currencies->effect,
+                'speed' => $currencies->speed,
+                'backgroundColor' => $currencies->backgroundColor,
+                'noRecordsMessage' => $currencies->noRecordsMessage,
+                'dateFormat' => $currencies->dateFormat,
+                'updateInterval' => $currencies->updateInterval,
+                'durationIsPerPage' => $currencies->durationIsPerPage,
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+        $this->assertSame(200, $this->client->response->status());
+        $this->assertNotEmpty($this->client->response->body());
+        $object = json_decode($this->client->response->body());
+        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $widgetOptions = (new XiboCurrencies($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        # check if changes were correctly saved
+        $this->assertSame($nameNew, $widgetOptions->name);
+        $this->assertSame($durationNew, $widgetOptions->duration);
+        foreach ($widgetOptions->widgetOptions as $option) {
+            if ($option['option'] == 'templateId') {
+                $this->assertSame($templateNew, $option['value']);
+            }
+            if ($option['option'] == 'items') {
+                $this->assertSame($itemsNew, $option['value']);
+            }
+            if ($option['option'] == 'reverseConversion') {
+                $this->assertSame($notReverse, intval($option['value']));
+            }
+        }
+    }
+
+    /**
+     * @group broken
+     */
+    public function testDelete()
+    {
+        # Create layout 
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('Currencies delete Layout', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        # Create a currencies with wrapper
+        $currencies = (new XiboCurrencies($this->getEntityProvider()))->create('currencies2', 'Unedited widget', 120, 1, 'GBP', 'EUR', 1, NULL, NULL, NULL, 'No messages', NULL, 50, 1, $region->playlists[0]['playlistId']);
+        # Delete it
+        $this->client->delete('/playlist/widget/' . $currencies->widgetId);
+        $response = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->status, $this->client->response->body());
     }
 }

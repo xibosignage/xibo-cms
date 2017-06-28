@@ -1220,7 +1220,7 @@ class User implements \JsonSerializable
 
             if ($row['libraryQuota'] > 0) {
                 $groupId = $row['groupId'];
-                $userQuota = $row['libraryQuota'];
+                $userQuota = intval($row['libraryQuota']);
                 break;
             }
         }
@@ -1244,8 +1244,10 @@ class User implements \JsonSerializable
 
             $fileSize = intval($row['SumSize']);
 
-            if (($fileSize / 1024) <= $userQuota)
+            if (($fileSize / 1024) >= $userQuota) {
+                $this->getLog()->debug('User has exceeded library quota. FileSize: ' . $fileSize . ' bytes, quota is ' . $userQuota * 1024);
                 throw new LibraryFullException(__('You have exceeded your library quota'));
+            }
         }
     }
 

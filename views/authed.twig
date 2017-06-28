@@ -41,7 +41,7 @@
                         {% endif %}
 
                         {% if currentUser.routeViewable("/dataset") %}
-                        <li class="sidebar-list"><a href="{{ urlFor("dataSet.view") }}">{% trans "DataSets" %}</a></li>
+                        <li class="sidebar-list"><a href="{{ urlFor("dataset.view") }}">{% trans "DataSets" %}</a></li>
                         {% endif %}
                     {% endif %}
 
@@ -52,7 +52,7 @@
                         {% endif %}
 
                         {% if currentUser.routeViewable("/displaygroup") %}
-                        <li class="sidebar-list"><a href="{{ urlFor("displayGroup.view") }}">{% trans "Display Groups" %}</a></li>
+                        <li class="sidebar-list"><a href="{{ urlFor("displaygroup.view") }}">{% trans "Display Groups" %}</a></li>
                         {% endif %}
 
                         {% if currentUser.routeViewable("/stats") %}
@@ -60,7 +60,7 @@
                         {% endif %}
 
                         {% if currentUser.routeViewable("/displayprofile") %}
-                        <li class="sidebar-list"><a href="{{ urlFor("displayProfile.view") }}">{% trans "Display Settings" %}</a></li>
+                        <li class="sidebar-list"><a href="{{ urlFor("displayprofile.view") }}">{% trans "Display Settings" %}</a></li>
                         {% endif %}
 
                         {% if currentUser.routeViewable("/command") %}
@@ -117,7 +117,7 @@
                         {% endif %}
 
                         {% if currentUser.routeViewable("/auditlog") %}
-                        <li class="sidebar-list"><a href="{{ urlFor("auditLog.view") }}">{% trans "Audit Trail" %}</a></li>
+                        <li class="sidebar-list"><a href="{{ urlFor("auditlog.view") }}">{% trans "Audit Trail" %}</a></li>
                         {% endif %}
 
                         {% if currentUser.routeViewable("/fault") %}

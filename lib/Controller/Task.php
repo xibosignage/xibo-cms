@@ -355,18 +355,19 @@ class Task extends Base
         // Get this task
         $task = $this->taskFactory->getById($taskId);
 
-        // Instantiate
-        if (!class_exists($task->class))
-            throw new NotFoundException();
-
-        /** @var TaskInterface $taskClass */
-        $taskClass = new $task->class();
-
         // Set to running
         $this->getLog()->debug('Running Task ' . $task->name . ' [' . $task->taskId . ']');
 
         // Run
         try {
+            // Instantiate
+            if (!class_exists($task->class))
+                throw new NotFoundException();
+
+            /** @var TaskInterface $taskClass */
+            $taskClass = new $task->class();
+
+            // Record the start time
             $start = time();
 
             $taskClass
@@ -391,6 +392,9 @@ class Task extends Base
                 ->setTask($task)
                 ->run();
 
+            // We should commit anything this task has done
+            $this->store->commitIfNecessary();
+
             // Collect results
             $task->lastRunDuration = time() - $start;
             $task->lastRunMessage = $taskClass->getRunMessage();
@@ -400,6 +404,11 @@ class Task extends Base
             $this->getLog()->error($e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
 
+            // We should rollback anything we've done so far
+            if ($this->store->getConnection()->inTransaction())
+                $this->store->getConnection()->rollBack();
+
+            // Set the results to error
             $task->lastRunMessage = $e->getMessage();
             $task->lastRunStatus = \Xibo\Entity\Task::$STATUS_ERROR;
         }
@@ -407,8 +416,8 @@ class Task extends Base
         $task->lastRunDt = $this->getDate()->getLocalDate(null, 'U');
         $task->runNow = 0;
 
-        // Save
-        $task->save();
+        // Save (on the XTR connection)
+        $task->save(['connection' => 'xtr', 'validate' => false]);
 
         $this->getLog()->debug('Finished Task ' . $task->name . ' [' . $task->taskId . '] Run Dt: ' . $this->getDate()->getLocalDate());
 
@@ -417,32 +426,48 @@ class Task extends Base
     }
 
     /**
-     * Take the quickest due task and run it.
+     * Poll for tasks to run
+     *  continue polling until there aren't any more to run
+     *  allow for multiple polls to run at the same time
      */
     public function poll()
     {
         $this->getLog()->debug('XTR poll started');
 
+        $this->pollProcessTimeouts();
+
         // The getting/updating of tasks runs in a separate DB connection
         // Query for a list of tasks to run.
         $db = $this->store->getConnection('xtr');
 
-        $pollSth = $db->prepare('SELECT taskId, schedule, runNow, lastRunDt FROM `task` WHERE isActive = 1 AND status <> :status ORDER BY lastRunDuration');
+        // This queries for all enabled tasks, because we need to assess the schedule in code
+        $pollSth = $db->prepare('SELECT taskId, `schedule`, runNow, lastRunDt FROM `task` WHERE isActive = 1 AND `status` <> :status ORDER BY lastRunDuration');
+
+        // Update statements
         $updateSth = $db->prepare('UPDATE `task` SET status = :status WHERE taskId = :taskId');
+        if (DBVERSION < 133)
+            $updateStartSth = null;
+        else
+            $updateStartSth = $db->prepare('UPDATE `task` SET status = :status, lastRunStartDt = :lastRunStartDt WHERE taskId = :taskId');
 
+        $updateFatalErrorSth = $db->prepare('UPDATE `task` SET status = :status, isActive = :isActive, lastRunMessage = :lastRunMessage WHERE taskId = :taskId');
+
+        // We loop until we have gone through without running a task
+        // we select new tasks each time
         while (true) {
-
+            // Get tasks that aren't running currently
             $pollSth->execute(['status' => \Xibo\Entity\Task::$STATUS_RUNNING]);
             $this->store->incrementStat('xtr', 'select');
 
             $tasks = $pollSth->fetchAll(\PDO::FETCH_ASSOC);
 
+            // Assume we wont run anything
             $taskRun = false;
 
             foreach ($tasks as $task) {
                 /** @var \Xibo\Entity\Task $task */
-                $cron = \Cron\CronExpression::factory($task['schedule']);
                 $taskId = $task['taskId'];
+                $cron = \Cron\CronExpression::factory($task['schedule']);
 
                 // Is the next run date of this event earlier than now, or is the task set to runNow
                 $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $task['lastRunDt']))->format('U');
@@ -452,42 +477,88 @@ class Task extends Base
                     $this->getLog()->info('Running Task ' . $taskId);
 
                     // Set to running
-                    $updateSth->execute(['taskId' => $taskId, 'status' => \Xibo\Entity\Task::$STATUS_RUNNING]);
+                    if (DBVERSION < 133) {
+                        $updateSth->execute([
+                            'taskId' => $taskId,
+                            'status' => \Xibo\Entity\Task::$STATUS_RUNNING
+                        ]);
+                    } else {
+                        $updateStartSth->execute([
+                            'taskId' => $taskId,
+                            'status' => \Xibo\Entity\Task::$STATUS_RUNNING,
+                            'lastRunStartDt' => $this->getDate()->getLocalDate(null, 'U')
+                        ]);
+                    }
                     $this->store->incrementStat('xtr', 'update');
 
                     // Pass to run.
                     try {
+                        // Run is isolated
                         $this->run($taskId);
-
-                        // Commit the default connection at this point.
-                        $this->store->commitIfNecessary();
 
                         // Set to idle
                         $updateSth->execute(['taskId' => $taskId, 'status' => \Xibo\Entity\Task::$STATUS_IDLE]);
                         $this->store->incrementStat('xtr', 'update');
 
                     } catch (\Exception $exception) {
+                        // This is a completely unexpected exception, and we should disable the task
                         $this->getLog()->error('Task run error for taskId ' . $taskId . '. E = ' . $exception->getMessage());
 
-                        // Rollback
-                        if ($this->store->getConnection()->inTransaction())
-                            $this->store->getConnection()->rollBack();
-
                         // Set to error
-                        $updateSth->execute(['taskId' => $taskId, 'status' => \Xibo\Entity\Task::$STATUS_ERROR]);
+                        $updateFatalErrorSth->execute([
+                            'taskId' => $taskId,
+                            'status' => \Xibo\Entity\Task::$STATUS_ERROR,
+                            'isActive' => 0,
+                            'lastRunMessage' => 'Fatal Error'
+                        ]);
                         $this->store->incrementStat('xtr', 'update');
                     }
 
-                    // Only do 1
+                    // We have run a task
                     $taskRun = true;
                     break;
                 }
             }
 
+            // If we haven't run a task, then stop
             if (!$taskRun)
                 break;
         }
 
         $this->getLog()->debug('XTR poll stopped');
+    }
+
+    private function pollProcessTimeouts()
+    {
+        $db = $this->store->getConnection('xtr');
+
+        // Not available before 133 (1.8.2)
+        if (DBVERSION < 133)
+            return;
+
+        // Get timed out tasks and deal with them
+        $command = $db->prepare('
+          SELECT taskId, lastRunStartDt 
+            FROM `task` 
+           WHERE isActive = 1 
+            AND `status` = :status
+            AND lastRunStartDt < :timeout
+        ');
+
+        $updateFatalErrorSth = $db->prepare('UPDATE `task` SET `status` = :status WHERE taskId = :taskId');
+
+        $command->execute([
+            'status' => \Xibo\Entity\Task::$STATUS_RUNNING,
+            'timeout' => $this->getDate()->parse()->subHours(12)->format('U')
+        ]);
+
+        foreach ($command->fetchAll(\PDO::FETCH_ASSOC) as $task) {
+            $this->getLog()->error('Timed out task detected, marking as timed out. TaskId: ' . $task['taskId']);
+
+            $updateFatalErrorSth->execute([
+                'taskId' => intval($task['taskId']),
+                'status' => \Xibo\Entity\Task::$STATUS_TIMEOUT
+            ]);
+        }
     }
 }

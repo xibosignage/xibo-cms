@@ -25,6 +25,7 @@ use Xibo\Entity\Widget;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\DeadlockException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\BandwidthFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DayPartFactory;
@@ -284,6 +285,7 @@ class Soap
         $playerNonce = Random::generateString(32);
         $playerNonceCache = $this->pool->getItem('/display/nonce/' . $this->display->displayId);
         $playerNonceCache->set($playerNonce);
+        $playerNonceCache->expiresAfter(86400);
         $this->pool->saveDeferred($playerNonceCache);
 
         // Get all required files for this display.
@@ -400,10 +402,14 @@ class Soap
 
                 if ($row['scheduleId'] != 0) {
                     $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
-                    $schedule
-                        ->setDateService($this->getDate())
-                        ->setDayPartFactory($this->dayPartFactory);
-                    $scheduleEvents = $schedule->getEvents($fromFilter, $toFilter);
+                    $schedule->setDayPartFactory($this->dayPartFactory);
+
+                    try {
+                        $scheduleEvents = $schedule->getEvents($fromFilter, $toFilter);
+                    } catch (XiboException $e) {
+                        $this->getLog()->error('Unable to getEvents for ' . $schedule->eventId);
+                        continue;
+                    }
 
                     if (count($scheduleEvents) <= 0)
                         continue;
@@ -561,6 +567,12 @@ class Soap
             // Make sure its XLF is up to date
             $path = $layout->xlfToDisk(['notify' => false]);
 
+            // If the status is *still* 4, then we skip this layout as it cannot build
+            if ($layout->status === 4) {
+                $this->getLog()->debug('Skipping layoutId ' . $layout->layoutId . ' which wont build');
+                continue;
+            }
+
             // For layouts the MD5 column is the layout xml
             $fileSize = filesize($path);
             $md5 = md5_file($path);
@@ -581,7 +593,8 @@ class Soap
             $file->setAttribute("size", $fileSize);
             $file->setAttribute("md5", $md5);
 
-            $supportsHttpLayouts = ($this->display->clientType == 'android' || ($this->display->clientType == 'windows' && $this->display->clientCode > 120));
+            // Permissive check for http layouts - always allow unless windows and <= 120
+            $supportsHttpLayouts = !($this->display->clientType == 'windows' && $this->display->clientCode <= 120);
 
             if ($httpDownloads && $supportsHttpLayouts) {
                 // Serve a link instead (standard HTTP link)
@@ -801,7 +814,7 @@ class Soap
 
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
-            $events = $this->scheduleFactory->getForXmds($this->display->displayId, $fromFilter->format('U'), $toFilter->format('U'), $options);
+            $events = $this->scheduleFactory->getForXmds($this->display->displayId, $fromFilter, $toFilter, $options);
 
             // If our dependents are nodes, then build a list of layouts we can use to query for nodes
             $layoutDependents = [];
@@ -847,10 +860,14 @@ class Soap
             foreach ($events as $row) {
 
                 $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
-                $schedule
-                    ->setDateService($this->getDate())
-                    ->setDayPartFactory($this->dayPartFactory);
-                $scheduleEvents = $schedule->getEvents($fromFilter, $toFilter);
+                $schedule->setDayPartFactory($this->dayPartFactory);
+
+                try {
+                    $scheduleEvents = $schedule->getEvents($fromFilter, $toFilter);
+                } catch (XiboException $e) {
+                    $this->getLog()->error('Unable to getEvents for ' . $schedule->eventId);
+                    continue;
+                }
 
                 $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
 
@@ -1216,8 +1233,16 @@ class Soap
             }
 
             // Adjust the date according to the display timezone
-            $date = ($this->display->timeZone != null) ? Date::createFromFormat('Y-m-d H:i:s', $date, $this->display->timeZone)->tz($defaultTimeZone) : Date::createFromFormat('Y-m-d H:i:s', $date);
-            $date = $this->getDate()->getLocalDate($date);
+            try {
+                $date = ($this->display->timeZone != null) ? Date::createFromFormat('Y-m-d H:i:s', $date, $this->display->timeZone)->tz($defaultTimeZone) : Date::createFromFormat('Y-m-d H:i:s', $date);
+                $date = $this->getDate()->getLocalDate($date);
+            } catch (\Exception $e) {
+                // Protect against the date format being inreadable
+                $this->getLog()->debug('Date format unreadable on log message: ' . $date);
+
+                // Use now instead
+                $date = $this->getDate()->getLocalDate();
+            }
 
             // Get the date and the message (all log types have these)
             foreach ($node->childNodes as $nodeElements) {
@@ -1517,8 +1542,11 @@ class Soap
 
         // Only call save if this property has actually changed.
         if ($this->display->hasPropertyChanged('mediaInventoryStatus')) {
+            $this->getLog()->debug('Media Inventory status changed to ' . $this->display->mediaInventoryStatus);
+
             // If we are complete, then drop the player nonce cache
             if ($this->display->mediaInventoryStatus == 1) {
+                $this->getLog()->debug('Media Inventory tells us that all downloads are complete, clearing the nonce for this display');
                 $this->pool->deleteItem('/display/nonce/' . $this->display->displayId);
             }
 

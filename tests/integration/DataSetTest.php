@@ -376,8 +376,9 @@ class DataSetTest extends LocalWebTestCase
     }
     /**
      * Test edit row
+     * @dataProvider provideSuccessCasesRow
      */
-    public function testRowEdit()
+    public function testRowEdit($data)
     {
         # Create a new dataset to use
         /** @var XiboDataSet $dataSet */
@@ -389,11 +390,12 @@ class DataSetTest extends LocalWebTestCase
         # Create new column and add it to our dataset
         $column = (new XiboDataSetColumn($this->getEntityProvider()))->create($dataSet->dataSetId, $nameCol,'', 2, 1, 1, '');
         # Add new row with data to our dataset
-        $row = $dataSet->createRow($column->dataSetColumnId, 'test');
+        $rowD = 'test';
+        $row = $dataSet->createRow($column->dataSetColumnId, $rowD);
         $rowCheck = $dataSet->getDataByRowId($row['id']);
         # Edit row data
         $response = $this->client->put('/dataset/data/' . $dataSet->dataSetId . '/' . $row['id'], [
-            'dataSetColumnId_' . $column->dataSetColumnId => 'API EDITED'
+            'dataSetColumnId_' . $column->dataSetColumnId => $data
             ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
         $object = json_decode($this->client->response->body());
@@ -403,9 +405,31 @@ class DataSetTest extends LocalWebTestCase
         $rowCheck = $dataSet->getDataByRowId($object->id);
         # Check if data was correctly added to the row
         $this->assertArrayHasKey($nameCol, $rowCheck);
-        $this->assertSame($rowCheck[$nameCol], 'API EDITED');
+        if ($data == Null){
+            $this->assertSame($rowCheck[$nameCol], $rowD);
+        }
+        else {
+         $this->assertSame($rowCheck[$nameCol], $data);           
+        }
         # Clean up as we no longer need it, deleteWData will delete dataset even if it has data assigned to it
         $dataSet -> deleteWData();
+    }
+
+    /**
+     * Each array is a test run
+     * Format ($data)
+     * @return array
+     */
+
+    public function provideSuccessCasesRow()
+    {
+        # Cases we provide to testRowEdit, you can extend it by simply adding new case here
+        return [
+            # Value
+            'String' => ['API EDITED ROW'],
+            'Null' => [NULL],
+            'number as string' => ['1212']
+        ];
     }
 
     /*

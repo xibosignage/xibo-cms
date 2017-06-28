@@ -420,6 +420,10 @@ class Soap4 extends Soap
         $this->display->lastCommandSuccess = $this->getSanitizer()->getCheckbox('lastCommandSuccess', $this->display->lastCommandSuccess, $status);
         $this->display->deviceName = $this->getSanitizer()->getString('deviceName', $this->display->deviceName, $status);
 
+        if ($this->getConfig()->GetSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1 && $this->display->hasPropertyChanged('deviceName')) {
+            $this->display->display = $this->display->deviceName;
+        }
+
         // Timezone
         $timeZone = $this->getSanitizer()->getString('timeZone', $status);
 

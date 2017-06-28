@@ -37,8 +37,13 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                     <div class="tab-pane active" id="general">
 
                         {% set title %}{% trans "Display" %}{% endset %}
-                        {% set helpText %}{% trans "The Name of the Display - (1 - 50 characters)." %}{% endset %}
-                        {{ forms.input("display", title, display.display, helpText, "", "required") }}
+                        {% if displayLockName %}
+                            {% set helpText %}{% trans "The Name of the Display - your administrator has locked this to the device name" %}{% endset %}
+                            {{ forms.disabled("display", title, display.display, helpText, "", "required") }}
+                        {% else %}
+                            {% set helpText %}{% trans "The Name of the Display - (1 - 50 characters)." %}{% endset %}
+                            {{ forms.input("display", title, display.display, helpText, "", "required") }}
+                        {% endif %}
                 
                         {% set title %}{% trans "Display's Hardware Key" %}{% endset %}
                         {% set helpText %}{% trans "A unique identifier for this display." %}{% endset %}

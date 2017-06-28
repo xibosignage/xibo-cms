@@ -134,4 +134,10 @@ interface StorageServiceInterface
      * @return mixed
      */
     public function incrementStat($connection, $key);
+
+    /**
+     * Get the Storage engine version
+     * @return string
+     */
+    public function getVersion();
 }

@@ -33,6 +33,13 @@
 
                 {% set message %}{% trans "Screenshots can be seen in the Display Grid by selecting Column Visibility and enabling the Screenshot column." %}{% endset %}
                 {{ forms.message(message) }}
+
+                {% if display.xmrChannel is empty %}
+                    <div class="alert alert-info">
+                        {% set message %}{% trans %}XMR is not working on this Player yet, the screenshot will be requested the next time the Player connects on its collection interval, expected {{ nextCollect }}.{% endtrans %}{% endset %}
+                        {{ forms.message(message) }}
+                    </div>
+                {% endif %}
             </form>
         </div>
     </div>

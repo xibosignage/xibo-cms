@@ -160,6 +160,9 @@ class Upgrade extends Base
 
         // Are we on the last step?
         if (count($this->upgradeFactory->getIncomplete()) <= 0) {
+            // Clear all Task statuses
+            $this->store->update('UPDATE `task` SET `status` = 0 WHERE `status` = 1;', []);
+
             // Install all module files if we are on the last step
             $this->getApp()->container->get('\Xibo\Controller\Library')->installAllModuleFiles();
 

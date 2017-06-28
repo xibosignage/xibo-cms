@@ -128,7 +128,7 @@ class DisplayFactory extends BaseFactory
 
     /**
      * @param int $displayGroupId
-     * @return array[Display]
+     * @return Display[]
      * @throws NotFoundException
      */
     public function getByDisplayGroupId($displayGroupId)
@@ -139,12 +139,17 @@ class DisplayFactory extends BaseFactory
     /**
      * @param array $sortOrder
      * @param array $filterBy
-     * @return array[Display]
+     * @return Display[]
      */
     public function query($sortOrder = null, $filterBy = null)
     {
         if ($sortOrder === null)
             $sortOrder = ['display'];
+
+        // SQL function for ST_X/X and ST_Y/Y dependent on MySQL version
+        $version = $this->getStore()->getVersion();
+
+        $functionPrefix = ($version === null || version_compare($version, '5.6.1', '>=')) ? 'ST_' : '';
 
         $entries = array();
         $params = array();
@@ -174,8 +179,8 @@ class DisplayFactory extends BaseFactory
                   display.broadCastAddress,
                   display.secureOn,
                   display.cidr,
-                  X(display.GeoLocation) AS latitude,
-                  Y(display.GeoLocation) AS longitude,
+                  ' . $functionPrefix . 'X(display.GeoLocation) AS latitude,
+                  ' . $functionPrefix . 'Y(display.GeoLocation) AS longitude,
                   display.version_instructions AS versionInstructions,
                   display.client_type AS clientType,
                   display.client_version AS clientVersion,
@@ -296,6 +301,48 @@ class DisplayFactory extends BaseFactory
             $body .= "   WHERE  lkdisplaydg.DisplayGroupID   = :excludeDisplayGroupId ";
             $body .= "       )";
             $params['excludeDisplayGroupId'] = $this->getSanitizer()->getInt('exclude_displaygroupid', $filterBy);
+        }
+
+        // Media ID - direct assignment
+        if ($this->getSanitizer()->getInt('mediaId', $filterBy) !== null) {
+
+            $body .= '
+                AND display.displayId IN (
+                    SELECT `lkdisplaydg`.displayId
+                       FROM `lkmediadisplaygroup`
+                        INNER JOIN `lkdgdg`
+                        ON `lkdgdg`.parentId = `lkmediadisplaygroup`.displayGroupId
+                        INNER JOIN `lkdisplaydg`
+                        ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
+                     WHERE `lkmediadisplaygroup`.mediaId = :mediaId
+                    UNION
+                    SELECT `lkdisplaydg`.displayId
+                      FROM `lklayoutdisplaygroup`
+                        INNER JOIN `lkdgdg`
+                        ON `lkdgdg`.parentId = `lklayoutdisplaygroup`.displayGroupId
+                        INNER JOIN `lkdisplaydg`
+                        ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
+                     WHERE `lklayoutdisplaygroup`.layoutId IN (
+                         SELECT `region`.layoutId
+                              FROM `lkwidgetmedia`
+                               INNER JOIN `widget`
+                               ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                               INNER JOIN `lkregionplaylist`
+                               ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                               INNER JOIN `region`
+                               ON `region`.regionId = `lkregionplaylist`.regionId
+                               INNER JOIN layout
+                               ON layout.LayoutID = region.layoutId
+                             WHERE lkwidgetmedia.mediaId = :mediaId
+                            UNION
+                            SELECT `layout`.layoutId
+                              FROM `layout`
+                             WHERE `layout`.backgroundImageId = :mediaId
+                        )
+                )
+            ';
+
+            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
         }
 
         // Sorting?

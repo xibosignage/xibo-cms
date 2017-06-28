@@ -128,7 +128,11 @@
                             </div>
                         </div>
 
-                        {% set helpText %}{% trans "Enter the text to display. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
+                        {% set helpText %}
+                            {% trans "Enter the text to display. Please note that the background colour has automatically coloured to your layout background colour." %}
+                            {% trans "The red rectangle reflects the size of the region you are editing." %}
+                            {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                        {% endset %}
                         {{ forms.textarea("ta_text", "", "", helpText, "", 10) }}
                     </div>
 

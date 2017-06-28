@@ -39,7 +39,7 @@ Good in theory, but it is giving back 0 and 0 at the moment
 
                 {% if countGeneric > 0 %}
                     {% set title %}{% trans %}Delete Generic Files?{% endtrans %}{% endset %}
-                    {% set helpText %}{% trans %}There is {{sumGeneric}} of data stored in {{countGeneric}} generic files. To delete these check here?{% endtrans %}{% endset %}
+                    {% set helpText %}{% trans %}There is {{sumGeneric}} of data stored in {{countGeneric}} generic files. To delete these check here{% endtrans %}{% endset %}
                     {{ forms.checkbox("tidyGenericFiles", title, 0, helpText) }}
                 {% endif %}
             </form>

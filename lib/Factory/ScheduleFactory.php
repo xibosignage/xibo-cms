@@ -9,10 +9,12 @@
 namespace Xibo\Factory;
 
 
+use Jenssegers\Date\Date;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Schedule;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -31,6 +33,9 @@ class ScheduleFactory extends BaseFactory
     /** @var PoolInterface  */
     private $pool;
 
+    /** @var  DateServiceInterface */
+    private $dateService;
+
     /**
      * @var DisplayGroupFactory
      */
@@ -43,13 +48,15 @@ class ScheduleFactory extends BaseFactory
      * @param SanitizerServiceInterface $sanitizerService
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
+     * @param DateServiceInterface $date
      * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($store, $log, $sanitizerService, $config, $pool, $displayGroupFactory)
+    public function __construct($store, $log, $sanitizerService, $config, $pool, $date, $displayGroupFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->config = $config;
         $this->pool = $pool;
+        $this->dateService = $date;
         $this->displayGroupFactory = $displayGroupFactory;
     }
 
@@ -64,6 +71,7 @@ class ScheduleFactory extends BaseFactory
             $this->getLog(),
             $this->config,
             $this->pool,
+            $this->dateService,
             $this->displayGroupFactory
         );
     }
@@ -116,18 +124,34 @@ class ScheduleFactory extends BaseFactory
     }
 
     /**
-     * @param $displayId
-     * @param $fromDt
-     * @param $toDt
-     * @param $options
+     * Get by DayPartId
+     * @param int $dayPartId
+     * @return Schedule[]
+     * @throws NotFoundException
+     */
+    public function getByDayPartId($dayPartId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'dayPartId' => $dayPartId]);
+    }
+
+    /**
+     * @param int $displayId
+     * @param Date $fromDt
+     * @param Date $toDt
+     * @param array $options
      * @return array
      */
     public function getForXmds($displayId, $fromDt, $toDt, $options = [])
     {
         $options = array_merge(['dependentsAsNodes' => false, 'useGroupId' => false], $options);
+
+        // We dial the fromDt back to the top of the day, so that we include dayPart events that start on this
+        // day
+        $adjustedFromDt = clone $fromDt;
+
         $params = array(
-            'fromDt' => $fromDt,
-            'toDt' => $toDt
+            'fromDt' => $adjustedFromDt->startOfDay()->format('U'),
+            'toDt' => $toDt->format('U')
         );
 
         $this->getLog()->debug('Get events for XMDS - with options: ' . json_encode($options));
@@ -222,7 +246,7 @@ class ScheduleFactory extends BaseFactory
         // Ranged request
         $SQL .= ' 
             AND (
-                  (schedule.FromDT <= :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                  (schedule.FromDT <= :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :fromDt) 
                   OR `schedule`.recurrence_range >= :fromDt 
                   OR (
                     IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 

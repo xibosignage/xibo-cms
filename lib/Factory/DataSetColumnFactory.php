@@ -48,7 +48,13 @@ class DataSetColumnFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new DataSetColumn($this->getStore(), $this->getLog(), $this->dataTypeFactory, $this->dataSetColumnTypeFactory);
+        return new DataSetColumn(
+            $this->getStore(),
+            $this->getLog(),
+            $this,
+            $this->dataTypeFactory,
+            $this->dataSetColumnTypeFactory
+        );
     }
 
     /**
@@ -70,7 +76,7 @@ class DataSetColumnFactory extends BaseFactory
     /**
      * Get by dataSetId
      * @param $dataSetId
-     * @return array[DataSetColumn]
+     * @return DataSetColumn[]
      */
     public function getByDataSetId($dataSetId)
     {

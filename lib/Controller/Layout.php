@@ -27,6 +27,8 @@ use Xibo\Entity\Region;
 use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\NotFoundException;
+use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
@@ -97,6 +99,9 @@ class Layout extends Base
     /** @var  DataSetFactory */
     private $dataSetFactory;
 
+    /** @var  CampaignFactory */
+    private $campaignFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -116,8 +121,9 @@ class Layout extends Base
      * @param TagFactory $tagFactory
      * @param MediaFactory $mediaFactory
      * @param DataSetFactory $dataSetFactory
+     * @param CampaignFactory $campaignFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -131,6 +137,7 @@ class Layout extends Base
         $this->tagFactory = $tagFactory;
         $this->mediaFactory = $mediaFactory;
         $this->dataSetFactory = $dataSetFactory;
+        $this->campaignFactory = $campaignFactory;
     }
 
     /**
@@ -663,7 +670,7 @@ class Layout extends Base
             $layout->thumbnail = '';
 
             if ($layout->backgroundImageId != 0) {
-                $download = $this->urlFor('library.download', ['id' => $layout->backgroundImageId]) . '?preview=1';
+                $download = $this->urlFor('layout.download.background', ['id' => $layout->layoutId]) . '?preview=1';
                 $layout->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56" /></i></a>';
             }
 
@@ -717,12 +724,23 @@ class Layout extends Base
                 'text' => __('Preview Layout')
             );
 
+            $layout->buttons[] = ['divider' => true];
+
             // Schedule Now
             $layout->buttons[] = array(
                 'id' => 'layout_button_schedulenow',
                 'url' => $this->urlFor('schedule.now.form', ['id' => $layout->campaignId, 'from' => 'Campaign']),
                 'text' => __('Schedule Now')
             );
+
+            // Assign to Campaign
+            if ($this->getUser()->routeViewable('/campaign')) {
+                $layout->buttons[] = array(
+                    'id' => 'layout_button_assignTo_campaign',
+                    'url' => $this->urlFor('layout.assignTo.campaign.form', ['id' => $layout->layoutId]),
+                    'text' => __('Assign to Campaign')
+                );
+            }
 
             $layout->buttons[] = ['divider' => true];
 
@@ -1203,7 +1221,10 @@ class Layout extends Base
         if (!$this->getUser()->checkViewable($layout))
             throw new AccessDeniedException();
 
-        $fileName = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/export_' . $layout->layout . '.zip';
+        // Make sure our file name is reasonable
+        $layoutName = preg_replace('/[^a-z0-9]+/', '-', strtolower($layout->layout));
+
+        $fileName = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/export_' . $layoutName . '.zip';
         $layout->toZip($this->dataSetFactory, $fileName, ['includeData' => ($this->getSanitizer()->getCheckbox('includeData')== 1)]);
 
         if (ini_get('zlib.output_compression')) {
@@ -1391,6 +1412,59 @@ class Layout extends Base
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Upgraded %s'), $layout->layout)
+        ]);
+    }
+
+
+
+    /**
+     * Gets a file from the library
+     * @param int $layoutId
+     * @throws NotFoundException
+     * @throws AccessDeniedException
+     */
+    public function downloadBackground($layoutId)
+    {
+        $this->getLog()->debug('Layout Download background request for layoutId ' . $layoutId);
+
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        if (!$this->getUser()->checkViewable($layout))
+            throw new AccessDeniedException();
+
+        if ($layout->backgroundImageId == null)
+            throw new NotFoundException();
+
+        // This media may not be viewable, but we won't check it because the user has permission to view the
+        // layout that it is assigned to.
+        $media = $this->mediaFactory->getById($layout->backgroundImageId);
+
+        // Make a media module
+        $widget = $this->moduleFactory->createWithMedia($media);
+
+        $widget->getResource();
+
+        $this->setNoOutput(true);
+    }
+
+    /**
+     * Assign to Campaign Form
+     * @param $layoutId
+     */
+    public function assignToCampaignForm($layoutId)
+    {
+        // Get the layout
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($layout))
+            throw new AccessDeniedException();
+
+        // Render the form
+        $this->getState()->template = 'layout-form-assign-to-campaign';
+        $this->getState()->setData([
+            'layout' => $layout,
+            'campaigns' => $this->campaignFactory->query()
         ]);
     }
 }

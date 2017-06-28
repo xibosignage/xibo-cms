@@ -30,8 +30,8 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class ConfigService implements ConfigServiceInterface
 {
-    public static $WEBSITE_VERSION_NAME = '1.8.1';
-    public static $WEBSITE_VERSION = 132;
+    public static $WEBSITE_VERSION_NAME = '1.8.2';
+    public static $WEBSITE_VERSION = 133;
     public static $VERSION_REQUIRED = '5.5';
     public static $VERSION_UNSUPPORTED = '7.0';
 
@@ -371,7 +371,6 @@ class ConfigService implements ConfigServiceInterface
 
             return $row;
         } catch (\Exception $e) {
-            trigger_error($e->getMessage());
             throw new \Exception(__('No Version information - please contact technical support'));
         }
     }
@@ -392,8 +391,31 @@ class ConfigService implements ConfigServiceInterface
     */
     public function isProxyException($host)
     {
-        $proxyException = $this->GetSetting('PROXY_EXCEPTIONS');
-        return ($proxyException != '' && stripos($host, $proxyException) > -1);
+        $proxyExceptions = $this->GetSetting('PROXY_EXCEPTIONS');
+
+        // If empty, cannot be an exception
+        if (empty($proxyExceptions))
+            return false;
+
+        // Simple test
+        if (stripos($host, $proxyExceptions) !== false)
+            return true;
+
+        // Host test
+        $parsedHost = parse_url($host, PHP_URL_HOST);
+
+        // Kick out extremely malformed hosts
+        if ($parsedHost === false)
+            return false;
+
+        // Go through each exception and test against the host
+        foreach (explode(',', $proxyExceptions) as $proxyException) {
+            if (stripos($parsedHost, $proxyException) !== false)
+                return true;
+        }
+
+        // If we've got here without returning, then we aren't an exception
+        return false;
     }
 
     /**

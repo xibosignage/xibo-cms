@@ -21,6 +21,9 @@ var layout;
 var lockPosition;
 var hideControls;
 var lowDesignerScale;
+var $region;
+var regionHoverInterval;
+var regionHoverIntervalReset = false;
 
 $(document).ready(function(){
     
@@ -58,22 +61,40 @@ $(document).ready(function(){
     // Hover functions for previews/info
     layout.find(".region")
         .hover(function() {
-            var $region = $(this);
+            $region = $(this);
 
-            $region.zIndex(900);
+            //console.log("Hover ON: region " + $region.attr("regionId"));
+
+            if (regionHoverInterval === null || regionHoverInterval === undefined) {
+                regionHoverIntervalReset = false;
+                regionHoverInterval = setTimeout(function () {
+                        //console.log("zIndex adjustment: region " + $region.attr("regionId"));
+
+                        $region.css("zIndex", 900);
+                        regionHoverInterval = null;
+                        regionHoverIntervalReset = true;
+                    }, 500
+                );
+            }
 
             if (!hideControls) {
                 layout.find(".regionInfo").show();
                 layout.find(".previewNav").show();
             }
         }, function() {
-            // Reset each region
-            layout.find('.region').each(function() {
-                var $resetRegion = $(this);
 
-                // Reset to the original z-index
-                $resetRegion.zIndex($resetRegion.attr("zindex"));
-            });
+
+            //console.log("Hover OFF: Interval Reset is " + regionHoverIntervalReset);
+
+            if (regionHoverIntervalReset) {
+                // Reset each region
+                layout.find('.region').each(function () {
+                    var $resetRegion = $(this);
+
+                    // Reset to the original z-index
+                    $resetRegion.css("zIndex", $resetRegion.attr("zindex"));
+                });
+            }
 
             layout.find(".regionInfo").hide();
             layout.find(".previewNav").hide();
@@ -290,7 +311,7 @@ function refreshPreview(regionId) {
 var loadTimeLineCallback = function(dialog) {
     // Make this a big modal
     dialog.addClass("modal-big");
-    console.log(dialog);
+
     dialog.on("hidden.bs.modal", function () {
         refreshPreview($("#layout").data("currentRegionId"));
     });

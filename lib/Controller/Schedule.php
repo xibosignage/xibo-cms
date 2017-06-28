@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DayPartFactory;
@@ -238,10 +239,14 @@ class Schedule extends Base
             /* @var \Xibo\Entity\Schedule $row */
 
             // Generate this event
-            $row
-                ->setDateService($this->getDate())
-                ->setDayPartFactory($this->dayPartFactory);
-            $scheduleEvents = $row->getEvents($start, $end);
+            $row->setDayPartFactory($this->dayPartFactory);
+
+            try {
+                $scheduleEvents = $row->getEvents($start, $end);
+            } catch (XiboException $e) {
+                $this->getLog()->error('Unable to getEvents for ' . $row->eventId);
+                continue;
+            }
 
             if (count($scheduleEvents) <= 0)
                 continue;
@@ -397,7 +402,7 @@ class Schedule extends Base
         }
 
         // Get list of events
-        $scheduleForXmds = $this->scheduleFactory->getForXmds(($display === null) ? null : $display->displayId, $date->format('U'), $date->format('U'), $options);
+        $scheduleForXmds = $this->scheduleFactory->getForXmds(($display === null) ? null : $display->displayId, $date, $date, $options);
 
         $this->getLog()->debug(count($scheduleForXmds) . ' events returned for displaygroup and date');
 
@@ -414,14 +419,18 @@ class Schedule extends Base
             // Assess schedules
             $schedule = $this->scheduleFactory->createEmpty()->hydrate($event, ['intProperties' => ['isPriority', 'syncTimezone', 'displayOrder']]);
             $schedule
-                ->setDateService($this->getDate())
                 ->setDayPartFactory($this->dayPartFactory)
                 ->load();
 
             $this->getLog()->debug('EventId ' . $schedule->eventId . ' exists in the schedule window, checking its instances for activity');
 
             // Get scheduled events based on recurrence
-            $scheduleEvents = $schedule->getEvents($date, $date);
+            try {
+                $scheduleEvents = $schedule->getEvents($date, $date);
+            } catch (XiboException $e) {
+                $this->getLog()->error('Unable to getEvents for ' . $schedule->eventId);
+                continue;
+            }
 
             // If this event is active, collect extra information and add to the events list
             if (count($scheduleEvents) > 0) {
@@ -612,7 +621,7 @@ class Schedule extends Base
         $this->getState()->setData([
             'displays' => $displays,
             'displayGroups' => $groups,
-            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1]),
+            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1, 'retired' => 0]),
             'commands' => $this->commandFactory->query(),
             'dayParts' => $this->dayPartFactory->allWithSystem(),
             'displayGroupIds' => $this->session->get('displayGroupIds'),
@@ -784,6 +793,9 @@ class Schedule extends Base
                 $schedule->fromDt = $fromDt->startOfDay()->format('U');
                 $schedule->toDt = null;
 
+                if ($recurrenceRange != null)
+                    $schedule->recurrenceRange = $recurrenceRange->format('U');
+
             } else if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
                 // In some circumstances we want to trim the seconds from the provided dates.
                 // this happens when the date format provided does not include seconds and when the add
@@ -810,7 +822,7 @@ class Schedule extends Base
         }
 
         // Ready to do the add
-        $schedule->setDisplayFactory($this->displayFactory)->setDateService($this->getDate());
+        $schedule->setDisplayFactory($this->displayFactory);
         $schedule->save();
 
         // Return
@@ -869,7 +881,7 @@ class Schedule extends Base
             'event' => $schedule,
             'displays' => $displays,
             'displayGroups' => $groups,
-            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1]),
+            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1, 'retired' => 0, 'includeCampaignId' => $schedule->campaignId]),
             'commands' => $this->commandFactory->query(),
             'dayParts' => $this->dayPartFactory->allWithSystem(),
             'displayGroupIds' => array_map(function($element) {
@@ -1050,6 +1062,9 @@ class Schedule extends Base
                 $schedule->fromDt = $fromDt->startOfDay()->format('U');
                 $schedule->toDt = null;
 
+                if ($recurrenceRange != null)
+                    $schedule->recurrenceRange = $recurrenceRange->format('U');
+
             } else if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
                 // In some circumstances we want to trim the seconds from the provided dates.
                 // this happens when the date format provided does not include seconds and when the add
@@ -1077,7 +1092,7 @@ class Schedule extends Base
         }
 
         // Ready to do the add
-        $schedule->setDisplayFactory($this->displayFactory)->setDateService($this->getDate());
+        $schedule->setDisplayFactory($this->displayFactory);
         $schedule->save();
 
         // Return
@@ -1138,8 +1153,9 @@ class Schedule extends Base
         if (!$this->isEventEditable($schedule->displayGroups))
             throw new AccessDeniedException();
 
-        $schedule->setDisplayFactory($this->displayFactory);
-        $schedule->delete();
+        $schedule
+            ->setDisplayFactory($this->displayFactory)
+            ->delete();
 
         // Return
         $this->getState()->hydrate([
