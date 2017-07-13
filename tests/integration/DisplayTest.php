@@ -80,9 +80,9 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
     }
 
     /**
-     * Edit Display test
+     * Edit Display test, expecting success
      */
-    public function testEdit()
+    public function testEditSuccess()
     {
         # Create a Display in the system
         $hardwareId = Random::generateString(12, 'phpunit');
@@ -109,6 +109,35 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
         $object = json_decode($this->client->response->body());
         # Check if display has new edited name
         $this->assertSame('API EDITED', $object->data->display);
+    }
+
+    /**
+     * Edit Display test, expecting failure
+     */
+    public function testEditFailure()
+    {
+        # Create a Display in the system
+        $hardwareId = Random::generateString(12, 'phpunit');
+        $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 'PHPUnit Test Display');
+        # Now find the Id of that Display
+        $displays = (new XiboDisplay($this->getEntityProvider()))->get(['hardwareKey' => $hardwareId]);
+        if (count($displays) != 1)
+            $this->fail('Display was not added correctly');
+        /** @var XiboDisplay $display */
+        $display = $displays[0];
+        # Edit display and change its hardwareKey
+        $this->client->put('/display/' . $display->displayId, [
+            'display' => 'API EDITED',
+            'isAuditing' => $display->isAuditing,
+            'defaultLayoutId' => $display->defaultLayoutId,
+            'licensed' => $display->licensed,
+            'license' => null,
+            'incSchedule' => $display->incSchedule,
+            'emailAlert' => $display->emailAlert,
+            'wakeOnLanEnabled' => $display->wakeOnLanEnabled,
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+        # Check if call failed as expected (license cannot be null)
+        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
     }
 
     /**
