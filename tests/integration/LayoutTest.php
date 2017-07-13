@@ -6,6 +6,7 @@
  */
 namespace Xibo\Tests\Integration;
 use Xibo\Helper\Random;
+use Xibo\OAuth2\Client\Entity\XiboCampaign;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\Tests\LocalWebTestCase;
@@ -353,6 +354,31 @@ class LayoutTest extends LocalWebTestCase
         }
         $this->assertTrue($flag, 'Layout ID ' . $layout1->layoutId . ' was not found after deleting a different layout');
         $layout1->delete();
+    }
+
+    /**
+    * Try to delete a layout that is assigned to a campaign
+    */
+    public function testDeleteAssigned()
+    {
+        # Load in a known layout
+        /** @var XiboLayout $layout */
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout assigned', 'phpunit layout', '', 9);
+        // Make a campaign with a known name
+        $name = Random::generateString(8, 'phpunit');
+        /* @var XiboCampaign $campaign */
+        $campaign = (new XiboCampaign($this->getEntityProvider()))->create($name);
+        $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
+        // Assign layout to campaign
+        $campaign->assignLayout($layout->layoutId);
+        # Check if it's assigned 
+        $campaignCheck = (new XiboCampaign($this->getEntityProvider()))->getById($campaign->campaignId);
+        $this->assertSame(1, $campaignCheck->numberLayouts);
+        # Try to Delete the layout assigned to the campaign
+        $this->client->delete('/layout/' . $layout->layoutId);
+        # This should return 204 for success
+        $response = json_decode($this->client->response->body());
+        $this->assertSame(204, $response->status, $this->client->response->body());
     }
 
     /**
