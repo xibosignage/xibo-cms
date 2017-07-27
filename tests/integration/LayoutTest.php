@@ -584,21 +584,25 @@ class LayoutTest extends LocalWebTestCase
         $this->client->post('/layout/' . $layout->layoutId . '/tag' , [
             'tag' => ['API']
             ]);
+        $layout = (new XiboLayout($this->getEntityProvider()))->getById($layout->layoutId);
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+        $this->assertSame('API', $layout->tags);
     }
 
     /**
-     * Delete tags to layout
+     * Delete tags from layout
      * @group broken
      */
     public function testDeleteTag()
     {
         $name = Random::generateString(8, 'phpunit');
         $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
-        $layout->addTag('API');
-
+        $tag = 'API';
+        $layout->addTag($tag);
+        $layout = (new XiboLayout($this->getEntityProvider()))->getById($layout->layoutId);
+        print_r($layout->tags);
         $this->client->delete('/layout/' . $layout->layoutId . '/untag', [
-            'tag' => ['API']
+            'tag' => [$tag]
             ]);
 
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
