@@ -1127,7 +1127,7 @@ class Layout extends Base
      * @SWG\Parameter(
      *      name="layoutId",
      *      in="path",
-     *      description="The Layout Id to Untag",
+     *      description="The Layout Id to get the status",
      *      type="integer",
      *      required=true
      *   ),
