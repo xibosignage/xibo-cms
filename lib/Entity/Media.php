@@ -843,7 +843,7 @@ class Media implements \JsonSerializable
         $return = copy($from, $to);
 
         if (!@unlink($from))
-            $this->getLog()->error('Cannot delete file: ' . $to);
+            $this->getLog()->error('Cannot delete file: ' . $from . ' after copying to ' . $to);
 
         return $return;
     }
