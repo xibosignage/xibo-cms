@@ -117,6 +117,13 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="embed",
+     *      in="formData",
+     *      description="Embed related data such as columns",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -130,7 +137,10 @@ class DataSet extends Base
     public function grid()
     {
         $user = $this->getUser();
-
+        
+        // Embed?
+        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+        
         $filter = [
             'dataSetId' => $this->getSanitizer()->getInt('dataSetId'),
             'dataSet' => $this->getSanitizer()->getString('dataSet'),
@@ -141,7 +151,11 @@ class DataSet extends Base
 
         foreach ($dataSets as $dataSet) {
             /* @var \Xibo\Entity\DataSet $dataSet */
-
+            if (in_array('columns', $embed)) {
+                $dataSet->load([
+                    'columns' => in_array('columns', $embed),
+                ]);
+            }
             if ($this->isApi())
                 break;
 
