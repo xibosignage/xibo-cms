@@ -152,9 +152,7 @@ class DataSet extends Base
         foreach ($dataSets as $dataSet) {
             /* @var \Xibo\Entity\DataSet $dataSet */
             if (in_array('columns', $embed)) {
-                $dataSet->load([
-                    'columns' => in_array('columns', $embed),
-                ]);
+                $dataSet->load();
             }
             if ($this->isApi())
                 break;
