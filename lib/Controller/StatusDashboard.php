@@ -343,7 +343,7 @@ class StatusDashboard extends Base
         }
 
         // Do we have an embedded widget?
-        $data['embedded-widget'] = html_entity_decode($this->getConfig()->GetSetting('EMBEDDED_STATUS_WIDGET'));
+        $data['embeddedWidget'] = html_entity_decode($this->getConfig()->GetSetting('EMBEDDED_STATUS_WIDGET'));
 
         // Render the Theme and output
         $this->getState()->template = 'dashboard-status-page';
