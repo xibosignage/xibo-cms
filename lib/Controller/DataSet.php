@@ -580,11 +580,32 @@ class DataSet extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
-     *      name="file",
+     *      name="files",
      *      in="formData",
      *      description="The file",
      *      type="file",
      *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="csvImport_{dataSetColumnId}",
+     *      in="formData",
+     *      description="You need to provide dataSetColumnId after csvImport_, to know your dataSet columns Ids, you will need to use the GET /dataset/{dataSetId}/column call first. The value of this parameter is the index of the column in your csv file, where the first column is 1",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="overwrite",
+     *      in="formData",
+     *      description="flag (0,1) Set to 1 to erase all content in the dataSet and overwrite it with new content in this import",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ignorefirstrow",
+     *      in="formData",
+     *      description="flag (0,1), Set to 1 to Ignore first row, useful if the CSV file has headings",
+     *      type="integer",
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=200,
