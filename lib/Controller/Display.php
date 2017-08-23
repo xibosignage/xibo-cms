@@ -664,7 +664,12 @@ class Display extends Base
                 } else {
                     // A format has been set
                     $format = (strlen($profile[$i]['value']) == 5) ? 'H:i' : 'H:i:s';
-                    $profile[$i]['valueString'] = $this->getDate()->parse($profile[$i]['value'], $format)->format($timeFormat);
+                    try {
+                        $profile[$i]['valueString'] = $this->getDate()->parse($profile[$i]['value'], $format)->format($timeFormat);
+                    } catch (\InvalidArgumentException $invalidArgumentException) {
+                        $this->getLog()->error('Display Profile contains an invalid time format, expecting ' . $format . ' value is ' . $profile[$i]['value']);
+                        $profile[$i]['valueString'] = '00:00';
+                    }
                 }
             }
         }
