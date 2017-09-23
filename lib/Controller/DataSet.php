@@ -152,6 +152,7 @@ class DataSet extends Base
             $dataSet->load();
 
             if ($user->checkEditable($dataSet)) {
+                $isRemote = $this->dataSetFactory->isRemoteDataSet($dataSet->dataSetId);
 
                 // View Data
                 $dataSet->buttons[] = array(
@@ -173,17 +174,19 @@ class DataSet extends Base
                 $dataSet->buttons[] = ['divider' => true];
 
                 // Import DataSet
-                $dataSet->buttons[] = array(
-                    'id' => 'dataset_button_import',
-                    'class' => 'dataSetImportForm',
-                    'url' => $this->urlFor('dataSet.import.form', ['id' => $dataSet->dataSetId]),
-                    'text' => __('Import CSV')
-                );
+                if (!$isRemote) {
+                    $dataSet->buttons[] = array(
+                        'id' => 'dataset_button_import',
+                        'class' => 'dataSetImportForm',
+                        'url' => $this->urlFor('dataSet.import.form', ['id' => $dataSet->dataSetId]),
+                        'text' => __('Import CSV')
+                    );
+                }
 
                 // Copy
                 $dataSet->buttons[] = array(
                     'id' => 'dataset_button_copy',
-                    'url' => $this->urlFor('dataSet.copy.form', ['id' => $dataSet->dataSetId]),
+                    'url' => $this->urlFor('dataSet.copy' . ($isRemote ? '.remote' : '') . '.form', ['id' => $dataSet->dataSetId]),
                     'text' => __('Copy')
                 );
 
@@ -193,7 +196,7 @@ class DataSet extends Base
                 // Edit DataSet
                 $dataSet->buttons[] = array(
                     'id' => 'dataset_button_edit',
-                    'url' => $this->urlFor('dataSet.edit.form', ['id' => $dataSet->dataSetId]),
+                    'url' => $this->urlFor('dataSet.edit' . ($isRemote ? '.remote' : '') . '.form', ['id' => $dataSet->dataSetId]),
                     'text' => __('Edit')
                 );
             }
@@ -202,7 +205,7 @@ class DataSet extends Base
                 // Delete DataSet
                 $dataSet->buttons[] = array(
                     'id' => 'dataset_button_delete',
-                    'url' => $this->urlFor('dataSet.delete.form', ['id' => $dataSet->dataSetId]),
+                    'url' => $this->urlFor('dataSet.delete' . ($isRemote ? '.remote' : '') . '.form', ['id' => $dataSet->dataSetId]),
                     'text' => __('Delete')
                 );
             }

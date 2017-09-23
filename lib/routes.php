@@ -282,6 +282,11 @@ $app->post('/dataset/copy/:id', '\Xibo\Controller\DataSet:copy')->name('dataSet.
 $app->map('/dataset/import/:id', '\Xibo\Controller\DataSet:import')->via('HEAD');
 $app->post('/dataset/import/:id', '\Xibo\Controller\DataSet:import')->name('dataSet.import');
 $app->post('/dataset/importjson/:id', '\Xibo\Controller\DataSet:importJson')->name('dataSet.import.json');
+// Remotes
+$app->post('/dataset/remote', '\Xibo\Controller\DataSetRemote:add')->name('dataSet.add.remote');
+$app->put('/dataset/remote/:id', '\Xibo\Controller\DataSetRemote:edit')->name('dataSet.edit.remote');
+$app->delete('/dataset/remote/:id', '\Xibo\Controller\DataSetRemote:delete')->name('dataSet.delete.remote');
+$app->post('/dataset/copy/remote/:id', '\Xibo\Controller\DataSetRemote:copy')->name('dataSet.copy.remote');
 // Columns
 $app->get('/dataset/:id/column', '\Xibo\Controller\DataSetColumn:grid')->name('dataSet.column.search');
 $app->post('/dataset/:id/column', '\Xibo\Controller\DataSetColumn:add')->name('dataSet.column.add');

@@ -1,0 +1,10 @@
+{
+  "dbVersion": 134,
+  "appVersion": "1.8.2",
+  "steps": [
+    {
+      "step": "Create a new Table for remote Dataset settings",
+      "action": "CREATE TABLE IF NOT EXISTS `datasetremote` (`rdId` bigint(20) NOT NULL AUTO_INCREMENT,`DataSetID` int(11) NOT NULL, `method` ENUM('GET','POST') NOT NULL, `uri` varchar(250) NOT NULL, `postData` TEXT DEFAULT NULL, `authentication` ENUM('none','plain','basic','digest') NOT NULL, `username` varchar(100) DEFAULT NULL, `password` varchar(250) DEFAULT NULL, `refreshRate` int(11) DEFAULT 86400, `clearRate` int(11) DEFAULT 0, `runsAfter` int(11) DEFAULT NULL, PRIMARY KEY (`rdId`)) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;"
+    }
+  ]
+}

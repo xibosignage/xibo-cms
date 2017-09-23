@@ -10,6 +10,7 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\DataSet;
+use Xibo\Entity\DataSetRemote;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -70,6 +71,23 @@ class DataSetFactory extends BaseFactory
     public function createEmpty()
     {
         return new DataSet(
+            $this->getStore(),
+            $this->getLog(),
+            $this->getSanitizer(),
+            $this->config,
+            $this,
+            $this->dataSetColumnFactory,
+            $this->permissionFactory,
+            $this->displayFactory
+        );
+    }
+
+    /**
+     * @return DataSetRemote
+     */
+    public function createEmptyRemote()
+    {
+        return new DataSetRemote(
             $this->getStore(),
             $this->getLog(),
             $this->getSanitizer(),
@@ -210,10 +228,14 @@ class DataSetFactory extends BaseFactory
 
             $sql = $select . $body . $order . $limit;
 
-
-
             foreach ($this->getStore()->select($sql, $params) as $row) {
-                $entries[] = $this->createEmpty()->hydrate($row);
+                $id = $this->getDataSetIdFromRow($row);
+                if ($this->isRemoteDataSet($id)) {
+                    $row = $this->extendRemoteRow($row);
+                    $entries[] = $this->createEmptyRemote()->hydrate($row);
+                } else {
+                    $entries[] = $this->createEmpty()->hydrate($row);
+                }
             }
 
             // Paging
@@ -231,5 +253,49 @@ class DataSetFactory extends BaseFactory
 
             throw new NotFoundException();
         }
+    }
+    
+    /**
+     * Extends a DataSet row with values from the DataSetRemote Table
+     * @param array $row The row to extend
+     * @return array the extended row
+     */
+    protected function extendRemoteRow(array $row = [])
+    {
+        $params = array('dataSetId' => $this->getDataSetIdFromRow($row));
+        $sql = 'SELECT * FROM datasetremote WHERE DataSetID = :dataSetId;';
+        foreach ($this->getStore()->select($sql, $params) as $data) {
+            $row = array_merge($data, $row);
+            break;
+        }
+        return $row;
+    }
+    
+    /**
+     * Returns the DataSetId from a Row if existing, otherwise '0'
+     * @param array $row
+     * @return int
+     */
+    private function getDataSetIdFromRow(array $row = null)
+    {
+        if ($row == null || !array_key_exists('dataSetId', $row)) {
+            return 0;
+        }
+        return intval($row['dataSetId']);
+    }
+    
+    /**
+     * Returns if the given DataSetId is from a Remote DataSet or not
+     * @param int $checkId
+     * @return boolean
+     */
+    public function isRemoteDataSet($checkId = 0)
+    {
+        if ($checkId <= 0) {
+            return false;
+        }
+        $params = array('dataSetId' => $checkId);
+        $sql = 'SELECT datasetremote.DataSetID FROM datasetremote WHERE datasetremote.DataSetID = :dataSetId;';
+        return $this->getStore()->exists($sql, $params);
     }
 }
