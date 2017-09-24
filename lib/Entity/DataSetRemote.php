@@ -34,7 +34,7 @@ class DataSetRemote extends DataSet
     public $postData;
 
     /**
-     * @SWG\Property(description="Authentication method, can be none, plain, digest, basic")
+     * @SWG\Property(description="Authentication method, can be none, digest, basic")
      * @var string
      */
     public $authentication;
@@ -68,7 +68,57 @@ class DataSetRemote extends DataSet
      * @var int
      */
     public $runsAfter;
+
+    /**
+     * @SWG\Property(description="Last Synchronisation Timestamp")
+     * @var int
+     */
+    public $lastSync = 0;
+
+    /**
+     * @SWG\Property(description="Root-Element form JSON where the data are stored in")
+     * @var String
+     */
+    public $dataRoot;
     
+
+    /**
+     * Returns an Array to be used with the function `curl_setopt_array($curl, $params);`
+     * @return array
+     */
+    public function getCurlParams() {
+        $params = [
+            CURLOPT_URL => $this->relpaceParams($this->uri),
+            CURLOPT_HEADER => false,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPAUTH => ($this->authentication == 'basic') ? CURLAUTH_BASIC : (($this->authentication == 'digest') ? CURLAUTH_DIGEST : 0),
+            CURLOPT_USERPWD => ($this->authentication != 'none') ? $this->username . ':' . $this->password : ''
+        ];
+        
+        if ($this->method == 'POST') {
+            $params += [
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => $this->relpaceParams($this->postData)
+            ];
+        }
+        
+        return $params;
+    }
+    
+    /**
+     * Replaces all URI/PostData parameters
+     * @param string string
+     * @return string
+     */
+    private function relpaceParams($string = '') {
+        $string = str_replace('{{DATE}}', date('Y-m-d'), $string);
+        $string = str_replace('%7B%7BDATE%7D%7D', date('Y-m-d'), $string);
+        $string = str_replace('{{TIME}}', date('H:m:s'), $string);
+        $string = str_replace('%7B%7BTIME%7D%7D', date('H:m:s'), $string);
+        
+        return $string;
+    }
     
     /**
      * Validate
@@ -105,17 +155,20 @@ class DataSetRemote extends DataSet
         parent::delete();
         $this->getStore()->update('DELETE FROM `datasetremote` WHERE dataSetId = :dataSetId', ['dataSetId' => $this->dataSetId]);
     }
-    
+
+    /**
+     * Checks if there is an entry in `datasetremote`
+     */
     private function exists() {
         return $this->getStore()->exists('SELECT DataSetID FROM `datasetremote` WHERE DataSetID = :dataSetId;', ['dataSetId' => $this->dataSetId]);
     }
-    
+
     /**
      * Add Remote Settings entry
      */
     private function addRemote() {
         $this->getStore()->insert(
-          'INSERT INTO `datasetremote` (`DataSetID`, `method`, `uri`, `postData`, `authentication`, `username`, `password`, `refreshRate`, `clearRate`, `runsAfter`)
+          'INSERT INTO `datasetremote` (`DataSetID`, `method`, `uri`, `postData`, `authentication`, `username`, `password`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`)
             VALUES (:dataSetId, :method, :uri, :postData, :authentication, :username, :password, :refreshRate, :clearRate, :runsAfter)', [
             'dataSetId' => $this->dataSetId,
             'method' => $this->method,
@@ -126,7 +179,9 @@ class DataSetRemote extends DataSet
             'password' => $this->password,
             'refreshRate' => $this->refreshRate,
             'clearRate' => $this->clearRate,
-            'runsAfter' => $this->runsAfter
+            'runsAfter' => $this->runsAfter,
+            'dataRoot' => $this->dataRoot,
+            'lastSync' => 0
         ]);
     }
 
@@ -135,7 +190,7 @@ class DataSetRemote extends DataSet
      */
     private function editRemote() {
         $this->getStore()->update(
-          'UPDATE datasetremote SET method = :method, uri = :uri, postData = :postData, authentication = :authentication, username = :username, password = :password, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter
+          'UPDATE datasetremote SET method = :method, uri = :uri, postData = :postData, authentication = :authentication, username = :username, password = :password, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot
             WHERE DataSetID = :dataSetId', [
             'dataSetId' => $this->dataSetId,
             'method' => $this->method,
@@ -146,7 +201,8 @@ class DataSetRemote extends DataSet
             'password' => $this->password,
             'refreshRate' => $this->refreshRate,
             'clearRate' => $this->clearRate,
-            'runsAfter' => $this->runsAfter
+            'runsAfter' => $this->runsAfter,
+            'dataRoot' => $this->dataRoot
         ]);
     }
 }

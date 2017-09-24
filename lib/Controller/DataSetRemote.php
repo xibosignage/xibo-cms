@@ -94,7 +94,8 @@ class DataSetRemote extends Base
     {
         $this->getState()->template = 'dataset-form-add-remote';
         $this->getState()->setData([
-            'help' => $this->getHelp()->link('DataSet', 'Add')
+            'help' => $this->getHelp()->link('DataSet', 'Add'),
+            'dataSets' => $this->dataSetFactory->query()
         ]);
     }
 
@@ -156,6 +157,7 @@ class DataSetRemote extends Base
         $dataSet->refreshRate = $this->getSanitizer()->getInt('refreshRate');
         $dataSet->clearRate = $this->getSanitizer()->getInt('clearRate');
         $dataSet->runsAfter = $this->getSanitizer()->getInt('runsAfter');
+        $dataSet->dataRoot = $this->getSanitizer()->getString('dataRoot');
 
         // Also add one column
         $dataSetColumn = $this->dataSetColumnFactory->createEmpty();
@@ -195,7 +197,8 @@ class DataSetRemote extends Base
         $this->getState()->template = 'dataset-form-edit-remote';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'help' => $this->getHelp()->link('DataSet', 'Edit')
+            'help' => $this->getHelp()->link('DataSet', 'Edit'),
+            'dataSets' => $this->dataSetFactory->query()
         ]);
     }
 
@@ -264,6 +267,7 @@ class DataSetRemote extends Base
         $dataSet->refreshRate = $this->getSanitizer()->getInt('refreshRate');
         $dataSet->clearRate = $this->getSanitizer()->getInt('clearRate');
         $dataSet->runsAfter = $this->getSanitizer()->getInt('runsAfter');
+        $dataSet->dataRoot = $this->getSanitizer()->getString('dataRoot');
         $dataSet->save();
 
         // Return
@@ -428,6 +432,27 @@ class DataSetRemote extends Base
             'message' => sprintf(__('Copied %s as %s'), $oldName, $dataSet->dataSet),
             'id' => $dataSet->dataSetId,
             'data' => $dataSet
+        ]);
+    }
+    
+    public function testRequest() {
+        $dataSet = $this->dataSetFactory->createEmptyRemote();
+        $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
+        $dataSet->method = $this->getSanitizer()->getString('method');
+        $dataSet->uri = $this->getSanitizer()->getString('uri');
+        $dataSet->postData = $this->getSanitizer()->getString('postData');
+        $dataSet->authentication = $this->getSanitizer()->getString('authentication');
+        $dataSet->username = $this->getSanitizer()->getString('username');
+        $dataSet->password = $this->getSanitizer()->getString('password');
+        $dataSet->dataRoot = $this->getSanitizer()->getString('dataRoot');
+        
+        $data = $this->dataSetFactory->callRemoteService($dataSet);
+        
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Run Test-Request for %s on %s'), $dataSet->dataSet, $dataSet->getCurlParams()[CURLOPT_URL]),
+            'id' => $dataSet->dataSetId,
+            'data' => $data
         ]);
     }
 }

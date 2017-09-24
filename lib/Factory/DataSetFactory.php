@@ -298,4 +298,21 @@ class DataSetFactory extends BaseFactory
         $sql = 'SELECT datasetremote.DataSetID FROM datasetremote WHERE datasetremote.DataSetID = :dataSetId;';
         return $this->getStore()->exists($sql, $params);
     }
+
+    /**
+     * Makes a call to a Remote Dataset and returns all received data as a JSON decoded Object.
+     * In case of an Error, null is returned instead.
+     * @param \Xibo\Entity\DataSetRemote dataSet The Dataset to get Data for
+     * @return Object|ErrorString
+     */
+    public function callRemoteService(DataSetRemote $dataSet)
+    {
+        $curl = curl_init();
+        curl_setopt_array($curl, $dataSet->getCurlParams());
+        $result = curl_exec($curl);
+        $error = curl_errno($curl) . ' ' . curl_error($curl);
+        curl_close($curl);
+        
+        return $result !== false ? json_decode($result) : $error;
+    }
 }

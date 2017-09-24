@@ -110,6 +110,8 @@ CREATE TABLE IF NOT EXISTS `datasetremote` (
   `refreshRate` int(11) DEFAULT 86400,
   `clearRate` int(11) DEFAULT 0,
   `runsAfter` int(11) DEFAULT NULL,
+  `dataRoot` varchar(250) DEFAULT NULL,
+  `lastSync` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`rdId`),
   KEY `DataSetID` (`DataSetID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
