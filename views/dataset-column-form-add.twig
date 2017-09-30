@@ -69,7 +69,7 @@
 
                     {% set title %}{% trans "List Content" %}{% endset %}
                     {% set helpText %}{% trans "A comma separated list of items to present in a combo box" %}{% endset %}
-                    {{ forms.input("listContent", title, "", helpText) }}
+                    {{ forms.input("listContent", title, "", helpText, "listContent") }}
                     
                     {% set title %}{% trans "Remote Data Part" %}{% endset %}
                     {% set helpText %}{% trans "Give here the JSON-Path of the DataField which should be stored inside this Column. Check out the RemoteDataset with the Test-Button to see the Data received from remote." %}{% endset %}
@@ -81,7 +81,7 @@
 
                     {% set title %}{% trans "Formula" %}{% endset %}
                     {% set helpText %}{% trans "A formula to use as a calculation for formula column types" %}{% endset %}
-                    {{ forms.input("formula", title, "", helpText) }}
+                    {{ forms.input("formula", title, "", helpText, "formula") }}
             </form>
         </div>
     </div>
