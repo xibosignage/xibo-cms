@@ -4,9 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-// Dropdown list for DataType and DataColumnType
-        Theme::Set('datatype_field_list', $db->GetArray('SELECT datatypeid, datatype FROM datatype'));
-        Theme::Set('datasetcolumntype_field_list', $db->GetArray('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype'));
 #}
 
 {% extends "form-base.twig" %}
@@ -20,6 +17,38 @@
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Save" %}, $("#dataSetColumnEditForm").submit()    
+{% endblock %}
+
+{% block formFieldActions %}
+[
+    {
+      "field": "dataSetColumnTypeId", "trigger": "init",
+      "operation": "equals", "value": "1",
+      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "block" }, ".remoteField": { "display": "none" } }
+    },{
+      "field": "dataSetColumnTypeId", "trigger": "change",
+      "operation": "equals", "value": "1",
+      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "block" }, ".remoteField": { "display": "none" } }
+    },
+    {
+      "field": "dataSetColumnTypeId", "trigger": "init",
+      "operation": "equals", "value": "2",
+      "actions": { ".formula": { "display": "block" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "none" } }
+    },{
+      "field": "dataSetColumnTypeId", "trigger": "change",
+      "operation": "equals", "value": "2",
+      "actions": { ".formula": { "display": "block" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "none" } }
+    },
+    {
+      "field": "dataSetColumnTypeId", "trigger": "init",
+      "operation": "equals", "value": "3",
+      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "block" } }
+    },{
+      "field": "dataSetColumnTypeId", "trigger": "change",
+      "operation": "equals", "value": "3",
+      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "block" } }
+    }
+]
 {% endblock %}
 
 {% block formHtml %}
@@ -40,7 +69,11 @@
 
                 {% set title %}{% trans "List Content" %}{% endset %}
                 {% set helpText %}{% trans "A comma separated list of items to present in a combo box" %}{% endset %}
-                {{ forms.input("listContent", title, dataSetColumn.listContent, helpText) }}
+                {{ forms.input("listContent", title, dataSetColumn.listContent, helpText, "listContent") }}
+
+                {% set title %}{% trans "Remote Data Part" %}{% endset %}
+                {% set helpText %}{% trans "Give here the JSON-Path of the DataField which should be stored inside this Column. Check out the RemoteDataset with the Test-Button to see the Data received from remote." %}{% endset %}
+                {{ forms.input("remoteField", title, dataSetColumn.remoteField, helpText, "remoteField") }}
 
                 {% set title %}{% trans "Column Order" %}{% endset %}
                 {% set helpText %}{% trans "The order this column should be displayed in when entering data" %}{% endset %}
@@ -48,7 +81,7 @@
 
                 {% set title %}{% trans "Formula" %}{% endset %}
                 {% set helpText %}{% trans "A formula to use as a calculation for formula column types" %}{% endset %}
-                {{ forms.input("formula", title, dataSetColumn.formula, helpText) }}
+                {{ forms.input("formula", title, dataSetColumn.formula, helpText, "formula") }}
             </form>
         </div>
     </div>

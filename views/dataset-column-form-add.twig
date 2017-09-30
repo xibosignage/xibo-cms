@@ -19,6 +19,38 @@
     {% trans "Save" %}, $("#dataSetColumnAddForm").submit()    
 {% endblock %}
 
+{% block formFieldActions %}
+[
+    {
+      "field": "dataSetColumnTypeId", "trigger": "init",
+      "operation": "equals", "value": "1",
+      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "block" }, ".remoteField": { "display": "none" } }
+    },{
+      "field": "dataSetColumnTypeId", "trigger": "change",
+      "operation": "equals", "value": "1",
+      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "block" }, ".remoteField": { "display": "none" } }
+    },
+    {
+      "field": "dataSetColumnTypeId", "trigger": "init",
+      "operation": "equals", "value": "2",
+      "actions": { ".formula": { "display": "block" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "none" } }
+    },{
+      "field": "dataSetColumnTypeId", "trigger": "change",
+      "operation": "equals", "value": "2",
+      "actions": { ".formula": { "display": "block" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "none" } }
+    },
+    {
+      "field": "dataSetColumnTypeId", "trigger": "init",
+      "operation": "equals", "value": "3",
+      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "block" } }
+    },{
+      "field": "dataSetColumnTypeId", "trigger": "change",
+      "operation": "equals", "value": "3",
+      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "block" } }
+    }
+]
+{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -38,6 +70,10 @@
                     {% set title %}{% trans "List Content" %}{% endset %}
                     {% set helpText %}{% trans "A comma separated list of items to present in a combo box" %}{% endset %}
                     {{ forms.input("listContent", title, "", helpText) }}
+                    
+                    {% set title %}{% trans "Remote Data Part" %}{% endset %}
+                    {% set helpText %}{% trans "Give here the JSON-Path of the DataField which should be stored inside this Column. Check out the RemoteDataset with the Test-Button to see the Data received from remote." %}{% endset %}
+                    {{ forms.input("remoteField", title, dataSetColumn.remoteField, helpText, "remoteField") }}
 
                     {% set title %}{% trans "Column Order" %}{% endset %}
                     {% set helpText %}{% trans "The order this column should be displayed in when entering data" %}{% endset %}

@@ -101,7 +101,8 @@ class DataSetColumnFactory extends BaseFactory
                 datasetcolumntype.dataSetColumnType,
                 listContent,
                 columnOrder,
-                formula
+                formula,
+                remoteField
             ';
 
         $body = '

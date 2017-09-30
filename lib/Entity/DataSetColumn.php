@@ -81,6 +81,12 @@ class DataSetColumn implements \JsonSerializable
     public $dataType;
 
     /**
+     * @SWG\Property(description="The data field of the remote DataSet as a JSON-String")
+     * @var string
+     */
+    public $remoteField;
+
+    /**
      * @SWG\Property(description="The column type for this Column")
      * @var string
      */
@@ -245,8 +251,8 @@ class DataSetColumn implements \JsonSerializable
     private function add()
     {
         $this->dataSetColumnId = $this->getStore()->insert('
-        INSERT INTO `datasetcolumn` (DataSetID, Heading, DataTypeID, ListContent, ColumnOrder, DataSetColumnTypeID, Formula)
-          VALUES (:dataSetId, :heading, :dataTypeId, :listContent, :columnOrder, :dataSetColumnTypeId, :formula)
+        INSERT INTO `datasetcolumn` (DataSetID, Heading, DataTypeID, ListContent, ColumnOrder, DataSetColumnTypeID, Formula, RemoteField)
+          VALUES (:dataSetId, :heading, :dataTypeId, :listContent, :columnOrder, :dataSetColumnTypeId, :formula, :remoteField)
         ', [
             'dataSetId' => $this->dataSetId,
             'heading' => $this->heading,
@@ -254,7 +260,8 @@ class DataSetColumn implements \JsonSerializable
             'listContent' => $this->listContent,
             'columnOrder' => $this->columnOrder,
             'dataSetColumnTypeId' => $this->dataSetColumnTypeId,
-            'formula' => $this->formula
+            'formula' => $this->formula,
+            'remoteField' => $this->remoteField
         ]);
 
         // Add Column to Underlying Table
@@ -279,7 +286,8 @@ class DataSetColumn implements \JsonSerializable
             ColumnOrder = :columnOrder,
             DataTypeID = :dataTypeId,
             DataSetColumnTypeID = :dataSetColumnTypeId,
-            Formula = :formula
+            Formula = :formula,
+            RemoteField = :remoteField
           WHERE dataSetColumnId = :dataSetColumnId
         ', [
             'dataSetId' => $this->dataSetId,
@@ -289,6 +297,7 @@ class DataSetColumn implements \JsonSerializable
             'columnOrder' => $this->columnOrder,
             'dataSetColumnTypeId' => $this->dataSetColumnTypeId,
             'formula' => $this->formula,
+            'remoteField' => $this->remoteField,
             'dataSetColumnId' => $this->dataSetColumnId
         ]);
 
