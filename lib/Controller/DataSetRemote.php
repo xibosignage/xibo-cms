@@ -158,6 +158,8 @@ class DataSetRemote extends Base
         $dataSet->clearRate = $this->getSanitizer()->getInt('clearRate');
         $dataSet->runsAfter = $this->getSanitizer()->getInt('runsAfter');
         $dataSet->dataRoot = $this->getSanitizer()->getString('dataRoot');
+        $dataSet->summarize = $this->getSanitizer()->getString('summarize');
+        $dataSet->summarizeField = $this->getSanitizer()->getString('summarizeField');
 
         // Also add one column
         $dataSetColumn = $this->dataSetColumnFactory->createEmpty();
@@ -165,9 +167,20 @@ class DataSetRemote extends Base
         $dataSetColumn->heading = 'Col1';
         $dataSetColumn->dataSetColumnTypeId = 1;
         $dataSetColumn->dataTypeId = 1;
-
-        // Add Column
+        
         $dataSet->assignColumn($dataSetColumn);
+        
+        // In case we have a summarize field, add a special column as well
+        if (($dataSet->summarizeField != null) && ($dataSet->summarizeField != '')) {
+            $summarizeColumn = $this->dataSetColumnFactory->createEmpty();
+            $summarizeColumn->columnOrder = 1;
+            $summarizeColumn->heading = 'Sum';
+            $summarizeColumn->dataSetColumnTypeId = 3;
+            $summarizeColumn->dataTypeId = 2;
+            $summarizeColumn->remoteField = $dataSet->summarizeField . '._sum_';
+            
+            $dataSet->assignColumn($summarizeColumn);
+        }
 
         // Save
         $dataSet->save();
@@ -268,6 +281,25 @@ class DataSetRemote extends Base
         $dataSet->clearRate = $this->getSanitizer()->getInt('clearRate');
         $dataSet->runsAfter = $this->getSanitizer()->getInt('runsAfter');
         $dataSet->dataRoot = $this->getSanitizer()->getString('dataRoot');
+        $dataSet->summarize = $this->getSanitizer()->getString('summarize');
+        $dataSet->summarizeField = $this->getSanitizer()->getString('summarizeField');
+        
+        // In case we have a summarize field, add a special column as well
+        // But only if there is no such field already of course :o)
+        if (($dataSet->summarizeField != null) && ($dataSet->summarizeField != '')) {
+            $entried = $this->dataSetColumnFactory->query(null, ['remoteField' => $dataSet->summarizeField . '._sum_']);
+            if (count($entries) == 0) {
+                $summarizeColumn = $this->dataSetColumnFactory->createEmpty();
+                $summarizeColumn->columnOrder = 1;
+                $summarizeColumn->heading = 'Sum';
+                $summarizeColumn->dataSetColumnTypeId = 3;
+                $summarizeColumn->dataTypeId = 2;
+                $summarizeColumn->remoteField = $dataSet->summarizeField . '._sum_';
+
+                $dataSet->assignColumn($summarizeColumn);
+            }
+        }
+        
         $dataSet->save();
 
         // Return

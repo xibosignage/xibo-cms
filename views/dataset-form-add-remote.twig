@@ -91,7 +91,23 @@
                         {% set title %}{% trans "Data root" %}{% endset %}
                         {% set helpText %}{% trans "Enter here the root where we will find all Data you want in the DataSet. This has to be in JSON Syntax.<br/>If you're unsure, try the <em>Test</em> function and see the resulting JSON below here." %}{% endset %}
                         {{ forms.input("dataRoot", title, "", helpText, "", "") }}
-                        
+
+                        {% set title %}{% trans "Aggregation" %}{% endset %}
+                        {% set helpText %}{% trans "Aggregate received data by the given method" %}{% endset %}
+                        {% set summ_none %}{% trans "None" %}{% endset %}
+                        {% set summ_sum %}{% trans "Summarize" %}{% endset %}
+                        {% set summ_count %}{% trans "Count" %}{% endset %}
+                        {% set options = [
+                        { typeid: "none", type: summ_none },
+                        { typeid: "sum", type: summ_sum },
+                        { typeid: "count", type: summ_count }
+                        ] %}
+                        {{ forms.dropdown("summarize", "single", title, "", options, "typeid", "type", helpText) }}
+
+                        {% set title %}{% trans "By Field" %}{% endset %}
+                        {% set helpText %}{% trans "Enter here the Field below the Data-Root (JSON-Syntax) by which the above Aggregate-Function should applied.<br/><strong>Summarize:</strong> Values in this field will be summarized and stored in one column.<br/><strong>Count:</strong> All individual values in this field will be counted and stored in one Column for each value" %}{% endset %}
+                        {{ forms.input("summarizeField", title, "", helpText, "", "") }}
+
                         <div class="form-group">
                             <script>
                                 function XiboDatasetRemoteTestRequest($form) {

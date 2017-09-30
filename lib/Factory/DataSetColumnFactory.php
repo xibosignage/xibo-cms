@@ -123,6 +123,11 @@ class DataSetColumnFactory extends BaseFactory
             $params['dataSetId'] = $this->getSanitizer()->getInt('dataSetId', $filterBy);
         }
 
+        if ($this->getSanitizer()->getInt('remoteField', $filterBy) !== null) {
+            $body .= ' AND remoteField = :remoteField ';
+            $params['remoteField'] = $this->getSanitizer()->getInt('remoteField', $filterBy);
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))

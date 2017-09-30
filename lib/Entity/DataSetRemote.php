@@ -80,7 +80,19 @@ class DataSetRemote extends DataSet
      * @var String
      */
     public $dataRoot;
-    
+
+    /**
+     * @SWG\Property(description="Optional function to use for summarize or count uniwue fields in a remote request")
+     * @var String
+     */
+    public $summarize;
+
+    /**
+     * @SWG\Property(description="JSON-Element below the Root-Element on which the summarize funciton should be applied on")
+     * @var String
+     */
+    public $summarizeField;
+
 
     /**
      * Returns an Array to be used with the function `curl_setopt_array($curl, $params);`
@@ -168,7 +180,7 @@ class DataSetRemote extends DataSet
      */
     private function addRemote() {
         $this->getStore()->insert(
-          'INSERT INTO `datasetremote` (`DataSetID`, `method`, `uri`, `postData`, `authentication`, `username`, `password`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`)
+          'INSERT INTO `datasetremote` (`DataSetID`, `method`, `uri`, `postData`, `authentication`, `username`, `password`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`)
             VALUES (:dataSetId, :method, :uri, :postData, :authentication, :username, :password, :refreshRate, :clearRate, :runsAfter)', [
             'dataSetId' => $this->dataSetId,
             'method' => $this->method,
@@ -181,6 +193,8 @@ class DataSetRemote extends DataSet
             'clearRate' => $this->clearRate,
             'runsAfter' => $this->runsAfter,
             'dataRoot' => $this->dataRoot,
+            'summarize' => $this->summarize,
+            'summarizeField' => $this->summarizeField,
             'lastSync' => 0
         ]);
     }
@@ -190,7 +204,7 @@ class DataSetRemote extends DataSet
      */
     private function editRemote() {
         $this->getStore()->update(
-          'UPDATE datasetremote SET method = :method, uri = :uri, postData = :postData, authentication = :authentication, username = :username, password = :password, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot
+          'UPDATE datasetremote SET method = :method, uri = :uri, postData = :postData, authentication = :authentication, username = :username, password = :password, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField
             WHERE DataSetID = :dataSetId', [
             'dataSetId' => $this->dataSetId,
             'method' => $this->method,
@@ -202,7 +216,9 @@ class DataSetRemote extends DataSet
             'refreshRate' => $this->refreshRate,
             'clearRate' => $this->clearRate,
             'runsAfter' => $this->runsAfter,
-            'dataRoot' => $this->dataRoot
+            'dataRoot' => $this->dataRoot,
+            'summarize' => $this->summarize,
+            'summarizeField' => $this->summarizeField
         ]);
     }
 }
