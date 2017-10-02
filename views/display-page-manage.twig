@@ -27,7 +27,7 @@
             <div class="widget">
                 <div class="widget-title">{% trans "File Status - Count of Files" %}</div>
                 <div class="widget-body">
-                    <div id="downloadedCountPie" style="clear:both; height: 230px;"></div>
+                    <canvas id="downloadedCountPie" style="clear:both; margin-top:25px;" width="230"></canvas>
                 </div>
             </div>
         </div>
@@ -35,7 +35,7 @@
             <div class="widget">
                 <div class="widget-title">{% trans "File Status - Size of Files" %}</div>
                 <div class="widget-body">
-                    <div id="downloadedSizePie" style="clear:both; height: 230px;"></div>
+                    <canvas id="downloadedSizePie" style="clear:both; margin-top:25px;" width="230"></canvas>
                 </div>
             </div>
         </div>
@@ -185,7 +185,7 @@
                             </div>
                         </div>
                         <div class="XiboData">
-                            <div id="bandwidthChart" style="clear:both; height: 230px;"></div>
+                            <canvas id="bandwidthChart" style="clear:both; margin-top:25px;" height="330"></canvas>
                         </div>
                     </div>
                 </div>
@@ -198,16 +198,7 @@
 {% block javaScript %}
     <script type="text/javascript">
 
-        var bandwidthChart;
-        var bandwidthChartOptions = {
-            element: 'bandwidthChart',
-            data: [],
-            xkey: 'label',
-            ykeys: ['value'],
-            labels: ['{% trans "Bandwidth" %}'],
-            stacked: false,
-            postUnits: ''
-        };
+        var bandwidthChart = null;
 
         function setBandwidthChart() {
             $.ajax({
@@ -217,14 +208,41 @@
                 dataType: "json",
                 data: $("#bandwidthFilter").find("form").serialize(),
                 success: function(response) {
-                    if (bandwidthChart == undefined) {
-                        // Create our chart
-                        bandwidthChartOptions.data = response.extra.data;
-                        bandwidthChartOptions.postUnits = response.extra.postUnits;
-                        bandwidthChart = Morris.Bar(bandwidthChartOptions);
-                    } else {
-                        bandwidthChart.setData(response.extra.data);
+                    if (bandwidthChart !== undefined && bandwidthChart !== null) {
+                        console.log('Destroying Chart');
+                        bandwidthChart.destroy();
                     }
+
+                    if (response.extra.data.length <= 0) {
+                        return;
+                    }
+
+                    // Create our chart
+                    bandwidthChart = new Chart($("#bandwidthChart"), {
+                        type: "bar",
+                        data: {
+                            labels: response.extra.labels,
+                            datasets: [{
+                                label: "{% trans "Bandwidth" %}",
+                                backgroundColor: "rgb(11, 98, 164)",
+                                data: response.extra.data
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                yAxes: [{
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: response.extra.postUnits,
+                                    }
+                                }]
+                            },
+                            legend: {
+                                display: false
+                            },
+                            maintainAspectRatio: false,
+                        }
+                    });
                 }
             });
         }
@@ -251,22 +269,30 @@
             });
 
             // Handle the Pie chart for download status
-            Morris.Donut({
-                element: 'downloadedCountPie',
-                data: [
-                    { label: "{% trans "Downloaded" %}", value: {{ status.countComplete }}},
-                    { label: "{% trans "Pending" %}", value: {{ status.countRemaining }}}
-                ],
-                colors: ["#00CC00", "#FF0000"]
+            var downloadedCountPie = new Chart($("#downloadedCountPie"), {
+                type: 'pie',
+                data: {
+                    datasets: [{
+                        data: [{{ status.countComplete }}, {{ status.countRemaining }}],
+                        backgroundColor: ["#00CC00", "#FF0000"]
+                    }],
+                    labels: [
+                        "{% trans "Downloaded" %}", "{% trans "Pending" %}"
+                    ]
+                }
             });
-            Morris.Donut({
-                element: 'downloadedSizePie',
-                data: [
-                    { label: "{% trans "Downloaded" %}", value: {{ status.sizeComplete }}},
-                    { label: "{% trans "Pending" %}", value: {{ status.sizeRemaining }}}
-                ],
-                colors: ["#00CC00", "#FF0000"],
-                formatter: function (y) { return y + "{{ status.units }}"; }
+
+            var downloadedSizePie = new Chart($("#downloadedSizePie"), {
+                type: 'pie',
+                data: {
+                    datasets: [{
+                        data: [{{ status.sizeComplete }}, {{ status.sizeRemaining }}],
+                        backgroundColor: ["#00CC00", "#FF0000"]
+                    }],
+                    labels: [
+                        "{% trans "Downloaded" %}" + " {{ status.units }}", "{% trans "Pending" %}" + " {{ status.units }}"
+                    ]
+                },
             });
         });
     </script>

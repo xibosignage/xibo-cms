@@ -417,7 +417,8 @@ class Stats extends Base
 
         $rows = $this->store->select($SQL, $params);
 
-        $output = array();
+        $labels = [];
+        $data = [];
         $maxDuration = 0;
 
         foreach ($rows as $row) {
@@ -438,14 +439,13 @@ class Stats extends Base
         }
 
         foreach ($rows as $row) {
-            $output[] = array(
-                'label' => $this->getSanitizer()->string($row['display']),
-                'value' => round($this->getSanitizer()->double($row['duration']) / $divisor, 2)
-            );
+            $labels[] = $this->getSanitizer()->string($row['display']);
+            $data[] = round($this->getSanitizer()->double($row['duration']) / $divisor, 2);
         }
 
         $this->getState()->extra = [
-            'data' => $output,
+            'labels' => $labels,
+            'data' => $data,
             'postUnits' => $postUnits
         ];
     }
@@ -525,28 +525,27 @@ class Stats extends Base
         // Decide what our units are going to be, based on the size
         $base = floor(log($maxSize) / log(1024));
 
-        $output = array();
+        $labels = [];
+        $data = [];
 
         foreach ($results as $row) {
 
             // label depends whether we are filtered by display
             if ($displayId != 0) {
-                $label = $row['type'];
+                $labels[] = $row['type'];
             } else {
-                $label = $row['display'];
+                $labels[] = $row['display'];
             }
 
-            $output[] = array(
-                'label' => $label,
-                'value' => round((double)$row['size'] / (pow(1024, $base)), 2)
-            );
+            $data[] = round((double)$row['size'] / (pow(1024, $base)), 2);
         }
 
         // Set up some suffixes
         $suffixes = array('bytes', 'k', 'M', 'G', 'T');
 
         $this->getState()->extra = [
-            'data' => $output,
+            'labels' => $labels,
+            'data' => $data,
             'postUnits' => (isset($suffixes[$base]) ? $suffixes[$base] : '')
         ];
     }
