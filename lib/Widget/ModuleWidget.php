@@ -1086,7 +1086,7 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Get templatesAvailable
-     * @return Templates
+     * @return array
      */
     public function templatesAvailable()
     {
@@ -1108,11 +1108,15 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Get by Template Id
      * @param int $templateId
-     * @return Template
+     * @return array|null
      */
     public function getTemplateById($templateId)
     {
         $templates = $this->templatesAvailable();
+        $template = null;
+
+        if (count($templates) <= 0)
+            return null;
 
         foreach ($templates as $item) {
             if( $item['id'] == $templateId ) {
