@@ -60,6 +60,9 @@ $app->configService = \Xibo\Service\ConfigService::Load(PROJECT_ROOT . '/web/set
 // Set XMR
 \Xibo\Middleware\Xmr::setXmr($app, false);
 
+$app->configService->setDependencies($app->store, '/');
+$app->configService->loadTheme();
+
 // Register Middleware Dispatchers
 // Handle additional Middleware
 if (isset($app->configService->middleware) && is_array($app->configService->middleware)) {
