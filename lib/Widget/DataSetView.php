@@ -447,9 +447,14 @@ class DataSetView extends ModuleWidget
         $output .= '    <li>' . __('Name') . ': ' . $this->getName() . '</li>';
 
         // Get the DataSet name
-        $dataSet = $this->dataSetFactory->getById($this->getOption('dataSetId'));
+        try {
+            $dataSet = $this->dataSetFactory->getById($this->getOption('dataSetId'));
 
-        $output .= '    <li>' . __('Source: DataSet named "%s".', $dataSet->dataSet) . '</li>';
+            $output .= '    <li>' . __('Source: DataSet named "%s".', $dataSet->dataSet) . '</li>';
+        } catch (NotFoundException $notFoundException) {
+            $this->getLog()->error('Layout Widget without a DataSet. widgetId: ' . $this->getWidgetId());
+            $output .= '    <li>' . __('Warning: No DataSet found.') . '</li>';
+        }
 
         if ($this->getUseDuration() == 1)
             $output .= '    <li>' . __('Duration') . ': ' . $this->widget->duration . ' ' . __('seconds') . '</li>';
