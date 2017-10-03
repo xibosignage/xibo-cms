@@ -1136,7 +1136,7 @@ class DisplayProfile implements \JsonSerializable
                 )
             ),
             'lg' => [
-                'synonym' => 'xiboforlg',
+                'synonym' => 'xiboforwebos',
                 'tabs' => [
                     ['id' => 'general', 'name' => __('General')],
                     ['id' => 'timers', 'name' => __('On/Off Time')],
@@ -1211,7 +1211,7 @@ class DisplayProfile implements \JsonSerializable
                             array('id' => 9, 'value' => __('Reverse Portrait'))
                         ),
                         'default' => 0,
-                        'helpText' => __('Set the orientation of the device (portrait mode will only work if supported by the hardware) Application Restart Required.'),
+                        'helpText' => __('Set the orientation of the device.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ],

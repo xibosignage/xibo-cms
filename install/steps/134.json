@@ -1,0 +1,10 @@
+{
+  "dbVersion": 134,
+  "appVersion": "1.8.3",
+  "steps": [
+    {
+      "step": "Add Xibo for webOS display profile",
+      "action": "INSERT INTO displayprofile (name, type, config, isdefault, userId) VALUES ('webOS', 'lg', '{}', 1, 1)"
+    }
+  ]
+}
