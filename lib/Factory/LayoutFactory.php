@@ -297,12 +297,18 @@ class LayoutFactory extends BaseFactory
     /**
      * Get by CampaignId
      * @param int $campaignId
-     * @return array[Layout]
+     * @param bool $isOwnerOnly
+     * @return Layout[]
      * @throws NotFoundException
      */
-    public function getByCampaignId($campaignId)
+    public function getByCampaignId($campaignId, $isOwnerOnly = false)
     {
-        return $this->query(['displayOrder'], array('campaignId' => $campaignId, 'excludeTemplates' => -1, 'retired' => -1));
+        return $this->query(['displayOrder'], [
+            'campaignId' => ($isOwnerOnly) ? null : $campaignId,
+            'ownerCampaignId' => ($isOwnerOnly) ? $campaignId : null,
+            'excludeTemplates' => -1,
+            'retired' => -1
+        ]);
     }
 
     /**
@@ -1001,6 +1007,12 @@ class LayoutFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('retired', 0, $filterBy) != -1) {
             $body .= " AND layout.retired = :retired ";
             $params['retired'] = $this->getSanitizer()->getInt('retired', 0, $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('ownerCampaignId', $filterBy) !== null) {
+            // Join Campaign back onto it again
+            $body .= " AND `campaign`.campaignId = :ownerCampaignId ";
+            $params['ownerCampaignId'] = $this->getSanitizer()->getInt('ownerCampaignId', 0, $filterBy);
         }
 
         // Tags

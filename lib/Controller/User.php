@@ -872,9 +872,20 @@ class User extends Base
 
             if ($object->canChangeOwner()) {
                 $object->setOwner($ownerId);
-                $object->save();
+                $object->save(['notify' => false]);
             } else {
                 throw new ConfigurationException(__('Cannot change owner on this Object'));
+            }
+
+            // Nasty handling for ownerId on the Layout
+            // ideally we'd remove that column and rely on the campaign ownerId in 1.9 onward
+            if ($object->permissionsClass() == 'Xibo\Entity\Campaign') {
+                $this->getLog()->debug('Changing owner on child Layout');
+
+                foreach ($this->layoutFactory->getByCampaignId($object->getId()) as $layout) {
+                    $layout->setOwner($ownerId, true);
+                    $layout->save(['notify' => false]);
+                }
             }
         }
 
