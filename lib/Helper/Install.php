@@ -264,6 +264,10 @@ define('SECRET_KEY', '$secretKey');
 // \$middleware = [];
 // \$authentication = ;
 
+// \$authentication = new \Xibo\Middleware\SAMLAuthentication();
+// \$samlFile = realpath(dirname(__FILE__) . '/samlSettings.php');
+// require_once $samlFile;
+
 END;
 
         if (!fwrite($fh, $settings))
