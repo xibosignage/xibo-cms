@@ -355,28 +355,21 @@
                 <span class="preview"></span>
             </td>
             <td class="title">
-                {% if (file.error) { %}
-                    <div><span class="label label-danger">{%=file.error%}</span></div>
-                {% } %}
-
-                {% if (!file.error) { %}
-                    <label for="name[]"><input name="name[]" type="text" id="name" value="" /></label>
-                {% } %}
+                <label for="name[]"><input name="name[]" type="text" id="name" value="" /></label>
+                <div><span class="error"></span></div>
             </td>
             <td>
                 <p class="size">{%=o.formatFileSize(file.size)%}</p>
-                {% if (!o.files.error) { %}
                     <div class="progress">
                         <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
                             <div class="sr-only"></div>
                         </div>
                     </div>
                 </div>
-                {% } %}
             </td>
             <td>
-                {% if (!o.files.error && !i && !o.options.autoUpload) { %}
-                    <button class="btn btn-primary start">
+                {% if (!i && !o.options.autoUpload) { %}
+                    <button class="btn btn-primary start" disabled>
                         <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
                     </button>
                 {% } %}
@@ -415,7 +408,7 @@
                 <div class="col-md-4">
                     <span class="btn btn-success fileinput-button">
                         <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
-                        <span>{% trans "Add Background" %}</span> <input type="file" name="files[]">
+                        <span>{% trans "Add a new background image?" %}</span> <input type="file" name="files[]">
                     </span>
                 </div>
                 <div class="col-md-8">

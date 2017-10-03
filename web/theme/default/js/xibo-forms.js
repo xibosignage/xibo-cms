@@ -484,9 +484,12 @@ var backGroundFormSetup = function(dialog) {
 function layoutEditBackgroundButtonClicked(e, dialog) {
     e.preventDefault();
 
+    // Hide the original button
+    dialog.find('.background-image-add-button').hide();
+
     // Append a background upload button to the dialog footer.
     var template = Handlebars.compile($("#layout-background-image-upload-template").html());
-    var footer = dialog.find(".modal-footer");
+    var footer = dialog.find("#layoutEditFormBackgroundUpload");
 
     footer.append(template());
 
@@ -564,6 +567,9 @@ function layoutEditBackgroundButtonClicked(e, dialog) {
         // Hide the stuff we've added
         form.slideUp();
     });
+
+    // Click the button
+    dialog.find('.fileinput-button').click();
 }
 
 function permissionsFormOpen(dialog) {
