@@ -1082,6 +1082,26 @@ class LayoutFactory extends BaseFactory
             $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', 0, $filterBy);
         }
 
+        // Media Like
+        if ($this->getSanitizer()->getString('mediaLike', $filterBy) !== null) {
+            $body .= ' AND layout.layoutId IN (
+                SELECT DISTINCT `region`.layoutId
+                  FROM `lkwidgetmedia`
+                    INNER JOIN `widget`
+                    ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                    INNER JOIN `lkregionplaylist`
+                    ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                    INNER JOIN `region`
+                    ON `region`.regionId = `lkregionplaylist`.regionId
+                    INNER JOIN `media` 
+                    ON `lkwidgetmedia`.mediaId = `media`.mediaId
+                 WHERE `media`.name LIKE :mediaLike
+                )
+            ';
+
+            $params['mediaLike'] = '%' . $this->getSanitizer()->getString('mediaLike', $filterBy) . '%';
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
