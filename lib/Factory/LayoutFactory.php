@@ -850,7 +850,7 @@ class LayoutFactory extends BaseFactory
      * Query for all Layouts
      * @param array $sortOrder
      * @param array $filterBy
-     * @return array[Layout]
+     * @return Layout[]
      * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = null)

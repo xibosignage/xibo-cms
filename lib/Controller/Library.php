@@ -1371,7 +1371,7 @@ class Library extends Base
         // Get a list of displays that this mediaId is used on by direct assignment
         $displays = $this->displayFactory->query($this->gridRenderSort(), $this->gridRenderFilter(['mediaId' => $mediaId]));
 
-        // if we've been provided a date, then we need to assess the schedules
+        // have we been provided with a date/time to restrict the scheduled events to?
         $mediaDate = $this->getSanitizer()->getDate('mediaEventDate');
 
         if ($mediaDate !== null) {
@@ -1380,15 +1380,27 @@ class Library extends Base
 
             $events = $this->scheduleFactory->query(null, [
                 'futureSchedulesFrom' => $mediaDate->format('U'),
-                'futureSchedulesTo' => $toDate->format('U')
+                'futureSchedulesTo' => $toDate->format('U'),
+                'mediaId' => $mediaId
             ]);
+        } else {
+            // All scheduled events for this mediaId
+            $events = $this->scheduleFactory->query(null, [
+                'mediaId' => $mediaId
+            ]);
+        }
 
-            foreach ($events as $row) {
-                /* @var \Xibo\Entity\Schedule $row */
+        // Total records returned from the schedules query
+        $totalRecords = $this->scheduleFactory->countLast();
 
-                // Generate this event
-                $row->setDayPartFactory($this->dayPartFactory);
+        foreach ($events as $row) {
+            /* @var \Xibo\Entity\Schedule $row */
 
+            // Generate this event
+            $row->setDayPartFactory($this->dayPartFactory);
+
+            // Assess the date?
+            if ($mediaDate !== null) {
                 try {
                     $scheduleEvents = $row->getEvents($mediaDate, $toDate);
                 } catch (XiboException $e) {
@@ -1396,35 +1408,91 @@ class Library extends Base
                     continue;
                 }
 
+                // Skip events that do not fall within the specified days
                 if (count($scheduleEvents) <= 0)
                     continue;
 
                 $this->getLog()->debug('EventId ' . $row->eventId . ' as events: ' . json_encode($scheduleEvents));
+            }
 
-                // Load the display groups
-                $row->load();
+            // Load the display groups
+            $row->load();
 
-                foreach ($row->displayGroups as $displayGroup) {
-                    foreach ($this->displayFactory->getByDisplayGroupId($displayGroup->displayGroupId) as $display) {
-                        $found = false;
+            foreach ($row->displayGroups as $displayGroup) {
+                foreach ($this->displayFactory->getByDisplayGroupId($displayGroup->displayGroupId) as $display) {
+                    $found = false;
 
-                        // Check to see if our ID is already in our list
-                        foreach ($displays as $existing) {
-                            if ($existing->displayId === $display->displayId) {
-                                $found = true;
-                                break;
-                            }
+                    // Check to see if our ID is already in our list
+                    foreach ($displays as $existing) {
+                        if ($existing->displayId === $display->displayId) {
+                            $found = true;
+                            break;
                         }
-
-                        if (!$found)
-                            $displays[] = $display;
                     }
+
+                    if (!$found)
+                        $displays[] = $display;
                 }
             }
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->mediaFactory->countLast();
+        $this->getState()->recordsTotal = $totalRecords;
         $this->getState()->setData($displays);
+    }
+
+    /**
+     * @SWG\Get(
+     *  path="/library/usage/layouts/{mediaId}",
+     *  operationId="libraryUsageLayoutsReport",
+     *  tags={"library"},
+     *  summary="Get Library Item Usage Report for Layouts",
+     *  description="Get the records for the library item usage report for Layouts",
+     *  @SWG\Response(
+     *     response=200,
+     *     description="successful operation"
+     *  )
+     * )
+     *
+     * @param int $mediaId
+     */
+    public function usageLayouts($mediaId)
+    {
+        $media = $this->mediaFactory->getById($mediaId);
+
+        if (!$this->getUser()->checkViewable($media))
+            throw new AccessDeniedException();
+
+        $layouts = $this->layoutFactory->query(null, ['mediaId' => $mediaId]);
+
+        if (!$this->isApi()) {
+            foreach ($layouts as $layout) {
+                $layout->includeProperty('buttons');
+
+                // Add some buttons for this row
+                if ($this->getUser()->checkEditable($layout)) {
+                    // Design Button
+                    $layout->buttons[] = array(
+                        'id' => 'layout_button_design',
+                        'linkType' => '_self', 'external' => true,
+                        'url' => $this->urlFor('layout.designer', array('id' => $layout->layoutId)),
+                        'text' => __('Design')
+                    );
+                }
+
+                // Preview
+                $layout->buttons[] = array(
+                    'id' => 'layout_button_preview',
+                    'linkType' => '_blank',
+                    'external' => true,
+                    'url' => $this->urlFor('layout.preview', ['id' => $layout->layoutId]),
+                    'text' => __('Preview Layout')
+                );
+            }
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $this->layoutFactory->countLast();
+        $this->getState()->setData($layouts);
     }
 }
