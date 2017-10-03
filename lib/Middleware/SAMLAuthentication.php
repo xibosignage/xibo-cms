@@ -84,7 +84,8 @@ class SAMLAuthentication extends Middleware
             $metadata = $settings->getSPMetadata();
             $errors = $settings->validateMetadata($metadata);
             if (empty($errors)) {
-                header('Content-Type: text/xml');
+                $app = $this->getApplication();
+                $app->response()->header('Content-Type', 'text/xml');
                 echo $metadata;
             } else {
                 throw new \Xibo\Exception\ConfigurationException(
