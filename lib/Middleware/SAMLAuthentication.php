@@ -371,17 +371,7 @@ class SAMLAuthentication extends Middleware
             }
         };
 
-        $updateUser = function () use ($app) {
-            $user = $app->user;
-            /* @var \Xibo\Entity\User $user */
-
-            if (!$app->public && $user->hasIdentity()) {
-                $user->touch();
-            }
-        };
-
         $app->hook('slim.before.dispatch', $isAuthorised);
-        $app->hook('slim.after.dispatch', $updateUser);
 
         $this->next->call();
     }

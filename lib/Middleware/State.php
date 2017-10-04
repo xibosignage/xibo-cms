@@ -174,7 +174,7 @@ class State extends Middleware
         });
 
         // Set some public routes
-        $app->publicRoutes = array('/login', '/logout', '/clock', '/about', '/login/ping');
+        $app->publicRoutes = array('/login', '/clock', '/about', '/login/ping');
 
         // The state of the application response
         $app->container->singleton('state', function() { return new ApplicationState(); });
