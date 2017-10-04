@@ -953,11 +953,14 @@ class Schedule implements \JsonSerializable
             }
 
             if (!$found) {
-                if ($start > $end)
-                    $end->addDay();
-
+                // Set the time section of our dates based on the daypart date
                 $start->setTimeFromTimeString($dayPart->startTime);
                 $end->setTimeFromTimeString($dayPart->endTime);
+
+                if ($start > $end) {
+                    $this->getLog()->debug('Start is ahead of end - adding a day to the end date');
+                    $end->addDay();
+                }
             }
         }
     }
