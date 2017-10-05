@@ -113,7 +113,7 @@ class NotificationFactory extends BaseFactory
     /**
      * @param array[Optional] $sortOrder
      * @param array[Optional] $filterBy
-     * @return array[Notification]
+     * @return Notification[]
      */
     public function query($sortOrder = null, $filterBy = null)
     {
@@ -149,14 +149,43 @@ class NotificationFactory extends BaseFactory
             $params['subject'] = $this->getSanitizer()->getString('subject', $filterBy);
         }
 
-        if ($this->getSanitizer()->getString('createFromDt', $filterBy) != null) {
+        if ($this->getSanitizer()->getInt('createFromDt', $filterBy) != null) {
             $body .= ' AND `notification`.createDt >= :createFromDt ';
-            $params['createFromDt'] = $this->getSanitizer()->getParam('createFromDt', $filterBy);
+            $params['createFromDt'] = $this->getSanitizer()->getInt('createFromDt', $filterBy);
         }
 
-        if ($this->getSanitizer()->getString('createToDt', $filterBy) != null) {
+        if ($this->getSanitizer()->getInt('releaseDt', $filterBy) != null) {
+            $body .= ' AND `notification`.releaseDt >= :releaseDt ';
+            $params['releaseDt'] = $this->getSanitizer()->getInt('releaseDt', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('createToDt', $filterBy) != null) {
             $body .= ' AND `notification`.createDt < :createToDt ';
-            $params['createToDt'] = $this->getSanitizer()->getParam('createToDt', $filterBy);
+            $params['createToDt'] = $this->getSanitizer()->getInt('createToDt', $filterBy);
+        }
+
+        // User Id?
+        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+            $body .= ' AND `notification`.notificationId IN (
+              SELECT notificationId 
+                FROM `lknotificationuser`
+               WHERE userId = :userId 
+            )';
+            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
+        }
+
+        // Display Id?
+        if ($this->getSanitizer()->getInt('displayId', $filterBy) !== null) {
+            $body .= ' AND `notification`.notificationId IN (
+              SELECT notificationId 
+                FROM `lknotificationdg`
+                    INNER JOIN `lkdgdg`
+                    ON `lkdgdg`.parentId = `lknotificationdg`.displayGroupId
+                    INNER JOIN `lkdisplaydg`
+                    ON `lkdisplaydg`.displayGroupId = `lkdgdg`.childId
+               WHERE `lkdisplaydg`.displayId = :displayId 
+            )';
+            $params['displayId'] = $this->getSanitizer()->getInt('displayId', $filterBy);
         }
 
         // Sorting?

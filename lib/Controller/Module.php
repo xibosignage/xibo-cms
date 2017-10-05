@@ -957,6 +957,7 @@ class Module extends Base
             throw new AccessDeniedException();
 
         // Call module GetResource
+        $module->setUser($this->getUser());
         echo $module->getResource();
         $this->setNoOutput(true);
     }
