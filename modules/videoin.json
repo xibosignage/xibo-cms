@@ -1,0 +1,7 @@
+{
+    "title": "Video In",
+    "author": "Spring Signage Ltd",
+    "description": "A module for displaying Video and Audio from an external source",
+    "name": "videoin",
+    "class": "Xibo\\Widget\\VideoIn"
+}
