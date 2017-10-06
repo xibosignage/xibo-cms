@@ -723,7 +723,7 @@ class DataSet extends Base
                     $filter = '';
                     foreach ($data['uniqueKeys'] as $uniqueKey) {
                         if (isset($sanitizedRow[$uniqueKey])) {
-                            $filter .= 'AND ' . $uniqueKey . '= \'' . $sanitizedRow[$uniqueKey] . '\' ';
+                            $filter .= 'AND `' . $uniqueKey . '` = \'' . $sanitizedRow[$uniqueKey] . '\' ';
                         }
                     }
                     $filter = trim($filter, 'AND');
