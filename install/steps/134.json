@@ -13,6 +13,10 @@
     {
       "step": "Create a new Column in DataSetColumn",
       "action": "ALTER TABLE `datasetcolumn` ADD `RemoteField` VARCHAR(250) DEFAULT NULL AFTER `formula`;"
+    },
+    {
+      "step": "Create a Task for fetching all remote DataSets automatically",
+      "action": "INSERT INTO `task` SET `name`='Fetch Remote DataSets', `class`='\\Xibo\\XTR\\RemoteDataSetFetch', `status`=2, `isActive`=1, `configFile`='/tasks/remote-dataset.task', `options`='{}', `schedule`='30 * * * * *';"
     }
   ]
 }

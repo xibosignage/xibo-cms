@@ -82,13 +82,13 @@ class DataSetRemote extends DataSet
     public $dataRoot;
 
     /**
-     * @SWG\Property(description="Optional function to use for summarize or count uniwue fields in a remote request")
+     * @SWG\Property(description="Optional function to use for summarize or count unique fields in a remote request")
      * @var String
      */
     public $summarize;
 
     /**
-     * @SWG\Property(description="JSON-Element below the Root-Element on which the summarize funciton should be applied on")
+     * @SWG\Property(description="JSON-Element below the Root-Element on which the consolidation should be applied on")
      * @var String
      */
     public $summarizeField;
@@ -116,6 +116,43 @@ class DataSetRemote extends DataSet
         }
         
         return $params;
+    }
+    
+    /**
+     * Returns a Timestamp for the next Synchronisation process.
+     * @return int Seconds
+     */
+    public function getNextSyncTime() {
+        return $this->lastSync + $this->refreshRate;
+    }
+    
+    /**
+     * Returns a Timestamp for the next Clearing process.
+     * @return int Seconds
+     */
+    public function getNextClearTime() {
+        return $this->lastSync + $this->clearRate;
+    }
+    
+    /**
+     * Returns if there is a consolidation field and method present or not.
+     * @return boolean
+     */
+    public function doConsolidate() {
+        return ($this->summarizeField != null) && ($this->summarizeField != '')
+            && ($this->summarize != null) && ($this->summarize != '');
+    }
+    
+    /**
+     * Returns the last Part of the Fieldname on which the consolidation should be applied on
+     * @return String
+     */
+    public function getConsolidationField() {
+        $pos = strrpos($this->summarizeField, '.');
+        if ($pos !== false) {
+            return substr($this->summarizeField, $pos + 1);
+        }
+        return $this->summarizeField;
     }
     
     /**

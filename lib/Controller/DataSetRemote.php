@@ -100,7 +100,7 @@ class DataSetRemote extends Base
     }
 
     /**
-     * Add Rmeote dataSet
+     * Add Remote dataSet
      *
      * @SWG\Post(
      *  path="/dataset",
@@ -167,20 +167,7 @@ class DataSetRemote extends Base
         $dataSetColumn->heading = 'Col1';
         $dataSetColumn->dataSetColumnTypeId = 1;
         $dataSetColumn->dataTypeId = 1;
-        
         $dataSet->assignColumn($dataSetColumn);
-        
-        // In case we have a summarize field, add a special column as well
-        if (($dataSet->summarizeField != null) && ($dataSet->summarizeField != '')) {
-            $summarizeColumn = $this->dataSetColumnFactory->createEmpty();
-            $summarizeColumn->columnOrder = 1;
-            $summarizeColumn->heading = 'Sum';
-            $summarizeColumn->dataSetColumnTypeId = 3;
-            $summarizeColumn->dataTypeId = 2;
-            $summarizeColumn->remoteField = $dataSet->summarizeField . '._sum_';
-            
-            $dataSet->assignColumn($summarizeColumn);
-        }
 
         // Save
         $dataSet->save();
@@ -283,22 +270,6 @@ class DataSetRemote extends Base
         $dataSet->dataRoot = $this->getSanitizer()->getString('dataRoot');
         $dataSet->summarize = $this->getSanitizer()->getString('summarize');
         $dataSet->summarizeField = $this->getSanitizer()->getString('summarizeField');
-        
-        // In case we have a summarize field, add a special column as well
-        // But only if there is no such field already of course :o)
-        if (($dataSet->summarizeField != null) && ($dataSet->summarizeField != '')) {
-            $entried = $this->dataSetColumnFactory->query(null, ['remoteField' => $dataSet->summarizeField . '._sum_']);
-            if (count($entries) == 0) {
-                $summarizeColumn = $this->dataSetColumnFactory->createEmpty();
-                $summarizeColumn->columnOrder = 1;
-                $summarizeColumn->heading = 'Sum';
-                $summarizeColumn->dataSetColumnTypeId = 3;
-                $summarizeColumn->dataTypeId = 2;
-                $summarizeColumn->remoteField = $dataSet->summarizeField . '._sum_';
-
-                $dataSet->assignColumn($summarizeColumn);
-            }
-        }
         
         $dataSet->save();
 
@@ -467,6 +438,9 @@ class DataSetRemote extends Base
         ]);
     }
     
+    /**
+     * Sends out a TestRequst and returns the Data as JSON to the Client so it can be shown in the Dialog
+     */
     public function testRequest() {
         $dataSet = $this->dataSetFactory->createEmptyRemote();
         $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
@@ -486,5 +460,185 @@ class DataSetRemote extends Base
             'id' => $dataSet->dataSetId,
             'data' => $data
         ]);
+    }
+    
+    /**
+     * Tries to process received Data against the configured DataSet with all Columns
+     * 
+     * @param \Xibo\Entity\DataSetRemote $dataSet The RemoteDataset to process
+     * @param array The JSON received from the remote endpoint
+     */
+    public function process(\Xibo\Entity\DataSetRemote $dataSet, array $result) {
+        // Remote Data has to have the configured DataRoot which has to be an Array
+        if (empty($dataSet->dataRoot) || array_key_exists($dataSet->dataRoot, $result)) {
+            $data = null;
+            if (empty($dataSet->dataRoot)) {
+                $data = $result;
+            } else {
+                $data = $result[$dataSet->dataRoot];
+            }
+            
+            if (is_array($data)) {
+                $columns = $this->dataSetColumnFactory->query(null, ['dataSetId' => $dataSet->dataSetId]);
+                $entries = [];
+                
+                // First process each entry form the remote and try to map the values to the configured columns
+                foreach($data as $k => $entry) {
+                    if (is_array($entry) || is_object($entry)) {
+                        $entries[] = $this->processEntry($dataSet, (array) $entry, $columns);
+                    } else {
+                        $message = sprintf(__('DataSet \'%s\' failed: DataRoot \'%s\' contains data which are not arrays and not objects.'), $dataSet->dataSet, $dataSet->dataRoot);
+                        break;
+                    }
+                }
+
+                // If there is a Consilidation-Function, use the Data against it
+                $entries = $this->consolidateEntries($dataSet, $entries, $columns);
+                
+                // Finally add each entry as a new Row in the DataSet
+                foreach ($entries as $entry) {
+                    $dataSet->addRow($entry);
+                }
+                
+            } else {
+                $message = sprintf(__('DataSet \'%s\' missconfigured: DataRoot \'%s\' is not an Array.'), $dataSet->dataSet, $dataSet->dataRoot);
+            }
+        }
+        
+        // Return
+        $this->getState()->hydrate([
+            'message' => $message,
+            'id' => $dataSet->dataSetId
+        ]);
+    }
+    
+    /**
+     * Process a single Data-Entry form the remote system and map it to the configured Columns
+     * 
+     * @param \Xibo\Entity\DataSetRemote $dataSet The DataSet which is processed currently
+     * @param array $entry The Data from the remte system
+     * @param array $columns The configured Columns form the current DataSet
+     * @return array The processed $entry as a List of Fields from $columns
+     */
+    private function processEntry(\Xibo\Entity\DataSetRemote $dataSet, array $entry, array $columns) {
+        $result = [];
+
+        foreach ($columns as $k => $column) {
+            if (($column->remoteField != null) && ($column->remoteField != '')) {
+                $dataTypeId = $column->dataTypeId;
+                
+                // The Field may be a Date, timestamp or a real field
+                if ($column->remoteField == '{{DATE}}') {
+                    $value = [0, date('Y-m-d')];
+                    
+                } else if ($column->remoteField == '{{TIMESTAMP}}') {
+                    $value = [0, time()];
+                    
+                } else {
+                    $chunks = explode('.', $column->remoteField);
+                    $value = $this->getFieldValueFromEntry($chunks, $entry);
+                }
+                
+                // Only add it to the result if we where able to process the field
+                if (($value != null) && ($value[1] != null)) {
+                    switch ($dataTypeId) {
+                        case 2:
+                            $result[$column->heading] = $this->getSanitizer()->double($value[1]);
+                            break;
+                        case 3:
+                            $result[$column->heading] = $this->getDate()->getLocalDate(strtotime($value[1]));
+                            break;
+                        case 5:
+                            $result[$column->heading] = $this->getSanitizer()->int($value[1]);
+                            break;
+                        default:
+                            $result[$column->heading] = $this->getSanitizer()->string($value[1]);
+                    }
+                }
+            }
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Returns the Value of the remote DataEntry based on the remoteField definition splitted into chunks
+     *
+     * This function is recursive, so be sure you remove the first value from chunks and pass it in again
+     *
+     * @param array List of Chunks which interprets the FieldNames in the actual DataEntry
+     * @param array $entry Current DataEntry
+     * @return Array of the last FieldName and the corresponding value
+     */
+    private function getFieldValueFromEntry(array $chunks, array $entry) {
+        $value = null;
+        $key = array_shift($chunks);
+
+        if (array_key_exists($key, $entry)) {
+            $value = $entry[$key];
+        }
+        
+        if (($value != null) && (count($chunks) > 0)) {
+            return $this->getFieldValueFromEntry($chunks, (array) $value);
+        }
+        
+        return [ $key, $value ];
+    }
+    
+    /**
+     * Consolidates all Entries by the defined Function in the DataSet
+     * 
+     * This Method *sums* or *counts* all same entries and returns them.
+     * If no consolidation function is configured, nothing is done here.
+     * 
+     * @param \Xibo\Entity\DataSetRemote $dataSet the current DataSet
+     * @param array $entries All processed entries which may be consolidated
+     * @param array $column The columns form this DataSet
+     * @return \Slim\Helper\Set which contains all Entries to be added to the DataSet
+     */
+    private function consolidateEntries(\Xibo\Entity\DataSetRemote $dataSet, array $entries, array $columns) {
+        if ((count($entries) > 0) && $dataSet->doConsolidate()) {
+            $consolidated = new \Slim\Helper\Set();
+            $field = $dataSet->getConsolidationField();
+            
+            // Get the Field-Heading based on the consolidation field
+            foreach ($columns as $k => $column) {
+                if ($column->remoteField == $dataSet->summarizeField) {
+                    $field = $column->heading;
+                    break;
+                }
+            }
+            
+            // Check each entry and consolidate the value form the defined field
+            foreach ($entries as $entry) {
+                if (array_key_exists($field, $entry)) {
+                    $key = $field . '-' . $entry[$field];
+                    $existing = $consolidated->get($key);
+                    
+                    // Create a new one if there is no currently consolidated field for this value
+                    if ($existing == null) {
+                        $existing = $entry;
+                        $existing[$field] = 0;
+                    }
+                    
+                    // Consolidate: Summarize, Count, Unknown
+                    if ($dataSet->summarize == 'sum') {
+                        $existing[$field] = $existing[$field] + $entry[$field];
+                        
+                    } else if ($dataSet->summarize == 'count') {
+                        $existing[$field] = $existing[$field] + 1;
+                        
+                    } else {
+                        // Unknown consolidation type :?
+                        $existing[$field] = 0;
+                    }
+                    
+                    $consolidated->set($key, $existing);
+                }
+            }
+            
+            return $consolidated;
+        }
+        return new \Slim\Helper\Set($entries);
     }
 }
