@@ -953,12 +953,20 @@ class Library extends Base
      */
     public function download($mediaId, $type = '')
     {
-        $this->getLog()->debug('Download request for mediaId %d and type %s', $mediaId, $type);
-
         $media = $this->mediaFactory->getById($mediaId);
 
-        if (!$this->getUser()->checkViewable($media))
+        $this->getLog()->debug('Download request for mediaId ' . $mediaId . ' and type ' . $type . '. Media is a ' . $media->mediaType);
+
+        if ($media->mediaType === 'module') {
+            // Make sure that our user has this mediaId assigned to a Widget they can view
+            // we can't test for normal media permissions, because no user has direct access to these "module" files
+            // https://github.com/xibosignage/xibo/issues/1304
+            if (count($this->widgetFactory->query(null, ['mediaId' => $mediaId])) <= 0) {
+                throw new AccessDeniedException();
+            }
+        } else if (!$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
+        }
 
         if ($type != '') {
             $widget = $this->moduleFactory->create($type);
