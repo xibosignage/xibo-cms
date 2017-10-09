@@ -98,7 +98,11 @@
                         ] %}
                         {% set title %}{% trans "Layout / Campaign" %}{% endset %}
                         {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
-                        {{ forms.dropdown("campaignId", "single", title, event.campaignId, {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "layout-control", "", "", "", "", optionGroups) }}
+                        {% set attributes = [
+                            { name: "data-live-search", value: "true" },
+                            { name: "data-selected-text-format", value: "count > 4" }
+                        ] %}
+                        {{ forms.dropdown("campaignId", "single", title, event.campaignId, {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "layout-control", "", "", "", attributes, optionGroups) }}
 
                         {% set title %}{% trans "Command" %}{% endset %}
                         {% set helpText %}{% trans "Please select a command for this Event." %}{% endset %}

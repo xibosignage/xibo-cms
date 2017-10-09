@@ -188,8 +188,28 @@ class DataSetFactory extends BaseFactory
             }
 
             if ($this->getSanitizer()->getString('dataSet', $filterBy) != null) {
-                $body .= ' AND dataset.dataSet = :dataSet ';
-                $params['dataSet'] = $this->getSanitizer()->getString('dataSet', $filterBy);
+            // convert into a space delimited array
+                $names = explode(' ', $this->getSanitizer()->getString('dataSet', $filterBy));
+
+                $i = 0;
+                foreach($names as $searchName)
+                {
+                    $i++;
+
+                    // Ignore if the word is empty
+                    if($searchName == '')
+                      continue;
+
+                    // Not like, or like?
+                    if (substr($searchName, 0, 1) == '-') {
+                        $body.= " AND  `dataset`.dataSet NOT LIKE :search$i ";
+                        $params['search' . $i] = '%' . ltrim($searchName) . '%';
+                    }
+                    else {
+                        $body.= " AND  `dataset`.dataSet LIKE :search$i ";
+                        $params['search' . $i] = '%' . $searchName . '%';
+                    }
+                }
             }
 
             if ($this->getSanitizer()->getString('code', $filterBy) != null) {

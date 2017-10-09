@@ -617,7 +617,7 @@ class DisplayProfile implements \JsonSerializable
                         'type' => 'int',
                         'fieldType' => 'text',
                         'default' => 10,
-                        'helpText' => __('If an empty layout is detected how long should it remain on screen. Must be greater then 1.'),
+                        'helpText' => __('If an empty layout is detected how long (in seconds) should it remain on screen? Must be greater than 1.'),
                         'validation' => 'number',
                         'enabled' => true,
                         'groupClass' => NULL

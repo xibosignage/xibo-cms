@@ -80,9 +80,9 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
     }
 
     /**
-     * Edit Display test
+     * Edit Display test, expecting success
      */
-    public function testEdit()
+    public function testEditSuccess()
     {
         # Create a Display in the system
         $hardwareId = Random::generateString(12, 'phpunit');
@@ -93,11 +93,12 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
             $this->fail('Display was not added correctly');
         /** @var XiboDisplay $display */
         $display = $displays[0];
+        $auditingTime = time()+3600;
         # Edit display and change its name
         $this->client->put('/display/' . $display->displayId, [
             'display' => 'API EDITED',
-            'isAuditing' => $display->isAuditing,
             'defaultLayoutId' => $display->defaultLayoutId,
+            'auditingUntil' => date('Y-m-d H:i:s', $auditingTime),
             'licensed' => $display->licensed,
             'license' => $display->license,
             'incSchedule' => $display->incSchedule,
@@ -109,6 +110,34 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
         $object = json_decode($this->client->response->body());
         # Check if display has new edited name
         $this->assertSame('API EDITED', $object->data->display);
+    }
+
+    /**
+     * Edit Display test, expecting failure
+     */
+    public function testEditFailure()
+    {
+        # Create a Display in the system
+        $hardwareId = Random::generateString(12, 'phpunit');
+        $this->getXmdsWrapper()->RegisterDisplay($hardwareId, 'PHPUnit Test Display');
+        # Now find the Id of that Display
+        $displays = (new XiboDisplay($this->getEntityProvider()))->get(['hardwareKey' => $hardwareId]);
+        if (count($displays) != 1)
+            $this->fail('Display was not added correctly');
+        /** @var XiboDisplay $display */
+        $display = $displays[0];
+        # Edit display and change its hardwareKey
+        $this->client->put('/display/' . $display->displayId, [
+            'display' => 'API EDITED',
+            'defaultLayoutId' => $display->defaultLayoutId,
+            'licensed' => $display->licensed,
+            'license' => null,
+            'incSchedule' => $display->incSchedule,
+            'emailAlert' => $display->emailAlert,
+            'wakeOnLanEnabled' => $display->wakeOnLanEnabled,
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+        # Check if call failed as expected (license cannot be null)
+        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
     }
 
     /**
@@ -181,17 +210,20 @@ pbBhRgkIdydXoZZdjQIDAQAB
         $display = $displays[0];
         # Check if mac address was added correctly
         $this->assertSame($macAddress, $display->macAddress, 'Mac Address not set correctly by XMDS Register Display');
+        $auditingTime = time()+3600;
         # Edit display and add broadcast channel
         $display->edit($display->display,
         $display->description, 
-        $display->isAuditing, 
+        date('Y-m-d H:i:s', $auditingTime), 
         $display->defaultLayoutId, 
         $display->licensed, 
         $display->license, 
         $display->incSchedule, 
         $display->emailAlert, 
         $display->wakeOnLanEnabled, 
-        '127.0.0.1');
+        '127.0.0.1',
+        0,
+        0);
         # Call WOL
         $this->client->post('/display/wol/' . $display->displayId);
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
