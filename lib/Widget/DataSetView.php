@@ -779,6 +779,9 @@ class DataSetView extends ModuleWidget
                         // The content is the ID of the image
                         try {
                             $file = $this->mediaFactory->getById($replace);
+
+                            // Already in the library - assign this mediaId to the Layout immediately.
+                            $this->assignMedia($file->mediaId);
                         }
                         catch (NotFoundException $e) {
                             $this->getLog()->error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);
