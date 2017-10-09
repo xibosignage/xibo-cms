@@ -235,6 +235,10 @@ class LayoutFactory extends BaseFactory
 
         // Ensure we have Playlists for each region
         foreach ($layout->regions as $region) {
+
+            // Set the ownership of this region to the user creating from template
+            $region->setOwner($ownerId, true);
+
             if (count($region->playlists) <= 0) {
                 // Create a Playlist for this region
                 $playlist = $this->playlistFactory->create($name, $ownerId);
