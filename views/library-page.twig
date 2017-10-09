@@ -294,6 +294,7 @@
         /// Library Usage Form
         ///
         function usageFormOpen(dialog) {
+            // Displays tab
             var usageTable = $("#usageReportTable").DataTable({
                 "language": dataTablesLanguage,
                 serverSide: true,
@@ -311,24 +312,7 @@
                 "columns": [
                     { "data": "displayId"},
                     { "data": "display" },
-                    { "data": "description" },
-                    {
-                        "data": "mediaInventoryStatus",
-                        "render": function (data, type, row) {
-                            if (type !== "display")
-                                return data;
-
-                            var icon = "";
-                            if (data === 1)
-                                icon = "fa-check";
-                            else if (data === 0)
-                                icon = "fa-times";
-                            else
-                                icon = "fa-cloud-download";
-
-                            return "<span class='fa " + icon + "'></span>";
-                        }
-                    }
+                    { "data": "description" }
                 ]
             });
 
@@ -350,6 +334,31 @@
                 $("#mediaEventDateLink").datetimepicker("update");
                 usageTable.ajax.reload();
             });
+
+            // Layouts tab
+            var usageTableLayouts = $("#usageReportLayoutsTable").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true,
+                stateSave: true,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("library.usage.layouts") }}".replace(":id", $("#usageReportLayoutsTable").data().mediaId)
+                },
+                "columns": [
+                    { "data": "layoutId"},
+                    { "data": "layout" },
+                    { "data": "description" },
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
+
+            usageTableLayouts.on('draw', dataTableDraw);
+            usageTableLayouts.on('processing.dt', dataTableProcessing);
         }
     </script>
 {% endblock %}

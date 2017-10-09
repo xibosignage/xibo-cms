@@ -444,7 +444,9 @@ class DataSet extends Base
 
         if (!$this->getUser()->checkDeleteable($dataSet))
             throw new AccessDeniedException();
+
         $this->getLog()->debug('Delete data flag = ' . $this->getSanitizer()->getCheckbox('deleteData') . '. Params = ' . var_export($this->getApp()->request()->params(), true));
+
         // Is there existing data?
         if ($this->getSanitizer()->getCheckbox('deleteData') == 0 && $dataSet->hasData())
             throw new \InvalidArgumentException(__('There is data assigned to this data set, cannot delete.'));
@@ -721,7 +723,7 @@ class DataSet extends Base
                     $filter = '';
                     foreach ($data['uniqueKeys'] as $uniqueKey) {
                         if (isset($sanitizedRow[$uniqueKey])) {
-                            $filter .= 'AND ' . $uniqueKey . '= \'' . $sanitizedRow[$uniqueKey] . '\' ';
+                            $filter .= 'AND `' . $uniqueKey . '` = \'' . $sanitizedRow[$uniqueKey] . '\' ';
                         }
                     }
                     $filter = trim($filter, 'AND');

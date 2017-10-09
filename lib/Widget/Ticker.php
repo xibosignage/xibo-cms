@@ -575,9 +575,14 @@ class Ticker extends ModuleWidget
 
         if ($sourceId == 2) {
             // Get the DataSet name
-            $dataSet = $this->dataSetFactory->getById($this->getOption('dataSetId'));
+            try {
+                $dataSet = $this->dataSetFactory->getById($this->getOption('dataSetId'));
 
-            $output .= '    <li>' . __('Source: DataSet named "%s".', $dataSet->dataSet) . '</li>';
+                $output .= '    <li>' . __('Source: DataSet named "%s".', $dataSet->dataSet) . '</li>';
+            } catch (NotFoundException $notFoundException) {
+                $this->getLog()->error('Layout Widget without a DataSet. widgetId: ' . $this->getWidgetId());
+                $output .= '    <li>' . __('Warning: No DataSet found.') . '</li>';
+            }
         }
         else
             $output .= '    <li>' . __('Source') . ': <a href="' . $url . '" target="_blank" title="' . __('Source') . '">' . $url . '</a></li>';

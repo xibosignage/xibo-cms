@@ -453,6 +453,16 @@ var processScheduleFormElements = function(el) {
                         $(this).css("display", "none");
                 }
             });
+
+            // If the fieldVal is 2 (command), then we should set the dayPartId to be 0 (custom)
+            if (fieldVal == 2) {
+                console.log('Setting dayPartId to custom');
+                $("#dayPartId").val(0);
+
+                var $startTime = $(".starttime-control");
+                $startTime.find("input[name=fromDt_Link2]").show();
+                $startTime.find(".help-block").html($startTime.closest("form").data().daypartMessage);
+            }
             
             // Call funtion for the daypart ID 
             processScheduleFormElements($('#dayPartId'));
@@ -509,6 +519,9 @@ var setupScheduleNowForm = function(form) {
         $(form).find("#dayPartId").val(always ? 1 : 0);
 
         $(form).find(".duration-part").toggle();
+        if (dateFormat.indexOf("s") <= -1) {
+            $(form).find(".schedule-now-seconds-field").hide();
+        }
     })
 
     var evaluateDates = $.debounce(500, function() {

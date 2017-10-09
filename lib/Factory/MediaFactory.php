@@ -207,8 +207,23 @@ class MediaFactory extends BaseFactory
         $media->saveAsync();
 
         // Add to our collection of queued downloads
-        if ($media->isSaveRequired)
-            $this->remoteDownloadQueue[] = $media;
+        // but only if its not already in the queue (we might have tried to queue it multiple times in the same request)
+        if ($media->isSaveRequired) {
+            $queueItem = true;
+            if ($media->getId() != null) {
+                // Existing media, check to see if we're already queued
+                foreach ($this->remoteDownloadQueue as $queue) {
+                    // If we find this item already, don't queue
+                    if ($queue->getId() === $media->getId()) {
+                        $queueItem = false;
+                        break;
+                    }
+                }
+            }
+
+            if ($queueItem)
+                $this->remoteDownloadQueue[] = $media;
+        }
 
         // Return the media item
         return $media;

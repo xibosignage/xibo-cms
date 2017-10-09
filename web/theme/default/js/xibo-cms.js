@@ -208,6 +208,7 @@ function XiboInitialise(scope) {
     });
 
     // Search for any charts
+    // TODO: remove in 1.9
     $(scope + " div.morrisChart").each(function() {
 
         // Look for a variable with the same ID as this element

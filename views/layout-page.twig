@@ -16,37 +16,51 @@
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {% set title %}{% trans "Name" %}{% endset %}
-                            {{ inline.input("layout", title) }}
+                            <ul class="nav nav-tabs" role="tablist">
+                                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+                            </ul>
+                            <div class="tab-content">
+                                <div class="tab-pane active" id="general">
+                                    {% set title %}{% trans "Name" %}{% endset %}
+                                    {{ inline.input("layout", title) }}
 
-                            {% set title %}{% trans "Tags" %}{% endset %}
-                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
-                            {{ inline.inputWithTags("tags", title, null, helpText) }}
+                                    {% set title %}{% trans "Tags" %}{% endset %}
+                                    {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                                    {{ inline.inputWithTags("tags", title, null, helpText) }}
 
-                            {% set attributes = [
-                            { name: "data-live-search", value: "true" },
-                            { name: "data-selected-text-format", value: "count > 4" }
-                            ] %}
+                                    {% set attributes = [
+                                    { name: "data-live-search", value: "true" },
+                                    { name: "data-selected-text-format", value: "count > 4" }
+                                    ] %}
 
-                            {% set title %}{% trans "Owner" %}{% endset %}
-                            {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}
-                            {{ inline.dropdown("userId", "single", title, "", [{userId:null, userName:""}]|merge(users), "userId", "userName", helpText, "selectPicker", "", "", "", attributes) }}
+                                    {% set title %}{% trans "Owner" %}{% endset %}
+                                    {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}
+                                    {{ inline.dropdown("userId", "single", title, "", [{userId:null, userName:""}]|merge(users), "userId", "userName", helpText, "selectPicker", "", "", "", attributes) }}
 
-                            {% set title %}{% trans "Owner User Group" %}{% endset %}
-                            {% set helpText %}{% trans "Show items owned by users in the selected User Group." %}{% endset %}
-                            {{ inline.dropdown("ownerUserGroupId", "single", title, "", [{groupId:null, group:""}]|merge(groups), "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
+                                    {% set title %}{% trans "Owner User Group" %}{% endset %}
+                                    {% set helpText %}{% trans "Show items owned by users in the selected User Group." %}{% endset %}
+                                    {{ inline.dropdown("ownerUserGroupId", "single", title, "", [{groupId:null, group:""}]|merge(groups), "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
 
-                            {% set title %}{% trans "Retired" %}{% endset %}
-                            {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
-                            {{ inline.dropdown("retired", "single", title, 0, values, "id", "value") }}
+                                </div>
+                                <div class="tab-pane" id="advanced">
 
-                            {% set title %}{% trans "Show" %}{% endset %}
-                            {% set values = [{id: 1, value: "All"}, {id: 2, value: "Only Used"}, {id: 3, value: "Only Unused"}] %}
-                            {{ inline.dropdown("layoutStatusId", "single", title, 1, values, "id", "value") }}
+                                    {% set title %}{% trans "Retired" %}{% endset %}
+                                    {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
+                                    {{ inline.dropdown("retired", "single", title, 0, values, "id", "value") }}
 
-                            {% set title %}{% trans "Description" %}{% endset %}
-                            {% set values = [{id: 1, value: "All"}, {id: 2, value: "1st line"}] %}
-                            {{ inline.dropdown("showDescriptionId", "single", title, 2, values, "id", "value") }}
+                                    {% set title %}{% trans "Show" %}{% endset %}
+                                    {% set values = [{id: 1, value: "All"}, {id: 2, value: "Only Used"}, {id: 3, value: "Only Unused"}] %}
+                                    {{ inline.dropdown("layoutStatusId", "single", title, 1, values, "id", "value") }}
+
+                                    {% set title %}{% trans "Description" %}{% endset %}
+                                    {% set values = [{id: 1, value: "All"}, {id: 2, value: "1st line"}] %}
+                                    {{ inline.dropdown("showDescriptionId", "single", title, 2, values, "id", "value") }}
+
+                                    {% set title %}{% trans "Media" %}{% endset %}
+                                    {{ inline.input("mediaLike", title) }}
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -197,7 +211,7 @@
                 // Initialize the jQuery File Upload widget:
                 form.fileupload({
                     url: url,
-                    disableImageResize: false
+                    disableImageResize: true
                 });
 
                 // Upload server status check for browsers with CORS support:

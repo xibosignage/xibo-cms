@@ -45,6 +45,8 @@
                                 <th>{% trans "Homepage" %}</th>
                                 <th>{% trans "Email" %}</th>
                                 <th>{% trans "Library Quota" %}</th>
+                                <th>{% trans "Last Login" %}</th>
+                                <th>{% trans "Logged In?" %}</th>
                                 <th>{% trans "Retired?" %}</th>
                                 <th>{% trans "First Name" %}</th>
                                 <th>{% trans "Last Name" %}</th>
@@ -90,6 +92,12 @@
                         "name": "libraryQuota",
                         "data": null,
                         "render": {"_": "libraryQuota", "display": "libraryQuotaFormatted", "sort": "libraryQuota"}
+                    },
+                    {"data": "lastAccessed", "visible": false},
+                    {
+                        "data": "loggedIn",
+                        "render": dataTableTickCrossColumn,
+                        "visible": false
                     },
                     {
                         "data": "retired",

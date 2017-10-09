@@ -48,6 +48,8 @@
                             <tr>
                                 <th>{% trans "Name" %}</th>
                                 <th>{% trans "Description" %}</th>
+                                <th>{% trans "Start Time" %}</th>
+                                <th>{% trans "End Time" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -84,6 +86,8 @@
             "columns": [
                 { "data": "name" },
                 { "data": "description" },
+                { "data": "startTime" },
+                { "data": "endTime" },
                 {
                     "orderable": false,
                     "data": dataTableButtonsColumn

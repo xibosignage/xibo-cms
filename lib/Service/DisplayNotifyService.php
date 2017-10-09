@@ -208,7 +208,11 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
                INNER JOIN `display`
                ON lkdisplaydg.DisplayID = display.displayID
-             WHERE `schedule`.CampaignID = :activeCampaignId
+               INNER JOIN `lkcampaignlayout` 
+               ON `lkcampaignlayout`.campaignId = `schedule`.campaignId
+               INNER JOIN lkcampaignlayout layouts
+               ON layouts.layoutId = lkcampaignlayout.layoutId
+             WHERE `layouts`.campaignId = :activeCampaignId
               AND (
                   (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
                   OR `schedule`.recurrence_range >= :fromDt 

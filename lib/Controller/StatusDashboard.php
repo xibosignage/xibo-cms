@@ -148,31 +148,50 @@ class StatusDashboard extends Base
                 $data['xmdsLimit'] = $xmdsLimit . ' ' . $suffixes[$base];
             }
 
-            $output = array();
+            $labels = [];
+            $usage = [];
+            $limit = [];
 
             foreach ($results as $row) {
+                $labels[] = $this->getDate()->getLocalDate($this->getSanitizer()->getDate('month', $row), 'F');
+
                 $size = ((double)$row['size']) / (pow(1024, $base));
-                $remaining = $xmdsLimit - $size;
-                $output[] = array(
-                    'label' => $this->getDate()->getLocalDate($this->getSanitizer()->getDate('month', $row), 'F'),
-                    'value' => round($size, 2),
-                    'limit' => round($remaining, 2)
-                );
+                $usage[] = round($size, 2);
+
+                $limit[] = round($xmdsLimit - $size, 2);
             }
 
             // What if we are empty?
-            if (count($output) == 0) {
-                $output[] = array(
-                    'label' => $this->getDate()->getLocalDate(null, 'F'),
-                    'value' => 0,
-                    'limit' => 0
-                );
+            if (count($results) == 0) {
+                $labels[] = $this->getDate()->getLocalDate(null, 'F');
+                $usage[] = 0;
+                $limit[] = 0;
+            }
+
+            // Organise our datasets
+            $dataSets = [
+                [
+                    'label' => __('Used'),
+                    'backgroundColor' => ($xmdsLimit > 0) ? 'rgb(255, 0, 0)' : 'rgb(11, 98, 164)',
+                    'data' => $usage
+                ]
+            ];
+
+            if ($xmdsLimit > 0) {
+                $dataSets[] = [
+                    'label' => __('Available'),
+                    'backgroundColor' => 'rgb(0, 204, 0)',
+                    'data' => $limit
+                ];
             }
 
             // Set the data
             $data['xmdsLimitSet'] = ($xmdsLimit > 0);
             $data['bandwidthSuffix'] = $suffixes[$base];
-            $data['bandwidthWidget'] = json_encode($output);
+            $data['bandwidthWidget'] = json_encode([
+                'labels' => $labels,
+                'datasets' => $dataSets
+            ]);
 
             // We would also like a library usage pie chart!
             if ($this->getUser()->libraryQuota != 0) {
@@ -207,38 +226,36 @@ class StatusDashboard extends Base
             // Decide what our units are going to be, based on the size
             $base = ($maxSize == 0) ? 0 : floor(log($maxSize) / log(1024));
 
-            $output = [];
+            $libraryUsage = [];
+            $libraryLabels = [];
             $totalSize = 0;
             foreach ($results as $library) {
-                $output[] = array(
-                    'value' => round((double)$library['SumSize'] / (pow(1024, $base)), 2),
-                    'label' => ucfirst($library['type'])
-                );
+                $libraryUsage[] = round((double)$library['SumSize'] / (pow(1024, $base)), 2);
+                $libraryLabels[] = ucfirst($library['type']) . ' ' . $suffixes[$base];
+
                 $totalSize = $totalSize + $library['SumSize'];
             }
 
             // Do we need to add the library remaining?
             if ($libraryLimit > 0) {
                 $remaining = round(($libraryLimit - $totalSize) / (pow(1024, $base)), 2);
-                $output[] = array(
-                    'value' => $remaining,
-                    'label' => __('Free')
-                );
+
+                $libraryUsage[] = $remaining;
+                $libraryLabels[] = __('Free') . ' ' . $suffixes[$base];
             }
 
             // What if we are empty?
-            if (count($output) == 0) {
-                $output[] = array(
-                    'label' => __('Empty'),
-                    'value' => 0
-                );
+            if (count($results) == 0 && $libraryLimit <= 0) {
+                $libraryUsage[] = 0;
+                $libraryLabels[] = __('Empty');
             }
 
-            $data['libraryLimitSet'] = $libraryLimit;
+            $data['libraryLimitSet'] = ($libraryLimit > 0);
             $data['libraryLimit'] = (round((double)$libraryLimit / (pow(1024, $base)), 2)) . ' ' . $suffixes[$base];
             $data['librarySize'] = ByteFormatter::format($totalSize, 1);
             $data['librarySuffix'] = $suffixes[$base];
-            $data['libraryWidget'] = json_encode($output);
+            $data['libraryWidgetLabels'] = json_encode($libraryLabels);
+            $data['libraryWidgetData'] = json_encode($libraryUsage);
 
             // Also a display widget
             $data['displays'] = $displays;
@@ -343,7 +360,7 @@ class StatusDashboard extends Base
         }
 
         // Do we have an embedded widget?
-        $data['embedded-widget'] = html_entity_decode($this->getConfig()->GetSetting('EMBEDDED_STATUS_WIDGET'));
+        $data['embeddedWidget'] = html_entity_decode($this->getConfig()->GetSetting('EMBEDDED_STATUS_WIDGET'));
 
         // Render the Theme and output
         $this->getState()->template = 'dashboard-status-page';

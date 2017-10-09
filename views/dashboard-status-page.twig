@@ -60,8 +60,8 @@
                         <i class="fa fa-cogs"></i>
                     </div>
                     <div class="widget-content pull-left">
-                        {% if embedded-widget != "" %}
-                            {{ embedded-widget|raw }}
+                        {% if embeddedWidget != "" %}
+                            {{ embeddedWidget|raw }}
                         {% else %}
                             <div class="title">{{ nowShowing }}</div>
                             <div class="comment">{% trans "Now Showing" %}</div>
@@ -88,7 +88,7 @@
                     <div class="clearfix"></div>
                 </div>
                 <div class="widget-body medium no-padding">
-                    <div id="bandwidthChart" class="morrisChart" style="width:99%; height: 230px;"></div>
+                    <canvas id="bandwidthChart" style="clear:both;" height="230"></canvas>
                 </div>
             </div>
         </div>
@@ -104,7 +104,7 @@
                     <div class="clearfix"></div>
                 </div>
                 <div class="widget-body medium no-padding">
-                    <div id="libraryChart" class="morrisChart" style="width:99%; height: 230px;"></div>
+                    <canvas id="libraryChart" style="clear:both;" width="350" height="220"></canvas>
                 </div>
             </div>
         </div>
@@ -173,33 +173,47 @@
 {% block javaScript %}
     <script type="text/javascript">
 
-        {% if xmdsLimitSet %}
-            var yKeys = ['value','limit'];
-            var labels = ['{% trans "Value" %}','{% trans "Remaining" %}'];
-        {% else %}
-            var yKeys = ['value'];
-            var labels = ['{% trans "Value" %}'];
-        {% endif %}
-
-        var bandwidthChart = {
-            type: 'bar',
-            data: {
-                element: 'bandwidthChart',
-                data: {{ bandwidthWidget|raw }},
-                xkey: 'label',
-                ykeys: yKeys,
-                labels: labels,
-                stacked: {% if xmdsLimitSet %}true{% else %}false{% endif %}
-        }
-        };
-
-        var libraryChart = {
-            type: 'donut',
-            data: {
-                element: 'libraryChart',
-                data: {{ libraryWidget|raw }},
-                formatter: function (y, data) { return y + "{{ librarySuffix }}"; }
+        // Create our chart
+        var bandwidthChart = new Chart($("#bandwidthChart"), {
+            type: "bar",
+            data: {{ bandwidthWidget|raw }},
+            options: {
+                scales: {
+                    xAxes: [{
+                        stacked: {% if xmdsLimit %}true{% else %}false{% endif %}
+                    }],
+                    yAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: "{{ bandwidthSuffix }}",
+                        },
+                        stacked: {% if xmdsLimit %}true{% else %}false{% endif %}
+                    }]
+                },
+                legend: {
+                    display: false
+                },
+                maintainAspectRatio: false,
             }
-        };
+        });
+
+        var libraryData = {{ libraryWidgetData|raw }};
+        var colours = new Array();
+        for(var i = 0; i < libraryData.length; i++) {
+            colours.push($c.rand());
+        }
+        var libraryChart = new Chart($("#libraryChart"), {
+            type: 'pie',
+            data: {
+                datasets: [{
+                    data: libraryData,
+                    backgroundColor: colours
+                }],
+                labels: {{ libraryWidgetLabels|raw }}
+            },
+            options: {
+                maintainAspectRatio: false
+            }
+        });
     </script>
 {% endblock %}

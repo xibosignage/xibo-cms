@@ -1106,7 +1106,7 @@ class DisplayGroup extends Base
      *      )
      *  ),
      *  @SWG\Parameter(
-     *      name="unassignLayoutsId",
+     *      name="unassignLayoutId",
      *      type="array",
      *      in="formData",
      *      description="Optional array of Layouts Id to unassign",
@@ -1146,7 +1146,7 @@ class DisplayGroup extends Base
         }
 
         // Check for unassign
-        foreach ($this->getSanitizer()->getIntArray('unassignLayoutsId') as $layoutId) {
+        foreach ($this->getSanitizer()->getIntArray('unassignLayoutId') as $layoutId) {
             // Get the layout record
             $layout = $this->layoutFactory->getById($layoutId);
 

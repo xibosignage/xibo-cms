@@ -327,7 +327,7 @@ class Schedule extends Base
                     'url' => ($editable) ? $url : null,
                     'start' => $fromDt->format('U') * 1000,
                     'end' => $toDt->format('U') * 1000,
-                    'sameDay' => ($fromDt->day == $toDt->day),
+                    'sameDay' => ($fromDt->day == $toDt->day && $fromDt->month == $toDt->month && $fromDt->year == $toDt->year),
                     'editable' => $editable,
                     'event' => $row,
                     'scheduleEvent' => $scheduleEvent

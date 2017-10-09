@@ -490,7 +490,15 @@ class DataSet implements \JsonSerializable
         if ($this->isLookup)
             throw new ConfigurationException(__('Lookup Tables cannot be deleted'));
 
-        // TODO check we aren't being used
+        if ($this->getStore()->exists('
+            SELECT widgetId 
+              FROM `widgetoption`
+              WHERE `widgetoption`.type = \'attrib\'
+                AND `widgetoption`.option = \'dataSetId\'
+                AND `widgetoption`.value = :dataSetId
+        ', ['dataSetId' => $this->dataSetId])) {
+            throw new InvalidArgumentException('Cannot delete because DataSet is in use on one or more Layouts.', 'dataSetId');
+        }
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {

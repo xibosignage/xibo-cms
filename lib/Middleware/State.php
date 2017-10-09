@@ -174,7 +174,7 @@ class State extends Middleware
         });
 
         // Set some public routes
-        $app->publicRoutes = array('/login', '/logout', '/clock', '/about', '/login/ping');
+        $app->publicRoutes = array('/login', '/clock', '/about', '/login/ping');
 
         // The state of the application response
         $app->container->singleton('state', function() { return new ApplicationState(); });
@@ -192,8 +192,13 @@ class State extends Middleware
         self::configureCache($app->container, $app->configService, $app->logWriter->getWriter());
 
         // Register the help service
-        $app->container->singleton('helpService', function($container) {
-            return new HelpService($container->store, $container->configService, $container->pool);
+        $app->container->singleton('helpService', function($container) use ($app) {
+            return new HelpService(
+                $container->store,
+                $container->configService,
+                $container->pool,
+                $app->router()->getCurrentRoute()->getPattern()
+            );
         });
 
         // Create a session

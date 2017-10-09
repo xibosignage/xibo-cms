@@ -35,6 +35,7 @@ $app->get('/', function () use ($app) {
 
         // We've seen it
         $user->newUserWizard = 1;
+        $user->save(['validate' => false, 'saveUserOptions' => false]);
     }
     else {
         $app->logService->debug('Showing the homepage: %s', $user->homePageId);
