@@ -176,14 +176,6 @@ class Display extends Base
         if (!$this->getUser()->checkViewable($display))
             throw new AccessDeniedException();
 
-        // Errors in the last 24 hours
-        $errors = $this->logFactory->query(null, [
-            'displayId' => $display->displayId,
-            'type' => 'ERROR',
-            'fromDt' => $this->getDate()->getLocalDate($this->getDate()->parse()->subHours(24), 'U'),
-            'toDt' => $this->getDate()->getLocalDate(null, 'U')
-        ]);
-
         // Zero out some variables
         $layouts = [];
         $widgets = [];
@@ -302,7 +294,12 @@ class Display extends Base
             'requiredFiles' => [],
             'display' => $display,
             'timeAgo' => $this->getDate()->parse($display->lastAccessed, 'U')->diffForHumans(),
-            'errors' => $errors,
+            'errorSearch' => http_build_query([
+                'displayId' => $display->displayId,
+                'type' => 'ERROR',
+                'fromDt' => $this->getDate()->getLocalDate($this->getDate()->parse()->subHours(12)),
+                'toDt' => $this->getDate()->getLocalDate()
+            ]),
             'inventory' => [
                 'layouts' => $layouts,
                 'media' => $media,
