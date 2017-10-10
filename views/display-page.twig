@@ -29,6 +29,16 @@
 
                             {% set title %}{% trans "Display Profile" %}{% endset %}
                             {{ inline.dropdown("displayProfileId", "single", title, "", [{displayProfileId:null, name:""}]|merge(displayProfiles), "displayProfileId", "name") }}
+
+                            {% set title %}{% trans "Authorised?" %}{% endset %}
+                            {% set yesOption %}{% trans "Yes" %}{% endset %}
+                            {% set noOption %}{% trans "No" %}{% endset %}
+                            {% set options = [
+                            { optionid: "", option: "" },
+                            { optionid: "1", option: yesOption },
+                            { optionid: "0", option: noOption},
+                            ] %}
+                            {{ inline.dropdown("authorised", "single", title, "", options, "optionid", "option") }}
                         </form>
                     </div>
                 </div>
