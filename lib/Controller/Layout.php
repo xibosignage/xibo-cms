@@ -603,6 +603,13 @@ class Layout extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="exactTags",
+     *      in="formData",
+     *      description="A flag indicating whether to treat the tags filter as an exact match",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="ownerUserGroupId",
      *      in="formData",
      *      description="Filter by users in this UserGroupId",
@@ -642,6 +649,7 @@ class Layout extends Base
             'userId' => $this->getSanitizer()->getInt('userId'),
             'retired' => $this->getSanitizer()->getInt('retired'),
             'tags' => $this->getSanitizer()->getString('tags'),
+            'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
             'filterLayoutStatusId' => $this->getSanitizer()->getInt('layoutStatusId'),
             'layoutId' => $this->getSanitizer()->getInt('layoutId'),
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),

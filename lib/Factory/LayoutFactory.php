@@ -1033,6 +1033,8 @@ class LayoutFactory extends BaseFactory
                     )
                 ';
             } else {
+                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+
                 $body .= " AND layout.layoutID IN (
                 SELECT lktaglayout.layoutId
                   FROM tag
@@ -1044,11 +1046,14 @@ class LayoutFactory extends BaseFactory
                     $i++;
 
                     if ($i == 1)
-                        $body .= " WHERE tag LIKE :tags$i ";
+                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
                     else
-                        $body .= " OR tag LIKE :tags$i ";
+                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
 
-                    $params['tags' . $i] = '%' . $tag . '%';
+                    if ($operator === '=')
+                        $params['tags' . $i] = $tag;
+                    else
+                        $params['tags' . $i] = '%' . $tag . '%';
                 }
 
                 $body .= " ) ";
