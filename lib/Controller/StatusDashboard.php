@@ -145,7 +145,7 @@ class StatusDashboard extends Base
             if ($xmdsLimit > 0) {
                 // Convert to appropriate size (xmds limit is in KB)
                 $xmdsLimit = ($xmdsLimit * 1024) / (pow(1024, $base));
-                $data['xmdsLimit'] = $xmdsLimit . ' ' . $suffixes[$base];
+                $data['xmdsLimit'] = round($xmdsLimit, 2) . ' ' . $suffixes[$base];
             }
 
             $labels = [];
