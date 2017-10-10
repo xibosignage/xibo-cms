@@ -663,7 +663,7 @@ class Campaign extends Base
         $extendedLayouts = [];
         foreach($layouts as $layout)
         {
-            $duration += $layout->duration ;
+            $duration += $layout->duration;
             $extendedLayouts[] = ['layout' => $layout,
                                   'duration' => $layout->duration,
                                   'previewOptions' => [
