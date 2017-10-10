@@ -359,7 +359,8 @@ class State extends Middleware
                 $container->store,
                 $container->applicationFactory,
                 $container->applicationRedirectUriFactory,
-                $container->applicationScopeFactory
+                $container->applicationScopeFactory,
+                $container->userFactory
             );
         });
 
