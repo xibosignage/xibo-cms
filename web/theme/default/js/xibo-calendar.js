@@ -405,6 +405,15 @@ var setupScheduleForm = function(dialog) {
             }
         });
     });
+
+    // Add a button for duplicating this event
+    if ($(dialog).find("#scheduleEditForm").length > 0) {
+        $button = $("<button>").addClass("btn btn-info").attr("id", "scheduleDuplateButton").html(translations.duplicate).on("click", function() {
+            duplicateScheduledEvent()
+        });
+
+        $(dialog).find('.modal-footer').prepend($button);
+    }
 };
 
 /**
@@ -513,6 +522,17 @@ var processScheduleFormElements = function(el) {
 
             break;
     }
+}
+
+var duplicateScheduledEvent = function() {
+    // Set the edit form URL to that of the add form
+    var $scheduleForm = $("#scheduleEditForm");
+    $scheduleForm.attr("action", $scheduleForm.data().addUrl).attr("method", "post");
+
+    // Remove the duplicate button
+    $("#scheduleDuplateButton").remove();
+
+    toastr.info($scheduleForm.data().duplicatedMessage);
 }
 
 /**

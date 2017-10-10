@@ -197,7 +197,7 @@ class State extends Middleware
                 $container->store,
                 $container->configService,
                 $container->pool,
-                $app->router()->getCurrentRoute()->getPattern()
+                ($app->router()->getCurrentRoute() !== null) ? $app->router()->getCurrentRoute()->getPattern() : null
             );
         });
 
