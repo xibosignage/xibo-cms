@@ -925,3 +925,7 @@ ul li.active.tab-design:hover a {
     top: 10px;
     color: red;
 }
+
+.spacing-whitespace-pre {
+    white-space: pre-wrap;
+}

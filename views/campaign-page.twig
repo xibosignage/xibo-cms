@@ -73,7 +73,10 @@ This is the template for the campaign page
                 }
             },
             "columns": [
-                { "data": "campaign" },
+                {
+                    "data": "campaign" ,
+                    "render": dataTableSpacingPreformatted
+                },
                 { "data": "numberLayouts" },
                 {
                     "sortable": false,
@@ -116,7 +119,10 @@ This is the template for the campaign page
                 },
                 "columns": [
                     { "data": "layoutId" },
-                    { "data": "layout" },
+                    {
+                        "data": "layout",
+                        "render": dataTableSpacingPreformatted
+                    },
                     {
                         "sortable": false,
                         "data": function(data, type, row, meta) {

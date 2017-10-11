@@ -500,6 +500,16 @@ function dataTableDateFromUnix(data, type, row) {
     return moment(data, "X").tz(timezone).format(jsDateFormat);
 }
 
+function dataTableSpacingPreformatted(data, type, row) {
+    if (type !== "display")
+        return data;
+
+    if (data === null || data === "")
+        return "";
+
+    return "<span class=\"spacing-whitespace-pre\">" + data + "</span>";
+}
+
 /**
  * DataTable Create tags
  * @param data
