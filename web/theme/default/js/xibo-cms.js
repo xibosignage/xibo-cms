@@ -704,7 +704,16 @@ function XiboFormRender(sourceObj, data) {
                         });
                 }
 
+                // Focus in the first input
                 $('input[type=text]', dialog).eq(0).focus();
+
+                $('input[type=text]', dialog).each(function(index, el) {
+                    formRenderDetectSpacingIssues(el);
+
+                    $(el).on("keyup", $.debounce(500, function() {
+                        formRenderDetectSpacingIssues(el);
+                    }))
+                });
 
                 // Set up dependencies between controls
                 if (response.fieldActions != '') {
@@ -824,6 +833,22 @@ function XiboFormRender(sourceObj, data) {
 
     // Dont then submit the link/button
     return false;
+}
+
+function formRenderDetectSpacingIssues(element) {
+    var $el = $(element);
+    var value = $el.val();
+
+    if (value !== '' && (value.startsWith(" ") || value.endsWith(" ") || value.indexOf("  ") > -1)) {
+        // Add a little icon to the fields parent to inform of this issue
+        console.log("Field with strange spacing: " + $el.attr("name"));
+
+        var warning = $("<span></span>").addClass("fa fa-exclamation-circle spacing-warning-icon").attr("title", translations.spacesWarning);
+
+        $el.parent().append(warning);
+    } else {
+        $el.parent().find('.spacing-warning-icon').remove();
+    }
 }
 
 function XiboMultiSelectFormRender(button) {
