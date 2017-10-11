@@ -217,7 +217,8 @@ class DisplayGroup implements \JsonSerializable
     }
 
     /**
-     * Set Notify Required
+     * Set Collection Required
+     *  If true will send a player action to collect immediately
      * @param bool|true $collectRequired
      */
     public function setCollectRequired($collectRequired = true)
