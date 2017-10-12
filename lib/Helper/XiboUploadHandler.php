@@ -318,6 +318,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $controller->getLog()->error('Error uploading media: %s', $e->getMessage());
             $controller->getLog()->debug($e->getTraceAsString());
 
+            // Unlink the temporary file
+            @unlink($filePath);
+
             $file->error = $e->getMessage();
 
             $controller->getApp()->commit = false;
