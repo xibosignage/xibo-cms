@@ -71,8 +71,13 @@ class RemoteDataSetFetchTask implements TaskInterface
             $processing = array_reverse($processing);
             foreach($processing as $dataSet) {
                 if ($runTime >= $dataSet->getNextSyncTime()) {
-                    $this->log->debug('Fetch and process ' . $dataSet->dataSet);
+                    // Truncate only if we also fetch new Data
+                    if ($runTime >= $dataSet->getNextClearTime()) {
+                        $this->log->debug('Truncate ' . $dataSet->dataSet);
+                        $dataSet->deleteData();
+                    }
                     
+                    $this->log->debug('Fetch and process ' . $dataSet->dataSet);
                     $result = $factory->callRemoteService($dataSet);
                     $controller->process($dataSet, (array) $result);
                 }
