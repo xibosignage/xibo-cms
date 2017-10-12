@@ -466,9 +466,23 @@ class DataSetRemote extends Base
      * Tries to process received Data against the configured DataSet with all Columns
      * 
      * @param \Xibo\Entity\DataSetRemote $dataSet The RemoteDataset to process
+     * @param \stdClass $results A simple Object with one Property 'entries' which contains all results
+     */
+    public function processResults(\Xibo\Entity\DataSetRemote $dataSet, \stdClass $results) {
+        if (property_exists('entries', $results) && is_array($results->entries)) {
+            foreach ($result as $results->entries) {
+                $this->process($dataSet, $result);
+            }
+        }
+    }
+
+    /**
+     * Tries to process received Data against the configured DataSet with all Columns
+     * 
+     * @param \Xibo\Entity\DataSetRemote $dataSet The RemoteDataset to process
      * @param array The JSON received from the remote endpoint
      */
-    public function process(\Xibo\Entity\DataSetRemote $dataSet, array $result) {
+    private function process(\Xibo\Entity\DataSetRemote $dataSet, array $result) {
         // Remote Data has to have the configured DataRoot which has to be an Array
         if (empty($dataSet->dataRoot) || array_key_exists($dataSet->dataRoot, $result)) {
             $data = null;

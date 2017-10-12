@@ -77,9 +77,15 @@ class RemoteDataSetFetchTask implements TaskInterface
                         $dataSet->deleteData();
                     }
                     
+                    // Getting the dependant DataSet to process the current DataSet on
+                    $dependant = null;
+                    if ($dataSet->runsAfter != $dataSet->dataSetId) {
+                        $dependant = $factory->getById($dataSet->dataSetId);
+                    }
+                    
                     $this->log->debug('Fetch and process ' . $dataSet->dataSet);
-                    $result = $factory->callRemoteService($dataSet);
-                    $controller->process($dataSet, (array) $result);
+                    $results = $factory->callRemoteService($dataSet, $dependant);
+                    $controller->processResults($dataSet, $results);
                 }
             }
         }

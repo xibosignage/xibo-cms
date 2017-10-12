@@ -302,17 +302,38 @@ class DataSetFactory extends BaseFactory
     /**
      * Makes a call to a Remote Dataset and returns all received data as a JSON decoded Object.
      * In case of an Error, null is returned instead.
-     * @param \Xibo\Entity\DataSetRemote dataSet The Dataset to get Data for
-     * @return Object|ErrorString
+     * @param \Xibo\Entity\DataSetRemote $dataSet The Dataset to get Data for
+     * @param \Xibo\Entity\DataSet $dependant The Dataset $dataSet depends on
+     * @return \stdClass{entries:[],number:int}
      */
-    public function callRemoteService(DataSetRemote $dataSet)
+    public function callRemoteService(DataSetRemote $dataSet, DataSet $dependant)
     {
-        $curl = curl_init();
-        curl_setopt_array($curl, $dataSet->getCurlParams());
-        $result = curl_exec($curl);
-        $error = curl_errno($curl) . ' ' . curl_error($curl);
-        curl_close($curl);
+        $result = new \stdClass();
+        $result->entries = [];
+        $result->number = 0;
         
-        return $result !== false ? json_decode($result) : $error;
+        // Getting all dependant values if needed
+        $values = [[]]; // just an empty array if no fields are used in the URI or PostData
+        if (($dependant != null) && $dataSet->containsDependatFieldsInRequest()) {
+            $values = $dependant->getData();
+        }
+        
+        // Fetching data for every field in the dependant dataSet
+        foreach ($values as $options) {
+            $curl = curl_init();
+            curl_setopt_array($curl, $dataSet->getCurlParams($options));
+            $content = curl_exec($curl);
+            $error = curl_errno($curl) . ' ' . curl_error($curl);
+            curl_close($curl);
+
+            if ($content !== false) {
+                $result->entries[] = json_decode($content);
+                $result->number = $result->number + 1;
+            } else {
+                $this->getLog()->error($error);
+            }
+        }
+        
+        return $result;
     }
 }
