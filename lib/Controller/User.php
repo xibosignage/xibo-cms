@@ -444,9 +444,11 @@ class User extends Base
         if ($this->getUser()->isSuperAdmin()) {
             $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
             $user->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
+            $user->isDisplayNotification = $this->getSanitizer()->getCheckbox('isDisplayNotification');
         } else {
             $user->userTypeId = 3;
             $user->isSystemNotification = 0;
+            $user->isDisplayNotification = 0;
         }
 
         $user->firstName = $this->getSanitizer()->getString('firstName');
@@ -508,6 +510,7 @@ class User extends Base
         if ($this->getUser()->isSuperAdmin()) {
             $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
             $user->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
+            $user->isDisplayNotification = $this->getSanitizer()->getCheckbox('isDisplayNotification');
         }
 
         $user->firstName = $this->getSanitizer()->getString('firstName');

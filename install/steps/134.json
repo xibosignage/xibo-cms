@@ -5,6 +5,14 @@
     {
       "step": "Add Xibo for webOS display profile",
       "action": "INSERT INTO displayprofile (name, type, config, isdefault, userId) VALUES ('webOS', 'lg', '{}', 1, 1)"
+    },
+    {
+      "step": "Add isDisplayNotification setting to Groups",
+      "action": "ALTER TABLE `group` ADD isDisplayNotification TINYINT DEFAULT 0 NULL;"
+    },
+    {
+      "step": "Remove MAINTENANCE_ALERTS_FOR_VIEW_USERS setting",
+      "action": "DELETE FROM `setting` WHERE setting = 'MAINTENANCE_ALERTS_FOR_VIEW_USERS';"
     }
   ]
 }

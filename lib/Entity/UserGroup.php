@@ -64,6 +64,12 @@ class UserGroup
      */
     public $isSystemNotification = 0;
 
+    /**
+     * @SWG\Property(description="Does this Group receive display notifications.")
+     * @var int
+     */
+    public $isDisplayNotification = 0;
+
     // Users
     private $users = [];
 
@@ -286,12 +292,13 @@ class UserGroup
      */
     private function add()
     {
-        $this->groupId = $this->getStore()->insert('INSERT INTO `group` (`group`, IsUserSpecific, libraryQuota, `isSystemNotification`)
-              VALUES (:group, :isUserSpecific, :libraryQuota, :isSystemNotification)', [
+        $this->groupId = $this->getStore()->insert('INSERT INTO `group` (`group`, IsUserSpecific, libraryQuota, `isSystemNotification`, `isDisplayNotification`)
+              VALUES (:group, :isUserSpecific, :libraryQuota, :isSystemNotification, :isDisplayNotification)', [
             'group' => $this->group,
             'isUserSpecific' => $this->isUserSpecific,
             'libraryQuota' => $this->libraryQuota,
-            'isSystemNotification' => $this->isSystemNotification
+            'isSystemNotification' => $this->isSystemNotification,
+            'isDisplayNotification' => $this->isDisplayNotification
         ]);
     }
 
@@ -300,11 +307,19 @@ class UserGroup
      */
     private function edit()
     {
-        $this->getStore()->update('UPDATE `group` SET `group` = :group, libraryQuota = :libraryQuota, `isSystemNotification` = :isSystemNotification WHERE groupId = :groupId', [
+        $this->getStore()->update('
+          UPDATE `group` SET 
+            `group` = :group, 
+            libraryQuota = :libraryQuota, 
+            `isSystemNotification` = :isSystemNotification,
+            `isDisplayNotification` = :isDisplayNotification 
+           WHERE groupId = :groupId
+        ', [
             'groupId' => $this->groupId,
             'group' => $this->group,
             'libraryQuota' => $this->libraryQuota,
-            'isSystemNotification' => $this->isSystemNotification
+            'isSystemNotification' => $this->isSystemNotification,
+            'isDisplayNotification' => $this->isDisplayNotification
         ]);
     }
 

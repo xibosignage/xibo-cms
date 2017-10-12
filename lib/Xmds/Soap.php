@@ -20,7 +20,6 @@ use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\Schedule;
 use Xibo\Entity\Stat;
-use Xibo\Entity\UserGroup;
 use Xibo\Entity\Widget;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\DeadlockException;
@@ -1708,25 +1707,22 @@ class Soap
 
             // Do we need to email?
             if ($this->display->emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected')
-                && $this->getConfig()->GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On'
-            ) {
+                && $this->getConfig()->GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On') {
 
                 $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
                 $body = sprintf(__("Display %s with ID %d is now back online."), $this->display->display, $this->display->displayId);
 
-                $notification = $this->notificationFactory->createSystemNotification($subject, $body, $this->getDate()->parse());
+                // Create a notification assigned to system wide user groups
+                try {
+                    $notification = $this->notificationFactory->createSystemNotification($subject, $body, $this->getDate()->parse());
 
-                // Get a list of people that have view access to the display?
-                if ($this->getConfig()->GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1) {
-
-                    foreach ($this->userGroupFactory->getByDisplayGroupId($this->display->displayGroupId) as $group) {
-                        /* @var UserGroup $group */
+                    // Add in any displayNotificationGroups, with permissions
+                    foreach ($this->userGroupFactory->getDisplayNotificationGroups($this->display->displayGroupId) as $group) {
                         $notification->assignUserGroup($group);
                     }
-                }
 
-                try {
                     $notification->save();
+
                 } catch (\Exception $e) {
                     $this->getLog()->error('Unable to send email alert for display %s with subject %s and body %s', $this->display->display, $subject, $body);
                 }
