@@ -398,6 +398,15 @@ CREATE TABLE IF NOT EXISTS `lktagcampaign` (
 
 -- --------------------------------------------------------
 
+create table lktagdisplaygroup
+(
+  lkTagDisplayGroupId int auto_increment primary key,
+  tagId int not null,
+  displayGroupId int not null,
+  constraint tagId
+  unique (tagId, displayGroupId)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
 --
 -- Table structure for table `lkusergroup`
 --

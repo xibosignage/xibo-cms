@@ -503,7 +503,8 @@ class State extends Middleware
                 $container->mediaFactory,
                 $container->scheduleFactory,
                 $container->displayEventFactory,
-                $container->requiredFileFactory
+                $container->requiredFileFactory,
+                $container->tagFactory
             );
         });
 
@@ -523,7 +524,8 @@ class State extends Middleware
                 $container->moduleFactory,
                 $container->mediaFactory,
                 $container->commandFactory,
-                $container->scheduleFactory
+                $container->scheduleFactory,
+                $container->tagFactory
             );
         });
 
@@ -1163,7 +1165,8 @@ class State extends Middleware
                 $container->sanitizerService,
                 $container->user,
                 $container->userFactory,
-                $container->permissionFactory
+                $container->permissionFactory,
+                $container->tagFactory
             );
         });
 

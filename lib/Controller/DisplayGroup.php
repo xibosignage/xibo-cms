@@ -31,6 +31,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\ScheduleFactory;
+use Xibo\Factory\TagFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -89,6 +90,11 @@ class DisplayGroup extends Base
     private $scheduleFactory;
 
     /**
+     * @var TagFactory
+     */
+    private $tagFactory;
+
+    /**
      * Set common dependencies.
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
@@ -105,8 +111,9 @@ class DisplayGroup extends Base
      * @param MediaFactory $mediaFactory
      * @param CommandFactory $commandFactory
      * @param ScheduleFactory $scheduleFactory
+     * @param TagFactory $tagFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $moduleFactory, $mediaFactory, $commandFactory, $scheduleFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $moduleFactory, $mediaFactory, $commandFactory, $scheduleFactory, $tagFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -118,6 +125,7 @@ class DisplayGroup extends Base
         $this->mediaFactory = $mediaFactory;
         $this->commandFactory = $commandFactory;
         $this->scheduleFactory = $scheduleFactory;
+        $this->tagFactory = $tagFactory;
     }
 
     /**
@@ -194,7 +202,9 @@ class DisplayGroup extends Base
             'displayGroup' => $this->getSanitizer()->getString('displayGroup'),
             'displayId' => $this->getSanitizer()->getInt('displayId'),
             'nestedDisplayId' => $this->getSanitizer()->getInt('nestedDisplayId'),
-            'dynamicCriteria' => $this->getSanitizer()->getString('dynamicCriteria')
+            'dynamicCriteria' => $this->getSanitizer()->getString('dynamicCriteria'),
+            'tags' => $this->getSanitizer()->getString('tags'),
+            'exactTags' => $this->getSanitizer()->getCheckbox('exactTags')
         ];
 
         $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
@@ -393,6 +403,13 @@ class DisplayGroup extends Base
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="A comma separated list of tags for this item",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="isDynamic",
      *      in="formData",
      *      description="Flag indicating whether this DisplayGroup is Dynamic",
@@ -425,6 +442,7 @@ class DisplayGroup extends Base
 
         $displayGroup->displayGroup = $this->getSanitizer()->getString('displayGroup');
         $displayGroup->description = $this->getSanitizer()->getString('description');
+        $displayGroup->tags = $this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags'));
         $displayGroup->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = $this->getSanitizer()->getString('dynamicCriteria');
         $displayGroup->userId = $this->getUser()->userId;
@@ -471,6 +489,13 @@ class DisplayGroup extends Base
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="A comma separated list of tags for this item",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="isDynamic",
      *      in="formData",
      *      description="Flag indicating whether this DisplayGroup is Dynamic",
@@ -501,6 +526,7 @@ class DisplayGroup extends Base
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->displayGroup = $this->getSanitizer()->getString('displayGroup');
         $displayGroup->description = $this->getSanitizer()->getString('description');
+        $displayGroup->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
         $displayGroup->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? $this->getSanitizer()->getString('dynamicCriteria') : null;
         $displayGroup->save();
