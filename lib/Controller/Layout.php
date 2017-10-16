@@ -640,8 +640,14 @@ class Layout extends Base
         // Should we parse the description into markdown
         $showDescriptionId = $this->getSanitizer()->getInt('showDescriptionId');
 
-        // Embed?
-        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+        // We might need to embed some extra content into the response if the "Show Description"
+        // is set to media listing
+        if ($showDescriptionId === 3) {
+            $embed = ['regions', 'playlists', 'widgets'];
+        } else {
+            // Embed?
+            $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+        }
 
         // Get all layouts
         $layouts = $this->layoutFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
@@ -676,6 +682,7 @@ class Layout extends Base
                 continue;
 
             $layout->includeProperty('buttons');
+            $layout->excludeProperty('regions');
 
             $layout->thumbnail = '';
 
@@ -694,6 +701,24 @@ class Layout extends Base
                 } else if ($showDescriptionId == 2) {
                     $layout->descriptionFormatted = strtok($layout->description, "\n");
                 }
+            }
+
+            if ($showDescriptionId === 3) {
+                // Load in the entire object model - creating module objects so that we can get the name of each
+                // widget and its items.
+                foreach ($layout->regions as $region) {
+                    foreach ($region->playlists as $playlist) {
+                        /* @var Playlist $playlist */
+
+                        foreach ($playlist->widgets as $widget) {
+                            /* @var Widget $widget */
+                            $widget->module = $this->moduleFactory->createWithWidget($widget, $region);
+                        }
+                    }
+                }
+
+                // provide our layout object to a template to render immediately
+                $layout->descriptionFormatted = $this->renderTemplateToString('layout-page-grid-widgetlist', $layout);
             }
 
             switch ($layout->status) {
