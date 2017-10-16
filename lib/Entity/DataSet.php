@@ -424,7 +424,7 @@ class DataSet implements \JsonSerializable
             throw new InvalidArgumentException(__('Description can not be longer than 254 characters'), 'description');
 
         try {
-            $existing = $this->dataSetFactory->getByName($this->dataSet);
+            $existing = $this->dataSetFactory->getByName($this->dataSet, $this->userId);
 
             if ($this->dataSetId == 0 || $this->dataSetId != $existing->dataSetId)
                 throw new DuplicateEntityException(sprintf(__('There is already dataSet called %s. Please choose another name.'), $this->dataSet));
