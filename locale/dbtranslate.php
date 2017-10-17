@@ -213,6 +213,14 @@ echo __('Audio');
 echo __('Play a video locally stored on the client');
 echo __('PDF');
 echo __('PDF document viewer');
+echo __('Notification');
+echo __('Display Notifications from the Notification Centre');
+
+echo __('Stocks Module');
+echo __('A module for displaying Stocks information. Uses the Yahoo API');
+echo __('Currencies Module');
+echo __('A module for displaying Currencies information. Uses the Yahoo API');
+
 echo __('Stocks');
 echo __('Yahoo Stocks');
 echo __('Currencies');
@@ -229,6 +237,7 @@ echo __('Twitter Metro');
 echo __('Twitter Metro Search Module');
 echo __('Weather');
 echo __('Weather Powered by DarkSky');
+
 
 echo __('Media will be created with these settings. If public everyone will be able to view and use this media.');
 echo __('New layouts will be created with these settings. If public everyone will be able to view and use this layout.');
