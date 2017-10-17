@@ -603,6 +603,13 @@ class Layout extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="exactTags",
+     *      in="formData",
+     *      description="A flag indicating whether to treat the tags filter as an exact match",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="ownerUserGroupId",
      *      in="formData",
      *      description="Filter by users in this UserGroupId",
@@ -633,8 +640,14 @@ class Layout extends Base
         // Should we parse the description into markdown
         $showDescriptionId = $this->getSanitizer()->getInt('showDescriptionId');
 
-        // Embed?
-        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+        // We might need to embed some extra content into the response if the "Show Description"
+        // is set to media listing
+        if ($showDescriptionId === 3) {
+            $embed = ['regions', 'playlists', 'widgets'];
+        } else {
+            // Embed?
+            $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+        }
 
         // Get all layouts
         $layouts = $this->layoutFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
@@ -642,6 +655,7 @@ class Layout extends Base
             'userId' => $this->getSanitizer()->getInt('userId'),
             'retired' => $this->getSanitizer()->getInt('retired'),
             'tags' => $this->getSanitizer()->getString('tags'),
+            'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
             'filterLayoutStatusId' => $this->getSanitizer()->getInt('layoutStatusId'),
             'layoutId' => $this->getSanitizer()->getInt('layoutId'),
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
@@ -668,6 +682,7 @@ class Layout extends Base
                 continue;
 
             $layout->includeProperty('buttons');
+            $layout->excludeProperty('regions');
 
             $layout->thumbnail = '';
 
@@ -686,6 +701,24 @@ class Layout extends Base
                 } else if ($showDescriptionId == 2) {
                     $layout->descriptionFormatted = strtok($layout->description, "\n");
                 }
+            }
+
+            if ($showDescriptionId === 3) {
+                // Load in the entire object model - creating module objects so that we can get the name of each
+                // widget and its items.
+                foreach ($layout->regions as $region) {
+                    foreach ($region->playlists as $playlist) {
+                        /* @var Playlist $playlist */
+
+                        foreach ($playlist->widgets as $widget) {
+                            /* @var Widget $widget */
+                            $widget->module = $this->moduleFactory->createWithWidget($widget, $region);
+                        }
+                    }
+                }
+
+                // provide our layout object to a template to render immediately
+                $layout->descriptionFormatted = $this->renderTemplateToString('layout-page-grid-widgetlist', $layout);
             }
 
             switch ($layout->status) {
@@ -1129,7 +1162,7 @@ class Layout extends Base
      * @SWG\Parameter(
      *      name="layoutId",
      *      in="path",
-     *      description="The Layout Id to Untag",
+     *      description="The Layout Id to get the status",
      *      type="integer",
      *      required=true
      *   ),

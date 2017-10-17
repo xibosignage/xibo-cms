@@ -43,14 +43,21 @@ class HelpService implements HelpServiceInterface
      */
     private $pool;
 
+    /** @var  string */
+    private $currentPage;
+
     /**
      * @inheritdoc
      */
-    public function __construct($store, $config, $pool)
+    public function __construct($store, $config, $pool, $currentPage)
     {
         $this->store = $store;
         $this->config = $config;
         $this->pool = $pool;
+
+        // Only take the first element of the current page
+        $currentPage = explode('/', ltrim($currentPage, '/'));
+        $this->currentPage = $currentPage[0];
     }
 
     /**
@@ -83,10 +90,10 @@ class HelpService implements HelpServiceInterface
     /**
      * @inheritdoc
      */
-    public function link($topic = '', $category = "General")
+    public function link($topic = null, $category = 'General')
     {
         // if topic is empty use the page name
-        $topic = ucfirst($topic);
+        $topic = ucfirst(($topic === null) ? $this->currentPage : $topic);
 
         $dbh = $this->getStore()->getConnection();
 

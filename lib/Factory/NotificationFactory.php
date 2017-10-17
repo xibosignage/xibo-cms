@@ -60,9 +60,10 @@ class NotificationFactory extends BaseFactory
      * @param string $body
      * @param Date $date
      * @param bool $isEmail
+     * @param bool $addGroups
      * @return Notification
      */
-    public function createSystemNotification($subject, $body, $date, $isEmail = true)
+    public function createSystemNotification($subject, $body, $date, $isEmail = true, $addGroups = true)
     {
         $notification = $this->createEmpty();
         $notification->subject = $subject;
@@ -74,10 +75,12 @@ class NotificationFactory extends BaseFactory
         $notification->userId = 0;
         $notification->isSystem = 1;
 
-        // Add the system notifications group - if there is one.
-        foreach ($this->userGroupFactory->getSystemNotificationGroups() as $group) {
-            /* @var \Xibo\Entity\UserGroup $group */
-            $notification->assignUserGroup($group);
+        if ($addGroups) {
+            // Add the system notifications group - if there is one.
+            foreach ($this->userGroupFactory->getSystemNotificationGroups() as $group) {
+                /* @var \Xibo\Entity\UserGroup $group */
+                $notification->assignUserGroup($group);
+            }
         }
 
         return $notification;

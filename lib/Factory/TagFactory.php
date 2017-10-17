@@ -191,4 +191,27 @@ class TagFactory extends BaseFactory
 
         return $tags;
     }
+
+    /**
+     * Gets tags for displayGroupId
+     * @param $displayGroupId
+     * @return array[Tag]
+     */
+    public function loadByDisplayGroupId($displayGroupId)
+    {
+        $tags = array();
+
+        $sql = 'SELECT tag.tagId, tag.tag FROM `tag` INNER JOIN `lktagdisplaygroup` ON lktagdisplaygroup.tagId = tag.tagId WHERE lktagdisplaygroup.displayGroupId = :displayGroupId';
+
+        foreach ($this->getStore()->select($sql, array('displayGroupId' => $displayGroupId)) as $row) {
+            $tag = $this->createEmpty();
+            $tag->tagId = $this->getSanitizer()->int($row['tagId']);
+            $tag->tag = $this->getSanitizer()->string($row['tag']);
+            $tag->assignMedia($displayGroupId);
+
+            $tags[] = $tag;
+        }
+
+        return $tags;
+    }
 }

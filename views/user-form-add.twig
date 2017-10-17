@@ -28,6 +28,9 @@
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "Details" %}</span></a></li>
                 <li><a href="#reference" role="tab" data-toggle="tab"><span>{% trans "Reference" %}</span></a></li>
+                {% if currentUser.userTypeId == 1 %}
+                    <li><a href="#notifications" role="tab" data-toggle="tab"><span>{% trans "Notifications" %}</span></a></li>
+                {% endif %}
             </ul>
             <form id="userAddForm" class="UserForm form-horizontal" method="post" action="{{ urlFor("user.add") }}">
                 <div class="tab-content">
@@ -77,12 +80,6 @@
                         {% set title %}{% trans "Initial User Group" %}{% endset %}
                         {% set helpText %}{% trans "What is the initial user group for this user?" %}{% endset %}
                         {{ forms.dropdown("groupId", "single", title, "", options.groups, "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
-
-                        {% if currentUser.userTypeId == 1 %}
-                            {% set title %}{% trans "Receive System Notifications?" %}{% endset %}
-                            {% set helpText %}{% trans "Should this User receive system notifications?" %}{% endset %}
-                            {{ forms.checkbox("isSystemNotification", title, 0, helpText) }}
-                        {% endif %}
                     </div>
                     <div class="tab-pane" id="reference">
                         {% set title %}{% trans "First Name" %}{% endset %}
@@ -117,6 +114,17 @@
                         {% set helpText %}{% trans "A reference field for custom user data" %}{% endset %}
                         {{ forms.input("ref5", title, "", helpText, "", "maxlength='254'") }}
                     </div>
+                    {% if currentUser.userTypeId == 1 %}
+                    <div class="tab-pane" id="notifications">
+                        {% set title %}{% trans "Receive System Notifications?" %}{% endset %}
+                        {% set helpText %}{% trans "Should this User receive system notifications?" %}{% endset %}
+                        {{ forms.checkbox("isSystemNotification", title, 0, helpText) }}
+
+                        {% set title %}{% trans "Receive Display Notifications?" %}{% endset %}
+                        {% set helpText %}{% trans "Should this User receive Display notifications for Displays they have permission to see?" %}{% endset %}
+                        {{ forms.checkbox("isDisplayNotification", title, 0, helpText) }}
+                    </div>
+                    {% endif %}
                 </div>
             </form>
         </div>

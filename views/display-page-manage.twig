@@ -41,12 +41,14 @@
         </div>
     </div>
     <div class="row">
-        {% if errors|length > 0 %}
         <div class="col-lg-6">
             <div class="widget">
-                <div class="widget-title">{% trans "Errors in the Last 12 hours" %}</div>
+                <div class="widget-title">
+                    <button id="refreshLog" class="btn btn-sm pull-right"><span class="fa fa-refresh"></span></button>
+                    {% trans "Errors in the Last 12 hours" %}
+                </div>
                 <div class="widget-body medium no-padding">
-                    <table class="table table-striped">
+                    <table id="logs" class="table table-striped">
                         <thead>
                         <tr>
                             <th>{% trans "ID" %}</th>
@@ -55,19 +57,12 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {% for item in errors %}
-                            <tr>
-                                <td>{{ item.logId }}</td>
-                                <td><span class="isoDate">{{ item.logDate }}</span></td>
-                                <td>{{ item.message[:250] }}</td>
-                            </tr>
-                        {% endfor %}
+
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
-        {% endif %}
         <div class="col-lg-6">
             <div class="widget">
                 <div class="widget-title">{% trans "Layouts" %}</div>
@@ -103,7 +98,9 @@
     <div class="row">
         <div class="col-lg-6">
             <div class="widget">
-                <div class="widget-title">{% trans "Media" %}</div>
+                <div class="widget-title">
+                    {% trans "Media" %}
+                </div>
                 <div class="widget-body medium no-padding">
                     <table class="table table-striped">
                         <thead>
@@ -197,6 +194,31 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+
+        $(document).ready(function() {
+            var table = $("#logs").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[0, "desc"]],
+                ajax: {
+                    url: "{{ urlFor("log.search") }}?{{ errorSearch|raw }}",
+                },
+                "columns": [
+                    {"data": "logId"},
+                    {"data": "logDate", "render": dataTableDateFromIso},
+                    {"data": "message"}
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+
+            $("#refreshLog").click(function () {
+                table.ajax.reload();
+            });
+        });
 
         var bandwidthChart = null;
 

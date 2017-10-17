@@ -60,7 +60,7 @@
         <div class="col-md-12">
             <form id="hlsAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
                 {% set title %}{% trans "Video Path" %}{% endset %}
-                {% set helpText %}{% trans "A URL to the HLS video stream." %}{% endset %}
+                {% set helpText %}{% trans "A URL to the HLS video stream. Requires Player running Windows 8.1 or later, or Android 6 or later. Earlier Android devices may play HLS via the LocalVideo widget." %}{% endset %}
                 {{ forms.input("uri", title, "", helpText, "", "required") }}
 
                 {% set title %}{% trans "Set a duration?" %}{% endset %}

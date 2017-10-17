@@ -45,18 +45,17 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
             // Get some parameters
             if ($index === null) {
-                if (!isset($_REQUEST['name']))
-                    throw new \InvalidArgumentException(__('Missing Name Parameter'));
-
-                $name = $_REQUEST['name'];
-            }
+                if (isset($_REQUEST['name']))
+                    $name = $_REQUEST['name'];
+                else 
+                    $name = $fileName;
+                }
             else {
-                if (!isset($_REQUEST['name'][$index]))
-                    throw new \InvalidArgumentException(__('Missing Name Parameter'));
-
-                $name = $_REQUEST['name'][$index];
-            }
-
+                if (isset($_REQUEST['name'][$index]))
+                    $name = $_REQUEST['name'][$index];
+                else 
+                    $name = $fileName;
+                }
             // Guess the type
             $module = $controller->getModuleFactory()->getByExtension(strtolower(substr(strrchr($fileName, '.'), 1)));
             $module = $controller->getModuleFactory()->create($module->type);
@@ -318,6 +317,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
         } catch (Exception $e) {
             $controller->getLog()->error('Error uploading media: %s', $e->getMessage());
             $controller->getLog()->debug($e->getTraceAsString());
+
+            // Unlink the temporary file
+            @unlink($filePath);
 
             $file->error = $e->getMessage();
 

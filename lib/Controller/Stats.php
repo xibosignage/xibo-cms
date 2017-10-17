@@ -25,6 +25,9 @@ use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\UserFactory;
+use Xibo\Factory\UserGroupFactory;
+use Xibo\Helper\ByteFormatter;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -55,6 +58,12 @@ class Stats extends Base
     /** @var  LayoutFactory */
     private $layoutFactory;
 
+    /** @var  UserFactory */
+    private $userFactory;
+
+    /** @var  UserGroupFactory */
+    private $userGroupFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -68,8 +77,10 @@ class Stats extends Base
      * @param DisplayFactory $displayFactory
      * @param LayoutFactory $layoutFactory
      * @param MediaFactory $mediaFactory
+     * @param UserFactory $userFactory
+     * @param UserGroupFactory $userGroupFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $displayFactory, $layoutFactory, $mediaFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $displayFactory, $layoutFactory, $mediaFactory, $userFactory, $userGroupFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -77,12 +88,33 @@ class Stats extends Base
         $this->displayFactory = $displayFactory;
         $this->layoutFactory = $layoutFactory;
         $this->mediaFactory = $mediaFactory;
+        $this->userFactory = $userFactory;
+        $this->userGroupFactory = $userGroupFactory;
     }
 
     /**
      * Stats page
      */
     function displayPage()
+    {
+        $data = [
+            // List of Displays this user has permission for
+            'displays' => $this->displayFactory->query(),
+            'defaults' => [
+                'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
+                'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
+                'toDate' => $this->getDate()->getLocalDate()
+            ]
+        ];
+
+        $this->getState()->template = 'statistics-page';
+        $this->getState()->setData($data);
+    }
+
+    /**
+     * Stats page
+     */
+    function displayProofOfPlayPage()
     {
         $data = [
             // List of Displays this user has permission for
@@ -98,7 +130,7 @@ class Stats extends Base
             ]
         ];
 
-        $this->getState()->template = 'statistics-page';
+        $this->getState()->template = 'stats-proofofplay-page';
         $this->getState()->setData($data);
     }
 
@@ -634,5 +666,188 @@ class Stats extends Base
         $app->response()->header('Content-Transfer-Encoding', 'binary"');
         $app->response()->header('Accept-Ranges', 'bytes');
         $this->setNoOutput(true);
+    }
+
+    /**
+     * Stats page
+     */
+    function displayLibraryPage()
+    {
+        $this->getState()->template = 'stats-library-page';
+        $data = [];
+
+        // Set up some suffixes
+        $suffixes = array('B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB');
+
+        // Widget for the library usage pie chart
+        try {
+            if ($this->getUser()->libraryQuota != 0) {
+                $libraryLimit = $this->getUser()->libraryQuota * 1024;
+            } else {
+                $libraryLimit = $this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+            }
+
+            // Library Size in Bytes
+            $params = [];
+            $sql = 'SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM `media` WHERE 1 = 1 ';
+            $this->mediaFactory->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
+            $sql .= ' GROUP BY type ';
+
+            $sth = $this->store->getConnection()->prepare($sql);
+            $sth->execute($params);
+
+            $results = $sth->fetchAll();
+
+            // Do we base the units on the maximum size or the library limit
+            $maxSize = 0;
+            if ($libraryLimit > 0) {
+                $maxSize = $libraryLimit;
+            } else {
+                // Find the maximum sized chunk of the items in the library
+                foreach ($results as $library) {
+                    $maxSize = ($library['SumSize'] > $maxSize) ? $library['SumSize'] : $maxSize;
+                }
+            }
+
+            // Decide what our units are going to be, based on the size
+            $base = ($maxSize == 0) ? 0 : floor(log($maxSize) / log(1024));
+
+            $libraryUsage = [];
+            $libraryLabels = [];
+            $totalSize = 0;
+            foreach ($results as $library) {
+                $libraryUsage[] = round((double)$library['SumSize'] / (pow(1024, $base)), 2);
+                $libraryLabels[] = ucfirst($library['type']) . ' ' . $suffixes[$base];
+
+                $totalSize = $totalSize + $library['SumSize'];
+            }
+
+            // Do we need to add the library remaining?
+            if ($libraryLimit > 0) {
+                $remaining = round(($libraryLimit - $totalSize) / (pow(1024, $base)), 2);
+
+                $libraryUsage[] = $remaining;
+                $libraryLabels[] = __('Free') . ' ' . $suffixes[$base];
+            }
+
+            // What if we are empty?
+            if (count($results) == 0 && $libraryLimit <= 0) {
+                $libraryUsage[] = 0;
+                $libraryLabels[] = __('Empty');
+            }
+
+            $data['libraryLimitSet'] = ($libraryLimit > 0);
+            $data['libraryLimit'] = (round((double)$libraryLimit / (pow(1024, $base)), 2)) . ' ' . $suffixes[$base];
+            $data['librarySize'] = ByteFormatter::format($totalSize, 1);
+            $data['librarySuffix'] = $suffixes[$base];
+            $data['libraryWidgetLabels'] = json_encode($libraryLabels);
+            $data['libraryWidgetData'] = json_encode($libraryUsage);
+
+        } catch (\Exception $exception) {
+            $this->getLog()->error('Error rendering the library stats page widget');
+        }
+
+        $data['users'] = $this->userFactory->query();
+        $data['groups'] = $this->userGroupFactory->query();
+
+        $this->getState()->setData($data);
+    }
+
+    public function libraryUsageGrid()
+    {
+        $params = [];
+        $select = '
+            SELECT `user`.userId,
+                `user`.userName,
+                IFNULL(SUM(`media`.FileSize), 0) AS bytesUsed,
+                COUNT(`media`.mediaId) AS numFiles
+        ';
+        $body = '     
+              FROM `user`
+                LEFT OUTER JOIN `media`
+                ON `media`.userID = `user`.UserID
+              WHERE 1 = 1
+        ';
+
+        // Restrict on the users we have permission to see
+        // Normal users can only see themselves
+        $permissions = '';
+        if ($this->getUser()->userTypeId == 3) {
+            $permissions .= ' AND user.userId = :currentUserId ';
+            $filterBy['currentUserId'] = $this->getUser()->userId;
+        }
+        // Group admins can only see users from their groups.
+        else if ($this->getUser()->userTypeId == 2) {
+            $permissions .= '
+                AND user.userId IN (
+                    SELECT `otherUserLinks`.userId
+                      FROM `lkusergroup`
+                        INNER JOIN `group`
+                        ON `group`.groupId = `lkusergroup`.groupId
+                            AND `group`.isUserSpecific = 0
+                        INNER JOIN `lkusergroup` `otherUserLinks`
+                        ON `otherUserLinks`.groupId = `group`.groupId
+                     WHERE `lkusergroup`.userId = :currentUserId
+                )
+            ';
+            $params['currentUserId'] = $this->getUser()->userId;
+        }
+
+        // Filter by userId
+        if ($this->getSanitizer()->getInt('userId') !== null) {
+            $body .= ' AND user.userId = :userId ';
+            $params['userId'] = $this->getSanitizer()->getInt('userId');
+        }
+
+        // Filter by groupId
+        if ($this->getSanitizer()->getInt('groupId') !== null) {
+            $body .= ' AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupId = :groupId) ';
+            $params['groupId'] = $this->getSanitizer()->getInt('groupId');
+        }
+
+        $body .= $permissions;
+        $body .= '            
+            GROUP BY `user`.userId,
+              `user`.userName
+        ';
+
+
+        // Sorting?
+        $filterBy = $this->gridRenderFilter();
+        $sortOrder = $this->gridRenderSort();
+
+        $order = '';
+        if (is_array($sortOrder))
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        $limit = '';
+        // Paging
+        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        }
+
+        $sql = $select . $body . $order . $limit;
+        $rows = [];
+
+        foreach ($this->store->select($sql, $params) as $row) {
+            $entry = [];
+
+            $entry['userId'] = $this->getSanitizer()->int($row['userId']);
+            $entry['userName'] = $this->getSanitizer()->string($row['userName']);
+            $entry['bytesUsed'] = $this->getSanitizer()->int($row['bytesUsed']);
+            $entry['bytesUsedFormatted'] = ByteFormatter::format($this->getSanitizer()->int($row['bytesUsed']), 2);
+            $entry['numFiles'] = $this->getSanitizer()->int($row['numFiles']);
+
+            $rows[] = $entry;
+        }
+
+        // Paging
+        if ($limit != '' && count($rows) > 0) {
+            $results = $this->store->select('SELECT COUNT(*) AS total FROM `user` ' . $permissions, $params);
+            $this->getState()->recordsTotal = intval($results[0]['total']);
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($rows);
     }
 }

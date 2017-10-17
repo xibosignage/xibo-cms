@@ -26,7 +26,7 @@
     {% if layout.backgroundImageId == 0 %}
         {% set backgroundCss = layout.backgroundColor %}
     {% else %}
-        {% set backgroundCss %}url('{{ urlFor("layout.download.background", {id: layout.layoutId}) }}?preview=1&width={{ width }}&height={{ height }}&proportional=0') top center no-repeat; background-color: {{ layout.backgroundColor }}{% endset %}
+        {% set backgroundCss %}url('{{ urlFor("layout.download.background", {id: layout.layoutId}) }}?preview=1&width={{ width }}&height={{ height }}&proportional=0&layoutBackgroundId={{ layout.backgroundImageId }}') top center no-repeat; background-color: {{ layout.backgroundColor }}{% endset %}
     {% endif %}
 
 
@@ -39,7 +39,7 @@
                             <a class="text-center" id="designer-tab" href="#tab1primary" data-toggle="tab"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  {% trans "Designer" %}</a>
                         </li>
                         <li class="tab-design">
-                            <a class="text-center" id="action-tab" href="#tab2primary" data-toggle="tab"><i class="fa fa-bell" aria-hidden="true"></i>   {% trans "Action" %}s</a>
+                            <a class="text-center" id="action-tab" href="#tab2primary" data-toggle="tab"><i class="fa fa-bell" aria-hidden="true"></i>   {% trans "Actions" %}</a>
                         </li>
                         <div class="pull-right">
                             <span class="text-center" data-toggle="tooltip" data-placement="bottom" data-title="{% trans "Layout Duration: Duration may change depending on the exact number of items in ticker/twitter media items." %}">
@@ -370,7 +370,7 @@
                 // Initialize the jQuery File Upload widget:
                 form.fileupload({
                     url: url,
-                    disableImageResize: false
+                    disableImageResize: true
                 });
 
                 // Upload server status check for browsers with CORS support:

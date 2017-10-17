@@ -70,6 +70,10 @@
                 {% set helpText %}{% trans "A short description of this Display Group" %}{% endset %}
                 {{ forms.input("description", title, "", helpText) }}
 
+                {% set title %}{% trans "Tags" %}{% endset %}
+                {% set helpText %}{% trans "Tag this item. Comma Separated." %}{% endset %}
+                {{ forms.inputWithTags("tags", title, "", helpText) }}
+
                 {% set title %}{% trans "Dynamic Group?" %}{% endset %}
                 {% set helpText %}{% trans "Are the members of this group dynamic?" %}{% endset %}
                 {{ forms.checkbox("isDynamic", title, 0, helpText) }}

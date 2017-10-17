@@ -31,6 +31,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\ScheduleFactory;
+use Xibo\Factory\TagFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -89,6 +90,11 @@ class DisplayGroup extends Base
     private $scheduleFactory;
 
     /**
+     * @var TagFactory
+     */
+    private $tagFactory;
+
+    /**
      * Set common dependencies.
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
@@ -105,8 +111,9 @@ class DisplayGroup extends Base
      * @param MediaFactory $mediaFactory
      * @param CommandFactory $commandFactory
      * @param ScheduleFactory $scheduleFactory
+     * @param TagFactory $tagFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $moduleFactory, $mediaFactory, $commandFactory, $scheduleFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $moduleFactory, $mediaFactory, $commandFactory, $scheduleFactory, $tagFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -118,6 +125,7 @@ class DisplayGroup extends Base
         $this->mediaFactory = $mediaFactory;
         $this->commandFactory = $commandFactory;
         $this->scheduleFactory = $scheduleFactory;
+        $this->tagFactory = $tagFactory;
     }
 
     /**
@@ -194,7 +202,9 @@ class DisplayGroup extends Base
             'displayGroup' => $this->getSanitizer()->getString('displayGroup'),
             'displayId' => $this->getSanitizer()->getInt('displayId'),
             'nestedDisplayId' => $this->getSanitizer()->getInt('nestedDisplayId'),
-            'dynamicCriteria' => $this->getSanitizer()->getString('dynamicCriteria')
+            'dynamicCriteria' => $this->getSanitizer()->getString('dynamicCriteria'),
+            'tags' => $this->getSanitizer()->getString('tags'),
+            'exactTags' => $this->getSanitizer()->getCheckbox('exactTags')
         ];
 
         $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
@@ -393,6 +403,13 @@ class DisplayGroup extends Base
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="A comma separated list of tags for this item",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="isDynamic",
      *      in="formData",
      *      description="Flag indicating whether this DisplayGroup is Dynamic",
@@ -425,6 +442,7 @@ class DisplayGroup extends Base
 
         $displayGroup->displayGroup = $this->getSanitizer()->getString('displayGroup');
         $displayGroup->description = $this->getSanitizer()->getString('description');
+        $displayGroup->tags = $this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags'));
         $displayGroup->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = $this->getSanitizer()->getString('dynamicCriteria');
         $displayGroup->userId = $this->getUser()->userId;
@@ -471,6 +489,13 @@ class DisplayGroup extends Base
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="A comma separated list of tags for this item",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="isDynamic",
      *      in="formData",
      *      description="Flag indicating whether this DisplayGroup is Dynamic",
@@ -501,6 +526,7 @@ class DisplayGroup extends Base
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->displayGroup = $this->getSanitizer()->getString('displayGroup');
         $displayGroup->description = $this->getSanitizer()->getString('description');
+        $displayGroup->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
         $displayGroup->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? $this->getSanitizer()->getString('dynamicCriteria') : null;
         $displayGroup->save();
@@ -1446,20 +1472,34 @@ class DisplayGroup extends Base
         // Check that this user has permissions to see this layout
         $layout = $this->layoutFactory->getById($layoutId);
 
+        if (!$this->getUser()->checkViewable($layout))
+            throw new AccessDeniedException();
+
         // Check to see if this layout is assigned to this display group.
         if (count($this->layoutFactory->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'displayGroupId' => $displayGroupId])) <= 0) {
             // Assign
             $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $displayGroup->load();
             $displayGroup->assignLayout($layout);
-            // Don't notify, this player action will cause a download.
+
+            // Don't collect now, this player action will cause a download.
+            // notify will still occur if the layout isn't already assigned (which is shouldn't be)
             $displayGroup->setCollectRequired(false);
+
             $displayGroup->save(['validate' => false]);
 
             // Convert into a download required
             $downloadRequired = true;
+        } else {
+            // The layout may not be built at this point
+            if ($downloadRequired) {
+                // in this case we should build it and notify before we send the action
+                // notify should NOT collect now, as we will do that during our own action.
+                $layout->xlfToDisk(['notify' => true, 'collectNow' => false]);
+            }
         }
 
+        // Create and send the player action
         $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($displayGroupId), (new ChangeLayoutAction())->setLayoutDetails(
             $layoutId,
             $this->getSanitizer()->getInt('duration'),
@@ -1579,6 +1619,9 @@ class DisplayGroup extends Base
         // Check that this user has permissions to see this layout
         $layout = $this->layoutFactory->getById($layoutId);
 
+        if (!$this->getUser()->checkViewable($layout))
+            throw new AccessDeniedException();
+
         // Check to see if this layout is assigned to this display group.
         if (count($this->layoutFactory->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'displayGroupId' => $displayGroupId])) <= 0) {
             // Assign
@@ -1591,6 +1634,13 @@ class DisplayGroup extends Base
 
             // Convert into a download required
             $downloadRequired = true;
+        } else {
+            // The layout may not be built at this point
+            if ($downloadRequired) {
+                // in this case we should build it and notify before we send the action
+                // notify should NOT collect now, as we will do that during our own action.
+                $layout->xlfToDisk(['notify' => true, 'collectNow' => false]);
+            }
         }
 
         $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($displayGroupId), (new OverlayLayoutAction())->setLayoutDetails(

@@ -17,11 +17,11 @@
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
                             <ul class="nav nav-tabs" role="tablist">
-                                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+                                <li class="active"><a href="#general-filter" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                                <li><a href="#advanced-filter" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
                             </ul>
                             <div class="tab-content">
-                                <div class="tab-pane active" id="general">
+                                <div class="tab-pane active" id="general-filter">
                                     {% set title %}{% trans "Name" %}{% endset %}
                                     {{ inline.input("layout", title) }}
 
@@ -43,7 +43,7 @@
                                     {{ inline.dropdown("ownerUserGroupId", "single", title, "", [{groupId:null, group:""}]|merge(groups), "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
 
                                 </div>
-                                <div class="tab-pane" id="advanced">
+                                <div class="tab-pane" id="advanced-filter">
 
                                     {% set title %}{% trans "Retired" %}{% endset %}
                                     {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
@@ -54,7 +54,10 @@
                                     {{ inline.dropdown("layoutStatusId", "single", title, 1, values, "id", "value") }}
 
                                     {% set title %}{% trans "Description" %}{% endset %}
-                                    {% set values = [{id: 1, value: "All"}, {id: 2, value: "1st line"}] %}
+                                    {% set option1 = "All"|trans %}
+                                    {% set option2 = "1st line"|trans %}
+                                    {% set option3 = "Widget List"|trans %}
+                                    {% set values = [{id: 1, value: option1}, {id: 2, value: option2}, {id: 3, value: option3}] %}
                                     {{ inline.dropdown("showDescriptionId", "single", title, 2, values, "id", "value") }}
 
                                     {% set title %}{% trans "Media" %}{% endset %}
@@ -110,7 +113,10 @@
                 },
                 "columns": [
                     {"data": "layoutId"},
-                    {"data": "layout"},
+                    {
+                        "data": "layout",
+                        "render": dataTableSpacingPreformatted
+                    },
                     {
                         "name": "description",
                         "data": null,
@@ -211,7 +217,7 @@
                 // Initialize the jQuery File Upload widget:
                 form.fileupload({
                     url: url,
-                    disableImageResize: false
+                    disableImageResize: true
                 });
 
                 // Upload server status check for browsers with CORS support:

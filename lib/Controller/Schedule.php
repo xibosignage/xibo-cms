@@ -640,7 +640,7 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="eventTypeId",
      *      in="formData",
-     *      description="The Event Type Id to use for this Event. 1=Campaign, 2=Command",
+     *      description="The Event Type Id to use for this Event. 1=Campaign, 2=Command, 3=Overlay",
      *      type="integer",
      *      required=true
      *  ),
@@ -911,7 +911,7 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="eventTypeId",
      *      in="formData",
-     *      description="The Event Type Id to use for this Event. 1=Campaign, 2=Command",
+     *      description="The Event Type Id to use for this Event. 1=Campaign, 2=Command, 3=Overlay",
      *      type="integer",
      *      required=true
      *  ),

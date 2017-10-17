@@ -107,16 +107,16 @@ class LibraryTest extends LocalWebTestCase
         $this->client->post('/library/' . $media->mediaId . '/tag', [
             'tag' => ['API']
             ]);
-
+        $media = (new XiboLibrary($this->getEntityProvider()))->getById($media->mediaId);
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object);
-        //$this->assertSame('API', $object->data->tags[0]['tag']);
+        $this->assertSame('API', $media->tags);
         $media->delete();
     }
 
     /**
-     * Delete tags to media
+     * Delete tags from media
      * @group broken
      */
     public function testDeleteTag()
@@ -124,10 +124,14 @@ class LibraryTest extends LocalWebTestCase
         # Using XiboLibrary wrapper to upload new file to the CMS, need to provide (name, file location)
         $media = (new XiboLibrary($this->getEntityProvider()))->create('flowers', PROJECT_ROOT . '/tests/resources/xts-flowers-001.jpg');
         $media->AddTag('API');
+        $media = (new XiboLibrary($this->getEntityProvider()))->getById($media->mediaId);
+        $this->assertSame('API', $media->tags);
+         print_r($media->tags);
         $this->client->delete('/library/' . $media->mediaId . '/untag', [
             'tag' => ['API']
             ]);
-
+        $media = (new XiboLibrary($this->getEntityProvider()))->getById($media->mediaId);
+         print_r($media->tags);
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
         $media->delete();
     }
@@ -145,8 +149,8 @@ class LibraryTest extends LocalWebTestCase
         $this->client->put('/library/' . $media->mediaId, [
             'name' => $name,
             'duration' => 50,
-            //'retired' => $media->retired,
-            //'tags' => $media->tags,
+            'retired' => $media->retired,
+            'tags' => $media->tags,
             'updateInLayouts' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
@@ -154,7 +158,8 @@ class LibraryTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertSame($name, $object->data->name);
-
+        $media = (new XiboLibrary($this->getEntityProvider()))->getById($media->mediaId);
+        $this->assertSame($name, $media->name);
         $media->delete();
     }
 

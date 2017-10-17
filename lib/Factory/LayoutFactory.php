@@ -235,6 +235,10 @@ class LayoutFactory extends BaseFactory
 
         // Ensure we have Playlists for each region
         foreach ($layout->regions as $region) {
+
+            // Set the ownership of this region to the user creating from template
+            $region->setOwner($ownerId, true);
+
             if (count($region->playlists) <= 0) {
                 // Create a Playlist for this region
                 $playlist = $this->playlistFactory->create($name, $ownerId);
@@ -1029,6 +1033,8 @@ class LayoutFactory extends BaseFactory
                     )
                 ';
             } else {
+                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+
                 $body .= " AND layout.layoutID IN (
                 SELECT lktaglayout.layoutId
                   FROM tag
@@ -1040,11 +1046,14 @@ class LayoutFactory extends BaseFactory
                     $i++;
 
                     if ($i == 1)
-                        $body .= " WHERE tag LIKE :tags$i ";
+                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
                     else
-                        $body .= " OR tag LIKE :tags$i ";
+                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
 
-                    $params['tags' . $i] = '%' . $tag . '%';
+                    if ($operator === '=')
+                        $params['tags' . $i] = $tag;
+                    else
+                        $params['tags' . $i] = '%' . $tag . '%';
                 }
 
                 $body .= " ) ";

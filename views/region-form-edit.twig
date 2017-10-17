@@ -65,13 +65,21 @@
                 {% set helpText %}{% trans "Name of the Region" %}{% endset %}
                 {{ forms.input("name", title, region.name, helpText) }}
 
-                {{ forms.number("top", "Top", region.top, "Offset from the Top Corner") }}
+                {% set title %}{% trans "Top" %}{% endset %}
+                {% set helpText %}{% trans "Offset from the Top Corner" %}{% endset %}
+                {{ forms.number("top", title, region.top, helpText) }}
 
-                {{ forms.number("left", "Left", region.left, "Offset from the Left Corner") }}
+                {% set title %}{% trans "Left" %}{% endset %}
+                {% set helpText %}{% trans "Offset from the Left Corner" %}{% endset %}
+                {{ forms.number("left", title, region.left, helpText) }}
 
-                {{ forms.number("width", "Width", region.width, "Width of the Region") }}
+                {% set title %}{% trans "Width" %}{% endset %}
+                {% set helpText %}{% trans "Width of the Region" %}{% endset %}
+                {{ forms.number("width", title, region.width, helpText) }}
 
-                {{ forms.number("height", "Height", region.height, "Height of the Region") }}
+                {% set title %}{% trans "Height" %}{% endset %}
+                {% set helpText %}{% trans "Height of the Region" %}{% endset %}
+                {{ forms.number("height", title, region.height, helpText) }}
 
                 {# Transitions #}
                 {% set title %}{% trans "Exit Transition" %}{% endset %}
@@ -87,8 +95,10 @@
                 {% set title %}{% trans "Loop?" %}{% endset %}
                 {% set helpText %}{% trans "If there is only one item in this region should it loop?" %}{% endset %}
                 {{ forms.checkbox("loop", title, region.getOptionValue("loop", 0), helpText) }}
-
-                {{ forms.number("zIndex", "Layer", region.zIndex, "The layering order of this region (z-index). Advanced use only.") }}
+                
+                {% set title %}{% trans "Layer" %}{% endset %}
+                {% set helpText %}{% trans "The layering order of this region (z-index). Advanced use only." %}{% endset %}
+                {{ forms.number("zIndex", title, region.zIndex, helpText) }}
             </form>
         </div>
     </div>

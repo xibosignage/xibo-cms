@@ -145,7 +145,7 @@ class StatusDashboard extends Base
             if ($xmdsLimit > 0) {
                 // Convert to appropriate size (xmds limit is in KB)
                 $xmdsLimit = ($xmdsLimit * 1024) / (pow(1024, $base));
-                $data['xmdsLimit'] = $xmdsLimit . ' ' . $suffixes[$base];
+                $data['xmdsLimit'] = round($xmdsLimit, 2) . ' ' . $suffixes[$base];
             }
 
             $labels = [];
@@ -323,9 +323,19 @@ class StatusDashboard extends Base
 
                         foreach ($feed->getItems() as $item) {
                             /* @var \PicoFeed\Parser\Item $item */
+
+                            // Try to get the description tag
+                            if (!$desc = $item->getTag('description')) {
+                                // use content with tags stripped
+                                $content = strip_tags($item->getContent());
+                            } else {
+                                // use description
+                                $content = (isset($desc[0]) ? $desc[0] : strip_tags($item->getContent()));
+                            }
+
                             $latestNews[] = array(
                                 'title' => $item->getTitle(),
-                                'description' => $item->getContent(),
+                                'description' => $content,
                                 'link' => $item->getUrl()
                             );
                         }

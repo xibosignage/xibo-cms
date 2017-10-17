@@ -117,6 +117,13 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="embed",
+     *      in="formData",
+     *      description="Embed related data such as columns",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -130,7 +137,10 @@ class DataSet extends Base
     public function grid()
     {
         $user = $this->getUser();
-
+        
+        // Embed?
+        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+        
         $filter = [
             'dataSetId' => $this->getSanitizer()->getInt('dataSetId'),
             'dataSet' => $this->getSanitizer()->getString('dataSet'),
@@ -141,7 +151,9 @@ class DataSet extends Base
 
         foreach ($dataSets as $dataSet) {
             /* @var \Xibo\Entity\DataSet $dataSet */
-
+            if (in_array('columns', $embed)) {
+                $dataSet->load();
+            }
             if ($this->isApi())
                 break;
 
@@ -570,11 +582,32 @@ class DataSet extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
-     *      name="file",
+     *      name="files",
      *      in="formData",
      *      description="The file",
      *      type="file",
      *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="csvImport_{dataSetColumnId}",
+     *      in="formData",
+     *      description="You need to provide dataSetColumnId after csvImport_, to know your dataSet columns Ids, you will need to use the GET /dataset/{dataSetId}/column call first. The value of this parameter is the index of the column in your csv file, where the first column is 1",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="overwrite",
+     *      in="formData",
+     *      description="flag (0,1) Set to 1 to erase all content in the dataSet and overwrite it with new content in this import",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ignorefirstrow",
+     *      in="formData",
+     *      description="flag (0,1), Set to 1 to Ignore first row, useful if the CSV file has headings",
+     *      type="integer",
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=200,
@@ -723,7 +756,7 @@ class DataSet extends Base
                     $filter = '';
                     foreach ($data['uniqueKeys'] as $uniqueKey) {
                         if (isset($sanitizedRow[$uniqueKey])) {
-                            $filter .= 'AND ' . $uniqueKey . '= \'' . $sanitizedRow[$uniqueKey] . '\' ';
+                            $filter .= 'AND `' . $uniqueKey . '` = \'' . $sanitizedRow[$uniqueKey] . '\' ';
                         }
                     }
                     $filter = trim($filter, 'AND');

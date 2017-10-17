@@ -40,6 +40,10 @@
 
                             {% set title %}{% trans "Dynamic Criteria" %}{% endset %}
                             {{ inline.input("dynamicCriteria", title) }}
+
+                            {% set title %}{% trans "Tags" %}{% endset %}
+                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                            {{ inline.inputWithTags("tags", title, null, helpText) }}
                         </form>
                     </div>
                 </div>
@@ -52,6 +56,7 @@
                                 <th>{% trans "Description" %}</th>
                                 <th>{% trans "Is Dynamic?" %}</th>
                                 <th>{% trans "Criteria" %}</th>
+                                <th>{% trans "Tags" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -80,10 +85,15 @@
             },
             "columns": [
                 { "data": "displayGroupId" },
-                { "data": "displayGroup" },
+                { "data": "displayGroup", "render": dataTableSpacingPreformatted },
                 { "data": "description" },
                 { "data": "isDynamic", "render": dataTableTickCrossColumn },
                 { "data": "dynamicCriteria" },
+                {
+                    "name": "tags",
+                    "sortable": false,
+                    "data": dataTableCreateTags
+                },
                 {
                     "orderable": false,
                     "data": dataTableButtonsColumn
@@ -92,7 +102,9 @@
         });
 
         table.on('draw', dataTableDraw);
+        table.on('draw', { form: $("#displaygroups").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
         table.on('processing.dt', dataTableProcessing);
+        dataTableAddButtons(table, $('#displaygroups_wrapper').find('.col-sm-6').eq(1));
 
         var displayTable;
         var criteria;

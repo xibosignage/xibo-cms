@@ -348,6 +348,13 @@ class Library extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="exactTags",
+     *      in="formData",
+     *      description="A flag indicating whether to treat the tags filter as an exact match",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="duration",
      *      in="formData",
      *      description="Filter by Duration - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
@@ -388,6 +395,7 @@ class Library extends Base
             'name' => $this->getSanitizer()->getString('media'),
             'type' => $this->getSanitizer()->getString('type'),
             'tags' => $this->getSanitizer()->getString('tags'),
+            'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
             'ownerId' => $this->getSanitizer()->getInt('ownerId'),
             'retired' => $this->getSanitizer()->getInt('retired'),
             'duration' => $this->getSanitizer()->getString('duration'),
@@ -953,12 +961,20 @@ class Library extends Base
      */
     public function download($mediaId, $type = '')
     {
-        $this->getLog()->debug('Download request for mediaId %d and type %s', $mediaId, $type);
-
         $media = $this->mediaFactory->getById($mediaId);
 
-        if (!$this->getUser()->checkViewable($media))
+        $this->getLog()->debug('Download request for mediaId ' . $mediaId . ' and type ' . $type . '. Media is a ' . $media->mediaType);
+
+        if ($media->mediaType === 'module') {
+            // Make sure that our user has this mediaId assigned to a Widget they can view
+            // we can't test for normal media permissions, because no user has direct access to these "module" files
+            // https://github.com/xibosignage/xibo/issues/1304
+            if (count($this->widgetFactory->query(null, ['mediaId' => $mediaId])) <= 0) {
+                throw new AccessDeniedException();
+            }
+        } else if (!$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
+        }
 
         if ($type != '') {
             $widget = $this->moduleFactory->create($type);
