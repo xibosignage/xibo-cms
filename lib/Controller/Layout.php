@@ -980,9 +980,32 @@ class Layout extends Base
         $layout->layout = $this->getSanitizer()->getString('name');
         $layout->description = $this->getSanitizer()->getString('description');
 
-        // TODO: Copy the media on the layout and change the assignments.
+        // Copy the media on the layout and change the assignments.
+        // https://github.com/xibosignage/xibo/issues/1283
         if ($this->getSanitizer()->getCheckbox('copyMediaFiles') == 1) {
+            foreach ($layout->getWidgets() as $widget) {
+                // Copy the media
+                $oldMedia = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                $media = clone $oldMedia;
+                $media->setOwner($this->getUser()->userId);
+                $media->save();
 
+                $widget->unassignMedia($oldMedia->mediaId);
+                $widget->assignMedia($media->mediaId);
+
+                // Update the widget option with the new ID
+                $widget->setOptionValue('uri', 'attrib', $media->storedAs);
+            }
+
+            // Also handle the background image, if there is one
+            if ($layout->backgroundImageId != 0) {
+                $oldMedia = $this->mediaFactory->getById($layout->backgroundImageId);
+                $media = clone $oldMedia;
+                $media->setOwner($this->getUser()->userId);
+                $media->save();
+
+                $layout->backgroundImageId = $media->mediaId;
+            }
         }
 
         // Save the new layout

@@ -301,7 +301,7 @@ class Media implements \JsonSerializable
         $this->permissions = [];
 
         // We need to do something with the name
-        $this->name = sprintf(__('Copy of %s'), $this->name);
+        $this->name = sprintf(__('Copy of %s on %s'), $this->name, date('Y-m-d H:i:s'));
 
         // Set so that when we add, we copy the existing file in the library
         $this->fileName = $this->storedAs;
