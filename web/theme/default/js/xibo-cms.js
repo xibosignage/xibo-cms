@@ -481,7 +481,7 @@ function dataTableTickCrossInverseColumn(data, type, row) {
 }
 
 function dataTableDateFromIso(data, type, row) {
-    if (type != "display")
+    if (type !== "display" && type !== "export")
         return data;
 
     if (data == null)
@@ -491,7 +491,7 @@ function dataTableDateFromIso(data, type, row) {
 }
 
 function dataTableDateFromUnix(data, type, row) {
-    if (type != "display")
+    if (type !== "display" && type !== "export")
         return data;
 
     if (data == null || data == 0)
@@ -515,7 +515,10 @@ function dataTableSpacingPreformatted(data, type, row) {
  * @param data
  * @returns {*}
  */
-function dataTableCreateTags(data) {
+function dataTableCreateTags(data, type) {
+
+    if (type !== "display")
+        return data.tags;
 
     var returnData = '';
 
@@ -592,7 +595,37 @@ function dataTableConfigureRefresh(gridId, table, refresh) {
 function dataTableAddButtons(table, filter) {
     var colVis = new $.fn.dataTable.Buttons(table, {
         buttons: [
-            'colvis', 'print', 'csv'
+            {
+                extend: 'colvis'
+            },
+            {
+                extend: 'print',
+                exportOptions: {
+                    orthogonal: 'export',
+                    format: {
+                        body: function (data, row, column, node) {
+                            if (data === null || data === "" || data === "null")
+                                return "";
+                            else
+                                return data;
+                        }
+                    }
+                }
+            },
+            {
+                extend: 'csv',
+                exportOptions: {
+                    orthogonal: 'export',
+                    format: {
+                        body: function (data, row, column, node) {
+                            if (data === null || data === "")
+                                return "";
+                            else
+                                return data;
+                        }
+                    }
+                }
+            }
         ]
     });
 
