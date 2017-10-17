@@ -21,6 +21,10 @@
     {
       "step": "Create Tag Display Group Link Table",
       "action": "create table lktagdisplaygroup (lkTagDisplayGroupId int auto_increment primary key,tagId int not null,displayGroupId int not null, constraint tagId unique (tagId, displayGroupId)) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;"
+    },
+    {
+      "step": "CreatedDt/ModifiedDt for Library Media",
+      "action": "ALTER TABLE media ADD createdDt DATETIME NULL, ADD modifiedDt DATETIME NULL;"
     }
   ]
 }

@@ -69,7 +69,7 @@ class ApplicationScopeFactory extends BaseFactory
     /**
      * Query
      * @param null $sortOrder
-     * @param null $filterBy
+     * @param array $filterBy
      * @return array
      */
     public function query($sortOrder = null, $filterBy = [])

@@ -58,7 +58,7 @@ class DataSetColumnTypeFactory extends BaseFactory
 
     /**
      * @param null $sortOrder
-     * @param null $filterBy
+     * @param array $filterBy
      * @return array[DataSetColumnType]
      */
     public function query($sortOrder = null, $filterBy = [])

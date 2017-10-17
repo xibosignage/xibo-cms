@@ -58,7 +58,7 @@ class DataTypeFactory extends BaseFactory
 
     /**
      * @param null $sortOrder
-     * @param null $filterBy
+     * @param array $filterBy
      * @return array[DataType]
      */
     public function query($sortOrder = null, $filterBy = [])

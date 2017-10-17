@@ -411,7 +411,7 @@ class MediaFactory extends BaseFactory
 
     /**
      * @param null $sortOrder
-     * @param null $filterBy
+     * @param array $filterBy
      * @return Media[]
      */
     public function query($sortOrder = null, $filterBy = [])
@@ -443,6 +443,13 @@ class MediaFactory extends BaseFactory
             $select .= '
                `media`.released,
                `media`.apiRef,
+            ';
+        }
+
+        if (DBVERSION >= 134) {
+            $select .= '
+               `media`.createdDt,
+               `media`.modifiedDt,
             ';
         }
 

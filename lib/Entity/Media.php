@@ -173,6 +173,22 @@ class Media implements \JsonSerializable
      */
     public $apiRef;
 
+    /**
+     * @var string
+     * @SWG\Property(
+     *  description="The datetime the Media was created"
+     * )
+     */
+    public $createdDt;
+
+    /**
+     * @var string
+     * @SWG\Property(
+     *  description="The datetime the Media was last modified"
+     * )
+     */
+    public $modifiedDt;
+
     // Private
     private $unassignTags = [];
 
@@ -670,8 +686,8 @@ class Media implements \JsonSerializable
     private function add()
     {
         $this->mediaId = $this->getStore()->insert('
-            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid)
-              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid)
+            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`)
+              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid, :createdDt)
         ', [
             'name' => $this->name,
             'type' => $this->mediaType,
@@ -682,7 +698,8 @@ class Media implements \JsonSerializable
             'moduleSystemFile' => (($this->moduleSystemFile) ? 1 : 0),
             'released' => $this->released,
             'apiRef' => $this->apiRef,
-            'valid' => 0
+            'valid' => 0,
+            'createdDt' => date('Y-m-d H:i:s')
         ]);
     }
 
@@ -702,7 +719,8 @@ class Media implements \JsonSerializable
                 isEdited = :isEdited,
                 userId = :userId,
                 released = :released,
-                apiRef = :apiRef
+                apiRef = :apiRef,
+                modifiedDt = :modifiedDt
            WHERE mediaId = :mediaId
         ', [
             'name' => $this->name,
@@ -714,6 +732,7 @@ class Media implements \JsonSerializable
             'userId' => $this->ownerId,
             'released' => $this->released,
             'apiRef' => $this->apiRef,
+            'modifiedDt' => date('Y-m-d H:i:s'),
             'mediaId' => $this->mediaId
         ]);
     }
