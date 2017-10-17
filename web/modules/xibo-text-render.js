@@ -1,6 +1,6 @@
 /**
 * Xibo - Digital Signage - http://www.xibo.org.uk
-* Copyright (C) 2009-2014 Daniel Garner
+* Copyright (C) 2009-2017 Spring Signage Ltd
 *
 * This file is part of Xibo.
 *
@@ -32,6 +32,7 @@ jQuery.fn.extend({
             "previewWidth": 0,
             "previewHeight": 0,
             "scaleOverride": 0,
+            "randomiseItems": 0,
             "marqueeInlineSelector": ".item, .item p"
         };
 
@@ -85,7 +86,21 @@ jQuery.fn.extend({
             //  items, 
             //  numItems (ticker number of items from the start/end),
             //  takeItemsFrom (ticker sort or reverse sort the array)
-            if (options.takeItemsFrom == "end") {
+            //  randomiseItems (randomise the items)
+            if (options.randomiseItems === 1) {
+                // Sort the items in a random order (considering the entire list)
+                // Durstenfeld shuffle
+                // https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm
+                // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+                for (var i = items.length - 1; i > 0; i--) {
+                    var j = Math.floor(Math.random() * (i + 1));
+                    var temp = items[i];
+                    items[i] = items[j];
+                    items[j] = temp;
+                }
+            }
+
+            if (options.takeItemsFrom === "end") {
                 //console.log("[Xibo] Reversing items");
                 items.reverse();
             }
@@ -100,7 +115,7 @@ jQuery.fn.extend({
             items = items.slice(0, options.numItems);
 
             // Reverse the items again (so they are in the correct order)
-            if (options.takeItemsFrom == "end") {
+            if (options.takeItemsFrom === "end") {
                 //console.log("[Xibo] Reversing items");
                 items.reverse();
             }

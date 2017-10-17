@@ -419,6 +419,13 @@ class Ticker extends ModuleWidget
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="randomiseItems",
+     *      in="formData",
+     *      description="A flag (0, 1), whether to randomise the feed",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -473,6 +480,7 @@ class Ticker extends ModuleWidget
         $this->setOption('numItems', $this->getSanitizer()->getInt('numItems'));
         $this->setOption('takeItemsFrom', $this->getSanitizer()->getString('takeItemsFrom'));
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
+        $this->setOption('randomiseItems', $this->getSanitizer()->getCheckbox('randomiseItems'));
         $this->setOption('itemsSideBySide', $this->getSanitizer()->getCheckbox('itemsSideBySide'));
         $this->setOption('upperLimit', $this->getSanitizer()->getInt('upperLimit', 0));
         $this->setOption('lowerLimit', $this->getSanitizer()->getInt('lowerLimit', 0));
@@ -669,6 +677,7 @@ class Ticker extends ModuleWidget
             'numItems' => $numItems,
             'takeItemsFrom' => $takeItemsFrom,
             'itemsPerPage' => $itemsPerPage,
+            'randomiseItems' => $this->getOption('randomiseItems', 0),
             'speed' => $this->getOption('speed'),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
@@ -838,7 +847,7 @@ class Ticker extends ModuleWidget
             $feedItems = $feed->getItems();
 
             // Disable date sorting?
-            if ($this->getOption('disableDateSort') == 0) {
+            if ($this->getOption('disableDateSort') == 0 && $this->getOption('randomiseItems', 0) == 0) {
                 // Sort the items array by date
                 usort($feedItems, function($a, $b) {
                     /* @var Item $a */
