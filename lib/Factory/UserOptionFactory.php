@@ -73,7 +73,7 @@ class UserOptionFactory extends BaseFactory
      * @param array $filterBy
      * @return array[UserOption]
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         if (DBVERSION < 122)
             return [];

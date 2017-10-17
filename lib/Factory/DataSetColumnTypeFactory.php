@@ -61,7 +61,7 @@ class DataSetColumnTypeFactory extends BaseFactory
      * @param null $filterBy
      * @return array[DataSetColumnType]
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $entries = [];
         $params = [];

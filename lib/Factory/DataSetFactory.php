@@ -136,7 +136,7 @@ class DataSetFactory extends BaseFactory
      * @return array[DataSet]
      * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $entries = array();
         $params = array();

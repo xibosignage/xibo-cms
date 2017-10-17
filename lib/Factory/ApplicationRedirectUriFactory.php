@@ -74,7 +74,7 @@ class ApplicationRedirectUriFactory extends BaseFactory
      * @param null $filterBy
      * @return array
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $entries = array();
         $params = array();

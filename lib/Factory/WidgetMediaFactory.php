@@ -56,7 +56,7 @@ class WidgetMediaFactory extends BaseFactory
      * @param array $filterBy
      * @return array[int]
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $sql = 'SELECT mediaId FROM `lkwidgetmedia` WHERE widgetId = :widgetId AND mediaId <> 0 ';
 

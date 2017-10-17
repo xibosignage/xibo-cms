@@ -414,7 +414,7 @@ class MediaFactory extends BaseFactory
      * @param null $filterBy
      * @return Media[]
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder === null)
             $sortOrder = ['name'];
