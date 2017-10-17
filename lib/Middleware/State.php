@@ -197,7 +197,7 @@ class State extends Middleware
                 $container->store,
                 $container->configService,
                 $container->pool,
-                $app->router()->getCurrentRoute()->getPattern()
+                ($app->router()->getCurrentRoute() !== null) ? $app->router()->getCurrentRoute()->getPattern() : null
             );
         });
 
@@ -359,7 +359,8 @@ class State extends Middleware
                 $container->store,
                 $container->applicationFactory,
                 $container->applicationRedirectUriFactory,
-                $container->applicationScopeFactory
+                $container->applicationScopeFactory,
+                $container->userFactory
             );
         });
 
@@ -502,7 +503,8 @@ class State extends Middleware
                 $container->mediaFactory,
                 $container->scheduleFactory,
                 $container->displayEventFactory,
-                $container->requiredFileFactory
+                $container->requiredFileFactory,
+                $container->tagFactory
             );
         });
 
@@ -522,7 +524,8 @@ class State extends Middleware
                 $container->moduleFactory,
                 $container->mediaFactory,
                 $container->commandFactory,
-                $container->scheduleFactory
+                $container->scheduleFactory,
+                $container->tagFactory
             );
         });
 
@@ -881,7 +884,9 @@ class State extends Middleware
                 $container->store,
                 $container->displayFactory,
                 $container->layoutFactory,
-                $container->mediaFactory
+                $container->mediaFactory,
+                $container->userFactory,
+                $container->userGroupFactory
             );
         });
 
@@ -1160,7 +1165,8 @@ class State extends Middleware
                 $container->sanitizerService,
                 $container->user,
                 $container->userFactory,
-                $container->permissionFactory
+                $container->permissionFactory,
+                $container->tagFactory
             );
         });
 

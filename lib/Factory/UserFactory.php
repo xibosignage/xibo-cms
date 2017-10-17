@@ -256,6 +256,13 @@ class UserFactory extends BaseFactory
             ';
         }
 
+        if (DBVERSION >= 134) {
+            $select .= '
+                ,
+                `group`.isDisplayNotification
+            ';
+        }
+
         $body = '
               FROM `user`
                 INNER JOIN lkusergroup

@@ -171,7 +171,26 @@ class MaintenanceDailyTask implements TaskInterface
             $maxage = date('Y-m-d H:i:s', time() - (86400 * intval($this->config->GetSetting('MAINTENANCE_STAT_MAXAGE'))));
 
             try {
-                $this->store->update('DELETE FROM `stat` WHERE statDate < :maxage', ['maxage' => $maxage]);
+                $i = 0;
+                $rows = 1;
+                $maxAttempts = $this->getOption('statsDeleteMaxAttempts', 10);
+                while ($rows > 0) {
+                    $i++;
+
+                    $rows = $this->store->update('DELETE FROM `stat` WHERE statDate < :maxage LIMIT 10000', ['maxage' => $maxage]);
+
+                    // Give SQL time to recover
+                    if ($rows > 0) {
+                        $this->log->debug('Stats delete effected ' . $rows . ' rows, sleeping.');
+                        sleep($this->getOption('statsDeleteSleep', 3));
+                    }
+
+                    // Break if we've exceeded the maximum attempts.
+                    if ($i >= $maxAttempts)
+                        break;
+                }
+
+                $this->log->debug('Deleted Stats back to ' . $maxage . ' in ' . $i . ' attempts');
 
                 $this->runMessage .= ' - ' . __('Done.') . PHP_EOL . PHP_EOL;
             }

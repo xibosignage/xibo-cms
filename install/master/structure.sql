@@ -228,6 +228,7 @@ CREATE TABLE IF NOT EXISTS `group` (
   `IsEveryone` tinyint(4) NOT NULL DEFAULT '0',
   `libraryQuota` int(11) DEFAULT NULL,
   `isSystemNotification` tinyint(4) NOT NULL DEFAULT '0',
+  `isDisplayNotification` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`groupID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Groups' AUTO_INCREMENT=2 ;
 
@@ -396,6 +397,15 @@ CREATE TABLE IF NOT EXISTS `lktagcampaign` (
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
+
+create table lktagdisplaygroup
+(
+  lkTagDisplayGroupId int auto_increment primary key,
+  tagId int not null,
+  displayGroupId int not null,
+  constraint tagId
+  unique (tagId, displayGroupId)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 --
 -- Table structure for table `lkusergroup`

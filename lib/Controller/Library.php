@@ -348,6 +348,13 @@ class Library extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="exactTags",
+     *      in="formData",
+     *      description="A flag indicating whether to treat the tags filter as an exact match",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="duration",
      *      in="formData",
      *      description="Filter by Duration - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
@@ -388,6 +395,7 @@ class Library extends Base
             'name' => $this->getSanitizer()->getString('media'),
             'type' => $this->getSanitizer()->getString('type'),
             'tags' => $this->getSanitizer()->getString('tags'),
+            'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
             'ownerId' => $this->getSanitizer()->getInt('ownerId'),
             'retired' => $this->getSanitizer()->getInt('retired'),
             'duration' => $this->getSanitizer()->getString('duration'),

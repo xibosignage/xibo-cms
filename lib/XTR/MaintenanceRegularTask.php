@@ -47,7 +47,6 @@ class MaintenanceRegularTask implements TaskInterface
 
         $emailAlerts = ($this->config->GetSetting("MAINTENANCE_EMAIL_ALERTS") == 'On');
         $alwaysAlert = ($this->config->GetSetting("MAINTENANCE_ALWAYS_ALERT") == 'On');
-        $alertForViewUsers = ($this->config->GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1);
 
         foreach ($this->app->container->get('\Xibo\Controller\Display')->setApp($this->app)->validateDisplays($this->displayFactory->query()) as $display) {
             /* @var \Xibo\Entity\Display $display */
@@ -67,12 +66,9 @@ class MaintenanceRegularTask implements TaskInterface
                         // Add to system
                         $notification = $this->notificationFactory->createSystemNotification($subject, $body, $this->date->parse());
 
-                        // Get a list of people that have view access to the display?
-                        if ($alertForViewUsers) {
-                            foreach ($this->userGroupFactory->getByDisplayGroupId($display->displayGroupId) as $group) {
-                                /* @var \Xibo\Entity\UserGroup $group */
-                                $notification->assignUserGroup($group);
-                            }
+                        // Add in any displayNotificationGroups, with permissions
+                        foreach ($this->userGroupFactory->getDisplayNotificationGroups($display->displayGroupId) as $group) {
+                            $notification->assignUserGroup($group);
                         }
 
                         $notification->save();
@@ -303,6 +299,13 @@ class MaintenanceRegularTask implements TaskInterface
                     $body,
                     $this->date->parse()
                 );
+
+                $display = $this->displayFactory->getById($item['displayId']);
+
+                // Add in any displayNotificationGroups, with permissions
+                foreach ($this->userGroupFactory->getDisplayNotificationGroups($display->displayGroupId) as $group) {
+                    $notification->assignUserGroup($group);
+                }
 
                 $notification->save();
 

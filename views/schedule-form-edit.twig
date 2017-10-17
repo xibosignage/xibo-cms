@@ -31,7 +31,11 @@
             </ul>
             {% set dayPartMessage %}{% trans "Select the start time for this event" %}{% endset %}
             {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
-            <form id="scheduleEditForm" class="form-horizontal" method="put" action="{{ urlFor("schedule.edit", {id: event.eventId}) }}" data-daypart-message="{{ dayPartMessage }}" data-not-daypart-message="{{ notDayPartMessage }}">
+            <form id="scheduleEditForm" class="form-horizontal" method="put" action="{{ urlFor("schedule.edit", {id: event.eventId}) }}"
+                  data-daypart-message="{{ dayPartMessage }}"
+                  data-not-daypart-message="{{ notDayPartMessage }}"
+                  data-add-url="{{ urlFor("schedule.add") }}"
+                  data-duplicated-message="{% trans "Duplicate form loaded, make adjustments and press save." %}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Event Type" %}{% endset %}
@@ -103,6 +107,13 @@
                             { name: "data-selected-text-format", value: "count > 4" }
                         ] %}
                         {{ forms.dropdown("campaignId", "single", title, event.campaignId, {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "layout-control", "", "", "", attributes, optionGroups) }}
+
+                        <div class="form-group preview-button-container">
+                            <div class="col-md-offset-2 col-md-10">
+                                <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ urlFor("campaign.preview") }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
+                                <span class="help-block">{% trans "Preview your selection in a new tab" %}</span>
+                            </div>
+                        </div>
 
                         {% set title %}{% trans "Command" %}{% endset %}
                         {% set helpText %}{% trans "Please select a command for this Event." %}{% endset %}

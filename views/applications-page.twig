@@ -55,7 +55,7 @@
             "order": [[ 0, "asc"]],
             ajax: "{{ urlFor("application.search") }}",
             "columns": [
-                { "data": "name" },
+                { "data": "name", "render": dataTableSpacingPreformatted },
                 { "data": "owner" },
                 {
                     "orderable": false,

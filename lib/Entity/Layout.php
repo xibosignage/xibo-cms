@@ -1178,14 +1178,15 @@ class Layout implements \JsonSerializable
     }
 
     /**
-     * Save the XLF to disk
+     * Save the XLF to disk if necessary
      * @param array $options
      * @return string the path
      */
     public function xlfToDisk($options = [])
     {
         $options = array_merge([
-            'notify' => true
+            'notify' => true,
+            'collectNow' => true
         ], $options);
 
         $path = $this->getCachePath();
@@ -1219,7 +1220,8 @@ class Layout implements \JsonSerializable
                 'setBuildRequired' => false,
                 'audit' => false,
                 'validate' => false,
-                'notify' => $options['notify']
+                'notify' => $options['notify'],
+                'collectNow' => $options['collectNow']
             ]);
         }
 
@@ -1287,7 +1289,8 @@ class Layout implements \JsonSerializable
     private function update($options = [])
     {
         $options = array_merge([
-            'notify' => true
+            'notify' => true,
+            'collectNow' => true
         ], $options);
 
         $this->getLog()->debug('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
@@ -1335,6 +1338,6 @@ class Layout implements \JsonSerializable
         $campaign = $this->campaignFactory->getById($this->campaignId);
         $campaign->campaign = $this->layout;
         $campaign->ownerId = $this->ownerId;
-        $campaign->save(['validate' => false, 'notify' => $options['notify']]);
+        $campaign->save(['validate' => false, 'notify' => $options['notify'], 'collectNow' => $options['collectNow']]);
     }
 }

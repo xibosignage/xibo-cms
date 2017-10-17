@@ -226,6 +226,12 @@ class User implements \JsonSerializable
     public $isSystemNotification = 0;
 
     /**
+     * @SWG\Property(description="Does this Group receive system notifications.")
+     * @var int
+     */
+    public $isDisplayNotification = 0;
+
+    /**
      * Cached Permissions
      * @var array[Permission]
      */
@@ -806,6 +812,7 @@ class User implements \JsonSerializable
         $group = $this->userGroupFactory->create($this->userName, $this->libraryQuota);
         $group->setOwner($this);
         $group->isSystemNotification = $this->isSystemNotification;
+        $group->isDisplayNotification = $this->isDisplayNotification;
         $group->save();
     }
 
@@ -864,6 +871,7 @@ class User implements \JsonSerializable
         $group->group = $this->userName;
         $group->libraryQuota = $this->libraryQuota;
         $group->isSystemNotification = $this->isSystemNotification;
+        $group->isDisplayNotification = $this->isDisplayNotification;
         $group->save(['linkUsers' => false]);
     }
 

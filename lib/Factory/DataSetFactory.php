@@ -116,12 +116,13 @@ class DataSetFactory extends BaseFactory
     /**
      * Get DataSets by Name
      * @param $dataSet
+     * @param int|null $userId the userId
      * @return DataSet
      * @throws NotFoundException
      */
-    public function getByName($dataSet)
+    public function getByName($dataSet, $userId = null)
     {
-        $dataSets = $this->query(null, ['disableUserCheck' => 1, 'dataSet' => $dataSet]);
+        $dataSets = $this->query(null, ['dataSet' => $dataSet, 'userId' => $userId]);
 
         if (count($dataSets) <= 0)
             throw new NotFoundException();
@@ -185,6 +186,11 @@ class DataSetFactory extends BaseFactory
             if ($this->getSanitizer()->getInt('dataSetId', $filterBy) !== null) {
                 $body .= ' AND dataset.dataSetId = :dataSetId ';
                 $params['dataSetId'] = $this->getSanitizer()->getInt('dataSetId', $filterBy);
+            }
+
+            if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+                $body .= ' AND dataset.userId = :userId ';
+                $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
             }
 
             if ($this->getSanitizer()->getString('dataSet', $filterBy) != null) {

@@ -1245,19 +1245,23 @@ class Ticker extends ModuleWidget
                             // Library Image
                             // The content is the ID of the image
                             try {
-                                $file = $this->mediaFactory->getById($replace);
+                                if ($replace !== 0) {
+                                    $file = $this->mediaFactory->getById($replace);
+
+                                    // Tag this layout with this file
+                                    $this->assignMedia($file->mediaId);
+
+                                    $replace = ($isPreview)
+                                        ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                                        : '<img src="' . $file->storedAs . '" />';
+                                } else {
+                                    $replace = '';
+                                }
                             }
                             catch (NotFoundException $e) {
                                 $this->getLog()->error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);
-                                continue;
+                                $replace = '';
                             }
-
-                            // Tag this layout with this file
-                            $this->assignMedia($file->mediaId);
-
-                            $replace = ($isPreview)
-                                ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
-                                : '<img src="' . $file->storedAs . '" />';
                         }
                     }
 

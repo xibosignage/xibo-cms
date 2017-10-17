@@ -67,7 +67,7 @@
             },
             "columns": [
                 { "data": "dataSetId" },
-                { "data": "dataSet" },
+                { "data": "dataSet", "render": dataTableSpacingPreformatted },
                 { "data": "description" },
                 { "data": "code" },
                 { "data": "owner" },
@@ -88,10 +88,14 @@
                 var template = Handlebars.compile($("#template-dataset-upload").html());
                 var data = table.row($(this).closest("tr")).data();
                 var columns = [];
+                var i = 1;
 
                 $.each(data.columns, function (index, element) {
-                    if (element.dataSetColumnTypeId == 1)
+                    if (element.dataSetColumnTypeId === 1) {
+                        element.index = i;
                         columns.push(element);
+                        i++;
+                    }
                 });
 
                 // Handle bars and open a dialog
@@ -238,7 +242,7 @@
                     <div class="form-group">
                         <label class="col-sm-2 control-label" for="csvImport_{{dataSetColumnId}}">{{heading}}</label>
                         <div class="col-sm-10">
-                            <input class="form-control" name="csvImport_{{dataSetColumnId}}" type="number" id="csvImport_{{dataSetColumnId}}" value="" />
+                            <input class="form-control" name="csvImport_{{dataSetColumnId}}" type="number" id="csvImport_{{dataSetColumnId}}" value="{{ index }}" />
                         </div>
                     </div>
                     {{/each}}

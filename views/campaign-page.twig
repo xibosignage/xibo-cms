@@ -73,7 +73,10 @@ This is the template for the campaign page
                 }
             },
             "columns": [
-                { "data": "campaign" },
+                {
+                    "data": "campaign" ,
+                    "render": dataTableSpacingPreformatted
+                },
                 { "data": "numberLayouts" },
                 {
                     "sortable": false,
@@ -94,7 +97,10 @@ This is the template for the campaign page
 
         // Callback for the media form
         // Fired when the media form opens
-        function layoutFormCallBack() {
+        function layoutFormCallBack(dialog) {
+
+            // Convert our filter form tags inputs into actual tag inputs
+            $(dialog).find("#tags").tagsinput();
 
             // Hold a container for the layouts we have assigned already
             var container = $("#LayoutAssign");
@@ -113,7 +119,10 @@ This is the template for the campaign page
                 },
                 "columns": [
                     { "data": "layoutId" },
-                    { "data": "layout" },
+                    {
+                        "data": "layout",
+                        "render": dataTableSpacingPreformatted
+                    },
                     {
                         "sortable": false,
                         "data": function(data, type, row, meta) {
@@ -127,8 +136,9 @@ This is the template for the campaign page
                 ]
             });
 
-            layoutTable.on('draw', function(e, settings) {
+            layoutTable.on('draw', { form: $("#layoutAssignments").closest(".XiboGrid").find("form") }, function(e, settings) {
                 dataTableDraw(e, settings);
+                dataTableCreateTagEvents(e, settings);
 
                 // Clicky on the +spans
                 $(".assignItem", "#layoutAssignments").click(function() {
