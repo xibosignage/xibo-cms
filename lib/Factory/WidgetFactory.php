@@ -177,7 +177,7 @@ class WidgetFactory extends BaseFactory
         return $widget;
     }
 
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder == null)
             $sortOrder = array('displayOrder');

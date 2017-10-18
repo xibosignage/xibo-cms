@@ -800,6 +800,22 @@ class ConfigService implements ConfigServiceInterface
             'advice' => $advice
         );
 
+        // Check to see if OpenSSL is installed
+        $advice = __('OpenSSL is used to seal and verify messages sent to XMR');
+        if ($this->checkOpenSsl()) {
+            $status = 1;
+        } else {
+            $this->envWarning = true;
+            $status = 2;
+            $advice .= __(' and is recommended.');
+        }
+
+        $rows[] = array(
+            'item' => __('OpenSSL'),
+            'status' => $status,
+            'advice' => $advice
+        );
+
         $this->envTested = true;
 
         return $rows;
@@ -1066,5 +1082,14 @@ class ConfigService implements ConfigServiceInterface
             return false;
 
         return ($results[0]['Value'] != 'STATEMENT');
+    }
+
+    /**
+     * Check open ssl is available
+     * @return bool
+     */
+    public function checkOpenSsl()
+    {
+        return extension_loaded('openssl');
     }
 }

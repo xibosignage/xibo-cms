@@ -179,7 +179,7 @@ class DisplayGroupFactory extends BaseFactory
      * @param array $filterBy
      * @return array[DisplayGroup]
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder == null)
             $sortOrder = ['displayGroup'];

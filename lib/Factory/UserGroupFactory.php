@@ -170,7 +170,7 @@ class UserGroupFactory extends BaseFactory
      * @return array[UserGroup]
      * @throws \Exception
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $entries = array();
         $params = array();

@@ -478,6 +478,8 @@ CREATE TABLE IF NOT EXISTS `media` (
   `expires` int(11) DEFAULT NULL,
   `released` tinyint(4) NOT NULL DEFAULT '1',
   `apiRef` varchar(254) NULL,
+  `createdDt` DATETIME NULL,
+  `modifiedDt` DATETIME NULL,
   PRIMARY KEY (`mediaID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 

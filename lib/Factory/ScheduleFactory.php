@@ -264,7 +264,7 @@ class ScheduleFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Schedule]
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $entries = [];
         $params = [];

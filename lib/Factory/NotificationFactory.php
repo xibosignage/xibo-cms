@@ -118,7 +118,7 @@ class NotificationFactory extends BaseFactory
      * @param array[Optional] $filterBy
      * @return Notification[]
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $entries = array();
 

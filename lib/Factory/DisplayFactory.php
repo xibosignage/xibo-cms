@@ -142,7 +142,7 @@ class DisplayFactory extends BaseFactory
      * @param array $filterBy
      * @return Display[]
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder === null)
             $sortOrder = ['display'];

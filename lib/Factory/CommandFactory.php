@@ -80,7 +80,7 @@ class CommandFactory extends BaseFactory
      * @param array $filterBy
      * @return array
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $entries = array();
 

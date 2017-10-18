@@ -31,6 +31,7 @@ use Xibo\Entity\User;
 use Xibo\Entity\Widget;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -513,6 +514,7 @@ class LayoutFactory extends BaseFactory
      * @param bool $importDataSetData
      * @param \Xibo\Controller\Library $libraryController
      * @return Layout
+     * @throws XiboException
      */
     public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController)
     {
@@ -863,7 +865,7 @@ class LayoutFactory extends BaseFactory
      * @return Layout[]
      * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $entries = array();
         $params = array();

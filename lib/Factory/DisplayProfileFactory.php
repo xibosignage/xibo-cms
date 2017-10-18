@@ -136,7 +136,7 @@ class DisplayProfileFactory extends BaseFactory
      * @return DisplayProfile[]
      * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $profiles = array();
 

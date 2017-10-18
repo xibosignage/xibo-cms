@@ -100,7 +100,6 @@
                 ajax: {
                     "url": "{{ urlFor("display.search") }}",
                     "data": function (dataToSend) {
-                        console.log(dataToSend);
                         //make a new object so as not to destroy the input.
                         var data = {};
                         data.draw = dataToSend.draw;
@@ -243,6 +242,10 @@
                     {
                         "data": "xmrChannel",
                         "render": function (data, type, row) {
+                            if (type === "export") {
+                                return (data !== null && data !== "") ? 1 : 0;
+                            }
+
                             if (type != "display")
                                 return data;
 
