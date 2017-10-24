@@ -160,11 +160,11 @@
                         {{ forms.checkbox("useDisplayLocation", title, 1, helpText) }}
 
                         {% set title %}{% trans "Latitude" %}{% endset %}
-                        {% set helpText %}{% trans "The Latitude for this weather module" %}{% endset %}
+                        {% set helpText %}{% trans "The Latitude for this widget" %}{% endset %}
                         {{ forms.number("latitude", title, module.getOption("latitude"), helpText, "locationControls") }}
 
                         {% set title %}{% trans "Longitude" %}{% endset %}
-                        {% set helpText %}{% trans "The Longitude for this weather module" %}{% endset %}
+                        {% set helpText %}{% trans "The Longitude for this widget" %}{% endset %}
                         {{ forms.number("longitude", title, module.getOption("longitude"), helpText, "locationControls") }}
                     </div>
 
