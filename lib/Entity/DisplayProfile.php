@@ -589,12 +589,13 @@ class DisplayProfile implements \JsonSerializable
                         'type' => 'string',
                         'fieldType' => 'dropdown',
                         'options' => array(
-                            array('id' => 'Top Left', 'value' => 'Top Left'),
-                            array('id' => 'Top Right', 'value' => 'Top Right'),
-                            array('id' => 'Bottom Left', 'value' => 'Bottom Left'),
-                            array('id' => 'Bottom Right', 'value' => 'Bottom Right'),
+                            array('id' => 'Unchanged', 'value' => __('Unchanged')),
+                            array('id' => 'Top Left', 'value' => __('Top Left')),
+                            array('id' => 'Top Right', 'value' => __('Top Right')),
+                            array('id' => 'Bottom Left', 'value' => __('Bottom Left')),
+                            array('id' => 'Bottom Right', 'value' => __('Bottom Right')),
                         ),
-                        'default' => 'Bottom Right',
+                        'default' => 'Unchanged',
                         'helpText' => __('The position of the cursor when the client starts up.'),
                         'enabled' => true,
                         'groupClass' => NULL
