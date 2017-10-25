@@ -1133,6 +1133,17 @@ class DisplayProfile implements \JsonSerializable
                         'helpText' => __('The port number to use for the embedded web server on the Player. Only change this if there is a port conflict reported on the status screen.'),
                         'enabled' => true,
                         'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'installWithLoadedLinkLibraries',
+                        'tabId' => 'advanced',
+                        'title' => __('Load Link Libraries for APK Update'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 1,
+                        'helpText' => __('Should the update command include dynamic link libraries? Only change this if your updates are failing.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     )
                 )
             ),
