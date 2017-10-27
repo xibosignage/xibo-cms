@@ -45,7 +45,12 @@ class Font extends ModuleWidget
 
             // If it already exists, then skip it
             try {
-                $this->mediaFactory->getByName($font->name);
+                $font = $this->mediaFactory->getByName($font->name);
+
+                // The font record already exists, force an update to it
+                $font->fileName = $filePath;
+                $font->saveFile();
+
             } catch (NotFoundException $e) {
                 // Excellent, we don't have it
                 $font->save(['validate' => false]);
