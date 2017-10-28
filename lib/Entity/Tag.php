@@ -65,9 +65,16 @@ class Tag implements \JsonSerializable
      */
     public $mediaIds = [];
 
+    /**
+     * @SWG\Property(description="An array of displayGroupIds with this Tag")
+     * @var int[]
+     */
+    public $displayGroupIds = [];
+
     private $originalLayoutIds = [];
     private $originalMediaIds = [];
     private $originalCampaignIds = [];
+    private $originalDisplayGroupIds = [];
 
     /**
      * Entity constructor.
@@ -154,6 +161,29 @@ class Tag implements \JsonSerializable
     }
 
     /**
+     * Assign DisplayGroup
+     * @param int $displayGroupId
+     */
+    public function assignDisplayGroup($displayGroupId)
+    {
+        $this->load();
+
+        if (!in_array($displayGroupId, $this->displayGroupIds))
+            $this->displayGroupIds[] = $displayGroupId;
+    }
+
+    /**
+     * Unassign DisplayGroup
+     * @param int $displayGroupId
+     */
+    public function unassignDisplayGroup($displayGroupId)
+    {
+        $this->load();
+
+        $this->displayGroupIds = array_diff($this->displayGroupIds, [$displayGroupId]);
+    }
+
+    /**
      * Load
      */
     public function load()
@@ -178,11 +208,17 @@ class Tag implements \JsonSerializable
             $this->mediaIds[] = $row['mediaId'];
         }
 
+        $this->displayGroupIds = [];
+        foreach ($this->getStore()->select('SELECT displayGroupId FROM `lktagdisplaygroup` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
+            $this->displayGroupIds[] = $row['displayGroupId'];
+        }
+
         // Set the originals
         $this->originalLayoutIds = $this->layoutIds;
         $this->originalCampaignIds = $this->campaignIds;
         $this->originalMediaIds = $this->mediaIds;
-        
+        $this->originalDisplayGroupIds = $this->displayGroupIds;
+
         $this->loaded = true;
     }
 
@@ -199,6 +235,7 @@ class Tag implements \JsonSerializable
         $this->linkLayouts();
         $this->linkCampaigns();
         $this->linkMedia();
+        $this->linkDisplayGroups();
         $this->removeAssignments();
 
         $this->getLog()->debug('Saving Tag: %s, %d', $this->tag, $this->tagId);
@@ -212,6 +249,7 @@ class Tag implements \JsonSerializable
         $this->unlinkLayouts();
         $this->unlinkCampaigns();
         $this->unlinkMedia();
+        $this->unlinkDisplayGroups();
     }
 
     /**
@@ -376,6 +414,63 @@ class Tag implements \JsonSerializable
         $sql .= ')';
 
 
+
+        $this->getStore()->update($sql, $params);
+    }
+
+
+    /**
+     * Link all assigned displayGroups
+     */
+    private function linkDisplayGroups()
+    {
+        // Didn't exist before 134
+        if (DBVERSION < 134)
+            return;
+
+        $displayGroupsToLink = array_diff($this->displayGroupIds, $this->originalDisplayGroupIds);
+
+        $this->getLog()->debug('Linking ' . count($displayGroupsToLink) . ' displayGroups to Tag ' . $this->tag);
+
+        // DisplayGroups that are in $this->displayGroupIds but not in $this->originalDisplayGroupIds
+        foreach ($displayGroupsToLink as $displayGroupId) {
+            $this->getStore()->update('INSERT INTO `lktagdisplaygroup` (tagId, displayGroupId) VALUES (:tagId, :displayGroupId) ON DUPLICATE KEY UPDATE displayGroupId = displayGroupId', array(
+                'tagId' => $this->tagId,
+                'displayGroupId' => $displayGroupId
+            ));
+        }
+    }
+
+    /**
+     * Unlink all assigned displayGroups
+     */
+    private function unlinkDisplayGroups()
+    {
+        // Didn't exist before 134
+        if (DBVERSION < 134)
+            return;
+
+        // DisplayGroups that are in the $this->originalDisplayGroupIds but not in the current $this->displayGroupIds
+        $displayGroupsToUnlink = array_diff($this->originalDisplayGroupIds, $this->displayGroupIds);
+
+        $this->getLog()->debug('Unlinking ' . count($displayGroupsToUnlink) . ' displayGroups from Tag ' . $this->tag);
+
+        if (count($displayGroupsToUnlink) <= 0)
+            return;
+
+        // Unlink any displayGroups that are NOT in the collection
+        $params = ['tagId' => $this->tagId];
+
+        $sql = 'DELETE FROM `lktagdisplaygroup` WHERE tagId = :tagId AND displayGroupId IN (0';
+
+        $i = 0;
+        foreach ($displayGroupsToUnlink as $displayGroupId) {
+            $i++;
+            $sql .= ',:displayGroupId' . $i;
+            $params['displayGroupId' . $i] = $displayGroupId;
+        }
+
+        $sql .= ')';
 
         $this->getStore()->update($sql, $params);
     }

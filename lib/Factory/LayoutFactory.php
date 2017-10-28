@@ -31,6 +31,7 @@ use Xibo\Entity\User;
 use Xibo\Entity\Widget;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -235,6 +236,10 @@ class LayoutFactory extends BaseFactory
 
         // Ensure we have Playlists for each region
         foreach ($layout->regions as $region) {
+
+            // Set the ownership of this region to the user creating from template
+            $region->setOwner($ownerId, true);
+
             if (count($region->playlists) <= 0) {
                 // Create a Playlist for this region
                 $playlist = $this->playlistFactory->create($name, $ownerId);
@@ -297,12 +302,18 @@ class LayoutFactory extends BaseFactory
     /**
      * Get by CampaignId
      * @param int $campaignId
-     * @return array[Layout]
+     * @param bool $isOwnerOnly
+     * @return Layout[]
      * @throws NotFoundException
      */
-    public function getByCampaignId($campaignId)
+    public function getByCampaignId($campaignId, $isOwnerOnly = false)
     {
-        return $this->query(['displayOrder'], array('campaignId' => $campaignId, 'excludeTemplates' => -1, 'retired' => -1));
+        return $this->query(['displayOrder'], [
+            'campaignId' => ($isOwnerOnly) ? null : $campaignId,
+            'ownerCampaignId' => ($isOwnerOnly) ? $campaignId : null,
+            'excludeTemplates' => -1,
+            'retired' => -1
+        ]);
     }
 
     /**
@@ -503,6 +514,7 @@ class LayoutFactory extends BaseFactory
      * @param bool $importDataSetData
      * @param \Xibo\Controller\Library $libraryController
      * @return Layout
+     * @throws XiboException
      */
     public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController)
     {
@@ -850,10 +862,10 @@ class LayoutFactory extends BaseFactory
      * Query for all Layouts
      * @param array $sortOrder
      * @param array $filterBy
-     * @return array[Layout]
+     * @return Layout[]
      * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $entries = array();
         $params = array();
@@ -1003,6 +1015,12 @@ class LayoutFactory extends BaseFactory
             $params['retired'] = $this->getSanitizer()->getInt('retired', 0, $filterBy);
         }
 
+        if ($this->getSanitizer()->getInt('ownerCampaignId', $filterBy) !== null) {
+            // Join Campaign back onto it again
+            $body .= " AND `campaign`.campaignId = :ownerCampaignId ";
+            $params['ownerCampaignId'] = $this->getSanitizer()->getInt('ownerCampaignId', 0, $filterBy);
+        }
+
         // Tags
         if ($this->getSanitizer()->getString('tags', $filterBy) != '') {
 
@@ -1017,6 +1035,8 @@ class LayoutFactory extends BaseFactory
                     )
                 ';
             } else {
+                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+
                 $body .= " AND layout.layoutID IN (
                 SELECT lktaglayout.layoutId
                   FROM tag
@@ -1028,11 +1048,14 @@ class LayoutFactory extends BaseFactory
                     $i++;
 
                     if ($i == 1)
-                        $body .= " WHERE tag LIKE :tags$i ";
+                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
                     else
-                        $body .= " OR tag LIKE :tags$i ";
+                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
 
-                    $params['tags' . $i] = '%' . $tag . '%';
+                    if ($operator === '=')
+                        $params['tags' . $i] = $tag;
+                    else
+                        $params['tags' . $i] = '%' . $tag . '%';
                 }
 
                 $body .= " ) ";
@@ -1080,6 +1103,26 @@ class LayoutFactory extends BaseFactory
             ';
 
             $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', 0, $filterBy);
+        }
+
+        // Media Like
+        if ($this->getSanitizer()->getString('mediaLike', $filterBy) !== null) {
+            $body .= ' AND layout.layoutId IN (
+                SELECT DISTINCT `region`.layoutId
+                  FROM `lkwidgetmedia`
+                    INNER JOIN `widget`
+                    ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                    INNER JOIN `lkregionplaylist`
+                    ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                    INNER JOIN `region`
+                    ON `region`.regionId = `lkregionplaylist`.regionId
+                    INNER JOIN `media` 
+                    ON `lkwidgetmedia`.mediaId = `media`.mediaId
+                 WHERE `media`.name LIKE :mediaLike
+                )
+            ';
+
+            $params['mediaLike'] = '%' . $this->getSanitizer()->getString('mediaLike', $filterBy) . '%';
         }
 
         // Sorting?

@@ -45,18 +45,17 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
             // Get some parameters
             if ($index === null) {
-                if (!isset($_REQUEST['name']))
-                    throw new \InvalidArgumentException(__('Missing Name Parameter'));
-
-                $name = $_REQUEST['name'];
-            }
+                if (isset($_REQUEST['name']))
+                    $name = $_REQUEST['name'];
+                else 
+                    $name = $fileName;
+                }
             else {
-                if (!isset($_REQUEST['name'][$index]))
-                    throw new \InvalidArgumentException(__('Missing Name Parameter'));
-
-                $name = $_REQUEST['name'][$index];
-            }
-
+                if (isset($_REQUEST['name'][$index]))
+                    $name = $_REQUEST['name'][$index];
+                else 
+                    $name = $fileName;
+                }
             // Guess the type
             $module = $controller->getModuleFactory()->getByExtension(strtolower(substr(strrchr($fileName, '.'), 1)));
             $module = $controller->getModuleFactory()->create($module->type);
@@ -298,10 +297,29 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Save the playlist
                 $playlist->save();
+
+                // Handle permissions
+                // https://github.com/xibosignage/xibo/issues/1274
+                if ($controller->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
+                    // Apply permissions from the Parent
+                    foreach ($playlist->permissions as $permission) {
+                        /* @var Permission $permission */
+                        $permission = $controller->getPermissionFactory()->create($permission->groupId, get_class($widget), $widget->getId(), $permission->view, $permission->edit, $permission->delete);
+                        $permission->save();
+                    }
+                } else {
+                    foreach ($controller->getPermissionFactory()->createForNewEntity($controller->getUser(), get_class($widget), $widget->getId(), $controller->getConfig()->GetSetting('LAYOUT_DEFAULT'), $controller->getUserGroupFactory()) as $permission) {
+                        /* @var Permission $permission */
+                        $permission->save();
+                    }
+                }
             }
         } catch (Exception $e) {
             $controller->getLog()->error('Error uploading media: %s', $e->getMessage());
             $controller->getLog()->debug($e->getTraceAsString());
+
+            // Unlink the temporary file
+            @unlink($filePath);
 
             $file->error = $e->getMessage();
 

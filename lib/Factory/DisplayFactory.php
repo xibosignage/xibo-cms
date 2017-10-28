@@ -98,12 +98,13 @@ class DisplayFactory extends BaseFactory
 
     /**
      * @param int $displayId
+     * @param bool|false $showTags
      * @return Display
      * @throws NotFoundException
      */
-    public function getById($displayId)
+    public function getById($displayId, $showTags = false)
     {
-        $displays = $this->query(null, ['disableUserCheck' => 1, 'displayId' => $displayId]);
+        $displays = $this->query(null, ['disableUserCheck' => 1, 'displayId' => $displayId, 'showTags' => $showTags]);
 
         if (count($displays) <= 0)
             throw new NotFoundException();
@@ -141,7 +142,7 @@ class DisplayFactory extends BaseFactory
      * @param array $filterBy
      * @return Display[]
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder === null)
             $sortOrder = ['display'];
@@ -197,6 +198,19 @@ class DisplayFactory extends BaseFactory
                   `display`.deviceName , 
                   `display`.timeZone
               ';
+
+        if ($this->getSanitizer()->getCheckbox('showTags', $filterBy) === 1 && DBVERSION >= 134) {
+            $select .= ', 
+                (
+                  SELECT GROUP_CONCAT(DISTINCT tag) 
+                    FROM tag 
+                      INNER JOIN lktagdisplaygroup 
+                      ON lktagdisplaygroup.tagId = tag.tagId 
+                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
+                  GROUP BY lktagdisplaygroup.displayGroupId
+                ) AS tags
+            ';
+        }
 
         $body = '
                 FROM `display`
@@ -343,6 +357,47 @@ class DisplayFactory extends BaseFactory
             ';
 
             $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
+        }
+
+        // Tags
+        if ($this->getSanitizer()->getString('tags', $filterBy) != '') {
+
+            $tagFilter = $this->getSanitizer()->getString('tags', $filterBy);
+
+            if (trim($tagFilter) === '--no-tag') {
+                $body .= ' AND `displaygroup`.displaygroupId NOT IN (
+                    SELECT `lktagdisplaygroup`.displaygroupId
+                     FROM tag
+                        INNER JOIN `lktagdisplaygroup`
+                        ON `lktagdisplaygroup`.tagId = tag.tagId
+                    )
+                ';
+            } else {
+                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+
+                $body .= " AND `displaygroup`.displaygroupId IN (
+                SELECT `lktagdisplaygroup`.displaygroupId
+                  FROM tag
+                    INNER JOIN `lktagdisplaygroup`
+                    ON `lktagdisplaygroup`.tagId = tag.tagId
+                ";
+                $i = 0;
+                foreach (explode(',', $tagFilter) as $tag) {
+                    $i++;
+
+                    if ($i == 1)
+                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
+                    else
+                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
+
+                    if ($operator === '=')
+                        $params['tags' . $i] = $tag;
+                    else
+                        $params['tags' . $i] = '%' . $tag . '%';
+                }
+
+                $body .= " ) ";
+            }
         }
 
         // Sorting?

@@ -225,4 +225,27 @@ class CampaignTest extends LocalWebTestCase
         $campaign->delete();
         $layout->delete();
     }
+
+    /**
+     * Assign Layout to layout specific campaignId - expect failure
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function testAssignLayoutFailure()
+    {
+        // Get a layout for the test
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit description', '', 9);
+        $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
+        // Call assign on the layout specific campaignId
+        $this->client->post('/campaign/layout/assign/' . $layout->campaignId, [
+            'layoutId' => [
+                [
+                    'layoutId' => $layout->layoutId,
+                    'displayOrder' => 1
+                ]
+            ]
+        ]);
+
+        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
+        $layout->delete();
+    }
 }

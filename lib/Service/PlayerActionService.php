@@ -11,6 +11,7 @@ namespace Xibo\Service;
 
 use Xibo\Entity\Display;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\XMR\PlayerAction;
 use Xibo\XMR\PlayerActionException;
 
@@ -76,16 +77,21 @@ class PlayerActionService implements PlayerActionServiceInterface
             throw new ConfigurationException(__('ZeroMQ is required to send Player Actions. Please check your configuration.'));
 
         if ($this->xmrAddress == '')
-            throw new \InvalidArgumentException(__('XMR address is not set'));
+            throw new InvalidArgumentException(__('XMR address is not set'), 'xmrAddress');
 
         // Send a message to all displays
         foreach ($displays as $display) {
             /* @var Display $display */
             if ($display->xmrChannel == '' || $display->xmrPubKey == '')
-                throw new \InvalidArgumentException(__('This Player is not configured or ready to receive push commands over XMR. Please contact your administrator.'));
+                throw new InvalidArgumentException(__('This Player is not configured or ready to receive push commands over XMR. Please contact your administrator.'), 'xmrRegistered');
 
             $displayAction = clone $action;
-            $displayAction->setIdentity($display->xmrChannel, $display->xmrPubKey);
+
+            try {
+                $displayAction->setIdentity($display->xmrChannel, $display->xmrPubKey);
+            } catch (\Exception $exception) {
+                throw new InvalidArgumentException(__('Invalid XMR registration'), 'xmrPubKey');
+            }
 
             // Add to collection
             $this->actions[] = $displayAction;

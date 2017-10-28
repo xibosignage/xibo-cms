@@ -26,9 +26,11 @@ use League\OAuth2\Server\Util\RedirectUri;
 use Xibo\Entity\Application;
 use Xibo\Entity\ApplicationScope;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\ApplicationRedirectUriFactory;
 use Xibo\Factory\ApplicationScopeFactory;
+use Xibo\Factory\UserFactory;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -68,6 +70,9 @@ class Applications extends Base
     /** @var  ApplicationScopeFactory */
     private $applicationScopeFactory;
 
+    /** @var  UserFactory */
+    private $userFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -81,8 +86,9 @@ class Applications extends Base
      * @param StorageServiceInterface $store
      * @param ApplicationFactory $applicationFactory
      * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
+     * @param UserFactory $userFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $store, $applicationFactory, $applicationRedirectUriFactory, $applicationScopeFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $store, $applicationFactory, $applicationRedirectUriFactory, $applicationScopeFactory, $userFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -91,6 +97,7 @@ class Applications extends Base
         $this->applicationFactory = $applicationFactory;
         $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
         $this->applicationScopeFactory = $applicationScopeFactory;
+        $this->userFactory = $userFactory;
     }
 
     /**
@@ -251,6 +258,7 @@ class Applications extends Base
         $this->getState()->setData([
             'client' => $client,
             'scopes' => $scopes,
+            'users' => $this->userFactory->query(),
             'help' => $this->getHelp()->link('Services', 'Register')
         ]);
     }
@@ -294,10 +302,12 @@ class Applications extends Base
     /**
      * Edit Application
      * @param $clientId
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\XiboException
      */
     public function edit($clientId)
     {
+        $this->getLog()->debug('Editing ' . $clientId);
+
         // Get the client
         $client = $this->applicationFactory->getById($clientId);
 
@@ -358,6 +368,18 @@ class Applications extends Base
                 $client->unassignScope($scope);
         }
 
+        // Change the ownership?
+        if ($this->getSanitizer()->getInt('userId') !== null) {
+            // Check we have permissions to view this user
+            $user = $this->userFactory->getById($this->getSanitizer()->getInt('userId'));
+
+            $this->getLog()->debug('Attempting to change ownership to ' . $user->userId . ' - ' . $user->userName);
+
+            if (!$this->getUser()->checkViewable($user))
+                throw new InvalidArgumentException('You do not have permission to assign this user', 'userId');
+
+            $client->userId = $user->userId;
+        }
 
         $client->save();
 

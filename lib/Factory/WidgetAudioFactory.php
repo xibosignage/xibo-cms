@@ -70,7 +70,7 @@ class WidgetAudioFactory extends BaseFactory
      * @param array $filterBy
      * @return array[int]
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $entries = [];
         $sql = 'SELECT `mediaId`, `widgetId`, `volume`, `loop` FROM `lkwidgetaudio` WHERE widgetId = :widgetId AND mediaId <> 0 ';

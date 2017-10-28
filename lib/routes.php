@@ -203,6 +203,7 @@ $app->delete('/resolution/:id', '\Xibo\Controller\Resolution:delete')->name('res
 $app->map('/library', '\Xibo\Controller\Library:add')->via('HEAD');
 $app->get('/library', '\Xibo\Controller\Library:grid')->name('library.search');
 $app->get('/library/usage/:id', '\Xibo\Controller\Library:usage')->name('library.usage');
+$app->get('/library/usage/layouts/:id', '\Xibo\Controller\Library:usageLayouts')->name('library.usage.layouts');
 $app->get('/library/download/:id(/:type)', '\Xibo\Controller\Library:download')->name('library.download');
 $app->post('/library', '\Xibo\Controller\Library:add')->name('library.add');
 $app->put('/library/:id', '\Xibo\Controller\Library:edit')->name('library.edit');

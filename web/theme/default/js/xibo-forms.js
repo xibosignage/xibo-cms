@@ -304,10 +304,11 @@ var FileAssociationsSubmit = function(displayGroupId)
 var forecastIoFormSetup = function() {
     $('#color').colorpicker();
 
-    // If all 3 of the template fields are empty, then the template should be reapplied.
-    if (!$("#overrideTemplate").is(":checked") && ($("#currentTemplate").val() == "" || $("#dailyTemplate").val() == "" || $("#styleSheet").val() == "")) {
+    var reapplyWeatherTemplate = function() {
         // Reapply
         var templateId = $("#templateId").val();
+
+        //console.log("Reapply templateId " + templateId);
 
         $.each($('.bootbox').data().extra, function(index, value) {
             if (value.id == templateId) {
@@ -320,30 +321,20 @@ var forecastIoFormSetup = function() {
         });
     }
 
-    $("#templateId").on('change', function() {
-        // Check to see if the override template check box is unchecked
-        if (!$("#overrideTemplate").is(":checked")) {
+    // Reapply the selected template if override template isn't checked
+    // https://github.com/xibosignage/xibo/issues/1241
+    if (!$("#overrideTemplate").is(":checked")) {
+        reapplyWeatherTemplate();
+    }
 
-            var templateId = $("#templateId").val();
-
-            $.each($('.bootbox').data().extra, function(index, value) {
-                if (value.id == templateId) {
-                    $("#widgetOriginalWidth").val(value.widgetOriginalWidth);
-                    $("#widgetOriginalHeight").val(value.widgetOriginalHeight);
-                    $("#currentTemplate").val(value.main);
-                    $("#dailyTemplate").val(value.daily);
-                    $("#styleSheet").val(value.css);
-                }
-            });
-        }
-    });
+    $("#templateId").on('change', reapplyWeatherTemplate);
 };
 
 var financeFormSetup = function() {
     $('#backgroundColor').colorpicker({format: 'rgba'});
 
     // If all 3 of the template fields are empty, then the template should be reapplied.
-    if (!$("#overrideTemplate").is(":checked") && ($("#currentTemplate").val() == "" || $("#mainTemplate").val() == "" || $("#itemTemplate").val() == "" || $("#styleSheet").val() == "")) {
+    if (!$("#overrideTemplate").is(":checked")) {
         // Reapply
         var templateId = $("#templateId").val();
 
@@ -484,9 +475,12 @@ var backGroundFormSetup = function(dialog) {
 function layoutEditBackgroundButtonClicked(e, dialog) {
     e.preventDefault();
 
+    // Hide the original button
+    dialog.find('.background-image-add-button').hide();
+
     // Append a background upload button to the dialog footer.
     var template = Handlebars.compile($("#layout-background-image-upload-template").html());
-    var footer = dialog.find(".modal-footer");
+    var footer = dialog.find("#layoutEditFormBackgroundUpload");
 
     footer.append(template());
 
@@ -564,6 +558,9 @@ function layoutEditBackgroundButtonClicked(e, dialog) {
         // Hide the stuff we've added
         form.slideUp();
     });
+
+    // Click the button
+    dialog.find('.fileinput-button').click();
 }
 
 function permissionsFormOpen(dialog) {

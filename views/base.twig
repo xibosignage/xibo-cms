@@ -82,6 +82,8 @@
         <script src="{{ theme.uri("libraries/momentjs/moment-timezone.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("libraries/morrisjs/raphael.min.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("libraries/morrisjs/morris.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/chartjs/Chart.min.js") }}?{{ version }}"></script>
+
         <script src="{{ theme.uri("libraries/colors/colors.min.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("js/xibo-cms.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("js/xibo-forms.js") }}?{{ version }}"></script>
@@ -135,6 +137,8 @@
             translations.failure = "{{ "Failure"|trans }}";
             translations.enterText = "{{ "Enter text..."|trans }}";
             translations.statusPending = "{{ "Status Pending"|trans }}";
+            translations.duplicate = "{{ "Duplicate"|trans }}";
+            translations.spacesWarning = "{{ "Warning - starts with or ends with a space, or contains double spaces"|trans }}";
             {% endautoescape %}
 
             var language = "{{ translate.jsLocale }}";

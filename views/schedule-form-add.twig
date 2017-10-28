@@ -99,7 +99,18 @@
                         ] %}
                         {% set title %}{% trans "Layout / Campaign" %}{% endset %}
                         {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
-                        {{ forms.dropdown("campaignId", "single", title, "", {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "layout-control", "", "", "", "", optionGroups) }}
+                        {% set attributes = [
+                            { name: "data-live-search", value: "true" },
+                            { name: "data-selected-text-format", value: "count > 4" }
+                        ] %}
+                        {{ forms.dropdown("campaignId", "single", title, "", {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "layout-control", "", "", "", attributes, optionGroups) }}
+
+                        <div class="form-group preview-button-container">
+                            <div class="col-md-offset-2 col-md-10">
+                                <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ urlFor("campaign.preview") }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
+                                <span class="help-block">{% trans "Preview your selection in a new tab" %}</span>
+                            </div>
+                        </div>
 
                         {% set title %}{% trans "Command" %}{% endset %}
                         {% set helpText %}{% trans "Please select a command for this Event." %}{% endset %}

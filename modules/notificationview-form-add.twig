@@ -1,0 +1,141 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2017 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Notification Widget" %}
+{% endblock %}
+
+{% block callBack %}notificationWidgetFormOpen{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#notificationForm").submit()
+{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#effectTab" role="tab" data-toggle="tab"><span>{% trans "Effect" %}</span></a></li>
+                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+            </ul>
+            <form id="notificationForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                        {{ forms.input("name", title, "", helpText) }}
+
+                        {% set title %}{% trans "Set a duration?" %}{% endset %}
+                        {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                        {{ forms.checkbox("useDuration", title, 0, helpText) }}
+
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, module.getModule().defaultDuration, helpText, "duration-fields", "required") }}
+
+                        {% set title %}{% trans "Age" %}{% endset %}
+                        {% set helpText %}{% trans "What is the maximum notification age in minutes, 0 for no restrictions." %}{% endset %}
+                        {{ forms.number("age", title, 0, helpText, "", "required") }}
+
+                        {% set helpText %}{% trans "The template for formatting your notifications. Enter [Subject] and [Body] with your desired formatting." %}{% endset %}
+                        {{ forms.textarea("template", "", module.getRawNode("template"), helpText, "", "", 5) }}
+                    </div>
+                    <div class="tab-pane" id="effectTab">
+                        {% set title %}{% trans "Effect" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the effect that will be used to transition between items." %}{% endset %}
+                        {% set noneOption %}{% trans "None" %}{% endset %}
+                        {% set fade %}{% trans "Fade" %}{% endset %}
+                        {% set fadeout %}{% trans "Fade Out" %}{% endset %}
+                        {% set scrollHorz %}{% trans "Scroll Horizontal" %}{% endset %}
+                        {% set scrollVert %}{% trans "Scroll Vertical" %}{% endset %}
+                        {% set flipHorz %}{% trans "Flip Horizontal" %}{% endset %}
+                        {% set flipVert %}{% trans "Flip Vertical" %}{% endset %}
+                        {% set shuffle %}{% trans "Shuffle" %}{% endset %}
+                        {% set tileSlide %}{% trans "Tile Slide" %}{% endset %}
+                        {% set tileBlind %}{% trans "Tile Blind" %}{% endset %}
+                        {% set options = [
+                        { effectid: "none", effect: noneOption },
+                        { effectid: "fade", effect: fade },
+                        { effectid: "fadeout", effect: fadeout},
+                        { effectid: "scrollHorz", effect: scrollHorz},
+                        { effectid: "scrollVert", effect: scrollVert},
+                        { effectid: "flipHorz", effect: flipHorz},
+                        { effectid: "flipVert", effect: flipVert},
+                        { effectid: "shuffle", effect: shuffle},
+                        { effectid: "tileSlide", effect: tileSlide},
+                        { effectid: "tileBlind", effect: tileBlind}
+                        ] %}
+                        {{ forms.dropdown("effect", "single", title, module.getOption("effect"), options, "effectid", "effect", helpText) }}
+
+                        {% set title %}{% trans "Speed" %}{% endset %}
+                        {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000)." %}{% endset %}
+                        {{ forms.number("speed", title, "", helpText, "effect-controls") }}
+                    </div>
+                    <div class="tab-pane" id="advanced">
+
+                        {% set title %}{% trans "Duration is per item" %}{% endset %}
+                        {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
+                        {{ forms.checkbox("durationIsPerItem", title, 1, helpText) }}
+
+                        {% set helpText %}{% trans "A message to display when there are no notifications to show" %}{% endset %}
+                        {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}
+
+{% set styleDefault %}
+<style type="text/css">
+
+</style>
+{% endset %}
+                        {% set helpText %}{% trans "Custom Style Sheets" %}{% endset %}
+                        {{ forms.textarea("embedStyle", "", styleDefault, helpText, "", "", 10) }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

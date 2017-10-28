@@ -428,6 +428,18 @@ class Schedule implements \JsonSerializable
         // Make sure we have a sensible recurrence setting
         if ($this->dayPartId !== self::$DAY_PART_CUSTOM && ($this->recurrenceType == 'Minute' || $this->recurrenceType == 'Hour'))
             throw new InvalidArgumentException(__('Repeats selection is invalid for Always or Daypart events'), 'recurrencyType');
+
+        // Check display order is positive
+        if ($this->displayOrder < 0)
+            throw new InvalidArgumentException(__('Display Order must be 0 or a positive number'), 'displayOrder');
+
+        // Check priority is positive
+        if ($this->isPriority < 0)
+            throw new InvalidArgumentException(__('Priority must be 0 or a positive number'), 'isPriority');
+
+        // Check recurrenceDetail every is positive
+        if ($this->recurrenceDetail < 0)
+            throw new InvalidArgumentException(__('Repeat every must be a positive number'), 'recurrenceDetail');
     }
 
     /**
@@ -953,11 +965,14 @@ class Schedule implements \JsonSerializable
             }
 
             if (!$found) {
-                if ($start > $end)
-                    $end->addDay();
-
+                // Set the time section of our dates based on the daypart date
                 $start->setTimeFromTimeString($dayPart->startTime);
                 $end->setTimeFromTimeString($dayPart->endTime);
+
+                if ($start > $end) {
+                    $this->getLog()->debug('Start is ahead of end - adding a day to the end date');
+                    $end->addDay();
+                }
             }
         }
     }

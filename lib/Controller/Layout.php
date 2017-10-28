@@ -187,13 +187,14 @@ class Layout extends Base
             $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
 
         $moduleFactory = $this->moduleFactory;
+        $isTemplate = $layout->hasTag('template');
 
         // Set up any JavaScript translations
         $data = [
             'layout' => $layout,
             'resolution' => $resolution,
-            'isTemplate' => $layout->hasTag('template'),
-            'layouts' => $this->layoutFactory->query(),
+            'isTemplate' => $isTemplate,
+            'layouts' => $this->layoutFactory->query(null, ['excludeTemplates' => $isTemplate ? 0 : 1]),
             'zoom' => $this->getSanitizer()->getDouble('zoom', $this->getUser()->getOptionValue('defaultDesignerZoom', 1)),
             'modules' => array_map(function($element) use ($moduleFactory) { return $moduleFactory->createForInstall($element->class); }, $moduleFactory->getAssignableModules())
         ];
@@ -602,6 +603,13 @@ class Layout extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="exactTags",
+     *      in="formData",
+     *      description="A flag indicating whether to treat the tags filter as an exact match",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="ownerUserGroupId",
      *      in="formData",
      *      description="Filter by users in this UserGroupId",
@@ -632,8 +640,14 @@ class Layout extends Base
         // Should we parse the description into markdown
         $showDescriptionId = $this->getSanitizer()->getInt('showDescriptionId');
 
-        // Embed?
-        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+        // We might need to embed some extra content into the response if the "Show Description"
+        // is set to media listing
+        if ($showDescriptionId === 3) {
+            $embed = ['regions', 'playlists', 'widgets'];
+        } else {
+            // Embed?
+            $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+        }
 
         // Get all layouts
         $layouts = $this->layoutFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
@@ -641,9 +655,11 @@ class Layout extends Base
             'userId' => $this->getSanitizer()->getInt('userId'),
             'retired' => $this->getSanitizer()->getInt('retired'),
             'tags' => $this->getSanitizer()->getString('tags'),
+            'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
             'filterLayoutStatusId' => $this->getSanitizer()->getInt('layoutStatusId'),
             'layoutId' => $this->getSanitizer()->getInt('layoutId'),
-            'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId')
+            'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
+            'mediaLike' => $this->getSanitizer()->getString('mediaLike')
         ]));
 
         foreach ($layouts as $layout) {
@@ -666,6 +682,7 @@ class Layout extends Base
                 continue;
 
             $layout->includeProperty('buttons');
+            $layout->excludeProperty('regions');
 
             $layout->thumbnail = '';
 
@@ -684,6 +701,24 @@ class Layout extends Base
                 } else if ($showDescriptionId == 2) {
                     $layout->descriptionFormatted = strtok($layout->description, "\n");
                 }
+            }
+
+            if ($showDescriptionId === 3) {
+                // Load in the entire object model - creating module objects so that we can get the name of each
+                // widget and its items.
+                foreach ($layout->regions as $region) {
+                    foreach ($region->playlists as $playlist) {
+                        /* @var Playlist $playlist */
+
+                        foreach ($playlist->widgets as $widget) {
+                            /* @var Widget $widget */
+                            $widget->module = $this->moduleFactory->createWithWidget($widget, $region);
+                        }
+                    }
+                }
+
+                // provide our layout object to a template to render immediately
+                $layout->descriptionFormatted = $this->renderTemplateToString('layout-page-grid-widgetlist', $layout);
             }
 
             switch ($layout->status) {
@@ -945,9 +980,32 @@ class Layout extends Base
         $layout->layout = $this->getSanitizer()->getString('name');
         $layout->description = $this->getSanitizer()->getString('description');
 
-        // TODO: Copy the media on the layout and change the assignments.
+        // Copy the media on the layout and change the assignments.
+        // https://github.com/xibosignage/xibo/issues/1283
         if ($this->getSanitizer()->getCheckbox('copyMediaFiles') == 1) {
+            foreach ($layout->getWidgets() as $widget) {
+                // Copy the media
+                $oldMedia = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                $media = clone $oldMedia;
+                $media->setOwner($this->getUser()->userId);
+                $media->save();
 
+                $widget->unassignMedia($oldMedia->mediaId);
+                $widget->assignMedia($media->mediaId);
+
+                // Update the widget option with the new ID
+                $widget->setOptionValue('uri', 'attrib', $media->storedAs);
+            }
+
+            // Also handle the background image, if there is one
+            if ($layout->backgroundImageId != 0) {
+                $oldMedia = $this->mediaFactory->getById($layout->backgroundImageId);
+                $media = clone $oldMedia;
+                $media->setOwner($this->getUser()->userId);
+                $media->save();
+
+                $layout->backgroundImageId = $media->mediaId;
+            }
         }
 
         // Save the new layout
@@ -1127,7 +1185,7 @@ class Layout extends Base
      * @SWG\Parameter(
      *      name="layoutId",
      *      in="path",
-     *      description="The Layout Id to Untag",
+     *      description="The Layout Id to get the status",
      *      type="integer",
      *      required=true
      *   ),

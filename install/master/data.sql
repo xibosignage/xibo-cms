@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.8.2', 5, 2, 133);
+('1.8.3', 5, 2, 134);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`, `isSystemNotification`) VALUES
 (1, 'Users', 0, 0, 0),
@@ -216,7 +216,6 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (77, 'FORCE_HTTPS', '0', 'checkbox', 'Force the portal into HTTPS?', NULL, 'network', 1, 'Force HTTPS?', '', 70, '0', 1, 'checkbox'),
 (78, 'ISSUE_STS', '0', 'checkbox', 'Add STS to the response headers? Make sure you fully understand STS before turning it on as it will prevent access via HTTP after the first successful HTTPS connection.', NULL, 'network', 1, 'Enable STS?', '', 80, '0', 1, 'checkbox'),
 (79, 'STS_TTL', '600', 'text', 'The Time to Live (maxage) of the STS header expressed in seconds.', NULL, 'network', 1, 'STS Time out', '', 90, '600', 1, 'int'),
-(80, 'MAINTENANCE_ALERTS_FOR_VIEW_USERS', '0', 'checkbox', 'Email maintenance alerts for users with view permissions to effected Displays.', NULL, 'displays', 1, 'Maintenance Alerts for Users', '', 60, '0', 1, 'checkbox'),
 (81, 'CALENDAR_TYPE', 'Gregorian', 'dropdown', 'Which Calendar Type should the CMS use?', 'Gregorian|Jalali', 'regional', 1, 'Calendar Type', '', 50, 'Gregorian', 1, 'string'),
 (82, 'DASHBOARD_LATEST_NEWS_ENABLED', '1', 'checkbox', 'Should the Dashboard show latest news? The address is provided by the theme.', '', 'general', 1, 'Enable Latest News?', '', 110, '1', 1, 'checkbox'),
 (83, 'LIBRARY_MEDIA_DELETEOLDVER_CHECKB','Checked','dropdown','Default the checkbox for Deleting Old Version of media when a new file is being uploaded to the library.','Checked|Unchecked','defaults',1,'Default for "Delete old version of Media" checkbox. Shown when Editing Library Media.', '', 50, 'Unchecked', 1, 'dropdown'),
@@ -285,7 +284,7 @@ INSERT INTO `tag` (`tagId`, `tag`) VALUES
 (3, 'thumbnail');
 
 INSERT INTO `displayprofile` (`name`, `type`, `config`, `isdefault`, `userid`)
-VALUES ('Windows', 'windows', '[]', '1', '1'), ('Android', 'android', '[]', '1', '1');
+VALUES ('Windows', 'windows', '[]', '1', '1'), ('Android', 'android', '[]', '1', '1'),  ('webOS', 'lg', '[]', '1', '1');
 
 INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES
 (1, 'Xibo\\Entity\\Page'),

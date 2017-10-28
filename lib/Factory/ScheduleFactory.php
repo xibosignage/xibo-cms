@@ -264,7 +264,7 @@ class ScheduleFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Schedule]
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $entries = [];
         $params = [];
@@ -353,6 +353,34 @@ class ScheduleFactory extends BaseFactory
             $sql .= ' AND ((schedule.fromDt < :futureSchedulesTo AND IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom) OR `schedule`.recurrence_range >= :futureSchedulesFrom OR (IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\') ) ';
             $params['futureSchedulesFrom'] = $this->getSanitizer()->getInt('futureSchedulesFrom', $filterBy);
             $params['futureSchedulesTo'] = $this->getSanitizer()->getInt('futureSchedulesTo', $filterBy);
+        }
+
+        // Restrict to mediaId - meaning layout schedules of which the layouts contain the selected mediaId
+        if ($this->getSanitizer()->getInt('mediaId', $filterBy) !== null) {
+            $sql .= '
+                AND schedule.campaignId IN (
+                    SELECT `lkcampaignlayout`.campaignId
+                      FROM `lkwidgetmedia`
+                       INNER JOIN `widget`
+                       ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                       INNER JOIN `lkregionplaylist`
+                       ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                       INNER JOIN `region`
+                       ON `region`.regionId = `lkregionplaylist`.regionId
+                       INNER JOIN layout
+                       ON layout.LayoutID = region.layoutId
+                       INNER JOIN `lkcampaignlayout`
+                       ON lkcampaignlayout.layoutId = layout.layoutId
+                     WHERE lkwidgetmedia.mediaId = :mediaId
+                    UNION
+                    SELECT `lkcampaignlayout`.campaignId
+                      FROM `layout`
+                       INNER JOIN `lkcampaignlayout`
+                       ON lkcampaignlayout.layoutId = layout.layoutId
+                     WHERE `layout`.backgroundImageId = :mediaId
+                )
+            ';
+            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
         }
 
         // Sorting?

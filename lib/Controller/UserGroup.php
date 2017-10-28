@@ -260,8 +260,10 @@ class UserGroup extends Base
         $group->group = $this->getSanitizer()->getString('group');
         $group->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
 
-        if ($this->getUser()->userTypeId == 1)
+        if ($this->getUser()->userTypeId == 1) {
             $group->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
+            $group->isDisplayNotification = $this->getSanitizer()->getCheckbox('isDisplayNotification');
+        }
 
         // Save
         $group->save();
@@ -294,8 +296,10 @@ class UserGroup extends Base
         $group->group = $this->getSanitizer()->getString('group');
         $group->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
 
-        if ($this->getUser()->userTypeId == 1)
+        if ($this->getUser()->userTypeId == 1) {
             $group->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
+            $group->isDisplayNotification = $this->getSanitizer()->getCheckbox('isDisplayNotification');
+        }
 
         // Save
         $group->save();

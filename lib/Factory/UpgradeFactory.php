@@ -91,7 +91,7 @@ class UpgradeFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Upgrade]
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $this->checkAndProvision();
 

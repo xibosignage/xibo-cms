@@ -309,6 +309,12 @@ class Display implements \JsonSerializable
     public $timeZone;
 
     /**
+     * @SWG\Property(description="Tags associated with this Display")
+     * @var Tag[]
+     */
+    public $tags;
+
+    /**
      * Commands
      * @var array[Command]
      */
@@ -616,6 +622,7 @@ class Display implements \JsonSerializable
 
         $displayGroup = $this->displayGroupFactory->createEmpty();
         $displayGroup->displayGroup = $this->display;
+        $displayGroup->tags = $this->tags;
         $displayGroup->setDisplaySpecificDisplay($this);
         $displayGroup->save();
     }
@@ -699,12 +706,13 @@ class Display implements \JsonSerializable
         ]);
 
         // Maintain the Display Group
-        if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('description')) {
+        if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('description') || $this->hasPropertyChanged('tags')) {
             $this->getLog()->debug('Display specific DisplayGroup properties need updating');
 
             $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
             $displayGroup->displayGroup = $this->display;
             $displayGroup->description = $this->description;
+            $displayGroup->replaceTags($this->tags);
             $displayGroup->save(DisplayGroup::$saveOptionsMinimum);
         }
     }

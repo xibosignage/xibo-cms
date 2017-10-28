@@ -83,7 +83,7 @@ class DataSetColumnFactory extends BaseFactory
         return $this->query(null, ['dataSetId' => $dataSetId]);
     }
 
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $entries = [];
         $params = [];

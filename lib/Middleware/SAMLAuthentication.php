@@ -84,7 +84,8 @@ class SAMLAuthentication extends Middleware
             $metadata = $settings->getSPMetadata();
             $errors = $settings->validateMetadata($metadata);
             if (empty($errors)) {
-                header('Content-Type: text/xml');
+                $app = $this->getApplication();
+                $app->response()->header('Content-Type', 'text/xml');
                 echo $metadata;
             } else {
                 throw new \Xibo\Exception\ConfigurationException(
@@ -370,17 +371,7 @@ class SAMLAuthentication extends Middleware
             }
         };
 
-        $updateUser = function () use ($app) {
-            $user = $app->user;
-            /* @var \Xibo\Entity\User $user */
-
-            if (!$app->public && $user->hasIdentity()) {
-                $user->touch();
-            }
-        };
-
         $app->hook('slim.before.dispatch', $isAuthorised);
-        $app->hook('slim.after.dispatch', $updateUser);
 
         $this->next->call();
     }

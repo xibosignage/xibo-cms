@@ -327,7 +327,7 @@ class Schedule extends Base
                     'url' => ($editable) ? $url : null,
                     'start' => $fromDt->format('U') * 1000,
                     'end' => $toDt->format('U') * 1000,
-                    'sameDay' => ($fromDt->day == $toDt->day),
+                    'sameDay' => ($fromDt->day == $toDt->day && $fromDt->month == $toDt->month && $fromDt->year == $toDt->year),
                     'editable' => $editable,
                     'event' => $row,
                     'scheduleEvent' => $scheduleEvent
@@ -640,7 +640,7 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="eventTypeId",
      *      in="formData",
-     *      description="The Event Type Id to use for this Event. 1=Campaign, 2=Command",
+     *      description="The Event Type Id to use for this Event. 1=Campaign, 2=Command, 3=Overlay",
      *      type="integer",
      *      required=true
      *  ),
@@ -911,7 +911,7 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="eventTypeId",
      *      in="formData",
-     *      description="The Event Type Id to use for this Event. 1=Campaign, 2=Command",
+     *      description="The Event Type Id to use for this Event. 1=Campaign, 2=Command, 3=Overlay",
      *      type="integer",
      *      required=true
      *  ),

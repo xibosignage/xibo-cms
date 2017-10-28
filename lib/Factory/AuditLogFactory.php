@@ -57,7 +57,7 @@ class AuditLogFactory extends BaseFactory
      * @param array $filterBy
      * @return array
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $this->getLog()->debug('AuditLog Factory with filter: %s', var_export($filterBy, true));
 

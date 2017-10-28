@@ -17,9 +17,9 @@ class TransExtension extends \Twig_Extension
      * @return array An array of Twig_TokenParserInterface or Twig_TokenParserBrokerInterface instances
      */
     public function getTokenParsers()
-{
-    return array(new TransTokenParser());
-}
+    {
+        return array(new TransTokenParser());
+    }
 
     /**
      * Returns a list of filters to add to the existing list.
@@ -27,11 +27,11 @@ class TransExtension extends \Twig_Extension
      * @return array An array of filters
      */
     public function getFilters()
-{
-    return array(
-        new \Twig_SimpleFilter('trans', '__'),
-    );
-}
+    {
+        return array(
+            new \Twig_SimpleFilter('trans', '__'),
+        );
+    }
 
     /**
      * Returns the name of the extension.
@@ -39,7 +39,7 @@ class TransExtension extends \Twig_Extension
      * @return string The extension name
      */
     public function getName()
-{
-    return 'i18n';
-}
+    {
+        return 'i18n';
+    }
 }

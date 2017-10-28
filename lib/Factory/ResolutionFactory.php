@@ -122,7 +122,7 @@ class ResolutionFactory extends BaseFactory
         return $resolutions[0];
     }
 
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder === null)
             $sortOrder = ['resolution'];

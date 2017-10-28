@@ -44,7 +44,10 @@ class TransNode extends \Twig_Node
         }
 
         if ($vars) {
+            // Add a hint for xgettext so that poedit goes not treat the variable substitution as PHP format
+            // https://github.com/xibosignage/xibo/issues/1284
             $compiler
+                ->write('/* xgettext:no-php-format */')
                 ->write('echo strtr(' . $function . '(')
                 ->subcompile($msg);
 

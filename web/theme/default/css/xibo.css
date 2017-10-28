@@ -918,3 +918,14 @@ ul li.active.tab-design:hover a {
     width: auto;
     padding-right: 0;
 }
+
+.spacing-warning-icon {
+    position: absolute;
+    right: 30px;
+    top: 10px;
+    color: red;
+}
+
+.spacing-whitespace-pre {
+    white-space: pre-wrap;
+}

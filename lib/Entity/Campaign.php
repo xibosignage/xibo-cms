@@ -299,14 +299,14 @@ class Campaign implements \JsonSerializable
      */
     public function save($options = [])
     {
-        
         $options = array_merge([
             'validate' => true,
             'notify' => true,
+            'collectNow' => true,
             'saveTags' => true
         ], $options);
 
-        $this->getLog()->debug('Saving %s', $this);
+        $this->getLog()->debug('Saving ' . $this);
 
         if ($options['validate'])
             $this->validate();
@@ -324,7 +324,7 @@ class Campaign implements \JsonSerializable
             foreach ($this->tags as $tag) {
                 /* @var Tag $tag */
 
-                $this->getLog()->debug('Assigning tag %s', $tag->tag);
+                $this->getLog()->debug('Assigning tag ' . $tag->tag);
 
                 $tag->assignCampaign($this->campaignId);
                 $tag->save();
@@ -335,7 +335,7 @@ class Campaign implements \JsonSerializable
         if (is_array($this->unassignTags)) {
             foreach ($this->unassignTags as $tag) {
                 /* @var Tag $tag */
-                $this->getLog()->debug('Unassigning tag %s', $tag->tag);
+                $this->getLog()->debug('Unassigning tag ' . $tag->tag);
 
                 $tag->unassignCampaign($this->campaignId);
                 $tag->save();
@@ -348,8 +348,7 @@ class Campaign implements \JsonSerializable
         }
 
         // Notify anyone interested of the changes
-        if ($options['notify'])
-            $this->notify();
+        $this->notify($options);
     }
 
     public function delete()
@@ -537,11 +536,27 @@ class Campaign implements \JsonSerializable
 
     /**
      * Notify displays of this campaign change
+     * @param array $options
      */
-    private function notify()
+    private function notify($options)
     {
-        $this->getLog()->debug('CampaignId ' . $this->campaignId . ' wants to notify.');
+        $options = array_merge([
+            'notify' => true,
+            'collectNow' => true,
+        ], $options);
 
-        $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByCampaignId($this->campaignId);
+        // Do we notify?
+        if ($options['notify']) {
+            $this->getLog()->debug('CampaignId ' . $this->campaignId . ' wants to notify.');
+
+            $notify = $this->displayFactory->getDisplayNotifyService();
+
+            // Should we collect immediately
+            if ($options['collectNow'])
+                $notify->collectNow();
+
+            // Notify
+            $notify->notifyByCampaignId($this->campaignId);
+        }
     }
 }
