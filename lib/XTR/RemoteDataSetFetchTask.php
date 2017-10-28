@@ -9,6 +9,7 @@
 namespace Xibo\XTR;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\TaskRunException;
+use Xibo\Entity\DataSetRemote;
 use Xibo\Factory\DataSetFactory;
 
 /**
@@ -51,24 +52,7 @@ class RemoteDataSetFetchTask implements TaskInterface
             $this->log->debug('Build Dependant-List for ' . $dataSet->dataSet);
             
             // List of Dependant Datasets to be processed in this loop
-            $processing = [ array_shift($dataSets) ];
-            $last = 0;
-            $found = true;
-            while ($found && ($processing[$last]->runsAfter != $processing[$last]->dataSetId)) {
-                $found = false;
-                foreach ($dataSets as $k => $dataSet) {
-                    if ($dataSet->dataSetId == $processing[$last]->runsAfter) {
-                        $last++;
-                        $found = true;
-                        $processing[] = $dataSet;
-                        unset($dataSets[$k]);
-                        break;
-                    }
-                }
-            }
-            
-            // Process in reverse order (LastIn-FirstOut)
-            $processing = array_reverse($processing);
+            $processing = $this->buildDependantList($dataSets);
             foreach($processing as $dataSet) {
                 if ($runTime >= $dataSet->getNextSyncTime()) {
                     // Truncate only if we also fetch new Data
@@ -91,5 +75,46 @@ class RemoteDataSetFetchTask implements TaskInterface
         }
         
         $this->runMessage .= __('Done') . PHP_EOL . PHP_EOL;
+    }
+    
+    /**
+     * Builds a List of \Xibo\Entity\DataSetRemote which depends on each other. The resulting list has to be processed like returned.
+     * @param array &$dataSets Reference to an Array which holds all not yet processed DataSets
+     * @return array Ordered list of \Xibo\Entity\DataSetRemote to process
+     */
+    private function buildDependantList(array &$dataSets) {
+        $processing = [ array_shift($dataSets) ];
+        $last = 0;
+        
+        // Indicator to break the while loop if no matching dependant DataSet is found
+        $found = true;
+
+        // As long as the current processing DataSet depends on an other, get that one and process it before
+        while ($found && $this->isDependantIsSet($processing[$last])) {
+            foreach ($dataSets as $k => $dataSet) {
+                $found = false;
+                
+                // If we found the dependant DataSet, add it to the Processing list and remove it from the original so we not process it multiple times
+                if ($dataSet->dataSetId == $processing[$last]->runsAfter) {
+                    $processing[] = $dataSet;
+                    $last++;
+                    $found = true;
+                    unset($dataSets[$k]);
+                    break;
+                }
+            }
+        }
+
+        // Process in reverse order (LastIn-FirstOut)
+        return array_reverse($processing);
+    }
+    
+    /**
+     * Checks if there is a Dependant DataSet which has to be processed before the passed one
+     * @param \Xibo\Entity\DataSetRemote $dataSet The DataSet to check if there is a dependant set
+     * @return boolean
+     */
+    private function isDependantIsSet(DataSetRemote $dataSet) {
+        return ($dataSet->runsAfter != $dataSet->dataSetId) && ($dataSet->runsAfter > -1);
     }
 }

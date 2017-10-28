@@ -173,7 +173,7 @@
                         
                         {% set title %}{% trans "Depending DataSet" %}{% endset %}
                         {% set helpText %}{% trans "This DataSet you choose here has to exist and will be actualized before" %}{% endset %}
-                        {{ forms.dropdown("runsAfter", "single", title, "", dataSet.dataSets(), "dataSetId", "dataSet", helpText, "dataset-fields") }}
+                        {{ forms.dropdown("runsAfter", "single", title, "", dataSets, "dataSetId", "dataSet", helpText) }}
                     </div>
                 </div>
             </form>

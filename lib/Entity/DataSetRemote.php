@@ -233,7 +233,7 @@ class DataSetRemote extends DataSet
     private function addRemote() {
         $this->getStore()->insert(
           'INSERT INTO `datasetremote` (`DataSetID`, `method`, `uri`, `postData`, `authentication`, `username`, `password`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`)
-            VALUES (:dataSetId, :method, :uri, :postData, :authentication, :username, :password, :refreshRate, :clearRate, :runsAfter)', [
+            VALUES (:dataSetId, :method, :uri, :postData, :authentication, :username, :password, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField)', [
             'dataSetId' => $this->dataSetId,
             'method' => $this->method,
             'uri' => $this->uri,

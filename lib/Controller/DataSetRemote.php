@@ -92,10 +92,25 @@ class DataSetRemote extends Base
      */
     public function addForm()
     {
+        $dataSets = [
+            (object) [
+                'dataSetId' => -1,
+                'dataSet' => __('None'),
+                'description' => ''
+            ]
+        ];
+        foreach ($this->dataSetFactory->query() as $entry) {
+            $dataSets[] = (object) [
+                'dataSetId' => $entry->dataSetId,
+                'dataSet' => $entry->dataSet,
+                'description' => $entry->description
+            ];
+        }
+        
         $this->getState()->template = 'dataset-form-add-remote';
         $this->getState()->setData([
             'help' => $this->getHelp()->link('DataSet', 'Add'),
-            'dataSets' => $this->dataSetFactory->query()
+            'dataSets' => $dataSets
         ]);
     }
 
@@ -190,15 +205,31 @@ class DataSetRemote extends Base
     {
         $dataSet = $this->dataSetFactory->getById($dataSetId);
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
+        $dataSets = [
+            (object) [
+                'dataSetId' => -1,
+                'dataSet' => __('None'),
+                'description' => ''
+            ]
+        ];
+        foreach ($this->dataSetFactory->query() as $entry) {
+            $dataSets[] = (object) [
+                'dataSetId' => $entry->dataSetId,
+                'dataSet' => $entry->dataSet,
+                'description' => $entry->description
+            ];
+        }
+        
         // Set the form
         $this->getState()->template = 'dataset-form-edit-remote';
         $this->getState()->setData([
             'dataSet' => $dataSet,
             'help' => $this->getHelp()->link('DataSet', 'Edit'),
-            'dataSets' => $this->dataSetFactory->query()
+            'dataSets' => $dataSets
         ]);
     }
 
@@ -458,7 +489,7 @@ class DataSetRemote extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Run Test-Request for %s on %s'), $dataSet->dataSet, $dataSet->getCurlParams()[CURLOPT_URL]),
             'id' => $dataSet->dataSetId,
-            'data' => $data
+            'data' => $data->entries[0]
         ]);
     }
     
@@ -469,8 +500,8 @@ class DataSetRemote extends Base
      * @param \stdClass $results A simple Object with one Property 'entries' which contains all results
      */
     public function processResults(\Xibo\Entity\DataSetRemote $dataSet, \stdClass $results) {
-        if (property_exists('entries', $results) && is_array($results->entries)) {
-            foreach ($result as $results->entries) {
+        if (property_exists($results, 'entries') && is_array($results->entries)) {
+            foreach ($results->entries as $result) {
                 $this->process($dataSet, $result);
             }
         }
@@ -484,46 +515,53 @@ class DataSetRemote extends Base
      */
     private function process(\Xibo\Entity\DataSetRemote $dataSet, array $result) {
         // Remote Data has to have the configured DataRoot which has to be an Array
-        if (empty($dataSet->dataRoot) || array_key_exists($dataSet->dataRoot, $result)) {
-            $data = null;
-            if (empty($dataSet->dataRoot)) {
-                $data = $result;
-            } else {
-                $data = $result[$dataSet->dataRoot];
-            }
-            
-            if (is_array($data)) {
-                $columns = $this->dataSetColumnFactory->query(null, ['dataSetId' => $dataSet->dataSetId]);
-                $entries = [];
-                
-                // First process each entry form the remote and try to map the values to the configured columns
-                foreach($data as $k => $entry) {
-                    if (is_array($entry) || is_object($entry)) {
-                        $entries[] = $this->processEntry($dataSet, (array) $entry, $columns);
-                    } else {
-                        $message = sprintf(__('DataSet \'%s\' failed: DataRoot \'%s\' contains data which are not arrays and not objects.'), $dataSet->dataSet, $dataSet->dataRoot);
-                        break;
-                    }
-                }
+        $data = $this->getDataRootFromResult($dataSet->dataRoot, $result);
+        if (($data != null) && is_array($data)) {
+            $columns = $this->dataSetColumnFactory->query(null, ['dataSetId' => $dataSet->dataSetId]);
+            $entries = [];
 
-                // If there is a Consilidation-Function, use the Data against it
-                $entries = $this->consolidateEntries($dataSet, $entries, $columns);
-                
-                // Finally add each entry as a new Row in the DataSet
-                foreach ($entries as $entry) {
-                    $dataSet->addRow($entry);
+            // First process each entry form the remote and try to map the values to the configured columns
+            foreach($data as $k => $entry) {
+                if (is_array($entry) || is_object($entry)) {
+                    $entries[] = $this->processEntry($dataSet, (array) $entry, $columns);
+                } else {
+                    $message = sprintf(__('DataSet \'%s\' failed: DataRoot \'%s\' contains data which are not arrays and not objects.'), $dataSet->dataSet, $dataSet->dataRoot);
+                    break;
                 }
-                
-            } else {
-                $message = sprintf(__('DataSet \'%s\' missconfigured: DataRoot \'%s\' is not an Array.'), $dataSet->dataSet, $dataSet->dataRoot);
             }
+
+            // If there is a Consilidation-Function, use the Data against it
+            $entries = $this->consolidateEntries($dataSet, $entries, $columns);
+
+            // Finally add each entry as a new Row in the DataSet
+            foreach ($entries as $entry) {
+                $dataSet->addRow($entry);
+            }
+        } else {
+            $message = sprintf(__('DataSet \'%s\' missconfigured: DataRoot \'%s\' is not an Array.'), $dataSet->dataSet, $dataSet->dataRoot);
         }
-        
+
         // Return
         $this->getState()->hydrate([
             'message' => $message,
             'id' => $dataSet->dataSetId
         ]);
+    }
+    
+    /**
+     * Process the RemoteResult to get the main DataRoot value which can be stay in a structure as well as the values
+     * 
+     * @param String Chuns splitted by a Dot where the main entries are hold
+     * @param array The Value from the remote request
+     * @return array The Data hold in the configured dataRoot
+     */
+    private function getDataRootFromResult($dataRoot, array $result) {
+        if (empty($dataRoot)) {
+            return $result;
+        }
+        $chunks = explode('.', $dataRoot);
+        $entries = $this->getFieldValueFromEntry($chunks, $result);
+        return $entries[1];
     }
     
     /**
@@ -588,7 +626,9 @@ class DataSetRemote extends Base
         $value = null;
         $key = array_shift($chunks);
 
-        if (array_key_exists($key, $entry)) {
+        if (($entry instanceof \StdClass) && property_exists($entry, $key)) {
+            $value = $entry->{$key};
+        } else if (array_key_exists($key, $entry)) {
             $value = $entry[$key];
         }
         
