@@ -384,10 +384,18 @@ class Region implements \JsonSerializable
         if ($options['validate'])
             $this->validate();
 
-        if ($this->regionId == null || $this->regionId == 0)
+        if ($this->regionId == null || $this->regionId == 0) {
             $this->add();
-        else if ($this->hash != $this->hash())
+
+            if ($options['audit'])
+                $this->audit($this->regionId, 'Added', ['regionId' => $this->regionId, 'details' => (string)$this]);
+        }
+        else if ($this->hash != $this->hash()) {
             $this->update();
+
+            if ($options['audit'])
+                $this->audit($this->regionId, 'Saved');
+        }
 
         if ($options['saveRegionOptions']) {
             // Save all Options
@@ -403,9 +411,6 @@ class Region implements \JsonSerializable
             // Manage the assignments to regions
             $this->manageAssignments();
         }
-
-        if ($options['audit'])
-            $this->audit($this->regionId, 'Saved');
     }
 
     /**

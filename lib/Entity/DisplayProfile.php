@@ -589,12 +589,13 @@ class DisplayProfile implements \JsonSerializable
                         'type' => 'string',
                         'fieldType' => 'dropdown',
                         'options' => array(
-                            array('id' => 'Top Left', 'value' => 'Top Left'),
-                            array('id' => 'Top Right', 'value' => 'Top Right'),
-                            array('id' => 'Bottom Left', 'value' => 'Bottom Left'),
-                            array('id' => 'Bottom Right', 'value' => 'Bottom Right'),
+                            array('id' => 'Unchanged', 'value' => __('Unchanged')),
+                            array('id' => 'Top Left', 'value' => __('Top Left')),
+                            array('id' => 'Top Right', 'value' => __('Top Right')),
+                            array('id' => 'Bottom Left', 'value' => __('Bottom Left')),
+                            array('id' => 'Bottom Right', 'value' => __('Bottom Right')),
                         ),
-                        'default' => 'Bottom Right',
+                        'default' => 'Unchanged',
                         'helpText' => __('The position of the cursor when the client starts up.'),
                         'enabled' => true,
                         'groupClass' => NULL
@@ -1130,6 +1131,17 @@ class DisplayProfile implements \JsonSerializable
                         'fieldType' => 'number',
                         'default' => 9696,
                         'helpText' => __('The port number to use for the embedded web server on the Player. Only change this if there is a port conflict reported on the status screen.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'installWithLoadedLinkLibraries',
+                        'tabId' => 'advanced',
+                        'title' => __('Load Link Libraries for APK Update'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 1,
+                        'helpText' => __('Should the update command include dynamic link libraries? Only change this if your updates are failing.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     )
