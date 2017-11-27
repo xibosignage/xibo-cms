@@ -97,9 +97,11 @@
             {% endif %}
         {% endif %}
 
-        <li class="sidebar-title"><a>{% trans "Reporting" %}</a></li>
 
         {% if currentUser.routeViewable("/stats") %}
+
+            <li class="sidebar-title"><a>{% trans "Reporting" %}</a></li>
+
             {% if currentUser.routeViewable("/stats") %}
                 <li class="sidebar-list"><a href="{{ urlFor("stats.view") }}">{% trans "Display Statistics" %}</a></li>
             {% endif %}

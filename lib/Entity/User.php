@@ -901,7 +901,7 @@ class User implements \JsonSerializable
     public function touch()
     {
         // This needs to happen on a separate connection
-        $this->getStore()->isolated('UPDATE `user` SET lastAccessed = :time, loggedIn = :loggedIn  WHERE userId = :userId', [
+        $this->getStore()->update('UPDATE `user` SET lastAccessed = :time, loggedIn = :loggedIn  WHERE userId = :userId', [
             'userId' => $this->userId,
             'loggedIn' => $this->loggedIn,
             'time' => date("Y-m-d H:i:s")
