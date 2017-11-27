@@ -985,6 +985,7 @@ class Layout implements \JsonSerializable
                         $audioNode = $document->createElement('uri', $audioMedia->storedAs);
                         $audioNode->setAttribute('volume', $audio->volume);
                         $audioNode->setAttribute('loop', $audio->loop);
+                        $audioNode->setAttribute('mediaId', $audio->mediaId);
                         $audioNodes->appendChild($audioNode);
                     }
 

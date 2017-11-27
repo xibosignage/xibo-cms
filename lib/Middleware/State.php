@@ -1208,7 +1208,8 @@ class State extends Middleware
                 $container->resolutionFactory,
                 $container->widgetFactory,
                 $container->widgetOptionFactory,
-                $container->playlistFactory
+                $container->playlistFactory,
+                $container->widgetAudioFactory
             );
         });
 
