@@ -545,7 +545,8 @@ class DisplayGroup implements \JsonSerializable
             'validate' => true,
             'saveGroup' => true,
             'manageLinks' => true,
-            'manageDisplayLinks' => true
+            'manageDisplayLinks' => true,
+            'manageDynamicDisplayLinks' => true,
         ], $options);
 
         if ($options['validate'])
@@ -597,14 +598,14 @@ class DisplayGroup implements \JsonSerializable
 
             if ($options['manageDisplayLinks']) {
                 // Handle any changes in the displays linked
-                $this->manageDisplayLinks();
+                $this->manageDisplayLinks($options['manageDynamicDisplayLinks']);
 
                 // Handle any group links
                 $this->manageDisplayGroupLinks();
             }
 
-        } else if ($this->isDynamic && $options['manageDisplayLinks']) {
-            $this->manageDisplayLinks();
+        } else if ($this->isDynamic && $options['manageDynamicDisplayLinks']) {
+            $this->manageDisplayLinks(true);
         }
 
         // Set media incomplete if necessary
@@ -705,10 +706,11 @@ class DisplayGroup implements \JsonSerializable
 
     /**
      * Manage the links to this display, dynamic or otherwise
+     * @var bool $manageDynamic
      */
-    private function manageDisplayLinks()
+    private function manageDisplayLinks($manageDynamic = true)
     {
-        if ($this->isDynamic) {
+        if ($this->isDynamic && $manageDynamic) {
 
             $this->getLog()->info('Managing Display Links for Dynamic Display Group %s', $this->displayGroup);
 
