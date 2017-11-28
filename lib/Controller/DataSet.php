@@ -306,7 +306,9 @@ class DataSet extends Base
         $dataSetColumn->dataTypeId = 1;
 
         // Add Column
-        $dataSet->assignColumn($dataSetColumn);
+        // only when we are not routing through the API
+        if (!$this->isApi())
+            $dataSet->assignColumn($dataSetColumn);
 
         // Save
         $dataSet->save();

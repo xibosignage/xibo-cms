@@ -1403,6 +1403,47 @@ class DisplayGroup extends Base
     }
 
     /**
+     * Cause the player to collect now
+     * @param int $displayGroupId
+     * @throws ConfigurationException when the message cannot be sent
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/action/clearStatsAndLogs",
+     *  operationId="displayGroupActionClearStatsAndLogs",
+     *  tags={"displayGroup"},
+     *  summary="Action: Clear Stats and Logs",
+     *  description="Clear all stats and logs on this Group",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      in="path",
+     *      description="The display group id",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function clearStatsAndLogs($displayGroupId)
+    {
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($displayGroupId), new CollectNowAction());
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
      * Change to a new Layout
      * @param $displayGroupId
      * @throws ConfigurationException

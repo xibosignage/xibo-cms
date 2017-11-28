@@ -190,7 +190,13 @@
                     {"data": "emailAlert", "render": dataTableTickCrossColumn, "visible": false},
                     {"data": "loggedIn", "render": dataTableTickCrossColumn},
                     {"data": "lastAccessed", "render": dataTableDateFromUnix},
-                    {"data": "displayProfile", "visible": false},
+                    {
+                        "name": "displayProfileId",
+                        "data": function (data, type) {
+                            return data.displayProfile;
+                        },
+                        "visible": false
+                    },
                     {
                         "name": "clientVersion",
                         "data": function (data, type) {

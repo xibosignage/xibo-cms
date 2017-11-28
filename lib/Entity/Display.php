@@ -320,7 +320,7 @@ class Display implements \JsonSerializable
      */
     private $commands = null;
 
-    public static $saveOptionsMinimum = ['validate' => false, 'audit' => false, 'triggerDynamicDisplayGroupAssessment' => false];
+    public static $saveOptionsMinimum = ['validate' => false, 'audit' => false];
 
     /**
      * @var ConfigServiceInterface
@@ -547,8 +547,7 @@ class Display implements \JsonSerializable
     {
         $options = array_merge([
             'validate' => true,
-            'audit' => true,
-            'triggerDynamicDisplayGroupAssessment' => false
+            'audit' => true
         ], $options);
 
         if ($options['validate'])
@@ -563,7 +562,7 @@ class Display implements \JsonSerializable
             $this->getLog()->audit('Display', $this->displayId, 'Display Saved', $this->getChangedProperties());
 
         // Trigger an update of all dynamic DisplayGroups
-        if ($options['triggerDynamicDisplayGroupAssessment']) {
+        if ($this->hasPropertyChanged('display')) {
             foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
                 /* @var DisplayGroup $group */
                 $group->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
@@ -585,7 +584,7 @@ class Display implements \JsonSerializable
             /* @var DisplayGroup $displayGroup */
             $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $displayGroup->unassignDisplay($this);
-            $displayGroup->save(['validate' => false]);
+            $displayGroup->save(['validate' => false, 'manageDynamicDisplayLinks' => false]);
         }
 
         // Delete our display specific group

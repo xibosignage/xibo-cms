@@ -783,13 +783,25 @@ class Soap
         $scheduleXml->appendChild($layoutElements);
 
         // Hour to hour time bands for the query
-        // Start at the current hour
-        $fromFilter = $this->getDate()->parse()->setTime(0, 0, 0);
+        // Rf lookahead is the number of seconds ahead we should consider.
+        // it may well be less than 1 hour, and if so we cannot do hour to hour time bands, we need to do
+        // now, forwards.
+        // Start with now:
+        $fromFilter = $this->getDate()->parse();
 
-        if ($this->getConfig()->GetSetting('SCHEDULE_LOOKAHEAD') == 'On')
+        if ($rfLookAhead >= 3600) {
+            // Go from the top of this hour
+            $fromFilter
+                ->minute(0)
+                ->second(0);
+        }
+
+        // If we're set to look ahead, then do so - otherwise grab only a 1 hour slice
+        if ($this->getConfig()->GetSetting('SCHEDULE_LOOKAHEAD') == 'On') {
             $toFilter = $fromFilter->copy()->addSeconds($rfLookAhead);
-        else
+        } else {
             $toFilter = $fromFilter->copy()->addHour();
+        }
 
         $this->getLog()->debug(sprintf('FromDT = %s. ToDt = %s', $fromFilter->toRssString(), $toFilter->toRssString()));
 

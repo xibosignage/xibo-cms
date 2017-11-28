@@ -904,6 +904,12 @@ class Layout implements \JsonSerializable
                         $widget->calculatedDuration = 0;
                     }
 
+                    // Does our widget have a durationIsPerItem and a Number of Items?
+                    $numItems = $widget->getOptionValue('numItems', 0);
+                    if ($widget->getOptionValue('durationIsPerItem', 0) == 1 && $numItems > 1) {
+                        $widget->calculatedDuration = (($widget->useDuration == 1) ? $widget->duration : $module->getModule()->defaultDuration) * $numItems;
+                    }
+
                     // Region duration
                     $region->duration = $region->duration + $widget->calculatedDuration;
 
@@ -979,6 +985,7 @@ class Layout implements \JsonSerializable
                         $audioNode = $document->createElement('uri', $audioMedia->storedAs);
                         $audioNode->setAttribute('volume', $audio->volume);
                         $audioNode->setAttribute('loop', $audio->loop);
+                        $audioNode->setAttribute('mediaId', $audio->mediaId);
                         $audioNodes->appendChild($audioNode);
                     }
 

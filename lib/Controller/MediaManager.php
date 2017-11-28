@@ -122,13 +122,16 @@ class MediaManager extends Base
                         if (!$this->getUser()->checkEditable($widget))
                             continue;
 
+                        // Create a module
+                        $module = $this->moduleFactory->createWithWidget($widget);
+
                         // We are good to go
                         $rows[] = [
                             'layout' => $layout,
                             'region' => $region->name,
                             'playlist' => $playlist->name,
-                            'widget' => $widget->getOptionValue('name', $widget->type),
-                            'type' => $widget->type,
+                            'widget' => $module->getName(),
+                            'type' => $module->getModuleName(),
                             'displayOrder' => $widget->displayOrder,
                             'buttons' => [
                                 [
