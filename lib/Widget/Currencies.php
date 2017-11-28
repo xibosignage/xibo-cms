@@ -21,6 +21,8 @@
  */
 namespace Xibo\Widget;
 
+use GuzzleHttp\Exception\RequestException;
+use Stash\Invalidation;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\ModuleFactory;
 
@@ -28,7 +30,7 @@ use Xibo\Factory\ModuleFactory;
  * Class Currencies
  * @package Xibo\Widget
  */
-class Currencies extends YahooBase
+class Currencies extends AlphaVantageBase
 {
     public $codeSchemaVersion = 1;
 
@@ -44,7 +46,7 @@ class Currencies extends YahooBase
             $module->name = 'Currencies';
             $module->type = 'currencies';
             $module->class = 'Xibo\Widget\Currencies';
-            $module->description = 'Yahoo Currencies';
+            $module->description = 'A module for showing Currency pairs and exchange rates';
             $module->imageUri = 'forms/library.gif';
             $module->enabled = 1;
             $module->previewEnabled = 1;
@@ -88,6 +90,7 @@ class Currencies extends YahooBase
      */
     public function settings()
     {
+        $this->module->settings['apiKey'] = $this->getSanitizer()->getString('apiKey');
         $this->module->settings['cachePeriod'] = $this->getSanitizer()->getInt('cachePeriod', 300);
 
         // Return an array of the processed settings.
@@ -335,19 +338,30 @@ class Currencies extends YahooBase
     }
 
     /**
-     * Get YQL Data
-     * @return array|bool an array of results according to the key specified by result identifier. false if an invalid value is returned.
+     * Get Results
+     * @return array|bool an array of results. false if an invalid value is returned.
      */
-    protected function getYql()
+    protected function getResults()
     {
-        
+        // Does this require a reversed conversion?
         $reverseConversion = ($this->getOption('reverseConversion', 0) == 1);
 
+        // What items/base currencies are we interested in?
         $items = $this->getOption('items');
         $base = $this->getOption('base');
+
+        if ($items == '' || $base == '' ) {
+            $this->getLog()->error('Missing Items for Currencies Module with WidgetId ' . $this->getWidgetId());
+            return false;
+        }
+
+        // Parse items out into an array
+        $items = explode(',', $items);
         
         // Get current item template
-        if( $this->getOption('overrideTemplate') == 0 ) {
+        $itemTemplate = null;
+
+        if ($this->getOption('overrideTemplate') == 0) {
             $template = $this->getTemplateById($this->getOption('templateId'));
             
             if (isset($template)) {
@@ -357,83 +371,111 @@ class Currencies extends YahooBase
             $itemTemplate = $this->getRawNode('itemTemplate');
         }
         
-        // Use the template to see if we need the xchange or quotes table 
-        $useVariation = stripos($itemTemplate, '[ChangePercentage]') > -1;
-        if($useVariation){
-            $resultIdentifier = "quote";
-            $yql = "select * from yahoo.finance.quotes where symbol in ([Item])";
-        } else {
-            $resultIdentifier = "rate";
-            $yql = "select * from yahoo.finance.xchange where pair in ([Item])";
-        }
-    
-        $this->getLog()->debug('Finance module with YQL = . Looking for %s in response', $yql);
+        // Does the template require a percentage change calculation.
+        $percentageChangeRequested = stripos($itemTemplate, '[ChangePercentage]') > -1;
 
-        if ($yql == '' || $items == '' || $base == '' ) {
-            $this->getLog()->error('Missing YQL/Items for Finance Module with WidgetId %d', $this->getWidgetId());
-            return false;
-        }
-
-        if (strstr($items, ','))
-            $items = explode(',', $items);
-        else
-            $items = [$items];
-            
-        // quote each item
-        $itemsJoined = array();
-        
-        foreach ($items as $key => $item) {
-            
-            // Remove the multiplier if there's one
-            $item = explode('|', $item)[0];
-            
-            $baseItemPair = ( $reverseConversion ) ? ( trim($item) . trim($base) ) : ( trim($base) . trim($item) );
-            
-            array_push(
-                $itemsJoined, 
-                ( $useVariation ) ? ('\'' . $baseItemPair . '=X' . '\'') : ('\'' . $baseItemPair . '\'')
-            );
-        }
-
-        $yql = str_replace('[Item]', implode(',', $itemsJoined), $yql);
-
-        // Fire off a request for the data
-        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($yql)));
+        // Our cache key is based on the base/items/changepercentage
+        /** @var \Stash\Item $cache */
+        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($base . implode(',', $items) . $percentageChangeRequested . $reverseConversion)));
+        $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
         $data = $cache->get();
 
         if ($cache->isMiss()) {
-
+            // Lock this cache record
             $cache->lock();
 
-            $this->getLog()->debug('Querying API for ' . $yql);
+            // Start fresh
+            $data = [];
+            $priorDay = [];
 
-            if (!$data = $this->request($yql)) {
+            // Do we need to get the data for percentage change?
+            if ($percentageChangeRequested && !$reverseConversion) {
+                try {
+                    // Get the prior day
+                    $priorDay = $this->getPriorDay($base, $items);
+
+                    $this->getLog()->debug('Percentage change requested, prior day is ' . var_export($priorDay, true));
+
+                } catch (RequestException $requestException) {
+                    $this->getLog()->error('Problem getting percentage change currency information. E = ' . $requestException->getMessage());
+                    $this->getLog()->debug($requestException->getTraceAsString());
+                }
+            }
+
+            // Each item we want is a call to the results API
+            try {
+                foreach ($items as $currency) {
+                    // Remove the multiplier if there's one (this is handled when we substitute the results into the template)
+                    $currency = explode('|', $currency)[0];
+
+                    // Do we need to reverse the from/to currency for this comparison?
+                    if ($reverseConversion) {
+                        $result = $this->getCurrencyExchangeRate($currency, $base);
+
+                        // We need to get the proir day for this pair only (reversed)
+                        $priorDay = $this->getPriorDay($currency, $base);
+
+                        $this->getLog()->debug('Percentage change requested, prior day is ' . var_export($priorDay, true));
+
+                    } else {
+                        $result = $this->getCurrencyExchangeRate($base, $currency);
+                    }
+
+                    $this->getLog()->debug('Results are: ' . var_export($result, true));
+
+                    $parsedResult = [
+                        'time' => $result['Realtime Currency Exchange Rate']['6. Last Refreshed'],
+                        'ToName' => $result['Realtime Currency Exchange Rate']['3. To_Currency Code'],
+                        'ToCurrency' => $result['Realtime Currency Exchange Rate']['4. To_Currency Name'],
+                        'FromName' => $result['Realtime Currency Exchange Rate']['1. From_Currency Code'],
+                        'FromCurrency' => $result['Realtime Currency Exchange Rate']['2. From_Currency Name'],
+                        'Bid' => round($result['Realtime Currency Exchange Rate']['5. Exchange Rate'], 4),
+                        'Ask' => round($result['Realtime Currency Exchange Rate']['5. Exchange Rate'], 4),
+                        'LastTradePriceOnly' => round($result['Realtime Currency Exchange Rate']['5. Exchange Rate'], 4),
+                        'RawLastTradePriceOnly' => $result['Realtime Currency Exchange Rate']['5. Exchange Rate'],
+                        'TimeZone' => $result['Realtime Currency Exchange Rate']['7. Time Zone'],
+                    ];
+
+                    // Set the name/currency to be the full name including the base currency
+                    $parsedResult['Name'] = $parsedResult['FromName'] . '/' . $parsedResult['ToName'];
+                    $parsedResult['Currency'] = $parsedResult['FromCurrency'] . '/' . $parsedResult['ToCurrency'];
+
+                    // work out the change when compared to the previous day
+                    if ($percentageChangeRequested && isset($priorDay[$parsedResult['ToName']]) && is_numeric($priorDay[$parsedResult['ToName']])) {
+                        $parsedResult['YesterdayTradePriceOnly'] = $priorDay[$parsedResult['ToName']];
+                        $parsedResult['Change'] = $parsedResult['RawLastTradePriceOnly'] - $parsedResult['YesterdayTradePriceOnly'];
+                    } else {
+                        $parsedResult['YesterdayTradePriceOnly'] = 0;
+                        $parsedResult['Change'] = 0;
+                    }
+
+                    // Parse the result and add it to our data array
+                    $data[] = $parsedResult;
+                }
+            } catch (RequestException $requestException) {
+                $this->getLog()->error('Problem getting currency information. E = ' . $requestException->getMessage());
+                $this->getLog()->debug($requestException->getTraceAsString());
+
                 return false;
             }
 
+            $this->getLog()->debug('Parsed Results are: ' . var_export($data, true));
+
             // Cache it
             $cache->set($data);
-            $cache->expiresAfter($this->getSetting('cachePeriod', 300));
+            $cache->expiresAfter($this->getSetting('cachePeriod', 3600));
             $this->getPool()->saveDeferred($cache);
-
         }
 
-        // Pull out the results according to the resultIdentifier
-        // If the element to return is an array and we aren't, then box.
-        $results = $data[$resultIdentifier];
-
-        if (array_key_exists(0, $results))
-            return $results;
-        else
-            return [$results];
+        return $data;
     }
 
     /**
      * Run through the data and substitute into the template
      * @param $data
      * @param $source
-     * @param $base 
+     * @param $baseCurrency
      * @return mixed
      */
     private function makeSubstitutions($data, $source, $baseCurrency)
@@ -460,7 +502,7 @@ class Currencies extends YahooBase
             $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
             
             // Match that in the array
-            if ( isset($data[$replace]) ){
+            if (isset($data[$replace])) {
                 // If the tag exists on the data variables use that var
                 $replacement = $data[$replace];
             } else {
@@ -470,7 +512,7 @@ class Currencies extends YahooBase
                 if (stripos($replace, 'time|') > -1) {
                     $timeSplit = explode('|', $replace);
 
-                    $time = $this->getDate()->getLocalDate($data['time'], $timeSplit[1]);
+                    $time = $this->getDate()->parse($data['time']. 'Y-m-d H:i:s')->format($timeSplit[1]);
 
                     $replacement = $time;
 
@@ -490,12 +532,9 @@ class Currencies extends YahooBase
                     // Replace the other tags
                     switch ($replace) {
                         case 'NameShort':
-                            // Replace the name to have just the second currency (or the first if the currency is reversed)
-                            $replaceBase = ( $reverseConversion ) ? ('/' . $baseCurrency) : ($baseCurrency . '/');
-                            
-                            if (isset($data['Name']))
-                                $replacement = trim(str_replace($replaceBase,'',$data['Name']));
-                                    
+
+                            $replacement = ($reverseConversion) ? $data['FromName'] : $data['ToName'];
+
                             break;
                             
                         case 'Multiplier':
@@ -504,10 +543,7 @@ class Currencies extends YahooBase
                             $replacement = '';
                             
                             // Get the current currency name/code
-                            $pairName = ( $reverseConversion ) ? ('/' . $baseCurrency) : ($baseCurrency . '/');
-                            
-                            if (isset($data['Name']))
-                                $currencyName = trim(str_replace($pairName,'',$data['Name']));
+                            $currencyName = ($reverseConversion) ? $data['FromName'] : $data['ToName'];
                             
                             // Search for the item that relates to the actual currency
                             foreach ($items as $item) {
@@ -526,8 +562,8 @@ class Currencies extends YahooBase
                             break;
                             
                         case 'CurrencyFlag':
-                            $replaceBase = ( $reverseConversion ) ? ('/' . $baseCurrency) : ($baseCurrency . '/');
-                            $currencyCode = str_replace($replaceBase,'',$data['Name']);
+
+                            $currencyCode = ($reverseConversion) ? $data['FromName'] : $data['ToName'];
                             
                             if (!file_exists(PROJECT_ROOT . '/web/modules/currencies/currency-flags/' . $currencyCode . '.svg')) 
                                 $currencyCode = 'default';
@@ -544,29 +580,12 @@ class Currencies extends YahooBase
                             
                             break;
                             
-                        case 'ChangePercentage':
-                            // Protect against null values
-                            if(($data['Change'] == null || $data['LastTradePriceOnly'] == null)){
-                                $replacement = "NULL";
-                            } else {
-                                // Calculate the percentage dividing the change by the ( previous value minus the change )
-                                $percentage = $data['Change'] / ( $data['LastTradePriceOnly'] - $data['Change'] );
-                                
-                                // Convert the value to percentage and round it
-                                $replacement = round($percentage*100, 2);
-                            }    
-                            
-                            break;
-                            
                         case 'LastTradePriceOnlyValue':
                         case 'BidValue':
                         case 'AskValue':
                             
                             // Get the converted currency name
-                            $currencyName = ( $reverseConversion ) ? ('/' . $baseCurrency) : ($baseCurrency . '/');
-                            
-                            if (isset($data['Name']))
-                                $currencyName = trim(str_replace($currencyName, '', $data['Name']));
+                            $currencyName = ($reverseConversion) ? $data['FromName'] : $data['ToName'];
                             
                             // Get the field's name and set the replacement as the default value from the API
                             $fieldName = str_replace('Value', '', $replace);
@@ -589,15 +608,29 @@ class Currencies extends YahooBase
                             }        
                             
                             break;
+
+                        case 'ChangePercentage':
+                            // Protect against null values
+                            if(($data['Change'] == null || $data['LastTradePriceOnly'] == null)){
+                                $replacement = "NULL";
+                            } else {
+                                // Calculate the percentage dividing the change by the ( previous value minus the change )
+                                $percentage = $data['Change'] / ( $data['LastTradePriceOnly'] - $data['Change'] );
+
+                                // Convert the value to percentage and round it
+                                $replacement = round($percentage*100, 2);
+                            }
+
+                            break;
                             
                         case 'ChangeStyle':
                             // Default value as no change
                             $replacement = 'value-equal';
                             
                             // Protect against null values
-                            if(($data['Change'] != null && $data['LastTradePriceOnly'] != null)){
+                            if (($data['Change'] != null && $data['LastTradePriceOnly'] != null)) {
                     
-                                if ( $data['Change'] > 0 ) {
+                                if ($data['Change'] > 0) {
                                     $replacement = 'value-up';
                                 } else if ( $data['Change'] < 0 ){
                                     $replacement = 'value-down';
@@ -612,7 +645,7 @@ class Currencies extends YahooBase
                             $replacement = 'right-arrow';
                             
                             // Protect against null values
-                            if(($data['Change'] != null && $data['LastTradePriceOnly'] != null)){
+                            if (($data['Change'] != null && $data['LastTradePriceOnly'] != null)) {
                     
                                 if ( $data['Change'] > 0 ) {
                                     $replacement = 'up-arrow';
@@ -649,7 +682,7 @@ class Currencies extends YahooBase
      */
     public function getTab($tab)
     {
-        if (!$data = $this->getYql())
+        if (!$data = $this->getResults())
             throw new NotFoundException(__('No data returned, please check error log.'));
 
         return ['results' => $data[0]];
@@ -673,7 +706,7 @@ class Currencies extends YahooBase
         $durationIsPerItem = $this->getOption('durationIsPerItem', 1);
 
         // Generate a JSON string of items.
-        if (!$items = $this->getYql()) {
+        if (!$items = $this->getResults()) {
             return '';
         }
 
