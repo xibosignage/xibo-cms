@@ -29,6 +29,14 @@
     {
       "step": "Add IPK to generic file module",
       "action": "UPDATE `module` SET validextensions = CONCAT(validextensions, ',ipk') WHERE module = 'genericfile' LIMIT 1;"
+    },
+    {
+      "step": "Update the Currencies Module description",
+      "action": "UPDATE `module` SET description = 'A module for showing Currency pairs and exchange rates' WHERE module = 'currencies';"
+    },
+    {
+      "step": "Update the Stocks Module description",
+      "action": "UPDATE `module` SET description = 'A module for showing Stock quotes' WHERE module = 'stocks';"
     }
   ]
 }
