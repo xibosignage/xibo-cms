@@ -217,9 +217,9 @@ echo __('Notification');
 echo __('Display Notifications from the Notification Centre');
 
 echo __('Stocks Module');
-echo __('A module for displaying Stocks information.');
+echo __('A module for showing Stock quotes');
 echo __('Currencies Module');
-echo __('A module for displaying Currencies information.');
+echo __('A module for showing Currency pairs and exchange rates');
 
 echo __('Stocks');
 echo __('Yahoo Stocks');
