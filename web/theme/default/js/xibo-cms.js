@@ -878,6 +878,27 @@ function XiboFormRender(sourceObj, data) {
     return false;
 }
 
+/**
+ * Makes a remote call to XIBO and passes the result in the given onSuccess method
+ * In case of an Error it shows an ErrorMessageBox
+ * @param {String} fromUrl
+ * @param {Object} data
+ * @param {Function} onSuccess
+ */
+function XiboRemoteRequest(formUrl, data, onSuccess) {
+    $.ajax({
+        type: "post",
+        url: formUrl,
+        cache: false,
+        dataType: "json",
+        data: data,
+        success: onSuccess,
+        error: function(response) {
+            SystemMessage(response.responseText);
+        }
+    });
+}
+
 function formRenderDetectSpacingIssues(element) {
     var $el = $(element);
     var value = $el.val();

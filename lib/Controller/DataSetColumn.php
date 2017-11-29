@@ -234,6 +234,13 @@ class DataSetColumn extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="remoteField",
+     *      in="formData",
+     *      description="JSON-String to select Data from the Remote DataSet",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -261,6 +268,7 @@ class DataSetColumn extends Base
         $column->dataTypeId = $this->getSanitizer()->getInt('dataTypeId');
         $column->dataSetColumnTypeId = $this->getSanitizer()->getInt('dataSetColumnTypeId');
         $column->formula = $this->getSanitizer()->getParam('formula', null);
+        $column->remoteField = $this->getSanitizer()->getParam('remoteField', null);
 
         // Assign the column to set the column order if necessary
         $dataSet->assignColumn($column);
@@ -369,6 +377,13 @@ class DataSetColumn extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="remoteField",
+     *      in="formData",
+     *      description="JSON-String to select Data from the Remote DataSet",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -396,6 +411,7 @@ class DataSetColumn extends Base
         $column->dataTypeId = $this->getSanitizer()->getInt('dataTypeId');
         $column->dataSetColumnTypeId = $this->getSanitizer()->getInt('dataSetColumnTypeId');
         $column->formula = $this->getSanitizer()->getParam('formula', null);
+        $column->remoteField = $this->getSanitizer()->getParam('remoteField', null);
         $column->save();
 
         $dataSet->notify();

@@ -81,6 +81,12 @@ class DataSetColumn implements \JsonSerializable
     public $dataType;
 
     /**
+     * @SWG\Property(description="The data field of the remote DataSet as a JSON-String")
+     * @var string
+     */
+    public $remoteField;
+
+    /**
      * @SWG\Property(description="The column type for this Column")
      * @var string
      */
@@ -143,6 +149,9 @@ class DataSetColumn implements \JsonSerializable
      */
     public function validate()
     {
+        if (strtolower($this->heading) == 'id')
+            throw new InvalidArgumentException(__('Please provide an other column heading, the name \'id\' can not be used.'), 'heading');
+            
         if ($this->dataSetId == 0 || $this->dataSetId == '')
             throw new InvalidArgumentException(__('Missing dataSetId'), 'dataSetId');
 
@@ -219,7 +228,6 @@ class DataSetColumn implements \JsonSerializable
 
         if ($options['validate'] && !$options['rebuilding'])
             $this->validate();
-
         if ($this->dataSetColumnId == 0)
             $this->add();
         else
@@ -234,7 +242,7 @@ class DataSetColumn implements \JsonSerializable
         $this->getStore()->update('DELETE FROM `datasetcolumn` WHERE DataSetColumnID = :dataSetColumnId', ['dataSetColumnId' => $this->dataSetColumnId]);
 
         // Delete column
-        if ($this->dataSetColumnTypeId == 1) {
+        if (($this->dataSetColumnTypeId == 1) || ($this->dataSetColumnTypeId == 3)) {
             $this->getStore()->update('ALTER TABLE `dataset_' . $this->dataSetId . '` DROP `' . $this->heading . '`', []);
         }
     }
@@ -245,8 +253,8 @@ class DataSetColumn implements \JsonSerializable
     private function add()
     {
         $this->dataSetColumnId = $this->getStore()->insert('
-        INSERT INTO `datasetcolumn` (DataSetID, Heading, DataTypeID, ListContent, ColumnOrder, DataSetColumnTypeID, Formula)
-          VALUES (:dataSetId, :heading, :dataTypeId, :listContent, :columnOrder, :dataSetColumnTypeId, :formula)
+        INSERT INTO `datasetcolumn` (DataSetID, Heading, DataTypeID, ListContent, ColumnOrder, DataSetColumnTypeID, Formula, RemoteField)
+          VALUES (:dataSetId, :heading, :dataTypeId, :listContent, :columnOrder, :dataSetColumnTypeId, :formula, :remoteField)
         ', [
             'dataSetId' => $this->dataSetId,
             'heading' => $this->heading,
@@ -254,11 +262,12 @@ class DataSetColumn implements \JsonSerializable
             'listContent' => $this->listContent,
             'columnOrder' => $this->columnOrder,
             'dataSetColumnTypeId' => $this->dataSetColumnTypeId,
-            'formula' => $this->formula
+            'formula' => $this->formula,
+            'remoteField' => $this->remoteField
         ]);
 
         // Add Column to Underlying Table
-        if ($this->dataSetColumnTypeId == 1) {
+        if (($this->dataSetColumnTypeId == 1) || ($this->dataSetColumnTypeId == 3)) {
             // Use a separate connection for DDL (it operates outside transactions)
             $this->getStore()->isolated('ALTER TABLE `dataset_' . $this->dataSetId . '` ADD `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL', []);
         }
@@ -279,7 +288,8 @@ class DataSetColumn implements \JsonSerializable
             ColumnOrder = :columnOrder,
             DataTypeID = :dataTypeId,
             DataSetColumnTypeID = :dataSetColumnTypeId,
-            Formula = :formula
+            Formula = :formula,
+            RemoteField = :remoteField
           WHERE dataSetColumnId = :dataSetColumnId
         ', [
             'dataSetId' => $this->dataSetId,
@@ -289,15 +299,16 @@ class DataSetColumn implements \JsonSerializable
             'columnOrder' => $this->columnOrder,
             'dataSetColumnTypeId' => $this->dataSetColumnTypeId,
             'formula' => $this->formula,
+            'remoteField' => $this->remoteField,
             'dataSetColumnId' => $this->dataSetColumnId
         ]);
 
         try {
-
-            if ($options['rebuilding'] && $this->dataSetColumnTypeId == 1) {
+            if ($options['rebuilding'] && ($this->dataSetColumnTypeId == 1 || $this->dataSetColumnTypeId == 3)) {
                 $this->getStore()->isolated('ALTER TABLE `dataset_' . $this->dataSetId . '` ADD `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL', []);
 
-            } else if ($this->dataSetColumnTypeId == 1 && ($this->hasPropertyChanged('heading') || $this->hasPropertyChanged('dataTypeId'))) {
+            } else if (($this->dataSetColumnTypeId == 1 || $this->dataSetColumnTypeId == 3)
+                   && ($this->hasPropertyChanged('heading') || $this->hasPropertyChanged('dataTypeId'))) {
                 $sql = 'ALTER TABLE `dataset_' . $this->dataSetId . '` CHANGE `' . $this->getOriginalValue('heading') . '` `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL DEFAULT NULL';
                 $this->getStore()->isolated($sql, []);
             }

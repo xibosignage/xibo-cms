@@ -95,6 +95,30 @@ CREATE TABLE IF NOT EXISTS `dataset` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `datasetremote`
+--
+
+CREATE TABLE IF NOT EXISTS `datasetremote` (
+  `rdId` bigint(20) NOT NULL AUTO_INCREMENT,
+  `DataSetID` int(11) NOT NULL,
+  `method` ENUM('GET','POST') NOT NULL,
+  `uri` varchar(250) NOT NULL,
+  `postData` TEXT DEFAULT NULL,
+  `authentication` ENUM('none','plain','basic','digest') NOT NULL,
+  `username` varchar(100) DEFAULT NULL,
+  `password` varchar(250) DEFAULT NULL,
+  `refreshRate` int(11) DEFAULT 86400,
+  `clearRate` int(11) DEFAULT 0,
+  `runsAfter` int(11) DEFAULT NULL,
+  `dataRoot` varchar(250) DEFAULT NULL,
+  `lastSync` int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`rdId`),
+  KEY `DataSetID` (`DataSetID`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `datasetcolumn`
 --
 
