@@ -26,7 +26,7 @@
     {% if layout.backgroundImageId == 0 %}
         {% set backgroundCss = layout.backgroundColor %}
     {% else %}
-        {% set backgroundCss %}url('{{ urlFor("layout.download.background", {id: layout.layoutId}) }}?preview=1&width={{ width }}&height={{ height }}&proportional=0') top center no-repeat; background-color: {{ layout.backgroundColor }}{% endset %}
+        {% set backgroundCss %}url('{{ urlFor("layout.download.background", {id: layout.layoutId}) }}?preview=1&width={{ width }}&height={{ height }}&proportional=0&layoutBackgroundId={{ layout.backgroundImageId }}') top center no-repeat; background-color: {{ layout.backgroundColor }}{% endset %}
     {% endif %}
 
 
@@ -39,7 +39,7 @@
                             <a class="text-center" id="designer-tab" href="#tab1primary" data-toggle="tab"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  {% trans "Designer" %}</a>
                         </li>
                         <li class="tab-design">
-                            <a class="text-center" id="action-tab" href="#tab2primary" data-toggle="tab"><i class="fa fa-bell" aria-hidden="true"></i>   {% trans "Action" %}s</a>
+                            <a class="text-center" id="action-tab" href="#tab2primary" data-toggle="tab"><i class="fa fa-bell" aria-hidden="true"></i>   {% trans "Actions" %}</a>
                         </li>
                         <div class="pull-right">
                             <span class="text-center" data-toggle="tooltip" data-placement="bottom" data-title="{% trans "Layout Duration: Duration may change depending on the exact number of items in ticker/twitter media items." %}">
@@ -355,48 +355,54 @@
                     animate: false,
                     updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}true{% else %}false{% endif %},
                     deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == "Checked" %}true{% else %}false{% endif %}
-                }).on('shown.bs.modal', function () {
-                    // Configure the upload form
-                    var url = "{{ urlFor("library.add") }}";
-                    var form = $(this).find("form");
+                });
 
-                    // Initialize the jQuery File Upload widget:
-                    form.fileupload({
+                openUploadFormModelShown($(".modal-body").find("form"));
+            }
+
+            /**
+             * Modal shown
+             */
+            function openUploadFormModelShown(form) {
+                // Configure the upload form
+                var url = "{{ urlFor("library.add") }}";
+
+                // Initialize the jQuery File Upload widget:
+                form.fileupload({
+                    url: url,
+                    disableImageResize: true
+                });
+
+                // Upload server status check for browsers with CORS support:
+                if ($.support.cors) {
+                    $.ajax({
                         url: url,
-                        disableImageResize: false
+                        type: 'HEAD'
+                    }).fail(function () {
+                        $('<span class="alert alert-error"/>')
+                            .text('Upload server currently unavailable - ' + new Date())
+                            .appendTo(form);
                     });
+                }
 
-                    // Upload server status check for browsers with CORS support:
-                    if ($.support.cors) {
-                        $.ajax({
-                            url: url,
-                            type: 'HEAD'
-                        }).fail(function () {
-                            $('<span class="alert alert-error"/>')
-                                    .text('Upload server currently unavailable - ' + new Date())
-                                    .appendTo(form);
-                        });
+                // Enable iframe cross-domain access via redirect option:
+                form.fileupload(
+                    'option',
+                    'redirect',
+                    window.location.href.replace(
+                        /\/[^\/]*$/,
+                        '/cors/result.html?%s'
+                    )
+                );
+
+                form.bind('fileuploadsubmit', function (e, data) {
+                    var inputs = data.context.find(':input');
+                    if (inputs.filter('[required][value=""]').first().focus().length) {
+                        return false;
                     }
+                    data.formData = inputs.serializeArray().concat(form.serializeArray());
 
-                    // Enable iframe cross-domain access via redirect option:
-                    form.fileupload(
-                            'option',
-                            'redirect',
-                            window.location.href.replace(
-                                    /\/[^\/]*$/,
-                                    '/cors/result.html?%s'
-                            )
-                    );
-
-                    form.bind('fileuploadsubmit', function (e, data) {
-                        var inputs = data.context.find(':input');
-                        if (inputs.filter('[required][value=""]').first().focus().length) {
-                            return false;
-                        }
-                        data.formData = inputs.serializeArray().concat(form.serializeArray());
-
-                        inputs.filter("input").prop("disabled", true);
-                    });
+                    inputs.filter("input").prop("disabled", true);
                 });
             }
 

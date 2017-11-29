@@ -419,6 +419,13 @@ class Ticker extends ModuleWidget
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="randomiseItems",
+     *      in="formData",
+     *      description="A flag (0, 1), whether to randomise the feed",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -473,6 +480,7 @@ class Ticker extends ModuleWidget
         $this->setOption('numItems', $this->getSanitizer()->getInt('numItems'));
         $this->setOption('takeItemsFrom', $this->getSanitizer()->getString('takeItemsFrom'));
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
+        $this->setOption('randomiseItems', $this->getSanitizer()->getCheckbox('randomiseItems'));
         $this->setOption('itemsSideBySide', $this->getSanitizer()->getCheckbox('itemsSideBySide'));
         $this->setOption('upperLimit', $this->getSanitizer()->getInt('upperLimit', 0));
         $this->setOption('lowerLimit', $this->getSanitizer()->getInt('lowerLimit', 0));
@@ -575,9 +583,14 @@ class Ticker extends ModuleWidget
 
         if ($sourceId == 2) {
             // Get the DataSet name
-            $dataSet = $this->dataSetFactory->getById($this->getOption('dataSetId'));
+            try {
+                $dataSet = $this->dataSetFactory->getById($this->getOption('dataSetId'));
 
-            $output .= '    <li>' . __('Source: DataSet named "%s".', $dataSet->dataSet) . '</li>';
+                $output .= '    <li>' . __('Source: DataSet named "%s".', $dataSet->dataSet) . '</li>';
+            } catch (NotFoundException $notFoundException) {
+                $this->getLog()->error('Layout Widget without a DataSet. widgetId: ' . $this->getWidgetId());
+                $output .= '    <li>' . __('Warning: No DataSet found.') . '</li>';
+            }
         }
         else
             $output .= '    <li>' . __('Source') . ': <a href="' . $url . '" target="_blank" title="' . __('Source') . '">' . $url . '</a></li>';
@@ -664,6 +677,7 @@ class Ticker extends ModuleWidget
             'numItems' => $numItems,
             'takeItemsFrom' => $takeItemsFrom,
             'itemsPerPage' => $itemsPerPage,
+            'randomiseItems' => $this->getOption('randomiseItems', 0),
             'speed' => $this->getOption('speed'),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
@@ -833,7 +847,7 @@ class Ticker extends ModuleWidget
             $feedItems = $feed->getItems();
 
             // Disable date sorting?
-            if ($this->getOption('disableDateSort') == 0) {
+            if ($this->getOption('disableDateSort') == 0 && $this->getOption('randomiseItems', 0) == 0) {
                 // Sort the items array by date
                 usort($feedItems, function($a, $b) {
                     /* @var Item $a */
@@ -1240,19 +1254,23 @@ class Ticker extends ModuleWidget
                             // Library Image
                             // The content is the ID of the image
                             try {
-                                $file = $this->mediaFactory->getById($replace);
+                                if ($replace !== 0) {
+                                    $file = $this->mediaFactory->getById($replace);
+
+                                    // Tag this layout with this file
+                                    $this->assignMedia($file->mediaId);
+
+                                    $replace = ($isPreview)
+                                        ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                                        : '<img src="' . $file->storedAs . '" />';
+                                } else {
+                                    $replace = '';
+                                }
                             }
                             catch (NotFoundException $e) {
                                 $this->getLog()->error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);
-                                continue;
+                                $replace = '';
                             }
-
-                            // Tag this layout with this file
-                            $this->assignMedia($file->mediaId);
-
-                            $replace = ($isPreview)
-                                ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
-                                : '<img src="' . $file->storedAs . '" />';
                         }
                     }
 

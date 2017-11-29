@@ -1,0 +1,91 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2017 Spring Signage Ltd.
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Video In" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#videoinEditForm").submit()
+{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="videoinEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+                {% set title %}{% trans "Input" %}{% endset %}
+                {% set helpText %}{% trans "Which device input should be shown" %}{% endset %}
+                {% set hdmi %}{% trans "HDMI" %}{% endset %}
+                {% set rgb %}{% trans "RGB" %}{% endset %}
+                {% set dvi %}{% trans "DVI" %}{% endset %}
+                {% set dp %}{% trans "DP" %}{% endset %}
+                {% set ops %}{% trans "OPS" %}{% endset %}
+                {% set options = [
+                { sourceId: hdmi, source: hdmi },
+                { sourceId: rgb, source: rgb },
+                { sourceId: dvi, source: dvi },
+                { sourceId: dp, source: dp },
+                { sourceId: ops, source: ops }
+                ] %}
+                {{ forms.dropdown("sourceId", "single", title, module.getOption("sourceId"), options, "sourceId", "source", helpText, "", "required") }}
+
+                {% set title %}{% trans "Set a duration?" %}{% endset %}
+                {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+
+                {% set title %}{% trans "Duration" %}{% endset %}
+                {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
+                {% set message %}{% trans "This module is compatibile only with Xibo for webOS player" %}{% endset %}
+                {{ forms.message(message, "alert alert-info") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2017 Spring Signage Ltd
+ * (notification-designer-javascript.twig)
+ */
+#}
+<script type="text/javascript">
+    function notificationWidgetFormOpen(dialog) {
+        // Choose a complementary color
+        var color = $c.complement($("#layout").data().backgroundColor);
+
+        // Apply some CSS to set a scale for these editors
+        var $layout = $("#layout");
+        var scale = $layout.attr('designer_scale');
+        var regionWidth = $("#region_" + $layout.data().currentRegionId).attr("width");
+        var regionHeight = $("#region_" + $layout.data().currentRegionId).attr("height");
+        var applyContentsToIframe = function(field) {
+            console.log('Applying iframe adjustments to ' + field);
+
+            $("#cke_" + field + " iframe").contents().find("head").append("" +
+                "<style>" +
+                "body {" +
+                "width: " + regionWidth + "px; " +
+                "height: " + regionHeight + "px; border:2px solid red; " +
+                "background: " + $('#layout').css('background-color') + "; " +
+                "transform: scale(" + scale + "); " +
+                "transform-origin: 0 0; }" +
+                "h1, h2, h3, h4, p { margin-top: 0;}" +
+                "</style>");
+        }
+
+        // Configure the editor
+        CKEDITOR.replace("template", CKEDITOR_DEFAULT_CONFIG);
+        CKEDITOR.instances["template"].on('instanceReady', function () {
+
+            applyContentsToIframe("template");
+
+            // Reapply the background style after switching to source view and back to the normal editing view
+            CKEDITOR.instances["template"].on('contentDom', function () { applyContentsToIframe("template") });
+
+            // Get the template data
+            var data = CKEDITOR.instances["template"].getData();
+
+            // Default config for fonts
+            if (data === "") {
+                CKEDITOR.instances["template"].setData("<span style=\"font-size: 48px;\"><span style=\"color: " + color + ";\">[Subject] - [Body]</span></span>");
+            }
+        });
+
+        // Configure the editor
+        CKEDITOR.replace("noDataMessage", CKEDITOR_DEFAULT_CONFIG);
+        CKEDITOR.instances["noDataMessage"].on('instanceReady', function () {
+
+            applyContentsToIframe("noDataMessage");
+
+            // Reapply the background style after switching to source view and back to the normal editing view
+            CKEDITOR.instances["noDataMessage"].on('contentDom', function() { applyContentsToIframe("noDataMessage"); });
+
+            // Get the template data
+            var data = CKEDITOR.instances["noDataMessage"].getData();
+
+            // Default config for fonts
+            if (data === "") {
+                CKEDITOR.instances["noDataMessage"].setData("<span style=\"font-size: 48px;\"><span style=\"color: " + color + ";\">" + translations.enterText + "</span></span>");
+            }
+        });
+
+        // Make sure when we close the dialog we also destroy the editor
+        dialog.on("hide.bs.modal", function() {
+            try {
+                if (CKEDITOR.instances["template"] !== undefined) {
+                    CKEDITOR.instances["template"].destroy();
+                }
+            } catch (e) {
+                console.log("Unable to remove CKEditor instance. " + e);
+            }
+            try {
+                if (CKEDITOR.instances["noDataMessage"] !== undefined) {
+                    CKEDITOR.instances["noDataMessage"].destroy();
+                }
+            } catch (e) {
+                console.log("Unable to remove CKEditor instance. " + e);
+            }
+        });
+    }
+</script>

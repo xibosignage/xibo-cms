@@ -208,6 +208,7 @@ function XiboInitialise(scope) {
     });
 
     // Search for any charts
+    // TODO: remove in 1.9
     $(scope + " div.morrisChart").each(function() {
 
         // Look for a variable with the same ID as this element
@@ -480,7 +481,7 @@ function dataTableTickCrossInverseColumn(data, type, row) {
 }
 
 function dataTableDateFromIso(data, type, row) {
-    if (type != "display")
+    if (type !== "display" && type !== "export")
         return data;
 
     if (data == null)
@@ -490,7 +491,7 @@ function dataTableDateFromIso(data, type, row) {
 }
 
 function dataTableDateFromUnix(data, type, row) {
-    if (type != "display")
+    if (type !== "display" && type !== "export")
         return data;
 
     if (data == null || data == 0)
@@ -499,12 +500,25 @@ function dataTableDateFromUnix(data, type, row) {
     return moment(data, "X").tz(timezone).format(jsDateFormat);
 }
 
+function dataTableSpacingPreformatted(data, type, row) {
+    if (type !== "display")
+        return data;
+
+    if (data === null || data === "")
+        return "";
+
+    return "<span class=\"spacing-whitespace-pre\">" + data + "</span>";
+}
+
 /**
  * DataTable Create tags
  * @param data
  * @returns {*}
  */
-function dataTableCreateTags(data) {
+function dataTableCreateTags(data, type) {
+
+    if (type !== "display")
+        return data.tags;
 
     var returnData = '';
 
@@ -581,7 +595,37 @@ function dataTableConfigureRefresh(gridId, table, refresh) {
 function dataTableAddButtons(table, filter) {
     var colVis = new $.fn.dataTable.Buttons(table, {
         buttons: [
-            'colvis', 'print', 'csv'
+            {
+                extend: 'colvis'
+            },
+            {
+                extend: 'print',
+                exportOptions: {
+                    orthogonal: 'export',
+                    format: {
+                        body: function (data, row, column, node) {
+                            if (data === null || data === "" || data === "null")
+                                return "";
+                            else
+                                return data;
+                        }
+                    }
+                }
+            },
+            {
+                extend: 'csv',
+                exportOptions: {
+                    orthogonal: 'export',
+                    format: {
+                        body: function (data, row, column, node) {
+                            if (data === null || data === "")
+                                return "";
+                            else
+                                return data;
+                        }
+                    }
+                }
+            }
         ]
     });
 
@@ -703,7 +747,16 @@ function XiboFormRender(sourceObj, data) {
                         });
                 }
 
+                // Focus in the first input
                 $('input[type=text]', dialog).eq(0).focus();
+
+                $('input[type=text]', dialog).each(function(index, el) {
+                    formRenderDetectSpacingIssues(el);
+
+                    $(el).on("keyup", $.debounce(500, function() {
+                        formRenderDetectSpacingIssues(el);
+                    }))
+                });
 
                 // Set up dependencies between controls
                 if (response.fieldActions != '') {
@@ -823,6 +876,22 @@ function XiboFormRender(sourceObj, data) {
 
     // Dont then submit the link/button
     return false;
+}
+
+function formRenderDetectSpacingIssues(element) {
+    var $el = $(element);
+    var value = $el.val();
+
+    if (value !== '' && (value.startsWith(" ") || value.endsWith(" ") || value.indexOf("  ") > -1)) {
+        // Add a little icon to the fields parent to inform of this issue
+        console.log("Field with strange spacing: " + $el.attr("name"));
+
+        var warning = $("<span></span>").addClass("fa fa-exclamation-circle spacing-warning-icon").attr("title", translations.spacesWarning);
+
+        $el.parent().append(warning);
+    } else {
+        $el.parent().find('.spacing-warning-icon').remove();
+    }
 }
 
 function XiboMultiSelectFormRender(button) {

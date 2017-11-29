@@ -48,9 +48,13 @@
                 </div>
 
                 {% if currentUser.userTypeId == 1 %}
-                {% set title %}{% trans "Receive System Notifications?" %}{% endset %}
-                {% set helpText %}{% trans "Should members of this Group receive system notifications?" %}{% endset %}
-                {{ forms.checkbox("isSystemNotification", title, group.isSystemNotification, helpText) }}
+                    {% set title %}{% trans "Receive System Notifications?" %}{% endset %}
+                    {% set helpText %}{% trans "Should members of this Group receive system notifications?" %}{% endset %}
+                    {{ forms.checkbox("isSystemNotification", title, group.isSystemNotification, helpText) }}
+
+                    {% set title %}{% trans "Receive Display Notifications?" %}{% endset %}
+                    {% set helpText %}{% trans "Should members of this Group receive Display notifications for Displays they have permission to see?" %}{% endset %}
+                    {{ forms.checkbox("isDisplayNotification", title, group.isDisplayNotification, helpText) }}
                 {% endif %}
             </form>
         </div>

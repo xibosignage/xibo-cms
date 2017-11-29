@@ -29,6 +29,20 @@
 
                             {% set title %}{% trans "Display Profile" %}{% endset %}
                             {{ inline.dropdown("displayProfileId", "single", title, "", [{displayProfileId:null, name:""}]|merge(displayProfiles), "displayProfileId", "name") }}
+
+                            {% set title %}{% trans "Authorised?" %}{% endset %}
+                            {% set yesOption %}{% trans "Yes" %}{% endset %}
+                            {% set noOption %}{% trans "No" %}{% endset %}
+                            {% set options = [
+                            { optionid: "", option: "" },
+                            { optionid: "1", option: yesOption },
+                            { optionid: "0", option: noOption},
+                            ] %}
+                            {{ inline.dropdown("authorised", "single", title, "", options, "optionid", "option") }}
+
+                            {% set title %}{% trans "Tags" %}{% endset %}
+                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                            {{ inline.inputWithTags("tags", title, null, helpText) }}
                         </form>
                     </div>
                 </div>
@@ -45,6 +59,7 @@
                                 <th>{% trans "Storage Total" %}</th>
                                 <th>{% trans "Storage Free %" %}</th>
                                 <th>{% trans "Description" %}</th>
+                                <th>{% trans "Tags" %}</th>
                                 <th>{% trans "Default Layout" %}</th>
                                 <th>{% trans "Interleave Default" %}</th>
                                 <th>{% trans "Email Alert" %}</th>
@@ -85,7 +100,6 @@
                 ajax: {
                     "url": "{{ urlFor("display.search") }}",
                     "data": function (dataToSend) {
-                        console.log(dataToSend);
                         //make a new object so as not to destroy the input.
                         var data = {};
                         data.draw = dataToSend.draw;
@@ -165,12 +179,24 @@
                     },
                     {"data": "storagePercentage", "visible": false},
                     {"data": "description", "visible": false},
+                    {
+                        "name": "tags",
+                        "sortable": false,
+                        "visible": false,
+                        "data": dataTableCreateTags
+                    },
                     {"data": "defaultLayout", "visible": false},
                     {"data": "incSchedule", "render": dataTableTickCrossColumn, "visible": false},
                     {"data": "emailAlert", "render": dataTableTickCrossColumn, "visible": false},
                     {"data": "loggedIn", "render": dataTableTickCrossColumn},
                     {"data": "lastAccessed", "render": dataTableDateFromUnix},
-                    {"data": "displayProfile", "visible": false},
+                    {
+                        "name": "displayProfileId",
+                        "data": function (data, type) {
+                            return data.displayProfile;
+                        },
+                        "visible": false
+                    },
                     {
                         "name": "clientVersion",
                         "data": function (data, type) {
@@ -222,6 +248,10 @@
                     {
                         "data": "xmrChannel",
                         "render": function (data, type, row) {
+                            if (type === "export") {
+                                return (data !== null && data !== "") ? 1 : 0;
+                            }
+
                             if (type != "display")
                                 return data;
 
@@ -243,6 +273,7 @@
             });
 
             table.on('draw', dataTableDraw);
+            table.on('draw', { form: $("#displays").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#displays_wrapper').find('.col-sm-6').eq(1));
         });

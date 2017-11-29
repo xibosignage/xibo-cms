@@ -264,7 +264,8 @@ class PermissionFactory extends BaseFactory
         if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
             // Normal users can only see themselves
             if ($user->userTypeId == 3) {
-                $filterBy['userId'] = $user->userId;
+                $body .= ' AND `user`.userId = :currentUserId ';
+                $params['currentUserId'] = $user->userId;
             }
             // Group admins can only see users from their groups.
             else if ($user->userTypeId == 2) {

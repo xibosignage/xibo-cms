@@ -37,6 +37,7 @@
                                 <th>{% trans "User Group" %}</th>
                                 <th>{% trans "Library Quota" %}</th>
                                 <th>{% trans "Receive System Notifications?" %}</th>
+                                <th>{% trans "Receive Display Notifications?" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -66,7 +67,7 @@
                     }
                 },
                 "columns": [
-                    {"data": "group"},
+                    {"data": "group", "render": dataTableSpacingPreformatted },
                     {
                         "name": "libraryQuota",
                         "data": null,
@@ -74,6 +75,10 @@
                     },
                     {
                         "data": "isSystemNotification",
+                        "render": dataTableTickCrossColumn
+                    },
+                    {
+                        "data": "isDisplayNotification",
                         "render": dataTableTickCrossColumn
                     },
                     {

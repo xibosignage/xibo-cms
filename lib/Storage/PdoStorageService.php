@@ -208,7 +208,11 @@ class PdoStorageService implements StorageServiceInterface
 
         $sth->execute($params);
 
+        $rows = $sth->rowCount();
+
         $this->incrementStat('default', 'update');
+
+        return $rows;
 	}
 
 	/**

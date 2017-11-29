@@ -26,6 +26,9 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
+            <div class="alert alert-warning">
+                {% trans "Assigning a Layout to a Display/DisplayGroup does NOT schedule that Layout to be shown. Please use the Schedule to show Layouts." %}
+            </div>
             <div id="FileAssociationsAssign" class="well" data-url="{{ urlFor("displayGroup.assign.layout", {id: displayGroup.displayGroupId}) }}">
                 <div>
                     <ul id="FileAssociationsSortable">

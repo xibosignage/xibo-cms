@@ -72,6 +72,11 @@
                             {% set id %}scope_{{ scope.id }}{% endset %}
                             {{ forms.checkbox(id, title, scope.selected) }}
                         {% endfor %}
+
+                        {% set title %}{% trans "Owner" %}{% endset %}
+                        {% set helpText %}{% trans "Set the owner of this Application. If you are not an admin you will not be able to reverse this action." %}{% endset %}
+                        {% set users = [{userId: null, user: ""}]|merge(users) %}
+                        {{ forms.dropdown("userId", "single", title, "", users, "userId", "userName", helpText) }}
                     </div>
                 </div>
             </form>

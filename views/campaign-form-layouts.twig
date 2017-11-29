@@ -40,14 +40,14 @@
     </div>
     <div class="row">
         <div class="col-md-12">
-            <div class="XiboGrid" id="{{ random() }}">
-                <div class="layoutAssignFilterOptions">
-                    <form onsubmit="false">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="layoutAssignView">
+                <div class="layoutAssignFilterOptions XiboFilter">
+                    <form class="form-inline" onsubmit="false">
                     {% set title %}{% trans "Name" %}{% endset %}
                     {{ inline.input("layout", title) }}
 
                     {% set title %}{% trans "Tags" %}{% endset %}
-                    {{ inline.input("tags", title) }}
+                    {{ inline.inputWithTags("tags", title) }}
                     </form>
                 </div>
                 <div class="XiboData">

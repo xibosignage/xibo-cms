@@ -27,7 +27,7 @@
             <div class="widget">
                 <div class="widget-title">{% trans "File Status - Count of Files" %}</div>
                 <div class="widget-body">
-                    <div id="downloadedCountPie" style="clear:both; height: 230px;"></div>
+                    <canvas id="downloadedCountPie" style="clear:both; margin-top:25px;" width="230"></canvas>
                 </div>
             </div>
         </div>
@@ -35,18 +35,20 @@
             <div class="widget">
                 <div class="widget-title">{% trans "File Status - Size of Files" %}</div>
                 <div class="widget-body">
-                    <div id="downloadedSizePie" style="clear:both; height: 230px;"></div>
+                    <canvas id="downloadedSizePie" style="clear:both; margin-top:25px;" width="230"></canvas>
                 </div>
             </div>
         </div>
     </div>
     <div class="row">
-        {% if errors|length > 0 %}
         <div class="col-lg-6">
             <div class="widget">
-                <div class="widget-title">{% trans "Errors in the Last 12 hours" %}</div>
+                <div class="widget-title">
+                    <button id="refreshLog" class="btn btn-sm pull-right"><span class="fa fa-refresh"></span></button>
+                    {% trans "Errors in the Last 12 hours" %}
+                </div>
                 <div class="widget-body medium no-padding">
-                    <table class="table table-striped">
+                    <table id="logs" class="table table-striped">
                         <thead>
                         <tr>
                             <th>{% trans "ID" %}</th>
@@ -55,19 +57,12 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {% for item in errors %}
-                            <tr>
-                                <td>{{ item.logId }}</td>
-                                <td><span class="isoDate">{{ item.logDate }}</span></td>
-                                <td>{{ item.message[:250] }}</td>
-                            </tr>
-                        {% endfor %}
+
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
-        {% endif %}
         <div class="col-lg-6">
             <div class="widget">
                 <div class="widget-title">{% trans "Layouts" %}</div>
@@ -103,7 +98,9 @@
     <div class="row">
         <div class="col-lg-6">
             <div class="widget">
-                <div class="widget-title">{% trans "Media" %}</div>
+                <div class="widget-title">
+                    {% trans "Media" %}
+                </div>
                 <div class="widget-body medium no-padding">
                     <table class="table table-striped">
                         <thead>
@@ -185,7 +182,7 @@
                             </div>
                         </div>
                         <div class="XiboData">
-                            <div id="bandwidthChart" style="clear:both; height: 230px;"></div>
+                            <canvas id="bandwidthChart" style="clear:both; margin-top:25px;" height="330"></canvas>
                         </div>
                     </div>
                 </div>
@@ -198,16 +195,32 @@
 {% block javaScript %}
     <script type="text/javascript">
 
-        var bandwidthChart;
-        var bandwidthChartOptions = {
-            element: 'bandwidthChart',
-            data: [],
-            xkey: 'label',
-            ykeys: ['value'],
-            labels: ['{% trans "Bandwidth" %}'],
-            stacked: false,
-            postUnits: ''
-        };
+        $(document).ready(function() {
+            var table = $("#logs").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[0, "desc"]],
+                ajax: {
+                    url: "{{ urlFor("log.search") }}?{{ errorSearch|raw }}",
+                },
+                "columns": [
+                    {"data": "logId"},
+                    {"data": "logDate", "render": dataTableDateFromIso},
+                    {"data": "message"}
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+
+            $("#refreshLog").click(function () {
+                table.ajax.reload();
+            });
+        });
+
+        var bandwidthChart = null;
 
         function setBandwidthChart() {
             $.ajax({
@@ -217,14 +230,41 @@
                 dataType: "json",
                 data: $("#bandwidthFilter").find("form").serialize(),
                 success: function(response) {
-                    if (bandwidthChart == undefined) {
-                        // Create our chart
-                        bandwidthChartOptions.data = response.extra.data;
-                        bandwidthChartOptions.postUnits = response.extra.postUnits;
-                        bandwidthChart = Morris.Bar(bandwidthChartOptions);
-                    } else {
-                        bandwidthChart.setData(response.extra.data);
+                    if (bandwidthChart !== undefined && bandwidthChart !== null) {
+                        console.log('Destroying Chart');
+                        bandwidthChart.destroy();
                     }
+
+                    if (response.extra.data.length <= 0) {
+                        return;
+                    }
+
+                    // Create our chart
+                    bandwidthChart = new Chart($("#bandwidthChart"), {
+                        type: "bar",
+                        data: {
+                            labels: response.extra.labels,
+                            datasets: [{
+                                label: "{% trans "Bandwidth" %}",
+                                backgroundColor: "rgb(11, 98, 164)",
+                                data: response.extra.data
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                yAxes: [{
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: response.extra.postUnits,
+                                    }
+                                }]
+                            },
+                            legend: {
+                                display: false
+                            },
+                            maintainAspectRatio: false,
+                        }
+                    });
                 }
             });
         }
@@ -251,22 +291,30 @@
             });
 
             // Handle the Pie chart for download status
-            Morris.Donut({
-                element: 'downloadedCountPie',
-                data: [
-                    { label: "{% trans "Downloaded" %}", value: {{ status.countComplete }}},
-                    { label: "{% trans "Pending" %}", value: {{ status.countRemaining }}}
-                ],
-                colors: ["#00CC00", "#FF0000"]
+            var downloadedCountPie = new Chart($("#downloadedCountPie"), {
+                type: 'pie',
+                data: {
+                    datasets: [{
+                        data: [{{ status.countComplete }}, {{ status.countRemaining }}],
+                        backgroundColor: ["#00CC00", "#FF0000"]
+                    }],
+                    labels: [
+                        "{% trans "Downloaded" %}", "{% trans "Pending" %}"
+                    ]
+                }
             });
-            Morris.Donut({
-                element: 'downloadedSizePie',
-                data: [
-                    { label: "{% trans "Downloaded" %}", value: {{ status.sizeComplete }}},
-                    { label: "{% trans "Pending" %}", value: {{ status.sizeRemaining }}}
-                ],
-                colors: ["#00CC00", "#FF0000"],
-                formatter: function (y) { return y + "{{ status.units }}"; }
+
+            var downloadedSizePie = new Chart($("#downloadedSizePie"), {
+                type: 'pie',
+                data: {
+                    datasets: [{
+                        data: [{{ status.sizeComplete }}, {{ status.sizeRemaining }}],
+                        backgroundColor: ["#00CC00", "#FF0000"]
+                    }],
+                    labels: [
+                        "{% trans "Downloaded" %}" + " {{ status.units }}", "{% trans "Pending" %}" + " {{ status.units }}"
+                    ]
+                },
             });
         });
     </script>

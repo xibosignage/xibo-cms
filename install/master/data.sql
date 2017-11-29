@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.8.2', 5, 2, 133);
+('1.8.3', 5, 2, 134);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`, `isSystemNotification`) VALUES
 (1, 'Users', 0, 0, 0),
@@ -102,7 +102,7 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`,
   (11, 'datasetview', 'Data Set', 1, 1, 'A view on a DataSet', 'forms/datasetview.gif', 1, NULL, 1, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\DataSetView', 60),
   (12, 'shellcommand', 'Shell Command', 1, 1, 'Execute a shell command on the client', 'forms/shellcommand.gif', 1, NULL, 1, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\ShellCommand', 3),
   (13, 'localvideo', 'Local Video', 1, 1, 'Play a video locally stored on the client', 'forms/video.gif', 1, NULL, 0, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\LocalVideo', 60),
-  (14, 'genericfile', 'Generic File', 1, 0, 'A generic file to be stored in the library', 'forms/library.gif', 1, 'apk,js,html,htm', 0, 0, NULL, NULL, '../modules', 'Xibo\\Widget\\GenericFile', 10),
+  (14, 'genericfile', 'Generic File', 1, 0, 'A generic file to be stored in the library', 'forms/library.gif', 1, 'apk,ipk,js,html,htm', 0, 0, NULL, NULL, '../modules', 'Xibo\\Widget\\GenericFile', 10),
   (15, 'clock', 'Clock', 1, 1, '', 'forms/library.gif', 1, NULL, 1, 1, 'html', '[]', '../modules', 'Xibo\\Widget\\Clock', 5),
   (16, 'font', 'Font', 1, 0, 'A font to use in other Modules', 'forms/library.gif', 1, 'ttf,otf,eot,svg,woff', 0, 0, NULL, NULL, '../modules', 'Xibo\\Widget\\Font', 10),
   (17, 'audio', 'Audio', 1, 0, 'Audio - support varies depending on the client hardware', 'forms/video.gif', 1, 'mp3,wav', 0, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\Audio', 0),
@@ -216,7 +216,6 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (77, 'FORCE_HTTPS', '0', 'checkbox', 'Force the portal into HTTPS?', NULL, 'network', 1, 'Force HTTPS?', '', 70, '0', 1, 'checkbox'),
 (78, 'ISSUE_STS', '0', 'checkbox', 'Add STS to the response headers? Make sure you fully understand STS before turning it on as it will prevent access via HTTP after the first successful HTTPS connection.', NULL, 'network', 1, 'Enable STS?', '', 80, '0', 1, 'checkbox'),
 (79, 'STS_TTL', '600', 'text', 'The Time to Live (maxage) of the STS header expressed in seconds.', NULL, 'network', 1, 'STS Time out', '', 90, '600', 1, 'int'),
-(80, 'MAINTENANCE_ALERTS_FOR_VIEW_USERS', '0', 'checkbox', 'Email maintenance alerts for users with view permissions to effected Displays.', NULL, 'displays', 1, 'Maintenance Alerts for Users', '', 60, '0', 1, 'checkbox'),
 (81, 'CALENDAR_TYPE', 'Gregorian', 'dropdown', 'Which Calendar Type should the CMS use?', 'Gregorian|Jalali', 'regional', 1, 'Calendar Type', '', 50, 'Gregorian', 1, 'string'),
 (82, 'DASHBOARD_LATEST_NEWS_ENABLED', '1', 'checkbox', 'Should the Dashboard show latest news? The address is provided by the theme.', '', 'general', 1, 'Enable Latest News?', '', 110, '1', 1, 'checkbox'),
 (83, 'LIBRARY_MEDIA_DELETEOLDVER_CHECKB','Checked','dropdown','Default the checkbox for Deleting Old Version of media when a new file is being uploaded to the library.','Checked|Unchecked','defaults',1,'Default for "Delete old version of Media" checkbox. Shown when Editing Library Media.', '', 50, 'Unchecked', 1, 'dropdown'),
@@ -285,7 +284,7 @@ INSERT INTO `tag` (`tagId`, `tag`) VALUES
 (3, 'thumbnail');
 
 INSERT INTO `displayprofile` (`name`, `type`, `config`, `isdefault`, `userid`)
-VALUES ('Windows', 'windows', '[]', '1', '1'), ('Android', 'android', '[]', '1', '1');
+VALUES ('Windows', 'windows', '[]', '1', '1'), ('Android', 'android', '[]', '1', '1'),  ('webOS', 'lg', '[]', '1', '1');
 
 INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES
 (1, 'Xibo\\Entity\\Page'),

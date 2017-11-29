@@ -18,6 +18,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
+use Xibo\Factory\TagFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -88,6 +89,12 @@ class DisplayGroup implements \JsonSerializable
     public $userId = 0;
 
     /**
+     * @SWG\Property(description="Tags associated with this DisplayGroup")
+     * @var Tag[]
+     */
+    public $tags = [];
+
+    /**
      * Minimum save options
      * @var array
      */
@@ -105,6 +112,7 @@ class DisplayGroup implements \JsonSerializable
     private $media = [];
     private $permissions = [];
     private $events = [];
+    private $unassignTags = [];
 
     // Track original assignments
     private $originalDisplayGroups = [];
@@ -152,18 +160,25 @@ class DisplayGroup implements \JsonSerializable
     private $scheduleFactory;
 
     /**
+     * @var TagFactory
+     */
+    private $tagFactory;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param DisplayGroupFactory $displayGroupFactory
      * @param PermissionFactory $permissionFactory
+     * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $displayGroupFactory, $permissionFactory)
+    public function __construct($store, $log, $displayGroupFactory, $permissionFactory, $tagFactory)
     {
         $this->setCommonDependencies($store, $log);
 
         $this->displayGroupFactory = $displayGroupFactory;
         $this->permissionFactory = $permissionFactory;
+        $this->tagFactory = $tagFactory;
     }
 
     /**
@@ -217,7 +232,8 @@ class DisplayGroup implements \JsonSerializable
     }
 
     /**
-     * Set Notify Required
+     * Set Collection Required
+     *  If true will send a player action to collect immediately
      * @param bool|true $collectRequired
      */
     public function setCollectRequired($collectRequired = true)
@@ -383,10 +399,86 @@ class DisplayGroup implements \JsonSerializable
     }
 
     /**
-     * Load the contents for this display group
+     * Does the campaign have the provided tag?
+     * @param $searchTag
+     * @return bool
      */
-    public function load()
+    public function hasTag($searchTag)
     {
+        $this->load();
+
+        foreach ($this->tags as $tag) {
+            /* @var Tag $tag */
+            if ($tag->tag == $searchTag)
+                return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Assign Tag
+     * @param Tag $tag
+     * @return $this
+     */
+    public function assignTag($tag)
+    {
+        $this->load();
+
+        if (!in_array($tag, $this->tags))
+            $this->tags[] = $tag;
+
+        return $this;
+    }
+
+    /**
+     * Unassign tag
+     * @param Tag $tag
+     * @return $this
+     */
+    public function unassignTag($tag)
+    {
+        $this->tags = array_udiff($this->tags, [$tag], function($a, $b) {
+            /* @var Tag $a */
+            /* @var Tag $b */
+            return $a->tagId - $b->tagId;
+        });
+
+        return $this;
+    }
+
+    /**
+     * @param array[Tag] $tags
+     */
+    public function replaceTags($tags = [])
+    {
+        if (!is_array($this->tags) || count($this->tags) <= 0)
+            $this->tags = $this->tagFactory->loadByDisplayGroupId($this->displayGroupId);
+
+        $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
+            /* @var Tag $a */
+            /* @var Tag $b */
+            return $a->tagId - $b->tagId;
+        });
+
+        $this->getLog()->debug('Tags to be removed: ' . json_encode($this->unassignTags));
+
+        // Replace the arrays
+        $this->tags = $tags;
+
+        $this->getLog()->debug('Tags remaining: ' . json_encode($this->tags));
+    }
+
+    /**
+     * Load the contents for this display group
+     * @param array $options
+     */
+    public function load($options = [])
+    {
+        $options = array_merge([
+            'loadTags' => true
+        ], $options);
+
         if ($this->loaded || $this->displayGroupId == null || $this->displayGroupId == 0)
             return;
 
@@ -404,6 +496,10 @@ class DisplayGroup implements \JsonSerializable
         $this->media = $this->mediaFactory->getByDisplayGroupId($this->displayGroupId);
 
         $this->events = $this->scheduleFactory->getByDisplayGroupId($this->displayGroupId);
+
+        // Load all tags
+        if ($options['loadTags'])
+            $this->tags = $this->tagFactory->loadByDisplayGroupId($this->displayGroupId);
 
         // Set the originals
         $this->originalDisplayGroups = $this->displayGroups;
@@ -449,7 +545,8 @@ class DisplayGroup implements \JsonSerializable
             'validate' => true,
             'saveGroup' => true,
             'manageLinks' => true,
-            'manageDisplayLinks' => true
+            'manageDisplayLinks' => true,
+            'manageDynamicDisplayLinks' => true,
         ], $options);
 
         if ($options['validate'])
@@ -461,6 +558,29 @@ class DisplayGroup implements \JsonSerializable
         }
         else if ($options['saveGroup'])
             $this->edit();
+
+        // Tags
+        if (is_array($this->tags)) {
+            foreach ($this->tags as $tag) {
+                /* @var Tag $tag */
+
+                $this->getLog()->debug('Assigning tag ' . $tag->tag);
+
+                $tag->assignDisplayGroup($this->displayGroupId);
+                $tag->save();
+            }
+        }
+
+        // Remove unwanted ones
+        if (is_array($this->unassignTags)) {
+            foreach ($this->unassignTags as $tag) {
+                /* @var Tag $tag */
+                $this->getLog()->debug('Unassigning tag ' . $tag->tag);
+
+                $tag->unassignDisplayGroup($this->displayGroupId);
+                $tag->save();
+            }
+        }
 
         if ($this->loaded) {
 
@@ -478,14 +598,14 @@ class DisplayGroup implements \JsonSerializable
 
             if ($options['manageDisplayLinks']) {
                 // Handle any changes in the displays linked
-                $this->manageDisplayLinks();
+                $this->manageDisplayLinks($options['manageDynamicDisplayLinks']);
 
                 // Handle any group links
                 $this->manageDisplayGroupLinks();
             }
 
-        } else if ($this->isDynamic && $options['manageDisplayLinks']) {
-            $this->manageDisplayLinks();
+        } else if ($this->isDynamic && $options['manageDynamicDisplayLinks']) {
+            $this->manageDisplayLinks(true);
         }
 
         // Set media incomplete if necessary
@@ -586,10 +706,11 @@ class DisplayGroup implements \JsonSerializable
 
     /**
      * Manage the links to this display, dynamic or otherwise
+     * @var bool $manageDynamic
      */
-    private function manageDisplayLinks()
+    private function manageDisplayLinks($manageDynamic = true)
     {
-        if ($this->isDynamic) {
+        if ($this->isDynamic && $manageDynamic) {
 
             $this->getLog()->info('Managing Display Links for Dynamic Display Group %s', $this->displayGroup);
 

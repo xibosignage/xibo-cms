@@ -35,6 +35,7 @@ $app->get('/', function () use ($app) {
 
         // We've seen it
         $user->newUserWizard = 1;
+        $user->save(['validate' => false, 'saveUserOptions' => false]);
     }
     else {
         $app->logService->debug('Showing the homepage: %s', $user->homePageId);
@@ -146,6 +147,7 @@ $app->get('/library/form/delete/:id', '\Xibo\Controller\Library:deleteForm')->na
 $app->get('/library/form/tidy', '\Xibo\Controller\Library:tidyForm')->name('library.tidy.form');
 $app->get('/library/form/usage/:id', '\Xibo\Controller\Library:usageForm')->name('library.usage.form');
 $app->get('/library/fontcss', '\Xibo\Controller\Library:fontCss')->name('library.font.css');
+
 
 //
 // display
@@ -328,7 +330,10 @@ $app->get('/help/form/delete/:id', '\Xibo\Controller\Help:deleteForm')->name('he
 // Stats
 //
 $app->get('/stats/view', '\Xibo\Controller\Stats:displayPage')->name('stats.view');
+$app->get('/stats/proofofplay/view', '\Xibo\Controller\Stats:displayProofOfPlayPage')->name('stats.proofofplay.view');
+$app->get('/stats/library/view', '\Xibo\Controller\Stats:displayLibraryPage')->name('stats.library.view');
 $app->get('/stats/form/export', '\Xibo\Controller\Stats:exportForm')->name('stats.export.form');
+$app->get('/stats/library', '\Xibo\Controller\Stats:libraryUsageGrid')->name('stats.library.grid');
 
 //
 // Audit Log

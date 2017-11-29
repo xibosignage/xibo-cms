@@ -21,8 +21,9 @@ interface HelpServiceInterface
      * @param StorageServiceInterface $store
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
+     * @param string $currentPage
      */
-    public function __construct($store, $config, $pool);
+    public function __construct($store, $config, $pool, $currentPage);
 
     /**
      * Get Help Link

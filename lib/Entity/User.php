@@ -226,6 +226,12 @@ class User implements \JsonSerializable
     public $isSystemNotification = 0;
 
     /**
+     * @SWG\Property(description="Does this Group receive system notifications.")
+     * @var int
+     */
+    public $isDisplayNotification = 0;
+
+    /**
      * Cached Permissions
      * @var array[Permission]
      */
@@ -653,7 +659,7 @@ class User implements \JsonSerializable
      */
     public function validate()
     {
-        if (!v::alnum('_.')->length(1, 50)->validate($this->userName) && !v::email()->validate($this->userName))
+        if (!v::alnum('_.-')->length(1, 50)->validate($this->userName) && !v::email()->validate($this->userName))
             throw new InvalidArgumentException(__('User name must be between 1 and 50 characters.'), 'userName');
 
         if (!v::string()->notEmpty()->validate($this->password))
@@ -806,6 +812,7 @@ class User implements \JsonSerializable
         $group = $this->userGroupFactory->create($this->userName, $this->libraryQuota);
         $group->setOwner($this);
         $group->isSystemNotification = $this->isSystemNotification;
+        $group->isDisplayNotification = $this->isDisplayNotification;
         $group->save();
     }
 
@@ -822,7 +829,6 @@ class User implements \JsonSerializable
                   Retired = :retired,
                   userTypeId = :userTypeId,
                   loggedIn = :loggedIn,
-                  lastAccessed = :lastAccessed,
                   newUserWizard = :newUserWizard,
                   CSPRNG = :CSPRNG,
                   `UserPassword` = :password,
@@ -842,7 +848,6 @@ class User implements \JsonSerializable
             'email' => $this->email,
             'homePageId' => $this->homePageId,
             'retired' => $this->retired,
-            'lastAccessed' => $this->lastAccessed,
             'loggedIn' => $this->loggedIn,
             'newUserWizard' => $this->newUserWizard,
             'CSPRNG' => $this->CSPRNG,
@@ -866,6 +871,7 @@ class User implements \JsonSerializable
         $group->group = $this->userName;
         $group->libraryQuota = $this->libraryQuota;
         $group->isSystemNotification = $this->isSystemNotification;
+        $group->isDisplayNotification = $this->isDisplayNotification;
         $group->save(['linkUsers' => false]);
     }
 
@@ -895,9 +901,9 @@ class User implements \JsonSerializable
     public function touch()
     {
         // This needs to happen on a separate connection
-        $this->getStore()->update('UPDATE `user` SET lastAccessed = :time, loggedIn = 1, newUserWizard = :newUserWizard WHERE userId = :userId', [
+        $this->getStore()->update('UPDATE `user` SET lastAccessed = :time, loggedIn = :loggedIn  WHERE userId = :userId', [
             'userId' => $this->userId,
-            'newUserWizard' => $this->newUserWizard,
+            'loggedIn' => $this->loggedIn,
             'time' => date("Y-m-d H:i:s")
         ]);
     }

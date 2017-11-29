@@ -34,6 +34,7 @@ use Xibo\Factory\LogFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\ScheduleFactory;
+use Xibo\Factory\TagFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Service\ConfigServiceInterface;
@@ -107,6 +108,9 @@ class Display extends Base
     /** @var  RequiredFileFactory */
     private $requiredFileFactory;
 
+    /** @var  TagFactory */
+    private $tagFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -128,8 +132,9 @@ class Display extends Base
      * @param ScheduleFactory $scheduleFactory
      * @param DisplayEventFactory $displayEventFactory
      * @param RequiredFileFactory $requiredFileFactory
+     * @param TagFactory $tagFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -145,6 +150,7 @@ class Display extends Base
         $this->scheduleFactory = $scheduleFactory;
         $this->displayEventFactory = $displayEventFactory;
         $this->requiredFileFactory = $requiredFileFactory;
+        $this->tagFactory = $tagFactory;
     }
 
     /**
@@ -175,14 +181,6 @@ class Display extends Base
 
         if (!$this->getUser()->checkViewable($display))
             throw new AccessDeniedException();
-
-        // Errors in the last 24 hours
-        $errors = $this->logFactory->query(null, [
-            'displayId' => $display->displayId,
-            'type' => 'ERROR',
-            'fromDt' => $this->getDate()->getLocalDate($this->getDate()->parse()->subHours(24), 'U'),
-            'toDt' => $this->getDate()->getLocalDate(null, 'U')
-        ]);
 
         // Zero out some variables
         $layouts = [];
@@ -302,7 +300,12 @@ class Display extends Base
             'requiredFiles' => [],
             'display' => $display,
             'timeAgo' => $this->getDate()->parse($display->lastAccessed, 'U')->diffForHumans(),
-            'errors' => $errors,
+            'errorSearch' => http_build_query([
+                'displayId' => $display->displayId,
+                'type' => 'ERROR',
+                'fromDt' => $this->getDate()->getLocalDate($this->getDate()->parse()->subHours(12)),
+                'toDt' => $this->getDate()->getLocalDate()
+            ]),
             'inventory' => [
                 'layouts' => $layouts,
                 'media' => $media,
@@ -419,6 +422,9 @@ class Display extends Base
             'clientVersion' => $this->getSanitizer()->getString('clientVersion'),
             'authorised' => $this->getSanitizer()->getInt('authorised'),
             'displayProfileId' => $this->getSanitizer()->getInt('displayProfileId'),
+            'tags' => $this->getSanitizer()->getString('tags'),
+            'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
+            'showTags' => true,
         ];
 
         // Get a list of displays
@@ -630,7 +636,7 @@ class Display extends Base
      */
     function editForm($displayId)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($displayId, true);
 
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
@@ -664,7 +670,12 @@ class Display extends Base
                 } else {
                     // A format has been set
                     $format = (strlen($profile[$i]['value']) == 5) ? 'H:i' : 'H:i:s';
-                    $profile[$i]['valueString'] = $this->getDate()->parse($profile[$i]['value'], $format)->format($timeFormat);
+                    try {
+                        $profile[$i]['valueString'] = $this->getDate()->parse($profile[$i]['value'], $format)->format($timeFormat);
+                    } catch (\InvalidArgumentException $invalidArgumentException) {
+                        $this->getLog()->error('Display Profile contains an invalid time format, expecting ' . $format . ' value is ' . $profile[$i]['value']);
+                        $profile[$i]['valueString'] = '00:00';
+                    }
                 }
             }
         }
@@ -743,6 +754,13 @@ class Display extends Base
      *      name="description",
      *      in="formData",
      *      description="A description of the Display",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="A comma separated list of tags for this item",
      *      type="string",
      *      required=false
      *   ),
@@ -882,7 +900,7 @@ class Display extends Base
      */
     function edit($displayId)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($displayId, true);
 
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
@@ -911,6 +929,9 @@ class Display extends Base
         $display->longitude = $this->getSanitizer()->getDouble('longitude');
         $display->timeZone = $this->getSanitizer()->getString('timeZone');
         $display->displayProfileId = $this->getSanitizer()->getInt('displayProfileId');
+
+        // Tags are stored on the displaygroup, we're just passing through here
+        $display->tags = $this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags'));
 
         if ($display->auditingUntil !== null)
             $display->auditingUntil = $display->auditingUntil->format('U');

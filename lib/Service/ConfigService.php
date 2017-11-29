@@ -30,8 +30,8 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class ConfigService implements ConfigServiceInterface
 {
-    public static $WEBSITE_VERSION_NAME = '1.8.2';
-    public static $WEBSITE_VERSION = 133;
+    public static $WEBSITE_VERSION_NAME = '1.8.3';
+    public static $WEBSITE_VERSION = 134;
     public static $VERSION_REQUIRED = '5.5';
     public static $VERSION_UNSUPPORTED = '7.0';
 
@@ -800,6 +800,22 @@ class ConfigService implements ConfigServiceInterface
             'advice' => $advice
         );
 
+        // Check to see if OpenSSL is installed
+        $advice = __('OpenSSL is used to seal and verify messages sent to XMR');
+        if ($this->checkOpenSsl()) {
+            $status = 1;
+        } else {
+            $this->envWarning = true;
+            $status = 2;
+            $advice .= __(' and is recommended.');
+        }
+
+        $rows[] = array(
+            'item' => __('OpenSSL'),
+            'status' => $status,
+            'advice' => $advice
+        );
+
         $this->envTested = true;
 
         return $rows;
@@ -1066,5 +1082,14 @@ class ConfigService implements ConfigServiceInterface
             return false;
 
         return ($results[0]['Value'] != 'STATEMENT');
+    }
+
+    /**
+     * Check open ssl is available
+     * @return bool
+     */
+    public function checkOpenSsl()
+    {
+        return extension_loaded('openssl');
     }
 }

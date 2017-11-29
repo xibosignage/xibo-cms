@@ -454,4 +454,15 @@ class Base
             $state->fieldActions = json_decode($view['fieldActions']);
         }
     }
+
+    /**
+     * Render a template to string
+     * @param string $template
+     * @param array $data
+     * @return string
+     */
+    public function renderTemplateToString($template, $data)
+    {
+        return $this->getApp()->view()->render($template . '.twig', $data);
+    }
 }

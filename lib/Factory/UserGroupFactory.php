@@ -119,6 +119,21 @@ class UserGroupFactory extends BaseFactory
     }
 
     /**
+     * Get isDisplayNotification Group
+     * @param int|null $displayGroupId Optionally provide a displayGroupId to restrict to view permissions.
+     * @return UserGroup[]
+     */
+    public function getDisplayNotificationGroups($displayGroupId = null)
+    {
+        return $this->query(null, [
+            'disableUserCheck' => 1,
+            'isDisplayNotification' => 1,
+            'isUserSpecific' => -1,
+            'displayGroupId' => $displayGroupId
+        ]);
+    }
+
+    /**
      * Get by User Id
      * @param int $userId
      * @return array[UserGroup]
@@ -141,12 +156,12 @@ class UserGroupFactory extends BaseFactory
 
     /**
      * Get by Display Group
-     * @param $displayGroupId
-     * @return array[User]
+     * @param int $displayGroupId
+     * @return UserGroup[]
      */
     public function getByDisplayGroupId($displayGroupId)
     {
-        return $this->query(null, array('disableUserCheck' => 1, 'displayGroupId' => [$displayGroupId]));
+        return $this->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
     }
 
     /**
@@ -155,7 +170,7 @@ class UserGroupFactory extends BaseFactory
      * @return array[UserGroup]
      * @throws \Exception
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $entries = array();
         $params = array();
@@ -181,6 +196,13 @@ class UserGroupFactory extends BaseFactory
 				$select .= '
 				    ,
 				    `group`.isSystemNotification
+				';
+            }
+
+            if (DBVERSION >= 134) {
+				$select .= '
+				    ,
+				    `group`.isDisplayNotification
 				';
             }
 
@@ -265,20 +287,28 @@ class UserGroupFactory extends BaseFactory
                 $params['isSystemNotification'] = $this->getSanitizer()->getInt('isSystemNotification', $filterBy);
             }
 
+            if (DBVERSION >= 134 && $this->getSanitizer()->getInt('isDisplayNotification', $filterBy) !== null) {
+                $body .= ' AND isDisplayNotification = :isDisplayNotification ';
+                $params['isDisplayNotification'] = $this->getSanitizer()->getInt('isDisplayNotification', $filterBy);
+            }
+
             if ($this->getSanitizer()->getInt('notificationId', $filterBy) !== null) {
                 $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lknotificationgroup` WHERE notificationId = :notificationId) ';
                 $params['notificationId'] = $this->getSanitizer()->getInt('notificationId', $filterBy);
             }
 
             if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
-                $body .= ' AND `group`.groupId IN (
-                SELECT DISTINCT `permission`.groupId
-                  FROM `permission`
-                    INNER JOIN `permissionentity`
-                    ON `permissionentity`.entityId = permission.entityId
-                        AND `permissionentity`.entity = \'Xibo\\Entity\\DisplayGroup\'
-                 WHERE `permission`.objectId = :displayGroupId
-            ) ';
+                $body .= ' 
+                    AND `group`.groupId IN (
+                        SELECT DISTINCT `permission`.groupId
+                          FROM `permission`
+                            INNER JOIN `permissionentity`
+                            ON `permissionentity`.entityId = permission.entityId
+                                AND `permissionentity`.entity = \'Xibo\\Entity\\DisplayGroup\'
+                         WHERE `permission`.objectId = :displayGroupId
+                            AND `permission`.view = 1
+                    )
+                ';
                 $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
             }
 

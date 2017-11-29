@@ -174,7 +174,7 @@ class State extends Middleware
         });
 
         // Set some public routes
-        $app->publicRoutes = array('/login', '/logout', '/clock', '/about', '/login/ping');
+        $app->publicRoutes = array('/login', '/clock', '/about', '/login/ping');
 
         // The state of the application response
         $app->container->singleton('state', function() { return new ApplicationState(); });
@@ -192,8 +192,13 @@ class State extends Middleware
         self::configureCache($app->container, $app->configService, $app->logWriter->getWriter());
 
         // Register the help service
-        $app->container->singleton('helpService', function($container) {
-            return new HelpService($container->store, $container->configService, $container->pool);
+        $app->container->singleton('helpService', function($container) use ($app) {
+            return new HelpService(
+                $container->store,
+                $container->configService,
+                $container->pool,
+                ($app->router()->getCurrentRoute() !== null) ? $app->router()->getCurrentRoute()->getPattern() : null
+            );
         });
 
         // Create a session
@@ -354,7 +359,8 @@ class State extends Middleware
                 $container->store,
                 $container->applicationFactory,
                 $container->applicationRedirectUriFactory,
-                $container->applicationScopeFactory
+                $container->applicationScopeFactory,
+                $container->userFactory
             );
         });
 
@@ -497,7 +503,8 @@ class State extends Middleware
                 $container->mediaFactory,
                 $container->scheduleFactory,
                 $container->displayEventFactory,
-                $container->requiredFileFactory
+                $container->requiredFileFactory,
+                $container->tagFactory
             );
         });
 
@@ -517,7 +524,8 @@ class State extends Middleware
                 $container->moduleFactory,
                 $container->mediaFactory,
                 $container->commandFactory,
-                $container->scheduleFactory
+                $container->scheduleFactory,
+                $container->tagFactory
             );
         });
 
@@ -876,7 +884,9 @@ class State extends Middleware
                 $container->store,
                 $container->displayFactory,
                 $container->layoutFactory,
-                $container->mediaFactory
+                $container->mediaFactory,
+                $container->userFactory,
+                $container->userGroupFactory
             );
         });
 
@@ -1155,7 +1165,8 @@ class State extends Middleware
                 $container->sanitizerService,
                 $container->user,
                 $container->userFactory,
-                $container->permissionFactory
+                $container->permissionFactory,
+                $container->tagFactory
             );
         });
 
@@ -1197,7 +1208,8 @@ class State extends Middleware
                 $container->resolutionFactory,
                 $container->widgetFactory,
                 $container->widgetOptionFactory,
-                $container->playlistFactory
+                $container->playlistFactory,
+                $container->widgetAudioFactory
             );
         });
 

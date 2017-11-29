@@ -203,6 +203,7 @@ $app->delete('/resolution/:id', '\Xibo\Controller\Resolution:delete')->name('res
 $app->map('/library', '\Xibo\Controller\Library:add')->via('HEAD');
 $app->get('/library', '\Xibo\Controller\Library:grid')->name('library.search');
 $app->get('/library/usage/:id', '\Xibo\Controller\Library:usage')->name('library.usage');
+$app->get('/library/usage/layouts/:id', '\Xibo\Controller\Library:usageLayouts')->name('library.usage.layouts');
 $app->get('/library/download/:id(/:type)', '\Xibo\Controller\Library:download')->name('library.download');
 $app->post('/library', '\Xibo\Controller\Library:add')->name('library.add');
 $app->put('/library/:id', '\Xibo\Controller\Library:edit')->name('library.edit');
@@ -250,6 +251,7 @@ $app->post('/displaygroup/:id/layout/assign', '\Xibo\Controller\DisplayGroup:ass
 $app->post('/displaygroup/:id/layout/unassign', '\Xibo\Controller\DisplayGroup:unassignLayouts')->name('displayGroup.unassign.layout');
 
 $app->post('/displaygroup/:id/action/collectNow', '\Xibo\Controller\DisplayGroup:collectNow')->name('displayGroup.action.collectNow');
+$app->post('/displaygroup/:id/action/clearStatsAndLogs', '\Xibo\Controller\DisplayGroup:clearStatsAndLogs')->name('displayGroup.action.clearStatsAndLogs');
 $app->post('/displaygroup/:id/action/changeLayout', '\Xibo\Controller\DisplayGroup:changeLayout')->name('displayGroup.action.changeLayout');
 $app->post('/displaygroup/:id/action/overlayLayout', '\Xibo\Controller\DisplayGroup:overlayLayout')->name('displayGroup.action.overlayLayout');
 $app->post('/displaygroup/:id/action/revertToSchedule', '\Xibo\Controller\DisplayGroup:revertToSchedule')->name('displayGroup.action.revertToSchedule');

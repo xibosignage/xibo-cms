@@ -4,6 +4,7 @@ namespace Xibo\Helper;
 
 use Exception;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\InvalidArgumentException;
 
 /**
  * Class DataSetUploadHandler
@@ -50,8 +51,8 @@ class DataSetUploadHandler extends BlueImpUploadHandler
                     // Has this column been provided in the mappings?
 
                     $spreadSheetColumn = 0;
-                    if( isset($_REQUEST['csvImport_' . $column->dataSetColumnId]) )
-                            $spreadSheetColumn = (($index === null) ? $_REQUEST['csvImport_' . $column->dataSetColumnId] : $_REQUEST['csvImport_' . $column->dataSetColumnId][$index]);
+                    if (isset($_REQUEST['csvImport_' . $column->dataSetColumnId]))
+                        $spreadSheetColumn = (($index === null) ? $_REQUEST['csvImport_' . $column->dataSetColumnId] : $_REQUEST['csvImport_' . $column->dataSetColumnId][$index]);
                             
                     // If it has been left blank, then skip
                     if ($spreadSheetColumn != 0)
@@ -67,9 +68,11 @@ class DataSetUploadHandler extends BlueImpUploadHandler
             ini_set('auto_detect_line_endings', true);
 
             $firstRow = true;
+            $i = 0;
 
             $handle = fopen($controller->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName, 'r');
             while (($data = fgetcsv($handle)) !== FALSE ) {
+                $i++;
 
                 $row = [];
 
@@ -85,11 +88,24 @@ class DataSetUploadHandler extends BlueImpUploadHandler
 
                     // Insert the data into the correct column
                     if (isset($spreadSheetMapping[$cell])) {
-                        $row[$spreadSheetMapping[$cell]] = $data[$cell];
+                        // Sanitize the data a bit
+                        $item = $data[$cell];
+
+                        if ($item == '')
+                            $item = null;
+
+                        $row[$spreadSheetMapping[$cell]] = $item;
                     }
                 }
 
-                $dataSet->addRow($row);
+                try {
+                    $dataSet->addRow($row);
+                } catch (\PDOException $PDOException) {
+                    $controller->getLog()->error('Error importing row ' . $i . '. E = ' . $PDOException->getMessage());
+                    $controller->getLog()->debug($PDOException->getTraceAsString());
+
+                    throw new InvalidArgumentException(__('Unable to import row %d', $i), 'row');
+                }
             }
 
             // Close the file

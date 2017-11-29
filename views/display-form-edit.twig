@@ -53,6 +53,10 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                         {% set helpText %}{% trans "A description - (1 - 254 characters)." %}{% endset %}
                         {{ forms.input("description", title, display.description, helpText) }}
 
+                        {% set title %}{% trans "Tags" %}{% endset %}
+                        {% set helpText %}{% trans "Tag this item. Comma Separated." %}{% endset %}
+                        {{ forms.inputWithTags("tags", title, display.tags, helpText) }}
+
                         {% set title %}{% trans "Authorise display?" %}{% endset %}
                         {% set helpText %}{% trans "Use one of the available slots for this display?" %}{% endset %}
                         {% set yes %}{% trans "Yes" %}{% endset %}

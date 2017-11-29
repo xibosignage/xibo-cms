@@ -20,7 +20,6 @@ use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\Schedule;
 use Xibo\Entity\Stat;
-use Xibo\Entity\UserGroup;
 use Xibo\Entity\Widget;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\DeadlockException;
@@ -784,13 +783,25 @@ class Soap
         $scheduleXml->appendChild($layoutElements);
 
         // Hour to hour time bands for the query
-        // Start at the current hour
-        $fromFilter = $this->getDate()->parse()->setTime(0, 0, 0);
+        // Rf lookahead is the number of seconds ahead we should consider.
+        // it may well be less than 1 hour, and if so we cannot do hour to hour time bands, we need to do
+        // now, forwards.
+        // Start with now:
+        $fromFilter = $this->getDate()->parse();
 
-        if ($this->getConfig()->GetSetting('SCHEDULE_LOOKAHEAD') == 'On')
+        if ($rfLookAhead >= 3600) {
+            // Go from the top of this hour
+            $fromFilter
+                ->minute(0)
+                ->second(0);
+        }
+
+        // If we're set to look ahead, then do so - otherwise grab only a 1 hour slice
+        if ($this->getConfig()->GetSetting('SCHEDULE_LOOKAHEAD') == 'On') {
             $toFilter = $fromFilter->copy()->addSeconds($rfLookAhead);
-        else
+        } else {
             $toFilter = $fromFilter->copy()->addHour();
+        }
 
         $this->getLog()->debug(sprintf('FromDT = %s. ToDt = %s', $fromFilter->toRssString(), $toFilter->toRssString()));
 
@@ -1708,25 +1719,22 @@ class Soap
 
             // Do we need to email?
             if ($this->display->emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected')
-                && $this->getConfig()->GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On'
-            ) {
+                && $this->getConfig()->GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On') {
 
                 $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
                 $body = sprintf(__("Display %s with ID %d is now back online."), $this->display->display, $this->display->displayId);
 
-                $notification = $this->notificationFactory->createSystemNotification($subject, $body, $this->getDate()->parse());
+                // Create a notification assigned to system wide user groups
+                try {
+                    $notification = $this->notificationFactory->createSystemNotification($subject, $body, $this->getDate()->parse());
 
-                // Get a list of people that have view access to the display?
-                if ($this->getConfig()->GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1) {
-
-                    foreach ($this->userGroupFactory->getByDisplayGroupId($this->display->displayGroupId) as $group) {
-                        /* @var UserGroup $group */
+                    // Add in any displayNotificationGroups, with permissions
+                    foreach ($this->userGroupFactory->getDisplayNotificationGroups($this->display->displayGroupId) as $group) {
                         $notification->assignUserGroup($group);
                     }
-                }
 
-                try {
                     $notification->save();
+
                 } catch (\Exception $e) {
                     $this->getLog()->error('Unable to send email alert for display %s with subject %s and body %s', $this->display->display, $subject, $body);
                 }

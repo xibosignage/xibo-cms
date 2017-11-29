@@ -376,9 +376,10 @@ var setupScheduleForm = function(dialog) {
     // Initial state of the components
     processScheduleFormElements($("#recurrenceType"));
     processScheduleFormElements($("#eventTypeId"));
+    processScheduleFormElements($("#campaignId"));
 
     // Events on change
-    $("#recurrenceType, #eventTypeId, #dayPartId").on("change", function() { processScheduleFormElements($(this)) });
+    $("#recurrenceType, #eventTypeId, #dayPartId, #campaignId").on("change", function() { processScheduleFormElements($(this)) });
 
     // Bind to the dialog submit
     $("#scheduleAddForm, #scheduleEditForm, #scheduleDeleteForm").submit(function(e) {
@@ -404,6 +405,15 @@ var setupScheduleForm = function(dialog) {
             }
         });
     });
+
+    // Add a button for duplicating this event
+    if ($(dialog).find("#scheduleEditForm").length > 0) {
+        $button = $("<button>").addClass("btn btn-info").attr("id", "scheduleDuplateButton").html(translations.duplicate).on("click", function() {
+            duplicateScheduledEvent()
+        });
+
+        $(dialog).find('.modal-footer').prepend($button);
+    }
 };
 
 /**
@@ -434,12 +444,14 @@ var processScheduleFormElements = function(el) {
             var startTimeControlDisplay = (fieldVal == 2) ? "block" : "block";
             var dayPartControlDisplay = (fieldVal == 2) ? "none" : "block";
             var commandControlDisplay = (fieldVal == 2) ? "block" : "none";
-            
+            var previewControlDisplay = (fieldVal == 2) ? "none" : "block";
+
             $(".layout-control").css('display', layoutControlDisplay);
             $(".endtime-control").css('display', endTimeControlDisplay);
             $(".starttime-control").css('display', startTimeControlDisplay);
             $(".day-part-control").css('display', dayPartControlDisplay);
             $(".command-control").css('display', commandControlDisplay);
+            $(".preview-button-container").css('display', previewControlDisplay);
 
             // Depending on the event type selected we either want to filter in or filter out the
             // campaigns.
@@ -453,6 +465,16 @@ var processScheduleFormElements = function(el) {
                         $(this).css("display", "none");
                 }
             });
+
+            // If the fieldVal is 2 (command), then we should set the dayPartId to be 0 (custom)
+            if (fieldVal == 2) {
+                console.log('Setting dayPartId to custom');
+                $("#dayPartId").val(0);
+
+                var $startTime = $(".starttime-control");
+                $startTime.find("input[name=fromDt_Link2]").show();
+                $startTime.find(".help-block").html($startTime.closest("form").data().daypartMessage);
+            }
             
             // Call funtion for the daypart ID 
             processScheduleFormElements($('#dayPartId'));
@@ -486,7 +508,31 @@ var processScheduleFormElements = function(el) {
             }
                         
             break;
+
+        case 'campaignId':
+            // Update the preview button URL
+            var $previewButton = $("#previewButton");
+
+            if (fieldVal === null || fieldVal === '' || fieldVal === 0) {
+                $previewButton.closest('.preview-button-container').hide();
+            } else {
+                $previewButton.closest('.preview-button-container').show();
+                $previewButton.attr("href", $previewButton.data().url.replace(":id", fieldVal));
+            }
+
+            break;
     }
+}
+
+var duplicateScheduledEvent = function() {
+    // Set the edit form URL to that of the add form
+    var $scheduleForm = $("#scheduleEditForm");
+    $scheduleForm.attr("action", $scheduleForm.data().addUrl).attr("method", "post");
+
+    // Remove the duplicate button
+    $("#scheduleDuplateButton").remove();
+
+    toastr.info($scheduleForm.data().duplicatedMessage);
 }
 
 /**
@@ -509,6 +555,9 @@ var setupScheduleNowForm = function(form) {
         $(form).find("#dayPartId").val(always ? 1 : 0);
 
         $(form).find(".duration-part").toggle();
+        if (dateFormat.indexOf("s") <= -1) {
+            $(form).find(".schedule-now-seconds-field").hide();
+        }
     })
 
     var evaluateDates = $.debounce(500, function() {

@@ -120,7 +120,7 @@ class ApplicationFactory extends BaseFactory
         return $this->query(null, ['userId' => $userId]);
     }
 
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $entries = array();
         $params = array();

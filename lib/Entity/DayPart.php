@@ -319,7 +319,7 @@ class DayPart implements \JsonSerializable
                 $schedule->save();
 
                 // Adjusting the fromdt on the new event
-                $newSchedule->fromDt = $now;
+                $newSchedule->fromDt = $this->getDate()->parse()->addDay()->format('U');
                 $newSchedule->save();
             } else {
                 $this->getLog()->debug('Schedule is for a single event');

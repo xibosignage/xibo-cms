@@ -79,6 +79,7 @@ interface StorageServiceInterface
      * Run Update SQL
      * @param string $sql
      * @param array $params
+     * @return int affected rows
      * @throws \PDOException
      */
     public function update($sql, $params);

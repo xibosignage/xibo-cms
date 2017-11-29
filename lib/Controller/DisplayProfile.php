@@ -166,12 +166,6 @@ class DisplayProfile extends Base
     function addForm()
     {
         $this->getState()->template = 'displayprofile-form-add';
-        $this->getState()->setData([
-            'clientTypes' => array(
-                array('key' => 'windows', 'value' => 'Windows'),
-                array('key' => 'android', 'value' => 'Android')
-            )
-        ]);
     }
 
     /**

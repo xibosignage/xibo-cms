@@ -424,7 +424,7 @@ class DataSet implements \JsonSerializable
             throw new InvalidArgumentException(__('Description can not be longer than 254 characters'), 'description');
 
         try {
-            $existing = $this->dataSetFactory->getByName($this->dataSet);
+            $existing = $this->dataSetFactory->getByName($this->dataSet, $this->userId);
 
             if ($this->dataSetId == 0 || $this->dataSetId != $existing->dataSetId)
                 throw new DuplicateEntityException(sprintf(__('There is already dataSet called %s. Please choose another name.'), $this->dataSet));
@@ -490,7 +490,15 @@ class DataSet implements \JsonSerializable
         if ($this->isLookup)
             throw new ConfigurationException(__('Lookup Tables cannot be deleted'));
 
-        // TODO check we aren't being used
+        if ($this->getStore()->exists('
+            SELECT widgetId 
+              FROM `widgetoption`
+              WHERE `widgetoption`.type = \'attrib\'
+                AND `widgetoption`.option = \'dataSetId\'
+                AND `widgetoption`.value = :dataSetId
+        ', ['dataSetId' => $this->dataSetId])) {
+            throw new InvalidArgumentException('Cannot delete because DataSet is in use on one or more Layouts.', 'dataSetId');
+        }
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {

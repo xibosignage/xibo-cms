@@ -309,12 +309,18 @@ class Display implements \JsonSerializable
     public $timeZone;
 
     /**
+     * @SWG\Property(description="Tags associated with this Display")
+     * @var Tag[]
+     */
+    public $tags;
+
+    /**
      * Commands
      * @var array[Command]
      */
     private $commands = null;
 
-    public static $saveOptionsMinimum = ['validate' => false, 'audit' => false, 'triggerDynamicDisplayGroupAssessment' => false];
+    public static $saveOptionsMinimum = ['validate' => false, 'audit' => false];
 
     /**
      * @var ConfigServiceInterface
@@ -541,8 +547,7 @@ class Display implements \JsonSerializable
     {
         $options = array_merge([
             'validate' => true,
-            'audit' => true,
-            'triggerDynamicDisplayGroupAssessment' => false
+            'audit' => true
         ], $options);
 
         if ($options['validate'])
@@ -557,7 +562,7 @@ class Display implements \JsonSerializable
             $this->getLog()->audit('Display', $this->displayId, 'Display Saved', $this->getChangedProperties());
 
         // Trigger an update of all dynamic DisplayGroups
-        if ($options['triggerDynamicDisplayGroupAssessment']) {
+        if ($this->hasPropertyChanged('display')) {
             foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
                 /* @var DisplayGroup $group */
                 $group->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
@@ -579,7 +584,7 @@ class Display implements \JsonSerializable
             /* @var DisplayGroup $displayGroup */
             $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $displayGroup->unassignDisplay($this);
-            $displayGroup->save(['validate' => false]);
+            $displayGroup->save(['validate' => false, 'manageDynamicDisplayLinks' => false]);
         }
 
         // Delete our display specific group
@@ -616,6 +621,7 @@ class Display implements \JsonSerializable
 
         $displayGroup = $this->displayGroupFactory->createEmpty();
         $displayGroup->displayGroup = $this->display;
+        $displayGroup->tags = $this->tags;
         $displayGroup->setDisplaySpecificDisplay($this);
         $displayGroup->save();
     }
@@ -699,12 +705,13 @@ class Display implements \JsonSerializable
         ]);
 
         // Maintain the Display Group
-        if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('description')) {
+        if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('description') || $this->hasPropertyChanged('tags')) {
             $this->getLog()->debug('Display specific DisplayGroup properties need updating');
 
             $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
             $displayGroup->displayGroup = $this->display;
             $displayGroup->description = $this->description;
+            $displayGroup->replaceTags($this->tags);
             $displayGroup->save(DisplayGroup::$saveOptionsMinimum);
         }
     }

@@ -46,7 +46,7 @@ class LogFactory extends BaseFactory
      * @param array $filterBy
      * @return array[\Xibo\Entity\Log]
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder == null)
             $sortOrder = ['logId DESC'];

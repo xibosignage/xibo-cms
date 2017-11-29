@@ -116,12 +116,13 @@ class DataSetFactory extends BaseFactory
     /**
      * Get DataSets by Name
      * @param $dataSet
+     * @param int|null $userId the userId
      * @return DataSet
      * @throws NotFoundException
      */
-    public function getByName($dataSet)
+    public function getByName($dataSet, $userId = null)
     {
-        $dataSets = $this->query(null, ['disableUserCheck' => 1, 'dataSet' => $dataSet]);
+        $dataSets = $this->query(null, ['dataSet' => $dataSet, 'userId' => $userId]);
 
         if (count($dataSets) <= 0)
             throw new NotFoundException();
@@ -135,7 +136,7 @@ class DataSetFactory extends BaseFactory
      * @return array[DataSet]
      * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $entries = array();
         $params = array();
@@ -187,9 +188,34 @@ class DataSetFactory extends BaseFactory
                 $params['dataSetId'] = $this->getSanitizer()->getInt('dataSetId', $filterBy);
             }
 
+            if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+                $body .= ' AND dataset.userId = :userId ';
+                $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
+            }
+
             if ($this->getSanitizer()->getString('dataSet', $filterBy) != null) {
-                $body .= ' AND dataset.dataSet = :dataSet ';
-                $params['dataSet'] = $this->getSanitizer()->getString('dataSet', $filterBy);
+            // convert into a space delimited array
+                $names = explode(' ', $this->getSanitizer()->getString('dataSet', $filterBy));
+
+                $i = 0;
+                foreach($names as $searchName)
+                {
+                    $i++;
+
+                    // Ignore if the word is empty
+                    if($searchName == '')
+                      continue;
+
+                    // Not like, or like?
+                    if (substr($searchName, 0, 1) == '-') {
+                        $body.= " AND  `dataset`.dataSet NOT LIKE :search$i ";
+                        $params['search' . $i] = '%' . ltrim($searchName) . '%';
+                    }
+                    else {
+                        $body.= " AND  `dataset`.dataSet LIKE :search$i ";
+                        $params['search' . $i] = '%' . $searchName . '%';
+                    }
+                }
             }
 
             if ($this->getSanitizer()->getString('code', $filterBy) != null) {

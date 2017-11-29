@@ -28,6 +28,11 @@ class DisplayGroupFactory extends BaseFactory
     private $permissionFactory;
 
     /**
+     * @var TagFactory
+     */
+    private $tagFactory;
+
+    /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
@@ -35,13 +40,15 @@ class DisplayGroupFactory extends BaseFactory
      * @param User $user
      * @param UserFactory $userFactory
      * @param PermissionFactory $permissionFactory
+     * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $permissionFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $permissionFactory, $tagFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
         $this->permissionFactory = $permissionFactory;
+        $this->tagFactory = $tagFactory;
     }
 
     /**
@@ -54,7 +61,8 @@ class DisplayGroupFactory extends BaseFactory
             $this->getStore(),
             $this->getLog(),
             $this,
-            $this->permissionFactory
+            $this->permissionFactory,
+            $this->tagFactory
         );
     }
 
@@ -171,7 +179,7 @@ class DisplayGroupFactory extends BaseFactory
      * @param array $filterBy
      * @return array[DisplayGroup]
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder == null)
             $sortOrder = ['displayGroup'];
@@ -186,7 +194,15 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.description,
                 `displaygroup`.isDynamic,
                 `displaygroup`.dynamicCriteria,
-                `displaygroup`.userId
+                `displaygroup`.userId,
+                (
+                  SELECT GROUP_CONCAT(DISTINCT tag) 
+                    FROM tag 
+                      INNER JOIN lktagdisplaygroup 
+                      ON lktagdisplaygroup.tagId = tag.tagId 
+                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
+                  GROUP BY lktagdisplaygroup.displayGroupId
+                ) AS tags 
         ';
 
         $body = '
@@ -281,6 +297,47 @@ class DisplayGroupFactory extends BaseFactory
                     $body .= " AND  `displaygroup`.displayGroup LIKE :search$i ";
                     $params['search' . $i] = '%' . $searchName . '%';
                 }
+            }
+        }
+
+        // Tags
+        if ($this->getSanitizer()->getString('tags', $filterBy) != '') {
+
+            $tagFilter = $this->getSanitizer()->getString('tags', $filterBy);
+
+            if (trim($tagFilter) === '--no-tag') {
+                $body .= ' AND `displaygroup`.displaygroupId NOT IN (
+                    SELECT `lktagdisplaygroup`.displaygroupId
+                     FROM tag
+                        INNER JOIN `lktagdisplaygroup`
+                        ON `lktagdisplaygroup`.tagId = tag.tagId
+                    )
+                ';
+            } else {
+                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+
+                $body .= " AND `displaygroup`.displaygroupId IN (
+                SELECT `lktagdisplaygroup`.displaygroupId
+                  FROM tag
+                    INNER JOIN `lktagdisplaygroup`
+                    ON `lktagdisplaygroup`.tagId = tag.tagId
+                ";
+                $i = 0;
+                foreach (explode(',', $tagFilter) as $tag) {
+                    $i++;
+
+                    if ($i == 1)
+                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
+                    else
+                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
+
+                    if ($operator === '=')
+                        $params['tags' . $i] = $tag;
+                    else
+                        $params['tags' . $i] = '%' . $tag . '%';
+                }
+
+                $body .= " ) ";
             }
         }
 

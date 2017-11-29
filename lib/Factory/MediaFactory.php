@@ -207,8 +207,23 @@ class MediaFactory extends BaseFactory
         $media->saveAsync();
 
         // Add to our collection of queued downloads
-        if ($media->isSaveRequired)
-            $this->remoteDownloadQueue[] = $media;
+        // but only if its not already in the queue (we might have tried to queue it multiple times in the same request)
+        if ($media->isSaveRequired) {
+            $queueItem = true;
+            if ($media->getId() != null) {
+                // Existing media, check to see if we're already queued
+                foreach ($this->remoteDownloadQueue as $queue) {
+                    // If we find this item already, don't queue
+                    if ($queue->getId() === $media->getId()) {
+                        $queueItem = false;
+                        break;
+                    }
+                }
+            }
+
+            if ($queueItem)
+                $this->remoteDownloadQueue[] = $media;
+        }
 
         // Return the media item
         return $media;
@@ -396,10 +411,10 @@ class MediaFactory extends BaseFactory
 
     /**
      * @param null $sortOrder
-     * @param null $filterBy
+     * @param array $filterBy
      * @return Media[]
      */
-    public function query($sortOrder = null, $filterBy = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder === null)
             $sortOrder = ['name'];
@@ -428,6 +443,13 @@ class MediaFactory extends BaseFactory
             $select .= '
                `media`.released,
                `media`.apiRef,
+            ';
+        }
+
+        if (DBVERSION >= 134) {
+            $select .= '
+               `media`.createdDt,
+               `media`.modifiedDt,
             ';
         }
 
@@ -621,6 +643,8 @@ class MediaFactory extends BaseFactory
                     )
                 ';
             } else {
+                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+
                 $body .= " AND `media`.mediaId IN (
                 SELECT `lktagmedia`.mediaId
                   FROM tag
@@ -632,11 +656,14 @@ class MediaFactory extends BaseFactory
                     $i++;
 
                     if ($i == 1)
-                        $body .= " WHERE tag LIKE :tags$i ";
+                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
                     else
-                        $body .= " OR tag LIKE :tags$i ";
+                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
 
-                    $params['tags' . $i] = '%' . $tag . '%';
+                    if ($operator === '=')
+                        $params['tags' . $i] = $tag;
+                    else
+                        $params['tags' . $i] = '%' . $tag . '%';
                 }
 
                 $body .= " ) ";

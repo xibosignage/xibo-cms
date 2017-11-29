@@ -1,6 +1,6 @@
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2014-15 Alex Harrington
+ * Copyright (C) 2014-17 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -23,7 +23,7 @@
 var LOG_LEVEL;
 
 /* String: Client Version */
-var VERSION = "1.8.0";
+var VERSION = "1.8.3";
 
 /* Int: Counter to ensure unique IDs */
 var ID_COUNTER = 0;
@@ -510,7 +510,7 @@ function media(parent, id, xml, options, preload) {
     /* media.css("left", self.offsetX + "px");
     media.css("top", self.offsetY + "px"); */
 
-    var tmpUrl = options.getResourceUrl.replace(":regionId", self.region.id).replace(":id", self.id) + '?preview=1';
+    var tmpUrl = options.getResourceUrl.replace(":regionId", self.region.id).replace(":id", self.id) + '?preview=true&raw=true&scale_override=' + self.region.layout.scaleFactor;
     
     if (self.render == "html" || self.mediaType == "ticker") {
         media.append('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');

@@ -352,6 +352,11 @@
                         {{ forms.dropdown("takeItemsFrom", "single", title, module.getOption("takeItemsFrom", "start"), options, "takeitemsfromid", "takeitemsfrom", helpText) }}
 
                         {{ fieldDurationIsPerItem }}
+
+                        {% set title %}{% trans "Randomise?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the order of the feed be randomised? When enabled each time the Widget is shown the items will be randomly shuffled and displayed in a random order." %}{% endset %}
+                        {{ forms.checkbox("randomiseItems", title, module.getOption("randomiseItems"), helpText) }}
+
                     </div>
                     <div class="tab-pane" id="advanced">
                         {{ fieldBackgroundColor }}

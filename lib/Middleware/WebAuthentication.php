@@ -104,6 +104,11 @@ class WebAuthentication extends Middleware
                     // Store the current route so we can come back to it after login
                     $app->flash('priorRoute', $app->request()->getRootUri() . $app->request()->getResourceUri());
 
+                    if ($user->hasIdentity()) {
+                        $user->loggedIn = 0;
+                        $user->touch();
+                    }
+
                     $redirectToLogin();
                 }
             }
@@ -112,22 +117,18 @@ class WebAuthentication extends Middleware
 
                 // If we are expired and come from ping/clock, then we redirect
                 if ($app->session->isExpired() && ($resource == '/login/ping' || $resource == 'clock')) {
+
+                    if ($user->hasIdentity()) {
+                        $user->loggedIn = 0;
+                        $user->touch();
+                    }
+
                     $redirectToLogin();
                 }
             }
         };
 
-        $updateUser = function () use ($app) {
-            $user = $app->user;
-            /* @var \Xibo\Entity\User $user */
-
-            if (!$app->public && $user->hasIdentity()) {
-                $user->touch();
-            }
-        };
-
         $app->hook('slim.before.dispatch', $isAuthorised);
-        $app->hook('slim.after.dispatch', $updateUser);
 
         $this->next->call();
     }

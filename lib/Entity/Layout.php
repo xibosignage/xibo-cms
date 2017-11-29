@@ -904,6 +904,12 @@ class Layout implements \JsonSerializable
                         $widget->calculatedDuration = 0;
                     }
 
+                    // Does our widget have a durationIsPerItem and a Number of Items?
+                    $numItems = $widget->getOptionValue('numItems', 0);
+                    if ($widget->getOptionValue('durationIsPerItem', 0) == 1 && $numItems > 1) {
+                        $widget->calculatedDuration = (($widget->useDuration == 1) ? $widget->duration : $module->getModule()->defaultDuration) * $numItems;
+                    }
+
                     // Region duration
                     $region->duration = $region->duration + $widget->calculatedDuration;
 
@@ -979,6 +985,7 @@ class Layout implements \JsonSerializable
                         $audioNode = $document->createElement('uri', $audioMedia->storedAs);
                         $audioNode->setAttribute('volume', $audio->volume);
                         $audioNode->setAttribute('loop', $audio->loop);
+                        $audioNode->setAttribute('mediaId', $audio->mediaId);
                         $audioNodes->appendChild($audioNode);
                     }
 
@@ -1178,14 +1185,15 @@ class Layout implements \JsonSerializable
     }
 
     /**
-     * Save the XLF to disk
+     * Save the XLF to disk if necessary
      * @param array $options
      * @return string the path
      */
     public function xlfToDisk($options = [])
     {
         $options = array_merge([
-            'notify' => true
+            'notify' => true,
+            'collectNow' => true
         ], $options);
 
         $path = $this->getCachePath();
@@ -1219,7 +1227,8 @@ class Layout implements \JsonSerializable
                 'setBuildRequired' => false,
                 'audit' => false,
                 'validate' => false,
-                'notify' => $options['notify']
+                'notify' => $options['notify'],
+                'collectNow' => $options['collectNow']
             ]);
         }
 
@@ -1287,7 +1296,8 @@ class Layout implements \JsonSerializable
     private function update($options = [])
     {
         $options = array_merge([
-            'notify' => true
+            'notify' => true,
+            'collectNow' => true
         ], $options);
 
         $this->getLog()->debug('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
@@ -1335,6 +1345,6 @@ class Layout implements \JsonSerializable
         $campaign = $this->campaignFactory->getById($this->campaignId);
         $campaign->campaign = $this->layout;
         $campaign->ownerId = $this->ownerId;
-        $campaign->save(['validate' => false, 'notify' => $options['notify']]);
+        $campaign->save(['validate' => false, 'notify' => $options['notify'], 'collectNow' => $options['collectNow']]);
     }
 }

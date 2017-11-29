@@ -406,6 +406,13 @@
                         "description": "Filter by DataSet Code",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "embed",
+                        "in": "formData",
+                        "description": "Embed related data such as columns",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -601,11 +608,32 @@
                         "type": "integer"
                     },
                     {
-                        "name": "file",
+                        "name": "files",
                         "in": "formData",
                         "description": "The file",
                         "required": true,
                         "type": "file"
+                    },
+                    {
+                        "name": "csvImport_{dataSetColumnId}",
+                        "in": "formData",
+                        "description": "You need to provide dataSetColumnId after csvImport_, to know your dataSet columns Ids, you will need to use the GET /dataset/{dataSetId}/column call first. The value of this parameter is the index of the column in your csv file, where the first column is 1",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "overwrite",
+                        "in": "formData",
+                        "description": "flag (0,1) Set to 1 to erase all content in the dataSet and overwrite it with new content in this import",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "ignorefirstrow",
+                        "in": "formData",
+                        "description": "flag (0,1), Set to 1 to Ignore first row, useful if the CSV file has headings",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -1302,6 +1330,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "tags",
+                        "in": "formData",
+                        "description": "A comma separated list of tags for this item",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "auditingUntil",
                         "in": "formData",
                         "description": "A date this Display records auditing information until.",
@@ -1597,6 +1632,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "tags",
+                        "in": "formData",
+                        "description": "A comma separated list of tags for this item",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "isDynamic",
                         "in": "formData",
                         "description": "Flag indicating whether this DisplayGroup is Dynamic",
@@ -1654,6 +1696,13 @@
                         "name": "description",
                         "in": "formData",
                         "description": "The Display Group Description",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "tags",
+                        "in": "formData",
+                        "description": "A comma separated list of tags for this item",
                         "required": false,
                         "type": "string"
                     },
@@ -1965,7 +2014,7 @@
                         }
                     },
                     {
-                        "name": "unassignLayoutsId",
+                        "name": "unassignLayoutId",
                         "in": "formData",
                         "description": "Optional array of Layouts Id to unassign",
                         "required": false,
@@ -2055,6 +2104,30 @@
                 "summary": "Action: Collect Now",
                 "description": "Send the collect now action to this DisplayGroup",
                 "operationId": "displayGroupActionCollectNow",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The display group id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/action/clearStatsAndLogs": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Action: Clear Stats and Logs",
+                "description": "Clear all stats and logs on this Group",
+                "operationId": "displayGroupActionClearStatsAndLogs",
                 "parameters": [
                     {
                         "name": "displayGroupId",
@@ -2433,6 +2506,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "exactTags",
+                        "in": "formData",
+                        "description": "A flag indicating whether to treat the tags filter as an exact match",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
                         "name": "ownerUserGroupId",
                         "in": "formData",
                         "description": "Filter by users in this UserGroupId",
@@ -2780,7 +2860,7 @@
                     {
                         "name": "layoutId",
                         "in": "path",
-                        "description": "The Layout Id to Untag",
+                        "description": "The Layout Id to get the status",
                         "required": true,
                         "type": "integer"
                     }
@@ -2845,6 +2925,13 @@
                         "description": "Filter by Tags - comma seperated",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "exactTags",
+                        "in": "formData",
+                        "description": "A flag indicating whether to treat the tags filter as an exact match",
+                        "required": false,
+                        "type": "integer"
                     },
                     {
                         "name": "duration",
@@ -3175,6 +3262,21 @@
                 "summary": "Get Library Item Usage Report",
                 "description": "Get the records for the library item usage report",
                 "operationId": "libraryUsageReport",
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/library/usage/layouts/{mediaId}": {
+            "get": {
+                "tags": [
+                    "library"
+                ],
+                "summary": "Get Library Item Usage Report for Layouts",
+                "description": "Get the records for the library item usage report for Layouts",
+                "operationId": "libraryUsageLayoutsReport",
                 "responses": {
                     "200": {
                         "description": "successful operation"
@@ -4146,7 +4248,7 @@
                     {
                         "name": "eventTypeId",
                         "in": "formData",
-                        "description": "The Event Type Id to use for this Event. 1=Campaign, 2=Command",
+                        "description": "The Event Type Id to use for this Event. 1=Campaign, 2=Command, 3=Overlay",
                         "required": true,
                         "type": "integer"
                     },
@@ -4296,7 +4398,7 @@
                     {
                         "name": "eventTypeId",
                         "in": "formData",
-                        "description": "The Event Type Id to use for this Event. 1=Campaign, 2=Command",
+                        "description": "The Event Type Id to use for this Event. 1=Campaign, 2=Command, 3=Overlay",
                         "required": true,
                         "type": "integer"
                     },
@@ -6214,6 +6316,102 @@
                 }
             }
         },
+        "/playlist/widget/notification/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a Notification Widget",
+                "description": "Add a new Notification Widget to the specified playlist",
+                "operationId": "WidgetNotificationAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add an Notification Widget",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "age",
+                        "in": "formData",
+                        "description": "The maximum notification age in minutes - 0 for all",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "noDataMessage",
+                        "in": "formData",
+                        "description": "Message to show when no notifications are available",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "effect",
+                        "in": "formData",
+                        "description": "Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "speed",
+                        "in": "formData",
+                        "description": "The transition speed of the selected effect in milliseconds (1000 = normal)",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "durationIsPerItem",
+                        "in": "formData",
+                        "description": "A flag (0, 1), The duration specified is per page/item, otherwise the widget duration is divided between the number of pages/items",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "embedStyle",
+                        "in": "formData",
+                        "description": "Custom Style Sheets (CSS)",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/playlist/widget/pdf/{playlistId}": {
             "post": {
                 "tags": [
@@ -6856,6 +7054,13 @@
                         "name": "useFilteringClause",
                         "in": "formData",
                         "description": "EDIT Only, SourceId=2 - flag (0,1) Use advanced filter clause - set to 1 if filter is provided",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "randomiseItems",
+                        "in": "formData",
+                        "description": "A flag (0, 1), whether to randomise the feed",
                         "required": false,
                         "type": "integer"
                     }
@@ -7763,6 +7968,13 @@
                 "timeZone": {
                     "description": "The Display Timezone, or empty to use the CMS timezone",
                     "type": "string"
+                },
+                "tags": {
+                    "description": "Tags associated with this Display",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Tag"
+                    }
                 }
             }
         },
@@ -7795,6 +8007,13 @@
                 "userId": {
                     "description": "The UserId who owns this display group",
                     "type": "integer"
+                },
+                "tags": {
+                    "description": "Tags associated with this DisplayGroup",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Tag"
+                    }
                 }
             }
         },
@@ -8068,6 +8287,14 @@
                 },
                 "apiRef": {
                     "description": "An API reference",
+                    "type": "string"
+                },
+                "createdDt": {
+                    "description": "The datetime the Media was created",
+                    "type": "string"
+                },
+                "modifiedDt": {
+                    "description": "The datetime the Media was last modified",
                     "type": "string"
                 }
             }
@@ -8574,6 +8801,13 @@
                     "items": {
                         "type": "integer"
                     }
+                },
+                "displayGroupIds": {
+                    "description": "An array of displayGroupIds with this Tag",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
@@ -8740,6 +8974,10 @@
                 "isSystemNotification": {
                     "description": "Does this Group receive system notifications.",
                     "type": "integer"
+                },
+                "isDisplayNotification": {
+                    "description": "Does this Group receive system notifications.",
+                    "type": "integer"
                 }
             }
         },
@@ -8767,6 +9005,10 @@
                 },
                 "isSystemNotification": {
                     "description": "Does this Group receive system notifications.",
+                    "type": "integer"
+                },
+                "isDisplayNotification": {
+                    "description": "Does this Group receive display notifications.",
                     "type": "integer"
                 }
             }

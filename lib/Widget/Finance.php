@@ -21,46 +21,31 @@
  */
 namespace Xibo\Widget;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
 /**
  * Class Finance
+ *
+ * This module is deprecated - the Yahoo YQL API has been removed.
+ *
  * @package Xibo\Widget
  */
-class Finance extends YahooBase
+class Finance extends ModuleWidget
 {
     public $codeSchemaVersion = 1;
 
     /**
      * Install or Update this module
      * @param ModuleFactory $moduleFactory
+     * @throws XiboException
      */
     public function installOrUpdate($moduleFactory)
     {
-        if ($this->module == null) {
-            // Install
-            $module = $moduleFactory->createEmpty();
-            $module->name = 'Finance';
-            $module->type = 'finance';
-            $module->class = 'Xibo\Widget\Finance';
-            $module->description = 'Yahoo Finance';
-            $module->imageUri = 'forms/library.gif';
-            $module->enabled = 1;
-            $module->previewEnabled = 1;
-            $module->assignable = 1;
-            $module->regionSpecific = 1;
-            $module->renderAs = 'html';
-            $module->schemaVersion = $this->codeSchemaVersion;
-            $module->defaultDuration = 10;
-            $module->settings = [];
-
-            $this->setModule($module);
-            $this->installModule();
-        }
-
-        // Check we are all installed
-        $this->installFiles();
+        throw new XiboException(__('Sorry, this module is deprecated and cannot be installed'));
     }
 
     /**
@@ -567,5 +552,35 @@ class Finance extends YahooBase
         // 1 = Valid
         // 2 = Unknown
         return 1;
+    }
+
+    /**
+     * Request from Yahoo API
+     * @param $yql
+     * @return array|bool
+     */
+    protected function request($yql)
+    {
+        // Encode the YQL and make the request
+        $url = 'https://query.yahooapis.com/v1/public/yql?q=' . urlencode($yql) . '&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys';
+        //$url = 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quote%20where%20symbol%20in%20(%22TEC.PA%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=';
+
+        $client = new Client();
+
+        try {
+            $response = $client->get($url, $this->getConfig()->getGuzzleProxy());
+
+            if ($response->getStatusCode() == 200) {
+                return json_decode($response->getBody(), true)['query']['results'];
+            }
+            else {
+                $this->getLog()->info('Invalid response from Yahoo %d. %s', $response->getStatusCode(), $response->getBody());
+                return false;
+            }
+        }
+        catch (RequestException $e) {
+            $this->getLog()->error('Unable to reach Yahoo API: %s', $e->getMessage());
+            return false;
+        }
     }
 }
