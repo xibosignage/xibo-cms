@@ -184,7 +184,6 @@ class adminDAO extends baseDAO {
         }
 
         $response->SetFormSubmitResponse(__('Settings Updated'), false);
-        $response->callBack = 'settingsUpdated';
         $response->Respond();
     }
 	
