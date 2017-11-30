@@ -22,6 +22,13 @@ var lastForm;
 var gridTimeouts = [];
 var buttonsTemplate;
 
+// Fix endsWith string prototype for IE
+if (!String.prototype.endsWith) {
+    String.prototype.endsWith = function(suffix) {
+        return this.indexOf(suffix, this.length - suffix.length) !== -1;
+    };
+}
+
 // Set up the light boxes
 $(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
     event.preventDefault();
