@@ -951,7 +951,12 @@ class User implements \JsonSerializable
         if ($this->pageFactory == null)
             throw new ConfigurationException('routeViewable called before user object has been initialised');
 
+        // Super-admins get all routes
         if ($this->userTypeId == 1)
+            return true;
+
+        // All users have access to the logout page
+        if ($route === '/logout')
             return true;
 
         try {
