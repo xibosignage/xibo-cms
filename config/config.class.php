@@ -491,7 +491,7 @@ class Config
             $this->envWarning = true;
             $status = 2;
             $advice = __('You probably want to allow larger files to be uploaded than is currently available with your PHP configuration.') . '<br />';
-            $advice .= __('We suggest setting your PHP post_max_size and upload_max_size to at least 128M, and also increasing your max_execution_time to at least 120 seconds.');
+            $advice .= __('We suggest setting your PHP post_max_size and upload_max_filesize to at least 128M, and also increasing your max_execution_time to at least 120 seconds.');
         }
 
         $rows[] = array(
