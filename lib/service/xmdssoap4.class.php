@@ -726,8 +726,7 @@ class XMDSSoap4
 
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
-            $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule.eventID, schedule.is_priority, ";
-            $SQL .= "  (SELECT GROUP_CONCAT(DISTINCT StoredAs) FROM media INNER JOIN lklayoutmedia ON lklayoutmedia.MediaID = media.MediaID WHERE lklayoutmedia.LayoutID = layout.LayoutID AND lklayoutmedia.regionID <> 'module' GROUP BY lklayoutmedia.LayoutID) AS Dependents";
+            $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule.eventID, schedule.is_priority ";
             $SQL .= " FROM `campaign` ";
             $SQL .= " INNER JOIN schedule ON schedule.CampaignID = campaign.CampaignID ";
             $SQL .= " INNER JOIN schedule_detail ON schedule_detail.eventID = schedule.eventID ";
@@ -746,14 +745,25 @@ class XMDSSoap4
                     'todt' => $fromFilter
                 ));
 
+            // Get all of the events
+            $events = $sth->fetchAll();
+
+            $dependentStmt = $dbh->prepare('
+                SELECT DISTINCT StoredAs 
+                    FROM `media` 
+                      INNER JOIN `lklayoutmedia` 
+                      ON lklayoutmedia.MediaID = media.MediaID 
+                   WHERE lklayoutmedia.LayoutID = :layoutId 
+                    AND lklayoutmedia.regionID <> \'module\'
+            ');
+
             // We must have some results in here by this point
-            foreach ($sth->fetchAll() as $row) {
+            foreach ($events as $row) {
                 $layoutId = $row[0];
                 $fromDt = date('Y-m-d H:i:s', $row[1]);
                 $toDt = date('Y-m-d H:i:s', $row[2]);
                 $scheduleId = $row[3];
                 $is_priority = Kit::ValidateParam($row[4], _INT);
-                $dependents = Kit::ValidateParam($row[5], _STRING);
 
                 // Add a layout node to the schedule
                 $layout = $scheduleXml->createElement("layout");
@@ -763,7 +773,16 @@ class XMDSSoap4
                 $layout->setAttribute("todt", $toDt);
                 $layout->setAttribute("scheduleid", $scheduleId);
                 $layout->setAttribute("priority", $is_priority);
-                $layout->setAttribute("dependents", $dependents);
+
+                // Get the dependents
+                $dependentStmt->execute(array('layoutId' => $layoutId));
+
+                $dependents = array();
+                foreach ($dependentStmt->fetchAll(PDO::FETCH_ASSOC) as $dependent) {
+                    $dependents[] = $dependent;
+                }
+
+                $layout->setAttribute("dependents", implode(',', $dependents));
 
                 $layoutElements->appendChild($layout);
             }
