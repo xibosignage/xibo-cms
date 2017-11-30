@@ -167,7 +167,7 @@ class XMDSSoap4
                     if ($clientType == 'windows') {
                         $displayProfile->config[] = array(
                             'name' => 'DisplayName',
-                            'value' => $display,
+                            'value' => htmlentities($display),
                             'type' => 'string'
                         );
                         $displayProfile->config[] = array(
@@ -179,7 +179,7 @@ class XMDSSoap4
                     else {
                         $displayProfile->config[] = array(
                             'name' => 'displayName',
-                            'value' => $display,
+                            'value' => htmlentities($display),
                             'type' => 'string'
                         );
                         $displayProfile->config[] = array(
