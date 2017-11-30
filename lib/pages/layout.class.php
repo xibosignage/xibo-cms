@@ -276,7 +276,7 @@ class layoutDAO extends baseDAO
 
         $layout         = Kit::GetParam('layout', _POST, _STRING);
         $description    = Kit::GetParam('description', _POST, _STRING);
-        $tags           = Kit::GetParam('tags', _POST, _STRING);
+        $tags           = htmlentities(Kit::GetParam('tags', _POST, _STRING));
         $templateId     = Kit::GetParam('templateid', _POST, _INT, 0);
         $resolutionId = Kit::GetParam('resolutionid', _POST, _INT, 0);
         $userid         = Kit::GetParam('userid', _SESSION, _INT);
@@ -308,7 +308,7 @@ class layoutDAO extends baseDAO
         $layoutid       = Kit::GetParam('layoutid', _POST, _INT);
         $layout         = Kit::GetParam('layout', _POST, _STRING);
         $description    = Kit::GetParam('description', _POST, _STRING);
-        $tags           = Kit::GetParam('tags', _POST, _STRING);
+        $tags           = htmlentities(Kit::GetParam('tags', _POST, _STRING));
         $retired        = Kit::GetParam('retired', _POST, _INT, 0);
         $userid         = Kit::GetParam('userid', _SESSION, _INT);
         
