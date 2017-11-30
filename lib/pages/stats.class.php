@@ -33,8 +33,8 @@ class statsDAO extends baseDAO
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="BandwidthGrid">');
         
         $formFields = array();
-        $formFields[] = FormManager::AddDatePicker('fromdt', __('From Date'), DateManager::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
-        $formFields[] = FormManager::AddDatePicker('todt', __('To Date'), DateManager::getLocalDate(null, 'Y-m-d'), NULL, 't');
+        $formFields[] = FormManager::AddMonthPicker('fromdt', __('From Date'), DateManager::getLocalDate(time() - (86400 * 35), 'Y-m'), NULL, 'f');
+        $formFields[] = FormManager::AddMonthPicker('todt', __('To Date'), DateManager::getLocalDate(null, 'Y-m'), NULL, 't');
 
         // List of Displays this user has permission for
         $displays = $this->user->DisplayGroupList(1);
@@ -346,8 +346,8 @@ class statsDAO extends baseDAO
 
     public function AvailabilityGrid() 
     {
-        $fromDt = DateManager::getTimestampFromString(Kit::GetParam('fromdt', _POST, _STRING));
-        $toDt = DateManager::getTimestampFromString(Kit::GetParam('todt', _POST, _STRING));
+        $fromDt = DateManager::getTimestampFromString(Kit::GetParam('fromdt', _POST, _STRING) . ' 00:00:00');
+        $toDt = DateManager::getTimestampFromString(Kit::GetParam('todt', _POST, _STRING) . ' 00:00:00');
         $displayId = Kit::GetParam('displayid', _POST, _INT);
 
         // Get an array of display id this user has access to.
@@ -367,10 +367,10 @@ class statsDAO extends baseDAO
         
             $params = array(
                 'type' => 'displaydown',
-                'start' => date('Y-m-d h:i:s', $fromDt),
-                'boundaryStart' => date('Y-m-d h:i:s', $fromDt),
-                'end' => date('Y-m-d h:i:s', $toDt),
-                'boundaryEnd' => date('Y-m-d h:i:s', $toDt)
+                'start' => date('Y-m-d H:i:s', $fromDt),
+                'boundaryStart' => date('Y-m-d H:i:s', $fromDt),
+                'end' => date('Y-m-d H:i:s', $toDt),
+                'boundaryEnd' => date('Y-m-d H:i:s', $toDt)
                 );
 
             $SQL = '
@@ -428,8 +428,8 @@ class statsDAO extends baseDAO
     public function BandwidthGrid() 
     {
 
-        $fromDt = DateManager::getTimestampFromString(Kit::GetParam('fromdt', _POST, _STRING));
-        $toDt = DateManager::getTimestampFromString(Kit::GetParam('todt', _POST, _STRING));
+        $fromDt = DateManager::getTimestampFromString(Kit::GetParam('fromdt', _POST, _STRING) . '-01 00:00:00');
+        $toDt = DateManager::getTimestampFromString(Kit::GetParam('todt', _POST, _STRING) . '-01 00:00:00');
 
         // Get an array of display id this user has access to.
         $displays = $this->user->DisplayList();

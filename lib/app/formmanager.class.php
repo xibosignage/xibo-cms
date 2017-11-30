@@ -253,5 +253,19 @@ class FormManager {
             'groupClass' => $groupClass
         );
     }
+
+    public static function AddMonthPicker($name, $title, $value, $helpText, $accessKey, $validation = '', $groupClass = '') {
+        return array(
+            'name' => $name,
+            'title' => $title,
+            'value' => $value,
+            'helpText' => $helpText,
+            'fieldType' => 'monthPicker',
+            'options' => NULL,
+            'validation' => $validation,
+            'accesskey' => $accessKey,
+            'groupClass' => $groupClass
+        );
+    }
 }
 ?>

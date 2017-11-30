@@ -306,6 +306,15 @@ function XiboInitialise(scope) {
         todayHighlight: true,
         minuteStep: 10
     });
+    $(scope + ' .monthPicker').datetimepicker({
+        format: "yyyy-mm",
+        autoClose: true,
+        language: language,
+        calendarType: calendarType,
+        minView: 3,
+        startView: 3,
+        todayHighlight: false
+    });
 }
 
 /**

@@ -202,6 +202,15 @@ if (!$tabs)
                                         </div>
                                     </div>
                                 <?php }
+                                else if ($field['fieldType'] == 'monthPicker') { ?>
+                                    <div class="form-group <?php echo $field['groupClass']; ?>">
+                                        <label class="control-label" for="<?php echo $field['name']; ?>" accesskey="<?php echo $field['accesskey']; ?>"><?php echo $field['title']; ?></label>
+                                        <div>
+                                            <input class="form-control monthPicker" name="<?php echo $field['name']; ?>" type="text" id="<?php echo $field['name']; ?>" value="<?php echo $field['value']; ?>" <?php echo $field['validation']; ?> readonly />
+                                            <span class="help-block"><?php echo $field['helpText']; ?></span>
+                                        </div>
+                                    </div>
+                                <?php }
                             } // End for loop
                             echo '</div>';
                         } // End for loop ?>
