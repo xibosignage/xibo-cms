@@ -23,6 +23,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 class Config
 {
     public static $VERSION_REQUIRED = '5.3.3';
+    public static $VERSION_UNSUPPORTED = '7.0';
 
     private $extensions;
     private $envTested;
@@ -575,12 +576,13 @@ class Config
     }
 
     /**
-     * Check PHP version > 5
-     * @return
+     * Check PHP version > 5 < 7
+     * @return bool
      */
     function CheckPHP()
     {
-        return (version_compare(phpversion(), Config::$VERSION_REQUIRED) != -1);
+        return (version_compare(phpversion(), Config::$VERSION_REQUIRED) != -1)
+            && (version_compare(phpversion(), Config::$VERSION_UNSUPPORTED) != 1);
     }
 
     /**
