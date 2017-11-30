@@ -68,6 +68,7 @@ class previewDAO extends baseDAO {
         $pfl = __('Preview for Layout');
 
         $previewCss = Theme::ItemPath('css/html-preview.css');
+        $emptyRegion = __('Empty Region');
         
         $output = <<<EOT
             <!DOCTYPE html>
@@ -79,6 +80,9 @@ class previewDAO extends baseDAO {
                     <script type="text/JavaScript" src="theme/default/libraries/jquery/jquery-1.9.1.js"></script>
                     <script type="text/JavaScript" src="modules/preview/html5Preloader.js"></script>
                     <script type="text/JavaScript" src="modules/preview/html-preview.js"></script>
+                    <script type="text/javascript">
+                    var emptyRegionMessage = "$emptyRegion"; 
+                    </script>
                     <link rel="shortcut icon" href="$favicon" />
                 </head>
                 <body onload="dsInit($this->layoutid)">

@@ -1,6 +1,6 @@
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2014 Alex Harrington
+ * Copyright (C) 2014-17 Alex Harrington
  *
  * This file is part of Xibo.
  *
@@ -22,7 +22,7 @@
 var LOG_LEVEL;
 
 /* String: Client Version */
-var VERSION = "1.7.0";
+var VERSION = "1.7.10";
 
 /* Int: Counter to ensure unique IDs */
 var ID_COUNTER = 0;
@@ -370,8 +370,9 @@ function region(parent, id, xml) {
         playLog(8, "debug", "nextMedia -> Next up is media " + (self.currentMedia + 1) + " of " + self.mediaObjects.length);
         
         self.curMedia = self.mediaObjects[self.currentMedia];
-        
-        playLog(8, "debug", "nextMedia -> New: " + self.curMedia.id);
+
+        if (self.curMedia !== undefined)
+            playLog(8, "debug", "nextMedia -> New: " + self.curMedia.id);
         
         /* Do the transition */
         self.transitionNodes(self.oldMedia, self.curMedia);
@@ -402,7 +403,21 @@ function region(parent, id, xml) {
     $(self.xml).find("media").each(function() { playLog(5, "debug", "Creating media " + $(this).attr('id'), false);
                                                 self.mediaObjects.push(new media(self, $(this).attr('id'), this));
                                               });
-    
+
+    // If the regions does not have any media change its background to transparent red
+    if ($(self.xml).find("media").length == 0) {
+        var $self = $("#" + self.containerName);
+
+        var messageSize = (self.sWidth > self.sHeight ) ? self.sHeight : self.sWidth;
+
+        $self.css("background-color", 'rgba(255, 0, 0, 0.25)');
+        $self.append('<div class="empty-message" id="empty_' + self.containerName + '"></div>');
+
+        var $message = $("#empty_" + self.containerName);
+        $message.append('<span class="empty-icon fa fa-exclamation-triangle" style="font-size:' + messageSize/4 + 'px"></span>');
+        $message.append('<span class="empty-icon">' + emptyRegionMessage + '</span>');
+    }
+
     playLog(4, "debug", "Region " + self.id + " has " + self.mediaObjects.length + " media items");
 }
 
