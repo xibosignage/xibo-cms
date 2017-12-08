@@ -29,7 +29,7 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Test" %}, XiboDatasetRemoteTestRequest($("#dataSetAddRemoteForm"))
+    {% trans "Test" %}, XiboDatasetRemoteTestRequest($("#dataSetEditForm"))
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Save" %}, $("#dataSetEditForm").submit()    
@@ -40,7 +40,7 @@
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#gateway" role="tab" data-toggle="tab"><span>{% trans "Data" %}</span></a></li>
+                <li><a href="#gateway" role="tab" data-toggle="tab"><span>{% trans "Remote" %}</span></a></li>
                 <li><a href="#auth" role="tab" data-toggle="tab"><span>{% trans "Authentication" %}</span></a></li>
                 <li><a href="#data" role="tab" data-toggle="tab"><span>{% trans "Data" %}</span></a></li>
                 <li><a href="#params" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
@@ -127,9 +127,6 @@
                         {% set helpText %}{% trans "Enter here the Field below the Data-Root (JSON-Syntax) by which the above Aggregate-Function should applied.<br/><strong>Summarize:</strong> Values in this field will be summarized and stored in one column.<br/><strong>Count:</strong> All individual values in this field will be counted and stored in one Column for each value" %}{% endset %}
                         {{ forms.input("summarizeField", title, dataSet.summarizeField, helpText, "", "") }}
 
-                        <div class="form-group">
-                            <div id="datasetRemoteTestRequestResult" class="col-sm-12"></div>
-                        </div>
                     </div>
 
                     <div class="tab-pane" id="params">
@@ -188,6 +185,7 @@
                     </div>
                 </div>
             </form>
+            <div id="datasetRemoteTestRequestResult" class="col-sm-12"></div>
         </div>
     </div>
 {% endblock %}

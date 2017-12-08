@@ -23,8 +23,10 @@
 namespace Xibo\Factory;
 
 
+use GuzzleHttp\Client;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetRemote;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -291,6 +293,11 @@ class DataSetFactory extends BaseFactory
      */
     public function callRemoteService(DataSet $dataSet, DataSet $dependant = null)
     {
+        $this->getLog()->debug('Calling remote service for DataSet: ' . $dataSet->dataSet . ' and URL ' . $dataSet->uri);
+
+        // TODO: switch to Guzzle for this and add proxy support.
+        $client = new Client($this->config->getGuzzleProxy());
+
         $result = new \stdClass();
         $result->entries = [];
         $result->number = 0;
@@ -306,10 +313,9 @@ class DataSetFactory extends BaseFactory
         }
         
         // Fetching data for every field in the dependant dataSet
-        // TODO: switch to Guzzle for this and add proxy support.
         foreach ($values as $options) {
             $curl = curl_init();
-            curl_setopt_array($curl, $dataSet->getCurlParams($options));
+            curl_setopt_array($curl, $this->getCurlParams($dataSet, $options));
             $content = curl_exec($curl);
             $error = curl_errno($curl) . ' ' . curl_error($curl);
             curl_close($curl);
@@ -323,5 +329,250 @@ class DataSetFactory extends BaseFactory
         }
         
         return $result;
+    }
+
+    /**
+     * Returns an Array to be used with the function `curl_setopt_array($curl, $params);`
+     * @param DataSet $dataSet
+     * @param array $values ColumnValues to use on URI and PostData for the {{COL.NAME}} parts
+     * @return array
+     */
+    public function getCurlParams(DataSet $dataSet, array $values = []) {
+        $params = [
+            CURLOPT_URL => $this->replaceParams($dataSet->uri, $values),
+            CURLOPT_HEADER => false,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPAUTH => ($dataSet->authentication == 'basic') ? CURLAUTH_BASIC : (($dataSet->authentication == 'digest') ? CURLAUTH_DIGEST : 0),
+            CURLOPT_USERPWD => ($dataSet->authentication != 'none') ? $dataSet->username . ':' . $dataSet->password : ''
+        ];
+
+        if ($dataSet->method == 'POST') {
+            $params += [
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => $this->replaceParams($dataSet->postData, $values)
+            ];
+        }
+
+        return $params;
+    }
+
+    /**
+     * Replaces all URI/PostData parameters
+     * @param string String to replace {{DATE}}, {{TIME}} and {{COL.xxx}}
+     * @param array $values ColumnValues to use on {{COL.xxx}} parts
+     * @return string
+     */
+    private function replaceParams($string = '', array $values = []) {
+        $string = str_replace('{{DATE}}', date('Y-m-d'), $string);
+        $string = str_replace('%7B%7BDATE%7D%7D', date('Y-m-d'), $string);
+        $string = str_replace('{{TIME}}', date('H:m:s'), $string);
+        $string = str_replace('%7B%7BTIME%7D%7D', date('H:m:s'), $string);
+
+        foreach ($values as $k => $v) {
+            $string = str_replace('{{COL.' . $k . '}}', urlencode($v), $string);
+            $string = str_replace('%7B%7BCOL.' . $k . '%7D%7D', urlencode($v), $string);
+        }
+
+        return $string;
+    }
+
+    /**
+     * Tries to process received Data against the configured DataSet with all Columns
+     *
+     * @param \Xibo\Entity\DataSet $dataSet The RemoteDataset to process
+     * @param \stdClass $results A simple Object with one Property 'entries' which contains all results
+     * @throws InvalidArgumentException
+     */
+    public function processResults(\Xibo\Entity\DataSet $dataSet, \stdClass $results) {
+        if (property_exists($results, 'entries') && is_array($results->entries)) {
+            foreach ($results->entries as $result) {
+                $this->process($dataSet, $result);
+            }
+        }
+    }
+
+    /**
+     * Tries to process received Data against the configured DataSet with all Columns
+     *
+     * @param \Xibo\Entity\DataSet $dataSet The RemoteDataset to process
+     * @param array The JSON received from the remote endpoint
+     * @throws InvalidArgumentException
+     */
+    private function process(\Xibo\Entity\DataSet $dataSet, array $result) {
+        // Remote Data has to have the configured DataRoot which has to be an Array
+        $data = $this->getDataRootFromResult($dataSet->dataRoot, $result);
+        if (($data != null) && is_array($data)) {
+            $columns = $this->dataSetColumnFactory->query(null, ['dataSetId' => $dataSet->dataSetId]);
+            $entries = [];
+
+            // First process each entry form the remote and try to map the values to the configured columns
+            foreach($data as $k => $entry) {
+                if (is_array($entry) || is_object($entry)) {
+                    $entries[] = $this->processEntry($dataSet, (array) $entry, $columns);
+                } else {
+                    $this->getLog()->error('DataSet ' . $dataSet->dataSet . ' failed: DataRoot ' . $dataSet->dataRoot . ' contains data which is not arrays or objeces.');
+                    break;
+                }
+            }
+
+            // If there is a Consilidation-Function, use the Data against it
+            $entries = $this->consolidateEntries($dataSet, $entries, $columns);
+
+            // Finally add each entry as a new Row in the DataSet
+            foreach ($entries as $entry) {
+                $dataSet->addRow($entry);
+            }
+        } else {
+            throw new InvalidArgumentException(__('DataSet %s missconfigured. DataRoot %s is not an array', $dataSet->dataSet, $dataSet->dataRoot), 'dataRoot');
+        }
+    }
+
+    /**
+     * Process the RemoteResult to get the main DataRoot value which can be stay in a structure as well as the values
+     *
+     * @param String Chuns splitted by a Dot where the main entries are hold
+     * @param array The Value from the remote request
+     * @return array The Data hold in the configured dataRoot
+     */
+    private function getDataRootFromResult($dataRoot, array $result) {
+        if (empty($dataRoot)) {
+            return $result;
+        }
+        $chunks = explode('.', $dataRoot);
+        $entries = $this->getFieldValueFromEntry($chunks, $result);
+        return $entries[1];
+    }
+
+    /**
+     * Process a single Data-Entry form the remote system and map it to the configured Columns
+     *
+     * @param \Xibo\Entity\DataSet $dataSet The DataSet which is processed currently
+     * @param array $entry The Data from the remte system
+     * @param array $columns The configured Columns form the current DataSet
+     * @return array The processed $entry as a List of Fields from $columns
+     */
+    private function processEntry(\Xibo\Entity\DataSet $dataSet, array $entry, array $columns) {
+        $result = [];
+
+        foreach ($columns as $k => $column) {
+            if (($column->remoteField != null) && ($column->remoteField != '')) {
+                $dataTypeId = $column->dataTypeId;
+
+                // The Field may be a Date, timestamp or a real field
+                if ($column->remoteField == '{{DATE}}') {
+                    $value = [0, date('Y-m-d')];
+
+                } else if ($column->remoteField == '{{TIMESTAMP}}') {
+                    $value = [0, time()];
+
+                } else {
+                    $chunks = explode('.', $column->remoteField);
+                    $value = $this->getFieldValueFromEntry($chunks, $entry);
+                }
+
+                // Only add it to the result if we where able to process the field
+                if (($value != null) && ($value[1] != null)) {
+                    switch ($dataTypeId) {
+                        case 2:
+                            $result[$column->heading] = $this->getSanitizer()->double($value[1]);
+                            break;
+                        case 3:
+                            $result[$column->heading] = $this->getDate()->getLocalDate(strtotime($value[1]));
+                            break;
+                        case 5:
+                            $result[$column->heading] = $this->getSanitizer()->int($value[1]);
+                            break;
+                        default:
+                            $result[$column->heading] = $this->getSanitizer()->string($value[1]);
+                    }
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Returns the Value of the remote DataEntry based on the remoteField definition splitted into chunks
+     *
+     * This function is recursive, so be sure you remove the first value from chunks and pass it in again
+     *
+     * @param array List of Chunks which interprets the FieldNames in the actual DataEntry
+     * @param array $entry Current DataEntry
+     * @return array of the last FieldName and the corresponding value
+     */
+    private function getFieldValueFromEntry(array $chunks, array $entry) {
+        $value = null;
+        $key = array_shift($chunks);
+
+        if (($entry instanceof \StdClass) && property_exists($entry, $key)) {
+            $value = $entry->{$key};
+        } else if (array_key_exists($key, $entry)) {
+            $value = $entry[$key];
+        }
+
+        if (($value != null) && (count($chunks) > 0)) {
+            return $this->getFieldValueFromEntry($chunks, (array) $value);
+        }
+
+        return [ $key, $value ];
+    }
+
+    /**
+     * Consolidates all Entries by the defined Function in the DataSet
+     *
+     * This Method *sums* or *counts* all same entries and returns them.
+     * If no consolidation function is configured, nothing is done here.
+     *
+     * @param \Xibo\Entity\DataSet $dataSet the current DataSet
+     * @param array $entries All processed entries which may be consolidated
+     * @param array $columns The columns form this DataSet
+     * @return \Slim\Helper\Set which contains all Entries to be added to the DataSet
+     */
+    private function consolidateEntries(\Xibo\Entity\DataSet $dataSet, array $entries, array $columns) {
+        if ((count($entries) > 0) && $dataSet->doConsolidate()) {
+            $consolidated = new \Slim\Helper\Set();
+            $field = $dataSet->getConsolidationField();
+
+            // Get the Field-Heading based on the consolidation field
+            foreach ($columns as $k => $column) {
+                if ($column->remoteField == $dataSet->summarizeField) {
+                    $field = $column->heading;
+                    break;
+                }
+            }
+
+            // Check each entry and consolidate the value form the defined field
+            foreach ($entries as $entry) {
+                if (array_key_exists($field, $entry)) {
+                    $key = $field . '-' . $entry[$field];
+                    $existing = $consolidated->get($key);
+
+                    // Create a new one if there is no currently consolidated field for this value
+                    if ($existing == null) {
+                        $existing = $entry;
+                        $existing[$field] = 0;
+                    }
+
+                    // Consolidate: Summarize, Count, Unknown
+                    if ($dataSet->summarize == 'sum') {
+                        $existing[$field] = $existing[$field] + $entry[$field];
+
+                    } else if ($dataSet->summarize == 'count') {
+                        $existing[$field] = $existing[$field] + 1;
+
+                    } else {
+                        // Unknown consolidation type :?
+                        $existing[$field] = 0;
+                    }
+
+                    $consolidated->set($key, $existing);
+                }
+            }
+
+            return $consolidated;
+        }
+        return new \Slim\Helper\Set($entries);
     }
 }

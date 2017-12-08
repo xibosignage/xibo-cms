@@ -498,31 +498,6 @@ class DataSet implements \JsonSerializable
     }
 
     /**
-     * Returns an Array to be used with the function `curl_setopt_array($curl, $params);`
-     * @param array $values ColumnValues to use on URI and PostData for the {{COL.NAME}} parts
-     * @return array
-     */
-    public function getCurlParams(array $values = []) {
-        $params = [
-            CURLOPT_URL => $this->relpaceParams($this->uri, $values),
-            CURLOPT_HEADER => false,
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPAUTH => ($this->authentication == 'basic') ? CURLAUTH_BASIC : (($this->authentication == 'digest') ? CURLAUTH_DIGEST : 0),
-            CURLOPT_USERPWD => ($this->authentication != 'none') ? $this->username . ':' . $this->password : ''
-        ];
-
-        if ($this->method == 'POST') {
-            $params += [
-                CURLOPT_POST => true,
-                CURLOPT_POSTFIELDS => $this->relpaceParams($this->postData, $values)
-            ];
-        }
-
-        return $params;
-    }
-
-    /**
      * Returns a Timestamp for the next Synchronisation process.
      * @return int Seconds
      */
@@ -565,26 +540,6 @@ class DataSet implements \JsonSerializable
      */
     public function containsDependatFieldsInRequest() {
         return strpos($this->postData, '{{COL.') !== false || strpos($this->uri, '{{COL.') !== false;
-    }
-
-    /**
-     * Replaces all URI/PostData parameters
-     * @param string String to replace {{DATE}}, {{TIME}} and {{COL.xxx}}
-     * @param array $values ColumnValues to use on {{COL.xxx}} parts
-     * @return string
-     */
-    private function relpaceParams($string = '', array $values = []) {
-        $string = str_replace('{{DATE}}', date('Y-m-d'), $string);
-        $string = str_replace('%7B%7BDATE%7D%7D', date('Y-m-d'), $string);
-        $string = str_replace('{{TIME}}', date('H:m:s'), $string);
-        $string = str_replace('%7B%7BTIME%7D%7D', date('H:m:s'), $string);
-
-        foreach ($values as $k => $v) {
-            $string = str_replace('{{COL.' . $k . '}}', urlencode($v), $string);
-            $string = str_replace('%7B%7BCOL.' . $k . '%7D%7D', urlencode($v), $string);
-        }
-
-        return $string;
     }
 
     /**
