@@ -1,8 +1,23 @@
 {#
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+ * Copyright (C) 2015-2017 Spring Signage Ltd
+ * contributions by LukyLuke aka Lukas Zurschmiede - https://github.com/LukyLuke
+ *
+ * (dataset-form-add.twig) This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
 
@@ -14,6 +29,7 @@
 {% endblock %}
 
 {% block formButtons %}
+    {% trans "Test" %}, XiboDatasetRemoteTestRequest($("#dataSetAddForm"))
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Save" %}, $("#dataSetAddForm").submit()    
@@ -22,18 +38,158 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#gateway" role="tab" data-toggle="tab"><span>{% trans "Data" %}</span></a></li>
+                <li><a href="#auth" role="tab" data-toggle="tab"><span>{% trans "Authentication" %}</span></a></li>
+                <li><a href="#data" role="tab" data-toggle="tab"><span>{% trans "Data" %}</span></a></li>
+                <li><a href="#params" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+            </ul>
             <form id="dataSetAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("dataSet.add") }}">
-                    {% set title %}{% trans "Name" %}{% endset %}
-                    {% set helpText %}{% trans "A name for this DataSet" %}{% endset %}
-                    {{ forms.input("dataSet", title, "", helpText, "", "required") }}
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "A name for this DataSet" %}{% endset %}
+                        {{ forms.input("dataSet", title, "", helpText, "", "required") }}
 
-                    {% set title %}{% trans "Description" %}{% endset %}
-                    {% set helpText %}{% trans "An optional description" %}{% endset %}
-                    {{ forms.input("description", title, "", helpText) }}
+                        {% set title %}{% trans "Description" %}{% endset %}
+                        {% set helpText %}{% trans "An optional description" %}{% endset %}
+                        {{ forms.input("description", title, "", helpText) }}
 
-                    {% set title %}{% trans "Code" %}{% endset %}
-                    {% set helpText %}{% trans "A code which can be used to lookup this DataSet - usually for an API application" %}{% endset %}
-                    {{ forms.input("code", title, "", helpText) }}
+                        {% set title %}{% trans "Code" %}{% endset %}
+                        {% set helpText %}{% trans "A code which can be used to lookup this DataSet - usually for an API application" %}{% endset %}
+                        {{ forms.input("code", title, "", helpText) }}
+
+                        {% set title %}{% trans "Remote?" %}{% endset %}
+                        {% set helpText %}{% trans "Is this DataSet connected to a remote data source?" %}{% endset %}
+                        {{ forms.checkbox("isRemote", title, 0, helpText) }}
+                    </div>
+
+                    <div class="tab-pane" id="gateway">
+                        {% set title %}{% trans "Method" %}{% endset %}
+                        {% set helpText %}{% trans "Type of Request" %}{% endset %}
+                        {% set request_get %}{% trans "GET" %}{% endset %}
+                        {% set request_post %}{% trans "POST" %}{% endset %}
+                        {% set options = [
+                            { typeid: "GET", type: request_get },
+                            { typeid: "POST", type: request_post }
+                        ] %}
+                        {{ forms.dropdown("method", "single", title, "", options, "typeid", "type", helpText) }}
+
+                        {% set title %}{% trans "URI" %}{% endset %}
+                        {% set helpText %}{% trans "URL to the Remote DataSet for GET and POST." %}{% endset %}
+                        {{ forms.input("uri", title, "", helpText, "", "required") }}
+
+                        {% set title %}{% trans "Request Data" %}{% endset %}
+                        {% set helpText %}{% trans "<strong>Replacements:</strong><br/>Request-Date: {{DATE}}<br/>Request-Time: {{TIME}}<br/>Dependant fields: {{COL.NAME}} where NAME is a FieldName from the dependant DataSet<br/><br/>Data to POST for completing the request. In case of a GET-Request the data in here are ignored." %}{% endset %}
+                        {{ forms.textarea("postData", title, "", helpText, "", "", 10) }}
+                    </div>
+
+                    <div class="tab-pane" id="auth">
+                        {% set title %}{% trans "Authentication" %}{% endset %}
+                        {% set helpText %}{% trans "Type of Authentication on the remote site" %}{% endset %}
+                        {% set auth_none %}{% trans "None" %}{% endset %}
+                        {% set auth_basic %}{% trans "Basic" %}{% endset %}
+                        {% set auth_digest %}{% trans "Digest" %}{% endset %}
+                        {% set options = [
+                            { typeid: "none", type: auth_none },
+                            { typeid: "basic", type: auth_basic },
+                            { typeid: "digest", type: auth_digest }
+                        ] %}
+                        {{ forms.dropdown("authentication", "single", title, "", options, "typeid", "type", helpText) }}
+
+                        {% set title %}{% trans "Username" %}{% endset %}
+                        {% set helpText %}{% trans "Enter the authentication Username" %}{% endset %}
+                        {{ forms.input("username", title, "", "", "", "") }}
+
+                        {% set title %}{% trans "Password" %}{% endset %}
+                        {% set helpText %}{% trans "Corresponding Password" %}{% endset %}
+                        {{ forms.input("password", title, "", "", "", "") }}
+                    </div>
+
+                    <div class="tab-pane" id="data">
+                        {% set title %}{% trans "Data root" %}{% endset %}
+                        {% set helpText %}{% trans "Enter here the root where we will find all Data you want in the DataSet. This has to be in JSON Syntax.<br/>If you're unsure, try the <em>Test</em> function and see the resulting JSON below here." %}{% endset %}
+                        {{ forms.input("dataRoot", title, "", helpText, "", "") }}
+
+                        {% set title %}{% trans "Aggregation" %}{% endset %}
+                        {% set helpText %}{% trans "Aggregate received data by the given method" %}{% endset %}
+                        {% set summ_none %}{% trans "None" %}{% endset %}
+                        {% set summ_sum %}{% trans "Summarize" %}{% endset %}
+                        {% set summ_count %}{% trans "Count" %}{% endset %}
+                        {% set options = [
+                            { typeid: "none", type: summ_none },
+                            { typeid: "sum", type: summ_sum },
+                            { typeid: "count", type: summ_count }
+                        ] %}
+                        {{ forms.dropdown("summarize", "single", title, "", options, "typeid", "type", helpText) }}
+
+                        {% set title %}{% trans "By Field" %}{% endset %}
+                        {% set helpText %}{% trans "Enter here the Field below the Data-Root (JSON-Syntax) by which the above Aggregate-Function should applied.<br/><strong>Summarize:</strong> Values in this field will be summarized and stored in one column.<br/><strong>Count:</strong> All individual values in this field will be counted and stored in one Column for each value" %}{% endset %}
+                        {{ forms.input("summarizeField", title, "", helpText, "", "") }}
+
+                        <div class="form-group">
+                            <div id="datasetRemoteTestRequestResult" class="col-sm-12">
+                                Here comes the test result
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="params">
+                        {% set title %}{% trans "Refresh" %}{% endset %}
+                        {% set helpText %}{% trans "Time between refreshing data" %}{% endset %}
+                        {% set refresh_everytime %}{% trans "On every request" %}{% endset %}
+                        {% set refresh_hour %}{% trans "Hourly" %}{% endset %}
+                        {% set refresh_day %}{% trans "Daily" %}{% endset %}
+                        {% set refresh_week %}{% trans "Weekly" %}{% endset %}
+                        {% set refresh_two_week %}{% trans "Every two Weeks" %}{% endset %}
+                        {% set refresh_month %}{% trans "Monthly" %}{% endset %}
+                        {% set refresh_quater %}{% trans "Quaterly" %}{% endset %}
+                        {% set refresh_year %}{% trans "Yearly" %}{% endset %}
+                        {% set options = [
+                            { typeid: "0", type: refresh_everytime },
+                            { typeid: "3600", type: refresh_hour },
+                            { typeid: "86400", type: refresh_day },
+                            { typeid: "604800", type: refresh_week },
+                            { typeid: "1209600", type: refresh_two_week },
+                            { typeid: "2419200", type: refresh_month },
+                            { typeid: "7257600", type: refresh_quater },
+                            { typeid: "29030400", type: refresh_year }
+                        ] %}
+                        {{ forms.dropdown("refreshRate", "single", title, "", options, "typeid", "type", helpText) }}
+
+                        {% set title %}{% trans "Truncate DataSet" %}{% endset %}
+                        {% set helpText %}{% trans "The Dataset is truncated before a new Request. A setting here lower than for the Refresh above does not make any sense." %}{% endset %}
+                        {% set truncate_never %}{% trans "Never" %}{% endset %}
+                        {% set truncate_everytime %}{% trans "On every request" %}{% endset %}
+                        {% set truncate_hour %}{% trans "Hourly" %}{% endset %}
+                        {% set truncate_day %}{% trans "Daily" %}{% endset %}
+                        {% set truncate_week %}{% trans "Weekly" %}{% endset %}
+                        {% set truncate_two_week %}{% trans "Every two Weeks" %}{% endset %}
+                        {% set truncate_month %}{% trans "Monthly" %}{% endset %}
+                        {% set truncate_quater %}{% trans "Quaterly" %}{% endset %}
+                        {% set truncate_year %}{% trans "Yearly" %}{% endset %}
+                        {% set truncate_two_year %}{% trans "Every second Year" %}{% endset %}
+                        {% set options = [
+                            { typeid: "0", type: truncate_never },
+                            { typeid: "1", type: truncate_everytime },
+                            { typeid: "3600", type: truncate_hour },
+                            { typeid: "86400", type: truncate_day },
+                            { typeid: "604800", type: truncate_week },
+                            { typeid: "1209600", type: truncate_two_week },
+                            { typeid: "2419200", type: truncate_month },
+                            { typeid: "7257600", type: truncate_quater },
+                            { typeid: "29030400", type: truncate_year },
+                            { typeid: "58060800", type: truncate_two_year }
+                        ] %}
+                        {{ forms.dropdown("clearRate", "single", title, "", options, "typeid", "type", helpText) }}
+
+                        {% set title %}{% trans "Depending DataSet" %}{% endset %}
+                        {% set dataSets = [{dataSetId: null, dataSet: ""}]|merge(dataSets) %}
+                        {% set helpText %}{% trans "This DataSet you choose here has to exist and will be actualized before" %}{% endset %}
+                        {{ forms.dropdown("runsAfter", "single", title, "", dataSets, "dataSetId", "dataSet", helpText) }}
+                    </div>
+                </div>
             </form>
         </div>
     </div>

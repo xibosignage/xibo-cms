@@ -1,11 +1,25 @@
 <?php
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (DataSetFactory.php)
+ * Copyright (C) 2015-2017 Spring Signage Ltd
+ * contributions by LukyLuke aka Lukas Zurschmiede - https://github.com/LukyLuke
+ *
+ * (DataSetFactory.php) This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
-
-
 namespace Xibo\Factory;
 
 
@@ -83,23 +97,6 @@ class DataSetFactory extends BaseFactory
     }
 
     /**
-     * @return DataSetRemote
-     */
-    public function createEmptyRemote()
-    {
-        return new DataSetRemote(
-            $this->getStore(),
-            $this->getLog(),
-            $this->getSanitizer(),
-            $this->config,
-            $this,
-            $this->dataSetColumnFactory,
-            $this->permissionFactory,
-            $this->displayFactory
-        );
-    }
-
-    /**
      * Get DataSets by ID
      * @param $dataSetId
      * @return DataSet
@@ -152,199 +149,164 @@ class DataSetFactory extends BaseFactory
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[DataSet]
-     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {
         $entries = array();
         $params = array();
 
-        try {
+        $select  = '
+          SELECT dataset.dataSetId,
+            dataset.dataSet,
+            dataset.description,
+            dataset.userId,
+            dataset.lastDataEdit,
+        ';
 
-            $select  = '
-              SELECT dataset.dataSetId,
-                dataset.dataSet,
-                dataset.description,
-                dataset.userId,
-                dataset.lastDataEdit,
-            ';
-
-            if (DBVERSION > 122) {
-                $select .= '
-                    dataset.`code`,
-                    dataset.`isLookup`,
-                ';
-            }
-
+        if (DBVERSION > 122) {
             $select .= '
-                user.userName AS owner,
-                (
-                  SELECT GROUP_CONCAT(DISTINCT `group`.group)
-                      FROM `permission`
-                        INNER JOIN `permissionentity`
-                        ON `permissionentity`.entityId = permission.entityId
-                        INNER JOIN `group`
-                        ON `group`.groupId = `permission`.groupId
-                     WHERE entity = :groupsWithPermissionsEntity
-                        AND objectId = dataset.dataSetId
-                ) AS groupsWithPermissions
+                dataset.`code`,
+                dataset.`isLookup`,
             ';
+        }
 
-            $params['groupsWithPermissionsEntity'] = 'Xibo\\Entity\\DataSet';
-
-            $body = '
-                  FROM dataset
-                   INNER JOIN `user` ON user.userId = dataset.userId
-                 WHERE 1 = 1
+        if (DBVERSION > 134) {
+            $select .= '
+                dataset.`isRemote`,
+                dataset.`method`,
+                dataset.`uri`,
+                dataset.`postData`,
+                dataset.`authentication`,
+                dataset.`username`,
+                dataset.`password`,
+                dataset.`refreshRate`,
+                dataset.`clearRate`,
+                dataset.`runsAfter`,
+                dataset.`dataRoot`,
+                dataset.`summarize`,
+                dataset.`summarizeField`,
             ';
+        }
 
-            // View Permissions
-            $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy);
+        $select .= '
+            user.userName AS owner,
+            (
+              SELECT GROUP_CONCAT(DISTINCT `group`.group)
+                  FROM `permission`
+                    INNER JOIN `permissionentity`
+                    ON `permissionentity`.entityId = permission.entityId
+                    INNER JOIN `group`
+                    ON `group`.groupId = `permission`.groupId
+                 WHERE entity = :groupsWithPermissionsEntity
+                    AND objectId = dataset.dataSetId
+            ) AS groupsWithPermissions
+        ';
 
-            if ($this->getSanitizer()->getInt('dataSetId', $filterBy) !== null) {
-                $body .= ' AND dataset.dataSetId = :dataSetId ';
-                $params['dataSetId'] = $this->getSanitizer()->getInt('dataSetId', $filterBy);
-            }
+        $params['groupsWithPermissionsEntity'] = 'Xibo\\Entity\\DataSet';
 
-            if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
-                $body .= ' AND dataset.userId = :userId ';
-                $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
-            }
+        $body = '
+              FROM dataset
+               INNER JOIN `user` ON user.userId = dataset.userId
+             WHERE 1 = 1
+        ';
 
-            if ($this->getSanitizer()->getString('dataSet', $filterBy) != null) {
-            // convert into a space delimited array
-                $names = explode(' ', $this->getSanitizer()->getString('dataSet', $filterBy));
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy);
 
-                $i = 0;
-                foreach($names as $searchName)
-                {
-                    $i++;
+        if ($this->getSanitizer()->getInt('dataSetId', $filterBy) !== null) {
+            $body .= ' AND dataset.dataSetId = :dataSetId ';
+            $params['dataSetId'] = $this->getSanitizer()->getInt('dataSetId', $filterBy);
+        }
 
-                    // Ignore if the word is empty
-                    if($searchName == '')
-                      continue;
+        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+            $body .= ' AND dataset.userId = :userId ';
+            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
+        }
 
-                    // Not like, or like?
-                    if (substr($searchName, 0, 1) == '-') {
-                        $body.= " AND  `dataset`.dataSet NOT LIKE :search$i ";
-                        $params['search' . $i] = '%' . ltrim($searchName) . '%';
-                    }
-                    else {
-                        $body.= " AND  `dataset`.dataSet LIKE :search$i ";
-                        $params['search' . $i] = '%' . $searchName . '%';
-                    }
+        if ($this->getSanitizer()->getString('dataSet', $filterBy) != null) {
+        // convert into a space delimited array
+            $names = explode(' ', $this->getSanitizer()->getString('dataSet', $filterBy));
+
+            $i = 0;
+            foreach($names as $searchName)
+            {
+                $i++;
+
+                // Ignore if the word is empty
+                if($searchName == '')
+                  continue;
+
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-') {
+                    $body.= " AND  `dataset`.dataSet NOT LIKE :search$i ";
+                    $params['search' . $i] = '%' . ltrim($searchName) . '%';
+                }
+                else {
+                    $body.= " AND  `dataset`.dataSet LIKE :search$i ";
+                    $params['search' . $i] = '%' . $searchName . '%';
                 }
             }
-
-            if ($this->getSanitizer()->getString('code', $filterBy) != null) {
-                $body .= ' AND `dataset`.`code` = :code ';
-                $params['code'] = $this->getSanitizer()->getString('code', $filterBy);
-            }
-
-            // Sorting?
-            $order = '';
-            if (is_array($sortOrder))
-                $order .= 'ORDER BY ' . implode(',', $sortOrder);
-
-            $limit = '';
-            // Paging
-            if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-                $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
-            }
-
-            $sql = $select . $body . $order . $limit;
-
-            foreach ($this->getStore()->select($sql, $params) as $row) {
-                $id = $this->getDataSetIdFromRow($row);
-                if ($this->isRemoteDataSet($id)) {
-                    $row = $this->extendRemoteRow($row);
-                    $entries[] = $this->createEmptyRemote()->hydrate($row);
-                } else {
-                    $entries[] = $this->createEmpty()->hydrate($row);
-                }
-            }
-
-            // Paging
-            if ($limit != '' && count($entries) > 0) {
-                unset($params['groupsWithPermissionsEntity']);
-                $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
-                $this->_countLast = intval($results[0]['total']);
-            }
-
-            return $entries;
-
-        } catch (\Exception $e) {
-
-            $this->getLog()->error($e);
-
-            throw new NotFoundException();
         }
-    }
-    
-    /**
-     * Extends a DataSet row with values from the DataSetRemote Table
-     * @param array $row The row to extend
-     * @return array the extended row
-     */
-    protected function extendRemoteRow(array $row = [])
-    {
-        $params = array('dataSetId' => $this->getDataSetIdFromRow($row));
-        $sql = 'SELECT * FROM datasetremote WHERE DataSetID = :dataSetId;';
-        foreach ($this->getStore()->select($sql, $params) as $data) {
-            $row = array_merge($data, $row);
-            break;
+
+        if ($this->getSanitizer()->getString('code', $filterBy) != null) {
+            $body .= ' AND `dataset`.`code` = :code ';
+            $params['code'] = $this->getSanitizer()->getString('code', $filterBy);
         }
-        return $row;
-    }
-    
-    /**
-     * Returns the DataSetId from a Row if existing, otherwise '0'
-     * @param array $row
-     * @return int
-     */
-    private function getDataSetIdFromRow(array $row = null)
-    {
-        if ($row == null || !array_key_exists('dataSetId', $row)) {
-            return 0;
+
+        // Sorting?
+        $order = '';
+        if (is_array($sortOrder))
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        $limit = '';
+        // Paging
+        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
-        return intval($row['dataSetId']);
-    }
-    
-    /**
-     * Returns if the given DataSetId is from a Remote DataSet or not
-     * @param int $checkId
-     * @return boolean
-     */
-    public function isRemoteDataSet($checkId = 0)
-    {
-        if ($checkId <= 0) {
-            return false;
+
+        $sql = $select . $body . $order . $limit;
+
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $this->createEmpty()->hydrate($row, [
+                'intProperties' => ['isLookup', 'isRemote']
+            ]);
         }
-        $params = array('dataSetId' => $checkId);
-        $sql = 'SELECT datasetremote.DataSetID FROM datasetremote WHERE datasetremote.DataSetID = :dataSetId;';
-        return $this->getStore()->exists($sql, $params);
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            unset($params['groupsWithPermissionsEntity']);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
+        }
+
+        return $entries;
     }
 
     /**
      * Makes a call to a Remote Dataset and returns all received data as a JSON decoded Object.
      * In case of an Error, null is returned instead.
-     * @param \Xibo\Entity\DataSetRemote $dataSet The Dataset to get Data for
-     * @param \Xibo\Entity\DataSet $dependant The Dataset $dataSet depends on
+     * @param \Xibo\Entity\DataSet $dataSet The Dataset to get Data for
+     * @param \Xibo\Entity\DataSet|null $dependant The Dataset $dataSet depends on
      * @return \stdClass{entries:[],number:int}
      */
-    public function callRemoteService(DataSetRemote $dataSet, DataSet $dependant)
+    public function callRemoteService(DataSet $dataSet, DataSet $dependant = null)
     {
         $result = new \stdClass();
         $result->entries = [];
         $result->number = 0;
         
         // Getting all dependant values if needed
-        $values = [[]]; // just an empty array if no fields are used in the URI or PostData
-        if (($dependant != null) && $dataSet->containsDependatFieldsInRequest()) {
+        // just an empty array if no fields are used in the URI or PostData
+        $values = [
+            []
+        ];
+
+        if ($dependant != null && $dataSet->containsDependatFieldsInRequest()) {
             $values = $dependant->getData();
         }
         
         // Fetching data for every field in the dependant dataSet
+        // TODO: switch to Guzzle for this and add proxy support.
         foreach ($values as $options) {
             $curl = curl_init();
             curl_setopt_array($curl, $dataSet->getCurlParams($options));

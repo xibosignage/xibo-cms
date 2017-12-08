@@ -262,7 +262,8 @@ INSERT INTO `datatype` (`DataTypeID`, `DataType`) VALUES
 
 INSERT INTO `datasetcolumntype` (`DataSetColumnTypeID`, `DataSetColumnType`) VALUES
 (1, 'Value'),
-(2, 'Formula');
+(2, 'Formula'),
+(3, 'Remote');
 
 INSERT INTO `bandwidthtype` (`bandwidthtypeid`, `name`) VALUES
 (1, 'Register'),
