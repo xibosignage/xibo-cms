@@ -66,7 +66,7 @@
                     </div>
                     <div class="tab-pane" id="gateway">
                         {% set title %}{% trans "Method" %}{% endset %}
-                        {% set helpText %}{% trans "Type of Request" %}{% endset %}
+                        {% set helpText %}{% trans "What type of request needs to be made to get the remote data?" %}{% endset %}
                         {% set request_get %}{% trans "GET" %}{% endset %}
                         {% set request_post %}{% trans "POST" %}{% endset %}
                         {% set options = [
@@ -79,9 +79,22 @@
                         {% set helpText %}{% trans "URL to the Remote DataSet for GET and POST." %}{% endset %}
                         {{ forms.input("uri", title, dataSet.uri, helpText, "", "required") }}
 
-                        {% set title %}{% trans "Request Data" %}{% endset %}
-                        {% set helpText %}{% trans "<strong>Replacements:</strong><br/>Request-Date: {{DATE}}<br/>Request-Time: {{TIME}}<br/>Dependant fields: {{COL.NAME}} where NAME is a FieldName from the dependant DataSet<br/><br/>Data to POST for completing the request. In case of a GET-Request the data in here are ignored." %}{% endset %}
-                        {{ forms.textarea("postData", title, dataSet.postData, helpText, "", "", 10) }}
+                        <div class="form-group">
+                            <div class="col-sm-12">
+                                <div class="help-block">
+                                    <strong>{% trans "Replacements" %}</strong><br>
+                                    {% trans "Request date: {{DATE}}" %}<br>
+                                    {% trans "Request time: {{TIME}}" %}<br>
+                                    {% trans "Dependant fields: {{COL.NAME}} where NAME is a FieldName from the dependant DataSet" %}<br>
+                                </div>
+                                <div class="help-block">
+                                    {% trans "Data to add to this request. This should be URL encoded, e.g. paramA=1&amp;paramB=2." %}
+                                </div>
+                                <textarea class="form-control" name="postData" id="postData" rows="10">
+                                    {{ dataSet.postData }}
+                                </textarea>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="tab-pane" id="auth">

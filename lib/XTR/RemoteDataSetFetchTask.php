@@ -64,13 +64,12 @@ class RemoteDataSetFetchTask implements TaskInterface
         /** @var DataSet $dataSet */
         $dataSet = null;
 
-        // Process all DataSets
-        // TODO: do we need to process every single DataSet? Or only the remote ones?
-        $dataSets = $dataSetFactory->query();
+        // Process all Remote DataSets (and their dependants)
+        $dataSets = $dataSetFactory->query(null, ['isRemote' => 1]);
         
         // As long as we have not-procesed IDs left
         while (count($dataSets) > 0) {
-            $this->log->debug('Build Dependant-List for ' . ($dataSet === null) ? '' : $dataSet->dataSet);
+            $this->log->debug('Build Dependant-List for ' . (($dataSet === null) ? '' : $dataSet->dataSet));
             
             // List of Dependant Datasets to be processed in this loop
             // this adds to the dataSets list by reference
@@ -92,6 +91,9 @@ class RemoteDataSetFetchTask implements TaskInterface
                     $this->log->debug('Fetch and process ' . $dataSet->dataSet);
                     $results = $dataSetFactory->callRemoteService($dataSet, $dependant);
                     $dataSetFactory->processResults($dataSet, $results);
+
+                    // TODO: notify here?
+                    $dataSet->notify();
                 }
             }
         }

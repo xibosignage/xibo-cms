@@ -538,7 +538,7 @@ class DataSet implements \JsonSerializable
      * Tests if this DataSet contains parameters for getting values on the dependant DataSet
      * @return boolean
      */
-    public function containsDependatFieldsInRequest() {
+    public function containsDependantFieldsInRequest() {
         return strpos($this->postData, '{{COL.') !== false || strpos($this->uri, '{{COL.') !== false;
     }
 

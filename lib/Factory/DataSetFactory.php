@@ -24,8 +24,8 @@ namespace Xibo\Factory;
 
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use Xibo\Entity\DataSet;
-use Xibo\Entity\DataSetRemote;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
@@ -225,6 +225,11 @@ class DataSetFactory extends BaseFactory
             $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
         }
 
+        if ($this->getSanitizer()->getInt('isRemote', $filterBy) !== null) {
+            $body .= ' AND dataset.isRemote = :isRemote ';
+            $params['isRemote'] = $this->getSanitizer()->getInt('isRemote', $filterBy);
+        }
+
         if ($this->getSanitizer()->getString('dataSet', $filterBy) != null) {
         // convert into a space delimited array
             $names = explode(' ', $this->getSanitizer()->getString('dataSet', $filterBy));
@@ -295,7 +300,7 @@ class DataSetFactory extends BaseFactory
     {
         $this->getLog()->debug('Calling remote service for DataSet: ' . $dataSet->dataSet . ' and URL ' . $dataSet->uri);
 
-        // TODO: switch to Guzzle for this and add proxy support.
+        // Guzzle for this and add proxy support.
         $client = new Client($this->config->getGuzzleProxy());
 
         $result = new \stdClass();
@@ -308,53 +313,50 @@ class DataSetFactory extends BaseFactory
             []
         ];
 
-        if ($dependant != null && $dataSet->containsDependatFieldsInRequest()) {
+        if ($dependant != null && $dataSet->containsDependantFieldsInRequest()) {
+            $this->getLog()->debug('Dependant provided with fields in the request.');
+
             $values = $dependant->getData();
         }
         
         // Fetching data for every field in the dependant dataSet
         foreach ($values as $options) {
-            $curl = curl_init();
-            curl_setopt_array($curl, $this->getCurlParams($dataSet, $options));
-            $content = curl_exec($curl);
-            $error = curl_errno($curl) . ' ' . curl_error($curl);
-            curl_close($curl);
+            // Make some request params to provide to the HTTP client
+            $resolvedUri = $this->replaceParams($dataSet->uri, $options);
+            $requestParams = [];
 
-            if ($content !== false) {
-                $result->entries[] = json_decode($content);
-                $result->number = $result->number + 1;
+            // Auth
+            if ($dataSet->authentication !== 'none') {
+                $requestParams['auth'] = [
+                    'username' => $dataSet->username,
+                    'password' => $dataSet->password,
+                    'digest' => $dataSet->authentication
+                ];
+            }
+
+            // Post request?
+            if ($dataSet->method === 'POST') {
+                parse_str($this->replaceParams($dataSet->postData, $options), $requestParams['form_params']);
             } else {
-                $this->getLog()->error($error);
+                parse_str($this->replaceParams($dataSet->postData, $options), $requestParams['query']);
+            }
+
+            $this->getLog()->debug('Making request to ' . $resolvedUri . ' with params: ' . var_export($requestParams, true));
+
+            try {
+                $request = $client->request($dataSet->method, $resolvedUri, $requestParams);
+
+                // TODO: we should probably do some checking to ensure we have JSON back
+
+                $result->entries[] = json_decode($request->getBody());
+                $result->number = $result->number + 1;
+
+            } catch (RequestException $requestException) {
+                $this->getLog()->error('Error making request. ' . $requestException->getMessage());
             }
         }
         
         return $result;
-    }
-
-    /**
-     * Returns an Array to be used with the function `curl_setopt_array($curl, $params);`
-     * @param DataSet $dataSet
-     * @param array $values ColumnValues to use on URI and PostData for the {{COL.NAME}} parts
-     * @return array
-     */
-    public function getCurlParams(DataSet $dataSet, array $values = []) {
-        $params = [
-            CURLOPT_URL => $this->replaceParams($dataSet->uri, $values),
-            CURLOPT_HEADER => false,
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPAUTH => ($dataSet->authentication == 'basic') ? CURLAUTH_BASIC : (($dataSet->authentication == 'digest') ? CURLAUTH_DIGEST : 0),
-            CURLOPT_USERPWD => ($dataSet->authentication != 'none') ? $dataSet->username . ':' . $dataSet->password : ''
-        ];
-
-        if ($dataSet->method == 'POST') {
-            $params += [
-                CURLOPT_POST => true,
-                CURLOPT_POSTFIELDS => $this->replaceParams($dataSet->postData, $values)
-            ];
-        }
-
-        return $params;
     }
 
     /**
@@ -400,16 +402,22 @@ class DataSetFactory extends BaseFactory
      * @throws InvalidArgumentException
      */
     private function process(\Xibo\Entity\DataSet $dataSet, array $result) {
+        // Load the DataSet fully
+        $dataSet->load();
+
         // Remote Data has to have the configured DataRoot which has to be an Array
         $data = $this->getDataRootFromResult($dataSet->dataRoot, $result);
         if (($data != null) && is_array($data)) {
-            $columns = $this->dataSetColumnFactory->query(null, ['dataSetId' => $dataSet->dataSetId]);
+            $columns = $dataSet->columns;
             $entries = [];
 
             // First process each entry form the remote and try to map the values to the configured columns
-            foreach($data as $k => $entry) {
+            foreach ($data as $k => $entry) {
+                $this->getLog()->debug('Processing key ' . $k . ' from the remote results');
+                $this->getLog()->debug('Entry is: ' . var_export($entry, true));
+
                 if (is_array($entry) || is_object($entry)) {
-                    $entries[] = $this->processEntry($dataSet, (array) $entry, $columns);
+                    $entries[] = $this->processEntry((array) $entry, $columns);
                 } else {
                     $this->getLog()->error('DataSet ' . $dataSet->dataSet . ' failed: DataRoot ' . $dataSet->dataRoot . ' contains data which is not arrays or objeces.');
                     break;
@@ -424,7 +432,7 @@ class DataSetFactory extends BaseFactory
                 $dataSet->addRow($entry);
             }
         } else {
-            throw new InvalidArgumentException(__('DataSet %s missconfigured. DataRoot %s is not an array', $dataSet->dataSet, $dataSet->dataRoot), 'dataRoot');
+            throw new InvalidArgumentException(__('DataSet %s misconfigured. DataRoot %s is not an array', $dataSet->dataSet, $dataSet->dataRoot), 'dataRoot');
         }
     }
 
@@ -447,17 +455,17 @@ class DataSetFactory extends BaseFactory
     /**
      * Process a single Data-Entry form the remote system and map it to the configured Columns
      *
-     * @param \Xibo\Entity\DataSet $dataSet The DataSet which is processed currently
-     * @param array $entry The Data from the remte system
-     * @param array $columns The configured Columns form the current DataSet
+     * @param array $entry The Data from the remote system
+     * @param array $dataSetColumns The configured Columns form the current DataSet
      * @return array The processed $entry as a List of Fields from $columns
      */
-    private function processEntry(\Xibo\Entity\DataSet $dataSet, array $entry, array $columns) {
+    private function processEntry(array $entry, array $dataSetColumns) {
         $result = [];
 
-        foreach ($columns as $k => $column) {
-            if (($column->remoteField != null) && ($column->remoteField != '')) {
-                $dataTypeId = $column->dataTypeId;
+        foreach ($dataSetColumns as $k => $column) {
+            if (($column->remoteField !== null) && ($column->remoteField !== '')) {
+
+                $this->getLog()->debug('Trying to match dataSetColumn ' . $column->heading . ' with remote field ' . $column->remoteField);
 
                 // The Field may be a Date, timestamp or a real field
                 if ($column->remoteField == '{{DATE}}') {
@@ -471,14 +479,17 @@ class DataSetFactory extends BaseFactory
                     $value = $this->getFieldValueFromEntry($chunks, $entry);
                 }
 
+                $this->getLog()->debug('Resolved value: ' . var_export($value, true));
+
                 // Only add it to the result if we where able to process the field
                 if (($value != null) && ($value[1] != null)) {
-                    switch ($dataTypeId) {
+                    switch ($column->dataTypeId) {
                         case 2:
                             $result[$column->heading] = $this->getSanitizer()->double($value[1]);
                             break;
                         case 3:
-                            $result[$column->heading] = $this->getDate()->getLocalDate(strtotime($value[1]));
+                            // This expects an ISO date
+                            $result[$column->heading] = $this->getSanitizer()->getDate($value[1]);
                             break;
                         case 5:
                             $result[$column->heading] = $this->getSanitizer()->int($value[1]);
@@ -489,6 +500,8 @@ class DataSetFactory extends BaseFactory
                 }
             }
         }
+
+        $this->getLog()->debug('processEntry returning ' . var_export($result, true));
 
         return $result;
     }
@@ -506,7 +519,9 @@ class DataSetFactory extends BaseFactory
         $value = null;
         $key = array_shift($chunks);
 
-        if (($entry instanceof \StdClass) && property_exists($entry, $key)) {
+        $this->getLog()->debug('Looking for ' . $key);
+
+        if (($entry instanceof \stdClass) && property_exists($entry, $key)) {
             $value = $entry->{$key};
         } else if (array_key_exists($key, $entry)) {
             $value = $entry[$key];

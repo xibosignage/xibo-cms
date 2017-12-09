@@ -71,8 +71,8 @@
                 {% set helpText %}{% trans "A comma separated list of items to present in a combo box" %}{% endset %}
                 {{ forms.input("listContent", title, dataSetColumn.listContent, helpText, "listContent") }}
 
-                {% set title %}{% trans "Remote Data Part" %}{% endset %}
-                {% set helpText %}{% trans "Give here the JSON-Path of the DataField which should be stored inside this Column. Check out the RemoteDataset with the Test-Button to see the Data received from remote." %}{% endset %}
+                {% set title %}{% trans "Remote Data Path" %}{% endset %}
+                {% set helpText %}{% trans "Give the JSON-path in the remote data for the value that you want to fill this column. This path should be relative to the DataRoot configured on the DataSet." %}{% endset %}
                 {{ forms.input("remoteField", title, dataSetColumn.remoteField, helpText, "remoteField") }}
 
                 {% set title %}{% trans "Column Order" %}{% endset %}
