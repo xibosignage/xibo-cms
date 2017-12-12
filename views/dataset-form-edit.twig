@@ -29,21 +29,22 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Test" %}, XiboDatasetRemoteTestRequest($("#dataSetEditForm"))
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Save" %}, $("#dataSetEditForm").submit()    
 {% endblock %}
+
+{% block callBack %}dataSetFormOpen{% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#gateway" role="tab" data-toggle="tab"><span>{% trans "Remote" %}</span></a></li>
-                <li><a href="#auth" role="tab" data-toggle="tab"><span>{% trans "Authentication" %}</span></a></li>
-                <li><a href="#data" role="tab" data-toggle="tab"><span>{% trans "Data" %}</span></a></li>
-                <li><a href="#params" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+                <li class="tabForRemoteDataSet"><a href="#gateway" role="tab" data-toggle="tab"><span>{% trans "Remote" %}</span></a></li>
+                <li class="tabForRemoteDataSet"><a href="#auth" role="tab" data-toggle="tab"><span>{% trans "Authentication" %}</span></a></li>
+                <li class="tabForRemoteDataSet"><a href="#data" role="tab" data-toggle="tab"><span>{% trans "Data" %}</span></a></li>
+                <li class="tabForRemoteDataSet"><a href="#params" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
             <form id="dataSetEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("dataSet.edit", {id: dataSet.dataSetId}) }}">
                 <div class="tab-content">
@@ -99,7 +100,7 @@
 
                     <div class="tab-pane" id="auth">
                         {% set title %}{% trans "Authentication" %}{% endset %}
-                        {% set helpText %}{% trans "Type of Authentication on the remote site" %}{% endset %}
+                        {% set helpText %}{% trans "Select the authentication requirements for the remote data source. These will be added to the request." %}{% endset %}
                         {% set auth_none %}{% trans "None" %}{% endset %}
                         {% set auth_basic %}{% trans "Basic" %}{% endset %}
                         {% set auth_digest %}{% trans "Digest" %}{% endset %}
@@ -112,17 +113,25 @@
 
                         {% set title %}{% trans "Username" %}{% endset %}
                         {% set helpText %}{% trans "Enter the authentication Username" %}{% endset %}
-                        {{ forms.input("username", title, dataSet.username, "", "", "") }}
+                        {{ forms.input("username", title, dataSet.username, helpText, "auth-fields", "") }}
 
                         {% set title %}{% trans "Password" %}{% endset %}
                         {% set helpText %}{% trans "Corresponding Password" %}{% endset %}
-                        {{ forms.input("password", title, dataSet.password, "", "", "") }}
+                        {{ forms.input("password", title, dataSet.password, helpText, "auth-fields", "") }}
                     </div>
 
                     <div class="tab-pane" id="data">
                         {% set title %}{% trans "Data root" %}{% endset %}
-                        {% set helpText %}{% trans "Enter here the root where we will find all Data you want in the DataSet. This has to be in JSON Syntax.<br/>If you're unsure, try the <em>Test</em> function and see the resulting JSON below here." %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the element in your remote data which we should use as the starting point when we match the remote Columns. This should be an array or an object. You can use the test button below to see the structure that is returned." %}{% endset %}
                         {{ forms.input("dataRoot", title, dataSet.dataRoot, helpText, "", "") }}
+
+                        <div class="form-group">
+                            <div class="col-sm-offset-2 col-sm-10">
+                                <a class="btn btn-default" id="dataSetRemoteTestButton" href="#">
+                                    {% trans "Test data URL" %}
+                                </a>
+                            </div>
+                        </div>
 
                         {% set title %}{% trans "Aggregation" %}{% endset %}
                         {% set helpText %}{% trans "Aggregate received data by the given method" %}{% endset %}
@@ -136,16 +145,24 @@
                         ] %}
                         {{ forms.dropdown("summarize", "single", title, dataSet.summarize, options, "typeid", "type", helpText) }}
 
-                        {% set title %}{% trans "By Field" %}{% endset %}
-                        {% set helpText %}{% trans "Enter here the Field below the Data-Root (JSON-Syntax) by which the above Aggregate-Function should applied.<br/><strong>Summarize:</strong> Values in this field will be summarized and stored in one column.<br/><strong>Count:</strong> All individual values in this field will be counted and stored in one Column for each value" %}{% endset %}
-                        {{ forms.input("summarizeField", title, dataSet.summarizeField, helpText, "", "") }}
-
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="summarizeField">{% trans "By Field" %}</label>
+                            <div class="col-sm-10">
+                                <input class="form-control" type="text" name="summarizeField" id="summarizeField" value="{{ dataSet.summarizeField }}"/>
+                                <div class="help-block">
+                                    {% trans "Using JSON syntax enter the path below the Data root by which the above aggregation should be applied." %}<br>
+                                    {% trans "Summarize: Values in this field will be summarized and stored in one column." %}<br>
+                                    {% trans "Count: All individual values in this field will be counted and stored in one Column for each value" %}<br>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="tab-pane" id="params">
                         {% set title %}{% trans "Refresh" %}{% endset %}
-                        {% set helpText %}{% trans "Time between refreshing data" %}{% endset %}
-                        {% set refresh_everytime %}{% trans "On every request" %}{% endset %}
+                        {% set helpText %}{% trans "How often should this remote data be fetched and imported?" %}{% endset %}
+
+                        {% set refresh_everytime %}{% trans "Constantly" %}{% endset %}
                         {% set refresh_hour %}{% trans "Hourly" %}{% endset %}
                         {% set refresh_day %}{% trans "Daily" %}{% endset %}
                         {% set refresh_week %}{% trans "Weekly" %}{% endset %}
@@ -166,9 +183,10 @@
                         {{ forms.dropdown("refreshRate", "single", title, dataSet.refreshRate, options, "typeid", "type", helpText) }}
 
                         {% set title %}{% trans "Truncate DataSet" %}{% endset %}
-                        {% set helpText %}{% trans "The Dataset is truncated before a new Request. A setting here lower than for the Refresh above does not make any sense." %}{% endset %}
+                        {% set helpText %}{% trans "Select when you would like the Data to be truncated out of this DataSet. The criteria is assessed when synchronisation occurs and is truncated before adding new data." %}{% endset %}
+
                         {% set truncate_never %}{% trans "Never" %}{% endset %}
-                        {% set truncate_everytime %}{% trans "On every request" %}{% endset %}
+                        {% set truncate_everytime %}{% trans "Always" %}{% endset %}
                         {% set truncate_hour %}{% trans "Hourly" %}{% endset %}
                         {% set truncate_day %}{% trans "Daily" %}{% endset %}
                         {% set truncate_week %}{% trans "Weekly" %}{% endset %}
@@ -191,9 +209,9 @@
                         ] %}
                         {{ forms.dropdown("clearRate", "single", title, dataSet.clearRate, options, "typeid", "type", helpText) }}
 
-                        {% set title %}{% trans "Depending DataSet" %}{% endset %}
+                        {% set title %}{% trans "Depends on DataSet" %}{% endset %}
                         {% set dataSets = [{dataSetId: null, dataSet: ""}]|merge(dataSets) %}
-                        {% set helpText %}{% trans "This DataSet you choose here has to exist and will be actualized before" %}{% endset %}
+                        {% set helpText %}{% trans "The DataSet you select here will be processed in advance and have its values available for subsitution in the data to add to this request on the Remote tab." %}{% endset %}
                         {{ forms.dropdown("runsAfter", "single", title, dataSet.runsAfter, dataSets, "dataSetId", "dataSet", helpText) }}
                     </div>
                 </div>

@@ -56,7 +56,7 @@ class RemoteDataSetFetchTask implements TaskInterface
     {
         $this->runMessage = '# ' . __('Fetching Remote-DataSets') . PHP_EOL . PHP_EOL;
 
-        $runTime = time();
+        $runTime = $this->date->getLocalDate(null, 'U');
 
         /** @var DataSetFactory $dataSetFactory */
         $dataSetFactory = $this->app->container->get('dataSetFactory');
@@ -92,7 +92,7 @@ class RemoteDataSetFetchTask implements TaskInterface
                     $results = $dataSetFactory->callRemoteService($dataSet, $dependant);
                     $dataSetFactory->processResults($dataSet, $results);
 
-                    // TODO: notify here?
+                    // notify here
                     $dataSet->notify();
                 }
             }

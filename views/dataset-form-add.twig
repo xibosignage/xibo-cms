@@ -67,7 +67,7 @@
 
                     <div class="tab-pane" id="gateway">
                         {% set title %}{% trans "Method" %}{% endset %}
-                        {% set helpText %}{% trans "Type of Request" %}{% endset %}
+                        {% set helpText %}{% trans "What type of request needs to be made to get the remote data?" %}{% endset %}
                         {% set request_get %}{% trans "GET" %}{% endset %}
                         {% set request_post %}{% trans "POST" %}{% endset %}
                         {% set options = [
@@ -80,14 +80,25 @@
                         {% set helpText %}{% trans "URL to the Remote DataSet for GET and POST." %}{% endset %}
                         {{ forms.input("uri", title, "", helpText, "", "required") }}
 
-                        {% set title %}{% trans "Request Data" %}{% endset %}
-                        {% set helpText %}{% trans "<strong>Replacements:</strong><br/>Request-Date: {{DATE}}<br/>Request-Time: {{TIME}}<br/>Dependant fields: {{COL.NAME}} where NAME is a FieldName from the dependant DataSet<br/><br/>Data to POST for completing the request. In case of a GET-Request the data in here are ignored." %}{% endset %}
-                        {{ forms.textarea("postData", title, "", helpText, "", "", 10) }}
+                        <div class="form-group">
+                            <div class="col-sm-12">
+                                <div class="help-block">
+                                    <strong>{% trans "Replacements" %}</strong><br>
+                                    {% trans "Request date: {{DATE}}" %}<br>
+                                    {% trans "Request time: {{TIME}}" %}<br>
+                                    {% trans "Dependant fields: {{COL.NAME}} where NAME is a FieldName from the dependant DataSet" %}<br>
+                                </div>
+                                <div class="help-block">
+                                    {% trans "Data to add to this request. This should be URL encoded, e.g. paramA=1&amp;paramB=2." %}
+                                </div>
+                                <textarea class="form-control" name="postData" id="postData" rows="10"></textarea>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="tab-pane" id="auth">
                         {% set title %}{% trans "Authentication" %}{% endset %}
-                        {% set helpText %}{% trans "Type of Authentication on the remote site" %}{% endset %}
+                        {% set helpText %}{% trans "Select the authentication requirements for the remote data source. These will be added to the request." %}{% endset %}
                         {% set auth_none %}{% trans "None" %}{% endset %}
                         {% set auth_basic %}{% trans "Basic" %}{% endset %}
                         {% set auth_digest %}{% trans "Digest" %}{% endset %}
@@ -100,17 +111,25 @@
 
                         {% set title %}{% trans "Username" %}{% endset %}
                         {% set helpText %}{% trans "Enter the authentication Username" %}{% endset %}
-                        {{ forms.input("username", title, "", "", "", "") }}
+                        {{ forms.input("username", title, "", helpText, "auth-fields", "") }}
 
                         {% set title %}{% trans "Password" %}{% endset %}
                         {% set helpText %}{% trans "Corresponding Password" %}{% endset %}
-                        {{ forms.input("password", title, "", "", "", "") }}
+                        {{ forms.input("password", title, "", helpText, "auth-fields", "") }}
                     </div>
 
                     <div class="tab-pane" id="data">
                         {% set title %}{% trans "Data root" %}{% endset %}
-                        {% set helpText %}{% trans "Enter here the root where we will find all Data you want in the DataSet. This has to be in JSON Syntax.<br/>If you're unsure, try the <em>Test</em> function and see the resulting JSON below here." %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the element in your remote data which we should use as the starting point when we match the remote Columns. This should be an array or an object. You can use the test button below to see the structure that is returned." %}{% endset %}
                         {{ forms.input("dataRoot", title, "", helpText, "", "") }}
+
+                        <div class="form-group">
+                            <div class="col-sm-offset-2 col-sm-10">
+                                <a class="btn btn-default" id="dataSetRemoteTestButton" href="#">
+                                    {% trans "Test data URL" %}
+                                </a>
+                            </div>
+                        </div>
 
                         {% set title %}{% trans "Aggregation" %}{% endset %}
                         {% set helpText %}{% trans "Aggregate received data by the given method" %}{% endset %}
@@ -124,21 +143,24 @@
                         ] %}
                         {{ forms.dropdown("summarize", "single", title, "", options, "typeid", "type", helpText) }}
 
-                        {% set title %}{% trans "By Field" %}{% endset %}
-                        {% set helpText %}{% trans "Enter here the Field below the Data-Root (JSON-Syntax) by which the above Aggregate-Function should applied.<br/><strong>Summarize:</strong> Values in this field will be summarized and stored in one column.<br/><strong>Count:</strong> All individual values in this field will be counted and stored in one Column for each value" %}{% endset %}
-                        {{ forms.input("summarizeField", title, "", helpText, "", "") }}
-
                         <div class="form-group">
-                            <div id="datasetRemoteTestRequestResult" class="col-sm-12">
-                                Here comes the test result
+                            <label class="col-sm-2 control-label" for="summarizeField">{% trans "By Field" %}</label>
+                            <div class="col-sm-10">
+                                <input class="form-control" type="text" name="summarizeField" id="summarizeField" />
+                                <div class="help-block">
+                                    {% trans "Using JSON syntax enter the path below the Data root by which the above aggregation should be applied." %}<br>
+                                    {% trans "Summarize: Values in this field will be summarized and stored in one column." %}<br>
+                                    {% trans "Count: All individual values in this field will be counted and stored in one Column for each value" %}<br>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="tab-pane" id="params">
                         {% set title %}{% trans "Refresh" %}{% endset %}
-                        {% set helpText %}{% trans "Time between refreshing data" %}{% endset %}
-                        {% set refresh_everytime %}{% trans "On every request" %}{% endset %}
+                        {% set helpText %}{% trans "How often should this remote data be fetched and imported?" %}{% endset %}
+
+                        {% set refresh_everytime %}{% trans "Constantly" %}{% endset %}
                         {% set refresh_hour %}{% trans "Hourly" %}{% endset %}
                         {% set refresh_day %}{% trans "Daily" %}{% endset %}
                         {% set refresh_week %}{% trans "Weekly" %}{% endset %}
@@ -159,9 +181,10 @@
                         {{ forms.dropdown("refreshRate", "single", title, "", options, "typeid", "type", helpText) }}
 
                         {% set title %}{% trans "Truncate DataSet" %}{% endset %}
-                        {% set helpText %}{% trans "The Dataset is truncated before a new Request. A setting here lower than for the Refresh above does not make any sense." %}{% endset %}
+                        {% set helpText %}{% trans "Select when you would like the Data to be truncated out of this DataSet. The criteria is assessed when synchronisation occurs and is truncated before adding new data." %}{% endset %}
+
                         {% set truncate_never %}{% trans "Never" %}{% endset %}
-                        {% set truncate_everytime %}{% trans "On every request" %}{% endset %}
+                        {% set truncate_everytime %}{% trans "Always" %}{% endset %}
                         {% set truncate_hour %}{% trans "Hourly" %}{% endset %}
                         {% set truncate_day %}{% trans "Daily" %}{% endset %}
                         {% set truncate_week %}{% trans "Weekly" %}{% endset %}
@@ -184,13 +207,14 @@
                         ] %}
                         {{ forms.dropdown("clearRate", "single", title, "", options, "typeid", "type", helpText) }}
 
-                        {% set title %}{% trans "Depending DataSet" %}{% endset %}
+                        {% set title %}{% trans "Depends on DataSet" %}{% endset %}
                         {% set dataSets = [{dataSetId: null, dataSet: ""}]|merge(dataSets) %}
-                        {% set helpText %}{% trans "This DataSet you choose here has to exist and will be actualized before" %}{% endset %}
+                        {% set helpText %}{% trans "The DataSet you select here will be processed in advance and have its values available for subsitution in the data to add to this request on the Remote tab." %}{% endset %}
                         {{ forms.dropdown("runsAfter", "single", title, "", dataSets, "dataSetId", "dataSet", helpText) }}
                     </div>
                 </div>
             </form>
+            <div id="datasetRemoteTestRequestResult" class="col-sm-12"></div>
         </div>
     </div>
 {% endblock %}
