@@ -29,21 +29,22 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Test" %}, XiboDatasetRemoteTestRequest($("#dataSetAddForm"))
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Save" %}, $("#dataSetAddForm").submit()    
 {% endblock %}
+
+{% block callBack %}dataSetFormOpen{% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#gateway" role="tab" data-toggle="tab"><span>{% trans "Remote" %}</span></a></li>
-                <li><a href="#auth" role="tab" data-toggle="tab"><span>{% trans "Authentication" %}</span></a></li>
-                <li><a href="#data" role="tab" data-toggle="tab"><span>{% trans "Data" %}</span></a></li>
-                <li><a href="#params" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+                <li class="tabForRemoteDataSet"><a href="#gateway" role="tab" data-toggle="tab"><span>{% trans "Remote" %}</span></a></li>
+                <li class="tabForRemoteDataSet"><a href="#auth" role="tab" data-toggle="tab"><span>{% trans "Authentication" %}</span></a></li>
+                <li class="tabForRemoteDataSet"><a href="#data" role="tab" data-toggle="tab"><span>{% trans "Data" %}</span></a></li>
+                <li class="tabForRemoteDataSet"><a href="#params" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
             <form id="dataSetAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("dataSet.add") }}">
                 <div class="tab-content">

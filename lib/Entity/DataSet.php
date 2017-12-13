@@ -621,6 +621,22 @@ class DataSet implements \JsonSerializable
     }
 
     /**
+     * @param int $time
+     * @return $this
+     */
+    public function saveLastSync($time)
+    {
+        $this->lastSync = $time;
+
+        $this->getStore()->update('UPDATE `dataset` SET lastSync = :lastSync WHERE dataSetId = :dataSetId', [
+            'dataSetId' => $this->dataSetId,
+            'lastSync' => $this->lastSync
+        ]);
+
+        return $this;
+    }
+
+    /**
      * Delete DataSet
      * @throws ConfigurationException
      * @throws InvalidArgumentException

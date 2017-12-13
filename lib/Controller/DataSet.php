@@ -311,7 +311,7 @@ class DataSet extends Base
         if ($dataSet->isRemote === 1) {
             $dataSet->method = $this->getSanitizer()->getString('method');
             $dataSet->uri = $this->getSanitizer()->getString('uri');
-            $dataSet->postData = $this->getSanitizer()->getString('postData');
+            $dataSet->postData = trim($this->getSanitizer()->getString('postData'));
             $dataSet->authentication = $this->getSanitizer()->getString('authentication');
             $dataSet->username = $this->getSanitizer()->getString('username');
             $dataSet->password = $this->getSanitizer()->getString('password');
@@ -428,7 +428,7 @@ class DataSet extends Base
         if ($dataSet->isRemote === 1) {
             $dataSet->method = $this->getSanitizer()->getString('method');
             $dataSet->uri = $this->getSanitizer()->getString('uri');
-            $dataSet->postData = $this->getSanitizer()->getString('postData');
+            $dataSet->postData = trim($this->getSanitizer()->getString('postData'));
             $dataSet->authentication = $this->getSanitizer()->getString('authentication');
             $dataSet->username = $this->getSanitizer()->getString('username');
             $dataSet->password = $this->getSanitizer()->getString('password');

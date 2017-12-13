@@ -75,7 +75,10 @@ class RemoteDataSetFetchTask implements TaskInterface
             // this adds to the dataSets list by reference
             $processing = $this->buildDependantList($dataSets);
             foreach ($processing as $dataSet) {
+                $this->log->debug('Comparing run time ' . $runTime . ' to next sync time ' . $dataSet->getNextSyncTime());
+
                 if ($runTime >= $dataSet->getNextSyncTime()) {
+
                     // Truncate only if we also fetch new Data
                     if ($runTime >= $dataSet->getNextClearTime()) {
                         $this->log->debug('Truncate ' . $dataSet->dataSet);
@@ -93,7 +96,10 @@ class RemoteDataSetFetchTask implements TaskInterface
                     $dataSetFactory->processResults($dataSet, $results);
 
                     // notify here
+                    $dataSet->saveLastSync($runTime);
                     $dataSet->notify();
+                } else {
+                    $this->log->debug('Sync not required for ' . $dataSet->dataSetId);
                 }
             }
         }
