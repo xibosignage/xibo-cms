@@ -13,7 +13,6 @@
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new DataSet" %}" href="{{ urlFor("dataSet.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DataSet" %}</a></li>
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Remote DataSet" %}" href="{{ urlFor("dataSet.add.remote.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Remote DataSet" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -38,6 +37,7 @@
                                 <th>{% trans "Name" %}</th>
                                 <th>{% trans "Description" %}</th>
                                 <th>{% trans "Code" %}</th>
+                                <th>{% trans "Remote?" %}</th>
                                 <th>{% trans "Owner" %}</th>
                                 <th>{% trans "Permissions" %}</th>
                                 <th></th>
@@ -71,6 +71,10 @@
                 { "data": "dataSet", "render": dataTableSpacingPreformatted },
                 { "data": "description" },
                 { "data": "code" },
+                {
+                    "data": "isRemote",
+                    "render": dataTableTickCrossColumn
+                },
                 { "data": "owner" },
                 { "data": "groupsWithPermissions" },
                 {
@@ -180,6 +184,52 @@
             });
         });
         table.on('processing.dt', dataTableProcessing);
+
+        function dataSetFormOpen(dialog) {
+            // Bind the test button
+            $(dialog).find("#dataSetRemoteTestButton").on('click', function() {
+                var $form = $(dialog).find("form");
+                XiboRemoteRequest("{{ urlFor("dataSet.test.remote") }}", $form.serializeObject(), function(response) {
+                    $("#datasetRemoteTestRequestResult").html('<pre style="height: 300px; overflow: scroll">' + JSON.stringify(response.data, null, 3) + '</pre>');
+                });
+            })
+
+            // Set up some dependencies between the isRemote checkbox and the tabs related to remote datasets
+            onRemoteFieldChanged(dialog);
+
+            $(dialog).find("#isRemote").on('change', function() {
+                onRemoteFieldChanged(dialog);
+            });
+
+            // Auth field
+            onAuthenticationFieldChanged(dialog);
+
+            $(dialog).find("#authentication").on('change', function() {
+                onAuthenticationFieldChanged(dialog);
+            });
+        }
+
+        function onRemoteFieldChanged(dialog) {
+            var isRemote = $(dialog).find("#isRemote").is(":checked");
+            var $remoteTabs = $(dialog).find(".tabForRemoteDataSet");
+
+            if (isRemote) {
+                $remoteTabs.removeClass("hidden");
+            } else {
+                $remoteTabs.addClass("hidden");
+            }
+        }
+
+        function onAuthenticationFieldChanged(dialog) {
+            var authentication = $(dialog).find("#authentication").val();
+            var $authFields = $(dialog).find(".auth-fields");
+
+            if (authentication === "none") {
+                $authFields.addClass("hidden");
+            } else {
+                $authFields.removeClass("hidden");
+            }
+        }
     </script>
 {% endblock %}
 

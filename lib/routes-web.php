@@ -216,11 +216,6 @@ $app->get('/dataset/form/edit/:id', '\Xibo\Controller\DataSet:editForm')->name('
 $app->get('/dataset/form/copy/:id', '\Xibo\Controller\DataSet:copyForm')->name('dataSet.copy.form');
 $app->get('/dataset/form/delete/:id', '\Xibo\Controller\DataSet:deleteForm')->name('dataSet.delete.form');
 $app->get('/dataset/form/import/:id', '\Xibo\Controller\DataSet:importForm')->name('dataSet.import.form');
-// Remotes
-$app->get('/dataset/form/remote/add', '\Xibo\Controller\DataSetRemote:addForm')->name('dataSet.add.remote.form');
-$app->get('/dataset/form/remote/edit/:id', '\Xibo\Controller\DataSetRemote:editForm')->name('dataSet.edit.remote.form');
-$app->get('/dataset/form/remote/copy/:id', '\Xibo\Controller\DataSetRemote:copyForm')->name('dataSet.copy.remote.form');
-$app->get('/dataset/form/remote/delete/:id', '\Xibo\Controller\DataSetRemote:deleteForm')->name('dataSet.delete.remote.form');
 // columns
 $app->get('/dataset/:id/column/view', '\Xibo\Controller\DataSetColumn:displayPage')->name('dataSet.column.view');
 $app->get('/dataset/:id/column/form/add', '\Xibo\Controller\DataSetColumn:addForm')->name('dataSet.column.add.form');

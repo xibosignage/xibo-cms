@@ -1,16 +1,32 @@
 <?php
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (DataSetFactory.php)
+ * Copyright (C) 2015-2017 Spring Signage Ltd
+ * contributions by LukyLuke aka Lukas Zurschmiede - https://github.com/LukyLuke
+ *
+ * (DataSetFactory.php) This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
-
-
 namespace Xibo\Factory;
 
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use Xibo\Entity\DataSet;
-use Xibo\Entity\DataSetRemote;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -83,23 +99,6 @@ class DataSetFactory extends BaseFactory
     }
 
     /**
-     * @return DataSetRemote
-     */
-    public function createEmptyRemote()
-    {
-        return new DataSetRemote(
-            $this->getStore(),
-            $this->getLog(),
-            $this->getSanitizer(),
-            $this->config,
-            $this,
-            $this->dataSetColumnFactory,
-            $this->permissionFactory,
-            $this->displayFactory
-        );
-    }
-
-    /**
      * Get DataSets by ID
      * @param $dataSetId
      * @return DataSet
@@ -152,214 +151,443 @@ class DataSetFactory extends BaseFactory
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[DataSet]
-     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {
         $entries = array();
         $params = array();
 
-        try {
+        $select  = '
+          SELECT dataset.dataSetId,
+            dataset.dataSet,
+            dataset.description,
+            dataset.userId,
+            dataset.lastDataEdit,
+        ';
 
-            $select  = '
-              SELECT dataset.dataSetId,
-                dataset.dataSet,
-                dataset.description,
-                dataset.userId,
-                dataset.lastDataEdit,
-            ';
-
-            if (DBVERSION > 122) {
-                $select .= '
-                    dataset.`code`,
-                    dataset.`isLookup`,
-                ';
-            }
-
+        if (DBVERSION > 122) {
             $select .= '
-                user.userName AS owner,
-                (
-                  SELECT GROUP_CONCAT(DISTINCT `group`.group)
-                      FROM `permission`
-                        INNER JOIN `permissionentity`
-                        ON `permissionentity`.entityId = permission.entityId
-                        INNER JOIN `group`
-                        ON `group`.groupId = `permission`.groupId
-                     WHERE entity = :groupsWithPermissionsEntity
-                        AND objectId = dataset.dataSetId
-                ) AS groupsWithPermissions
+                dataset.`code`,
+                dataset.`isLookup`,
             ';
+        }
 
-            $params['groupsWithPermissionsEntity'] = 'Xibo\\Entity\\DataSet';
-
-            $body = '
-                  FROM dataset
-                   INNER JOIN `user` ON user.userId = dataset.userId
-                 WHERE 1 = 1
+        if (DBVERSION > 134) {
+            $select .= '
+                dataset.`isRemote`,
+                dataset.`method`,
+                dataset.`uri`,
+                dataset.`postData`,
+                dataset.`authentication`,
+                dataset.`username`,
+                dataset.`password`,
+                dataset.`refreshRate`,
+                dataset.`clearRate`,
+                dataset.`runsAfter`,
+                dataset.`dataRoot`,
+                dataset.`summarize`,
+                dataset.`summarizeField`,
             ';
+        }
 
-            // View Permissions
-            $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy);
+        $select .= '
+            user.userName AS owner,
+            (
+              SELECT GROUP_CONCAT(DISTINCT `group`.group)
+                  FROM `permission`
+                    INNER JOIN `permissionentity`
+                    ON `permissionentity`.entityId = permission.entityId
+                    INNER JOIN `group`
+                    ON `group`.groupId = `permission`.groupId
+                 WHERE entity = :groupsWithPermissionsEntity
+                    AND objectId = dataset.dataSetId
+            ) AS groupsWithPermissions
+        ';
 
-            if ($this->getSanitizer()->getInt('dataSetId', $filterBy) !== null) {
-                $body .= ' AND dataset.dataSetId = :dataSetId ';
-                $params['dataSetId'] = $this->getSanitizer()->getInt('dataSetId', $filterBy);
-            }
+        $params['groupsWithPermissionsEntity'] = 'Xibo\\Entity\\DataSet';
 
-            if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
-                $body .= ' AND dataset.userId = :userId ';
-                $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
-            }
+        $body = '
+              FROM dataset
+               INNER JOIN `user` ON user.userId = dataset.userId
+             WHERE 1 = 1
+        ';
 
-            if ($this->getSanitizer()->getString('dataSet', $filterBy) != null) {
-            // convert into a space delimited array
-                $names = explode(' ', $this->getSanitizer()->getString('dataSet', $filterBy));
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy);
 
-                $i = 0;
-                foreach($names as $searchName)
-                {
-                    $i++;
+        if ($this->getSanitizer()->getInt('dataSetId', $filterBy) !== null) {
+            $body .= ' AND dataset.dataSetId = :dataSetId ';
+            $params['dataSetId'] = $this->getSanitizer()->getInt('dataSetId', $filterBy);
+        }
 
-                    // Ignore if the word is empty
-                    if($searchName == '')
-                      continue;
+        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+            $body .= ' AND dataset.userId = :userId ';
+            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
+        }
 
-                    // Not like, or like?
-                    if (substr($searchName, 0, 1) == '-') {
-                        $body.= " AND  `dataset`.dataSet NOT LIKE :search$i ";
-                        $params['search' . $i] = '%' . ltrim($searchName) . '%';
-                    }
-                    else {
-                        $body.= " AND  `dataset`.dataSet LIKE :search$i ";
-                        $params['search' . $i] = '%' . $searchName . '%';
-                    }
+        if ($this->getSanitizer()->getInt('isRemote', $filterBy) !== null) {
+            $body .= ' AND dataset.isRemote = :isRemote ';
+            $params['isRemote'] = $this->getSanitizer()->getInt('isRemote', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getString('dataSet', $filterBy) != null) {
+        // convert into a space delimited array
+            $names = explode(' ', $this->getSanitizer()->getString('dataSet', $filterBy));
+
+            $i = 0;
+            foreach($names as $searchName)
+            {
+                $i++;
+
+                // Ignore if the word is empty
+                if($searchName == '')
+                  continue;
+
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-') {
+                    $body.= " AND  `dataset`.dataSet NOT LIKE :search$i ";
+                    $params['search' . $i] = '%' . ltrim($searchName) . '%';
+                }
+                else {
+                    $body.= " AND  `dataset`.dataSet LIKE :search$i ";
+                    $params['search' . $i] = '%' . $searchName . '%';
                 }
             }
-
-            if ($this->getSanitizer()->getString('code', $filterBy) != null) {
-                $body .= ' AND `dataset`.`code` = :code ';
-                $params['code'] = $this->getSanitizer()->getString('code', $filterBy);
-            }
-
-            // Sorting?
-            $order = '';
-            if (is_array($sortOrder))
-                $order .= 'ORDER BY ' . implode(',', $sortOrder);
-
-            $limit = '';
-            // Paging
-            if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-                $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
-            }
-
-            $sql = $select . $body . $order . $limit;
-
-            foreach ($this->getStore()->select($sql, $params) as $row) {
-                $id = $this->getDataSetIdFromRow($row);
-                if ($this->isRemoteDataSet($id)) {
-                    $row = $this->extendRemoteRow($row);
-                    $entries[] = $this->createEmptyRemote()->hydrate($row);
-                } else {
-                    $entries[] = $this->createEmpty()->hydrate($row);
-                }
-            }
-
-            // Paging
-            if ($limit != '' && count($entries) > 0) {
-                unset($params['groupsWithPermissionsEntity']);
-                $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
-                $this->_countLast = intval($results[0]['total']);
-            }
-
-            return $entries;
-
-        } catch (\Exception $e) {
-
-            $this->getLog()->error($e);
-
-            throw new NotFoundException();
         }
-    }
-    
-    /**
-     * Extends a DataSet row with values from the DataSetRemote Table
-     * @param array $row The row to extend
-     * @return array the extended row
-     */
-    protected function extendRemoteRow(array $row = [])
-    {
-        $params = array('dataSetId' => $this->getDataSetIdFromRow($row));
-        $sql = 'SELECT * FROM datasetremote WHERE DataSetID = :dataSetId;';
-        foreach ($this->getStore()->select($sql, $params) as $data) {
-            $row = array_merge($data, $row);
-            break;
+
+        if ($this->getSanitizer()->getString('code', $filterBy) != null) {
+            $body .= ' AND `dataset`.`code` = :code ';
+            $params['code'] = $this->getSanitizer()->getString('code', $filterBy);
         }
-        return $row;
-    }
-    
-    /**
-     * Returns the DataSetId from a Row if existing, otherwise '0'
-     * @param array $row
-     * @return int
-     */
-    private function getDataSetIdFromRow(array $row = null)
-    {
-        if ($row == null || !array_key_exists('dataSetId', $row)) {
-            return 0;
+
+        // Sorting?
+        $order = '';
+        if (is_array($sortOrder))
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        $limit = '';
+        // Paging
+        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
-        return intval($row['dataSetId']);
-    }
-    
-    /**
-     * Returns if the given DataSetId is from a Remote DataSet or not
-     * @param int $checkId
-     * @return boolean
-     */
-    public function isRemoteDataSet($checkId = 0)
-    {
-        if ($checkId <= 0) {
-            return false;
+
+        $sql = $select . $body . $order . $limit;
+
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $this->createEmpty()->hydrate($row, [
+                'intProperties' => ['isLookup', 'isRemote']
+            ]);
         }
-        $params = array('dataSetId' => $checkId);
-        $sql = 'SELECT datasetremote.DataSetID FROM datasetremote WHERE datasetremote.DataSetID = :dataSetId;';
-        return $this->getStore()->exists($sql, $params);
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            unset($params['groupsWithPermissionsEntity']);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
+        }
+
+        return $entries;
     }
 
     /**
      * Makes a call to a Remote Dataset and returns all received data as a JSON decoded Object.
      * In case of an Error, null is returned instead.
-     * @param \Xibo\Entity\DataSetRemote $dataSet The Dataset to get Data for
-     * @param \Xibo\Entity\DataSet $dependant The Dataset $dataSet depends on
+     * @param \Xibo\Entity\DataSet $dataSet The Dataset to get Data for
+     * @param \Xibo\Entity\DataSet|null $dependant The Dataset $dataSet depends on
      * @return \stdClass{entries:[],number:int}
      */
-    public function callRemoteService(DataSetRemote $dataSet, DataSet $dependant)
+    public function callRemoteService(DataSet $dataSet, DataSet $dependant = null)
     {
+        $this->getLog()->debug('Calling remote service for DataSet: ' . $dataSet->dataSet . ' and URL ' . $dataSet->uri);
+
+        // Guzzle for this and add proxy support.
+        $client = new Client($this->config->getGuzzleProxy());
+
         $result = new \stdClass();
         $result->entries = [];
         $result->number = 0;
         
         // Getting all dependant values if needed
-        $values = [[]]; // just an empty array if no fields are used in the URI or PostData
-        if (($dependant != null) && $dataSet->containsDependatFieldsInRequest()) {
+        // just an empty array if no fields are used in the URI or PostData
+        $values = [
+            []
+        ];
+
+        if ($dependant != null && $dataSet->containsDependantFieldsInRequest()) {
+            $this->getLog()->debug('Dependant provided with fields in the request.');
+
             $values = $dependant->getData();
         }
         
         // Fetching data for every field in the dependant dataSet
         foreach ($values as $options) {
-            $curl = curl_init();
-            curl_setopt_array($curl, $dataSet->getCurlParams($options));
-            $content = curl_exec($curl);
-            $error = curl_errno($curl) . ' ' . curl_error($curl);
-            curl_close($curl);
+            // Make some request params to provide to the HTTP client
+            $resolvedUri = $this->replaceParams($dataSet->uri, $options);
+            $requestParams = [];
 
-            if ($content !== false) {
-                $result->entries[] = json_decode($content);
-                $result->number = $result->number + 1;
+            // Auth
+            if ($dataSet->authentication !== 'none') {
+                $requestParams['auth'] = [
+                    'username' => $dataSet->username,
+                    'password' => $dataSet->password,
+                    'digest' => $dataSet->authentication
+                ];
+            }
+
+            // Post request?
+            if ($dataSet->method === 'POST') {
+                parse_str($this->replaceParams($dataSet->postData, $options), $requestParams['form_params']);
             } else {
-                $this->getLog()->error($error);
+                parse_str($this->replaceParams($dataSet->postData, $options), $requestParams['query']);
+            }
+
+            $this->getLog()->debug('Making request to ' . $resolvedUri . ' with params: ' . var_export($requestParams, true));
+
+            try {
+                $request = $client->request($dataSet->method, $resolvedUri, $requestParams);
+
+                // TODO: we should probably do some checking to ensure we have JSON back
+
+                $result->entries[] = json_decode($request->getBody());
+                $result->number = $result->number + 1;
+
+            } catch (RequestException $requestException) {
+                $this->getLog()->error('Error making request. ' . $requestException->getMessage());
             }
         }
         
         return $result;
+    }
+
+    /**
+     * Replaces all URI/PostData parameters
+     * @param string String to replace {{DATE}}, {{TIME}} and {{COL.xxx}}
+     * @param array $values ColumnValues to use on {{COL.xxx}} parts
+     * @return string
+     */
+    private function replaceParams($string = '', array $values = []) {
+        $string = str_replace('{{DATE}}', date('Y-m-d'), $string);
+        $string = str_replace('%7B%7BDATE%7D%7D', date('Y-m-d'), $string);
+        $string = str_replace('{{TIME}}', date('H:m:s'), $string);
+        $string = str_replace('%7B%7BTIME%7D%7D', date('H:m:s'), $string);
+
+        foreach ($values as $k => $v) {
+            $string = str_replace('{{COL.' . $k . '}}', urlencode($v), $string);
+            $string = str_replace('%7B%7BCOL.' . $k . '%7D%7D', urlencode($v), $string);
+        }
+
+        return $string;
+    }
+
+    /**
+     * Tries to process received Data against the configured DataSet with all Columns
+     *
+     * @param \Xibo\Entity\DataSet $dataSet The RemoteDataset to process
+     * @param \stdClass $results A simple Object with one Property 'entries' which contains all results
+     * @throws InvalidArgumentException
+     */
+    public function processResults(\Xibo\Entity\DataSet $dataSet, \stdClass $results) {
+        if (property_exists($results, 'entries') && is_array($results->entries)) {
+            foreach ($results->entries as $result) {
+                $this->process($dataSet, $result);
+            }
+        }
+    }
+
+    /**
+     * Tries to process received Data against the configured DataSet with all Columns
+     *
+     * @param \Xibo\Entity\DataSet $dataSet The RemoteDataset to process
+     * @param array The JSON received from the remote endpoint
+     * @throws InvalidArgumentException
+     */
+    private function process(\Xibo\Entity\DataSet $dataSet, array $result) {
+        // Load the DataSet fully
+        $dataSet->load();
+
+        // Remote Data has to have the configured DataRoot which has to be an Array
+        $data = $this->getDataRootFromResult($dataSet->dataRoot, $result);
+        if (($data != null) && is_array($data)) {
+            $columns = $dataSet->columns;
+            $entries = [];
+
+            // First process each entry form the remote and try to map the values to the configured columns
+            foreach ($data as $k => $entry) {
+                $this->getLog()->debug('Processing key ' . $k . ' from the remote results');
+                $this->getLog()->debug('Entry is: ' . var_export($entry, true));
+
+                if (is_array($entry) || is_object($entry)) {
+                    $entries[] = $this->processEntry((array) $entry, $columns);
+                } else {
+                    $this->getLog()->error('DataSet ' . $dataSet->dataSet . ' failed: DataRoot ' . $dataSet->dataRoot . ' contains data which is not arrays or objeces.');
+                    break;
+                }
+            }
+
+            // If there is a Consilidation-Function, use the Data against it
+            $entries = $this->consolidateEntries($dataSet, $entries, $columns);
+
+            // Finally add each entry as a new Row in the DataSet
+            foreach ($entries as $entry) {
+                $dataSet->addRow($entry);
+            }
+        } else {
+            throw new InvalidArgumentException(__('DataSet %s misconfigured. DataRoot %s is not an array', $dataSet->dataSet, $dataSet->dataRoot), 'dataRoot');
+        }
+    }
+
+    /**
+     * Process the RemoteResult to get the main DataRoot value which can be stay in a structure as well as the values
+     *
+     * @param String Chuns splitted by a Dot where the main entries are hold
+     * @param array The Value from the remote request
+     * @return array The Data hold in the configured dataRoot
+     */
+    private function getDataRootFromResult($dataRoot, array $result) {
+        if (empty($dataRoot)) {
+            return $result;
+        }
+        $chunks = explode('.', $dataRoot);
+        $entries = $this->getFieldValueFromEntry($chunks, $result);
+        return $entries[1];
+    }
+
+    /**
+     * Process a single Data-Entry form the remote system and map it to the configured Columns
+     *
+     * @param array $entry The Data from the remote system
+     * @param array $dataSetColumns The configured Columns form the current DataSet
+     * @return array The processed $entry as a List of Fields from $columns
+     */
+    private function processEntry(array $entry, array $dataSetColumns) {
+        $result = [];
+
+        foreach ($dataSetColumns as $k => $column) {
+            if (($column->remoteField !== null) && ($column->remoteField !== '')) {
+
+                $this->getLog()->debug('Trying to match dataSetColumn ' . $column->heading . ' with remote field ' . $column->remoteField);
+
+                // The Field may be a Date, timestamp or a real field
+                if ($column->remoteField == '{{DATE}}') {
+                    $value = [0, date('Y-m-d')];
+
+                } else if ($column->remoteField == '{{TIMESTAMP}}') {
+                    $value = [0, time()];
+
+                } else {
+                    $chunks = explode('.', $column->remoteField);
+                    $value = $this->getFieldValueFromEntry($chunks, $entry);
+                }
+
+                $this->getLog()->debug('Resolved value: ' . var_export($value, true));
+
+                // Only add it to the result if we where able to process the field
+                if (($value != null) && ($value[1] != null)) {
+                    switch ($column->dataTypeId) {
+                        case 2:
+                            $result[$column->heading] = $this->getSanitizer()->double($value[1]);
+                            break;
+                        case 3:
+                            // This expects an ISO date
+                            $result[$column->heading] = $this->getSanitizer()->getDate($value[1]);
+                            break;
+                        case 5:
+                            $result[$column->heading] = $this->getSanitizer()->int($value[1]);
+                            break;
+                        default:
+                            $result[$column->heading] = $this->getSanitizer()->string($value[1]);
+                    }
+                }
+            }
+        }
+
+        $this->getLog()->debug('processEntry returning ' . var_export($result, true));
+
+        return $result;
+    }
+
+    /**
+     * Returns the Value of the remote DataEntry based on the remoteField definition splitted into chunks
+     *
+     * This function is recursive, so be sure you remove the first value from chunks and pass it in again
+     *
+     * @param array List of Chunks which interprets the FieldNames in the actual DataEntry
+     * @param array $entry Current DataEntry
+     * @return array of the last FieldName and the corresponding value
+     */
+    private function getFieldValueFromEntry(array $chunks, array $entry) {
+        $value = null;
+        $key = array_shift($chunks);
+
+        $this->getLog()->debug('Looking for ' . $key);
+
+        if (($entry instanceof \stdClass) && property_exists($entry, $key)) {
+            $value = $entry->{$key};
+        } else if (array_key_exists($key, $entry)) {
+            $value = $entry[$key];
+        }
+
+        if (($value != null) && (count($chunks) > 0)) {
+            return $this->getFieldValueFromEntry($chunks, (array) $value);
+        }
+
+        return [ $key, $value ];
+    }
+
+    /**
+     * Consolidates all Entries by the defined Function in the DataSet
+     *
+     * This Method *sums* or *counts* all same entries and returns them.
+     * If no consolidation function is configured, nothing is done here.
+     *
+     * @param \Xibo\Entity\DataSet $dataSet the current DataSet
+     * @param array $entries All processed entries which may be consolidated
+     * @param array $columns The columns form this DataSet
+     * @return \Slim\Helper\Set which contains all Entries to be added to the DataSet
+     */
+    private function consolidateEntries(\Xibo\Entity\DataSet $dataSet, array $entries, array $columns) {
+        if ((count($entries) > 0) && $dataSet->doConsolidate()) {
+            $consolidated = new \Slim\Helper\Set();
+            $field = $dataSet->getConsolidationField();
+
+            // Get the Field-Heading based on the consolidation field
+            foreach ($columns as $k => $column) {
+                if ($column->remoteField == $dataSet->summarizeField) {
+                    $field = $column->heading;
+                    break;
+                }
+            }
+
+            // Check each entry and consolidate the value form the defined field
+            foreach ($entries as $entry) {
+                if (array_key_exists($field, $entry)) {
+                    $key = $field . '-' . $entry[$field];
+                    $existing = $consolidated->get($key);
+
+                    // Create a new one if there is no currently consolidated field for this value
+                    if ($existing == null) {
+                        $existing = $entry;
+                        $existing[$field] = 0;
+                    }
+
+                    // Consolidate: Summarize, Count, Unknown
+                    if ($dataSet->summarize == 'sum') {
+                        $existing[$field] = $existing[$field] + $entry[$field];
+
+                    } else if ($dataSet->summarize == 'count') {
+                        $existing[$field] = $existing[$field] + 1;
+
+                    } else {
+                        // Unknown consolidation type :?
+                        $existing[$field] = 0;
+                    }
+
+                    $consolidated->set($key, $existing);
+                }
+            }
+
+            return $consolidated;
+        }
+        return new \Slim\Helper\Set($entries);
     }
 }

@@ -86,6 +86,91 @@ class DataSet implements \JsonSerializable
      */
     public $isLookup = 0;
 
+    /**
+     * @SWG\Property(description="Flag to indicate whether this DataSet is Remote")
+     * @var int
+     */
+    public $isRemote = 0;
+
+    /**
+     * @SWG\Property(description="Method to fetch the Data, can be GET or POST")
+     * @var string
+     */
+    public $method;
+
+    /**
+     * @SWG\Property(description="URI to call to fetch Data from. Replacements are {{DATE}}, {{TIME}} and, in case this is a sequencial used DataSet, {{COL.NAME}} where NAME is a ColumnName from the underlying DataSet.")
+     * @var string
+     */
+    public $uri;
+
+    /**
+     * @SWG\Property(description="Data to send as POST-Data to the remote host with the same Replacements as in the URI.")
+     * @var string
+     */
+    public $postData;
+
+    /**
+     * @SWG\Property(description="Authentication method, can be none, digest, basic")
+     * @var string
+     */
+    public $authentication;
+
+    /**
+     * @SWG\Property(description="Username to authenticate with")
+     * @var string
+     */
+    public $username;
+
+    /**
+     * @SWG\Property(description="Corresponding password")
+     * @var string
+     */
+    public $password;
+
+    /**
+     * @SWG\Property(description="Time in seconds this DataSet should fetch new Datas from the remote host")
+     * @var int
+     */
+    public $refreshRate;
+
+    /**
+     * @SWG\Property(description="Time in seconds when this Dataset should be cleared. If here is a lower value than in RefreshRate it will be cleared when the data is refreshed")
+     * @var int
+     */
+    public $clearRate;
+
+    /**
+     * @SWG\Property(description="DataSetID of the DataSet which should be fetched and present before the Data from this DataSet are fetched")
+     * @var int
+     */
+    public $runsAfter;
+
+    /**
+     * @SWG\Property(description="Last Synchronisation Timestamp")
+     * @var int
+     */
+    public $lastSync = 0;
+
+    /**
+     * @SWG\Property(description="Root-Element form JSON where the data are stored in")
+     * @var String
+     */
+    public $dataRoot;
+
+    /**
+     * @SWG\Property(description="Optional function to use for summarize or count unique fields in a remote request")
+     * @var String
+     */
+    public $summarize;
+
+    /**
+     * @SWG\Property(description="JSON-Element below the Root-Element on which the consolidation should be applied on")
+     * @var String
+     */
+    public $summarizeField;
+
+    /** @var array Permissions */
     private $permissions = [];
 
     /**
@@ -413,7 +498,54 @@ class DataSet implements \JsonSerializable
     }
 
     /**
+     * Returns a Timestamp for the next Synchronisation process.
+     * @return int Seconds
+     */
+    public function getNextSyncTime() {
+        return $this->lastSync + $this->refreshRate;
+    }
+
+    /**
+     * Returns a Timestamp for the next Clearing process.
+     * @return int Seconds
+     */
+    public function getNextClearTime() {
+        return $this->lastSync + $this->clearRate;
+    }
+
+    /**
+     * Returns if there is a consolidation field and method present or not.
+     * @return boolean
+     */
+    public function doConsolidate() {
+        return ($this->summarizeField != null) && ($this->summarizeField != '')
+            && ($this->summarize != null) && ($this->summarize != '');
+    }
+
+    /**
+     * Returns the last Part of the Fieldname on which the consolidation should be applied on
+     * @return String
+     */
+    public function getConsolidationField() {
+        $pos = strrpos($this->summarizeField, '.');
+        if ($pos !== false) {
+            return substr($this->summarizeField, $pos + 1);
+        }
+        return $this->summarizeField;
+    }
+
+    /**
+     * Tests if this DataSet contains parameters for getting values on the dependant DataSet
+     * @return boolean
+     */
+    public function containsDependantFieldsInRequest() {
+        return strpos($this->postData, '{{COL.') !== false || strpos($this->uri, '{{COL.') !== false;
+    }
+
+    /**
      * Validate
+     * @throws InvalidArgumentException
+     * @throws DuplicateEntityException
      */
     public function validate()
     {
@@ -422,6 +554,12 @@ class DataSet implements \JsonSerializable
 
         if ($this->description != null && !v::string()->length(null, 254)->validate($this->description))
             throw new InvalidArgumentException(__('Description can not be longer than 254 characters'), 'description');
+
+        // If we are a remote dataset do some additional checks
+        if ($this->isRemote === 1) {
+            if (!v::string()->notEmpty()->validate($this->uri))
+                throw new InvalidArgumentException(__('A remote DataSet must have a URI.'), 'uri');
+        }
 
         try {
             $existing = $this->dataSetFactory->getByName($this->dataSet, $this->userId);
@@ -454,6 +592,8 @@ class DataSet implements \JsonSerializable
     /**
      * Save this DataSet
      * @param array $options
+     * @throws InvalidArgumentException
+     * @throws DuplicateEntityException
      */
     public function save($options = [])
     {
@@ -482,6 +622,8 @@ class DataSet implements \JsonSerializable
 
     /**
      * Delete DataSet
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
      */
     public function delete()
     {
@@ -490,6 +632,9 @@ class DataSet implements \JsonSerializable
         if ($this->isLookup)
             throw new ConfigurationException(__('Lookup Tables cannot be deleted'));
 
+        // TODO: Make sure we're not used as a dependent DataSet
+
+        // Make sure we're able to delete
         if ($this->getStore()->exists('
             SELECT widgetId 
               FROM `widgetoption`
@@ -534,16 +679,40 @@ class DataSet implements \JsonSerializable
      */
     private function add()
     {
-        $this->dataSetId = $this->getStore()->insert('
-          INSERT INTO `dataset` (DataSet, Description, UserID, `code`, `isLookup`)
-            VALUES (:dataSet, :description, :userId, :code, :isLookup)
-        ', [
+        $columns = 'DataSet, Description, UserID, `code`, `isLookup`, `isRemote`';
+        $values = ':dataSet, :description, :userId, :code, :isLookup, :isRemote';
+
+        $params = [
             'dataSet' => $this->dataSet,
             'description' => $this->description,
             'userId' => $this->userId,
             'code' => ($this->code == '') ? null : $this->code,
-            'isLookup' => $this->isLookup
-        ]);
+            'isLookup' => $this->isLookup,
+            'isRemote' => $this->isRemote
+        ];
+
+        // Insert the extra columns we expect for a remote DataSet
+        if ($this->isRemote === 1) {
+            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`';
+            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField';
+
+            $params['method'] = $this->method;
+            $params['uri'] = $this->uri;
+            $params['postData'] = $this->postData;
+            $params['authentication'] = $this->authentication;
+            $params['username'] = $this->username;
+            $params['password'] = $this->password;
+            $params['refreshRate'] = $this->refreshRate;
+            $params['clearRate'] = $this->clearRate;
+            $params['runsAfter'] = $this->runsAfter;
+            $params['dataRoot'] = $this->dataRoot;
+            $params['summarize'] = $this->summarize;
+            $params['summarizeField'] = $this->summarizeField;
+            $params['lastSync'] = 0;
+        }
+
+        // Do the insert
+        $this->dataSetId = $this->getStore()->insert('INSERT INTO `dataset` (' . $columns . ') VALUES (' . $values . ')', $params);
 
         // Create the data table for this dataSet
         $this->createTable();
@@ -554,18 +723,40 @@ class DataSet implements \JsonSerializable
      */
     private function edit()
     {
-        $this->getStore()->update('
-          UPDATE dataset SET DataSet = :dataSet, Description = :description, lastDataEdit = :lastDataEdit, `code` = :code, `isLookup` = :isLookup WHERE DataSetID = :dataSetId
-        ', [
+        $sql = 'DataSet = :dataSet, Description = :description, lastDataEdit = :lastDataEdit, `code` = :code, `isLookup` = :isLookup, `isRemote` = :isRemote ';
+        $params = [
             'dataSetId' => $this->dataSetId,
             'dataSet' => $this->dataSet,
             'description' => $this->description,
             'lastDataEdit' => $this->lastDataEdit,
             'code' => $this->code,
-            'isLookup' => $this->isLookup
-        ]);
+            'isLookup' => $this->isLookup,
+            'isRemote' => $this->isRemote,
+        ];
+
+        if ($this->isRemote) {
+            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField';
+
+            $params['method'] = $this->method;
+            $params['uri'] = $this->uri;
+            $params['postData'] = $this->postData;
+            $params['authentication'] = $this->authentication;
+            $params['username'] = $this->username;
+            $params['password'] = $this->password;
+            $params['refreshRate'] = $this->refreshRate;
+            $params['clearRate'] = $this->clearRate;
+            $params['runsAfter'] = $this->runsAfter;
+            $params['dataRoot'] = $this->dataRoot;
+            $params['summarize'] = $this->summarize;
+            $params['summarizeField'] = $this->summarizeField;
+        }
+
+        $this->getStore()->update('UPDATE dataset SET ' . $sql . '  WHERE DataSetID = :dataSetId', $params);
     }
 
+    /**
+     * Create the realised table structure for this DataSet
+     */
     private function createTable()
     {
         // Create the data table for this dataset

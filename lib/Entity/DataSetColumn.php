@@ -146,6 +146,7 @@ class DataSetColumn implements \JsonSerializable
 
     /**
      * Validate
+     * @throws InvalidArgumentException
      */
     public function validate()
     {
@@ -180,7 +181,12 @@ class DataSetColumn implements \JsonSerializable
         }
 
         try {
-            $this->dataSetColumnTypeFactory->getById($this->dataTypeId);
+            $dataSetColumnType = $this->dataSetColumnTypeFactory->getById($this->dataSetColumnTypeId);
+
+            // If we are a remote column, validate we have a field
+            if (strtolower($dataSetColumnType->dataSetColumnType) === 'remote' && empty($this->remoteField))
+                throw new InvalidArgumentException(__('Remote field is required when the column type is set to Remote'), 'remoteField');
+
         } catch (NotFoundException $e) {
             throw new InvalidArgumentException(__('Provided DataSet Column Type doesn\'t exist'), 'dataSetColumnTypeId');
         }
@@ -221,6 +227,7 @@ class DataSetColumn implements \JsonSerializable
     /**
      * Save
      * @param array[Optional] $options
+     * @throws InvalidArgumentException
      */
     public function save($options = [])
     {

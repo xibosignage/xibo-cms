@@ -435,20 +435,6 @@ class State extends Middleware
             );
         });
 
-        $app->container->singleton('\Xibo\Controller\DataSetRemote', function($container) {
-            return new \Xibo\Controller\DataSetRemote(
-                $container->logService,
-                $container->sanitizerService,
-                $container->state,
-                $container->user,
-                $container->helpService,
-                $container->dateService,
-                $container->configService,
-                $container->dataSetFactory,
-                $container->dataSetColumnFactory
-            );
-        });
-
         $app->container->singleton('\Xibo\Controller\DataSetColumn', function($container) {
             return new \Xibo\Controller\DataSetColumn(
                 $container->logService,
@@ -600,7 +586,7 @@ class State extends Middleware
             );
         });
 
-        $app->container->singleton('\Xibo\Controller\/*IconDa*/shboard', function($container) {
+        $app->container->singleton('\Xibo\Controller\IconDashboard', function($container) {
             return new \Xibo\Controller\IconDashboard(
                 $container->logService,
                 $container->sanitizerService,

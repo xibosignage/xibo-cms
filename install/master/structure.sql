@@ -88,33 +88,23 @@ CREATE TABLE IF NOT EXISTS `dataset` (
   `LastDataEdit` int(11) NOT NULL DEFAULT '0',
   `code` varchar(50) DEFAULT NULL,
   `isLookup` tinyint(4) NOT NULL DEFAULT '0',
+  isRemote tinyint default '0' not null,
+  method enum('GET', 'POST') null,
+  uri varchar(250) null,
+  postData text null,
+  authentication enum('none', 'plain', 'basic', 'digest') null,
+  username varchar(100) null,
+  password varchar(250) null,
+  refreshRate int default '86400' null,
+  clearRate int default '0' null,
+  runsAfter int null,
+  dataRoot varchar(250) null,
+  lastSync int default '0' not null,
+  summarize varchar(10) null,
+  summarizeField varchar(250) null,
   PRIMARY KEY (`DataSetID`),
   KEY `UserID` (`UserID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `datasetremote`
---
-
-CREATE TABLE IF NOT EXISTS `datasetremote` (
-  `rdId` bigint(20) NOT NULL AUTO_INCREMENT,
-  `DataSetID` int(11) NOT NULL,
-  `method` ENUM('GET','POST') NOT NULL,
-  `uri` varchar(250) NOT NULL,
-  `postData` TEXT DEFAULT NULL,
-  `authentication` ENUM('none','plain','basic','digest') NOT NULL,
-  `username` varchar(100) DEFAULT NULL,
-  `password` varchar(250) DEFAULT NULL,
-  `refreshRate` int(11) DEFAULT 86400,
-  `clearRate` int(11) DEFAULT 0,
-  `runsAfter` int(11) DEFAULT NULL,
-  `dataRoot` varchar(250) DEFAULT NULL,
-  `lastSync` int(11) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`rdId`),
-  KEY `DataSetID` (`DataSetID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
 -- --------------------------------------------------------
 
@@ -131,6 +121,7 @@ CREATE TABLE IF NOT EXISTS `datasetcolumn` (
   `ListContent` varchar(1000) DEFAULT NULL,
   `ColumnOrder` smallint(6) NOT NULL,
   `Formula` varchar(1000) DEFAULT NULL,
+  `RemoteField` VARCHAR(250) DEFAULT NULL,
   PRIMARY KEY (`DataSetColumnID`),
   KEY `DataSetID` (`DataSetID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
