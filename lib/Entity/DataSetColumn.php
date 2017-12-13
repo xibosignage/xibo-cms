@@ -184,7 +184,7 @@ class DataSetColumn implements \JsonSerializable
             $dataSetColumnType = $this->dataSetColumnTypeFactory->getById($this->dataSetColumnTypeId);
 
             // If we are a remote column, validate we have a field
-            if (strtolower($dataSetColumnType->dataSetColumnType) === 'remote' && empty($this->remoteField))
+            if (strtolower($dataSetColumnType->dataSetColumnType) === 'remote' && ($this->remoteField === '' || $this->remoteField === null))
                 throw new InvalidArgumentException(__('Remote field is required when the column type is set to Remote'), 'remoteField');
 
         } catch (NotFoundException $e) {
