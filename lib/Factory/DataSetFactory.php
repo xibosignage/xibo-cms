@@ -26,6 +26,7 @@ namespace Xibo\Factory;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Xibo\Entity\DataSet;
+use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
@@ -187,6 +188,7 @@ class DataSetFactory extends BaseFactory
                 dataset.`dataRoot`,
                 dataset.`summarize`,
                 dataset.`summarizeField`,
+                dataset.`lastSync`,
             ';
         }
 
@@ -366,6 +368,10 @@ class DataSetFactory extends BaseFactory
      * @return string
      */
     private function replaceParams($string = '', array $values = []) {
+
+        if (empty($string))
+            return $string;
+
         $string = str_replace('{{DATE}}', date('Y-m-d'), $string);
         $string = str_replace('%7B%7BDATE%7D%7D', date('Y-m-d'), $string);
         $string = str_replace('{{TIME}}', date('H:m:s'), $string);
@@ -401,49 +407,63 @@ class DataSetFactory extends BaseFactory
      * @param array The JSON received from the remote endpoint
      * @throws InvalidArgumentException
      */
-    private function process(\Xibo\Entity\DataSet $dataSet, array $result) {
+    private function process(\Xibo\Entity\DataSet $dataSet, $result) {
         // Load the DataSet fully
         $dataSet->load();
 
         // Remote Data has to have the configured DataRoot which has to be an Array
         $data = $this->getDataRootFromResult($dataSet->dataRoot, $result);
-        if (($data != null) && is_array($data)) {
-            $columns = $dataSet->columns;
-            $entries = [];
 
+        $columns = $dataSet->columns;
+        $entries = [];
+
+        // Process the data root according to its type
+        if (is_array($data)) {
             // First process each entry form the remote and try to map the values to the configured columns
             foreach ($data as $k => $entry) {
                 $this->getLog()->debug('Processing key ' . $k . ' from the remote results');
                 $this->getLog()->debug('Entry is: ' . var_export($entry, true));
 
                 if (is_array($entry) || is_object($entry)) {
-                    $entries[] = $this->processEntry((array) $entry, $columns);
+                    $entries[] = $this->processEntry((array)$entry, $columns);
                 } else {
                     $this->getLog()->error('DataSet ' . $dataSet->dataSet . ' failed: DataRoot ' . $dataSet->dataRoot . ' contains data which is not arrays or objeces.');
                     break;
                 }
             }
-
-            // If there is a Consilidation-Function, use the Data against it
-            $entries = $this->consolidateEntries($dataSet, $entries, $columns);
-
-            // Finally add each entry as a new Row in the DataSet
-            foreach ($entries as $entry) {
-                $dataSet->addRow($entry);
-            }
-        } else {
-            throw new InvalidArgumentException(__('DataSet %s misconfigured. DataRoot %s is not an array', $dataSet->dataSet, $dataSet->dataRoot), 'dataRoot');
         }
+        else if (is_object($data)) {
+
+            $this->getLog()->debug('The data at dataroot is an object.');
+            $this->getLog()->debug(var_export($data, true));
+
+            foreach (get_object_vars($data) as $property => $value) {
+                // Treat each property as an index key (flattening the array)
+                $entries[] = $this->processEntry([$property, $value], $columns);
+            }
+
+        } else {
+            throw new InvalidArgumentException(__('DataSet %s misconfigured. DataRoot %s is not an array or object', $dataSet->dataSet, $dataSet->dataRoot), 'dataRoot');
+        }
+
+        // If there is a Consilidation-Function, use the Data against it
+        $entries = $this->consolidateEntries($dataSet, $entries, $columns);
+
+        // Finally add each entry as a new Row in the DataSet
+        foreach ($entries as $entry) {
+            $dataSet->addRow($entry);
+        }
+
     }
 
     /**
      * Process the RemoteResult to get the main DataRoot value which can be stay in a structure as well as the values
      *
      * @param String Chuns splitted by a Dot where the main entries are hold
-     * @param array The Value from the remote request
-     * @return array The Data hold in the configured dataRoot
+     * @param array|\stdClass The Value from the remote request
+     * @return array|\stdClass The Data hold in the configured dataRoot
      */
-    private function getDataRootFromResult($dataRoot, array $result) {
+    private function getDataRootFromResult($dataRoot, $result) {
         if (empty($dataRoot)) {
             return $result;
         }
@@ -456,14 +476,14 @@ class DataSetFactory extends BaseFactory
      * Process a single Data-Entry form the remote system and map it to the configured Columns
      *
      * @param array $entry The Data from the remote system
-     * @param array $dataSetColumns The configured Columns form the current DataSet
+     * @param DataSetColumn[] $dataSetColumns The configured Columns form the current DataSet
      * @return array The processed $entry as a List of Fields from $columns
      */
     private function processEntry(array $entry, array $dataSetColumns) {
         $result = [];
 
         foreach ($dataSetColumns as $k => $column) {
-            if (($column->remoteField !== null) && ($column->remoteField !== '')) {
+            if ($column->dataSetColumnTypeId === 3 && $column->remoteField !== null && $column->remoteField !== '') {
 
                 $this->getLog()->debug('Trying to match dataSetColumn ' . $column->heading . ' with remote field ' . $column->remoteField);
 
@@ -512,10 +532,10 @@ class DataSetFactory extends BaseFactory
      * This function is recursive, so be sure you remove the first value from chunks and pass it in again
      *
      * @param array List of Chunks which interprets the FieldNames in the actual DataEntry
-     * @param array $entry Current DataEntry
+     * @param array|\stdClass $entry Current DataEntry
      * @return array of the last FieldName and the corresponding value
      */
-    private function getFieldValueFromEntry(array $chunks, array $entry) {
+    private function getFieldValueFromEntry(array $chunks, $entry) {
         $value = null;
         $key = array_shift($chunks);
 
