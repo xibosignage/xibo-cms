@@ -306,6 +306,15 @@ function XiboInitialise(scope) {
         todayHighlight: true,
         minuteStep: 10
     });
+    $(scope + ' .monthPicker').datetimepicker({
+        format: "yyyy-mm",
+        autoClose: true,
+        language: language,
+        calendarType: calendarType,
+        minView: 3,
+        startView: 3,
+        todayHighlight: false
+    });
 }
 
 /**
@@ -1026,6 +1035,11 @@ function XiboSubmitResponse(response, form) {
                 // Render
                 XiboGridRender(gridId);
             });
+
+            // Has a next token been provided?
+            if (response.nextToken !== undefined && response.nextToken !== null && response.nextToken !== "") {
+                $(form).find("input[name='token']").val($(response.nextToken).val());
+            }
         }
     }
     else {
@@ -1036,7 +1050,13 @@ function XiboSubmitResponse(response, form) {
         }
         else {
             // Likely just an error that we want to report on
-            SystemMessageInline(response.message, $(form).closest(".modal"));
+            var $target = $(form).closest(".modal");
+
+            if ($target === null || $target === undefined || $target.length <= 0) {
+                SystemMessage(response.message, false);
+            } else {
+                SystemMessageInline(response.message, $target);
+            }
         }
     }
 

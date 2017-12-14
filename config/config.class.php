@@ -23,6 +23,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 class Config
 {
     public static $VERSION_REQUIRED = '5.3.3';
+    public static $VERSION_UNSUPPORTED = '7.0';
 
     private $extensions;
     private $envTested;
@@ -491,7 +492,7 @@ class Config
             $this->envWarning = true;
             $status = 2;
             $advice = __('You probably want to allow larger files to be uploaded than is currently available with your PHP configuration.') . '<br />';
-            $advice .= __('We suggest setting your PHP post_max_size and upload_max_size to at least 128M, and also increasing your max_execution_time to at least 120 seconds.');
+            $advice .= __('We suggest setting your PHP post_max_size and upload_max_filesize to at least 128M, and also increasing your max_execution_time to at least 120 seconds.');
         }
 
         $rows[] = array(
@@ -575,12 +576,13 @@ class Config
     }
 
     /**
-     * Check PHP version > 5
-     * @return
+     * Check PHP version > 5 < 7
+     * @return bool
      */
     function CheckPHP()
     {
-        return (version_compare(phpversion(), Config::$VERSION_REQUIRED) != -1);
+        return (version_compare(phpversion(), Config::$VERSION_REQUIRED) != -1)
+            && (version_compare(phpversion(), Config::$VERSION_UNSUPPORTED) != 1);
     }
 
     /**

@@ -167,7 +167,7 @@ class XMDSSoap4
                     if ($clientType == 'windows') {
                         $displayProfile->config[] = array(
                             'name' => 'DisplayName',
-                            'value' => $display,
+                            'value' => htmlentities($display),
                             'type' => 'string'
                         );
                         $displayProfile->config[] = array(
@@ -179,7 +179,7 @@ class XMDSSoap4
                     else {
                         $displayProfile->config[] = array(
                             'name' => 'displayName',
-                            'value' => $display,
+                            'value' => htmlentities($display),
                             'type' => 'string'
                         );
                         $displayProfile->config[] = array(
@@ -443,7 +443,12 @@ class XMDSSoap4
                     $cdnUrl = Config::GetSetting('CDN_URL');
                     if ($cdnUrl != '') {
                         // Serve a link instead (standard HTTP link)
-                        $file->setAttribute("path", 'http' . ((isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ? 's' : '') . '://' . $cdnUrl . urlencode($saveAsPath));
+                        $file->setAttribute("path", 'http' . (
+                            (
+                                (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ||
+                                (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) == 'https')
+                            ) ? 's' : ''
+                        ) . '://' . $cdnUrl . urlencode($saveAsPath));
                     } else {
                         // Serve a link instead (standard HTTP link)
                         $file->setAttribute("path", $saveAsPath);
@@ -721,8 +726,7 @@ class XMDSSoap4
 
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
-            $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule.eventID, schedule.is_priority, ";
-            $SQL .= "  (SELECT GROUP_CONCAT(DISTINCT StoredAs) FROM media INNER JOIN lklayoutmedia ON lklayoutmedia.MediaID = media.MediaID WHERE lklayoutmedia.LayoutID = layout.LayoutID AND lklayoutmedia.regionID <> 'module' GROUP BY lklayoutmedia.LayoutID) AS Dependents";
+            $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule.eventID, schedule.is_priority ";
             $SQL .= " FROM `campaign` ";
             $SQL .= " INNER JOIN schedule ON schedule.CampaignID = campaign.CampaignID ";
             $SQL .= " INNER JOIN schedule_detail ON schedule_detail.eventID = schedule.eventID ";
@@ -741,14 +745,25 @@ class XMDSSoap4
                     'todt' => $fromFilter
                 ));
 
+            // Get all of the events
+            $events = $sth->fetchAll();
+
+            $dependentStmt = $dbh->prepare('
+                SELECT DISTINCT StoredAs 
+                    FROM `media` 
+                      INNER JOIN `lklayoutmedia` 
+                      ON lklayoutmedia.MediaID = media.MediaID 
+                   WHERE lklayoutmedia.LayoutID = :layoutId 
+                    AND lklayoutmedia.regionID <> \'module\'
+            ');
+
             // We must have some results in here by this point
-            foreach ($sth->fetchAll() as $row) {
+            foreach ($events as $row) {
                 $layoutId = $row[0];
                 $fromDt = date('Y-m-d H:i:s', $row[1]);
                 $toDt = date('Y-m-d H:i:s', $row[2]);
                 $scheduleId = $row[3];
                 $is_priority = Kit::ValidateParam($row[4], _INT);
-                $dependents = Kit::ValidateParam($row[5], _STRING);
 
                 // Add a layout node to the schedule
                 $layout = $scheduleXml->createElement("layout");
@@ -758,7 +773,16 @@ class XMDSSoap4
                 $layout->setAttribute("todt", $toDt);
                 $layout->setAttribute("scheduleid", $scheduleId);
                 $layout->setAttribute("priority", $is_priority);
-                $layout->setAttribute("dependents", $dependents);
+
+                // Get the dependents
+                $dependentStmt->execute(array('layoutId' => $layoutId));
+
+                $dependents = array();
+                foreach ($dependentStmt->fetchAll(PDO::FETCH_ASSOC) as $dependent) {
+                    $dependents[] = $dependent;
+                }
+
+                $layout->setAttribute("dependents", implode(',', $dependents));
 
                 $layoutElements->appendChild($layout);
             }
@@ -766,6 +790,24 @@ class XMDSSoap4
         catch (Exception $e) {
             Debug::Error('Error getting a list of layouts for the schedule. ' . $e->getMessage(), $this->displayId);
             return new SoapFault('Sender', 'Unable to get A list of layouts for the schedule');
+        }
+
+        // Get dependents for the default layout
+        $sth = $dbh->prepare('
+          SELECT DISTINCT StoredAs 
+            FROM media 
+              INNER JOIN lklayoutmedia 
+              ON lklayoutmedia.MediaID = media.MediaID 
+           WHERE lklayoutmedia.LayoutID = :layoutId 
+            AND lklayoutmedia.regionID <> \'module\'
+        ');
+
+        $sth->execute(array('layoutId' => $this->defaultLayoutId));
+
+        $defaultDependents = array();
+
+        foreach ($sth->fetchAll(PDO::FETCH_ASSOC) as $defaultDependent) {
+            $defaultDependents[] = $defaultDependent['StoredAs'];
         }
 
         // Are we interleaving the default?
@@ -778,6 +820,7 @@ class XMDSSoap4
             $layout->setAttribute("todt", '2030-01-19 00:00:00');
             $layout->setAttribute("scheduleid", 0);
             $layout->setAttribute("priority", 0);
+            $layout->setAttribute("dependents", (count($defaultDependents) > 0) ? implode(',', $defaultDependents) : '');
 
             $layoutElements->appendChild($layout);
         }
@@ -785,6 +828,7 @@ class XMDSSoap4
         // Add on the default layout node
         $default = $scheduleXml->createElement("default");
         $default->setAttribute("file", $this->defaultLayoutId);
+        $default->setAttribute("dependents", (count($defaultDependents) > 0) ? implode(',', $defaultDependents) : '');
         $layoutElements->appendChild($default);
 
         // Add on a list of global dependants
