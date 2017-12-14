@@ -779,7 +779,7 @@ class XMDSSoap4
 
                 $dependents = array();
                 foreach ($dependentStmt->fetchAll(PDO::FETCH_ASSOC) as $dependent) {
-                    $dependents[] = $dependent;
+                    $dependents[] = $dependent['StoredAs'];
                 }
 
                 $layout->setAttribute("dependents", implode(',', $dependents));
