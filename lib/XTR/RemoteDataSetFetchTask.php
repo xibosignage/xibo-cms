@@ -24,6 +24,7 @@
 namespace Xibo\XTR;
 
 use Xibo\Entity\DataSet;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetFactory;
 
 /**
@@ -69,42 +70,51 @@ class RemoteDataSetFetchTask implements TaskInterface
         
         // As long as we have not-procesed IDs left
         while (count($dataSets) > 0) {
-            $this->log->debug('Build Dependant-List for ' . (($dataSet === null) ? '' : $dataSet->dataSet));
-            
-            // List of Dependant Datasets to be processed in this loop
-            // this adds to the dataSets list by reference
-            $processing = $this->buildDependantList($dataSets);
-            foreach ($processing as $dataSet) {
-                $this->log->debug('Comparing run time ' . $runTime . ' to next sync time ' . $dataSet->getNextSyncTime());
 
-                if ($runTime >= $dataSet->getNextSyncTime()) {
+            try {
 
-                    // Truncate only if we also fetch new Data
-                    if ($runTime >= $dataSet->getNextClearTime()) {
-                        $this->log->debug('Truncate ' . $dataSet->dataSet);
-                        $dataSet->deleteData();
+                $this->log->debug('Build Dependant-List for ' . (($dataSet === null) ? '' : $dataSet->dataSet));
+
+                // List of Dependant Datasets to be processed in this loop
+                // this adds to the dataSets list by reference
+                $processing = $this->buildDependantList($dataSets);
+                foreach ($processing as $dataSet) {
+                    $this->log->debug('Comparing run time ' . $runTime . ' to next sync time ' . $dataSet->getNextSyncTime());
+
+                    if ($runTime >= $dataSet->getNextSyncTime()) {
+
+                        // Truncate only if we also fetch new Data
+                        if ($runTime >= $dataSet->getNextClearTime()) {
+                            $this->log->debug('Truncate ' . $dataSet->dataSet);
+                            $dataSet->deleteData();
+                        }
+
+                        // Getting the dependant DataSet to process the current DataSet on
+                        $dependant = null;
+                        if ($dataSet->runsAfter != $dataSet->dataSetId) {
+                            $dependant = $dataSetFactory->getById($dataSet->dataSetId);
+                        }
+
+                        $this->log->debug('Fetch and process ' . $dataSet->dataSet);
+                        $results = $dataSetFactory->callRemoteService($dataSet, $dependant);
+                        $dataSetFactory->processResults($dataSet, $results);
+
+                        // notify here
+                        $dataSet->saveLastSync($runTime);
+                        $dataSet->notify();
+                    } else {
+                        $this->log->debug('Sync not required for ' . $dataSet->dataSetId);
                     }
-                    
-                    // Getting the dependant DataSet to process the current DataSet on
-                    $dependant = null;
-                    if ($dataSet->runsAfter != $dataSet->dataSetId) {
-                        $dependant = $dataSetFactory->getById($dataSet->dataSetId);
-                    }
-                    
-                    $this->log->debug('Fetch and process ' . $dataSet->dataSet);
-                    $results = $dataSetFactory->callRemoteService($dataSet, $dependant);
-                    $dataSetFactory->processResults($dataSet, $results);
-
-                    // notify here
-                    $dataSet->saveLastSync($runTime);
-                    $dataSet->notify();
-                } else {
-                    $this->log->debug('Sync not required for ' . $dataSet->dataSetId);
                 }
+
+            } catch (XiboException $e) {
+                $this->appendRunMessage(__('Error syncing DataSet %s', $dataSet->dataSet));
+                $this->log->error('Error syncing DataSet ' . $dataSet->dataSetId . '. E = ' . $e->getMessage());
+                $this->log->debug($e->getTraceAsString());
             }
         }
-        
-        $this->runMessage .= __('Done') . PHP_EOL . PHP_EOL;
+
+        $this->appendRunMessage(__('Done'));
     }
     
     /**
