@@ -83,12 +83,6 @@ class RemoteDataSetFetchTask implements TaskInterface
 
                     if ($runTime >= $dataSet->getNextSyncTime()) {
 
-                        // Truncate only if we also fetch new Data
-                        if ($runTime >= $dataSet->getNextClearTime()) {
-                            $this->log->debug('Truncate ' . $dataSet->dataSet);
-                            $dataSet->deleteData();
-                        }
-
                         // Getting the dependant DataSet to process the current DataSet on
                         $dependant = null;
                         if ($dataSet->runsAfter != $dataSet->dataSetId) {
@@ -97,11 +91,26 @@ class RemoteDataSetFetchTask implements TaskInterface
 
                         $this->log->debug('Fetch and process ' . $dataSet->dataSet);
                         $results = $dataSetFactory->callRemoteService($dataSet, $dependant);
-                        $dataSetFactory->processResults($dataSet, $results);
 
-                        // notify here
+                        if ($results->number > 0) {
+
+                            // Truncate only if we also fetch new Data
+                            if ($runTime >= $dataSet->getNextClearTime()) {
+                                $this->log->debug('Truncate ' . $dataSet->dataSet);
+                                $dataSet->deleteData();
+                            }
+
+                            $dataSetFactory->processResults($dataSet, $results);
+
+                            // notify here
+                            $dataSet->notify();
+
+                        } else {
+                            $this->appendRunMessage(__('No results for %s', $dataSet->dataSet));
+                        }
+
                         $dataSet->saveLastSync($runTime);
-                        $dataSet->notify();
+
                     } else {
                         $this->log->debug('Sync not required for ' . $dataSet->dataSetId);
                     }
