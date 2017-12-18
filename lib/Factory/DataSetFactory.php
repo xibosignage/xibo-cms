@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\InvalidArgumentException;
@@ -43,6 +44,9 @@ class DataSetFactory extends BaseFactory
     /** @var  ConfigServiceInterface */
     private $config;
 
+    /** @var PoolInterface */
+    private $pool;
+
     /** @var  DataSetColumnFactory */
     private $dataSetColumnFactory;
 
@@ -60,15 +64,17 @@ class DataSetFactory extends BaseFactory
      * @param \Xibo\Entity\User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
+     * @param PoolInterface $pool
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param PermissionFactory $permissionFactory
      * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $dataSetColumnFactory, $permissionFactory, $displayFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool, $dataSetColumnFactory, $permissionFactory, $displayFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
         $this->config = $config;
+        $this->pool = $pool;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->permissionFactory = $permissionFactory;
         $this->displayFactory = $displayFactory;
@@ -92,6 +98,7 @@ class DataSetFactory extends BaseFactory
             $this->getLog(),
             $this->getSanitizer(),
             $this->config,
+            $this->pool,
             $this,
             $this->dataSetColumnFactory,
             $this->permissionFactory,
@@ -296,11 +303,15 @@ class DataSetFactory extends BaseFactory
      * In case of an Error, null is returned instead.
      * @param \Xibo\Entity\DataSet $dataSet The Dataset to get Data for
      * @param \Xibo\Entity\DataSet|null $dependant The Dataset $dataSet depends on
+     * @throws InvalidArgumentException
      * @return \stdClass{entries:[],number:int}
      */
     public function callRemoteService(DataSet $dataSet, DataSet $dependant = null)
     {
         $this->getLog()->debug('Calling remote service for DataSet: ' . $dataSet->dataSet . ' and URL ' . $dataSet->uri);
+
+        // Record our max memory
+        $maxMemory = $this->config->getMemoryLimitBytes() / 2;
 
         // Guzzle for this and add proxy support.
         $client = new Client($this->config->getGuzzleProxy());
@@ -346,6 +357,14 @@ class DataSetFactory extends BaseFactory
             $this->getLog()->debug('Making request to ' . $resolvedUri . ' with params: ' . var_export($requestParams, true));
 
             try {
+                // Make a HEAD request to the URI and see if we are able to process this.
+                if ($dataSet->method === 'GET') {
+                    $request = $client->head($resolvedUri, $requestParams);
+
+                    if ($request->getHeader('Content-Length') > $maxMemory)
+                        throw new InvalidArgumentException(__('The request is too large to fit inside the configured memory limit. %d', $maxMemory), 'contentLength');
+                }
+
                 $request = $client->request($dataSet->method, $resolvedUri, $requestParams);
 
                 // TODO: we should probably do some checking to ensure we have JSON back
@@ -355,6 +374,10 @@ class DataSetFactory extends BaseFactory
 
             } catch (RequestException $requestException) {
                 $this->getLog()->error('Error making request. ' . $requestException->getMessage());
+
+                // No point in carrying on through this stack of requests, dependent or original data will be
+                // missing
+                throw new InvalidArgumentException(__('Unable to get Data for %s because %s.', $dataSet->dataSet, $requestException->getMessage()), 'dataSetId');
             }
         }
         

@@ -9,6 +9,7 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\DuplicateEntityException;
 use Xibo\Exception\InvalidArgumentException;
@@ -189,6 +190,9 @@ class DataSet implements \JsonSerializable
     /** @var  ConfigServiceInterface */
     private $config;
 
+    /** @var PoolInterface */
+    private $pool;
+
     /** @var  DataSetFactory */
     private $dataSetFactory;
 
@@ -207,16 +211,18 @@ class DataSet implements \JsonSerializable
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizer
      * @param ConfigServiceInterface $config
+     * @param PoolInterface $pool
      * @param DataSetFactory $dataSetFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param PermissionFactory $permissionFactory
      * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log, $sanitizer, $config, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory)
+    public function __construct($store, $log, $sanitizer, $config, $pool, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->sanitizer = $sanitizer;
         $this->config = $config;
+        $this->pool = $pool;
         $this->dataSetFactory = $dataSetFactory;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->permissionFactory = $permissionFactory;
@@ -342,9 +348,12 @@ class DataSet implements \JsonSerializable
      * @param array $filterBy
      * @param array $options
      * @return array
+     * @throws NotFoundException
      */
     public function getData($filterBy = [], $options = [])
     {
+        $this->touchLastAccessed();
+
         $start = $this->sanitizer->getInt('start', 0, $filterBy);
         $size = $this->sanitizer->getInt('size', 0, $filterBy);
         $filter = $this->sanitizer->getParam('filter', $filterBy);
@@ -616,6 +625,9 @@ class DataSet implements \JsonSerializable
             }
         }
 
+        // We've been touched
+        $this->touchLastAccessed();
+
         // Notify Displays?
         $this->notify();
     }
@@ -634,6 +646,15 @@ class DataSet implements \JsonSerializable
         ]);
 
         return $this;
+    }
+
+    private function touchLastAccessed()
+    {
+        // Touch this dataSet
+        $dataSetCache = $this->pool->getItem('/dataset/accessed/' . $this->dataSetId);
+        $dataSetCache->set('true');
+        $dataSetCache->expiresAfter(intval($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD')) * 1.5);
+        $this->pool->saveDeferred($dataSetCache);
     }
 
     /**

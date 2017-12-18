@@ -637,6 +637,15 @@ class Soap
                                     $dataSetId = $widget->getOption('dataSetId');
                                     $dataSet = $this->dataSetFactory->getById($dataSetId);
                                     $widgetModifiedDt = $dataSet->lastDataEdit;
+
+                                    // Remote datasets are kept "active" by required files
+                                    if ($dataSet->isRemote) {
+                                        // Touch this dataSet
+                                        $dataSetCache = $this->pool->getItem('/dataset/accessed/' . $dataSet->dataSetId);
+                                        $dataSetCache->set('true');
+                                        $dataSetCache->expiresAfter($rfLookAhead * 1.5);
+                                        $this->pool->saveDeferred($dataSetCache);
+                                    }
                                 }
                                 catch (NotFoundException $e) {
                                     // Widget doesn't have a dataSet associated to it

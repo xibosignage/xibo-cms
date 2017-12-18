@@ -23,6 +23,7 @@
 
 namespace Xibo\XTR;
 
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetFactory;
@@ -62,6 +63,9 @@ class RemoteDataSetFetchTask implements TaskInterface
         /** @var DataSetFactory $dataSetFactory */
         $dataSetFactory = $this->app->container->get('dataSetFactory');
 
+        /** @var PoolInterface $pool */
+        $pool = $this->app->container->get('pool');
+
         /** @var DataSet $dataSet */
         $dataSet = null;
 
@@ -73,12 +77,21 @@ class RemoteDataSetFetchTask implements TaskInterface
 
             try {
 
+                // Has this dataSet been accessed recently?
+                $cache = $pool->getItem('/dataset/accessed/' . $dataSet->dataSetId);
+                if ($cache->isMiss()) {
+                    // Skipping dataSet due to it not being accessed recently
+                    $this->log->info('Skipping dataSet ' . $dataSet->dataSetId . ' due to it not being accessed recently');
+                    continue;
+                }
+
                 $this->log->debug('Build Dependant-List for ' . (($dataSet === null) ? '' : $dataSet->dataSet));
 
                 // List of Dependant Datasets to be processed in this loop
                 // this adds to the dataSets list by reference
                 $processing = $this->buildDependantList($dataSets);
                 foreach ($processing as $dataSet) {
+
                     $this->log->debug('Comparing run time ' . $runTime . ' to next sync time ' . $dataSet->getNextSyncTime());
 
                     if ($runTime >= $dataSet->getNextSyncTime()) {
@@ -90,6 +103,7 @@ class RemoteDataSetFetchTask implements TaskInterface
                         }
 
                         $this->log->debug('Fetch and process ' . $dataSet->dataSet);
+
                         $results = $dataSetFactory->callRemoteService($dataSet, $dependant);
 
                         if ($results->number > 0) {
@@ -120,6 +134,11 @@ class RemoteDataSetFetchTask implements TaskInterface
                 $this->appendRunMessage(__('Error syncing DataSet %s', $dataSet->dataSet));
                 $this->log->error('Error syncing DataSet ' . $dataSet->dataSetId . '. E = ' . $e->getMessage());
                 $this->log->debug($e->getTraceAsString());
+
+                // Send a notification to the dataSet owner, informing them of the failure.
+                $notification = $this->userNotificationFactory->create(__('Remote DataSet %s failed to synchronise', $dataSet->dataSet), 'The error is: ' . $e->getMessage());
+                $notification->userId = $dataSet->userId;
+                $notification->save();
             }
         }
 
@@ -127,28 +146,31 @@ class RemoteDataSetFetchTask implements TaskInterface
     }
     
     /**
-     * Builds a List of \Xibo\Entity\DataSetRemote which depends on each other. The resulting list has to be processed like returned.
-     * @param array &$dataSets Reference to an Array which holds all not yet processed DataSets
-     * @return array Ordered list of \Xibo\Entity\DataSetRemote to process
+     * Builds a List of DataSets which depends on each other. The resulting list has to be processed like returned.
+     * @param DataSet[] &$dataSets Reference to an Array which holds all not yet processed DataSets
+     * @return DataSet[] Ordered list of DataSets to process
      */
     private function buildDependantList(array &$dataSets)
     {
+        // Pop the first element from the beginning of the list
         $processing = [ array_shift($dataSets) ];
         $last = 0;
         
         // Indicator to break the while loop if no matching dependant DataSet is found
-        $found = true;
+        $noMatchingDependents = true;
 
         // As long as the current processing DataSet depends on an other, get that one and process it before
-        while ($found && $this->isDependantIsSet($processing[$last])) {
+        while ($noMatchingDependents && $this->isDependantIsSet($processing[$last])) {
+            // We have a dependent set, if it is a remote dataset and is in our original list of datasets to process
+            // then we should search the list and remove it as we will process it as part of this pass
             foreach ($dataSets as $k => $dataSet) {
-                $found = false;
+                $noMatchingDependents = false;
                 
                 // If we found the dependant DataSet, add it to the Processing list and remove it from the original so we not process it multiple times
                 if ($dataSet->dataSetId == $processing[$last]->runsAfter) {
                     $processing[] = $dataSet;
                     $last++;
-                    $found = true;
+                    $noMatchingDependents = true;
                     unset($dataSets[$k]);
                     break;
                 }
