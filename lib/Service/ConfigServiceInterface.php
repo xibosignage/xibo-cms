@@ -141,4 +141,10 @@ interface ConfigServiceInterface
      * @return string
      */
     public function getCacheNamespace();
+
+    /**
+     * Get the memory limit in bytes
+     * @return int
+     */
+    public function getMemoryLimitBytes();
 }

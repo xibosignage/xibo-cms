@@ -9,6 +9,7 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\DuplicateEntityException;
 use Xibo\Exception\InvalidArgumentException;
@@ -189,6 +190,9 @@ class DataSet implements \JsonSerializable
     /** @var  ConfigServiceInterface */
     private $config;
 
+    /** @var PoolInterface */
+    private $pool;
+
     /** @var  DataSetFactory */
     private $dataSetFactory;
 
@@ -207,16 +211,18 @@ class DataSet implements \JsonSerializable
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizer
      * @param ConfigServiceInterface $config
+     * @param PoolInterface $pool
      * @param DataSetFactory $dataSetFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param PermissionFactory $permissionFactory
      * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log, $sanitizer, $config, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory)
+    public function __construct($store, $log, $sanitizer, $config, $pool, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->sanitizer = $sanitizer;
         $this->config = $config;
+        $this->pool = $pool;
         $this->dataSetFactory = $dataSetFactory;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->permissionFactory = $permissionFactory;
@@ -342,9 +348,12 @@ class DataSet implements \JsonSerializable
      * @param array $filterBy
      * @param array $options
      * @return array
+     * @throws NotFoundException
      */
     public function getData($filterBy = [], $options = [])
     {
+        $this->touchLastAccessed();
+
         $start = $this->sanitizer->getInt('start', 0, $filterBy);
         $size = $this->sanitizer->getInt('size', 0, $filterBy);
         $filter = $this->sanitizer->getParam('filter', $filterBy);
@@ -501,15 +510,25 @@ class DataSet implements \JsonSerializable
      * Returns a Timestamp for the next Synchronisation process.
      * @return int Seconds
      */
-    public function getNextSyncTime() {
+    public function getNextSyncTime()
+    {
         return $this->lastSync + $this->refreshRate;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTruncateEnabled()
+    {
+        return $this->clearRate === 0;
     }
 
     /**
      * Returns a Timestamp for the next Clearing process.
      * @return int Seconds
      */
-    public function getNextClearTime() {
+    public function getNextClearTime()
+    {
         return $this->lastSync + $this->clearRate;
     }
 
@@ -517,7 +536,8 @@ class DataSet implements \JsonSerializable
      * Returns if there is a consolidation field and method present or not.
      * @return boolean
      */
-    public function doConsolidate() {
+    public function doConsolidate()
+    {
         return ($this->summarizeField != null) && ($this->summarizeField != '')
             && ($this->summarize != null) && ($this->summarize != '');
     }
@@ -526,7 +546,8 @@ class DataSet implements \JsonSerializable
      * Returns the last Part of the Fieldname on which the consolidation should be applied on
      * @return String
      */
-    public function getConsolidationField() {
+    public function getConsolidationField()
+    {
         $pos = strrpos($this->summarizeField, '.');
         if ($pos !== false) {
             return substr($this->summarizeField, $pos + 1);
@@ -538,7 +559,8 @@ class DataSet implements \JsonSerializable
      * Tests if this DataSet contains parameters for getting values on the dependant DataSet
      * @return boolean
      */
-    public function containsDependantFieldsInRequest() {
+    public function containsDependantFieldsInRequest()
+    {
         return strpos($this->postData, '{{COL.') !== false || strpos($this->uri, '{{COL.') !== false;
     }
 
@@ -616,6 +638,9 @@ class DataSet implements \JsonSerializable
             }
         }
 
+        // We've been touched
+        $this->touchLastAccessed();
+
         // Notify Displays?
         $this->notify();
     }
@@ -634,6 +659,15 @@ class DataSet implements \JsonSerializable
         ]);
 
         return $this;
+    }
+
+    private function touchLastAccessed()
+    {
+        // Touch this dataSet
+        $dataSetCache = $this->pool->getItem('/dataset/accessed/' . $this->dataSetId);
+        $dataSetCache->set('true');
+        $dataSetCache->expiresAfter(intval($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD')) * 1.5);
+        $this->pool->saveDeferred($dataSetCache);
     }
 
     /**
@@ -751,7 +785,7 @@ class DataSet implements \JsonSerializable
         ];
 
         if ($this->isRemote) {
-            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField';
+            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField ';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;

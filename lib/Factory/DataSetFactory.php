@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\InvalidArgumentException;
@@ -43,6 +44,9 @@ class DataSetFactory extends BaseFactory
     /** @var  ConfigServiceInterface */
     private $config;
 
+    /** @var PoolInterface */
+    private $pool;
+
     /** @var  DataSetColumnFactory */
     private $dataSetColumnFactory;
 
@@ -60,15 +64,17 @@ class DataSetFactory extends BaseFactory
      * @param \Xibo\Entity\User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
+     * @param PoolInterface $pool
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param PermissionFactory $permissionFactory
      * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $dataSetColumnFactory, $permissionFactory, $displayFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool, $dataSetColumnFactory, $permissionFactory, $displayFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
         $this->config = $config;
+        $this->pool = $pool;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->permissionFactory = $permissionFactory;
         $this->displayFactory = $displayFactory;
@@ -92,6 +98,7 @@ class DataSetFactory extends BaseFactory
             $this->getLog(),
             $this->getSanitizer(),
             $this->config,
+            $this->pool,
             $this,
             $this->dataSetColumnFactory,
             $this->permissionFactory,
@@ -296,11 +303,16 @@ class DataSetFactory extends BaseFactory
      * In case of an Error, null is returned instead.
      * @param \Xibo\Entity\DataSet $dataSet The Dataset to get Data for
      * @param \Xibo\Entity\DataSet|null $dependant The Dataset $dataSet depends on
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @return \stdClass{entries:[],number:int}
      */
     public function callRemoteService(DataSet $dataSet, DataSet $dependant = null)
     {
         $this->getLog()->debug('Calling remote service for DataSet: ' . $dataSet->dataSet . ' and URL ' . $dataSet->uri);
+
+        // Record our max memory
+        $maxMemory = $this->config->getMemoryLimitBytes() / 2;
 
         // Guzzle for this and add proxy support.
         $client = new Client($this->config->getGuzzleProxy());
@@ -310,7 +322,7 @@ class DataSetFactory extends BaseFactory
         $result->number = 0;
         
         // Getting all dependant values if needed
-        // just an empty array if no fields are used in the URI or PostData
+        // just an empty array if we don't have a dependent
         $values = [
             []
         ];
@@ -346,15 +358,75 @@ class DataSetFactory extends BaseFactory
             $this->getLog()->debug('Making request to ' . $resolvedUri . ' with params: ' . var_export($requestParams, true));
 
             try {
+                // Make a HEAD request to the URI and see if we are able to process this.
+                if ($dataSet->method === 'GET') {
+                    $request = $client->head($resolvedUri, $requestParams);
+
+                    $contentLength = $request->getHeader('Content-Length');
+                    if ($maxMemory > 0 && count($contentLength) > 0 && $contentLength[0] > $maxMemory)
+                        throw new InvalidArgumentException(__('The request %d is too large to fit inside the configured memory limit. %d', $contentLength[0], $maxMemory), 'contentLength');
+                }
+
                 $request = $client->request($dataSet->method, $resolvedUri, $requestParams);
 
-                // TODO: we should probably do some checking to ensure we have JSON back
+                // Check the cache control situation
+                // recache if necessary
+                $cacheControlKey = $this->pool->getItem('/dataset/cache/' . md5($resolvedUri . json_encode($requestParams)));
+                $cacheControlKeyValue = ($cacheControlKey->isMiss()) ? '' : $cacheControlKey->get();
 
+                $this->getLog()->debug('Cache Control Key is ' . $cacheControlKeyValue);
+
+                $etags = $request->getHeader('E-Tag');
+                $lastModifieds = $request->getHeader('Last-Modified');
+
+                if (count($etags) > 0) {
+                    // Compare the etag with the cache key and see if they are the same, if they are
+                    // then we stop processing this data set
+                    if ($cacheControlKeyValue === $etags[0]) {
+                        $this->getLog()->debug('Skipping due to eTag');
+                        continue;
+                    }
+
+                    $cacheControlKeyValue = $etags[0];
+
+                } else if (count($lastModifieds) > 0) {
+                    if ($cacheControlKeyValue === $lastModifieds[0]) {
+                        $this->getLog()->debug('Skipping due to Last-Modified');
+                        continue;
+                    }
+
+                    $cacheControlKeyValue = $lastModifieds[0];
+
+                } else {
+                    // Request doesn't have any cache control of its own
+                    // use the md5
+                    $md5 = md5($request->getBody());
+
+                    if ($cacheControlKeyValue === $md5) {
+                        $this->getLog()->debug('Skipping due to MD5');
+                        continue;
+                    }
+
+                    $cacheControlKeyValue = $md5;
+                }
+
+                $this->getLog()->debug('Cache Control Key is now ' . $cacheControlKeyValue);
+
+                // Store the cache key
+                $cacheControlKey->set($cacheControlKeyValue);
+                $cacheControlKey->expiresAfter(86400 * 365);
+                $this->pool->saveDeferred($cacheControlKey);
+
+                // TODO: we should probably do some checking to ensure we have JSON back
                 $result->entries[] = json_decode($request->getBody());
                 $result->number = $result->number + 1;
 
             } catch (RequestException $requestException) {
                 $this->getLog()->error('Error making request. ' . $requestException->getMessage());
+
+                // No point in carrying on through this stack of requests, dependent or original data will be
+                // missing
+                throw new InvalidArgumentException(__('Unable to get Data for %s because %s.', $dataSet->dataSet, $requestException->getMessage()), 'dataSetId');
             }
         }
         
@@ -435,7 +507,6 @@ class DataSetFactory extends BaseFactory
         else if (is_object($data)) {
 
             $this->getLog()->debug('The data at dataroot is an object.');
-            $this->getLog()->debug(var_export($data, true));
 
             foreach (get_object_vars($data) as $property => $value) {
                 // Treat each property as an index key (flattening the array)
