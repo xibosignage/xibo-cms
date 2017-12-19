@@ -510,15 +510,25 @@ class DataSet implements \JsonSerializable
      * Returns a Timestamp for the next Synchronisation process.
      * @return int Seconds
      */
-    public function getNextSyncTime() {
+    public function getNextSyncTime()
+    {
         return $this->lastSync + $this->refreshRate;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTruncateEnabled()
+    {
+        return $this->clearRate === 0;
     }
 
     /**
      * Returns a Timestamp for the next Clearing process.
      * @return int Seconds
      */
-    public function getNextClearTime() {
+    public function getNextClearTime()
+    {
         return $this->lastSync + $this->clearRate;
     }
 
@@ -526,7 +536,8 @@ class DataSet implements \JsonSerializable
      * Returns if there is a consolidation field and method present or not.
      * @return boolean
      */
-    public function doConsolidate() {
+    public function doConsolidate()
+    {
         return ($this->summarizeField != null) && ($this->summarizeField != '')
             && ($this->summarize != null) && ($this->summarize != '');
     }
@@ -535,7 +546,8 @@ class DataSet implements \JsonSerializable
      * Returns the last Part of the Fieldname on which the consolidation should be applied on
      * @return String
      */
-    public function getConsolidationField() {
+    public function getConsolidationField()
+    {
         $pos = strrpos($this->summarizeField, '.');
         if ($pos !== false) {
             return substr($this->summarizeField, $pos + 1);
@@ -547,7 +559,8 @@ class DataSet implements \JsonSerializable
      * Tests if this DataSet contains parameters for getting values on the dependant DataSet
      * @return boolean
      */
-    public function containsDependantFieldsInRequest() {
+    public function containsDependantFieldsInRequest()
+    {
         return strpos($this->postData, '{{COL.') !== false || strpos($this->uri, '{{COL.') !== false;
     }
 
@@ -772,7 +785,7 @@ class DataSet implements \JsonSerializable
         ];
 
         if ($this->isRemote) {
-            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField';
+            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField ';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;

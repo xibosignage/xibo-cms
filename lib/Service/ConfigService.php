@@ -1099,8 +1099,6 @@ class ConfigService implements ConfigServiceInterface
      */
     public function getMemoryLimitBytes()
     {
-        return (int)preg_replace_callback('/(\-?\d+)(.?)/', function ($m) {
-            return $m[1] * pow(1024, strpos('BKMG', $m[2]));
-        }, strtoupper(ini_get('memory_limit')));
+        return intval(str_replace(array('G', 'M', 'K'), array('000000000', '000000', '000'), ini_get('memory_limit')));
     }
 }
