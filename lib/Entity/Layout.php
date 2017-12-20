@@ -888,7 +888,7 @@ class Layout implements \JsonSerializable
                         // The calculated duration is the provided one
                         $widget->calculatedDuration = $widgetDuration;
 
-                    } else if (!$layoutHasRegionControllingDuration || $countWidgets > 1 || $regionLoop == 1) {
+                    } else if (!$layoutHasRegionControllingDuration || $countWidgets > 1 || $regionLoop == 1 || $widget->type === 'video') {
                         // No specified duration, but we've detected that we need to use the default duration
                         // Edge case being video - we must ensure that the default duration for video is always 0.
                         $widgetDuration = $module->getModule()->defaultDuration;
