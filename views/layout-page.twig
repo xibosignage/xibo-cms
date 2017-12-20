@@ -144,7 +144,10 @@
                         "render": {"_": "thumbnail", "display": "thumbnail", "sort": "layoutId"}
                     },
                     {"data": "owner"},
-                    {"data": "groupsWithPermissions"},
+                    {
+                        "data": "groupsWithPermissions",
+                        "render": dataTableCreatePermissions
+                    },
                     {
                         "name": "status",
                         "data": function (data, type) {

@@ -546,6 +546,34 @@ function dataTableCreateTags(data, type) {
 }
 
 /**
+ * DataTable Create permissions
+ * @param data
+ * @returns {*}
+ */
+function dataTableCreatePermissions(data, type) {
+
+    if (type !== "display")
+        return data;
+
+    var returnData = '';
+
+    if(typeof data != undefined && data != null ) {
+        var arrayOfTags = data.split(',');
+
+        returnData += '<div class="permissionsDiv">';
+
+        for (var i = 0; i < arrayOfTags.length; i++) {
+            if(arrayOfTags[i] != '')
+                returnData += '<li class="badge">' + arrayOfTags[i] + '</span></li>'
+        }
+
+        returnData += '</div>';
+    }
+
+    return returnData;
+}
+
+/**
  * DataTable Create tags
  * @param e
  * @param settings
