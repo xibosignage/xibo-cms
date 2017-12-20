@@ -307,17 +307,17 @@ class LayoutFactory extends BaseFactory
     /**
      * Get by CampaignId
      * @param int $campaignId
-     * @param bool $isOwnerOnly
+     * @param bool $permissionsCheck Should we check permissions?
      * @return Layout[]
      * @throws NotFoundException
      */
-    public function getByCampaignId($campaignId, $isOwnerOnly = false)
+    public function getByCampaignId($campaignId, $permissionsCheck = true)
     {
         return $this->query(['displayOrder'], [
-            'campaignId' => ($isOwnerOnly) ? null : $campaignId,
-            'ownerCampaignId' => ($isOwnerOnly) ? $campaignId : null,
+            'campaignId' => $campaignId,
             'excludeTemplates' => -1,
-            'retired' => -1
+            'retired' => -1,
+            'disableUserCheck' => $permissionsCheck ? 0 : 1
         ]);
     }
 
