@@ -213,7 +213,7 @@ class Maintenance extends Base
               FROM dataset
                 INNER JOIN datasetcolumn
                 ON datasetcolumn.DataSetID = dataset.DataSetID
-             WHERE DataTypeID = 5;
+             WHERE DataTypeID = 5 AND DataSetColumnTypeID <> 2;
         ';
 
         $dataSets = $this->store->select($dataSetSql, []);
@@ -258,7 +258,7 @@ class Maintenance extends Base
                 $dataSetId = $this->getSanitizer()->getInt('dataSetId', $dataSet);
                 $heading = $this->getSanitizer()->getString('heading', $dataSet);
 
-                $sql .= ' SELECT ' . $heading . ' AS mediaId FROM `dataset_' . $dataSetId . '`';
+                $sql .= ' SELECT `' . $heading . '` AS mediaId FROM `dataset_' . $dataSetId . '`';
             }
 
             $sql .= ') dataSetImages 
