@@ -722,7 +722,7 @@ class ForecastIo extends ModuleWidget
             'night-partly-cloudy-image' => $this->getResourceUrl('forecastio/wi-night-partly-cloudy.jpg'),            
             'rain-image' => $this->getResourceUrl('forecastio/wi-rain.jpg'),
             'snow-image' => $this->getResourceUrl('forecastio/wi-snow.jpg'),
-            'windy' => $this->getResourceUrl('forecastio/wi-windy.jpg'),
+            'windy-image' => $this->getResourceUrl('forecastio/wi-windy.jpg'),
           ], $styleSheet
         );
 
