@@ -663,7 +663,7 @@ class Ticker extends ModuleWidget
         $oldDirection = $this->getOption('direction', 'none');
 
         if ($oldDirection == 'single')
-            $oldDirection = 'fade';
+            $oldDirection = 'noTransition';
         else if ($oldDirection != 'none')
             $oldDirection = 'marquee' . ucfirst($oldDirection);
 

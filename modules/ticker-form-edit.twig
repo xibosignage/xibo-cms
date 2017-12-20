@@ -1,8 +1,8 @@
 {#
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+ * Copyright (C) 2015-17 Spring Signage Ltd
+ * (ticker-form-edit.twig)
  */
 #}
 
@@ -208,8 +208,29 @@
                 {% set fieldDuration %}{{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}{% endset %}
 
                 {% set title %}{% trans "Effect" %}{% endset %}
-                {% set helpText %}{% trans "Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
-                {% set noneOption %}{% trans "None" %}{% endset %}
+                {% set helpText %}{% trans "Please select the effect that will be used to transition between items. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
+
+                {% set showAll %}{% trans "Show all items" %}{% endset %}
+                {% set showPaged %}{% trans "Paged" %}{% endset %}
+                {% set marqueeLeft %}{% trans "Marquee Left" %}{% endset %}
+                {% set marqueeRight %}{% trans "Marquee Right" %}{% endset %}
+                {% set marqueeUp %}{% trans "Marquee Up" %}{% endset %}
+                {% set marqueeDown %}{% trans "Marquee Down" %}{% endset %}
+                {% set optionGroups = [
+                    {id: "showAll", label: showAll},
+                    {id: "showPaged", label: showPaged}
+                ] %}
+
+                {% set noneOption %}{% trans "No effect - all items are shown" %}{% endset %}
+                {% set showAllOptions = [
+                    { effectid: "none", effect: noneOption },
+                    { effectid: "marqueeLeft", effect: marqueeLeft},
+                    { effectid: "marqueeRight", effect: marqueeRight},
+                    { effectid: "marqueeUp", effect: marqueeUp},
+                    { effectid: "marqueeDown", effect: marqueeDown}
+                ] %}
+
+                {% set noTransitionOption %}{% trans "No transition" %}{% endset %}
                 {% set fade %}{% trans "Fade" %}{% endset %}
                 {% set fadeout %}{% trans "Fade Out" %}{% endset %}
                 {% set scrollHorz %}{% trans "Scroll Horizontal" %}{% endset %}
@@ -219,12 +240,8 @@
                 {% set shuffle %}{% trans "Shuffle" %}{% endset %}
                 {% set tileSlide %}{% trans "Tile Slide" %}{% endset %}
                 {% set tileBlind %}{% trans "Tile Blind" %}{% endset %}
-                {% set marqueeLeft %}{% trans "Marquee Left" %}{% endset %}
-                {% set marqueeRight %}{% trans "Marquee Right" %}{% endset %}
-                {% set marqueeUp %}{% trans "Marquee Up" %}{% endset %}
-                {% set marqueeDown %}{% trans "Marquee Down" %}{% endset %}
-                {% set options = [
-                { effectid: "none", effect: noneOption },
+                {% set showPagedOptions = [
+                { effectid: "noTransition", effect: noTransitionOption },
                 { effectid: "fade", effect: fade },
                 { effectid: "fadeout", effect: fadeout},
                 { effectid: "scrollHorz", effect: scrollHorz},
@@ -233,13 +250,9 @@
                 { effectid: "flipVert", effect: flipVert},
                 { effectid: "shuffle", effect: shuffle},
                 { effectid: "tileSlide", effect: tileSlide},
-                { effectid: "tileBlind", effect: tileBlind},
-                { effectid: "marqueeLeft", effect: marqueeLeft},
-                { effectid: "marqueeRight", effect: marqueeRight},
-                { effectid: "marqueeUp", effect: marqueeUp},
-                { effectid: "marqueeDown", effect: marqueeDown}
+                { effectid: "tileBlind", effect: tileBlind}
                 ] %}
-                {% set fieldEffect %}{{ forms.dropdown("effect", "single", title, module.getOption("effect"), options, "effectid", "effect", helpText) }}{% endset %}
+                {% set fieldEffect %}{{ forms.dropdown("effect", "single", title, module.getOption("effect"), {showAll: showAllOptions, showPaged: showPagedOptions}, "effectid", "effect", helpText, "l", "", "", "", "", optionGroups) }}{% endset %}
 
                 {% set title %}{% trans "Speed" %}{% endset %}
                 {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
@@ -250,7 +263,7 @@
                 {% set fieldBackgroundColor %}{{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}{% endset %}
 
                 {% set title %}{% trans "Items per page" %}{% endset %}
-                {% set helpText %}{% trans "When in single mode how many items per page should be shown." %}{% endset %}
+                {% set helpText %}{% trans "If an effect has been selected from the General tab, how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page." %}{% endset %}
                 {% set fieldItemsPerPage %}{{ forms.number("itemsPerPage", title, module.getOption("itemsPerPage"), helpText, "effect-controls") }}{% endset %}
 
                 {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
@@ -326,7 +339,7 @@
                         {{ fieldSpeed }}
 
                         {% set title %}{% trans "Text direction" %}{% endset %}
-                        {% set helpText %}{% trans "Which direction does the text in the feed use? (left to right or right to left" %}{% endset %}
+                        {% set helpText %}{% trans "Which direction does the text in the feed use?" %}{% endset %}
                         {% set leftToRight %}{% trans "Left to Right (LTR)" %}{% endset %}
                         {% set rightToLeft %}{% trans "Right to Left (RTL)" %}{% endset %}
                         {% set options = [
