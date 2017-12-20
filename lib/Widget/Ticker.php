@@ -708,15 +708,13 @@ class Ticker extends ModuleWidget
 
         // Work out how many pages we will be showing.
         $pages = $numItems;
-
         if ($numItems > count($items) || $numItems == 0)
             $pages = count($items);
 
         $pages = ($itemsPerPage > 0) ? ceil($pages / $itemsPerPage) : $pages;
-        $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
 
         // Replace and Control Meta options
-        $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->';
+        $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $duration . ' -->';
 
         // Replace the head content
         $headContent = '';
@@ -1019,7 +1017,13 @@ class Ticker extends ModuleWidget
                     }
 
                     if ($this->getOption('stripTags') != '') {
+                        // Handle cache path for HTML serializer
+                        $cachePath = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'cache/HTMLPurifier';
+                        if (!is_dir($cachePath))
+                            mkdir($cachePath);
+
                         $config = \HTMLPurifier_Config::createDefault();
+                        $config->set('Cache.SerializerPath', $cachePath);
                         $config->set('HTML.ForbiddenElements', explode(',', $this->getOption('stripTags')));
                         $purifier = new \HTMLPurifier($config);
                         $replace = $purifier->purify($replace);

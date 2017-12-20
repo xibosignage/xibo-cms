@@ -906,7 +906,12 @@ class Layout implements \JsonSerializable
 
                     // Does our widget have a durationIsPerItem and a Number of Items?
                     $numItems = $widget->getOptionValue('numItems', 0);
+                    $itemsPerPage = $widget->getOptionValue('itemsPerPage', 0);
                     if ($widget->getOptionValue('durationIsPerItem', 0) == 1 && $numItems > 1) {
+                        // If we have paging involved then work out the page count.
+                        if ($itemsPerPage > 0)
+                            $numItems = ceil($numItems / $itemsPerPage);
+
                         $widget->calculatedDuration = (($widget->useDuration == 1) ? $widget->duration : $module->getModule()->defaultDuration) * $numItems;
                     }
 
