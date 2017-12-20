@@ -23,6 +23,7 @@ namespace Xibo\Widget;
 
 use GuzzleHttp\Exception\RequestException;
 use Stash\Invalidation;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\ModuleFactory;
 
@@ -97,13 +98,21 @@ class Stocks extends AlphaVantageBase
         return $this->module->settings;
     }
 
+    /**
+     * Validate
+     * @throws InvalidArgumentException
+     */
     public function validate()
     {
         if($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null) )
-            throw new \InvalidArgumentException(__('Please choose a template'));
+            throw new InvalidArgumentException(__('Please choose a template'), 'templateId');
             
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new \InvalidArgumentException(__('Please enter a duration'));
+            throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
+
+        // Validate for the items field
+        if ($this->getOption('items') == '')
+            throw new InvalidArgumentException(__('Please provide a comma separated list of symbols in the items field.'), 'items');
     }
 
 
