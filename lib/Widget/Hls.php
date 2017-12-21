@@ -10,8 +10,8 @@ namespace Xibo\Widget;
 
 
 use Respect\Validation\Validator as v;
-use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
 /**
@@ -63,7 +63,7 @@ class Hls extends ModuleWidget
     /**
      * Install Files
      */
-    public function InstallFiles()
+    public function installFiles()
     {
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
     }
@@ -160,6 +160,7 @@ class Hls extends ModuleWidget
 
     /**
      * Validate
+     * @throws XiboException
      */
     private function validate()
     {
@@ -199,7 +200,7 @@ class Hls extends ModuleWidget
     }
 
     /**
-     * @return int
+     * @inheritdoc
      */
     public function isValid()
     {
@@ -215,80 +216,65 @@ class Hls extends ModuleWidget
      * Return the rendered resource to be used by the client (or a preview) for displaying this content.
      * @param integer $displayId If this comes from a real client, this will be the display id.
      * @return mixed
-     * @throws ConfigurationException
      */
     public function getResource($displayId = 0)
     {
-        // Behave exactly like the client.
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
-
-        // Include some vendor items
-        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/hls/hls.min.js') . '"></script>';
-        $javaScriptContent .= '
-<script type="text/javascript">
-    
-    $(document).ready(function() {
-
-        if(Hls.isSupported()) {
-            var video = document.getElementById("video");
-            var hls = new Hls({
-                autoStartLoad: true,
-                startPosition : -1,
-                capLevelToPlayerSize: false,
-                debug: false,
-                defaultAudioCodec: undefined,
-                enableWorker: true
-            });
-            hls.loadSource("' . urldecode($this->getOption('uri')) . '");
-            hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, function() {
-              video.play();
-            });
-            hls.on(Hls.Events.ERROR, function (event, data) {
-                if (data.fatal) {
-                    switch(data.type) {
-                        case Hls.ErrorTypes.NETWORK_ERROR:
-                            // try to recover network error
-                            //console.log("fatal network error encountered, try to recover");
-                            hls.startLoad();
-                            break;
-                        
-                        case Hls.ErrorTypes.MEDIA_ERROR:
-                            //console.log("fatal media error encountered, try to recover");
-                            hls.recoverMediaError();
-                            break;
-                            
-                        default:
-                            // cannot recover
-                            hls.destroy();
-                            break;
-                    }
+        $this
+            ->initialiseGetResource()
+            ->appendViewPortWidth($this->region->width)
+            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js')
+            ->appendJavaScriptFile('vendor/hls/hls.min.js')
+            ->appendJavaScript('
+                $(document).ready(function() {
+            
+                    if(Hls.isSupported()) {
+                        var video = document.getElementById("video");
+                        var hls = new Hls({
+                            autoStartLoad: true,
+                            startPosition : -1,
+                            capLevelToPlayerSize: false,
+                            debug: false,
+                            defaultAudioCodec: undefined,
+                            enableWorker: true
+                        });
+                        hls.loadSource("' . urldecode($this->getOption('uri')) . '");
+                        hls.attachMedia(video);
+                        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                          video.play();
+                        });
+                        hls.on(Hls.Events.ERROR, function (event, data) {
+                            if (data.fatal) {
+                                switch(data.type) {
+                                    case Hls.ErrorTypes.NETWORK_ERROR:
+                                        // try to recover network error
+                                        //console.log("fatal network error encountered, try to recover");
+                                        hls.startLoad();
+                                        break;
+                                    
+                                    case Hls.ErrorTypes.MEDIA_ERROR:
+                                        //console.log("fatal media error encountered, try to recover");
+                                        hls.recoverMediaError();
+                                        break;
+                                        
+                                    default:
+                                        // cannot recover
+                                        hls.destroy();
+                                        break;
+                                }
+                            }
+                        });
+                     }
+                });
+            ')
+            ->appendBody('<video id="video" poster="' . $this->getResourceUrl('vendor/hls/hls-1px-transparent.png') . '" ' . (($this->getOption('mute', 0) == 1) ? 'muted' : '') . '></video>')
+            ->appendCss('
+                video {
+                    width: 100%; 
+                    height: 100%;
                 }
-            });
-         }
-    });
-</script>';
+            ')
+        ;
 
-        // Parse any other library references
-        $javaScriptContent = $this->parseLibraryReferences($isPreview, $javaScriptContent);
-
-        $body = $this->parseLibraryReferences($isPreview, '<video id="video" poster="' . $this->getResourceUrl('vendor/hls/hls-1px-transparent.png') . '"' . (($this->getOption('mute', 0) == 1) ? 'muted' : '') . '></video>');
-
-        if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
-
-        return $this->renderTemplate([
-            'viewPortWidth' => ($isPreview) ? $this->region->width : '[[ViewPortWidth]]',
-            'javaScript' => $javaScriptContent,
-            'body' => $body,
-            'head' => '
-<style type="text/css">
-video {
-    width: 100%; 
-    height: 100%;
-}
-</style>'
-        ], 'get-resource');
+        return $this->finaliseGetResource();
     }
 }

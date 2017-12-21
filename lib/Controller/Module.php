@@ -168,6 +168,7 @@ class Module extends Base
 
     /**
      * A grid of modules
+     * @throws XiboException
      */
     public function grid()
     {
@@ -215,6 +216,7 @@ class Module extends Base
     /**
      * Settings Form
      * @param int $moduleId
+     * @throws XiboException
      */
     public function settingsForm($moduleId)
     {
@@ -240,7 +242,7 @@ class Module extends Base
     /**
      * Settings
      * @param int $moduleId
-     * @throws InvalidArgumentException
+     * @throws XiboException
      */
     public function settings($moduleId)
     {
@@ -294,6 +296,7 @@ class Module extends Base
 
     /**
      * Verify Module
+     * @throws \Exception
      */
     public function verify()
     {
@@ -311,6 +314,7 @@ class Module extends Base
 
     /**
      * Form for the install list
+     * @throws XiboException
      */
     public function installListForm()
     {
@@ -356,7 +360,7 @@ class Module extends Base
     /**
      * Install Module
      * @param string $name
-     * @throws InvalidArgumentException
+     * @throws XiboException
      */
     public function install($name)
     {
@@ -391,6 +395,7 @@ class Module extends Base
      * Add Widget Form
      * @param string $type
      * @param int $playlistId
+     * @throws XiboException
      */
     public function addWidgetForm($type, $playlistId)
     {
@@ -415,7 +420,7 @@ class Module extends Base
      * Add Widget
      * @param string $type
      * @param int $playlistId
-     * @throws ConfigurationException
+     * @throws XiboException
      */
     public function addWidget($type, $playlistId)
     {
@@ -471,6 +476,7 @@ class Module extends Base
     /**
      * Edit Widget Form
      * @param int $widgetId
+     * @throws XiboException
      */
     public function editWidgetForm($widgetId)
     {
@@ -514,10 +520,9 @@ class Module extends Base
      *      )
      * )
      *)
-     */
-    
-    /**
+     *
      * @param int $widgetId
+     * @throws XiboException
      */
     public function editWidget($widgetId)
     {
@@ -543,6 +548,7 @@ class Module extends Base
     /**
      * Delete Widget Form
      * @param int $widgetId
+     * @throws XiboException
      */
     public function deleteWidgetForm($widgetId)
     {
@@ -582,9 +588,9 @@ class Module extends Base
      *      description="successful operation",
      *  )
      *)
-     */
-    /**
+     *
      * @param int $widgetId
+     * @throws XiboException
      */
     public function deleteWidget($widgetId)
     {
@@ -633,6 +639,7 @@ class Module extends Base
      * Edit Widget Transition Form
      * @param string $type
      * @param int $widgetId
+     * @throws XiboException
      */
     public function editWidgetTransitionForm($type, $widgetId)
     {
@@ -716,10 +723,9 @@ class Module extends Base
      *          description="Location of the new widget",
      *          type="string"
      *      )
+     *   )
      * )
-     *)
-     */
-    /**
+     *
      * @param string $type
      * @param int $widgetId
      */
@@ -764,6 +770,7 @@ class Module extends Base
     /**
      * Widget Audio Form
      * @param int $widgetId
+     * @throws XiboException
      */
     public function widgetAudioForm($widgetId)
     {
@@ -836,8 +843,7 @@ class Module extends Base
      *      )
      *  )
      * )
-     */
-    /**
+     *
      * @param int $widgetId
      */
     public function widgetAudio($widgetId)
@@ -898,9 +904,7 @@ class Module extends Base
      *      description="successful operation",
      *  )
      *)
-     */
-
-     /**
+     *
      * @param int $widgetId
      */
     public function widgetAudioDelete($widgetId)
@@ -978,7 +982,7 @@ class Module extends Base
     /**
      * @param $moduleId
      * @param $formName
-     * @throws ConfigurationException
+     * @throws XiboException
      */
     public function customFormRender($moduleId, $formName)
     {
@@ -996,7 +1000,7 @@ class Module extends Base
     /**
      * @param $moduleId
      * @param $formName
-     * @throws ConfigurationException
+     * @throws XiboException
      */
     public function customFormExecute($moduleId, $formName)
     {
@@ -1064,6 +1068,7 @@ class Module extends Base
     /**
      * Clear Cache Form
      * @param $moduleId
+     * @throws XiboException
      */
     public function clearCacheForm($moduleId)
     {
@@ -1079,6 +1084,7 @@ class Module extends Base
     /**
      * Clear Cache
      * @param $moduleId
+     * @throws XiboException
      */
     public function clearCache($moduleId)
     {

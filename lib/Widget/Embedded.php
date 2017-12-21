@@ -20,7 +20,10 @@
  */
 namespace Xibo\Widget;
 
-
+/**
+ * Class Embedded
+ * @package Xibo\Widget
+ */
 class Embedded extends ModuleWidget
 {
     /**
@@ -150,6 +153,9 @@ class Embedded extends ModuleWidget
         $this->saveWidget();
     }
 
+    /**
+     * @inheritdoc
+     */
     public function isValid()
     {
         // Can't be sure because the client does the rendering
