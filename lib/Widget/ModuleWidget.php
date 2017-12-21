@@ -20,7 +20,6 @@
  */
 namespace Xibo\Widget;
 
-use Intervention\Image\ImageManagerStatic as Img;
 use Mimey\MimeTypes;
 use Slim\Slim;
 use Stash\Interfaces\PoolInterface;
@@ -1292,6 +1291,8 @@ abstract class ModuleWidget implements ModuleInterface
         $this->data['head'] = '';
         $this->data['body'] = '';
         $this->data['controlMeta'] = '';
+        $this->data['options'] = '{}';
+        $this->data['items'] = '{}';
         return $this;
     }
 
@@ -1310,9 +1311,8 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function finaliseGetResource($templateName = 'get-resource')
     {
-        return $this
-            ->appendJavaScript('var options = ' . $this->data['options'] . '; var items = ' . $this->data['items'] . ';')
-            ->renderTemplate($this->data, $templateName);
+        $this->data['javaScript'] = '<script type="text/javascript">var options = ' . $this->data['options'] . '; var items = ' . $this->data['items'] . ';</script>' . PHP_EOL . $this->data['javaScript'];
+        return $this->renderTemplate($this->data, $templateName);
     }
 
     /**
@@ -1332,7 +1332,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function appendFontCss()
     {
-        $this->data['styleSheet'] .= '<link href="' . (($this->isPreview()) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen" />';
+        $this->data['styleSheet'] .= '<link href="' . (($this->isPreview()) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen" />' . PHP_EOL;
         return $this;
     }
 
@@ -1343,7 +1343,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function appendCssFile($uri)
     {
-        $this->data['styleSheet'] .= '<link href="' . $this->getResourceUrl($uri) . '" rel="stylesheet" media="screen" />';
+        $this->data['styleSheet'] .= '<link href="' . $this->getResourceUrl($uri) . '" rel="stylesheet" media="screen" />' . PHP_EOL;
         return $this;
     }
 
@@ -1355,7 +1355,7 @@ abstract class ModuleWidget implements ModuleInterface
     protected function appendCss($css)
     {
         if (!empty($css))
-            $this->data['styleSheet'] .= '<style type="text/css">' . $css . '</style>';
+            $this->data['styleSheet'] .= '<style type="text/css">' . $css . '</style>' . PHP_EOL;
 
         return $this;
     }
@@ -1367,7 +1367,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function appendJavaScriptFile($uri)
     {
-        $this->data['javaScript'] .= '<script type="text/javascript" src="' . $this->getResourceUrl($uri) . '"></script>';
+        $this->data['javaScript'] .= '<script type="text/javascript" src="' . $this->getResourceUrl($uri) . '"></script>' . PHP_EOL;
         return $this;
     }
 
@@ -1379,7 +1379,7 @@ abstract class ModuleWidget implements ModuleInterface
     protected function appendJavaScript($javasScript)
     {
         if (!empty($javasScript))
-            $this->data['javaScript'] .= '<script type="text/javascript">' . $javasScript . '</script>';
+            $this->data['javaScript'] .= '<script type="text/javascript">' . $javasScript . '</script>' . PHP_EOL;
 
         return $this;
     }
@@ -1392,7 +1392,7 @@ abstract class ModuleWidget implements ModuleInterface
     protected function appendBody($body)
     {
         if (!empty($body))
-            $this->data['body'] .= $body;
+            $this->data['body'] .= $body . PHP_EOL;
 
         return $this;
     }
@@ -1427,7 +1427,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function appendRaw($key, $item)
     {
-        $this->data[$key] .= $item;
+        $this->data[$key] .= $item . PHP_EOL;
         return $this;
     }
 
