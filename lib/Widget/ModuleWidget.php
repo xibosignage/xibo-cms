@@ -1327,13 +1327,23 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * Append Font CSS
+     * @return $this
+     */
+    protected function appendFontCss()
+    {
+        $this->data['styleSheet'] .= '<link href="' . (($this->isPreview()) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen" />';
+        return $this;
+    }
+
+    /**
      * Append CSS File
      * @param string $uri The URI, according to whether this is a CMS preview or not
      * @return $this
      */
     protected function appendCssFile($uri)
     {
-        $this->data['styleSheet'] .= '<link href="' . $uri . '" rel="stylesheet" media="screen" />';
+        $this->data['styleSheet'] .= '<link href="' . $this->getResourceUrl($uri) . '" rel="stylesheet" media="screen" />';
         return $this;
     }
 
@@ -1406,6 +1416,18 @@ abstract class ModuleWidget implements ModuleInterface
     protected function appendItems($items)
     {
         $this->data['items'] = json_encode($items);
+        return $this;
+    }
+
+    /**
+     * Append raw string
+     * @param string $key
+     * @param string $item
+     * @return $this
+     */
+    protected function appendRaw($key, $item)
+    {
+        $this->data[$key] .= $item;
         return $this;
     }
 
