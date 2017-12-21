@@ -43,7 +43,7 @@ class TwitterMetro extends TwitterBase
      */
     public function init()
     {
-        $this->resourceFolder = PROJECT_ROOT . '/web/modules/twittermetro';
+        $this->resourceFolder = PROJECT_ROOT . '/modules/twittermetro';
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
@@ -85,12 +85,12 @@ class TwitterMetro extends TwitterBase
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-metro-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/emojione/emojione.sprites.svg')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/bootstrap.min.css')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-metro-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.svg')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
         
         foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
             /* @var \Xibo\Entity\Media $media */
@@ -149,32 +149,6 @@ class TwitterMetro extends TwitterBase
         );
         
         return $templateArray[$orientation];
-    }
-    
-    /**
-    * Loads color templates for this module
-    */
-    private function loadColorTemplates()
-    {
-        $this->module->settings['colortemplates'] = [];
-
-        // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/twittermetro/*.colortemplate.json') as $template) {
-            // Read the contents, json_decode and add to the array
-            $this->module->settings['colortemplates'][] = json_decode(file_get_contents($template), true);
-        }
-    }
-
-    /**
-    * Color templates available
-    * @return array
-    */
-    public function colorTemplatesAvailable()
-    {
-        if (!isset($this->module->settings['colortemplates']))
-            $this->loadColorTemplates();
-
-        return $this->module->settings['colortemplates'];
     }
 
     /**
@@ -491,7 +465,7 @@ class TwitterMetro extends TwitterBase
                             // Get the colors array
                             if( $this->getOption('overrideColorTemplate') == 0 ) {
                                 
-                                $templates = $this->colorTemplatesAvailable();
+                                $templates = $this->templatesAvailable();
                                 
                                 foreach ($templates as $tmplt) {
                                     if( $tmplt['id'] == $this->getOption('colorTemplateId') ){
@@ -656,7 +630,7 @@ class TwitterMetro extends TwitterBase
         // Get the colors array
         if( $this->getOption('overrideColorTemplate') == 0 ) {
             
-            $templates = $this->colorTemplatesAvailable();
+            $templates = $this->templatesAvailable();
             
             foreach ($templates as $tmplt) {
                 if( $tmplt['id'] == $this->getOption('colorTemplateId') ){

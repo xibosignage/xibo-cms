@@ -65,7 +65,7 @@ class Hls extends ModuleWidget
      */
     public function InstallFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
     }
 
     /**
@@ -185,13 +185,13 @@ class Hls extends ModuleWidget
         $this->setOption('transparency', 0);
 
         // Ensure we have the necessary files linked up
-        $media = $this->mediaFactory->createModuleFile(PROJECT_ROOT . '/web/modules/vendor/hls/hls.min.js');
+        $media = $this->mediaFactory->createModuleFile(PROJECT_ROOT . '/modules/vendor/hls/hls.min.js');
         $media->save();
         $this->assignMedia($media->mediaId);
 
         $this->setOption('hlsId', $media->mediaId);
 
-        $media = $this->mediaFactory->createModuleFile(PROJECT_ROOT . '/web/modules/vendor/hls/hls-1px-transparent.png');
+        $media = $this->mediaFactory->createModuleFile(PROJECT_ROOT . '/modules/vendor/hls/hls-1px-transparent.png');
         $media->save();
         $this->assignMedia($media->mediaId);
 

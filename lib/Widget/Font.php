@@ -34,7 +34,7 @@ class Font extends ModuleWidget
     public function installFiles()
     {
         // Create font media items for each of the fonts found in the theme default fonts folder
-        $folder = PROJECT_ROOT . '/web/modules/fonts';
+        $folder = PROJECT_ROOT . '/modules/fonts';
         foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
 
             $filePath = $folder . DIRECTORY_SEPARATOR . $file;

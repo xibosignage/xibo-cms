@@ -28,6 +28,11 @@ use Xibo\Entity\Media;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\ModuleFactory;
 
+/**
+ * Class ForecastIo
+ * Weather module powered by the DarkSky API
+ * @package Xibo\Widget
+ */
 class ForecastIo extends ModuleWidget
 {
     const API_ENDPOINT = 'https://api.darksky.net/forecast/';
@@ -40,7 +45,7 @@ class ForecastIo extends ModuleWidget
      */
     public function init()
     {
-        $this->resourceFolder = PROJECT_ROOT . '/web/modules/forecastio';
+        $this->resourceFolder = PROJECT_ROOT . '/modules/forecastio';
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
@@ -79,10 +84,10 @@ class ForecastIo extends ModuleWidget
 
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/bootstrap.min.css')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
 
         foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
             /* @var Media $media */

@@ -71,11 +71,11 @@ class Currencies extends AlphaVantageBase
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-finance-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/bootstrap.min.css')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-finance-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
     }
 
     /**
@@ -577,10 +577,10 @@ class Currencies extends AlphaVantageBase
 
                             $currencyCode = ($reverseConversion) ? $data['FromName'] : $data['ToName'];
                             
-                            if (!file_exists(PROJECT_ROOT . '/web/modules/currencies/currency-flags/' . $currencyCode . '.svg')) 
+                            if (!file_exists(PROJECT_ROOT . '/modules/currencies/currency-flags/' . $currencyCode . '.svg'))
                                 $currencyCode = 'default';
                             
-                            $file = $this->mediaFactory->createModuleFile('currency_' . $currencyCode, PROJECT_ROOT . '/web/modules/currencies/currency-flags/' . $currencyCode . '.svg');
+                            $file = $this->mediaFactory->createModuleFile('currency_' . $currencyCode, PROJECT_ROOT . '/modules/currencies/currency-flags/' . $currencyCode . '.svg');
                             $file->alwaysCopy = true;
                             $file->storedAs = 'currency_' . $currencyCode . '.svg';
                             $file->save();
@@ -588,7 +588,7 @@ class Currencies extends AlphaVantageBase
                             // Tag this layout with this file
                             $this->assignMedia($file->mediaId);
                             
-                            $replacement = ($isPreview) ? $this->getResourceUrl('currencies/currency-flags/' . $currencyCode . '.svg') : $file->storedAs;
+                            $replacement = $this->getFileUrl($file);
                             
                             break;
                             

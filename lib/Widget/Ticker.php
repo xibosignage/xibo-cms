@@ -39,13 +39,13 @@ class Ticker extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.marquee.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
     }
 
     /**
@@ -934,9 +934,7 @@ class Ticker extends ModuleWidget
                                 // Grab the profile image
                                 $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expires);
 
-                                $replace = ($isPreview)
-                                    ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" ' . $attribute . '/>'
-                                    : '<img src="' . $file->storedAs . '" ' . $attribute . ' />';
+                                $replace = '<img src="' . $this->getFileUrl($file, 'image') . '" ' . $attribute . ' />';
                             }
                         } else {
                             // Our namespace is not "image". Which means we are a normal text substitution using a namespace/attribute
@@ -1003,9 +1001,7 @@ class Ticker extends ModuleWidget
                                         // Grab the image
                                         $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expires);
 
-                                        $replace = ($isPreview)
-                                            ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
-                                            : '<img src="' . $file->storedAs . '" />';
+                                        $replace = '<img src="' . $this->getFileUrl($file, 'image') . '"/>';
                                     } else {
                                         $this->getLog()->debug('No image found for image tag using getEnclosureUrl');
                                     }
@@ -1250,9 +1246,7 @@ class Ticker extends ModuleWidget
                             // Download the image, alter the replace to wrap in an image tag
                             $file = $this->mediaFactory->queueDownload('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)), $expires);
 
-                            $replace = ($isPreview)
-                                ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
-                                : '<img src="' . $file->storedAs . '" />';
+                            $replace = '<img src="' . $this->getFileUrl($file, 'image') . '"/>';
 
                         } else if ($mappings[$header]['dataTypeId'] == 5) {
                             // Library Image
@@ -1264,9 +1258,7 @@ class Ticker extends ModuleWidget
                                     // Tag this layout with this file
                                     $this->assignMedia($file->mediaId);
 
-                                    $replace = ($isPreview)
-                                        ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
-                                        : '<img src="' . $file->storedAs . '" />';
+                                    $replace = '<img src="' . $this->getFileUrl($file, 'image') . '" />';
                                 } else {
                                     $replace = '';
                                 }

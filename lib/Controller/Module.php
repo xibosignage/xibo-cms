@@ -25,6 +25,7 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -929,7 +930,7 @@ class Module extends Base
      * Get Tab
      * @param string $tab
      * @param int $widgetId
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws XiboException
      */
     public function getTab($tab, $widgetId)
     {
@@ -944,10 +945,22 @@ class Module extends Base
     }
 
     /**
+     * @param $type
+     * @param $templateId
+     * @throws XiboException
+     */
+    public function getTemplateImage($type, $templateId)
+    {
+        $module = $this->moduleFactory->create($type);
+        $module->getTemplateImage($templateId);
+        $this->setNoOutput(true);
+    }
+
+    /**
      * Get Resource
      * @param $regionId
      * @param $widgetId
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws XiboException
      */
     public function getResource($regionId, $widgetId)
     {
