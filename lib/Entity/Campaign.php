@@ -24,6 +24,7 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
@@ -180,6 +181,10 @@ class Campaign implements \JsonSerializable
         $this->ownerId = $ownerId;
     }
 
+    /**
+     * @param array $options
+     * @throws \Xibo\Exception\NotFoundException
+     */
     public function load($options = [])
     {
         $options = array_merge([
@@ -202,7 +207,7 @@ class Campaign implements \JsonSerializable
 
         // Layouts
         if ($options['loadLayouts'])
-            $this->layouts = $this->layoutFactory->getByCampaignId($this->campaignId);
+            $this->layouts = $this->layoutFactory->getByCampaignId($this->campaignId, false);
             
         // Load all tags
         if ($options['loadTags'])
@@ -215,6 +220,9 @@ class Campaign implements \JsonSerializable
         $this->loaded = true;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function validate()
     {
         if (!v::string()->notEmpty()->validate($this->campaign))
@@ -226,6 +234,7 @@ class Campaign implements \JsonSerializable
      * Does the campaign have the provided tag?
      * @param $searchTag
      * @return bool
+     * @throws NotFoundException
      */
     public function hasTag($searchTag)
     {

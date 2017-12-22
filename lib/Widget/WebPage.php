@@ -23,6 +23,10 @@ namespace Xibo\Widget;
 use InvalidArgumentException;
 use Respect\Validation\Validator as v;
 
+/**
+ * Class WebPage
+ * @package Xibo\Widget
+ */
 class WebPage extends ModuleWidget
 {
     /**
@@ -30,9 +34,9 @@ class WebPage extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-webpage-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-webpage-render.js')->save();
     }
 
     public function validate()
@@ -278,6 +282,7 @@ class WebPage extends ModuleWidget
         return $this->renderTemplate($data);
     }
 
+    /** @inheritdoc */
     public function IsValid()
     {
         // Can't be sure because the client does the rendering

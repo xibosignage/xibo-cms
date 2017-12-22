@@ -149,15 +149,19 @@ class Soap5 extends Soap4
 
                     // Append each individual command
                     foreach ($display->getCommands() as $command) {
-                        /* @var \Xibo\Entity\Command $command */
-                        $node = $return->createElement($command->code);
-                        $commandString = $return->createElement('commandString', $command->commandString);
-                        $validationString = $return->createElement('validationString', $command->validationString);
+                        try {
+                            /* @var \Xibo\Entity\Command $command */
+                            $node = $return->createElement($command->code);
+                            $commandString = $return->createElement('commandString', $command->commandString);
+                            $validationString = $return->createElement('validationString', $command->validationString);
 
-                        $node->appendChild($commandString);
-                        $node->appendChild($validationString);
+                            $node->appendChild($commandString);
+                            $node->appendChild($validationString);
 
-                        $commandElement->appendChild($node);
+                            $commandElement->appendChild($node);
+                        } catch (\DOMException $DOMException) {
+                            $this->getLog()->error('Cannot add command to settings for displayId ' . $this->display->displayId . ', ' . $DOMException->getMessage());
+                        }
                     }
                 }
 

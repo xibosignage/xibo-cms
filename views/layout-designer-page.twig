@@ -522,7 +522,12 @@
                         {"data": "displayOrder"},
                         {"data": "name", "orderable": false},
                         {"data": "type"},
-                        {"data": "duration"},
+                        {
+                            "data": "calculatedDuration",
+                            "render": function(data) {
+                                return (data == 0) ? 'N/A' : data;
+                            }
+                        },
                         {"data": "transition"},
                         {
                             "orderable": false,

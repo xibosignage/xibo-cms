@@ -135,7 +135,10 @@
                     },
                     {"data": "fileSize", "visible": false},
                     {"data": "owner"},
-                    {"data": "groupsWithPermissions"},
+                    {
+                        "data": "groupsWithPermissions",
+                        "render": dataTableCreatePermissions
+                    },
                     {"data": "revised", "render": dataTableTickCrossColumn, "visible": false},
                     {"data": "fileName"},
                     {

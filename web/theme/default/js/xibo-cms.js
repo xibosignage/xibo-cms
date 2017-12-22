@@ -22,6 +22,13 @@ var lastForm;
 var gridTimeouts = [];
 var buttonsTemplate;
 
+// Fix endsWith string prototype for IE
+if (!String.prototype.endsWith) {
+    String.prototype.endsWith = function(suffix) {
+        return this.indexOf(suffix, this.length - suffix.length) !== -1;
+    };
+}
+
 // Set up the light boxes
 $(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
     event.preventDefault();
@@ -530,6 +537,34 @@ function dataTableCreateTags(data, type) {
         for (var i = 0; i < arrayOfTags.length; i++) {
             if(arrayOfTags[i] != '')
                 returnData += '<li class="btn btn-sm btn-default btn-tag">' + arrayOfTags[i] + '</span></li>'
+        }
+
+        returnData += '</div>';
+    }
+
+    return returnData;
+}
+
+/**
+ * DataTable Create permissions
+ * @param data
+ * @returns {*}
+ */
+function dataTableCreatePermissions(data, type) {
+
+    if (type !== "display")
+        return data;
+
+    var returnData = '';
+
+    if(typeof data != undefined && data != null ) {
+        var arrayOfTags = data.split(',');
+
+        returnData += '<div class="permissionsDiv">';
+
+        for (var i = 0; i < arrayOfTags.length; i++) {
+            if(arrayOfTags[i] != '')
+                returnData += '<li class="badge">' + arrayOfTags[i] + '</span></li>'
         }
 
         returnData += '</div>';

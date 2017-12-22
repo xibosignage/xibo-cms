@@ -20,7 +20,7 @@
 
 {% block callBack %}metroFormSetup{% endblock %}
 
-{% block extra %}{{ {"colors": module.getOption("templateColours"), "templates": module.colorTemplatesAvailable()}|json_encode|raw }}{% endblock %}
+{% block extra %}{{ {"colors": module.getOption("templateColours"), "templates": module.templatesAvailable()}|json_encode|raw }}{% endblock %}
 
 {% block formFieldActions %}
     [{
@@ -182,7 +182,7 @@
                     <div class="tab-pane" id="template">
                         {% set title %}{% trans "Template Colours" %}{% endset %}
                         {% set helpText %}{% trans "Select the template colours you would like to apply." %}{% endset %}
-                        {{ forms.dropdown("colorTemplateId", "single", title, module.getOption("colorTemplateId"), module.colorTemplatesAvailable(), "id", "value", helpText, "selectPicker selectPickerWithImage template-selector-control", null, null, null, null, null, baseUrl, "image") }}
+                        {{ forms.dropdown("colorTemplateId", "single", title, module.getOption("colorTemplateId"), module.templatesAvailable(), "id", "value", helpText, "selectPicker selectPickerWithImage template-selector-control", null, null, null, null, null, baseUrl, "image") }}
             
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}

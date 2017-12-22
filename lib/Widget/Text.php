@@ -20,8 +20,13 @@
  */
 namespace Xibo\Widget;
 
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Helper\Translate;
 
+/**
+ * Class Text
+ * @package Xibo\Widget
+ */
 class Text extends ModuleWidget
 {
     /**
@@ -29,23 +34,26 @@ class Text extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.marquee.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function validate()
     {
         // Validation
         if ($this->getOption('text') == '')
-            throw new \InvalidArgumentException(__('Please enter some text'));
+            throw new InvalidArgumentException(__('Please enter some text'), 'text');
 
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new \InvalidArgumentException(__('You must enter a duration.'));
+            throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
     }
 
     /**
@@ -137,19 +145,12 @@ class Text extends ModuleWidget
      *      )
      *  )
      * )
+     *
+     * @throws InvalidArgumentException
      */
     public function add()
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('xmds', true);
-        $this->setOption('effect', $this->getSanitizer()->getString('effect'));
-        $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
-        $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('marqueeInlineSelector', $this->getSanitizer()->getString('marqueeInlineSelector'));
-        $this->setRawNode('text', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('text', null)));
-        $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        $this->setCommonOptions();
 
         // Save the widget
         $this->validate();
@@ -158,8 +159,21 @@ class Text extends ModuleWidget
 
     /**
      * Edit Media
+     * @throws InvalidArgumentException
      */
     public function edit()
+    {
+        $this->setCommonOptions();
+
+        // Save the widget
+        $this->validate();
+        $this->saveWidget();
+    }
+
+    /**
+     * Set common options
+     */
+    private function setCommonOptions()
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
@@ -171,10 +185,6 @@ class Text extends ModuleWidget
         $this->setOption('marqueeInlineSelector', $this->getSanitizer()->getString('marqueeInlineSelector'));
         $this->setRawNode('text', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('text', null)));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
-
-        // Save the widget
-        $this->validate();
-        $this->saveWidget();
     }
 
     /**
@@ -184,21 +194,21 @@ class Text extends ModuleWidget
      */
     public function GetResource($displayId = 0)
     {
-        $data = [];
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
-
         // Clear all linked media.
         $this->clearMedia();
 
-        // Replace the View Port Width?
-        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
-
-        $duration = $this->getCalculatedDurationForGetResource();
-
-        $text = $this->parseLibraryReferences($isPreview, $this->getRawNode('text', null));
-
-        // Get the JavaScript node
-        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
+        // Start building the template
+        $this
+            ->initialiseGetResource()
+            ->appendViewPortWidth($this->region->width)
+            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js')
+            ->appendJavaScriptFile('xibo-layout-scaler.js')
+            ->appendJavaScriptFile('xibo-text-render.js')
+            ->appendJavaScriptFile('xibo-image-render.js')
+            ->appendFontCss()
+            ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
+            ->appendJavaScript($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', '')))
+        ;
 
         // Handle older layouts that have a direction node but no effect node
         $oldDirection = $this->getOption('direction', 'none');
@@ -209,10 +219,10 @@ class Text extends ModuleWidget
         $effect = $this->getOption('effect', $oldDirection);
 
         // Set some options
-        $options = array(
+        $this->appendOptions([
             'type' => $this->getModuleType(),
             'fx' => $effect,
-            'duration' => $duration,
+            'duration' => $this->getCalculatedDurationForGetResource(),
             'durationIsPerItem' => false,
             'numItems' => 1,
             'takeItemsFrom' => 'start',
@@ -224,7 +234,10 @@ class Text extends ModuleWidget
             'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
             'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
             'marqueeInlineSelector' => $this->getOption('marqueeInlineSelector', '.item, .item p')
-        );
+        ]);
+
+        // Pull out our text
+        $text = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('text', null));
 
         // See if we need to replace out any [clock] or [date] tags
         $clock = false;
@@ -254,38 +267,31 @@ class Text extends ModuleWidget
             }
         }
 
-        // Generate a JSON string of substituted items.
-        $items[] = $text;
+        // The xibo-text-render library will take these items and render them appropriately depending on the options provided
+        $this->appendItems([$text]);
 
         // Replace the head content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
 
         // Need the marquee plugin?
         if (stripos($effect, 'marquee') !== false)
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.marquee.min.js') . '"></script>';
+            $this->appendJavaScriptFile('vendor/jquery.marquee.min.js');
 
         // Need the cycle plugin?
         if ($effect != 'none')
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
-
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
+            $this->appendJavaScriptFile('vendor/jquery-cycle-2.1.6.min.js');
 
         // Do we need to include moment?
         if ($clock)
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js') . '"></script>';
+            $this->appendJavaScriptFile('vendor/moment.js');
 
-        $javaScriptContent .= '<script type="text/javascript">';
-        $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
-        $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
-        $javaScriptContent .= '   $(document).ready(function() { ';
+        // Finalise some JavaScript to run.
+        $javaScriptContent = '$(document).ready(function() { ';
         $javaScriptContent .= '       $("#content").xiboTextRender(options, items); $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); ';
 
         if ($clock)
             $javaScriptContent .= ' moment.locale("' . Translate::GetJsLocale() . '"); updateClock(); setInterval(updateClock, 1000); ';
 
-        $javaScriptContent .= '   }); ';
+        $javaScriptContent .= '}); ';
 
         if ($clock) {
             $javaScriptContent .= '
@@ -297,29 +303,18 @@ class Text extends ModuleWidget
             ';
         }
 
-        $javaScriptContent .= $javaScript;
-        $javaScriptContent .= '</script>';
+        $this->appendJavaScript($javaScriptContent);
 
-        // Replace the Head Content with our generated javascript
-        $data['javaScript'] = $javaScriptContent;
-
-        // Add our fonts.css file
-        $headContent = '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
-        $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
-
+        // Fill in a background color?
         if ($this->getOption('backgroundColor') != '') {
-            $headContent .= '<style type="text/css">';
-            $headContent .= ' body { background-color: ' . $this->getOption('backgroundColor') . '; }';
-            $headContent .= '</style>';
+            $this->appendCss('body { background-color: ' . $this->getOption('backgroundColor') . '; }');
         }
-
-        $data['head'] = $headContent;
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
             $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
 
-        return $this->renderTemplate($data);
+        return $this->finaliseGetResource();
     }
 
     /** @inheritdoc */
@@ -335,6 +330,7 @@ class Text extends ModuleWidget
         return $output;
     }
 
+    /** @inheritdoc */
     public function isValid()
     {
         // Text rendering will be valid

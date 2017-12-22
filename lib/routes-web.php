@@ -137,6 +137,7 @@ $app->get('/playlist/widget/form/audio/:id', '\Xibo\Controller\Module:widgetAudi
 // Outputs
 $app->get('/playlist/widget/tab/:tab/:id', '\Xibo\Controller\Module:getTab')->name('module.widget.tab.form');
 $app->get('/playlist/widget/resource/:regionId/:id', '\Xibo\Controller\Module:getResource')->name('module.getResource');
+$app->get('/playlist/widget/form/templateimage/:type/:templateId', '\Xibo\Controller\Module:getTemplateImage')->name('module.getTemplateImage');
 
 //
 // library

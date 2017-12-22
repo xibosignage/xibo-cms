@@ -22,6 +22,7 @@ namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Helper\DataSetUploadHandler;
@@ -616,6 +617,9 @@ class DataSet extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
+     * @throws \Exception
      */
     public function import($dataSetId)
     {
