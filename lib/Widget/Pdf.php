@@ -5,8 +5,9 @@
  * (Pdf.php)
  */
 
-
 namespace Xibo\Widget;
+
+use Xibo\Exception\XiboException;
 
 /**
  * Class Pdf
@@ -90,6 +91,7 @@ class Pdf extends ModuleWidget
      * Get Resource
      * @param int $displayId
      * @return mixed
+     * @throws XiboException
      */
     public function getResource($displayId = 0)
     {

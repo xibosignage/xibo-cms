@@ -267,7 +267,7 @@ class Text extends ModuleWidget
             }
         }
 
-        // Generate a JSON string of substituted items.
+        // The xibo-text-render library will take these items and render them appropriately depending on the options provided
         $this->appendItems([$text]);
 
         // Replace the head content

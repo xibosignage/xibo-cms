@@ -23,6 +23,10 @@ namespace Xibo\Widget;
 use InvalidArgumentException;
 use Respect\Validation\Validator as v;
 
+/**
+ * Class WebPage
+ * @package Xibo\Widget
+ */
 class WebPage extends ModuleWidget
 {
     /**
@@ -278,6 +282,7 @@ class WebPage extends ModuleWidget
         return $this->renderTemplate($data);
     }
 
+    /** @inheritdoc */
     public function IsValid()
     {
         // Can't be sure because the client does the rendering

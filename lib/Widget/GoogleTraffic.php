@@ -11,6 +11,7 @@ namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
 /**
@@ -221,6 +222,7 @@ class GoogleTraffic extends ModuleWidget
         $this->setOption('zoom', $this->getSanitizer()->getInt('zoom'));
     }
 
+    /** @inheritdoc */
     public function isValid()
     {
         // Using the information you have in your module calculate whether it is valid or not.
@@ -235,12 +237,11 @@ class GoogleTraffic extends ModuleWidget
      * Return the rendered resource to be used by the client (or a preview) for displaying this content.
      * @param integer $displayId If this comes from a real client, this will be the display id.
      * @return mixed
-     * @throws ConfigurationException
+     * @throws XiboException
      */
     public function getResource($displayId = 0)
     {
         // Behave exactly like the client.
-        $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         if ($this->getSetting('apiKey') == '')
