@@ -26,6 +26,7 @@ use Xibo\Event\LayoutBuildRegionEvent;
 use Xibo\Exception\DuplicateEntityException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\LayoutFactory;
@@ -587,7 +588,7 @@ class Layout implements \JsonSerializable
     /**
      * Delete Layout
      * @param array $options
-     * @throws \Exception
+     * @throws XiboException
      */
     public function delete($options = [])
     {

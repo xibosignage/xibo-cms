@@ -31,7 +31,7 @@ interface PlayerActionServiceInterface
      * @param PlayerAction $action
      * @throws ConfigurationException
      */
-    public function sendAction($displays, $action);
+    public function sendAction($display, $action);
 
     /**
      * Process the Queue of Actions

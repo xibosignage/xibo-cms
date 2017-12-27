@@ -138,6 +138,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
         foreach ($displays as $display) {
             $stdObj = new \stdClass();
+            $stdObj->displayId = $display['displayId'];
             $stdObj->xmrChannel = $display['xmrChannel'];
             $stdObj->xmrPubKey = $display['xmrPubKey'];
 

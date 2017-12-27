@@ -361,6 +361,10 @@ class Campaign implements \JsonSerializable
         $this->notify($options);
     }
 
+    /**
+     * Delete Campaign
+     * @throws NotFoundException
+     */
     public function delete()
     {
         $this->load();
@@ -382,9 +386,14 @@ class Campaign implements \JsonSerializable
             $tag->save();
         }
 
+        // Notify anyone interested of the changes
+        // we do this before we delete from the DB (otherwise notify won't find anything)
+        $this->notify();
+
         // Delete all events
         foreach ($this->events as $event) {
             /* @var Schedule $event */
+            $event->setDisplayFactory($this->displayFactory);
             $event->delete();
         }
 
@@ -395,6 +404,7 @@ class Campaign implements \JsonSerializable
     /**
      * Assign Layout
      * @param Layout $layout
+     * @throws NotFoundException
      */
     public function assignLayout($layout)
     {
@@ -548,7 +558,7 @@ class Campaign implements \JsonSerializable
      * Notify displays of this campaign change
      * @param array $options
      */
-    private function notify($options)
+    private function notify($options = [])
     {
         $options = array_merge([
             'notify' => true,
