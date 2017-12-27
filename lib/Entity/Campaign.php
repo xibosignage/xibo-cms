@@ -305,6 +305,7 @@ class Campaign implements \JsonSerializable
     /**
      * Save this Campaign
      * @param array $options
+     * @throws InvalidArgumentException
      */
     public function save($options = [])
     {

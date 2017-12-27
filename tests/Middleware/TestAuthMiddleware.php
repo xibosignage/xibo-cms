@@ -6,14 +6,15 @@
  */
 
 
-namespace Xibo\tests;
-
+namespace Xibo\Tests\Middleware;
 
 use Slim\Middleware;
 
+
 /**
  * Class TestAuthMiddleware
- * @package Xibo\tests
+ * @package Xibo\Tests\Middleware
+ *
  */
 class TestAuthMiddleware extends Middleware
 {

@@ -46,6 +46,10 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class Display implements \JsonSerializable
 {
+    public static $STATUS_DONE = 1;
+    public static $STATUS_DOWNLOADING = 2;
+    public static $STATUS_PENDING = 3;
+
     private $_config;
     use EntityTrait;
 
