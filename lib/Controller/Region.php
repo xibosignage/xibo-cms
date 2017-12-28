@@ -15,6 +15,7 @@ use Xibo\Entity\Playlist;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
@@ -386,6 +387,8 @@ class Region extends Base
      *      @SWG\Schema(ref="#/definitions/Region")
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function edit($regionId)
     {

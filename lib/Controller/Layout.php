@@ -541,6 +541,8 @@ class Layout extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     function retire($layoutId)
     {
