@@ -98,10 +98,17 @@ class XmdsWrapper
     {
     
     }
-    
-    function GetResource()
+
+    /**
+     * @param string $hardwareKey
+     * @param int $layoutId
+     * @param int $regionId
+     * @param string $mediaId
+     * @return string
+     */
+    function GetResource($hardwareKey, $layoutId, $regionId, $mediaId)
     {
-    
+        return $this->client->GetResource($this->KEY, $hardwareKey, $layoutId, $regionId, $mediaId);
     }
     
     function NotifyStatus()

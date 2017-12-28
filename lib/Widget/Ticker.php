@@ -29,6 +29,7 @@ use Stash\Invalidation;
 use Xibo\Controller\Library;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Service\LogService;
 
 
@@ -607,6 +608,7 @@ class Ticker extends ModuleWidget
      * Get Resource
      * @param int $displayId
      * @return mixed
+     * @throws XiboException
      */
     public function getResource($displayId = 0)
     {
@@ -635,7 +637,7 @@ class Ticker extends ModuleWidget
         // Get CSS and HTML template from the original template or from the input field
         if ($this->getOption('sourceId') != 2 && $this->getOption('overrideTemplate') == 0) {
             // Feed tickers without override set.
-            $template = $this->getTemplateById($this->getOption('templateId'));
+            $template = $this->getTemplateById($this->getOption('templateId', 'title-only'));
             
             if (isset($template)) {
                 $text = $template['template'];
@@ -778,11 +780,17 @@ class Ticker extends ModuleWidget
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
     }
 
+    /**
+     * @param $isPreview
+     * @param $text
+     * @return array|mixed|null
+     * @throws \Xibo\Exception\ConfigurationException
+     */
     private function getRssItems($isPreview, $text)
     {
         // Make sure we have the cache location configured
@@ -801,17 +809,24 @@ class Ticker extends ModuleWidget
 
         // Check our cache to see if the key exists
         // Ticker cache holds the entire rendered contents of the feed
-        if ($cache->isHit()) {
+        if ($cache->isHit() && isset($items['media'])) {
             // Our local cache is valid
-            return $items;
+            // Go through the mediaIds in the cache and assign them to this layout
+            foreach ($items['media'] as $mediaId) {
+                $this->assignMedia($mediaId);
+            }
+
+            return $items['items'];
         }
+
+        $this->getLog()->debug('Cache Miss, getting RSS items');
 
         // Lock this cache item (120 seconds)
         $cache->lock(120);
 
         // Our local cache is not valid
         // Store our formatted items
-        $items = [];
+        $items = ['items' => [], 'media' => []];
 
         try {
             $clientConfig = $this->getConfig()->getPicoFeedProxy($feedUrl);
@@ -1029,30 +1044,35 @@ class Ticker extends ModuleWidget
                     $rowString = str_replace($sub, $replace, $rowString);
                 }
 
-                $items[] = $rowString;
+                $items['items'][] = $rowString;
             }
 
             // Process queued downloads
-            $this->mediaFactory->processDownloads(function($media) {
+            $this->mediaFactory->processDownloads(function($media) use ($items) {
                 // Success
-                $this->getLog()->debug('Successfully downloaded ' . $media->mediaId);
+                $this->getLog()->debug((($media->isSaveRequired) ? 'Successfully downloaded ' : 'Download not required for ') . $media->mediaId);
 
                 // Tag this layout with this file
                 $this->assignMedia($media->mediaId);
+
+                // Add to the cache
+                $items['media'][] = $media->mediaId;
             });
 
             // Copyright information?
             if ($this->getOption('copyright', '') != '') {
-                $items[] = '<span id="copyright">' . $this->getOption('copyright') . '</span>';
+                $items['items'][] = '<span id="copyright">' . $this->getOption('copyright') . '</span>';
             }
 
             // Add this to the cache.
             $cache->set($items);
             $cache->expiresAfter($this->getOption('updateInterval', 360) * 60);
             $this->getPool()->saveDeferred($cache);
+
+            $this->getLog()->debug('Processed feed and added to the cache for ' . $this->getOption('updateInterval', 360) . ' minutes');
         }
         catch (PicoFeedException $e) {
-            $this->getLog()->error('Unable to get feed: %s', $e->getMessage());
+            $this->getLog()->error('Unable to get feed: ' . $e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
         }
 
@@ -1061,9 +1081,15 @@ class Ticker extends ModuleWidget
         }
 
         // Return the formatted items
-        return $items;
+        return $items['items'];
     }
 
+    /**
+     * @param $displayId
+     * @param $isPreview
+     * @param $text
+     * @return array
+     */
     private function getDataSetItems($displayId, $isPreview, $text)
     {
         // Lock the request

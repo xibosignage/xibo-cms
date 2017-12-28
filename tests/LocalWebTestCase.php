@@ -309,6 +309,11 @@ class LocalWebTestCase extends WebTestCase
      */
     public function getPlayerActionQueue()
     {
-        return $this->app->container->get('playerActionService')->processQueue();
+        $service = $this->app->container->get('playerActionService');
+
+        if ($service === null)
+            $this->fail('Test hasnt used the client and therefore cannot determine XMR activity');
+
+        return $service->processQueue();
     }
 }

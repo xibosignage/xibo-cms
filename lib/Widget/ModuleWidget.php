@@ -1145,9 +1145,10 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Get templatesAvailable
+     * @param bool $loadImage Should the image URL be loaded?
      * @return array
      */
-    public function templatesAvailable()
+    public function templatesAvailable($loadImage = true)
     {
         if (!isset($this->module->settings['templates'])) {
 
@@ -1159,8 +1160,10 @@ abstract class ModuleWidget implements ModuleInterface
                 $template = json_decode(file_get_contents($template), true);
                 $template['fileName'] = $template['image'];
 
-                // We ltrim this because the control is expecting a relative URL
-                $template['image'] = ltrim($this->getApp()->urlFor('module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]), '/');
+                if ($loadImage) {
+                    // We ltrim this because the control is expecting a relative URL
+                    $template['image'] = ltrim($this->getApp()->urlFor('module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]), '/');
+                }
 
                 $this->module->settings['templates'][] = $template;
             }
@@ -1176,7 +1179,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function getTemplateById($templateId)
     {
-        $templates = $this->templatesAvailable();
+        $templates = $this->templatesAvailable(false);
         $template = null;
 
         if (count($templates) <= 0)

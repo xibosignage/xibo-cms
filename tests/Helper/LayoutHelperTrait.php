@@ -56,6 +56,16 @@ trait LayoutHelperTrait
     }
 
     /**
+     * Build the Layout ready for XMDS
+     * @param XiboLayout $layout
+     */
+    protected function buildLayout($layout)
+    {
+        // Call the status route
+        $this->getEntityProvider()->get('/layout/status/' . $layout->layoutId);
+    }
+
+    /**
      * @param XiboLayout $layout
      */
     protected function deleteLayout($layout)
@@ -74,7 +84,7 @@ trait LayoutHelperTrait
         try {
             $check = (new XiboLayout($this->getEntityProvider()))->getById($layout->layoutId);
 
-            $this->getLogger()->debug('Tested ' . $layout->layout . '. Status returned is ' . $check->status);
+            $this->getLogger()->debug('Tested Layout ' . $layout->layout . '. Status returned is ' . $check->status);
 
             return $check->status === $status;
 

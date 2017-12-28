@@ -43,6 +43,9 @@ class MediaFactory extends BaseFactory
     /** @var Media[] */
     private $remoteDownloadQueue = [];
 
+    /** @var Media[] */
+    private $remoteDownloadNotRequiredQueue = [];
+
     /**
      * @var ConfigServiceInterface
      */
@@ -223,6 +226,23 @@ class MediaFactory extends BaseFactory
 
             if ($queueItem)
                 $this->remoteDownloadQueue[] = $media;
+
+        } else {
+            // Queue in the not required download queue
+            $queueItem = true;
+            if ($media->getId() != null) {
+                // Existing media, check to see if we're already queued
+                foreach ($this->remoteDownloadNotRequiredQueue as $queue) {
+                    // If we find this item already, don't queue
+                    if ($queue->getId() === $media->getId()) {
+                        $queueItem = false;
+                        break;
+                    }
+                }
+            }
+
+            if ($queueItem)
+                $this->remoteDownloadNotRequiredQueue[] = $media;
         }
 
         // Return the media item
@@ -236,60 +256,69 @@ class MediaFactory extends BaseFactory
      */
     public function processDownloads($success = null, $failure = null)
     {
-        if (count($this->remoteDownloadQueue) <= 0)
-            return;
+        if (count($this->remoteDownloadQueue) > 0) {
 
-        $this->getLog()->debug('Processing Queue of ' . count($this->remoteDownloadQueue) . ' downloads.');
+            $this->getLog()->debug('Processing Queue of ' . count($this->remoteDownloadQueue) . ' downloads.');
 
-        // Create a generator and Pool
-        $log = $this->getLog();
-        $queue = $this->remoteDownloadQueue;
-        $client = new Client($this->config->getGuzzleProxy());
+            // Create a generator and Pool
+            $log = $this->getLog();
+            $queue = $this->remoteDownloadQueue;
+            $client = new Client($this->config->getGuzzleProxy());
 
-        $downloads = function() use ($client, $queue) {
-            foreach ($queue as $media) {
-                $url = $media->downloadUrl();
-                $sink = $media->downloadSink();
+            $downloads = function () use ($client, $queue) {
+                foreach ($queue as $media) {
+                    $url = $media->downloadUrl();
+                    $sink = $media->downloadSink();
 
-                yield function() use ($client, $url, $sink) {
-                    return $client->getAsync($url, ['save_to' => $sink]);
-                };
-            }
-        };
-
-        $pool = new Pool($client, $downloads(), [
-            'concurrency' => 5,
-            'fulfilled' => function ($response, $index) use ($log, $queue, $success, $failure) {
-                /** @var Media $item */
-                $item = $queue[$index];
-
-                // File is downloaded, call save to move it appropriately
-                try {
-                    $item->saveFile();
-
-                    // If a success callback has been provided, call it
-                    if ($success !== null && is_callable($success))
-                        $success($item);
-
-                } catch (\Exception $e) {
-                    $this->getLog()->error('Unable to save:' . $item->mediaId . '. ' . $e->getMessage());
-
-                    // Remove it
-                    $item->delete(['rollback' => true]);
-
-                    // If a failure callback has been provided, call it
-                    if ($failure !== null && is_callable($failure))
-                        $failure($item);
+                    yield function () use ($client, $url, $sink) {
+                        return $client->getAsync($url, ['save_to' => $sink]);
+                    };
                 }
-            },
-            'rejected' => function ($reason, $index) use ($log) {
-                /* @var RequestException $reason */
-                $log->error(sprintf('Rejected Request %d to %s because %s', $index, $reason->getRequest()->getUri(), $reason->getMessage()));
-            }
-        ]);
+            };
 
-        $promise = $pool->promise();
-        $promise->wait();
+            $pool = new Pool($client, $downloads(), [
+                'concurrency' => 5,
+                'fulfilled' => function ($response, $index) use ($log, $queue, $success, $failure) {
+                    /** @var Media $item */
+                    $item = $queue[$index];
+
+                    // File is downloaded, call save to move it appropriately
+                    try {
+                        $item->saveFile();
+
+                        // If a success callback has been provided, call it
+                        if ($success !== null && is_callable($success))
+                            $success($item);
+
+                    } catch (\Exception $e) {
+                        $this->getLog()->error('Unable to save:' . $item->mediaId . '. ' . $e->getMessage());
+
+                        // Remove it
+                        $item->delete(['rollback' => true]);
+
+                        // If a failure callback has been provided, call it
+                        if ($failure !== null && is_callable($failure))
+                            $failure($item);
+                    }
+                },
+                'rejected' => function ($reason, $index) use ($log) {
+                    /* @var RequestException $reason */
+                    $log->error(sprintf('Rejected Request %d to %s because %s', $index, $reason->getRequest()->getUri(), $reason->getMessage()));
+                }
+            ]);
+
+            $promise = $pool->promise();
+            $promise->wait();
+        }
+
+        // Handle the downloads that did not require downloading
+        if (count($this->remoteDownloadNotRequiredQueue) > 0) {
+            foreach ($this->remoteDownloadNotRequiredQueue as $item) {
+                // If a success callback has been provided, call it
+                if ($success !== null && is_callable($success))
+                    $success($item);
+            }
+        }
     }
 
     /**

@@ -83,6 +83,18 @@ pbBhRgkIdydXoZZdjQIDAQAB
     /**
      * @param XiboDisplay $display
      */
+    protected function displaySetLicensed($display)
+    {
+        $this->getStore()->update('UPDATE `display` SET licensed = 1, auditingUntil = :auditingUntil WHERE displayId = :displayId', [
+            'displayId' => $display->displayId,
+            'auditingUntil' => (time() + 86400)
+        ]);
+        $this->getStore()->commitIfNecessary();
+    }
+
+    /**
+     * @param XiboDisplay $display
+     */
     protected function deleteDisplay($display)
     {
         $display->delete();
@@ -99,7 +111,7 @@ pbBhRgkIdydXoZZdjQIDAQAB
         try {
             $check = (new XiboDisplay($this->getEntityProvider()))->getById($display->displayGroupId);
 
-            $this->getLogger()->debug('Tested ' . $display->display . '. Status returned is ' . $check->mediaInventoryStatus);
+            $this->getLogger()->debug('Tested Display ' . $display->display . '. Status returned is ' . $check->mediaInventoryStatus);
 
             return $check->mediaInventoryStatus === $status;
 
