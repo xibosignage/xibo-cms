@@ -450,31 +450,6 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /**
-     * Get PicoFeed Proxy
-     * @param string $feedUrl
-     * @return null|\PicoFeed\Config\Config
-     */
-    public function getPicoFeedProxy($feedUrl)
-    {
-        $clientOptions = null;
-
-        if ($this->GetSetting('PROXY_HOST') != '' && !$this->isProxyException($feedUrl)) {
-            $clientOptions = new \PicoFeed\Config\Config();
-            $clientOptions->setProxyHostname($this->GetSetting('PROXY_HOST'));
-            $clientOptions->setProxyPort($this->GetSetting('PROXY_PORT'));
-
-            $proxyAuth = $this->GetSetting('PROXY_AUTH');
-            if ($proxyAuth != '') {
-                $proxyAuth = explode(':', $proxyAuth);
-                $clientOptions->setProxyUsername($proxyAuth[0]);
-                $clientOptions->setProxyPassword($proxyAuth[1]);
-            }
-        }
-
-        return $clientOptions;
-    }
-
-    /**
      * Checks the Environment and Determines if it is suitable
      * @return string
      */
