@@ -200,7 +200,7 @@ class MaintenanceRegularTask implements TaskInterface
         foreach ($this->layoutFactory->query(null, ['status' => 3]) as $layout) {
             /* @var \Xibo\Entity\Layout $layout */
             try {
-                $layout->xlfToDisk(['notify' => false]);
+                $layout->xlfToDisk(['notify' => true]);
             } catch (\Exception $e) {
                 $this->log->error('Maintenance cannot build Layout %d, %s.', $layout->layoutId, $e->getMessage());
             }

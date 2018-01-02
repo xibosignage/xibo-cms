@@ -126,6 +126,9 @@ class LocalWebTestCase extends WebTestCase
         require PROJECT_ROOT . '/lib/routes.php';
         require PROJECT_ROOT . '/lib/routes-web.php';
 
+        // Add the route for running a task manually
+        $app->get('/tasks/:id', '\Xibo\Controller\Task:run');
+
         return $app;
     }
 
