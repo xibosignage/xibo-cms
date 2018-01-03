@@ -621,6 +621,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function assignDisplay($displayGroupId)
     {
@@ -1502,6 +1504,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function changeLayout($displayGroupId)
     {
@@ -1649,6 +1653,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function overlayLayout($displayGroupId)
     {

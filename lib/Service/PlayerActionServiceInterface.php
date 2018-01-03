@@ -9,6 +9,7 @@
 namespace Xibo\Service;
 
 
+use Xibo\Entity\Display;
 use Xibo\Exception\ConfigurationException;
 use Xibo\XMR\PlayerAction;
 
@@ -27,11 +28,11 @@ interface PlayerActionServiceInterface
     public function __construct($config, $log, $triggerPlayerActions);
 
     /**
-     * @param array[Display]|Display $displays
+     * @param Display[]|Display $displays
      * @param PlayerAction $action
      * @throws ConfigurationException
      */
-    public function sendAction($display, $action);
+    public function sendAction($displays, $action);
 
     /**
      * Process the Queue of Actions

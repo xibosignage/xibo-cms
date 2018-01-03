@@ -60,7 +60,7 @@ class PlayerActionService implements PlayerActionServiceInterface
     /**
      * @inheritdoc
      */
-    public function sendAction($display, $action)
+    public function sendAction($displays, $action)
     {
         if (!$this->triggerPlayerActions)
             return;
@@ -69,8 +69,8 @@ class PlayerActionService implements PlayerActionServiceInterface
         if ($this->xmrAddress == null)
             $this->xmrAddress = $this->getConfig()->GetSetting('XMR_ADDRESS');
 
-        if (!is_array($display))
-            $display = [$display];
+        if (!is_array($displays))
+            $displays = [$displays];
 
         // Check ZMQ
         if (!$this->getConfig()->checkZmq())
@@ -80,7 +80,7 @@ class PlayerActionService implements PlayerActionServiceInterface
             throw new InvalidArgumentException(__('XMR address is not set'), 'xmrAddress');
 
         // Send a message to all displays
-        foreach ($display as $display) {
+        foreach ($displays as $display) {
             /* @var Display $display */
             if ($display->xmrChannel == '' || $display->xmrPubKey == '')
                 throw new InvalidArgumentException(__('This Player is not configured or ready to receive push commands over XMR. Please contact your administrator.'), 'xmrRegistered');

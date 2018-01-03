@@ -30,9 +30,14 @@ class MockPlayerActionService implements PlayerActionServiceInterface
     /**
      * @inheritdoc
      */
-    public function sendAction($display, $action)
+    public function sendAction($displays, $action)
     {
-        $this->displays[] = $display->displayId;
+        if (!is_array($displays))
+            $displays = [$displays];
+
+        foreach ($displays as $display) {
+            $this->displays[] = $display->displayId;
+        }
     }
 
     /**
