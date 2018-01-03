@@ -12,6 +12,7 @@ namespace Xibo\Entity;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\DuplicateEntityException;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -356,6 +357,9 @@ class DisplayGroup implements \JsonSerializable
     {
         $this->load();
 
+        // Changes made?
+        $countBefore = count($this->media);
+
         $this->media = array_udiff($this->media, [$media], function($a, $b) {
             /**
              * @var Media $a
@@ -363,6 +367,10 @@ class DisplayGroup implements \JsonSerializable
              */
             return $a->getId() - $b->getId();
         });
+
+        // Notify if necessary
+        if ($countBefore !== count($this->media))
+            $this->notifyRequired = true;
     }
 
     /**
@@ -389,6 +397,9 @@ class DisplayGroup implements \JsonSerializable
     {
         $this->load();
 
+        // Changes made?
+        $countBefore = count($this->layouts);
+
         $this->layouts = array_udiff($this->layouts, [$layout], function($a, $b) {
             /**
              * @var Layout $a
@@ -396,6 +407,10 @@ class DisplayGroup implements \JsonSerializable
              */
             return $a->getId() - $b->getId();
         });
+
+        // Notify if necessary
+        if ($countBefore !== count($this->layouts))
+            $this->notifyRequired = true;
     }
 
     /**
@@ -538,6 +553,7 @@ class DisplayGroup implements \JsonSerializable
     /**
      * Save
      * @param array $options
+     * @throws XiboException
      */
     public function save($options = [])
     {

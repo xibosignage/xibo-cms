@@ -2,43 +2,43 @@
 /*
  * Spring Signage Ltd - http://www.springsignage.com
  * Copyright (C) 2017-18 Spring Signage Ltd
- * (LayoutBuildTest.php)
+ * (CampaignDeleteTest.php)
  */
 
 
 namespace Xibo\Tests\integration\Cache;
 
+use Jenssegers\Date\Date;
 use Xibo\Entity\Display;
+use Xibo\Helper\Random;
+use Xibo\OAuth2\Client\Entity\XiboCampaign;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboSchedule;
-use Xibo\OAuth2\Client\Entity\XiboText;
-use Xibo\OAuth2\Client\Entity\XiboTicker;
 use Xibo\Tests\Helper\DisplayHelperTrait;
 use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
- * Class LayoutBuildTest
+ * Class CampaignDeleteTest
  * @package Xibo\Tests\integration\Cache
  */
-class LayoutBuildTest extends LocalWebTestCase
+class CampaignDeleteTest extends LocalWebTestCase
 {
     use LayoutHelperTrait;
     use DisplayHelperTrait;
 
+    /** @var XiboCampaign */
+    protected $campaign;
+
     /** @var XiboLayout */
     protected $layout;
-
-    /** @var XiboRegion */
-    protected $region;
 
     /** @var XiboDisplay */
     protected $display;
 
-    /** @var XiboTicker */
-    protected $widget;
+    /** @var XiboSchedule */
+    protected $event;
 
     // <editor-fold desc="Init">
     public function setup()
@@ -56,17 +56,27 @@ class LayoutBuildTest extends LocalWebTestCase
             'useDuration' => 1
         ]);
 
-        $this->widget = (new XiboText($this->getEntityProvider()))->hydrate($response);
+        // Build the layout
+        $this->buildLayout($this->layout);
+
+        // Create a Campaign
+        $this->campaign = (new XiboCampaign($this->getEntityProvider()))->create(Random::generateString());
+
+        // Assign the Layout to the Campaign
+        $this->campaign->assignLayout($this->layout->layoutId);
 
         // Create a Display
         $this->display = $this->createDisplay();
 
-        // Schedule the Layout "always" onto our display
+        // Date
+        $date = Date::now();
+
+        // Schedule the Campaign "always" onto our display
         //  deleting the layout will remove this at the end
-        $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d H:i:s', time()+3600),
-            date('Y-m-d H:i:s', time()+7200),
-            $this->layout->campaignId,
+        $this->event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
+            $date->format('Y-m-d H:i:s'),
+            $date->addHours(3)->format('Y-m-d H:i:s'),
+            $this->campaign->campaignId,
             [$this->display->displayGroupId],
             0,
             NULL,
@@ -101,18 +111,11 @@ class LayoutBuildTest extends LocalWebTestCase
      */
     public function testInvalidateCache()
     {
-        // Make sure our Layout is already status 1
-        $this->assertTrue($this->layoutStatusEquals($this->layout, 3), 'Layout Status isnt as expected');
-
         // Make sure our Display is already DONE
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
 
-        // Build the Layout
-        $this->client->get('/tasks/2');
-
-        // Check the Layout Status
-        // Validate the layout status afterwards
-        $this->assertTrue($this->layoutStatusEquals($this->layout, 1), 'Layout Status isnt as expected');
+        // Add the Layout we have prepared to the existing Campaign
+        $this->client->delete('/campaign/' . $this->campaign->campaignId);
 
         // Validate the display status afterwards
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_PENDING), 'Display Status isnt as expected');

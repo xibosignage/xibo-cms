@@ -24,6 +24,7 @@ use Xibo\Entity\Display;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -1146,6 +1147,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function assignLayouts($displayGroupId)
     {
@@ -1224,6 +1227,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function unassignLayouts($displayGroupId)
     {
@@ -1240,7 +1245,7 @@ class DisplayGroup extends Base
 
         // Loop through all the media
         foreach ($layoutIds as $layoutId) {
-
+            $this->getLog()->debug('Unassign layoutId ' . $layoutId . ' from ' . $displayGroupId);
             $displayGroup->unassignLayout($this->layoutFactory->getById($layoutId));
         }
 
@@ -1309,6 +1314,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function version($displayGroupId)
     {

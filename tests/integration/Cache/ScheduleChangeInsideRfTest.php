@@ -44,7 +44,7 @@ class ScheduleChangeInsideRfTest extends LocalWebTestCase
     {
         parent::setup();
 
-        $this->getLogger()->debug('Setup test for Cache Get Resource Test');
+        $this->getLogger()->debug('Setup test for Cache ' . get_class() .' Test');
 
         // Create a Layout
         $this->layout = $this->createLayout();

@@ -2,43 +2,34 @@
 /*
  * Spring Signage Ltd - http://www.springsignage.com
  * Copyright (C) 2017-18 Spring Signage Ltd
- * (LayoutBuildTest.php)
+ * (DisplayGroupVersionInstructionsTest.php)
  */
 
 
 namespace Xibo\Tests\integration\Cache;
 
 use Xibo\Entity\Display;
+use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
-use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\OAuth2\Client\Entity\XiboRegion;
-use Xibo\OAuth2\Client\Entity\XiboSchedule;
-use Xibo\OAuth2\Client\Entity\XiboText;
-use Xibo\OAuth2\Client\Entity\XiboTicker;
+use Xibo\OAuth2\Client\Entity\XiboLibrary;
 use Xibo\Tests\Helper\DisplayHelperTrait;
 use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
- * Class LayoutBuildTest
+ * Class DisplayGroupVersionInstructionsTest
  * @package Xibo\Tests\integration\Cache
  */
-class LayoutBuildTest extends LocalWebTestCase
+class DisplayGroupVersionInstructionsTest extends LocalWebTestCase
 {
     use LayoutHelperTrait;
     use DisplayHelperTrait;
 
-    /** @var XiboLayout */
-    protected $layout;
-
-    /** @var XiboRegion */
-    protected $region;
+    /** @var XiboLibrary */
+    protected $media;
 
     /** @var XiboDisplay */
     protected $display;
-
-    /** @var XiboTicker */
-    protected $widget;
 
     // <editor-fold desc="Init">
     public function setup()
@@ -47,34 +38,12 @@ class LayoutBuildTest extends LocalWebTestCase
 
         $this->getLogger()->debug('Setup test for Cache ' . get_class() .' Test');
 
-        // Create a Layout
-        $this->layout = $this->createLayout();
-
-        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $this->layout->regions[0]->playlists[0]['playlistId'], [
-            'text' => 'Widget A',
-            'duration' => 100,
-            'useDuration' => 1
-        ]);
-
-        $this->widget = (new XiboText($this->getEntityProvider()))->hydrate($response);
+        // Add a media item
+        $this->media = (new XiboLibrary($this->getEntityProvider()))
+            ->create(Random::generateString(), PROJECT_ROOT . '/tests/resources/Xibo_for_Android_v1.7_R61.apk');
 
         // Create a Display
         $this->display = $this->createDisplay();
-
-        // Schedule the Layout "always" onto our display
-        //  deleting the layout will remove this at the end
-        $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d H:i:s', time()+3600),
-            date('Y-m-d H:i:s', time()+7200),
-            $this->layout->campaignId,
-            [$this->display->displayGroupId],
-            0,
-            NULL,
-            NULL,
-            NULL,
-            0,
-            0
-        );
 
         $this->displaySetStatus($this->display, Display::$STATUS_DONE);
         $this->displaySetLicensed($this->display);
@@ -89,7 +58,7 @@ class LayoutBuildTest extends LocalWebTestCase
         parent::tearDown();
 
         // Delete the Layout we've been working with
-        $this->deleteLayout($this->layout);
+        $this->media->deleteAssigned();
 
         // Delete the Display
         $this->deleteDisplay($this->display);
@@ -101,23 +70,33 @@ class LayoutBuildTest extends LocalWebTestCase
      */
     public function testInvalidateCache()
     {
-        // Make sure our Layout is already status 1
-        $this->assertTrue($this->layoutStatusEquals($this->layout, 3), 'Layout Status isnt as expected');
-
         // Make sure our Display is already DONE
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
 
-        // Build the Layout
-        $this->client->get('/tasks/2');
-
-        // Check the Layout Status
-        // Validate the layout status afterwards
-        $this->assertTrue($this->layoutStatusEquals($this->layout, 1), 'Layout Status isnt as expected');
+        // Add the Layout we have prepared to the Display Group
+        $this->client->post('/displaygroup/' . $this->display->displayGroupId . '/version', [
+            'mediaId' => $this->media->mediaId
+        ]);
 
         // Validate the display status afterwards
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_PENDING), 'Display Status isnt as expected');
 
         // Validate that XMR has been called.
         $this->assertTrue(in_array($this->display->displayId, $this->getPlayerActionQueue()), 'Player action not present');
+
+        // Ensure the Version Instructions are present on the Register Display call
+        // Register our display
+        $register = $this->getXmdsWrapper()->RegisterDisplay($this->display->license,
+            $this->display->license,
+            'windows',
+            null,
+            null,
+            null,
+            '00:16:D9:C9:AL:69',
+            $this->display->xmrChannel,
+            $this->display->xmrPubKey
+        );
+
+        $this->assertContains($this->media->storedAs, $register, 'Version information not in Register');
     }
 }
