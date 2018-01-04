@@ -28,6 +28,7 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\DeadlockException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
@@ -546,6 +547,7 @@ class Display implements \JsonSerializable
     /**
      * Save
      * @param array $options
+     * @throws XiboException
      */
     public function save($options = [])
     {
@@ -554,13 +556,20 @@ class Display implements \JsonSerializable
             'audit' => true
         ], $options);
 
+        $allowNotify = true;
+
         if ($options['validate'])
             $this->validate();
 
-        if ($this->displayId == null || $this->displayId == 0)
+        if ($this->displayId == null || $this->displayId == 0) {
             $this->add();
-        else
+
+            // Never notify on add (there is little point, we've only just added).
+            $allowNotify = false;
+        }
+        else {
             $this->edit();
+        }
 
         if ($options['audit'])
             $this->getLog()->audit('Display', $this->displayId, 'Display Saved', $this->getChangedProperties());
@@ -570,7 +579,7 @@ class Display implements \JsonSerializable
             foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
                 /* @var DisplayGroup $group */
                 $group->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-                $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true]);
+                $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true, 'allowNotify' => $allowNotify]);
             }
         }
     }

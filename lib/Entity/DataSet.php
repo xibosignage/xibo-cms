@@ -609,7 +609,7 @@ class DataSet implements \JsonSerializable
     {
         $this->getLog()->debug('DataSet ' . $this->dataSetId . ' wants to notify');
 
-        $this->displayFactory->getDisplayNotifyService()->notifyByDataSetId($this->dataSetId);
+        $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDataSetId($this->dataSetId);
     }
 
     /**

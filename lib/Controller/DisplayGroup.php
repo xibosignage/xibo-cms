@@ -722,6 +722,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function unassignDisplay($displayGroupId)
     {
@@ -741,7 +743,14 @@ class DisplayGroup extends Base
         $displays = $this->getSanitizer()->getIntArray('displayId');
 
         foreach ($displays as $displayId) {
-            $displayGroup->unassignDisplay($this->displayFactory->getById($displayId));
+            $display = $this->displayFactory->getById($displayId);
+
+            if (!$this->getUser()->checkViewable($this->displayGroupFactory->getById($display->displayGroupId)))
+                throw new AccessDeniedException(__('Access Denied to Display'));
+
+            $this->getLog()->debug('Unassigning ' . $display->display);
+
+            $displayGroup->unassignDisplay($display);
         }
 
         $displayGroup->save(['validate' => false]);

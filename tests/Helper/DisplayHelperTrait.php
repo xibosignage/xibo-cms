@@ -73,8 +73,9 @@ pbBhRgkIdydXoZZdjQIDAQAB
     {
         $display->mediaInventoryStatus = $status;
 
-        $this->getStore()->update('UPDATE `display` SET MediaInventoryStatus = :status WHERE displayId = :displayId', [
+        $this->getStore()->update('UPDATE `display` SET MediaInventoryStatus = :status, auditingUntil = :auditingUntil WHERE displayId = :displayId', [
             'displayId' => $display->displayId,
+            'auditingUntil' => time() + 86400,
             'status' => $status
         ]);
         $this->getStore()->commitIfNecessary();
