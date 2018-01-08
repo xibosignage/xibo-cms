@@ -24,6 +24,7 @@ use Xibo\Entity\Display;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -620,6 +621,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function assignDisplay($displayGroupId)
     {
@@ -719,6 +722,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function unassignDisplay($displayGroupId)
     {
@@ -738,7 +743,14 @@ class DisplayGroup extends Base
         $displays = $this->getSanitizer()->getIntArray('displayId');
 
         foreach ($displays as $displayId) {
-            $displayGroup->unassignDisplay($this->displayFactory->getById($displayId));
+            $display = $this->displayFactory->getById($displayId);
+
+            if (!$this->getUser()->checkViewable($this->displayGroupFactory->getById($display->displayGroupId)))
+                throw new AccessDeniedException(__('Access Denied to Display'));
+
+            $this->getLog()->debug('Unassigning ' . $display->display);
+
+            $displayGroup->unassignDisplay($display);
         }
 
         $displayGroup->save(['validate' => false]);
@@ -792,6 +804,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function assignDisplayGroup($displayGroupId)
     {
@@ -875,6 +889,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function unassignDisplayGroup($displayGroupId)
     {
@@ -909,6 +925,7 @@ class DisplayGroup extends Base
     /**
      * Media Form (media linked to displays)
      * @param int $displayGroupId
+     * @throws XiboException
      */
     public function mediaForm($displayGroupId)
     {
@@ -972,6 +989,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function assignMedia($displayGroupId)
     {
@@ -1008,6 +1027,7 @@ class DisplayGroup extends Base
             $displayGroup->unassignMedia($media);
         }
 
+        $displayGroup->setCollectRequired(false);
         $displayGroup->save(['validate' => false]);
 
         // Return
@@ -1050,6 +1070,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function unassignMedia($displayGroupId)
     {
@@ -1070,6 +1092,7 @@ class DisplayGroup extends Base
             $displayGroup->unassignMedia($this->mediaFactory->getById($mediaId));
         }
 
+        $displayGroup->setCollectRequired(false);
         $displayGroup->save(['validate' => false]);
 
         // Return
@@ -1083,6 +1106,8 @@ class DisplayGroup extends Base
     /**
      * Layouts Form (layouts linked to displays)
      * @param int $displayGroupId
+     *
+     * @throws XiboException
      */
     public function LayoutsForm($displayGroupId)
     {
@@ -1146,6 +1171,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function assignLayouts($displayGroupId)
     {
@@ -1182,6 +1209,7 @@ class DisplayGroup extends Base
             $displayGroup->unassignLayout($layout);
         }
 
+        $displayGroup->setCollectRequired(false);
         $displayGroup->save(['validate' => false]);
 
         // Return
@@ -1224,6 +1252,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function unassignLayouts($displayGroupId)
     {
@@ -1240,10 +1270,11 @@ class DisplayGroup extends Base
 
         // Loop through all the media
         foreach ($layoutIds as $layoutId) {
-
+            $this->getLog()->debug('Unassign layoutId ' . $layoutId . ' from ' . $displayGroupId);
             $displayGroup->unassignLayout($this->layoutFactory->getById($layoutId));
         }
 
+        $displayGroup->setCollectRequired(false);
         $displayGroup->save(['validate' => false]);
 
         // Return
@@ -1309,6 +1340,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function version($displayGroupId)
     {
@@ -1495,6 +1528,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function changeLayout($displayGroupId)
     {
@@ -1642,6 +1677,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function overlayLayout($displayGroupId)
     {

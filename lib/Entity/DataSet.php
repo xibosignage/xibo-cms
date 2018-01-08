@@ -850,7 +850,7 @@ class DataSet implements \JsonSerializable
     {
         $this->getLog()->debug('DataSet ' . $this->dataSetId . ' wants to notify');
 
-        $this->displayFactory->getDisplayNotifyService()->notifyByDataSetId($this->dataSetId);
+        $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDataSetId($this->dataSetId);
     }
 
     /**
@@ -860,7 +860,7 @@ class DataSet implements \JsonSerializable
      */
     public function addRow($row)
     {
-        $this->getLog()->debug('Adding row %s', var_export($row, true));
+        $this->getLog()->debug('Adding row ' . var_export($row, true));
 
         // Update the last edit date on this dataSet
         $this->lastDataEdit = time();

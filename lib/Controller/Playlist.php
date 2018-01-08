@@ -12,6 +12,7 @@ namespace Xibo\Controller;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
@@ -502,6 +503,8 @@ class Playlist extends Base
      *      SWG\Schema(ref="#/definitions/Playlist")
      *  )
      * )
+     *
+     * @throws XiboException
      */
     function order($playlistId)
     {

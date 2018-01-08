@@ -188,6 +188,8 @@ class DataSetData extends Base
      *      )
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function add($dataSetId)
     {

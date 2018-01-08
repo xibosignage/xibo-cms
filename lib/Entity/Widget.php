@@ -612,8 +612,8 @@ class Widget implements \JsonSerializable
         $this->linkMedia();
         $this->unlinkMedia();
 
-        if ($options['notify'])
-            $this->notify($options);
+        // Call notify with the notify options passed in
+        $this->notify($options);
 
         if ($options['audit']) {
             $changedProperties = $this->getChangedProperties();
@@ -678,8 +678,8 @@ class Widget implements \JsonSerializable
         // Delete this
         $this->getStore()->update('DELETE FROM `widget` WHERE widgetId = :widgetId', array('widgetId' => $this->widgetId));
 
-        if ($options['notify'])
-            $this->notify($options);
+        // Call notify with the notify options passed in
+        $this->notify($options);
 
         $this->getLog()->debug('Delete Widget Complete');
     }
@@ -690,21 +690,23 @@ class Widget implements \JsonSerializable
      */
     private function notify($options)
     {
-        $this->getLog()->debug('Notifying upstream playlist. Notify Displays: ' . $options['notifyDisplays']);
+        $this->getLog()->debug('Notifying upstream playlist. Notify Layout: ' . $options['notify'] . ' Notify Displays: ' . $options['notifyDisplays']);
 
-        // Notify the Layout
-        $this->getStore()->update('
-            UPDATE `layout` SET `status` = 3, `modifiedDT` = :modifiedDt WHERE layoutId IN (
-              SELECT `region`.layoutId
-                FROM `lkregionplaylist`
-                  INNER JOIN `region`
-                  ON region.regionId = `lkregionplaylist`.regionId
-               WHERE `lkregionplaylist`.playlistId = :playlistId
-            )
-        ', [
-            'playlistId' => $this->playlistId,
-            'modifiedDt' => $this->dateService->getLocalDate()
-        ]);
+        if ($options['notify']) {
+            // Notify the Layout
+            $this->getStore()->update('
+                UPDATE `layout` SET `status` = 3, `modifiedDT` = :modifiedDt WHERE layoutId IN (
+                  SELECT `region`.layoutId
+                    FROM `lkregionplaylist`
+                      INNER JOIN `region`
+                      ON region.regionId = `lkregionplaylist`.regionId
+                   WHERE `lkregionplaylist`.playlistId = :playlistId
+                )
+            ', [
+                'playlistId' => $this->playlistId,
+                'modifiedDt' => $this->dateService->getLocalDate()
+            ]);
+        }
 
         // Notify any displays (clearing their cache)
         if ($options['notifyDisplays']) {

@@ -253,6 +253,8 @@ class PdoStorageService implements StorageServiceInterface
     /** @inheritdoc */
     public function updateWithDeadlockLoop($sql, $params, $connection = null)
     {
+        $maxRetries = 2;
+
         // Should we log?
         if ($this->log != null)
             $this->log->sql($sql, $params);
@@ -265,7 +267,7 @@ class PdoStorageService implements StorageServiceInterface
 
         // Deadlock protect this statement
         $success = false;
-        $retries = 2;
+        $retries = $maxRetries;
         do {
             try {
                 $this->incrementStat($connection, 'update');
@@ -291,7 +293,7 @@ class PdoStorageService implements StorageServiceInterface
         } while ($retries--);
 
         if (!$success)
-            throw new DeadlockException(__('Failed to write to database after %d retries. Please try again later.', $retries));
+            throw new DeadlockException(__('Failed to write to database after %d retries. Please try again later.', $maxRetries));
     }
 
     /** @inheritdoc */

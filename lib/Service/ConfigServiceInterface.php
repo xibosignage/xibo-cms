@@ -83,13 +83,6 @@ interface ConfigServiceInterface
     public function getGuzzleProxy($httpOptions = []);
 
     /**
-     * Get PicoFeed Proxy
-     * @param string $feedUrl
-     * @return null|\PicoFeed\Config\Config
-     */
-    public function getPicoFeedProxy($feedUrl);
-
-    /**
      * Checks the Environment and Determines if it is suitable
      * @return string
      */

@@ -387,6 +387,8 @@ class Layout extends Base
      *      @SWG\Schema(ref="#/definitions/Layout")
      *  )
      * )
+     *
+     * @throws XiboException
      */
     function edit($layoutId)
     {
@@ -419,7 +421,8 @@ class Layout extends Base
             'saveLayout' => true,
             'saveRegions' => $saveRegions,
             'saveTags' => true,
-            'setBuildRequired' => true
+            'setBuildRequired' => true,
+            'notify' => false
         ]);
 
         // Return
@@ -497,6 +500,8 @@ class Layout extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     function delete($layoutId)
     {
@@ -536,6 +541,8 @@ class Layout extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     function retire($layoutId)
     {

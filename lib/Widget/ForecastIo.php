@@ -26,6 +26,7 @@ use GuzzleHttp\Exception\RequestException;
 use Respect\Validation\Validator as v;
 use Xibo\Entity\Media;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
 /**
@@ -462,6 +463,7 @@ class ForecastIo extends ModuleWidget
      * Get the forecast data for the provided display id
      * @param int $displayId
      * @return array|boolean
+     * @throws XiboException
      */
     private function getForecastData($displayId)
     {
@@ -666,6 +668,7 @@ class ForecastIo extends ModuleWidget
      * Get Resource
      * @param int $displayId
      * @return mixed
+     * @throws XiboException
      */
     public function getResource($displayId = 0)
     {
@@ -818,7 +821,7 @@ class ForecastIo extends ModuleWidget
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         // Return that content.
         return $this->renderTemplate($data);

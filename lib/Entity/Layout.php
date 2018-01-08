@@ -588,7 +588,7 @@ class Layout implements \JsonSerializable
     /**
      * Delete Layout
      * @param array $options
-     * @throws \Exception
+     * @throws XiboException
      */
     public function delete($options = [])
     {

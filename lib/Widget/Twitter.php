@@ -26,6 +26,7 @@ use Emojione\Ruleset;
 use Respect\Validation\Validator as v;
 use Stash\Invalidation;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
 /**
@@ -424,7 +425,7 @@ class Twitter extends TwitterBase
      * @param int $displayId
      * @param bool $isPreview
      * @return array|false
-     * @throws ConfigurationException
+     * @throws XiboException
      */
     protected function getTwitterFeed($displayId = 0, $isPreview = true)
     {
@@ -843,7 +844,7 @@ class Twitter extends TwitterBase
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         $this->concurrentRequestRelease();
 
