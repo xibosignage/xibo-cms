@@ -1111,6 +1111,7 @@ class State extends Middleware
                 $container->user,
                 $container->userFactory,
                 $container->configService,
+                $container->pool,
                 $container->dataSetColumnFactory,
                 $container->permissionFactory,
                 $container->displayFactory

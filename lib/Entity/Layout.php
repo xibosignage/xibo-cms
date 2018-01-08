@@ -26,6 +26,7 @@ use Xibo\Event\LayoutBuildRegionEvent;
 use Xibo\Exception\DuplicateEntityException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\LayoutFactory;
@@ -1049,6 +1050,8 @@ class Layout implements \JsonSerializable
      * @param DataSetFactory $dataSetFactory
      * @param string $fileName
      * @param array $options
+     * @throws InvalidArgumentException
+     * @throws XiboException
      */
     public function toZip($dataSetFactory, $fileName, $options = [])
     {
@@ -1063,7 +1066,7 @@ class Layout implements \JsonSerializable
         $zip = new \ZipArchive();
         $result = $zip->open($fileName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
         if ($result !== true)
-            throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: ' . $result));
+            throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code: ' . $result), 'fileName');
 
         // Add a mapping file for the region names
         $regionMapping = [];

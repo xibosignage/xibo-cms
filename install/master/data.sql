@@ -262,7 +262,8 @@ INSERT INTO `datatype` (`DataTypeID`, `DataType`) VALUES
 
 INSERT INTO `datasetcolumntype` (`DataSetColumnTypeID`, `DataSetColumnType`) VALUES
 (1, 'Value'),
-(2, 'Formula');
+(2, 'Formula'),
+(3, 'Remote');
 
 INSERT INTO `bandwidthtype` (`bandwidthtypeid`, `name`) VALUES
 (1, 'Register'),
@@ -319,4 +320,5 @@ INSERT INTO task (taskId, name, class, status, options, schedule, isActive, conf
   (2, 'Regular Maintenance', '\\Xibo\\XTR\\MaintenanceRegularTask', 2, '[]', '*/5 * * * * *', 1, '/tasks/maintenance-regular.task'),
   (3, 'Email Notifications', '\\Xibo\\XTR\\EmailNotificationsTask', 2, '[]', '*/5 * * * * *', 1, '/tasks/email-notifications.task'),
   (4, 'Stats Archive', '\\Xibo\\XTR\\StatsArchiveTask', 2, '{"periodSizeInDays":"7","maxPeriods":"4"}', '0 0 * * Mon', 0, '/tasks/stats-archiver.task'),
-  (5, 'Remove old Notifications', '\\Xibo\\XTR\\NotificationTidyTask', 2, '{"maxAgeDays":"7","systemOnly":"1","readOnly":"0"}', '15 0 * * *', 1, '/tasks/notification-tidy.task');
+  (5, 'Remove old Notifications', '\\Xibo\\XTR\\NotificationTidyTask', 2, '{"maxAgeDays":"7","systemOnly":"1","readOnly":"0"}', '15 0 * * *', 1, '/tasks/notification-tidy.task'),
+  (6, 'Fetch Remote DataSets', '\\Xibo\\XTR\\RemoteDataSetFetchTask', 2, 1, '/tasks/remote-dataset.task', '{}', '30 * * * * *');

@@ -1092,4 +1092,13 @@ class ConfigService implements ConfigServiceInterface
     {
         return extension_loaded('openssl');
     }
+
+    /**
+     * @inheritdoc
+     * https://stackoverflow.com/a/45767760
+     */
+    public function getMemoryLimitBytes()
+    {
+        return intval(str_replace(array('G', 'M', 'K'), array('000000000', '000000', '000'), ini_get('memory_limit')));
+    }
 }

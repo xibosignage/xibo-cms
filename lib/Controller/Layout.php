@@ -28,6 +28,7 @@ use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\LayoutFactory;
@@ -1267,6 +1268,7 @@ class Layout extends Base
 
     /**
      * @param int $layoutId
+     * @throws XiboException
      */
     public function export($layoutId)
     {
