@@ -1029,12 +1029,10 @@ class User extends Base
         $requestedPreference = $this->getSanitizer()->getString('preference');
 
         if ($requestedPreference != '') {
-            return [
-                $this->getUser()->getOption($requestedPreference)
-            ];
+            $this->getState()->setData($this->getUser()->getOption($requestedPreference));
         }
         else {
-            return $this->getUser()->userOptions;
+            $this->getState()->setData($this->getUser()->getUserOptions());
         }
     }
 

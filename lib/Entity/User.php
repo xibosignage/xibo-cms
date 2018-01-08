@@ -214,12 +214,6 @@ class User implements \JsonSerializable
     public $homePage;
 
     /**
-     * @SWG\Property(description="The user options")
-     * @var UserOption[]
-     */
-    public $userOptions = [];
-
-    /**
      * @SWG\Property(description="Does this Group receive system notifications.")
      * @var int
      */
@@ -230,6 +224,11 @@ class User implements \JsonSerializable
      * @var int
      */
     public $isDisplayNotification = 0;
+
+    /**
+     * @var UserOption[]
+     */
+    private $userOptions = [];
 
     /**
      * Cached Permissions
@@ -1279,5 +1278,16 @@ class User implements \JsonSerializable
             if(!preg_match($policy, $password, $matches))
                 throw new \InvalidArgumentException($policyError);
         }
+    }
+
+    /**
+     * @return UserOption[]
+     */
+    public function getUserOptions()
+    {
+        // Don't return anything with Grid in it (these have to be specifically requested).
+        return array_filter($this->userOptions, function($element) {
+            return !(stripos($element->option, 'Grid'));
+        });
     }
 }
