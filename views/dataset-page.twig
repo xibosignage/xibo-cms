@@ -138,7 +138,8 @@
                         upload: {
                             maxSize: {{ libraryUpload.maxSize }},
                             maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
-                            validExt: "{{ libraryUpload.validExt }}"
+                            validExt: "{{ libraryUpload.validExt }}",
+                            utf8Message: "{% trans "If the CSV file contains non-ASCII characters please ensure the file is UTF-8 encoded" %}"
                         },
                         columns: columns
                     }),
@@ -150,6 +151,13 @@
                             callback: function() {
                                 table.ajax.reload();
                                 XiboDialogClose();
+                            }
+                        },
+                        help: {
+                            label: "{% trans "Help" %}",
+                            className: "default",
+                            callback: function() {
+                                XiboHelpRender("{{ helpService.link("dataset") }}#Importing_from_CSV_file");
                             }
                         }
                     }
@@ -219,10 +227,11 @@
     <script type="text/x-handlebars-template" id="template-dataset-upload">
         <form class="form-horizontal" method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/)csv/i">
             <div class="row fileupload-buttonbar">
+                <div class="well">
+                    {{ upload.maxSizeMessage }} <br>
+                    {{ upload.utf8Message }}
+                </div>
                 <div class="col-md-7">
-                    <div class="well">
-                        {{ upload.maxSizeMessage }}
-                    </div>
                     <!-- The fileinput-button span is used to style the file input field as button -->
                     <span class="btn btn-success fileinput-button">
                         <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
