@@ -804,6 +804,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function assignDisplayGroup($displayGroupId)
     {
@@ -887,6 +889,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function unassignDisplayGroup($displayGroupId)
     {
@@ -921,6 +925,7 @@ class DisplayGroup extends Base
     /**
      * Media Form (media linked to displays)
      * @param int $displayGroupId
+     * @throws XiboException
      */
     public function mediaForm($displayGroupId)
     {
@@ -984,6 +989,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function assignMedia($displayGroupId)
     {
@@ -1020,6 +1027,7 @@ class DisplayGroup extends Base
             $displayGroup->unassignMedia($media);
         }
 
+        $displayGroup->setCollectRequired(false);
         $displayGroup->save(['validate' => false]);
 
         // Return
@@ -1062,6 +1070,8 @@ class DisplayGroup extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function unassignMedia($displayGroupId)
     {
@@ -1082,6 +1092,7 @@ class DisplayGroup extends Base
             $displayGroup->unassignMedia($this->mediaFactory->getById($mediaId));
         }
 
+        $displayGroup->setCollectRequired(false);
         $displayGroup->save(['validate' => false]);
 
         // Return
@@ -1095,6 +1106,8 @@ class DisplayGroup extends Base
     /**
      * Layouts Form (layouts linked to displays)
      * @param int $displayGroupId
+     *
+     * @throws XiboException
      */
     public function LayoutsForm($displayGroupId)
     {
@@ -1196,6 +1209,7 @@ class DisplayGroup extends Base
             $displayGroup->unassignLayout($layout);
         }
 
+        $displayGroup->setCollectRequired(false);
         $displayGroup->save(['validate' => false]);
 
         // Return
@@ -1260,6 +1274,7 @@ class DisplayGroup extends Base
             $displayGroup->unassignLayout($this->layoutFactory->getById($layoutId));
         }
 
+        $displayGroup->setCollectRequired(false);
         $displayGroup->save(['validate' => false]);
 
         // Return
