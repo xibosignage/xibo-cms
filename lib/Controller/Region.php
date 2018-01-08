@@ -9,9 +9,7 @@
 namespace Xibo\Controller;
 
 
-//use Xibo\Entity\Layout;
 use Xibo\Entity\Permission;
-use Xibo\Entity\Playlist;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
@@ -120,7 +118,7 @@ class Region extends Base
 
         // Loop through everything setting permissions
         foreach ($region->playlists as $playlist) {
-            /* @var Playlist $playlist */
+            /* @var \Xibo\Entity\Playlist $playlist */
 
             foreach ($playlist->widgets as $widget) {
                 /* @var Widget $widget */
@@ -269,7 +267,7 @@ class Region extends Base
                 $permission->save();
 
                 foreach ($region->playlists as $playlist) {
-                    /* @var Playlist $playlist */
+                    /* @var \Xibo\Entity\Playlist $playlist */
                     $permission = $this->permissionFactory->create($permission->groupId, get_class($playlist), $playlist->getId(), $permission->view, $permission->edit, $permission->delete);
                     $permission->save();
                 }
@@ -285,7 +283,7 @@ class Region extends Base
             }
 
             foreach ($region->playlists as $playlist) {
-                /* @var Playlist $playlist */
+                /* @var \Xibo\Entity\Playlist $playlist */
                 foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
