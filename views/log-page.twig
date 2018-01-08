@@ -87,6 +87,9 @@
 
                                     {% set title %}{% trans "Message" %}{% endset %}
                                     {{ inline.input("message", title) }}
+
+                                    {% set title %}{% trans "Exclude logs common to each request?" %}{% endset %}
+                                    {{ inline.checkbox("excludeLog", title, 1) }}
                                 </div>
                             </div>
                         </form>

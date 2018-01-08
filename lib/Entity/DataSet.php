@@ -619,7 +619,7 @@ class DataSet implements \JsonSerializable
      */
     public function addRow($row)
     {
-        $this->getLog()->debug('Adding row %s', var_export($row, true));
+        $this->getLog()->debug('Adding row ' . var_export($row, true));
 
         // Update the last edit date on this dataSet
         $this->lastDataEdit = time();
