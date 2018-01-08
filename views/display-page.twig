@@ -109,7 +109,8 @@
                         url: "{{ urlFor("user.pref") }}?preference=displayGrid",
                         dataType: 'json',
                         success: function (json) {
-                            data = JSON.parse(json.data.value);
+                            if (json.success)
+                                data = JSON.parse(json.data.value);
                         }
                     });
                     return data;

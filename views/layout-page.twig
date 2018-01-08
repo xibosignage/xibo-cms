@@ -104,6 +104,32 @@
                 "lengthMenu": [10, 25, 50, 100, 250, 500],
                 serverSide: true,
                 stateSave: true,
+                stateLoadCallback: function (settings, callback) {
+                    var data;
+                    $.ajax({
+                        type: "GET",
+                        async: false,
+                        url: "{{ urlFor("user.pref") }}?preference=layoutGrid",
+                        dataType: 'json',
+                        success: function (json) {
+                            if (json.success)
+                                data = JSON.parse(json.data.value);
+                        }
+                    });
+                    return data;
+                },
+                stateSaveCallback: function (settings, data) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ urlFor("user.pref") }}",
+                        data: {
+                            preference: [{
+                                option: "layoutGrid",
+                                value: JSON.stringify(data)
+                            }]
+                        }
+                    });
+                },
                 filter: false,
                 searchDelay: 3000,
                 "order": [[1, "asc"]],

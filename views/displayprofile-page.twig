@@ -52,6 +52,32 @@
     <script type="text/javascript">
         var table = $("#displayProfiles").DataTable({ "language": dataTablesLanguage,
             serverSide: true, stateSave: true,
+            stateLoadCallback: function (settings, callback) {
+                var data;
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "{{ urlFor("user.pref") }}?preference=displayProfileGrid",
+                    dataType: 'json',
+                    success: function (json) {
+                        if (json.success)
+                            data = JSON.parse(json.data.value);
+                    }
+                });
+                return data;
+            },
+            stateSaveCallback: function (settings, data) {
+                $.ajax({
+                    type: "POST",
+                    url: "{{ urlFor("user.pref") }}",
+                    data: {
+                        preference: [{
+                            option: "displayProfileGrid",
+                            value: JSON.stringify(data)
+                        }]
+                    }
+                });
+            },
             filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
