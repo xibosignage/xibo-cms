@@ -20,6 +20,7 @@
  */
 namespace Xibo\Widget;
 
+use Intervention\Image\ImageManagerStatic as Img;
 use Mimey\MimeTypes;
 use Slim\Slim;
 use Stash\Interfaces\PoolInterface;
