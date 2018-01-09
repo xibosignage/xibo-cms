@@ -1,5 +1,5 @@
 // Include gulp
-var version = '1.8.3';
+var version = '1.8.4';
 var gulp = require("gulp");
 var del = require("del");
 var composer = require("gulp-composer");

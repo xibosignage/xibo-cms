@@ -767,6 +767,13 @@
                         "description": "MySQL SELECT syntax formula for this Column if the column type is formula",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "remoteField",
+                        "in": "formData",
+                        "description": "JSON-String to select Data from the Remote DataSet",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -847,6 +854,13 @@
                         "name": "formula",
                         "in": "formData",
                         "description": "MySQL SELECT syntax formula for this Column if the column type is formula",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "remoteField",
+                        "in": "formData",
+                        "description": "JSON-String to select Data from the Remote DataSet",
                         "required": false,
                         "type": "string"
                     }
@@ -7711,6 +7725,62 @@
                 "isLookup": {
                     "description": "Flag to indicate whether this DataSet is a lookup table",
                     "type": "integer"
+                },
+                "isRemote": {
+                    "description": "Flag to indicate whether this DataSet is Remote",
+                    "type": "integer"
+                },
+                "method": {
+                    "description": "Method to fetch the Data, can be GET or POST",
+                    "type": "string"
+                },
+                "uri": {
+                    "description": "URI to call to fetch Data from. Replacements are {{DATE}}, {{TIME}} and, in case this is a sequencial used DataSet, {{COL.NAME}} where NAME is a ColumnName from the underlying DataSet.",
+                    "type": "string"
+                },
+                "postData": {
+                    "description": "Data to send as POST-Data to the remote host with the same Replacements as in the URI.",
+                    "type": "string"
+                },
+                "authentication": {
+                    "description": "Authentication method, can be none, digest, basic",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "Username to authenticate with",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "Corresponding password",
+                    "type": "string"
+                },
+                "refreshRate": {
+                    "description": "Time in seconds this DataSet should fetch new Datas from the remote host",
+                    "type": "integer"
+                },
+                "clearRate": {
+                    "description": "Time in seconds when this Dataset should be cleared. If here is a lower value than in RefreshRate it will be cleared when the data is refreshed",
+                    "type": "integer"
+                },
+                "runsAfter": {
+                    "description": "DataSetID of the DataSet which should be fetched and present before the Data from this DataSet are fetched",
+                    "type": "integer"
+                },
+                "lastSync": {
+                    "description": "Last Synchronisation Timestamp",
+                    "type": "integer"
+                },
+                "dataRoot": {
+                    "description": "Root-Element form JSON where the data are stored in",
+                    "type": "string"
+                },
+                "summarize": {
+                    "description": "Optional function to use for summarize or count unique fields in a remote request",
+                    "type": "string"
+                },
+                "summarizeField": {
+                    "description": "JSON-Element below the Root-Element on which the consolidation should be applied on",
+                    "type": "string"
                 }
             }
         },
@@ -7750,6 +7820,10 @@
                 },
                 "dataType": {
                     "description": "The data type for this Column",
+                    "type": "string"
+                },
+                "remoteField": {
+                    "description": "The data field of the remote DataSet as a JSON-String",
                     "type": "string"
                 },
                 "dataSetColumnType": {
@@ -8963,13 +9037,6 @@
                 "homePage": {
                     "description": "The name of home page",
                     "type": "string"
-                },
-                "userOptions": {
-                    "description": "The user options",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/UserOption"
-                    }
                 },
                 "isSystemNotification": {
                     "description": "Does this Group receive system notifications.",
