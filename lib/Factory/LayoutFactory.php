@@ -1146,10 +1146,10 @@ class LayoutFactory extends BaseFactory
                   FROM `lkwidgetmedia`
                     INNER JOIN `widget`
                     ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                    INNER JOIN `lkregionplaylist`
-                    ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                    INNER JOIN `playlist`
+                    ON `playlist`.playlistId = `widget`.playlistId
                     INNER JOIN `region`
-                    ON `region`.regionId = `lkregionplaylist`.regionId
+                    ON `region`.regionId = `playlist`.regionId
                  WHERE `lkwidgetmedia`.mediaId = :mediaId
                 )
             ';
@@ -1164,10 +1164,10 @@ class LayoutFactory extends BaseFactory
                   FROM `lkwidgetmedia`
                     INNER JOIN `widget`
                     ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                    INNER JOIN `lkregionplaylist`
-                    ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                    INNER JOIN `playlist`
+                    ON `playlist`.playlistId = `widget`.playlistId
                     INNER JOIN `region`
-                    ON `region`.regionId = `lkregionplaylist`.regionId
+                    ON `region`.regionId = `playlist`.regionId
                     INNER JOIN `media` 
                     ON `lkwidgetmedia`.mediaId = `media`.mediaId
                  WHERE `media`.name LIKE :mediaLike

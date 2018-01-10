@@ -121,11 +121,6 @@ class RegionFactory extends BaseFactory
         $region->left = $left;
         $region->zIndex = $zIndex;
 
-        // Create a Playlist for this region
-        // many to many relationship
-        $playlist = $this->playlistFactory->create($name, $ownerId);
-        $region->assignPlaylist($playlist);
-
         return $region;
     }
 
@@ -155,6 +150,7 @@ class RegionFactory extends BaseFactory
      * Load a region
      * @param int $regionId
      * @return Region
+     * @throws NotFoundException
      */
     public function loadByRegionId($regionId)
     {
@@ -203,24 +199,9 @@ class RegionFactory extends BaseFactory
               `region`.duration
         ';
 
-        if ($this->getSanitizer()->getInt('playlistId', $filterBy) !== null) {
-            $sql .= ', `lkregionplaylist`.displayOrder ';
-        }
-
         $sql .= '
             FROM `region`
         ';
-
-        if ($this->getSanitizer()->getInt('playlistId', $filterBy) !== null) {
-            // Restrict to assigned playlists
-            $sql .= '
-                INNER JOIN `lkregionplaylist`
-                ON `lkregionplaylist`.regionId = `region`.regionId
-                    AND `lkregionplaylist`.playlistId = :playlistId
-            ';
-
-            $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', $filterBy);
-        }
 
         $sql .= ' WHERE 1 = 1 ';
 
@@ -232,6 +213,11 @@ class RegionFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('layoutId', $filterBy) != 0) {
             $sql .= ' AND layoutId = :layoutId ';
             $params['layoutId'] = $this->getSanitizer()->getInt('layoutId', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('playlistId', $filterBy) !== null) {
+            $sql .= ' AND regionId IN (SELECT regionId FROM playlist WHERE playlistId = :playlistId) ';
+            $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', $filterBy);
         }
 
         foreach ($this->getStore()->select($sql, $params) as $row) {

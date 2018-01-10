@@ -127,6 +127,13 @@ $app->get('/region/form/timeline/:id', '\Xibo\Controller\Region:timelineForm')->
 //
 // playlists
 //
+$app->get('/playlist/view', '\Xibo\Controller\Playlist:displayPage')->name('playlist.view');
+$app->get('/playlist/form/add', '\Xibo\Controller\Playlist:addForm')->name('playlist.add.form');
+$app->get('/playlist/form/edit/:id', '\Xibo\Controller\Playlist:editForm')->name('playlist.edit.form');
+$app->get('/playlist/form/copy/:id', '\Xibo\Controller\Playlist:copyForm')->name('playlist.copy.form');
+$app->get('/playlist/form/delete/:id', '\Xibo\Controller\Playlist:deleteForm')->name('playlist.delete.form');
+$app->get('/playlist/form/timeline/:id', '\Xibo\Controller\Playlist:timelineForm')->name('playlist.timeline.form');
+// Designer
 $app->get('/playlist/form/library/assign/:id', '\Xibo\Controller\Playlist:libraryAssignForm')->name('playlist.library.assign.form');
 // Module functions
 $app->get('/playlist/widget/form/add/:type/:id', '\Xibo\Controller\Module:addWidgetForm')->name('module.widget.add.form');

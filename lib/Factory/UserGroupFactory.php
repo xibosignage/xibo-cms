@@ -167,8 +167,7 @@ class UserGroupFactory extends BaseFactory
     /**
      * @param array $sortOrder
      * @param array $filterBy
-     * @return array[UserGroup]
-     * @throws \Exception
+     * @return UserGroup[]
      */
     public function query($sortOrder = null, $filterBy = [])
     {
@@ -178,170 +177,162 @@ class UserGroupFactory extends BaseFactory
         if ($sortOrder === null)
             $sortOrder = ['`group`'];
 
-        try {
-            $select = '
-            SELECT 	`group`.group,
-				`group`.groupId,
-				`group`.isUserSpecific,
-				`group`.isEveryone ';
+        $select = '
+        SELECT 	`group`.group,
+            `group`.groupId,
+            `group`.isUserSpecific,
+            `group`.isEveryone ';
 
-            if (DBVERSION >= 88) {
-				$select .= '
-				    ,
-				    `group`.libraryQuota
-				';
-            }
-
-            if (DBVERSION >= 124) {
-				$select .= '
-				    ,
-				    `group`.isSystemNotification
-				';
-            }
-
-            if (DBVERSION >= 134) {
-				$select .= '
-				    ,
-				    `group`.isDisplayNotification
-				';
-            }
-
-            $body = '
-              FROM `group`
-             WHERE 1 = 1
+        if (DBVERSION >= 88) {
+            $select .= '
+                ,
+                `group`.libraryQuota
             ';
+        }
 
-            // Permissions
-            if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
-                // Normal users can only see their group
-                if ($this->getUser()->userTypeId != 1) {
-                    $body .= '
-                    AND `group`.groupId IN (
-                        SELECT `group`.groupId
-                          FROM `lkusergroup`
-                            INNER JOIN `group`
-                            ON `group`.groupId = `lkusergroup`.groupId
-                                AND `group`.isUserSpecific = 0
-                         WHERE `lkusergroup`.userId = :currentUserId
-                    )
-                    ';
-                    $params['currentUserId'] = $this->getUser()->userId;
-                }
+        if (DBVERSION >= 124) {
+            $select .= '
+                ,
+                `group`.isSystemNotification
+            ';
+        }
+
+        if (DBVERSION >= 134) {
+            $select .= '
+                ,
+                `group`.isDisplayNotification
+            ';
+        }
+
+        $body = '
+          FROM `group`
+         WHERE 1 = 1
+        ';
+
+        // Permissions
+        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
+            // Normal users can only see their group
+            if ($this->getUser()->userTypeId != 1) {
+                $body .= '
+                AND `group`.groupId IN (
+                    SELECT `group`.groupId
+                      FROM `lkusergroup`
+                        INNER JOIN `group`
+                        ON `group`.groupId = `lkusergroup`.groupId
+                            AND `group`.isUserSpecific = 0
+                     WHERE `lkusergroup`.userId = :currentUserId
+                )
+                ';
+                $params['currentUserId'] = $this->getUser()->userId;
             }
+        }
 
-            // Filter by Group Id
-            if ($this->getSanitizer()->getInt('groupId', $filterBy) !== null) {
-                $body .= ' AND `group`.groupId = :groupId ';
-                $params['groupId'] = $this->getSanitizer()->getInt('groupId', $filterBy);
-            }
+        // Filter by Group Id
+        if ($this->getSanitizer()->getInt('groupId', $filterBy) !== null) {
+            $body .= ' AND `group`.groupId = :groupId ';
+            $params['groupId'] = $this->getSanitizer()->getInt('groupId', $filterBy);
+        }
 
-            // Filter by Group Name
-            if ($this->getSanitizer()->getString('group', $filterBy) != null) {
-                // Convert into commas
-                foreach (explode(',', $this->getSanitizer()->getString('group', $filterBy)) as $term) {
+        // Filter by Group Name
+        if ($this->getSanitizer()->getString('group', $filterBy) != null) {
+            // Convert into commas
+            foreach (explode(',', $this->getSanitizer()->getString('group', $filterBy)) as $term) {
 
-                    if (empty(trim($term)))
-                        continue;
+                if (empty(trim($term)))
+                    continue;
 
-                    // convert into a space delimited array
-                    $names = explode(' ', $term);
+                // convert into a space delimited array
+                $names = explode(' ', $term);
 
-                    $i = 0;
-                    foreach ($names as $searchName) {
-                        $i++;
-                        // Not like, or like?
-                        if (substr($searchName, 0, 1) == '-') {
-                            $body .= " AND `group`.group NOT RLIKE (:group$i) ";
-                            $params['group' . $i] = ltrim(($searchName), '-');
-                        } else {
-                            $body .= " AND `group`.group RLIKE (:group$i) ";
-                            $params['group' . $i] = $searchName;
-                        }
+                $i = 0;
+                foreach ($names as $searchName) {
+                    $i++;
+                    // Not like, or like?
+                    if (substr($searchName, 0, 1) == '-') {
+                        $body .= " AND `group`.group NOT RLIKE (:group$i) ";
+                        $params['group' . $i] = ltrim(($searchName), '-');
+                    } else {
+                        $body .= " AND `group`.group RLIKE (:group$i) ";
+                        $params['group' . $i] = $searchName;
                     }
                 }
             }
-
-            if ($this->getSanitizer()->getString('exactGroup', $filterBy) != null) {
-                $body .= ' AND `group`.group = :exactGroup ';
-                $params['exactGroup'] = $this->getSanitizer()->getString('exactGroup', $filterBy);
-            }
-
-            // Filter by User Id
-            if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
-                $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lkusergroup` WHERE userId = :userId) ';
-                $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
-            }
-
-            if ($this->getSanitizer()->getInt('isUserSpecific', $filterBy) != -1) {
-                $body .= ' AND isUserSpecific = :isUserSpecific ';
-                $params['isUserSpecific'] = $this->getSanitizer()->getInt('isUserSpecific', 0, $filterBy);
-            }
-
-            if ($this->getSanitizer()->getInt('isEveryone', $filterBy) != -1) {
-                $body .= ' AND isEveryone = :isEveryone ';
-                $params['isEveryone'] = $this->getSanitizer()->getInt('isEveryone', 0, $filterBy);
-            }
-
-            if ($this->getSanitizer()->getInt('isSystemNotification', $filterBy) !== null) {
-                $body .= ' AND isSystemNotification = :isSystemNotification ';
-                $params['isSystemNotification'] = $this->getSanitizer()->getInt('isSystemNotification', $filterBy);
-            }
-
-            if (DBVERSION >= 134 && $this->getSanitizer()->getInt('isDisplayNotification', $filterBy) !== null) {
-                $body .= ' AND isDisplayNotification = :isDisplayNotification ';
-                $params['isDisplayNotification'] = $this->getSanitizer()->getInt('isDisplayNotification', $filterBy);
-            }
-
-            if ($this->getSanitizer()->getInt('notificationId', $filterBy) !== null) {
-                $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lknotificationgroup` WHERE notificationId = :notificationId) ';
-                $params['notificationId'] = $this->getSanitizer()->getInt('notificationId', $filterBy);
-            }
-
-            if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
-                $body .= ' 
-                    AND `group`.groupId IN (
-                        SELECT DISTINCT `permission`.groupId
-                          FROM `permission`
-                            INNER JOIN `permissionentity`
-                            ON `permissionentity`.entityId = permission.entityId
-                                AND `permissionentity`.entity = \'Xibo\\Entity\\DisplayGroup\'
-                         WHERE `permission`.objectId = :displayGroupId
-                            AND `permission`.view = 1
-                    )
-                ';
-                $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
-            }
-
-            // Sorting?
-            $order = '';
-            if (is_array($sortOrder))
-                $order .= 'ORDER BY ' . implode(',', $sortOrder);
-
-            $limit = '';
-            // Paging
-            if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-                $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
-            }
-
-            $sql = $select . $body . $order . $limit;
-
-            foreach ($this->getStore()->select($sql, $params) as $row) {
-                $entries[] = $this->createEmpty()->hydrate($row);
-            }
-
-            // Paging
-            if ($limit != '' && count($entries) > 0) {
-                $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
-                $this->_countLast = intval($results[0]['total']);
-            }
-
-            return $entries;
-
-        } catch (\Exception $e) {
-
-            $this->getLog()->error($e);
-
-            throw $e;
         }
+
+        if ($this->getSanitizer()->getString('exactGroup', $filterBy) != null) {
+            $body .= ' AND `group`.group = :exactGroup ';
+            $params['exactGroup'] = $this->getSanitizer()->getString('exactGroup', $filterBy);
+        }
+
+        // Filter by User Id
+        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+            $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lkusergroup` WHERE userId = :userId) ';
+            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('isUserSpecific', $filterBy) != -1) {
+            $body .= ' AND isUserSpecific = :isUserSpecific ';
+            $params['isUserSpecific'] = $this->getSanitizer()->getInt('isUserSpecific', 0, $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('isEveryone', $filterBy) != -1) {
+            $body .= ' AND isEveryone = :isEveryone ';
+            $params['isEveryone'] = $this->getSanitizer()->getInt('isEveryone', 0, $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('isSystemNotification', $filterBy) !== null) {
+            $body .= ' AND isSystemNotification = :isSystemNotification ';
+            $params['isSystemNotification'] = $this->getSanitizer()->getInt('isSystemNotification', $filterBy);
+        }
+
+        if (DBVERSION >= 134 && $this->getSanitizer()->getInt('isDisplayNotification', $filterBy) !== null) {
+            $body .= ' AND isDisplayNotification = :isDisplayNotification ';
+            $params['isDisplayNotification'] = $this->getSanitizer()->getInt('isDisplayNotification', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('notificationId', $filterBy) !== null) {
+            $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lknotificationgroup` WHERE notificationId = :notificationId) ';
+            $params['notificationId'] = $this->getSanitizer()->getInt('notificationId', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
+            $body .= ' 
+                AND `group`.groupId IN (
+                    SELECT DISTINCT `permission`.groupId
+                      FROM `permission`
+                        INNER JOIN `permissionentity`
+                        ON `permissionentity`.entityId = permission.entityId
+                            AND `permissionentity`.entity = \'Xibo\\Entity\\DisplayGroup\'
+                     WHERE `permission`.objectId = :displayGroupId
+                        AND `permission`.view = 1
+                )
+            ';
+            $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
+        }
+
+        // Sorting?
+        $order = '';
+        if (is_array($sortOrder))
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        $limit = '';
+        // Paging
+        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        }
+
+        $sql = $select . $body . $order . $limit;
+
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $this->createEmpty()->hydrate($row);
+        }
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
+        }
+
+        return $entries;
     }
 }

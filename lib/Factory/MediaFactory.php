@@ -635,16 +635,17 @@ class MediaFactory extends BaseFactory
         }
 
         if ($this->getSanitizer()->getInt('layoutId', $filterBy) !== null) {
+            //TODO: handle sub-playlists
             $body .= '
                 AND media.mediaId IN (
                     SELECT `lkwidgetmedia`.mediaId
                       FROM`lkwidgetmedia`
                         INNER JOIN `widget`
                         ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                        INNER JOIN `lkregionplaylist`
-                        ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                        INNER JOIN `playlist`
+                        ON `playlist`.playlistId = `widget`.playlistId
                         INNER JOIN `region`
-                        ON `region`.regionId = `lkregionplaylist`.regionId
+                        ON `region`.regionId = `playlist`.regionId
                     WHERE region.layoutId = :layoutId ';
 
             if ($this->getSanitizer()->getInt('widgetId', $filterBy) !== null) {

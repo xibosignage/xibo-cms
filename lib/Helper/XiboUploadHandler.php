@@ -278,7 +278,6 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Get the Playlist
                 $playlist = $controller->getPlaylistFactory()->getById($this->options['playlistId']);
-                $playlist->setChildObjectDependencies($controller->getRegionFactory());
 
                 // Create a Widget and add it to our region
                 $widget = $controller->getWidgetFactory()->create($this->options['userId'], $playlist->playlistId, $module->getModuleType(), $media->duration);

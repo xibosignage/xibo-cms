@@ -1,17 +1,16 @@
 {#
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+ * Copyright (C) 2015-2018 Spring Signage Ltd
+ * (region-form-timeline.twig)
  */
-
 #}
 
 {% extends "form-base.twig" %}
 {% import "forms.twig" as forms %}
 
 {% block formTitle %}
-    {% trans "Region Timeline" %}
+    {% trans "Edit Playlist" %}
 {% endblock %}
 
 {% block formButtons %}
@@ -24,8 +23,6 @@
 {% block callBack %}loadTimeLineCallback{% endblock %}
 
 {% block formHtml %}
-    {# TODO: We will need to design a playlist selector #}
-    {% set playlist = region.playlists[0] %}
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-2">
@@ -38,7 +35,7 @@
                             {% if module.regionSpecific %}
                                 <li class="XiboFormButton" href="{{ urlFor("module.widget.add.form", {type: module.type, id: playlist.playlistId}) }}"><a tabindex="-1" href="#">{{ module.name }}</a></li>
                             {% else %}
-                                <li class="libraryUploadForm" href="#" data-playlist-id="{{ playlist.playlistId }}" data-valid-ext="{{ module.validExtensions }}"><a tabindex="-1" href="#">{{ module.name }}</a></li>
+                                <li class="libraryUploadForm" href="#" data-playlist-id="{{ playlist.playlistId }}" data-valid-ext="{{ module.validExtensions }}" data-max-size="{{ libraryUpload.maxSize }}" data-max-size-message="{{ libraryUpload.maxSizeMessage }}"><a tabindex="-1" href="#">{{ module.name }}</a></li>
                             {% endif %}
 
                             {% if module.type == "audio" %}

@@ -118,5 +118,3 @@ FOREIGN KEY (scopeId) REFERENCES oauth_scopes (id) ON DELETE CASCADE;
 
 CREATE INDEX requiredfile_displayId_type_index ON requiredfile (displayId, type);
 
-CREATE INDEX idx_lkregionplaylist_playlistId ON lkregionplaylist (playlistId);
-

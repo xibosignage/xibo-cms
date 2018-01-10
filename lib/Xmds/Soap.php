@@ -457,10 +457,10 @@ class Soap
                    ON `lkwidgetmedia`.mediaID = media.MediaID
                    INNER JOIN `widget`
                    ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                   INNER JOIN `lkregionplaylist`
-                   ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                   INNER JOIN `playlist`
+                   ON `playlist`.playlistId = `widget`.playlistId
                    INNER JOIN `region`
-                   ON `region`.regionId = `lkregionplaylist`.regionId
+                   ON `region`.regionId = `playlist`.regionId
                    INNER JOIN layout
                    ON layout.LayoutID = region.layoutId
                  WHERE layout.layoutId IN (%s)
@@ -854,10 +854,10 @@ class Soap
                     ON `lkwidgetmedia`.MediaID = `media`.MediaID
                     INNER JOIN `widget`
                     ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                    INNER JOIN `lkregionplaylist`
-                    ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                    INNER JOIN `playlist`
+                    ON `playlist`.playlistId = `widget`.playlistId
                     INNER JOIN `region`
-                    ON `region`.regionId = `lkregionplaylist`.regionId
+                    ON `region`.regionId = `playlist`.regionId
                  WHERE `region`.layoutId IN (' . implode(',', $layoutIds) . ')
                   AND media.type <> \'module\'
             ';
