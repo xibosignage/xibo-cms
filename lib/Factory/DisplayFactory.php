@@ -341,10 +341,10 @@ class DisplayFactory extends BaseFactory
                               FROM `lkwidgetmedia`
                                INNER JOIN `widget`
                                ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                               INNER JOIN `lkregionplaylist`
-                               ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                               INNER JOIN `playlist`
+                               ON `playlist`.playlistId = `widget`.playlistId
                                INNER JOIN `region`
-                               ON `region`.regionId = `lkregionplaylist`.regionId
+                               ON `region`.regionId = `playlist`.regionId
                                INNER JOIN layout
                                ON layout.LayoutID = region.layoutId
                              WHERE lkwidgetmedia.mediaId = :mediaId

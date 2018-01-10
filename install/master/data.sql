@@ -142,7 +142,7 @@ INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (30, 'displayprofile', 'Display Profiles', 1),
   (31, 'audit', 'Audit Trail', 0),
   (32, 'region', 'Regions', 0),
-  (33, 'playlist', 'Playlist', 0),
+  (33, 'playlist', 'Playlist', 1),
   (34, 'maintenance', 'Maintenance', 0),
   (35, 'command', 'Commands', 1),
   (36, 'notification', 'Notifications', 0),

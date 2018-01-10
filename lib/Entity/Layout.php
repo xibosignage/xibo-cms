@@ -503,6 +503,7 @@ class Layout implements \JsonSerializable
     /**
      * Save this Layout
      * @param array $options
+     * @throws XiboException
      */
     public function save($options = [])
     {

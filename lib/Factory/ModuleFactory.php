@@ -323,7 +323,6 @@ class ModuleFactory extends BaseFactory
             }
 
             $playlist = $this->playlistFactory->getById($playlistId);
-            $playlist->setChildObjectDependencies($this->regionFactory);
             $playlist->load(['playlistIncludeRegionAssignments' => false]);
 
             // Create a new widget to use

@@ -1,0 +1,30 @@
+{
+  "dbVersion": 160,
+  "appVersion": "1.9.0-alpha1",
+  "steps": [
+    {
+      "step": "Update Playlist with RegionId",
+      "action": "ALTER TABLE `playlist` ADD regionId INT DEFAULT NULL  NULL;"
+    },
+    {
+      "step": "Update existing Regions with their PlaylistId",
+      "action": "UPDATE `playlist` SET regionId = (SELECT MAX(regionId) FROM lkregionplaylist WHERE playlist.playlistId = lkregionplaylist.playlistId);"
+    },
+    {
+      "step": "Remove old link table",
+      "action": "DELETE TABLE `lkregionplaylist`;"
+    },
+    {
+      "step": "Allow Playlist as a Home Page",
+      "action": "UPDATE `pages` SET asHome = 1 WHERE name = 'playlist';"
+    },
+    {
+      "step": "Create Playlist Tag link table",
+      "action": "CREATE TABLE IF NOT EXISTS `lktagplaylist` (`lkTagPlaylistId` int(11) NOT NULL AUTO_INCREMENT,`tagId` int(11) NOT NULL,`playlistId` int(11) NOT NULL,PRIMARY KEY (`lkTagLayoutId`),UNIQUE KEY `tagId` (`tagId`,`playlistId`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;"
+    },
+    {
+      "step": "Additional fields for Playlist table",
+      "action": "ALTER TABLE playlist ADD createdDt DATETIME NOT NULL;ALTER TABLE playlist ADD modifiedDt DATETIME NOT NULL;ALTER TABLE playlist ADD duration INT DEFAULT 0 NOT NULL;"
+    }
+  ]
+}

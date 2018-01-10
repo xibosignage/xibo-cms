@@ -23,9 +23,10 @@
 namespace Xibo\Entity;
 
 
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\RegionFactory;
+use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -60,16 +61,40 @@ class Playlist implements \JsonSerializable
     public $name;
 
     /**
+     * @SWG\Property(description="The RegionId if this Playlist is specific to a Region")
+     * @var int
+     */
+    public $regionId;
+
+    /**
+     * @var string
+     * @SWG\Property(
+     *  description="The datetime the Layout was created"
+     * )
+     */
+    public $createdDt;
+
+    /**
+     * @var string
+     * @SWG\Property(
+     *  description="The datetime the Layout was last modified"
+     * )
+     */
+    public $modifiedDt;
+
+    /**
+     * @var int
+     * @SWG\Property(
+     *  description="A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1 or 2."
+     * )
+     */
+    public $duration = 0;
+
+    /**
      * @SWG\Property(description="An array of Tags")
      * @var Tag[]
      */
     public $tags = [];
-
-    /**
-     * @SWG\Property(description="An array of Regions this Playlist is assigned to")
-     * @var Region[]
-     */
-    public $regions = [];
 
     /**
      * @SWG\Property(description="An array of Widgets assigned to this Playlist")
@@ -83,12 +108,12 @@ class Playlist implements \JsonSerializable
      */
     public $permissions = [];
 
-    /**
-     * @SWG\Property(description="The display order of the Playlist when assigned to a Region")
-     * @var int
-     */
-    public $displayOrder;
+    // Read only properties
+    public $owner;
+    public $groupsWithPermissions;
+    private $unassignTags = [];
 
+    //<editor-fold desc="Factories and Dependencies">
     /**
      * @var DateServiceInterface
      */
@@ -105,9 +130,10 @@ class Playlist implements \JsonSerializable
     private $widgetFactory;
 
     /**
-     * @var RegionFactory
+     * @var TagFactory
      */
-    private $regionFactory;
+    private $tagFactory;
+    //</editor-fold>
 
     /**
      * Entity constructor.
@@ -116,46 +142,46 @@ class Playlist implements \JsonSerializable
      * @param DateServiceInterface $date
      * @param PermissionFactory $permissionFactory
      * @param WidgetFactory $widgetFactory
+     * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $date, $permissionFactory, $widgetFactory)
+    public function __construct($store, $log, $date, $permissionFactory, $widgetFactory, $tagFactory)
     {
         $this->setCommonDependencies($store, $log);
 
         $this->dateService = $date;
         $this->permissionFactory = $permissionFactory;
         $this->widgetFactory = $widgetFactory;
-
-        $this->excludeProperty('regions');
+        $this->tagFactory = $tagFactory;
     }
 
     /**
-     * @param $regionFactory
-     * @return $this
+     * Clone this Playlist
      */
-    public function setChildObjectDependencies($regionFactory)
-    {
-        $this->regionFactory = $regionFactory;
-        return $this;
-    }
-
     public function __clone()
     {
         $this->hash = null;
         $this->playlistId = null;
-        $this->regions = [];
+        $this->regionId = null;
         $this->permissions = [];
+        $this->tags = [];
 
         $this->widgets = array_map(function ($object) { return clone $object; }, $this->widgets);
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
-        return sprintf('Playlist %s. Widgets = %d. PlaylistId = %d', $this->name, count($this->widgets), $this->playlistId);
+        return sprintf('Playlist %s. Widgets = %d. PlaylistId = %d. RegionId = %d', $this->name, count($this->widgets), $this->playlistId, $this->regionId);
     }
 
+    /**
+     * @return string
+     */
     private function hash()
     {
-        return md5($this->playlistId . $this->ownerId . $this->name);
+        return md5($this->regionId . $this->playlistId . $this->ownerId . $this->name);
     }
 
     /**
@@ -220,26 +246,53 @@ class Playlist implements \JsonSerializable
     }
 
     /**
+     * @param Tag[] $tags
+     */
+    public function replaceTags($tags = [])
+    {
+        if (!is_array($this->tags) || count($this->tags) <= 0)
+            $this->tags = $this->tagFactory->loadByPlaylistId($this->playlistId);
+
+        $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
+            /* @var Tag $a */
+            /* @var Tag $b */
+            return $a->tagId - $b->tagId;
+        });
+
+        $this->getLog()->debug('Tags to be removed: ' . json_encode($this->unassignTags));
+
+        // Replace the arrays
+        $this->tags = $tags;
+
+        $this->getLog()->debug('Tags remaining: ' . json_encode($this->tags));
+    }
+
+    /**
      * Load
      * @param array $loadOptions
+     * @return $this
      */
     public function load($loadOptions = [])
     {
         if ($this->playlistId == null || $this->loaded)
-            return;
+            return $this;
 
         // Options
         $options = array_merge([
-            'playlistIncludeRegionAssignments' => true,
             'loadPermissions' => true,
-            'loadWidgets' => true
+            'loadWidgets' => true,
+            'loadTags' => true
         ], $loadOptions);
 
-        $this->getLog()->debug('Load Playlist with %s', json_encode($options));
+        $this->getLog()->debug('Load Playlist with ' . json_encode($options));
 
         // Load permissions
         if ($options['loadPermissions'])
             $this->permissions = $this->permissionFactory->getByObjectId(get_class(), $this->playlistId);
+
+        // Load all tags
+        if ($options['loadTags'])
+            $this->tags = $this->tagFactory->loadByPlaylistId($this->playlistId);
 
         // Load the widgets
         if ($options['loadWidgets']) {
@@ -250,23 +303,23 @@ class Playlist implements \JsonSerializable
             }
         }
 
-        if ($options['playlistIncludeRegionAssignments']) {
-            // Load the region assignments
-            foreach ($this->regionFactory->getByPlaylistId($this->playlistId) as $region) {
-                /* @var Region $region */
-                $this->regions[] = $region;
-            }
-        }
-
         $this->hash = $this->hash();
         $this->loaded = true;
+
+        return $this;
     }
 
     /**
      * Save
+     * @param array $options
      */
-    public function save()
+    public function save($options = [])
     {
+        // Default options
+        $options = array_merge([
+            'saveTags' => true
+        ], $options);
+
         if ($this->playlistId == null || $this->playlistId == 0)
             $this->add();
         else if ($this->hash != $this->hash())
@@ -294,10 +347,38 @@ class Playlist implements \JsonSerializable
             $widget->displayOrder = $i;
             $widget->save();
         }
+
+        if ($options['saveTags']) {
+            $this->getLog()->debug('Saving tags on ' . $this);
+
+            // Save the tags
+            if (is_array($this->tags)) {
+                foreach ($this->tags as $tag) {
+                    /* @var Tag $tag */
+
+                    $this->getLog()->debug('Assigning tag ' . $tag->tag);
+
+                    $tag->assignPlaylist($this->playlistId);
+                    $tag->save();
+                }
+            }
+
+            // Remove unwanted ones
+            if (is_array($this->unassignTags)) {
+                foreach ($this->unassignTags as $tag) {
+                    /* @var Tag $tag */
+                    $this->getLog()->debug('Unassigning tag ' . $tag->tag);
+
+                    $tag->unassignPlaylist($this->playlistId);
+                    $tag->save();
+                }
+            }
+        }
     }
 
     /**
      * Delete
+     * @throws InvalidArgumentException
      */
     public function delete()
     {
@@ -306,6 +387,9 @@ class Playlist implements \JsonSerializable
             $this->load();
 
         $this->getLog()->debug('Deleting ' . $this);
+
+        if ($this->regionId != 0)
+            throw new InvalidArgumentException(__('This Playlist belongs to a Region, please delete the Region instead.'), 'regionId');
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {
@@ -322,13 +406,6 @@ class Playlist implements \JsonSerializable
             $widget->delete();
         }
 
-        // Unlink regions
-        foreach ($this->regions as $region) {
-            /* @var Region $region */
-            $region->unassignPlaylist($this);
-            $region->save();
-        }
-
         // Delete this playlist
         $this->getStore()->update('DELETE FROM `playlist` WHERE playlistId = :playlistId', array('playlistId' => $this->playlistId));
     }
@@ -340,10 +417,15 @@ class Playlist implements \JsonSerializable
     {
         $this->getLog()->debug('Adding Playlist ' . $this->name);
 
-        $sql = 'INSERT INTO `playlist` (`name`, `ownerId`) VALUES (:name, :ownerId)';
+        $time = date('Y-m-d H:i:s');
+
+        $sql = 'INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `createdDt`, `modifiedDt`) VALUES (:name, :ownerId, :regionId, :createdDt, :modifiedDt)';
         $this->playlistId = $this->getStore()->insert($sql, array(
             'name' => $this->name,
-            'ownerId' => $this->ownerId
+            'ownerId' => $this->ownerId,
+            'regionId' => $this->regionId == 0 ? null : $this->regionId,
+            'createdDt' => $time,
+            'modifiedDt' => $time,
         ));
     }
 
@@ -354,10 +436,21 @@ class Playlist implements \JsonSerializable
     {
         $this->getLog()->debug('Updating Playlist ' . $this->name . '. Id = ' . $this->playlistId);
 
-        $sql = 'UPDATE `playlist` SET `name` = :name WHERE `playlistId` = :playlistId';
+        $sql = '
+            UPDATE `playlist` SET 
+                `name` = :name, 
+                `regionId` = :regionId, 
+                `modifiedDt` = :modifiedDt, 
+                `duration` = :duration 
+             WHERE `playlistId` = :playlistId
+        ';
+
         $this->getStore()->update($sql, array(
             'playlistId' => $this->playlistId,
-            'name' => $this->name
+            'name' => $this->name,
+            'regionId' => $this->regionId == 0 ? null : $this->regionId,
+            'duration' => $this->duration,
+            'modifiedDt' => date('Y-m-d H:i:s')
         ));
     }
 
@@ -370,28 +463,16 @@ class Playlist implements \JsonSerializable
      */
     public function notifyLayouts()
     {
+        //TODO: this will need to change to assess as if we were a sub-playlist
         $this->getStore()->update('
             UPDATE `layout` SET `status` = 3, `modifiedDT` = :modifiedDt WHERE layoutId IN (
               SELECT `region`.layoutId
-                FROM `lkregionplaylist`
-                  INNER JOIN `region`
-                  ON region.regionId = `lkregionplaylist`.regionId
-               WHERE `lkregionplaylist`.playlistId = :playlistId
+                FROM `region`
+               WHERE `region`.playlistId = :playlistId
             )
         ', [
             'playlistId' => $this->playlistId,
             'modifiedDt' => $this->dateService->getLocalDate()
         ]);
-    }
-
-    /**
-     * Has layouts
-     * @return bool
-     */
-    public function hasLayouts()
-    {
-        $results = $this->getStore()->select('SELECT COUNT(*) AS qty FROM `lkregionplaylist` WHERE playlistId = :playlistId', ['playlistId' => $this->playlistId]);
-
-        return ($results[0]['qty'] > 0);
     }
 }

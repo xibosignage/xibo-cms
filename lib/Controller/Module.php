@@ -434,7 +434,6 @@ class Module extends Base
             throw new ConfigurationException(__('Sorry there is an error with this request, cannot set inherited permissions'));
 
         // Load some information about this playlist
-        $playlist->setChildObjectDependencies($this->regionFactory);
         $playlist->load([
             'playlistIncludeRegionAssignments' => false,
             'loadWidgets' => false

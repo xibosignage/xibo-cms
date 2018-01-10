@@ -345,18 +345,6 @@ CREATE TABLE IF NOT EXISTS `lklayoutdisplaygroup` (
   UNIQUE KEY `layoutId` (`layoutId`,`displaygroupid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Layout associations directly to Display Groups' AUTO_INCREMENT=1 ;
 
-
---
--- Table structure for table `lkregionplaylist`
---
-
-CREATE TABLE IF NOT EXISTS `lkregionplaylist` (
-  `regionId` int(11) NOT NULL,
-  `playlistId` int(11) NOT NULL,
-  `displayOrder` int(11) NOT NULL,
-  PRIMARY KEY (`regionId`,`playlistId`,`displayOrder`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 -- --------------------------------------------------------
 
 --
@@ -381,6 +369,19 @@ CREATE TABLE IF NOT EXISTS `lktaglayout` (
   `layoutId` int(11) NOT NULL,
   PRIMARY KEY (`lkTagLayoutId`),
   UNIQUE KEY `tagId` (`tagId`,`layoutId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lktagplaylist`
+--
+
+CREATE TABLE IF NOT EXISTS `lktagplaylist` (
+  `lkTagPlaylistId` int(11) NOT NULL AUTO_INCREMENT,
+  `tagId` int(11) NOT NULL,
+  `playlistId` int(11) NOT NULL,
+  PRIMARY KEY (`lkTagLayoutId`),
+  UNIQUE KEY `tagId` (`tagId`,`playlistId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
@@ -739,6 +740,10 @@ CREATE TABLE IF NOT EXISTS `playlist` (
   `playlistId` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(254) DEFAULT NULL,
   `ownerId` int(11) NOT NULL,
+  `regionId` int(11) NULL,
+  `createdDt` datetime NOT NULL,
+  `modifiedDt` datetime NOT NULL,
+  `duration` int(11) NOT NULL DEFAULT '0' COMMENT 'The duration in seconds',
   PRIMARY KEY (`playlistId`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 

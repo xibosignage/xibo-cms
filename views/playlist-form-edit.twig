@@ -1,0 +1,37 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015-2018 Spring Signage Ltd
+ * (playlist-form-edit.twig)
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Playlist" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#playlistEditForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="playlistEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("playlist.edit", {id: playlist.playlistId}) }}">
+
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name of the Playlist - (1 - 50 characters)" %}{% endset %}
+                {{ forms.input("name", title, playlist.name, helpText) }}
+
+                {% set title %}{% trans "Tags" %}{% endset %}
+                {% set helpText %}{% trans "Tags for this playlist - used when searching for it. Comma delimited. (1 - 250 characters)" %}{% endset %}
+                {{ forms.inputWithTags("tags", title, playlist.tags, helpText) }}
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -697,10 +697,10 @@ class Widget implements \JsonSerializable
             $this->getStore()->update('
                 UPDATE `layout` SET `status` = 3, `modifiedDT` = :modifiedDt WHERE layoutId IN (
                   SELECT `region`.layoutId
-                    FROM `lkregionplaylist`
+                    FROM `playlist`
                       INNER JOIN `region`
-                      ON region.regionId = `lkregionplaylist`.regionId
-                   WHERE `lkregionplaylist`.playlistId = :playlistId
+                      ON region.regionId = `playlist`.regionId
+                   WHERE `playlist`.playlistId = :playlistId
                 )
             ', [
                 'playlistId' => $this->playlistId,

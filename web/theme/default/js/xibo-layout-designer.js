@@ -300,6 +300,11 @@ function setFullScreenLayout(width, height) {
 }
 
 function refreshPreview(regionId) {
+    if (regionId === undefined) {
+        console.log('No preview to refresh');
+        return;
+    }
+
     // Refresh the preview
     var preview = Preview.instances[regionId];
     preview.SetSequence(preview.seq);
@@ -513,4 +518,245 @@ function layoutStatus(url) {
             return false;
         }
     });
+}
+
+// Callback for the media form
+function mediaFormCallBack(dialog) {
+
+    $(dialog).closest(".modal").addClass("modal-big");
+
+    // prevent filter form submit
+    $("#libraryAssignFilterOptions").find("form").on("submit", function(e) {
+        e.preventDefault();
+        return false;
+    });
+
+    var mediaTable = $("#mediaAssignments").DataTable({
+            "language": dataTablesLanguage,
+            serverSide: true, stateSave: true,
+            searchDelay: 3000,
+            "order": [[1, "asc"]],
+            "filter": false,
+            ajax: {
+                url: librarySearchUrl,
+            "data": function (d) {
+                $.extend(d, $("#libraryAssignFilterOptions").find("form").serializeObject());
+            }
+        },
+        "columns": [
+            {"data": "mediaId"},
+            {"data": "name"},
+            {"data": "mediaType"},
+            {
+                "name": "mediaId",
+                "data": null,
+                "render": function (data, type, row, meta) {
+                    if (type === "display") {
+                        // Return only the image part of the data
+                        if (data.thumbnailUrl === '')
+                            return '';
+                        else
+                            return '<img src="' + data.thumbnailUrl + '"/>';
+                        return data;
+                    } else {
+                        return row.mediaId;
+                    }
+                }
+            },
+            {
+                "sortable": false,
+                "data": function (data, type, row, meta) {
+                    if (type !== "display")
+                        return "";
+
+                    // Create a click-able span
+                    return "<a href=\"#\" class=\"assignItem\"><span class=\"glyphicon glyphicon-plus-sign\"></a>";
+                }
+            }
+        ]
+    });
+
+    mediaTable.on('draw', function (e, settings) {
+        dataTableDraw(e, settings);
+
+        // Clicky on the +spans
+        $(".assignItem", "#mediaAssignments").click(function () {
+            // Get the row that this is in.
+            var data = mediaTable.row($(this).closest("tr")).data();
+
+            // Construct a new list item for the lower list and append it.
+            var newItem = $("<li/>", {
+                "text": " " + data.name,
+                "data-media-id": data.mediaId,
+                "class": "li-sortable",
+                "dblclick": function () {
+                    $(this).remove();
+                }
+            });
+
+            newItem.appendTo("#LibraryAssignSortable");
+
+            // Add a span to that new item
+            $("<span/>", {
+                "class": "glyphicon glyphicon-minus-sign",
+                click: function () {
+                    $(this).parent().remove();
+                }
+            }).prependTo(newItem);
+        });
+    });
+    mediaTable.on('processing.dt', dataTableProcessing);
+
+    // Make our little list sortable
+    $("#LibraryAssignSortable").sortable();
+
+    // Bind the filter form
+    $("#libraryAssignFilterOptions").find("input, select").change(function () {
+        mediaTable.ajax.reload();
+    });
+}
+
+/**
+ * Open Upload Form
+ */
+function openUploadForm(templateOptions, buttons) {
+
+    // Close the current dialog
+    XiboDialogClose();
+
+    var template = Handlebars.compile($("#template-file-upload").html());
+
+    // Handle bars and open a dialog
+    bootbox.dialog({
+        message: template(templateOptions),
+        title: playlistTrans.uploadMessage,
+        buttons: buttons,
+        animate: false,
+        updateInAllChecked: uploadFormUpdateAllDefault,
+    deleteOldRevisionsChecked: uploadFormDeleteOldDefault
+});
+
+    openUploadFormModelShown($(".modal-body").find("form"));
+}
+
+/**
+ * Modal shown
+ */
+function openUploadFormModelShown(form) {
+    // Configure the upload form
+    var url = libraryAddUrl;
+
+    // Initialize the jQuery File Upload widget:
+    form.fileupload({
+        url: url,
+        disableImageResize: true
+    });
+
+    // Upload server status check for browsers with CORS support:
+    if ($.support.cors) {
+        $.ajax({
+            url: url,
+            type: 'HEAD'
+        }).fail(function () {
+            $('<span class="alert alert-error"/>')
+                .text('Upload server currently unavailable - ' + new Date())
+                .appendTo(form);
+        });
+    }
+
+    // Enable iframe cross-domain access via redirect option:
+    form.fileupload(
+        'option',
+        'redirect',
+        window.location.href.replace(
+            /\/[^\/]*$/,
+            '/cors/result.html?%s'
+        )
+    );
+
+    form.bind('fileuploadsubmit', function (e, data) {
+        var inputs = data.context.find(':input');
+        if (inputs.filter('[required][value=""]').first().focus().length) {
+            return false;
+        }
+        data.formData = inputs.serializeArray().concat(form.serializeArray());
+
+        inputs.filter("input").prop("disabled", true);
+    });
+}
+
+// Click Handler for Library Upload Buttons (image, video, powerpoint, flash)
+function libraryUploadClick(e) {
+    e.preventDefault();
+
+    var validExt = $(this).data().validExt.replace(/,/g, "|");
+    var playlistId = $(this).data().playlistId;
+
+    openUploadForm({
+        trans: playlistTrans,
+        upload: {
+            maxSize: $(this).data().maxSize,
+            maxSizeMessage: $(this).data().maxSizeMessage,
+            validExt: validExt
+        },
+        playlistId: playlistId
+    }, {
+        library: {
+            label: playlistTrans.viewLibrary,
+            callback: function () {
+                XiboFormRender(libraryPlaylistAssignUrl.replace(":id", playlistId));
+            }
+        },
+        main: {
+            label: translations.done,
+                className: "btn-primary",
+                callback: function () {
+                XiboFormRender(timelineForm.url, timelineForm.value);
+            }
+        }
+    });
+}
+
+/**
+ * Media Edit form
+ */
+function mediaEditFormOpen(dialog) {
+
+    if (dialog.find("form").data().mediaEditable != 1)
+        return;
+
+    // Create a new button
+    var footer = dialog.find(".modal-footer");
+    var mediaId = dialog.find("form").data().mediaId;
+    var widgetId = dialog.find("form").data().widgetId;
+    var validExtensions = dialog.find("form").data().validExtensions;
+
+    // Append
+    var replaceButton = $('<button class="btn btn-warning">').html(playlistAddFilesTrans.uploadMessage);
+    replaceButton.click(function (e) {
+        e.preventDefault();
+
+        // Open the upload dialog with our options.
+        openUploadForm({
+            oldMediaId: mediaId,
+            widgetId: widgetId,
+            updateInAllChecked: uploadFormUpdateAllDefault,
+            trans: playlistAddFilesTrans,
+            upload: {
+                maxSize: $(this).data().maxSize,
+                maxSizeMessage: $(this).data().maxSizeMessage,
+                validExt: validExtensions
+            }
+        }, {
+            main: {
+                label: translations.done,
+                className: "btn-primary",
+                callback: function () {
+                    XiboFormRender(timelineForm.url, timelineForm.value);
+                }
+            }
+        });
+    });
+
+    footer.find(".btn-primary").before(replaceButton);
 }
