@@ -300,13 +300,19 @@ function setFullScreenLayout(width, height) {
 }
 
 function refreshPreview(regionId) {
-    if (regionId === undefined) {
+    if (regionId === undefined || regionId === null || regionId === "") {
         console.log('No preview to refresh');
         return;
     }
 
     // Refresh the preview
     var preview = Preview.instances[regionId];
+
+    if (preview === undefined) {
+        console.log('No preview to refresh');
+        return;
+    }
+
     preview.SetSequence(preview.seq);
 
     // Clear the layout status
