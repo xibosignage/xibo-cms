@@ -12,6 +12,7 @@ namespace Xibo\Controller;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -219,6 +220,11 @@ class Playlist extends Base
         $this->getState()->setData($playlists);
     }
 
+    //<editor-fold desc="CRUD">
+
+    /**
+     * Add Form
+     */
     public function addForm()
     {
         $this->getState()->template = 'playlist-form-add';
@@ -330,6 +336,129 @@ class Playlist extends Base
     }
 
     /**
+     * Copy playlist form
+     * @param int $playlistId
+     * @throws NotFoundException
+     */
+    public function copyForm($playlistId)
+    {
+        // Get the playlist
+        $playlist = $this->playlistFactory->getById($playlistId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($playlist))
+            throw new AccessDeniedException();
+
+        $this->getState()->template = 'playlist-form-copy';
+        $this->getState()->setData([
+            'playlist' => $playlist
+        ]);
+    }
+
+    /**
+     * Copies a playlist
+     * @param int $playlistId
+     *
+     * @SWG\Post(
+     *  path="/playlist/copy/{playlistId}",
+     *  operationId="playlistCopy",
+     *  tags={"playlist"},
+     *  summary="Copy Playlist",
+     *  description="Copy a Playlist, providing a new name if applicable",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The Playlist ID to Copy",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="The name for the new Playlist",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="copyMediaFiles",
+     *      in="formData",
+     *      description="Flag indicating whether to make new Copies of all Media Files assigned to the Playlist being Copied",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Playlist"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     * @throws XiboException
+     */
+    public function copy($playlistId)
+    {
+        // Get the playlist
+        $playlist = $this->playlistFactory->getById($playlistId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($playlist))
+            throw new AccessDeniedException();
+
+        // Load the playlist for Copy
+        $playlist->load();
+        $playlist = clone $playlist;
+
+        $playlist->name = $this->getSanitizer()->getString('name');
+
+        // Copy the media on the playlist and change the assignments.
+        if ($this->getSanitizer()->getCheckbox('copyMediaFiles') == 1) {
+            foreach ($playlist->widgets as $widget) {
+                // Copy the media
+                $oldMedia = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                $media = clone $oldMedia;
+                $media->setOwner($this->getUser()->userId);
+                $media->save();
+
+                $widget->unassignMedia($oldMedia->mediaId);
+                $widget->assignMedia($media->mediaId);
+
+                // Update the widget option with the new ID
+                $widget->setOptionValue('uri', 'attrib', $media->storedAs);
+            }
+        }
+
+        // Save the new playlist
+        $playlist->save();
+
+        // Permissions
+        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            /* @var Permission $permission */
+            $permission->save();
+        }
+
+        foreach ($playlist->widgets as $widget) {
+            /* @var Widget $widget */
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+                /* @var Permission $permission */
+                $permission->save();
+            }
+        }
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Copied as %s'), $playlist->name),
+            'id' => $playlist->playlistId,
+            'data' => $playlist
+        ]);
+    }
+    //</editor-fold>
+
+    /**
      * Timeline Form
      * @param int $playlistId
      * @throws XiboException
@@ -344,9 +473,15 @@ class Playlist extends Base
 
         $playlist->load();
 
+        foreach ($playlist->widgets as $widget) {
+            /* @var Widget $widget */
+            $widget->module = $this->moduleFactory->createWithWidget($widget);
+        }
+
         // Pass to view
         $this->getState()->template = 'region-form-timeline';
         $this->getState()->setData([
+            'region' => ['regionId' => -1],
             'playlist' => $playlist,
             'modules' => $this->moduleFactory->getAssignableModules(),
             'transitions' => $this->transitionData(),
