@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "c87b8f60adb3b17098a3da34c117606f",
-    "content-hash": "70774e278d2c6da6d9984ae1d8870ef6",
+    "hash": "e0581f8d969452023745ba9abdc1a50e",
+    "content-hash": "0721076338c501004f3f66e33669cf51",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -3123,16 +3123,16 @@
         },
         {
             "name": "xibosignage/oauth2-xibo-cms",
-            "version": "dev-master",
+            "version": "1.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/PeterMis/oauth2-xibo-cms.git",
-                "reference": "fb75b14ce61e721b615774ed605535492ab3941a"
+                "url": "https://github.com/xibosignage/oauth2-xibo-cms.git",
+                "reference": "7c1c8e5c69399fbfaeb5f6b7ad029671f1b47eb5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PeterMis/oauth2-xibo-cms/zipball/fb75b14ce61e721b615774ed605535492ab3941a",
-                "reference": "fb75b14ce61e721b615774ed605535492ab3941a",
+                "url": "https://api.github.com/repos/xibosignage/oauth2-xibo-cms/zipball/7c1c8e5c69399fbfaeb5f6b7ad029671f1b47eb5",
+                "reference": "7c1c8e5c69399fbfaeb5f6b7ad029671f1b47eb5",
                 "shasum": ""
             },
             "require": {
@@ -3170,7 +3170,7 @@
                 "xibo",
                 "xibo cms"
             ],
-            "time": "2018-01-05 16:08:40"
+            "time": "2017-11-30 07:51:47"
         },
         {
             "name": "xibosignage/xibo-xmr",
@@ -5408,7 +5408,6 @@
         "sallar/jdatetime": 20,
         "phpmailer/phpmailer": 20,
         "fguillot/picofeed": 0,
-        "xibosignage/oauth2-xibo-cms": 20,
         "umpirsky/twig-gettext-extractor": 20
     },
     "prefer-stable": false,
