@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Media;
 use Xibo\Entity\Module;
+use Xibo\Entity\Region;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
 use Xibo\Exception\NotFoundException;
@@ -32,6 +33,7 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ModuleServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Widget\ModuleWidget;
 
 /**
  * Class ModuleFactory
@@ -174,7 +176,8 @@ class ModuleFactory extends BaseFactory
             $this->commandFactory,
             $this->scheduleFactory,
             $this->permissionFactory,
-            $this->userGroupFactory
+            $this->userGroupFactory,
+            $this->playlistFactory
         );
     }
 
@@ -205,7 +208,8 @@ class ModuleFactory extends BaseFactory
             $this->commandFactory,
             $this->scheduleFactory,
             $this->permissionFactory,
-            $this->userGroupFactory
+            $this->userGroupFactory,
+            $this->playlistFactory
         );
     }
 
@@ -213,7 +217,6 @@ class ModuleFactory extends BaseFactory
      * Create a Module
      * @param string $className
      * @return \Xibo\Widget\ModuleWidget
-     * @throws NotFoundException
      */
     public function createForInstall($className)
     {
@@ -229,7 +232,8 @@ class ModuleFactory extends BaseFactory
             $this->commandFactory,
             $this->scheduleFactory,
             $this->permissionFactory,
-            $this->userGroupFactory
+            $this->userGroupFactory,
+            $this->playlistFactory
         );
     }
 
@@ -252,7 +256,8 @@ class ModuleFactory extends BaseFactory
             $this->commandFactory,
             $this->scheduleFactory,
             $this->permissionFactory,
-            $this->userGroupFactory
+            $this->userGroupFactory,
+            $this->playlistFactory
         );
     }
 
@@ -287,7 +292,8 @@ class ModuleFactory extends BaseFactory
             $this->commandFactory,
             $this->scheduleFactory,
             $this->permissionFactory,
-            $this->userGroupFactory
+            $this->userGroupFactory,
+            $this->playlistFactory
         );
         $object->setWidget($widget);
 
@@ -323,7 +329,14 @@ class ModuleFactory extends BaseFactory
             }
 
             $playlist = $this->playlistFactory->getById($playlistId);
-            $playlist->load(['playlistIncludeRegionAssignments' => false]);
+
+            // We load here only to ensure we aren't loading when we assign
+            // loadWidgets = true to keep the ordering correct
+            $playlist->load([
+                'loadPermissions' => false,
+                'loadWidgets' => true,
+                'loadTags' => false
+            ]);
 
             // Create a new widget to use
             $widget = $this->widgetFactory->create($ownerId, $playlistId, $module->getModuleType(), null);
@@ -342,8 +355,9 @@ class ModuleFactory extends BaseFactory
     /**
      * Create a Module using a Widget
      * @param Widget $widget
-     * @param Region[optional] $region
+     * @param Region|null $region
      * @return \Xibo\Widget\ModuleWidget
+     * @throws NotFoundException
      */
     public function createWithWidget($widget, $region = null)
     {
@@ -356,6 +370,10 @@ class ModuleFactory extends BaseFactory
         return $module;
     }
 
+    /**
+     * @param string $key
+     * @return array
+     */
     public function get($key = 'type')
     {
         $modules = $this->query();
@@ -475,6 +493,11 @@ class ModuleFactory extends BaseFactory
         return $paths;
     }
 
+    /**
+     * @param null $sortOrder
+     * @param array $filterBy
+     * @return ModuleWidget[]
+     */
     public function query($sortOrder = null, $filterBy = array())
     {
         if ($sortOrder == null)
@@ -482,12 +505,11 @@ class ModuleFactory extends BaseFactory
 
         $entries = array();
 
-        try {
-            $dbh = $this->getStore()->getConnection();
+        $dbh = $this->getStore()->getConnection();
 
-            $params = array();
+        $params = array();
 
-            $select = '
+        $select = '
                 SELECT ModuleID,
                    Module,
                    Name,
@@ -503,145 +525,138 @@ class ModuleFactory extends BaseFactory
                    SchemaVersion
                 ';
 
-            if (DBVERSION >= 120) {
-                $select .= '
+        if (DBVERSION >= 120) {
+            $select .= '
                     ,
                     viewPath,
                    `class`
                 ';
-            }
+        }
 
-            if (DBVERSION >= 122) {
-                $select .= '
+        if (DBVERSION >= 122) {
+            $select .= '
                     ,
                     `defaultDuration`
                 ';
-            }
+        }
 
-            if (DBVERSION >= 125) {
-                $select .= '
+        if (DBVERSION >= 125) {
+            $select .= '
                     ,
                     IFNULL(`installName`, `module`) AS installName
                 ';
-            }
+        }
 
-            $body = '
+        $body = '
                   FROM `module`
                  WHERE 1 = 1
             ';
 
-            if ($this->getSanitizer()->getInt('moduleId', $filterBy) !== null) {
-                $params['moduleId'] = $this->getSanitizer()->getInt('moduleId', $filterBy);
-                $body .= ' AND ModuleID = :moduleId ';
-            }
-
-            if ($this->getSanitizer()->getString('name', $filterBy) != '') {
-                $params['name'] = $this->getSanitizer()->getString('name', $filterBy);
-                $body .= ' AND name = :name ';
-            }
-
-            if ($this->getSanitizer()->getString('installName', $filterBy) != null) {
-                $params['installName'] = $this->getSanitizer()->getString('installName', $filterBy);
-                $body .= ' AND installName = :installName ';
-            }
-
-            if ($this->getSanitizer()->getString('type', $filterBy) != '') {
-                $params['type'] = $this->getSanitizer()->getString('type', $filterBy);
-                $body .= ' AND module = :type ';
-            }
-
-            if ($this->getSanitizer()->getString('class', $filterBy) != '') {
-                $params['class'] = $this->getSanitizer()->getString('class', $filterBy);
-                $body .= ' AND `class` = :class ';
-            }
-
-            if ($this->getSanitizer()->getString('extension', $filterBy) != '') {
-                $params['extension'] = '%' . $this->getSanitizer()->getString('extension', $filterBy) . '%';
-                $body .= ' AND ValidExtensions LIKE :extension ';
-            }
-
-            if ($this->getSanitizer()->getInt('assignable', -1, $filterBy) != -1) {
-                $body .= " AND assignable = :assignable ";
-                $params['assignable'] = $this->getSanitizer()->getInt('assignable', $filterBy);
-            }
-
-            if ($this->getSanitizer()->getInt('enabled', -1, $filterBy) != -1) {
-                $body .= " AND enabled = :enabled ";
-                $params['enabled'] = $this->getSanitizer()->getInt('enabled', $filterBy);
-            }
-
-            if ($this->getSanitizer()->getInt('regionSpecific', -1, $filterBy) != -1) {
-                $body .= " AND regionSpecific = :regionSpecific ";
-                $params['regionSpecific'] = $this->getSanitizer()->getInt('regionSpecific', $filterBy);
-            }
-
-            // Sorting?
-            $order = '';
-            if (is_array($sortOrder))
-                $order .= 'ORDER BY ' . implode(',', $sortOrder);
-
-            $limit = '';
-            // Paging
-            if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-                $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
-            }
-
-            $sql = $select . $body . $order . $limit;
-
-            //
-
-            $sth = $dbh->prepare($sql);
-            $sth->execute($params);
-
-            foreach ($sth->fetchAll(\PDO::FETCH_ASSOC) as $row) {
-                $module = $this->createEmpty();
-                $module->moduleId = $this->getSanitizer()->int($row['ModuleID']);
-                $module->name = $this->getSanitizer()->string($row['Name']);
-                $module->description = $this->getSanitizer()->string($row['Description']);
-                $module->validExtensions = $this->getSanitizer()->string($row['ValidExtensions']);
-                $module->imageUri = $this->getSanitizer()->string($row['ImageUri']);
-                $module->renderAs = $this->getSanitizer()->string($row['render_as']);
-                $module->enabled = $this->getSanitizer()->int($row['Enabled']);
-                $module->regionSpecific = $this->getSanitizer()->int($row['RegionSpecific']);
-                $module->previewEnabled = $this->getSanitizer()->int($row['PreviewEnabled']);
-                $module->assignable = $this->getSanitizer()->int($row['assignable']);
-                $module->schemaVersion = $this->getSanitizer()->int($row['SchemaVersion']);
-
-                // Identification
-                $module->type = strtolower($this->getSanitizer()->string($row['Module']));
-
-                if (DBVERSION >= 120) {
-                    $module->class = $this->getSanitizer()->string($row['class']);
-                    $module->viewPath = $this->getSanitizer()->string($row['viewPath']);
-                }
-
-                if (DBVERSION >= 122) {
-                    $module->defaultDuration = $this->getSanitizer()->int($row['defaultDuration']);
-                }
-
-                if (DBVERSION >= 125) {
-                    $module->installName = $this->getSanitizer()->string($row['installName']);
-                }
-
-                $settings = $row['settings'];
-                $module->settings = ($settings == '') ? array() : json_decode($settings, true);
-
-                $entries[] = $module;
-            }
-
-            // Paging
-            if ($limit != '' && count($entries) > 0) {
-                $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
-                $this->_countLast = intval($results[0]['total']);
-            }
-
-            return $entries;
+        if ($this->getSanitizer()->getInt('moduleId', $filterBy) !== null) {
+            $params['moduleId'] = $this->getSanitizer()->getInt('moduleId', $filterBy);
+            $body .= ' AND ModuleID = :moduleId ';
         }
-        catch (\Exception $e) {
 
-            $this->getLog()->error($e->getMessage());
-
-            return array();
+        if ($this->getSanitizer()->getString('name', $filterBy) != '') {
+            $params['name'] = $this->getSanitizer()->getString('name', $filterBy);
+            $body .= ' AND name = :name ';
         }
+
+        if ($this->getSanitizer()->getString('installName', $filterBy) != null) {
+            $params['installName'] = $this->getSanitizer()->getString('installName', $filterBy);
+            $body .= ' AND installName = :installName ';
+        }
+
+        if ($this->getSanitizer()->getString('type', $filterBy) != '') {
+            $params['type'] = $this->getSanitizer()->getString('type', $filterBy);
+            $body .= ' AND module = :type ';
+        }
+
+        if ($this->getSanitizer()->getString('class', $filterBy) != '') {
+            $params['class'] = $this->getSanitizer()->getString('class', $filterBy);
+            $body .= ' AND `class` = :class ';
+        }
+
+        if ($this->getSanitizer()->getString('extension', $filterBy) != '') {
+            $params['extension'] = '%' . $this->getSanitizer()->getString('extension', $filterBy) . '%';
+            $body .= ' AND ValidExtensions LIKE :extension ';
+        }
+
+        if ($this->getSanitizer()->getInt('assignable', -1, $filterBy) != -1) {
+            $body .= " AND assignable = :assignable ";
+            $params['assignable'] = $this->getSanitizer()->getInt('assignable', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('enabled', -1, $filterBy) != -1) {
+            $body .= " AND enabled = :enabled ";
+            $params['enabled'] = $this->getSanitizer()->getInt('enabled', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('regionSpecific', -1, $filterBy) != -1) {
+            $body .= " AND regionSpecific = :regionSpecific ";
+            $params['regionSpecific'] = $this->getSanitizer()->getInt('regionSpecific', $filterBy);
+        }
+
+        // Sorting?
+        $order = '';
+        if (is_array($sortOrder))
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        $limit = '';
+        // Paging
+        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        }
+
+        $sql = $select . $body . $order . $limit;
+
+        //
+
+        $sth = $dbh->prepare($sql);
+        $sth->execute($params);
+
+        foreach ($sth->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+            $module = $this->createEmpty();
+            $module->moduleId = $this->getSanitizer()->int($row['ModuleID']);
+            $module->name = $this->getSanitizer()->string($row['Name']);
+            $module->description = $this->getSanitizer()->string($row['Description']);
+            $module->validExtensions = $this->getSanitizer()->string($row['ValidExtensions']);
+            $module->imageUri = $this->getSanitizer()->string($row['ImageUri']);
+            $module->renderAs = $this->getSanitizer()->string($row['render_as']);
+            $module->enabled = $this->getSanitizer()->int($row['Enabled']);
+            $module->regionSpecific = $this->getSanitizer()->int($row['RegionSpecific']);
+            $module->previewEnabled = $this->getSanitizer()->int($row['PreviewEnabled']);
+            $module->assignable = $this->getSanitizer()->int($row['assignable']);
+            $module->schemaVersion = $this->getSanitizer()->int($row['SchemaVersion']);
+
+            // Identification
+            $module->type = strtolower($this->getSanitizer()->string($row['Module']));
+
+            if (DBVERSION >= 120) {
+                $module->class = $this->getSanitizer()->string($row['class']);
+                $module->viewPath = $this->getSanitizer()->string($row['viewPath']);
+            }
+
+            if (DBVERSION >= 122) {
+                $module->defaultDuration = $this->getSanitizer()->int($row['defaultDuration']);
+            }
+
+            if (DBVERSION >= 125) {
+                $module->installName = $this->getSanitizer()->string($row['installName']);
+            }
+
+            $settings = $row['settings'];
+            $module->settings = ($settings == '') ? array() : json_decode($settings, true);
+
+            $entries[] = $module;
+        }
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
+        }
+
+        return $entries;
     }
 }

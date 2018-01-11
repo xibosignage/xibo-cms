@@ -281,19 +281,18 @@ class Layout extends Base
                 $permission->save();
             }
 
-            foreach ($region->playlists as $playlist) {
-                /* @var Playlist $playlist */
-                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            $playlist = $region->getPlaylist();
+
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+                /* @var Permission $permission */
+                $permission->save();
+            }
+
+            foreach ($playlist->widgets as $widget) {
+                /* @var Widget $widget */
+                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
-                }
-
-                foreach ($playlist->widgets as $widget) {
-                    /* @var Widget $widget */
-                    foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                        /* @var Permission $permission */
-                        $permission->save();
-                    }
                 }
             }
         }

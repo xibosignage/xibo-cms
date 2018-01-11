@@ -407,6 +407,8 @@ class Module extends Base
         // Create a module to use
         $module = $this->moduleFactory->createForWidget($type, null, $this->getUser()->userId, $playlistId);
 
+        $this->getLog()->debug('Module created, passing back to Twig');
+
         // Pass to view
         $this->getState()->template = $module->addForm();
         $this->getState()->setData($module->setTemplateData([
@@ -436,7 +438,8 @@ class Module extends Base
         // Load some information about this playlist
         $playlist->load([
             'playlistIncludeRegionAssignments' => false,
-            'loadWidgets' => false
+            'loadWidgets' => false,
+            'loadTags' => false
         ]);
 
         // Create a module to use

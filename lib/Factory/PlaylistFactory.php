@@ -203,6 +203,11 @@ class PlaylistFactory extends BaseFactory
             $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', $filterBy);
         }
 
+        if ($this->getSanitizer()->getInt('notPlaylistId', $filterBy) !== null) {
+            $body .= ' AND `playlist`.playlistId <> :notPlaylistId ';
+            $params['notPlaylistId'] = $this->getSanitizer()->getInt('notPlaylistId', $filterBy);
+        }
+
         if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
             $body .= ' AND `playlist`.ownerId = :ownerId ';
             $params['ownerId'] = $this->getSanitizer()->getInt('userId', $filterBy);

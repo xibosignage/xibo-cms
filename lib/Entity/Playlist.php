@@ -391,6 +391,17 @@ class Playlist implements \JsonSerializable
         if ($this->regionId != 0)
             throw new InvalidArgumentException(__('This Playlist belongs to a Region, please delete the Region instead.'), 'regionId');
 
+        // Notify we're going to delete
+        // we do this here, because once we've deleted we lose the references for the storage query
+        $this->notifyLayouts();
+
+        // TODO: Delete me from any other Playlists using me as a sub-playlist
+        // i'll need to find these widgets at this point and remove them?
+
+
+        // Delete my closure table records
+        $this->getStore()->update('DELETE FROM `lkplaylistplaylist` WHERE childId = :playlistId', ['playlistId' => $this->playlistId]);
+
         // Delete Permissions
         foreach ($this->permissions as $permission) {
             /* @var Permission $permission */
@@ -427,6 +438,14 @@ class Playlist implements \JsonSerializable
             'createdDt' => $time,
             'modifiedDt' => $time,
         ));
+
+        if (DBVERSION >= 160) {
+            // Insert my self link
+            $this->getStore()->insert('INSERT INTO `lkplaylistplaylist` (`parentId`, `childId`, `depth`) VALUES (:parentId, :childId, 0)', [
+                'parentId' => $this->playlistId,
+                'childId' => $this->playlistId
+            ]);
+        }
     }
 
     /**
@@ -467,8 +486,12 @@ class Playlist implements \JsonSerializable
         $this->getStore()->update('
             UPDATE `layout` SET `status` = 3, `modifiedDT` = :modifiedDt WHERE layoutId IN (
               SELECT `region`.layoutId
-                FROM `region`
-               WHERE `region`.playlistId = :playlistId
+                FROM `lkplaylistplaylist`
+                  INNER JOIN `playlist`
+                  ON `playlist`.playlistId = `lkplaylistplaylist`.parentId
+                  INNER JOIN `region`
+                  ON `region`.regionId = `playlist`.playlistId 
+               WHERE `lkplaylistplaylist`.childId = :playlistId
             )
         ', [
             'playlistId' => $this->playlistId,

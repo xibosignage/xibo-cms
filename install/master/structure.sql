@@ -1166,3 +1166,11 @@ CREATE TABLE IF NOT EXISTS `requiredfile` (
   `size` BIGINT(20) DEFAULT 0 NOT NULL,
   PRIMARY KEY (`rfId`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+CREATE TABLE IF NOT EXISTS `lkplaylistplaylist` (
+  `parentId` int(11) NOT NULL,
+  `childId` int(11) NOT NULL,
+  `depth` int(11) NOT NULL,
+  UNIQUE KEY `parentId` (`parentId`,`childId`,`depth`),
+  UNIQUE KEY `childId` (`childId`,`parentId`,`depth`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
