@@ -360,11 +360,15 @@ class DataSetFactory extends BaseFactory
             try {
                 // Make a HEAD request to the URI and see if we are able to process this.
                 if ($dataSet->method === 'GET') {
-                    $request = $client->head($resolvedUri, $requestParams);
+                    try {
+                        $request = $client->head($resolvedUri, $requestParams);
 
-                    $contentLength = $request->getHeader('Content-Length');
-                    if ($maxMemory > 0 && count($contentLength) > 0 && $contentLength[0] > $maxMemory)
-                        throw new InvalidArgumentException(__('The request %d is too large to fit inside the configured memory limit. %d', $contentLength[0], $maxMemory), 'contentLength');
+                        $contentLength = $request->getHeader('Content-Length');
+                        if ($maxMemory > 0 && count($contentLength) > 0 && $contentLength[0] > $maxMemory)
+                            throw new InvalidArgumentException(__('The request %d is too large to fit inside the configured memory limit. %d', $contentLength[0], $maxMemory), 'contentLength');
+                    } catch (RequestException $requestException) {
+                        $this->getLog()->info('Cannot make head request for remote dataSet ' . $dataSet->dataSetId);
+                    }
                 }
 
                 $request = $client->request($dataSet->method, $resolvedUri, $requestParams);
