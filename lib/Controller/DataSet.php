@@ -857,7 +857,7 @@ class DataSet extends Base
         $dataSet->dataRoot = $this->getSanitizer()->getString('dataRoot');
 
         // Call the remote service requested
-        $data = $this->dataSetFactory->callRemoteService($dataSet);
+        $data = $this->dataSetFactory->callRemoteService($dataSet, null, false);
 
         // Return
         $this->getState()->hydrate([

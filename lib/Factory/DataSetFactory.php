@@ -303,11 +303,12 @@ class DataSetFactory extends BaseFactory
      * In case of an Error, null is returned instead.
      * @param \Xibo\Entity\DataSet $dataSet The Dataset to get Data for
      * @param \Xibo\Entity\DataSet|null $dependant The Dataset $dataSet depends on
+     * @param bool $enableCaching Should we cache check the results and store the resulting cache
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @return \stdClass{entries:[],number:int}
      */
-    public function callRemoteService(DataSet $dataSet, DataSet $dependant = null)
+    public function callRemoteService(DataSet $dataSet, DataSet $dependant = null, $enableCaching = true)
     {
         $this->getLog()->debug('Calling remote service for DataSet: ' . $dataSet->dataSet . ' and URL ' . $dataSet->uri);
 
@@ -374,52 +375,54 @@ class DataSetFactory extends BaseFactory
                 $request = $client->request($dataSet->method, $resolvedUri, $requestParams);
 
                 // Check the cache control situation
-                // recache if necessary
-                $cacheControlKey = $this->pool->getItem('/dataset/cache/' . md5($resolvedUri . json_encode($requestParams)));
-                $cacheControlKeyValue = ($cacheControlKey->isMiss()) ? '' : $cacheControlKey->get();
+                if ($enableCaching) {
+                    // recache if necessary
+                    $cacheControlKey = $this->pool->getItem('/dataset/cache/' . md5($resolvedUri . json_encode($requestParams)));
+                    $cacheControlKeyValue = ($cacheControlKey->isMiss()) ? '' : $cacheControlKey->get();
 
-                $this->getLog()->debug('Cache Control Key is ' . $cacheControlKeyValue);
+                    $this->getLog()->debug('Cache Control Key is ' . $cacheControlKeyValue);
 
-                $etags = $request->getHeader('E-Tag');
-                $lastModifieds = $request->getHeader('Last-Modified');
+                    $etags = $request->getHeader('E-Tag');
+                    $lastModifieds = $request->getHeader('Last-Modified');
 
-                if (count($etags) > 0) {
-                    // Compare the etag with the cache key and see if they are the same, if they are
-                    // then we stop processing this data set
-                    if ($cacheControlKeyValue === $etags[0]) {
-                        $this->getLog()->debug('Skipping due to eTag');
-                        continue;
+                    if (count($etags) > 0) {
+                        // Compare the etag with the cache key and see if they are the same, if they are
+                        // then we stop processing this data set
+                        if ($cacheControlKeyValue === $etags[0]) {
+                            $this->getLog()->debug('Skipping due to eTag');
+                            continue;
+                        }
+
+                        $cacheControlKeyValue = $etags[0];
+
+                    } else if (count($lastModifieds) > 0) {
+                        if ($cacheControlKeyValue === $lastModifieds[0]) {
+                            $this->getLog()->debug('Skipping due to Last-Modified');
+                            continue;
+                        }
+
+                        $cacheControlKeyValue = $lastModifieds[0];
+
+                    } else {
+                        // Request doesn't have any cache control of its own
+                        // use the md5
+                        $md5 = md5($request->getBody());
+
+                        if ($cacheControlKeyValue === $md5) {
+                            $this->getLog()->debug('Skipping due to MD5');
+                            continue;
+                        }
+
+                        $cacheControlKeyValue = $md5;
                     }
 
-                    $cacheControlKeyValue = $etags[0];
+                    $this->getLog()->debug('Cache Control Key is now ' . $cacheControlKeyValue);
 
-                } else if (count($lastModifieds) > 0) {
-                    if ($cacheControlKeyValue === $lastModifieds[0]) {
-                        $this->getLog()->debug('Skipping due to Last-Modified');
-                        continue;
-                    }
-
-                    $cacheControlKeyValue = $lastModifieds[0];
-
-                } else {
-                    // Request doesn't have any cache control of its own
-                    // use the md5
-                    $md5 = md5($request->getBody());
-
-                    if ($cacheControlKeyValue === $md5) {
-                        $this->getLog()->debug('Skipping due to MD5');
-                        continue;
-                    }
-
-                    $cacheControlKeyValue = $md5;
+                    // Store the cache key
+                    $cacheControlKey->set($cacheControlKeyValue);
+                    $cacheControlKey->expiresAfter(86400 * 365);
+                    $this->pool->saveDeferred($cacheControlKey);
                 }
-
-                $this->getLog()->debug('Cache Control Key is now ' . $cacheControlKeyValue);
-
-                // Store the cache key
-                $cacheControlKey->set($cacheControlKeyValue);
-                $cacheControlKey->expiresAfter(86400 * 365);
-                $this->pool->saveDeferred($cacheControlKey);
 
                 // TODO: we should probably do some checking to ensure we have JSON back
                 $result->entries[] = json_decode($request->getBody());
