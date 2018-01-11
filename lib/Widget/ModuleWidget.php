@@ -1187,8 +1187,9 @@ abstract class ModuleWidget implements ModuleInterface
             return null;
 
         foreach ($templates as $item) {
-            if( $item['id'] == $templateId ) {
+            if ($item['id'] == $templateId) {
                 $template = $item;
+                break;
             }
         }
 

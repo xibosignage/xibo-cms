@@ -465,12 +465,12 @@ class TwitterMetro extends TwitterBase
                         
                             // Get the colors array
                             if ($this->getOption('overrideColorTemplate') == 0) {
-                                $template = $this->getTemplateById($this->getOption('colorTemplateId'));
+                                $colorTemplate = $this->getTemplateById($this->getOption('colorTemplateId'));
 
-                                if ($template === null)
-                                    $template = $this->getTemplateById('default');
+                                if ($colorTemplate === null)
+                                    $colorTemplate = $this->getTemplateById('default');
 
-                                $colorArray = $template['colors'];
+                                $colorArray = $colorTemplate['colors'];
                             } else {
                                 $colorArray = explode("|", $this->getOption('templateColours'));
                             }
