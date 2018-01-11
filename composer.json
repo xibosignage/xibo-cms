@@ -73,7 +73,8 @@
     "phpunit/phpunit": "~4.0",
     "zircote/swagger-php": "~2.0",
     "umpirsky/twig-gettext-extractor": "dev-dev-xibo-extractors",
-    "there4/slim-test-helpers": "0.9.*"
+    "there4/slim-test-helpers": "0.9.*",
+    "doctrine/instantiator": "1.0.*"
   },
   "autoload": {
     "psr-4": { "Xibo\\" : "lib/", "Xibo\\Custom\\": "custom/" }
