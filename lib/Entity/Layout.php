@@ -755,6 +755,7 @@ class Layout implements \JsonSerializable
     /**
      * Export the Layout as its XLF
      * @return string
+     * @throws XiboException
      */
     public function toXlf()
     {

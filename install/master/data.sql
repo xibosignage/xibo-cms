@@ -106,8 +106,7 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`,
   (15, 'clock', 'Clock', 1, 1, '', 'forms/library.gif', 1, NULL, 1, 1, 'html', '[]', '../modules', 'Xibo\\Widget\\Clock', 5),
   (16, 'font', 'Font', 1, 0, 'A font to use in other Modules', 'forms/library.gif', 1, 'ttf,otf,eot,svg,woff', 0, 0, NULL, NULL, '../modules', 'Xibo\\Widget\\Font', 10),
   (17, 'audio', 'Audio', 1, 0, 'Audio - support varies depending on the client hardware', 'forms/video.gif', 1, 'mp3,wav', 0, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\Audio', 0),
-  (18, 'pdf', 'PDF', 1, 0, 'PDF document viewer', 'forms/pdf.gif', 1, 'pdf', 1, 1, 'html', null, '../modules', 'Xibo\\Widget\\Pdf', 60),
-  (19, 'notificationview', 'Notification', 1, 1, 'Display Notifications from the Notification Centre', 'forms/library.gif', 1, null, 1, 1, 'html', null, '../modules', 'Xibo\\Widget\\NotificationView', 10);
+  (18, 'pdf', 'PDF', 1, 0, 'PDF document viewer', 'forms/pdf.gif', 1, 'pdf', 1, 1, 'html', null, '../modules', 'Xibo\\Widget\\Pdf', 60);
 
 INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (1, 'dashboard', 'Dashboard', 1),
@@ -322,4 +321,4 @@ INSERT INTO task (taskId, name, class, status, options, schedule, isActive, conf
   (3, 'Email Notifications', '\\Xibo\\XTR\\EmailNotificationsTask', 2, '[]', '*/5 * * * * *', 1, '/tasks/email-notifications.task'),
   (4, 'Stats Archive', '\\Xibo\\XTR\\StatsArchiveTask', 2, '{"periodSizeInDays":"7","maxPeriods":"4"}', '0 0 * * Mon', 0, '/tasks/stats-archiver.task'),
   (5, 'Remove old Notifications', '\\Xibo\\XTR\\NotificationTidyTask', 2, '{"maxAgeDays":"7","systemOnly":"1","readOnly":"0"}', '15 0 * * *', 1, '/tasks/notification-tidy.task'),
-  (6, 'Fetch Remote DataSets', '\\Xibo\\XTR\\RemoteDataSetFetchTask', 2, '[]', '30 * * * * *', 1, '/tasks/remote-dataset.task');
+  (6, 'Fetch Remote DataSets', '\\Xibo\\XTR\\RemoteDataSetFetchTask', 2, 1, '/tasks/remote-dataset.task', '{}', '30 * * * * *');
