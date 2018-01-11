@@ -30,10 +30,6 @@
     {
       "type": "vcs",
       "url": "https://github.com/dasgarner/Twig-Gettext-Extractor"
-    },
-    {
-      "type": "vcs",
-      "url": "https://github.com/PeterMis/oauth2-xibo-cms"
     }
   ],
   "require": {
