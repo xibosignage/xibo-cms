@@ -123,11 +123,14 @@ class Playlist extends Base
      */
     public function displayPage()
     {
+        $moduleFactory = $this->moduleFactory;
+
         // Call to render the template
         $this->getState()->template = 'playlist-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
-            'groups' => $this->userGroupFactory->query()
+            'groups' => $this->userGroupFactory->query(),
+            'modules' => array_map(function($element) use ($moduleFactory) { return $moduleFactory->createForInstall($element->class); }, $moduleFactory->getAssignableModules())
         ]);
     }
 

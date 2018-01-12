@@ -744,6 +744,7 @@ CREATE TABLE IF NOT EXISTS `playlist` (
   `createdDt` datetime NOT NULL,
   `modifiedDt` datetime NOT NULL,
   `duration` int(11) NOT NULL DEFAULT '0' COMMENT 'The duration in seconds',
+  `requiresDurationUpdate` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`playlistId`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 

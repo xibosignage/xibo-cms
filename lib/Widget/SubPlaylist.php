@@ -103,7 +103,7 @@ class SubPlaylist extends ModuleWidget
         // Manage the closure table that holds these relationships
         if ($existingSubPlaylistId != $subPlaylistId) {
             // Manage closure
-            $this->getLog()->debug('Manage closure table for parent ' . $this->widget->playlistId . ' and child ' . $subPlaylistId);
+            $this->getLog()->debug('Manage closure table for parent ' . $this->getPlaylistId() . ' and child ' . $subPlaylistId);
 
             if ($existingSubPlaylistId != 0) {
                 $this->getLog()->debug('Removing old links - existing link child is ' . $existingSubPlaylistId);
@@ -114,7 +114,7 @@ class SubPlaylist extends ModuleWidget
                      WHERE p.parentId = link.parentId AND c.childId = link.childId
                        AND p.childId = :parentId AND c.parentId = :childId
                 ', [
-                    'parentId' => $this->widget->playlistId,
+                    'parentId' => $this->getPlaylistId(),
                     'childId' => $existingSubPlaylistId
                 ]);
             }
@@ -125,9 +125,22 @@ class SubPlaylist extends ModuleWidget
                   FROM lkplaylistplaylist p, lkplaylistplaylist c
                  WHERE p.childId = :parentId AND c.parentId = :childId
             ', [
-                'parentId' => $this->widget->playlistId,
+                'parentId' => $this->getPlaylistId(),
                 'childId' => $subPlaylistId
             ]);
+        }
+
+        // Make sure we've not created a circular reference
+        // this is a lazy last minute check as we can't really tell if there is a circular reference unless
+        // we've inserted the records already.
+        if ($this->getStore()->exists('
+            SELECT depth 
+              FROM `lkplaylistplaylist` 
+             WHERE parentId = :parentId 
+               AND childId = parentId 
+               AND depth > 0
+        ', ['parentId' => $this->getPlaylistId()])) {
+            throw new \InvalidArgumentException(__('This assignment creates a circular reference'));
         }
     }
 
@@ -145,7 +158,7 @@ class SubPlaylist extends ModuleWidget
              WHERE p.parentId = link.parentId AND c.childId = link.childId
                AND p.childId = :parentId AND c.parentId = :childId
         ', [
-            'parentId' => $this->widget->playlistId,
+            'parentId' => $this->getPlaylistId(),
             'childId' => $subPlaylistId
         ]);
     }
@@ -156,6 +169,20 @@ class SubPlaylist extends ModuleWidget
     public function preview($width, $height, $scaleOverride = 0)
     {
         //TODO: make a nice little sub-playlist viewer, perhaps showing a list of whats inside?
-        return '<h1>Sub Playlist</h1>';
+        $output = '<h1>Sub Playlist</h1><ul>';
+
+        foreach ($this->playlistFactory->getById($this->getOption('subPlaylistId'))->expandWidgets() as $widget) {
+            $output .= '<li>' . $widget->type . '</li>';
+        }
+
+        return $output . '</ul>';
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getName()
+    {
+        return __('Sub-Playlist: %s', $this->playlistFactory->getById($this->getOption('subPlaylistId'))->name);
     }
 }

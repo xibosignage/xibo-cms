@@ -667,7 +667,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     final protected function saveWidget()
     {
-        $this->widget->save();
+        $this->widget->calculateDuration($this)->save();
     }
 
     /**

@@ -759,9 +759,12 @@ class Layout implements \JsonSerializable
      */
     public function toXlf()
     {
-        $this->getLog()->debug('Layout toXLF for Layout %s, %d', $this->layout, $this->layoutId);
+        $this->getLog()->debug('Layout toXLF for Layout ' . $this->layout . ' - ' . $this->layoutId);
 
         $this->load(['loadPlaylists' => true]);
+
+        // Keep track of whether this layout has an empty region
+        $layoutHasEmptyRegion = false;
 
         $document = new \DOMDocument();
         $layoutNode = $document->createElement('layout');
@@ -786,52 +789,6 @@ class Layout implements \JsonSerializable
         // Track module status within the layout
         $status = 0;
         $this->clearStatusMessage();
-
-        // We need to make some assessment based on the duration
-        //  1. Find out whether any of the regions have more than 1 widget
-        //      If they do, then we will always have a region that controls duration.
-        //  2. If we don't, then find out if any of the single item regions have a duration specified
-        //      If they do, then we will always have a region that controls duration.
-        //  3. Go through each region and assess whether they are single widget regions or not.
-        //      If they are, then check to see if we have a region that governs duration and if we do set them
-        //      to expire after 1 second
-        //  4. If they are not single widget regions, then set their duration to be either the duration specified, or
-        //      the default duration if none has been specified.
-        //  5. In either case, add the duration from #4 to the region duration
-
-        $layoutHasRegionControllingDuration = false;
-        $layoutHasEmptyRegion = false;
-
-        foreach ($this->regions as $region) {
-            /* @var Region $region */
-            // Get a count of widgets in this region
-            $countWidgets = 0;
-            $hasDuration = false;
-            foreach ($region->playlists as $playlist) {
-                $countWidgets = $countWidgets + count($playlist->widgets);
-
-                foreach ($playlist->widgets as $widget) {
-                    /* @var Widget $widget */
-                    if ($widget->useDuration == 1) {
-                        $hasDuration = true;
-                        break;
-                    }
-                }
-            }
-
-            // Record whether there is an empty region
-            if ($countWidgets <= 0)
-                $layoutHasEmptyRegion = true;
-
-            // Any with more than one widget
-            // Any with duration specified?
-            if ($countWidgets > 1 || $hasDuration) {
-                $layoutHasRegionControllingDuration = true;
-            }
-        }
-
-        if ($layoutHasEmptyRegion)
-            $this->getLog()->alert('Layout has empty region');
 
         foreach ($this->regions as $region) {
             /* @var Region $region */
@@ -865,152 +822,123 @@ class Layout implements \JsonSerializable
             $regionLoop = $region->getOptionValue('loop', 0);
 
             // Get a count of widgets in this region
-            $countWidgets = 0;
-            foreach ($region->playlists as $playlist) {
-                $countWidgets = $countWidgets + count($playlist->widgets);
+            $widgets = $region->getPlaylist()->expandWidgets();
+            $countWidgets = count($widgets);
+
+            if ($countWidgets <= 0) {
+                $this->getLog()->info('Layout has empty region');
+                $layoutHasEmptyRegion = true;
             }
 
-            foreach ($region->playlists as $playlist) {
-                /* @var Playlist $playlist */
-                foreach ($playlist->widgets as $widget) {
-                    /* @var Widget $widget */
-                    $module = $this->moduleFactory->createWithWidget($widget, $region);
+            foreach ($widgets as $widget) {
+                /* @var Widget $widget */
+                $module = $this->moduleFactory->createWithWidget($widget, $region);
 
-                    // Set the Layout Status
-                    $moduleStatus = $module->isValid();
-                    $status = ($moduleStatus > $status) ? $moduleStatus : $status;
+                // Set the Layout Status
+                $moduleStatus = $module->isValid();
+                $status = ($moduleStatus > $status) ? $moduleStatus : $status;
 
-                    if ($moduleStatus > 1 && $module->getStatusMessage() != '')
-                        $this->pushStatusMessage($module->getStatusMessage());
+                if ($moduleStatus > 1 && $module->getStatusMessage() != '')
+                    $this->pushStatusMessage($module->getStatusMessage());
 
-                    // Determine the duration of this widget
-                    if ($widget->useDuration == 1) {
-                        // Widget duration is as specified
-                        $widgetDuration = $widget->duration;
+                // Determine the duration of this widget
+                // the calculated duration contains the best guess at this duration from the playlist's perspective
+                // the only time we want to override this, is if we want it set to the Minimum Duration for the XLF
+                $widgetDuration = $widget->calculatedDuration;
 
-                        // The calculated duration is the provided one
-                        $widget->calculatedDuration = $widgetDuration;
+                if ($widget->useDuration == 0 && $countWidgets <= 1 && $regionLoop == 0) {
+                    // We have a widget without a specified duration in a region on its own and the region isn't set to
+                    // loop.
+                    // Reset to the minimum duration
+                    $widgetDuration = Widget::$widgetMinDuration;
+                }
 
-                    } else if (!$layoutHasRegionControllingDuration || $countWidgets > 1 || $regionLoop == 1 || $widget->type === 'video') {
-                        // No specified duration, but we've detected that we need to use the default duration
-                        // Edge case being video - we must ensure that the default duration for video is always 0.
-                        $widgetDuration = $module->getModule()->defaultDuration;
+                // Region duration
+                $region->duration = $region->duration + $widget->calculatedDuration;
 
-                        // The calculated duration is the "real" duration (caters for 0 videos)
-                        $widget->calculatedDuration = (($widgetDuration == 0) ? $module->getDuration(['real' => true]) : $widgetDuration);
+                // We also want to add any transition OUT duration
+                // only the OUT duration because IN durations do not get added to the widget duration by the player
+                // https://github.com/xibosignage/xibo/issues/705
+                if ($widget->getOptionValue('transOut', '') != '') {
+                    // Transition durations are in milliseconds
+                    $region->duration = $region->duration + ($widget->getOptionValue('transOutDuration', 0) / 1000);
+                }
 
-                    } else {
-                        // No specified duration, add nothing to region duration and expire the widget in 1 second
-                        $widgetDuration = Widget::$widgetMinDuration;
+                // Create media xml node for XLF.
+                $renderAs = $module->getModule()->renderAs;
+                $mediaNode = $document->createElement('media');
+                $mediaNode->setAttribute('id', $widget->widgetId);
+                $mediaNode->setAttribute('type', $widget->type);
+                $mediaNode->setAttribute('render', ($renderAs == '') ? 'native' : $renderAs);
 
-                        // The calculated duration is 0
-                        $widget->calculatedDuration = 0;
+                // Set the duration according to whether we are using widget duration or not
+                $mediaNode->setAttribute('duration', $widgetDuration);
+                $mediaNode->setAttribute('useDuration', $widget->useDuration);
+
+                // Create options nodes
+                $optionsNode = $document->createElement('options');
+                $rawNode = $document->createElement('raw');
+
+                $mediaNode->appendChild($optionsNode);
+                $mediaNode->appendChild($rawNode);
+
+                // Inject the URI
+                $uriInjected = false;
+                if ($module->getModule()->regionSpecific == 0) {
+                    $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                    $optionNode = $document->createElement('uri', $media->storedAs);
+                    $optionsNode->appendChild($optionNode);
+                    $uriInjected = true;
+
+                    // Add the fileId attribute to the media element
+                    $mediaNode->setAttribute('fileId', $media->mediaId);
+                }
+
+                foreach ($widget->widgetOptions as $option) {
+                    /* @var WidgetOption $option */
+                    if (trim($option->value) === '')
+                        continue;
+
+                    if ($option->type == 'cdata') {
+                        $optionNode = $document->createElement($option->option);
+                        $cdata = $document->createCDATASection($option->value);
+                        $optionNode->appendChild($cdata);
+                        $rawNode->appendChild($optionNode);
                     }
+                    else if ($option->type == 'attrib' || $option->type == 'attribute') {
 
-                    // Does our widget have a durationIsPerItem and a Number of Items?
-                    $numItems = $widget->getOptionValue('numItems', 0);
-                    $itemsPerPage = $widget->getOptionValue('itemsPerPage', 0);
-                    if ($widget->getOptionValue('durationIsPerItem', 0) == 1 && $numItems > 1) {
-                        // If we have paging involved then work out the page count.
-                        if ($itemsPerPage > 0)
-                            $numItems = ceil($numItems / $itemsPerPage);
-
-                        $widget->calculatedDuration = (($widget->useDuration == 1) ? $widget->duration : $module->getModule()->defaultDuration) * $numItems;
-                    }
-
-                    // Region duration
-                    $region->duration = $region->duration + $widget->calculatedDuration;
-
-                    // We also want to add any transition OUT duration
-                    // only the OUT duration because IN durations do not get added to the widget duration by the player
-                    // https://github.com/xibosignage/xibo/issues/705
-                    if ($widget->getOptionValue('transOut', '') != '') {
-                        // Transition durations are in milliseconds
-                        $region->duration = $region->duration + ($widget->getOptionValue('transOutDuration', 0) / 1000);
-                    }
-
-                    // Create media xml node for XLF.
-                    $renderAs = $module->getModule()->renderAs;
-                    $mediaNode = $document->createElement('media');
-                    $mediaNode->setAttribute('id', $widget->widgetId);
-                    $mediaNode->setAttribute('type', $widget->type);
-                    $mediaNode->setAttribute('render', ($renderAs == '') ? 'native' : $renderAs);
-
-                    // Set the duration according to whether we are using widget duration or not
-                    $mediaNode->setAttribute('duration', $widgetDuration);
-                    $mediaNode->setAttribute('useDuration', $widget->useDuration);
-
-                    // Create options nodes
-                    $optionsNode = $document->createElement('options');
-                    $rawNode = $document->createElement('raw');
-
-                    $mediaNode->appendChild($optionsNode);
-                    $mediaNode->appendChild($rawNode);
-
-                    // Inject the URI
-                    $uriInjected = false;
-                    if ($module->getModule()->regionSpecific == 0) {
-                        $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
-                        $optionNode = $document->createElement('uri', $media->storedAs);
-                        $optionsNode->appendChild($optionNode);
-                        $uriInjected = true;
-
-                        // Add the fileId attribute to the media element
-                        $mediaNode->setAttribute('fileId', $media->mediaId);
-                    }
-
-                    foreach ($widget->widgetOptions as $option) {
-                        /* @var WidgetOption $option */
-                        if (trim($option->value) === '')
+                        if ($uriInjected && $option->option == 'uri')
                             continue;
 
-                        if ($option->type == 'cdata') {
-                            $optionNode = $document->createElement($option->option);
-                            $cdata = $document->createCDATASection($option->value);
-                            $optionNode->appendChild($cdata);
-                            $rawNode->appendChild($optionNode);
-                        }
-                        else if ($option->type == 'attrib' || $option->type == 'attribute') {
-
-                            if ($uriInjected && $option->option == 'uri')
-                                continue;
-
-                            $optionNode = $document->createElement($option->option, $option->value);
-                            $optionsNode->appendChild($optionNode);
-                        }
+                        $optionNode = $document->createElement($option->option, $option->value);
+                        $optionsNode->appendChild($optionNode);
                     }
-
-                    // Handle associated audio
-                    $audioNodes = null;
-                    foreach ($widget->audio as $audio) {
-                        /** @var WidgetAudio $audio */
-                        if ($audioNodes == null)
-                            $audioNodes = $document->createElement('audio');
-
-                        // Get the full media node for this audio element
-                        $audioMedia = $this->mediaFactory->getById($audio->mediaId);
-
-                        $audioNode = $document->createElement('uri', $audioMedia->storedAs);
-                        $audioNode->setAttribute('volume', $audio->volume);
-                        $audioNode->setAttribute('loop', $audio->loop);
-                        $audioNode->setAttribute('mediaId', $audio->mediaId);
-                        $audioNodes->appendChild($audioNode);
-                    }
-
-                    if ($audioNodes != null)
-                        $mediaNode->appendChild($audioNodes);
-
-                    // Save our widget
-                    $widget->save([
-                        'notify' => false,
-                        'saveWidgetOptions' => false
-                    ]);
-
-                    $regionNode->appendChild($mediaNode);
                 }
+
+                // Handle associated audio
+                $audioNodes = null;
+                foreach ($widget->audio as $audio) {
+                    /** @var WidgetAudio $audio */
+                    if ($audioNodes == null)
+                        $audioNodes = $document->createElement('audio');
+
+                    // Get the full media node for this audio element
+                    $audioMedia = $this->mediaFactory->getById($audio->mediaId);
+
+                    $audioNode = $document->createElement('uri', $audioMedia->storedAs);
+                    $audioNode->setAttribute('volume', $audio->volume);
+                    $audioNode->setAttribute('loop', $audio->loop);
+                    $audioNode->setAttribute('mediaId', $audio->mediaId);
+                    $audioNodes->appendChild($audioNode);
+                }
+
+                if ($audioNodes != null)
+                    $mediaNode->appendChild($audioNodes);
+
+                $regionNode->appendChild($mediaNode);
             }
 
-            $this->getLog()->debug('Region duration on layout %d is %d. Comparing to %d.', $this->layoutId, $region->duration, $this->duration);
+            $this->getLog()->debug('Region duration on layout ' . $this->layoutId . ' is ' . $region->duration . '. Comparing to ' . $this->duration);
 
             // Track the max duration within the layout
             // Test this duration against the layout duration

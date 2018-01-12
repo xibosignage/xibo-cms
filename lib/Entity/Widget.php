@@ -521,6 +521,45 @@ class Widget implements \JsonSerializable
     }
 
     /**
+     * Calculates the duration of this widget according to some rules
+     * @param $module ModuleWidget
+     * @return $this
+     */
+    public function calculateDuration($module)
+    {
+        $this->getLog()->debug('Calculating Duration - existing value is ' . $this->calculatedDuration);
+
+        // Does our widget have a durationIsPerItem and a Number of Items?
+        $numItems = $this->getOptionValue('numItems', 0);
+
+        // Determine the duration of this widget
+        if ($this->getOptionValue('durationIsPerItem', 0) == 1 && $numItems > 1) {
+            // If we have paging involved then work out the page count.
+            $itemsPerPage = $this->getOptionValue('itemsPerPage', 0);
+            if ($itemsPerPage > 0)
+                $numItems = ceil($numItems / $itemsPerPage);
+
+            $this->calculatedDuration = (($this->useDuration == 1) ? $this->duration : $module->getModule()->defaultDuration) * $numItems;
+
+        } else if ($this->useDuration == 1) {
+            // Widget duration is as specified
+            $this->calculatedDuration = $this->duration;
+
+        } else if ($this->type === 'video') {
+            // The calculated duration is the "real" duration (caters for 0 videos)
+            $this->calculatedDuration = $module->getDuration(['real' => true]);
+
+        } else {
+            // The module default duration.
+            $this->calculatedDuration = $module->getModule()->defaultDuration;
+        }
+
+        $this->getLog()->debug('Set to ' . $this->calculatedDuration);
+
+        return $this;
+    }
+
+    /**
      * Load the Widget
      */
     public function load()
@@ -558,11 +597,13 @@ class Widget implements \JsonSerializable
             'saveWidgetOptions' => true,
             'saveWidgetAudio' => true,
             'notify' => true,
+            'notifyPlaylists' => true,
             'notifyDisplays' => false,
-            'audit' => true
+            'audit' => true,
+            'updatePlaylistDuration' => true
         ], $options);
 
-        $this->getLog()->debug('Saving widgetId %d with options. %s', $this->getId(), json_encode($options, JSON_PRETTY_PRINT));
+        $this->getLog()->debug('Saving widgetId ' . $this->getId() . ' with options. ' . json_encode($options, JSON_PRETTY_PRINT));
 
         // Add/Edit
         if ($this->widgetId == null || $this->widgetId == 0)
@@ -612,6 +653,13 @@ class Widget implements \JsonSerializable
         $this->linkMedia();
         $this->unlinkMedia();
 
+        // Update Playlist Duration
+        if ($options['updatePlaylistDuration'] && $this->hasPropertyChanged('calculatedDuration')) {
+            $this->getStore()->update('UPDATE `playlist` SET requiresDurationUpdate = 1 WHERE playlistId = :playlistId', [
+                'playlistId' => $this->playlistId
+            ]);
+        }
+
         // Call notify with the notify options passed in
         $this->notify($options);
 
@@ -641,6 +689,7 @@ class Widget implements \JsonSerializable
     {
         $options = array_merge([
             'notify' => true,
+            'notifyPlaylists' => true,
             'notifyDisplays' => false
         ], $options);
 
@@ -692,15 +741,25 @@ class Widget implements \JsonSerializable
     {
         $this->getLog()->debug('Notifying upstream playlist. Notify Layout: ' . $options['notify'] . ' Notify Displays: ' . $options['notifyDisplays']);
 
+        if ($options['notifyPlaylists']) {
+            // Notify the Playlist
+            $this->getStore()->update('UPDATE `playlist` SET requiresDurationUpdate = 1, `modifiedDT` = :modifiedDt WHERE playlistId = :playlistId', [
+                'playlistId' => $this->playlistId,
+                'modifiedDt' => $this->dateService->getLocalDate()
+            ]);
+        }
+
         if ($options['notify']) {
             // Notify the Layout
             $this->getStore()->update('
                 UPDATE `layout` SET `status` = 3, `modifiedDT` = :modifiedDt WHERE layoutId IN (
                   SELECT `region`.layoutId
-                    FROM `playlist`
+                    FROM `lkplaylistplaylist`
+                      INNER JOIN `playlist`
+                      ON `playlist`.playlistId = `lkplaylistplaylist`.parentId
                       INNER JOIN `region`
-                      ON region.regionId = `playlist`.regionId
-                   WHERE `playlist`.playlistId = :playlistId
+                      ON `region`.regionId = `playlist`.playlistId 
+                   WHERE `lkplaylistplaylist`.childId = :playlistId
                 )
             ', [
                 'playlistId' => $this->playlistId,
