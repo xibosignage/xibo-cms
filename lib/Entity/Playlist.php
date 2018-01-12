@@ -25,6 +25,7 @@ namespace Xibo\Entity;
 
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\TagFactory;
@@ -32,6 +33,7 @@ use Xibo\Factory\WidgetFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Widget\SubPlaylist;
 
 /**
  * Class Playlist
@@ -144,6 +146,9 @@ class Playlist implements \JsonSerializable
      * @var PlaylistFactory
      */
     private $playlistFactory;
+
+    /** @var ModuleFactory */
+    private $moduleFactory;
     //</editor-fold>
 
     /**
@@ -165,6 +170,16 @@ class Playlist implements \JsonSerializable
         $this->playlistFactory = $playlistFactory;
         $this->widgetFactory = $widgetFactory;
         $this->tagFactory = $tagFactory;
+    }
+
+    /**
+     * @param ModuleFactory $moduleFactory
+     * @return $this
+     */
+    public function setModuleFactory($moduleFactory)
+    {
+        $this->moduleFactory = $moduleFactory;
+        return $this;
     }
 
     /**
@@ -553,9 +568,9 @@ class Playlist implements \JsonSerializable
             if ($widget->type !== 'subplaylist') {
                 $widgets[] = $widget;
             } else {
-                // Add all of the sub-playlists widgets too
-                $playlist = $this->playlistFactory->getById($widget->getOptionValue('subPlaylistId', 0));
-                $widgets = array_merge($widgets, $playlist->expandWidgets());
+                /** @var SubPlaylist $module */
+                $module = $this->moduleFactory->createWithWidget($widget);
+                $widgets = array_merge($widgets, $module->getSubPlaylistResolvedWidgets());
             }
         }
 
@@ -587,8 +602,9 @@ class Playlist implements \JsonSerializable
                 $duration += $widget->calculatedDuration;
             } else {
                 // Add the sub playlist duration
-                $playlist = $this->playlistFactory->getById($widget->getOptionValue('subPlaylistId', 0));
-                $duration += $playlist->duration;
+                /** @var SubPlaylist $module */
+                $module = $this->moduleFactory->createWithWidget($widget);
+                $duration += $module->getSubPlaylistResolvedDuration();
             }
         }
 

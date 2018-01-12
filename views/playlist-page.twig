@@ -170,12 +170,17 @@
                         "render": dataTableSpacingPreformatted
                     },
                     {
-                        "name": "duration",
-                        "data": function (data, type) {
-                            if (type != "display")
-                                return data.duration;
+                        "data": "duration",
+                        "render": function (data, type, row) {
+                            if (type !== "display" && type !== "export")
+                                return data;
 
-                            return moment().startOf("day").seconds(data.duration).format("H:mm:ss");
+                            console.log(row);
+
+                            if (row.requiresDurationUpdate === 1)
+                                return '<span class="fa fa-clock-o" title="{{ "Changes have been made and we are recalculating this Playlists duration" }}"></span>';
+
+                            return moment().startOf("day").seconds(data).format("H:mm:ss");
                         }
                     },
                     {
