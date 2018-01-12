@@ -88,6 +88,7 @@ class PlaylistFactory extends BaseFactory
             $this->getLog(),
             $this->dateService,
             $this->permissionFactory,
+            $this,
             $this->widgetFactory,
             $this->tagFactory
         );
@@ -166,6 +167,7 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.createdDt,
                 `playlist`.modifiedDt,
                 `playlist`.duration,
+                `playlist`.requiresDurationUpdate,
                 (
                 SELECT GROUP_CONCAT(DISTINCT tag) 
                   FROM tag 
@@ -222,6 +224,30 @@ class PlaylistFactory extends BaseFactory
         if (DBVERSION >= 160 && $this->getSanitizer()->getInt('regionId', $filterBy) !== null) {
             $body .= ' AND `playlist`.regionId = :regionId ';
             $params['regionId'] = $this->getSanitizer()->getInt('regionId', $filterBy);
+        }
+
+        if (DBVERSION >= 160 && $this->getSanitizer()->getInt('requiresDurationUpdate', $filterBy) !== null) {
+            $body .= ' AND `playlist`.requiresDurationUpdate = :requiresDurationUpdate ';
+            $params['requiresDurationUpdate'] = $this->getSanitizer()->getInt('requiresDurationUpdate', $filterBy);
+        }
+
+        if (DBVERSION >= 160 && $this->getSanitizer()->getInt('childId', $filterBy) !== null) {
+            $body .= ' 
+                AND `playlist`.playlistId IN (
+                    SELECT parentId 
+                      FROM `lkplaylistplaylist` 
+                     WHERE childId = :childId
+            ';
+
+            if ($this->getSanitizer()->getInt('depth', $filterBy) !== null) {
+                $body .= ' AND depth = :depth ';
+                $params['depth'] = $this->getSanitizer()->getInt('depth', $filterBy);
+            }
+
+            $body .= '
+                ) 
+            ';
+            $params['childId'] = $this->getSanitizer()->getInt('childId', $filterBy);
         }
 
         if (DBVERSION >= 160 && $this->getSanitizer()->getInt('regionSpecific', $filterBy) !== null) {
@@ -346,10 +372,10 @@ class PlaylistFactory extends BaseFactory
 
         $sql = $select . $body . $order . $limit;
 
-
-
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row);
+            $playlist = $this->createEmpty()->hydrate($row, ['intProperties' , ['requiresDurationUpdate']]);
+            $playlist->excludeProperty('requiresDurationUpdate');
+            $entries[] = $playlist;
         }
 
         // Paging

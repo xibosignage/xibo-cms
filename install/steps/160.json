@@ -24,7 +24,7 @@
     },
     {
       "step": "Additional fields for Playlist table",
-      "action": "ALTER TABLE playlist ADD createdDt DATETIME NOT NULL;ALTER TABLE playlist ADD modifiedDt DATETIME NOT NULL;ALTER TABLE playlist ADD duration INT DEFAULT 0 NOT NULL;"
+      "action": "ALTER TABLE playlist ADD createdDt DATETIME NOT NULL;ALTER TABLE playlist ADD modifiedDt DATETIME NOT NULL;ALTER TABLE playlist ADD duration INT DEFAULT 0 NOT NULL;ALTER TABLE playlist ADD requiresDurationUpdate TINYINT DEFAULT 0 NOT NULL;"
     },
     {
       "step": "Add Playlist Module",

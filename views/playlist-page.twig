@@ -211,4 +211,11 @@
             dataTableAddButtons(table, $('#playlists_wrapper').find('.col-sm-6').eq(1));
         });
     </script>
+
+    {% for module in modules %}
+        {% if module.layoutDesignerJavaScript() != "" %}
+            {% include module.layoutDesignerJavaScript() ~ ".twig" %}
+        {% endif %}
+    {% endfor %}
+
 {% endblock %}
