@@ -7,6 +7,7 @@
 
 
 namespace Xibo\Widget;
+use Xibo\Entity\Widget;
 use Xibo\Exception\InvalidArgumentException;
 
 /**
@@ -21,14 +22,40 @@ class SubPlaylist extends ModuleWidget
         return 1;
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function validate()
+    /** @inheritdoc */
+    public function layoutDesignerJavaScript()
     {
-        // Validation
-        if ($this->getOption('subPlaylistId') == 0)
-            throw new InvalidArgumentException(__('Please select a Playlist to embed'), 'subPlaylistId');
+        return 'subplaylist-designer-javascript';
+    }
+
+    /**
+     * Extra data for the Form rendering
+     * @return array
+     */
+    public function getExtra()
+    {
+        return [
+            'playlists' => $this->getAssignablePlaylists(),
+            'subPlaylistId' => $this->getAssignedPlaylistIds()
+        ];
+    }
+
+    /**
+     * @return int[]
+     */
+    protected function getAssignedPlaylistIds()
+    {
+        return json_decode($this->getOption('subPlaylistIds', '[]'));
+    }
+
+    /**
+     * @param int[] $playlistIds
+     * @return $this
+     */
+    protected function setAssignedPlaylistIds($playlistIds)
+    {
+        $this->setOption('subPlaylistIds', json_encode($playlistIds));
+        return $this;
     }
 
     /**
@@ -72,7 +99,6 @@ class SubPlaylist extends ModuleWidget
         $this->setCommonOptions();
 
         // Save the widget
-        $this->validate();
         $this->saveWidget();
     }
 
@@ -85,39 +111,54 @@ class SubPlaylist extends ModuleWidget
         $this->setCommonOptions();
 
         // Save the widget
-        $this->validate();
         $this->saveWidget();
     }
 
     /**
      * Set common options
+     * @throws InvalidArgumentException
      */
     private function setCommonOptions()
     {
-        $existingSubPlaylistId = $this->getOption('subPlaylistId', 0);
-        $subPlaylistId = $this->getSanitizer()->getInt('subPlaylistId');
+        // Set some dud durations
         $this->setDuration(10);
         $this->setUseDuration(0);
-        $this->setOption('subPlaylistId', $subPlaylistId);
 
-        // Manage the closure table that holds these relationships
-        if ($existingSubPlaylistId != $subPlaylistId) {
-            // Manage closure
-            $this->getLog()->debug('Manage closure table for parent ' . $this->getPlaylistId() . ' and child ' . $subPlaylistId);
+        // Get the list of playlists
+        $subPlaylistId = $this->getSanitizer()->getIntArray('subPlaylistId');
+        $existingSubPlaylistId = $this->getAssignedPlaylistIds();
 
-            if ($existingSubPlaylistId != 0) {
-                $this->getLog()->debug('Removing old links - existing link child is ' . $existingSubPlaylistId);
+        // Validation
+        if (count($subPlaylistId) < 1)
+            throw new InvalidArgumentException(__('Please select at least 1 Playlist to embed'), 'subPlaylistId');
 
-                $this->getStore()->update('
+        // Set the new list
+        $this->setAssignedPlaylistIds($subPlaylistId);
+
+        // Work out whether we've added/removed
+        $addedEntries = array_diff($subPlaylistId, $existingSubPlaylistId);
+        $removedEntries = array_diff($existingSubPlaylistId, $subPlaylistId);
+
+        $this->getLog()->debug('Added ' . var_export($addedEntries, true));
+        $this->getLog()->debug('Removed ' . var_export($removedEntries, true));
+
+        // Remove items from closure table if necessary
+        foreach ($removedEntries as $entry) {
+            $this->getLog()->debug('Removing old link - existing link child is ' . $entry);
+
+            $this->getStore()->update('
                     DELETE link
                       FROM `lkplaylistplaylist` p, `lkplaylistplaylist` link, `lkplaylistplaylist` c
                      WHERE p.parentId = link.parentId AND c.childId = link.childId
                        AND p.childId = :parentId AND c.parentId = :childId
                 ', [
-                    'parentId' => $this->getPlaylistId(),
-                    'childId' => $existingSubPlaylistId
-                ]);
-            }
+                'parentId' => $this->getPlaylistId(),
+                'childId' => $entry
+            ]);
+        }
+
+        foreach ($addedEntries as $addedEntry) {
+            $this->getLog()->debug('Manage closure table for parent ' . $this->getPlaylistId() . ' and child ' . $addedEntry);
 
             $this->getStore()->insert('
                 INSERT INTO `lkplaylistplaylist` (parentId, childId, depth)
@@ -126,7 +167,7 @@ class SubPlaylist extends ModuleWidget
                  WHERE p.childId = :parentId AND c.parentId = :childId
             ', [
                 'parentId' => $this->getPlaylistId(),
-                'childId' => $subPlaylistId
+                'childId' => $addedEntry
             ]);
         }
 
@@ -168,12 +209,20 @@ class SubPlaylist extends ModuleWidget
      */
     public function preview($width, $height, $scaleOverride = 0)
     {
-        //TODO: make a nice little sub-playlist viewer, perhaps showing a list of whats inside?
+        $this->getLog()->debug('Previewing Sub-Playlist');
+
+        //TODO: make this hook itself into the preview properly so that you can see the actual widgets rather than a list
         $output = '<h1>Sub Playlist</h1><ul>';
 
-        foreach ($this->playlistFactory->getById($this->getOption('subPlaylistId'))->expandWidgets() as $widget) {
-            $output .= '<li>' . $widget->type . '</li>';
+        foreach ($this->getAssignedPlaylistIds() as $playlistId) {
+            $this->getLog()->debug('Sub-Playlist assigned list is ' . $playlistId);
+
+            foreach ($this->playlistFactory->getById($playlistId)->setModuleFactory($this->moduleFactory)->expandWidgets() as $widget) {
+                $output .= '<li>' . $widget->type . $widget->getOptionValue('name', '') . '</li>';
+            }
         }
+
+        $this->getLog()->debug('Finished Preview Sub-Playlist');
 
         return $output . '</ul>';
     }
@@ -183,6 +232,46 @@ class SubPlaylist extends ModuleWidget
      */
     public function getName()
     {
-        return __('Sub-Playlist: %s', $this->playlistFactory->getById($this->getOption('subPlaylistId'))->name);
+        $names = [];
+
+        foreach ($this->getAssignedPlaylistIds() as $playlistId) {
+            $names[] = $this->playlistFactory->getById($playlistId)->name;
+        }
+
+        return __('Sub-Playlist: %s', implode(', ', $names));
+    }
+
+    /**
+     * @return Widget[] $widgets
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function getSubPlaylistResolvedWidgets()
+    {
+        $widgets = [];
+        // Add all of the sub-playlists widgets too
+        // TODO: this will depend very much on the way we select widgets from the playlists in question.
+        foreach ($this->getAssignedPlaylistIds() as $playlistId) {
+            $playlist = $this->playlistFactory->getById($playlistId)->setModuleFactory($this->moduleFactory);
+            $widgets = array_merge($widgets, $playlist->expandWidgets());
+        }
+
+        return $widgets;
+    }
+
+    /**
+     * @return int
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function getSubPlaylistResolvedDuration()
+    {
+        $duration = 0;
+        // Add all of the sub-playlists widgets too
+        // TODO: this will depend very much on the way we select widgets from the playlists in question.
+        foreach ($this->getAssignedPlaylistIds() as $playlistId) {
+            $playlist = $this->playlistFactory->getById($playlistId);
+            $duration += $playlist->duration;
+        }
+
+        return $duration;
     }
 }

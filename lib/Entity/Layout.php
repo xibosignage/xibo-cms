@@ -822,7 +822,7 @@ class Layout implements \JsonSerializable
             $regionLoop = $region->getOptionValue('loop', 0);
 
             // Get a count of widgets in this region
-            $widgets = $region->getPlaylist()->expandWidgets();
+            $widgets = $region->getPlaylist()->setModuleFactory($this->moduleFactory)->expandWidgets();
             $countWidgets = count($widgets);
 
             if ($countWidgets <= 0) {
@@ -950,7 +950,7 @@ class Layout implements \JsonSerializable
             // End of region loop.
         }
 
-        $this->getLog()->debug('Setting Layout Duration to %d', $this->duration);
+        $this->getLog()->debug('Setting Layout Duration to ' . $this->duration);
 
         $tagsNode = $document->createElement('tags');
 

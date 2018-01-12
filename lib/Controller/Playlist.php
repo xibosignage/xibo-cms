@@ -159,6 +159,7 @@ class Playlist extends Base
                 continue;
 
             $playlist->includeProperty('buttons');
+            $playlist->includeProperty('requiresDurationUpdate');
 
             // Only proceed if we have edit permissions
             if ($this->getUser()->checkEditable($playlist)) {

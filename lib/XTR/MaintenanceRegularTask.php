@@ -8,6 +8,7 @@
 
 namespace Xibo\XTR;
 use Xibo\Exception\XiboException;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\WakeOnLan;
@@ -328,13 +329,15 @@ class MaintenanceRegularTask implements TaskInterface
 
         /** @var PlaylistFactory $playlistFactory */
         $playlistFactory = $this->app->container->get('playlistFactory');
+        /** @var ModuleFactory $moduleFactory */
+        $moduleFactory = $this->app->container->get('moduleFactory');
 
         $this->runMessage .= '## ' . __('Playlist Duration Updates') . PHP_EOL;
 
         // Build Layouts
         foreach ($playlistFactory->query(null, ['requiresDurationUpdate' => 1]) as $playlist) {
             try {
-                $playlist->updateDuration();
+                $playlist->setModuleFactory($moduleFactory)->updateDuration();
             } catch (XiboException $xiboException) {
                 $this->log->error('Maintenance cannot update Playlist ' . $playlist->playlistId . ', ' . $xiboException->getMessage());
             }
