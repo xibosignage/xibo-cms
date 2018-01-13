@@ -247,15 +247,19 @@ class Playlist implements \JsonSerializable
     /**
      * Get Widget at Index
      * @param int $index
+     * @param Widget[]|null $widgets
      * @return Widget
      * @throws NotFoundException
      */
-    public function getWidgetAt($index)
+    public function getWidgetAt($index, $widgets = null)
     {
-        if ($index <= count($this->widgets)) {
+        if ($widgets === null)
+            $widgets = $this->widgets;
+
+        if ($index <= count($widgets)) {
             $zeroBased = $index - 1;
-            if (isset($this->widgets[$zeroBased])) {
-                return $this->widgets[$zeroBased];
+            if (isset($widgets[$zeroBased])) {
+                return $widgets[$zeroBased];
             }
         }
 
