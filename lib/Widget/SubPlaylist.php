@@ -259,6 +259,7 @@ class SubPlaylist extends ModuleWidget
         // As a first step, get all of our playlists widgets loaded into an array
         $resolvedWidgets = [];
         $widgets = [];
+        $firstListCount = 0;
         $largestListCount = 0;
         $smallestListCount = 0;
 
@@ -267,6 +268,10 @@ class SubPlaylist extends ModuleWidget
             $playlist = $this->playlistFactory->getById($playlistId)->setModuleFactory($this->moduleFactory);
             $expanded = $playlist->expandWidgets();
             $countExpanded = count($expanded);
+
+            // first watermark
+            if ($firstListCount === 0)
+                $firstListCount = $countExpanded;
 
             // high watermark
             if ($countExpanded > $largestListCount)
@@ -282,34 +287,82 @@ class SubPlaylist extends ModuleWidget
         $this->getLog()->debug('Finished parsing all sub-playlists, smallest list is ' . $smallestListCount . ' widgets in size');
 
         // Arrangement first
+        if ($arrangement === 'even') {
+            // Evenly distributed by round robin
+            $arrangement = 'roundrobin';
+
+            // We need to decide how frequently we take from the respective lists.
+            $takeEvery = ($firstListCount < $largestListCount) ? 1 : ($largestListCount / $smallestListCount);
+
+            $this->getLog()->debug('Even arrangement, take items every ' . $takeEvery);
+        } else {
+            // On a standard round robin, we take every 1 item (i.e. one from each).
+            $takeEvery = 1;
+        }
+
+        // Track the index we are taking items for the second or later lists.
+        $lastTakeIndex = -1;
+        $takeIndex = -1;
+
+        // Round robin or seqentially
         if ($arrangement === 'roundrobin') {
             // Round Robin
             // Take 1 from each until we have run out, use the smallest list as the "key"
             $keys = array_keys($widgets);
             for ($i = 0; $i < $largestListCount; $i++) {
+                $first = true;
                 foreach ($keys as $key) {
+                    // Start the index as the current loop in the largest list
+                    $index = $i;
+                    $countInList = count($widgets[$key]);
+
+                    $this->getLog()->debug('Assessing index ' . $i . ' for list ' . $key . ' which has ' . $countInList . ' widgets.' . (($first) ? ' first list' : ''));
+
+                    // We always take from the first list
+                    if (!$first) {
+                        // We are on the second or later list - should we take?
+                        if ($index - $lastTakeIndex !== $takeEvery)
+                            continue;
+
+                        $this->getLog()->debug('Not on the first list, we have assessed that we should take an item');
+
+                        $lastTakeIndex = $index;
+                        $takeIndex++;
+
+                        // Reset the item we will take according to the take index
+                        $index = $takeIndex;
+                    }
+
                     // Does this key actually have this many items?
-                    if (!isset($widgets[$key][$i])) {
+                    if ($index >= $countInList) {
                         // it does not :o
+                        $this->getLog()->debug('Index is higher than the count of widgets in the list');
                         // what we do depends on our remainder setting
                         // if we drop, we stop, otherwise we skip
                         if ($remainder === 'drop') {
                             // force the whole shebang to stop
                             $i = $largestListCount;
                             break;
+                        } else if ($remainder === 'repeat') {
+                            // start this list again from the beginning.
+                            while ($index >= $countInList) {
+                                $index = $index - $countInList;
+                            }
                         } else {
                             // Just skip this key
                             continue;
                         }
                     }
 
+                    $this->getLog()->debug('Selecting widget at position '. $index);
+
                     // Append the key at the position
-                    $resolvedWidgets[] = $widgets[$key][$i];
+                    $resolvedWidgets[] = $widgets[$key][$index];
+
+                    // Not the first list
+                    $first = false;
                 }
             }
-        } else if ($arrangement === 'even') {
-            // Evenly distributed
-
         } else {
             // None
             // If the arrangement is none we just add all of the widgets together
@@ -320,6 +373,15 @@ class SubPlaylist extends ModuleWidget
 
                     // We trim all arrays down to the smallest of them
                     $items = array_slice($items, 0, $smallestListCount);
+                } else if ($remainder === 'repeat') {
+                    $this->getLog()->debug('Expanding list of ' . count($items) . ' widgets to ' . $largestListCount);
+
+                    while (count($items) < $largestListCount) {
+                        $items = array_merge($items, $items);
+                    }
+
+                    // Finally trim (we might have added too many if they list sizes aren't exactly divisable
+                    $items = array_slice($items, 0, $largestListCount);
                 }
 
                 $resolvedWidgets = array_merge($resolvedWidgets, $items);
