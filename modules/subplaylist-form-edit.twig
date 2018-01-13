@@ -42,9 +42,11 @@
                 {% set helpText %}{% trans "If there are Widgets left unarranged at the end, what should be done with these Widgets?" %}{% endset %}
                 {% set noneOption %}{% trans "Append - add left over Widgets to the end of the list" %}{% endset %}
                 {% set dropOption %}{% trans "Drop - use the smallest list as the total length and drop the rest" %}{% endset %}
+                {% set repeatOption %}{% trans "Repeat - use the largest list as the total length and repeat the rest" %}{% endset %}
                 {% set options = [
                     { id: "none", value: noneOption },
-                    { id: "drop", value: dropOption }
+                    { id: "drop", value: dropOption },
+                    { id: "repeat", value: repeatOption }
                 ] %}
                 {{ forms.dropdown("remainder", "single", title, module.getOption("remainder"), options, "id", "value", helpText) }}
 
