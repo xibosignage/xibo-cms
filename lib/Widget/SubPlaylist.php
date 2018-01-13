@@ -124,6 +124,10 @@ class SubPlaylist extends ModuleWidget
         $this->setDuration(10);
         $this->setUseDuration(0);
 
+        // Options
+        $this->setOption('arrangement', $this->getSanitizer()->getString('arrangement'));
+        $this->setOption('remainder', $this->getSanitizer()->getString('remainder'));
+
         // Get the list of playlists
         $subPlaylistId = $this->getSanitizer()->getIntArray('subPlaylistId');
         $existingSubPlaylistId = $this->getAssignedPlaylistIds();
@@ -247,15 +251,82 @@ class SubPlaylist extends ModuleWidget
      */
     public function getSubPlaylistResolvedWidgets()
     {
+        $arrangement = $this->getOption('arrangement', 'none');
+        $remainder = $this->getOption('remainder', 'none');
+
+        $this->getLog()->debug('Resolve widgets for Sub-Playlist ' . $this->getWidgetId() . ' with arrangement ' . $arrangement . ' and remainder ' . $remainder);
+
+        // As a first step, get all of our playlists widgets loaded into an array
+        $resolvedWidgets = [];
         $widgets = [];
-        // Add all of the sub-playlists widgets too
-        // TODO: this will depend very much on the way we select widgets from the playlists in question.
+        $largestListCount = 0;
+        $smallestListCount = 0;
+
+        // Expand all widgets from sub-playlists
         foreach ($this->getAssignedPlaylistIds() as $playlistId) {
             $playlist = $this->playlistFactory->getById($playlistId)->setModuleFactory($this->moduleFactory);
-            $widgets = array_merge($widgets, $playlist->expandWidgets());
+            $expanded = $playlist->expandWidgets();
+            $countExpanded = count($expanded);
+
+            // high watermark
+            if ($countExpanded > $largestListCount)
+                $largestListCount = $countExpanded;
+
+            // low watermark
+            if ($countExpanded < $smallestListCount || $smallestListCount === 0)
+                $smallestListCount = $countExpanded;
+
+            $widgets[$playlistId] = $expanded;
         }
 
-        return $widgets;
+        $this->getLog()->debug('Finished parsing all sub-playlists, smallest list is ' . $smallestListCount . ' widgets in size');
+
+        // Arrangement first
+        if ($arrangement === 'roundrobin') {
+            // Round Robin
+            // Take 1 from each until we have run out, use the smallest list as the "key"
+            $keys = array_keys($widgets);
+            for ($i = 0; $i < $largestListCount; $i++) {
+                foreach ($keys as $key) {
+                    // Does this key actually have this many items?
+                    if (!isset($widgets[$key][$i])) {
+                        // it does not :o
+                        // what we do depends on our remainder setting
+                        // if we drop, we stop, otherwise we skip
+                        if ($remainder === 'drop') {
+                            // force the whole shebang to stop
+                            $i = $largestListCount;
+                            break;
+                        } else {
+                            // Just skip this key
+                            continue;
+                        }
+                    }
+
+                    // Append the key at the position
+                    $resolvedWidgets[] = $widgets[$key][$i];
+                }
+            }
+        } else if ($arrangement === 'even') {
+            // Evenly distributed
+
+        } else {
+            // None
+            // If the arrangement is none we just add all of the widgets together
+            // Merge the arrays together for returning
+            foreach ($widgets as $key => $items) {
+                if ($remainder === 'drop') {
+                    $this->getLog()->debug('Dropping list of ' . count($items) . ' widgets down to ' . $smallestListCount);
+
+                    // We trim all arrays down to the smallest of them
+                    $items = array_slice($items, 0, $smallestListCount);
+                }
+
+                $resolvedWidgets = array_merge($resolvedWidgets, $items);
+            }
+        }
+
+        return $resolvedWidgets;
     }
 
     /**
@@ -266,10 +337,8 @@ class SubPlaylist extends ModuleWidget
     {
         $duration = 0;
         // Add all of the sub-playlists widgets too
-        // TODO: this will depend very much on the way we select widgets from the playlists in question.
-        foreach ($this->getAssignedPlaylistIds() as $playlistId) {
-            $playlist = $this->playlistFactory->getById($playlistId);
-            $duration += $playlist->duration;
+        foreach ($this->getSubPlaylistResolvedWidgets() as $widget) {
+            $duration += $widget->calculatedDuration;
         }
 
         return $duration;

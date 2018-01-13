@@ -581,10 +581,12 @@ class Region extends Base
             $region->load();
 
             // Get the first playlist we can find
-            $playlist = $region->getPlaylist();
+            $playlist = $region->getPlaylist()->setModuleFactory($this->moduleFactory);
 
-            /* @var \Xibo\Entity\Playlist $playlist */
-            $countWidgets = count($playlist->widgets);
+            // Expand this Playlist out to its individual Widgets
+            $widgets = $playlist->expandWidgets();
+
+            $countWidgets = count($widgets);
 
             // We want to load the widget in the given sequence
             if ($countWidgets <= 0) {
@@ -592,10 +594,10 @@ class Region extends Base
                 throw new NotFoundException(__('No widgets to preview'));
             }
 
-            $this->getLog()->debug('There are ' . count($playlist->widgets) . ' widgets.');
+            $this->getLog()->debug('There are ' . $countWidgets . ' widgets.');
 
             // Select the widget at the required sequence
-            $widget = $playlist->getWidgetAt($seq);
+            $widget = $playlist->getWidgetAt($seq, $widgets);
             /* @var \Xibo\Entity\Widget $widget */
             $widget->load();
 
