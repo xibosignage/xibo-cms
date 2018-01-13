@@ -658,6 +658,8 @@ class Playlist extends Base
      *      @SWG\Schema(ref="#/definitions/Playlist")
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function libraryAssign($playlistId)
     {
@@ -705,6 +707,9 @@ class Playlist extends Base
             // If a duration is provided, then we want to use it
             if ($duration !== null)
                 $widget->useDuration = 1;
+
+            // Calculate the duration
+            $widget->calculateDuration($module);
 
             // Assign the widget to the playlist
             $playlist->assignWidget($widget);
