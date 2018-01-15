@@ -394,17 +394,15 @@ class Layout implements \JsonSerializable
     /**
      * Get Widgets assigned to this Layout
      * @return Widget[]
+     * @throws NotFoundException
      */
     public function getWidgets()
     {
         $widgets = [];
 
         foreach ($this->regions as $region) {
-            /* @var Region $region */
-            foreach ($region->playlists as $playlist) {
-                /* @var Playlist $playlist */
-                $widgets = array_merge($playlist->widgets, $widgets);
-            }
+            $widgets = array_merge($region->getPlaylist()->widgets, $widgets);
+
         }
 
         return $widgets;
@@ -874,6 +872,10 @@ class Layout implements \JsonSerializable
                 // Set the duration according to whether we are using widget duration or not
                 $mediaNode->setAttribute('duration', $widgetDuration);
                 $mediaNode->setAttribute('useDuration', $widget->useDuration);
+
+                // Set a from/to date
+                $mediaNode->setAttribute('fromDt', $this->date->getLocalDate($this->date->parse($widget->fromDt, 'U')));
+                $mediaNode->setAttribute('toDt', $this->date->getLocalDate($this->date->parse($widget->toDt, 'U')));
 
                 // Create options nodes
                 $optionsNode = $document->createElement('options');

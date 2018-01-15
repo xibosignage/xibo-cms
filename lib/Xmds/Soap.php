@@ -16,8 +16,6 @@ use Slim\Log;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
-use Xibo\Entity\Playlist;
-use Xibo\Entity\Region;
 use Xibo\Entity\Schedule;
 use Xibo\Entity\Stat;
 use Xibo\Entity\Widget;
@@ -613,56 +611,52 @@ class Soap
 
             // Load the layout XML and work out if we have any ticker / text / dataset media items
             foreach ($layout->regions as $region) {
-                /* @var Region $region */
-                foreach ($region->playlists as $playlist) {
-                    /* @var Playlist $playlist */
-                    foreach ($playlist->widgets as $widget) {
-                        /* @var Widget $widget */
-                        if ($widget->type == 'ticker' ||
-                            $widget->type == 'text' ||
-                            $widget->type == 'datasetview' ||
-                            $widget->type == 'webpage' ||
-                            $widget->type == 'embedded' ||
-                            $modules[$widget->type]->renderAs == 'html'
-                        ) {
-                            // Add nonce
-                            $getResourceRf = $this->requiredFileFactory->createForGetResource($this->display->displayId, $widget->widgetId)->save();
-                            $newRfIds[] = $getResourceRf->rfId;
+                foreach ($region->getPlaylist()->expandWidgets() as $widget) {
+                    /* @var Widget $widget */
+                    if ($widget->type == 'ticker' ||
+                        $widget->type == 'text' ||
+                        $widget->type == 'datasetview' ||
+                        $widget->type == 'webpage' ||
+                        $widget->type == 'embedded' ||
+                        $modules[$widget->type]->renderAs == 'html'
+                    ) {
+                        // Add nonce
+                        $getResourceRf = $this->requiredFileFactory->createForGetResource($this->display->displayId, $widget->widgetId)->save();
+                        $newRfIds[] = $getResourceRf->rfId;
 
-                            // Does the media provide a modified Date?
-                            $widgetModifiedDt = $layoutModifiedDt->getTimestamp();
+                        // Does the media provide a modified Date?
+                        $widgetModifiedDt = $layoutModifiedDt->getTimestamp();
 
-                            if ($widget->type == 'datasetview' || $widget->type == 'ticker') {
-                                try {
-                                    $dataSetId = $widget->getOption('dataSetId');
-                                    $dataSet = $this->dataSetFactory->getById($dataSetId);
-                                    $widgetModifiedDt = $dataSet->lastDataEdit;
+                        if ($widget->type == 'datasetview' || $widget->type == 'ticker') {
+                            try {
+                                $dataSetId = $widget->getOption('dataSetId');
+                                $dataSet = $this->dataSetFactory->getById($dataSetId);
+                                $widgetModifiedDt = $dataSet->lastDataEdit;
 
-                                    // Remote datasets are kept "active" by required files
-                                    if ($dataSet->isRemote) {
-                                        // Touch this dataSet
-                                        $dataSetCache = $this->pool->getItem('/dataset/accessed/' . $dataSet->dataSetId);
-                                        $dataSetCache->set('true');
-                                        $dataSetCache->expiresAfter($rfLookAhead * 1.5);
-                                        $this->pool->saveDeferred($dataSetCache);
-                                    }
-                                }
-                                catch (NotFoundException $e) {
-                                    // Widget doesn't have a dataSet associated to it
-                                    // This is perfectly valid, so ignore it.
+                                // Remote datasets are kept "active" by required files
+                                if ($dataSet->isRemote) {
+                                    // Touch this dataSet
+                                    $dataSetCache = $this->pool->getItem('/dataset/accessed/' . $dataSet->dataSetId);
+                                    $dataSetCache->set('true');
+                                    $dataSetCache->expiresAfter($rfLookAhead * 1.5);
+                                    $this->pool->saveDeferred($dataSetCache);
                                 }
                             }
-
-                            // Append this item to required files
-                            $file = $requiredFilesXml->createElement("file");
-                            $file->setAttribute('type', 'resource');
-                            $file->setAttribute('id', $widget->widgetId);
-                            $file->setAttribute('layoutid', $layoutId);
-                            $file->setAttribute('regionid', $region->regionId);
-                            $file->setAttribute('mediaid', $widget->widgetId);
-                            $file->setAttribute('updated', $widgetModifiedDt);
-                            $fileElements->appendChild($file);
+                            catch (NotFoundException $e) {
+                                // Widget doesn't have a dataSet associated to it
+                                // This is perfectly valid, so ignore it.
+                            }
                         }
+
+                        // Append this item to required files
+                        $file = $requiredFilesXml->createElement("file");
+                        $file->setAttribute('type', 'resource');
+                        $file->setAttribute('id', $widget->widgetId);
+                        $file->setAttribute('layoutid', $layoutId);
+                        $file->setAttribute('regionid', $region->regionId);
+                        $file->setAttribute('mediaid', $widget->widgetId);
+                        $file->setAttribute('updated', $widgetModifiedDt);
+                        $fileElements->appendChild($file);
                     }
                 }
             }

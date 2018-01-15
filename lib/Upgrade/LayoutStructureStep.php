@@ -141,18 +141,16 @@ class LayoutStructureStep implements Step
                         }
                     }
 
-                    foreach ($region->playlists as $playlist) {
-                        /* @var \Xibo\Entity\Playlist $playlist */
-                        foreach ($playlist->widgets as $widget) {
-                            /* @var \Xibo\Entity\Widget $widget */
-                            if (array_key_exists($widget->tempId, $mediaPermissions)) {
-                                $permission = $mediaPermissions[$widget->tempId];
-                                /* @var \Xibo\Entity\Permission $permission */
-                                if ($permission->objectId == $layout->layoutId && $region->tempId == $permission->objectIdString) {
-                                    $permission = clone $permission;
-                                    $permission->objectId = $widget->widgetId;
-                                    $permission->save();
-                                }
+                    /* @var \Xibo\Entity\Playlist $playlist */
+                    foreach ($region->getPlaylist()->widgets as $widget) {
+                        /* @var \Xibo\Entity\Widget $widget */
+                        if (array_key_exists($widget->tempId, $mediaPermissions)) {
+                            $permission = $mediaPermissions[$widget->tempId];
+                            /* @var \Xibo\Entity\Permission $permission */
+                            if ($permission->objectId == $layout->layoutId && $region->tempId == $permission->objectIdString) {
+                                $permission = clone $permission;
+                                $permission->objectId = $widget->widgetId;
+                                $permission->save();
                             }
                         }
                     }

@@ -992,6 +992,8 @@ CREATE TABLE IF NOT EXISTS `widget` (
   `displayOrder` int(11) NOT NULL,
   `useDuration` int(4) NOT NULL DEFAULT '1',
   `calculatedDuration` int(4) NOT NULL,
+  `fromDt` int(11) NOT NULL,
+  `toDt` int(11) NOT NULL,
   PRIMARY KEY (`widgetId`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 

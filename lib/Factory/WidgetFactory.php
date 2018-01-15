@@ -196,6 +196,10 @@ class WidgetFactory extends BaseFactory
               `widget`.calculatedDuration
         ';
 
+        if (DBVERSION >= 160) {
+            $select .=  ' , `widget`.fromDt, `widget`.toDt ';
+        }
+
         $body = '
           FROM `widget`
         ';
@@ -241,7 +245,7 @@ class WidgetFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['duration']]);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['duration', 'fromDt', 'toDt']]);
         }
 
         // Paging
