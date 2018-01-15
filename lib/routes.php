@@ -155,6 +155,7 @@ $app->delete('/playlist/widget/:id', '\Xibo\Controller\Module:deleteWidget')->na
 $app->put('/playlist/widget/transition/:type/:id', '\Xibo\Controller\Module:editWidgetTransition')->name('module.widget.transition.edit');
 $app->put('/playlist/widget/:id/audio', '\Xibo\Controller\Module:widgetAudio')->name('module.widget.audio');
 $app->delete('/playlist/widget/:id/audio', '\Xibo\Controller\Module:widgetAudioDelete');
+$app->put('/playlist/widget/:id/expiry', '\Xibo\Controller\Module:widgetExpiry')->name('module.widget.expiry');
 
 /**
  * Campaign

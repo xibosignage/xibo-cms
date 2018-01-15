@@ -88,7 +88,7 @@
                                             {% endif %}
                                             {% if isAudioEnabled and widget.type != "audio" and currentUser.checkEditable(widget) %}
                                                 <li>
-                                                    <a class="XiboFormButton timelineMediaBarLink" href="{{ urlFor("module.widget.audio.form", {type: "out", id: widget.widgetId}) }}" title="{% trans "Click to assign audio to this widget" %}">
+                                                    <a class="XiboFormButton timelineMediaBarLink" href="{{ urlFor("module.widget.audio.form", {id: widget.widgetId}) }}" title="{% trans "Click to assign audio to this widget" %}">
                                                         <span class="fa-stack">
                                                             {# Do we have audio already assigned? #}
                                                             {% if widget.countAudio <= 0  %}
@@ -101,12 +101,17 @@
                                                     </a>
                                                 </li>
                                             {% endif %}
+                                            <li>
+                                                <a class="XiboFormButton timelineMediaBarLink" href="{{ urlFor("module.widget.expiry.form", {id: widget.widgetId}) }}" title="{% trans "Click to assign a from/to date to this widget" %}">
+                                                    <i class="fa fa-calendar"></i>
+                                                </a>
+                                            </li>
                                         </ul>
                                         <div class="timelineMediaDetails {{ coloring }}">
                                             {% if widget.useDuration %}
-                                            <h3>{% trans %}{{ name }} ({{ duration }} seconds){% endtrans %}</h3>
+                                            <h3>{% trans %}{{ name }} ({{ duration }} seconds){% endtrans %}{% if widget.isExpired() %} <i class="fa fa-calendar-minus-o" title="{% trans "This Widget is outside its expiry dates" %}"></i>{% endif %}</h3>
                                             {% else %}
-                                            <h3>{{ name }}</h3>
+                                            <h3>{{ name }}{% if widget.isExpired() %} <i class="fa fa-calendar-minus-o" title="{% trans "This Widget is outside its expiry dates" %}"></i>{% endif %}</h3>
                                             {% endif %}
                                         </div>
                                         <div class="timelineMediaPreview">

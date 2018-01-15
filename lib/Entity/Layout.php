@@ -402,7 +402,6 @@ class Layout implements \JsonSerializable
 
         foreach ($this->regions as $region) {
             $widgets = array_merge($region->getPlaylist()->widgets, $widgets);
-
         }
 
         return $widgets;
