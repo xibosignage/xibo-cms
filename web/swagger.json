@@ -455,6 +455,97 @@
                         "description": "A code for this DataSet",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "isRemote",
+                        "in": "formData",
+                        "description": "Is this a remote DataSet?",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "method",
+                        "in": "formData",
+                        "description": "The Request Method GET or POST",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "uri",
+                        "in": "formData",
+                        "description": "The URI, without query parameters",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "postData",
+                        "in": "formData",
+                        "description": "query parameter encoded data to add to the request",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "authentication",
+                        "in": "formData",
+                        "description": "HTTP Authentication method None|Basic|Digest",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "username",
+                        "in": "formData",
+                        "description": "HTTP Authentication User Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "password",
+                        "in": "formData",
+                        "description": "HTTP Authentication Password",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "refreshRate",
+                        "in": "formData",
+                        "description": "How often in seconds should this remote DataSet be refreshed",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "clearRate",
+                        "in": "formData",
+                        "description": "How often in seconds should this remote DataSet be truncated",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "runsAfter",
+                        "in": "formData",
+                        "description": "An optional dataSetId which should be run before this Remote DataSet",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataRoot",
+                        "in": "formData",
+                        "description": "The root of the data in the Remote source which is used as the base for all remote columns",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "summarize",
+                        "in": "formData",
+                        "description": "Should the data be aggregated? None|Summarize|Count",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "summarizeField",
+                        "in": "formData",
+                        "description": "Which field should be used to summarize",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -507,6 +598,97 @@
                         "name": "code",
                         "in": "formData",
                         "description": "A code for this DataSet",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "isRemote",
+                        "in": "formData",
+                        "description": "Is this a remote DataSet?",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "method",
+                        "in": "formData",
+                        "description": "The Request Method GET or POST",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "uri",
+                        "in": "formData",
+                        "description": "The URI, without query parameters",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "postData",
+                        "in": "formData",
+                        "description": "query parameter encoded data to add to the request",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "authentication",
+                        "in": "formData",
+                        "description": "HTTP Authentication method None|Basic|Digest",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "username",
+                        "in": "formData",
+                        "description": "HTTP Authentication User Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "password",
+                        "in": "formData",
+                        "description": "HTTP Authentication Password",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "refreshRate",
+                        "in": "formData",
+                        "description": "How often in seconds should this remote DataSet be refreshed",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "clearRate",
+                        "in": "formData",
+                        "description": "How often in seconds should this remote DataSet be truncated",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "runsAfter",
+                        "in": "formData",
+                        "description": "An optional dataSetId which should be run before this Remote DataSet",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataRoot",
+                        "in": "formData",
+                        "description": "The root of the data in the Remote source which is used as the base for all remote columns",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "summarize",
+                        "in": "formData",
+                        "description": "Should the data be aggregated? None|Summarize|Count",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "summarizeField",
+                        "in": "formData",
+                        "description": "Which field should be used to summarize",
                         "required": false,
                         "type": "string"
                     }
@@ -3574,7 +3756,7 @@
                         "name": "releaseDt",
                         "in": "formData",
                         "description": "ISO date representing the release date for this notification",
-                        "required": true,
+                        "required": false,
                         "type": "string"
                     },
                     {

@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "e0581f8d969452023745ba9abdc1a50e",
-    "content-hash": "0721076338c501004f3f66e33669cf51",
+    "hash": "4a27174cc5a1774fc1a7cb869a112588",
+    "content-hash": "d7b7eb884486f35e2e6cd709f36181d6",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -1990,12 +1990,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPMailer/PHPMailer.git",
-                "reference": "da9fede584e200038ae78e7cd153d092a210f9b7"
+                "reference": "63e2c71ea1880ba37442bea6d96df46f3ebf1f46"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/da9fede584e200038ae78e7cd153d092a210f9b7",
-                "reference": "da9fede584e200038ae78e7cd153d092a210f9b7",
+                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/63e2c71ea1880ba37442bea6d96df46f3ebf1f46",
+                "reference": "63e2c71ea1880ba37442bea6d96df46f3ebf1f46",
                 "shasum": ""
             },
             "require": {
@@ -2048,7 +2048,7 @@
                 }
             ],
             "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
-            "time": "2018-01-10 23:29:45"
+            "time": "2018-01-15 14:04:43"
         },
         {
             "name": "psr/cache",
@@ -3271,30 +3271,30 @@
     "packages-dev": [
         {
             "name": "doctrine/annotations",
-            "version": "v1.6.0",
+            "version": "v1.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/annotations.git",
-                "reference": "c7f2050c68a9ab0bdb0f98567ec08d80ea7d24d5"
+                "reference": "bd4461328621bde0ae6b1b2675fbc6aca4ceb558"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/annotations/zipball/c7f2050c68a9ab0bdb0f98567ec08d80ea7d24d5",
-                "reference": "c7f2050c68a9ab0bdb0f98567ec08d80ea7d24d5",
+                "url": "https://api.github.com/repos/doctrine/annotations/zipball/bd4461328621bde0ae6b1b2675fbc6aca4ceb558",
+                "reference": "bd4461328621bde0ae6b1b2675fbc6aca4ceb558",
                 "shasum": ""
             },
             "require": {
                 "doctrine/lexer": "1.*",
-                "php": "^7.1"
+                "php": "^5.6 || ^7.0"
             },
             "require-dev": {
                 "doctrine/cache": "1.*",
-                "phpunit/phpunit": "^6.4"
+                "phpunit/phpunit": "^5.6.1"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.6.x-dev"
+                    "dev-master": "1.4.x-dev"
                 }
             },
             "autoload": {
@@ -3335,7 +3335,7 @@
                 "docblock",
                 "parser"
             ],
-            "time": "2017-12-06 07:11:42"
+            "time": "2016-12-30 15:59:45"
         },
         {
             "name": "doctrine/instantiator",
@@ -5415,5 +5415,8 @@
     "platform": {
         "php": ">=5.5.9"
     },
-    "platform-dev": []
+    "platform-dev": [],
+    "platform-overrides": {
+        "php": "5.6"
+    }
 }
