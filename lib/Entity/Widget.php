@@ -256,7 +256,7 @@ class Widget implements \JsonSerializable
      */
     private function hash()
     {
-        return md5($this->widgetId . $this->playlistId . $this->ownerId . $this->type . $this->duration . $this->displayOrder . $this->useDuration . $this->calculatedDuration);
+        return md5($this->widgetId . $this->playlistId . $this->ownerId . $this->type . $this->duration . $this->displayOrder . $this->useDuration . $this->calculatedDuration . $this->fromDt . $this->toDt);
     }
 
     /**
@@ -542,7 +542,7 @@ class Widget implements \JsonSerializable
      */
     public function isExpired()
     {
-        return ($this->toDt !== self::$DATE_MAX && $this->dateService->parse($this->toDt) < $this->dateService->parse());
+        return ($this->toDt !== self::$DATE_MAX && $this->dateService->parse($this->toDt, 'U') < $this->dateService->parse());
     }
 
     /**
@@ -621,6 +621,7 @@ class Widget implements \JsonSerializable
         $options = array_merge([
             'saveWidgetOptions' => true,
             'saveWidgetAudio' => true,
+            'saveWidgetMedia' => true,
             'notify' => true,
             'notifyPlaylists' => true,
             'notifyDisplays' => false,
@@ -674,8 +675,10 @@ class Widget implements \JsonSerializable
         }
 
         // Manage the assigned media
-        $this->linkMedia();
-        $this->unlinkMedia();
+        if ($options['saveWidgetMedia'] || $options['saveWidgetAudio']) {
+            $this->linkMedia();
+            $this->unlinkMedia();
+        }
 
         // Call notify with the notify options passed in
         $this->notify($options);
@@ -809,8 +812,8 @@ class Widget implements \JsonSerializable
             'displayOrder' => $this->displayOrder,
             'useDuration' => $this->useDuration,
             'calculatedDuration' => $this->calculatedDuration,
-            'fromDt' => ($this->fromDt == null) ? 0 : self::$DATE_MIN,
-            'toDt' => ($this->toDt == null) ? 0 : self::$DATE_MAX
+            'fromDt' => ($this->fromDt == null) ? self::$DATE_MIN : $this->fromDt,
+            'toDt' => ($this->toDt == null) ? self::$DATE_MAX : $this->toDt
         ));
     }
 
@@ -842,8 +845,8 @@ class Widget implements \JsonSerializable
         if (DBVERSION >= 160) {
             $sql .= ', `fromDt` = :fromDt, `toDt` = :toDt ';
 
-            $params['fromDt'] = ($this->fromDt == null) ? 0 : self::$DATE_MIN;
-            $params['toDt'] = ($this->toDt == null) ? 0 : self::$DATE_MAX;
+            $params['fromDt'] = ($this->fromDt == null) ? self::$DATE_MIN : $this->fromDt;
+            $params['toDt'] = ($this->toDt == null) ? self::$DATE_MAX : $this->toDt;
         }
 
         $sql .= ' WHERE `widgetId` = :widgetId ';
