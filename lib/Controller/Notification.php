@@ -334,7 +334,7 @@ class Notification extends Base
      *      @SWG\Items(type="integer")
      *   ),
      *  @SWG\Parameter(
-     *      name="userGroupId",
+     *      name="userGroupIds",
      *      in="formData",
      *      description="The user group ids to assign to this notification",
      *      type="array",
@@ -445,7 +445,7 @@ class Notification extends Base
      *      @SWG\Items(type="integer")
      *   ),
      *  @SWG\Parameter(
-     *      name="userGroupId",
+     *      name="userGroupIds",
      *      in="formData",
      *      description="The user group ids to assign to this notification",
      *      type="array",
