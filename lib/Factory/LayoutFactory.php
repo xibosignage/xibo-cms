@@ -182,6 +182,8 @@ class LayoutFactory extends BaseFactory
      * @param string $description
      * @param string $tags
      * @return Layout
+     *
+     * @throws XiboException
      */
     public function createFromResolution($resolutionId, $ownerId, $name, $description, $tags)
     {
@@ -218,7 +220,7 @@ class LayoutFactory extends BaseFactory
      * @param string $description
      * @param string $tags
      * @return Layout
-     * @throws NotFoundException
+     * @throws XiboException
      */
     public function createFromTemplate($layoutId, $ownerId, $name, $description, $tags)
     {
@@ -241,15 +243,8 @@ class LayoutFactory extends BaseFactory
 
         // Ensure we have Playlists for each region
         foreach ($layout->regions as $region) {
-
             // Set the ownership of this region to the user creating from template
             $region->setOwner($ownerId, true);
-
-            if (count($region->playlists) <= 0) {
-                // Create a Playlist for this region
-                $playlist = $this->playlistFactory->create($name, $ownerId);
-                $region->assignPlaylist($playlist);
-            }
         }
 
         // Fresh layout object, entirely new and ready to be saved
@@ -296,7 +291,7 @@ class LayoutFactory extends BaseFactory
     /**
      * Get by OwnerId
      * @param int $ownerId
-     * @return array[Layout]
+     * @return Layout[]
      * @throws NotFoundException
      */
     public function getByOwnerId($ownerId)
@@ -324,7 +319,8 @@ class LayoutFactory extends BaseFactory
     /**
      * Get by Display Group Id
      * @param int $displayGroupId
-     * @return array[Media]
+     * @return Layout[]
+     * @throws XiboException
      */
     public function getByDisplayGroupId($displayGroupId)
     {
@@ -334,7 +330,8 @@ class LayoutFactory extends BaseFactory
     /**
      * Get by Background Image Id
      * @param int $backgroundImageId
-     * @return array[Media]
+     * @return Layout[]
+     * @throws XiboException
      */
     public function getByBackgroundImageId($backgroundImageId)
     {
@@ -400,8 +397,7 @@ class LayoutFactory extends BaseFactory
                 $region->name = count($layout->regions) + 1;
 
             // Populate Playlists (XLF doesn't contain any playlists)
-            $playlist = $region->playlists[0];
-            $playlist->ownerId = $regionOwnerId;
+            $playlist = $this->playlistFactory->create($region->name, $regionOwnerId);
 
             // Get all widgets
             foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media') as $mediaNode) {
@@ -418,9 +414,11 @@ class LayoutFactory extends BaseFactory
                 $widget->useDuration = $mediaNode->getAttribute('useDuration');
                 $widget->useDuration = ($widget->useDuration == '') ? 1 : 0;
                 $widget->tempId = $mediaNode->getAttribute('fileId');
+                $widget->fromDt = ($mediaNode->getAttribute('fromDt') === '') ? Widget::$DATE_MIN : $mediaNode->getAttribute('fromDt');
+                $widget->toDt = ($mediaNode->getAttribute('toDt') === '') ? Widget::$DATE_MIN : $mediaNode->getAttribute('toDt');
                 $widgetId = $mediaNode->getAttribute('id');
 
-                $this->getLog()->debug('Adding Widget to object model. %s', $widget);
+                $this->getLog()->debug('Adding Widget to object model. ' . $widget);
 
                 // Does this module type exist?
                 if (!array_key_exists($widget->type, $modules)) {
@@ -517,8 +515,10 @@ class LayoutFactory extends BaseFactory
                 $playlist->assignWidget($widget);
             }
 
-            $region->playlists[] = $playlist;
+            // Assign Playlist to the Region
+            $region->tempPlaylist = $playlist;
 
+            // Assign the region to the Layout
             $layout->regions[] = $region;
         }
 

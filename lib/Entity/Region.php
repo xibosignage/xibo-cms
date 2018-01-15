@@ -123,6 +123,10 @@ class Region implements \JsonSerializable
      */
     public $tempId = null;
 
+    /** @var Playlist|null */
+    public $tempPlaylist = null;
+
+    //<editor-fold desc="Factories and Dependencies">
     /**  @var DateServiceInterface */
     private $dateService;
 
@@ -145,6 +149,7 @@ class Region implements \JsonSerializable
      * @var PlaylistFactory
      */
     private $playlistFactory;
+    //</editor-fold>
 
     /**
      * Entity constructor.
@@ -294,7 +299,8 @@ class Region implements \JsonSerializable
      */
     public function getPlaylist()
     {
-        return $this->playlistFactory->getByRegionId($this->regionId)->load();
+        $this->tempPlaylist = $this->playlistFactory->getByRegionId($this->regionId)->load();
+        return $this->tempPlaylist;
     }
 
     /**
@@ -355,7 +361,14 @@ class Region implements \JsonSerializable
             $this->add();
 
             // Add and save a region specific playlist
-            $this->playlistFactory->create($this->name, $this->ownerId, $this->regionId)->save();
+            if ($this->tempPlaylist === null) {
+                $this->tempPlaylist = $this->playlistFactory->create($this->name, $this->ownerId, $this->regionId);
+            } else {
+                // assert the region id
+                $this->tempPlaylist->regionId = $this->regionId;
+                $this->tempPlaylist->setOwner($this->ownerId);
+            }
+            $this->tempPlaylist->save();
 
             // Audit
             if ($options['audit'])

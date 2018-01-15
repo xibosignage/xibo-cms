@@ -545,7 +545,7 @@ class Playlist implements \JsonSerializable
                   INNER JOIN `playlist`
                   ON `playlist`.playlistId = `lkplaylistplaylist`.parentId
                   INNER JOIN `region`
-                  ON `region`.regionId = `playlist`.playlistId 
+                  ON `region`.regionId = `playlist`.regionId 
                WHERE `lkplaylistplaylist`.childId = :playlistId
             )
         ', [
@@ -567,6 +567,11 @@ class Playlist implements \JsonSerializable
 
         // Start with our own Widgets
         foreach ($this->widgets as $widget) {
+
+            // some basic checking on whether this widets date/time are conductive to it being added to the
+            // list. This is really an "expires" check, because we will rely on the player otherwise
+            if ($widget->isExpired())
+                continue;
 
             // If we're a standard widget, add right away
             if ($widget->type !== 'subplaylist') {

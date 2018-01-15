@@ -37,6 +37,14 @@
     {
       "step": "Populate Playlist closure table",
       "action": "INSERT INTO lkplaylistplaylist (parentId, childId, depth) SELECT playlistId, playlistId, 0 FROM playlist;"
+    },
+    {
+      "step": "Add Widget From/To Date",
+      "action": "ALTER TABLE widget ADD fromDt INT NOT NULL;ALTER TABLE widget ADD toDt INT NOT NULL;"
+    },
+    {
+      "step": "Set default from/to dates",
+      "action": "UPDATE `widget` SET fromDt = 0, toDt = 2147483647;"
     }
   ]
 }

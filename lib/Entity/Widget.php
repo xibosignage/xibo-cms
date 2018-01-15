@@ -42,6 +42,9 @@ use Xibo\Widget\ModuleWidget;
  */
 class Widget implements \JsonSerializable
 {
+    public static $DATE_MIN = 0;
+    public static $DATE_MAX = 2147483647;
+
     use EntityTrait;
 
     /**
@@ -91,6 +94,18 @@ class Widget implements \JsonSerializable
      * @var int
      */
     public $calculatedDuration = 0;
+
+    /**
+     * @SWG\Property(description="Widget From Date")
+     * @var int
+     */
+    public $fromDt;
+
+    /**
+     * @SWG\Property(description="Widget To Date")
+     * @var int
+     */
+    public $toDt;
 
     /**
      * @SWG\Property(description="An array of Widget Options")
@@ -152,6 +167,7 @@ class Widget implements \JsonSerializable
      */
     public static $widgetMinDuration = 1;
 
+    //<editor-fold desc="Factories and Dependencies">
     /** @var  DateServiceInterface */
     private $dateService;
 
@@ -178,6 +194,7 @@ class Widget implements \JsonSerializable
 
     /** @var  PlaylistFactory */
     private $playlistFactory;
+    //</editor-fold>
 
     /**
      * Entity constructor.
@@ -521,6 +538,14 @@ class Widget implements \JsonSerializable
     }
 
     /**
+     * @return bool true if this widget has expired
+     */
+    public function isExpired()
+    {
+        return ($this->toDt !== self::$DATE_MAX && $this->dateService->parse($this->toDt) < $this->dateService->parse());
+    }
+
+    /**
      * Calculates the duration of this widget according to some rules
      * @param $module ModuleWidget
      * @return $this
@@ -599,8 +624,7 @@ class Widget implements \JsonSerializable
             'notify' => true,
             'notifyPlaylists' => true,
             'notifyDisplays' => false,
-            'audit' => true,
-            'updatePlaylistDuration' => true
+            'audit' => true
         ], $options);
 
         $this->getLog()->debug('Saving widgetId ' . $this->getId() . ' with options. ' . json_encode($options, JSON_PRETTY_PRINT));
@@ -652,13 +676,6 @@ class Widget implements \JsonSerializable
         // Manage the assigned media
         $this->linkMedia();
         $this->unlinkMedia();
-
-        // Update Playlist Duration
-        if ($options['updatePlaylistDuration'] && $this->hasPropertyChanged('calculatedDuration')) {
-            $this->getStore()->update('UPDATE `playlist` SET requiresDurationUpdate = 1 WHERE playlistId = :playlistId', [
-                'playlistId' => $this->playlistId
-            ]);
-        }
 
         // Call notify with the notify options passed in
         $this->notify($options);
@@ -741,7 +758,7 @@ class Widget implements \JsonSerializable
     {
         $this->getLog()->debug('Notifying upstream playlist. Notify Layout: ' . $options['notify'] . ' Notify Displays: ' . $options['notifyDisplays']);
 
-        if ($options['notifyPlaylists']) {
+        if ($options['notifyPlaylists'] && $this->hasPropertyChanged('calculatedDuration')) {
             // Notify the Playlist
             $this->getStore()->update('UPDATE `playlist` SET requiresDurationUpdate = 1, `modifiedDT` = :modifiedDt WHERE playlistId = :playlistId', [
                 'playlistId' => $this->playlistId,
@@ -758,7 +775,7 @@ class Widget implements \JsonSerializable
                       INNER JOIN `playlist`
                       ON `playlist`.playlistId = `lkplaylistplaylist`.parentId
                       INNER JOIN `region`
-                      ON `region`.regionId = `playlist`.playlistId 
+                      ON `region`.regionId = `playlist`.regionId 
                    WHERE `lkplaylistplaylist`.childId = :playlistId
                 )
             ', [
@@ -780,8 +797,8 @@ class Widget implements \JsonSerializable
         $this->isNew = true;
 
         $sql = '
-            INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`, `displayOrder`, `useDuration`, `calculatedDuration`)
-            VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder, :useDuration, :calculatedDuration)
+            INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`, `displayOrder`, `useDuration`, `calculatedDuration`, `fromDt`, `toDt`)
+            VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder, :useDuration, :calculatedDuration, :fromDt, :toDt)
         ';
 
         $this->widgetId = $this->getStore()->insert($sql, array(
@@ -791,7 +808,9 @@ class Widget implements \JsonSerializable
             'duration' => $this->duration,
             'displayOrder' => $this->displayOrder,
             'useDuration' => $this->useDuration,
-            'calculatedDuration' => $this->calculatedDuration
+            'calculatedDuration' => $this->calculatedDuration,
+            'fromDt' => ($this->fromDt == null) ? 0 : self::$DATE_MIN,
+            'toDt' => ($this->toDt == null) ? 0 : self::$DATE_MAX
         ));
     }
 
@@ -807,10 +826,9 @@ class Widget implements \JsonSerializable
             `displayOrder` = :displayOrder,
             `useDuration` = :useDuration,
             `calculatedDuration` = :calculatedDuration
-           WHERE `widgetId` = :widgetId
         ';
 
-        $this->getStore()->update($sql, array(
+        $params = [
             'playlistId' => $this->playlistId,
             'ownerId' => $this->ownerId,
             'type' => $this->type,
@@ -819,7 +837,17 @@ class Widget implements \JsonSerializable
             'displayOrder' => $this->displayOrder,
             'useDuration' => $this->useDuration,
             'calculatedDuration' => $this->calculatedDuration
-        ));
+        ];
+
+        if (DBVERSION >= 160) {
+            $sql .= ', `fromDt` = :fromDt, `toDt` = :toDt ';
+
+            $params['fromDt'] = ($this->fromDt == null) ? 0 : self::$DATE_MIN;
+            $params['toDt'] = ($this->toDt == null) ? 0 : self::$DATE_MAX;
+        }
+
+        $sql .= ' WHERE `widgetId` = :widgetId ';
+        $this->getStore()->update($sql, $params);
     }
 
     /**

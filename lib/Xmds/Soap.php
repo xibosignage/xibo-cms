@@ -16,8 +16,6 @@ use Slim\Log;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
-use Xibo\Entity\Playlist;
-use Xibo\Entity\Region;
 use Xibo\Entity\Schedule;
 use Xibo\Entity\Stat;
 use Xibo\Entity\Widget;
@@ -613,41 +611,37 @@ class Soap
 
             // Load the layout XML and work out if we have any ticker / text / dataset media items
             foreach ($layout->regions as $region) {
-                /* @var Region $region */
-                foreach ($region->playlists as $playlist) {
-                    /* @var Playlist $playlist */
-                    foreach ($playlist->widgets as $widget) {
-                        /* @var Widget $widget */
-                        if ($widget->type == 'ticker' ||
-                            $widget->type == 'text' ||
-                            $widget->type == 'datasetview' ||
-                            $widget->type == 'webpage' ||
-                            $widget->type == 'embedded' ||
-                            $modules[$widget->type]->renderAs == 'html'
-                        ) {
-                            // Add nonce
-                            $getResourceRf = $this->requiredFileFactory->createForGetResource($this->display->displayId, $widget->widgetId)->save();
-                            $newRfIds[] = $getResourceRf->rfId;
+                foreach ($region->getPlaylist()->expandWidgets() as $widget) {
+                    /* @var Widget $widget */
+                    if ($widget->type == 'ticker' ||
+                        $widget->type == 'text' ||
+                        $widget->type == 'datasetview' ||
+                        $widget->type == 'webpage' ||
+                        $widget->type == 'embedded' ||
+                        $modules[$widget->type]->renderAs == 'html'
+                    ) {
+                        // Add nonce
+                        $getResourceRf = $this->requiredFileFactory->createForGetResource($this->display->displayId, $widget->widgetId)->save();
+                        $newRfIds[] = $getResourceRf->rfId;
 
-                            // Make me a module from the widget, so I can ask it whether it has an updated last accessed
-                            // date or not.
-                            $module = $this->moduleFactory->createWithWidget($widget);
+                        // Make me a module from the widget, so I can ask it whether it has an updated last accessed
+                        // date or not.
+                        $module = $this->moduleFactory->createWithWidget($widget);
 
-                            $widgetModifiedDt = $module->getModifiedTimestamp($this->display->displayId);
+                        $widgetModifiedDt = $module->getModifiedTimestamp($this->display->displayId);
 
-                            if ($widgetModifiedDt === null)
-                                $widgetModifiedDt = $layoutModifiedDt->getTimestamp();
+                        if ($widgetModifiedDt === null)
+                            $widgetModifiedDt = $layoutModifiedDt->getTimestamp();
 
-                            // Append this item to required files
-                            $file = $requiredFilesXml->createElement("file");
-                            $file->setAttribute('type', 'resource');
-                            $file->setAttribute('id', $widget->widgetId);
-                            $file->setAttribute('layoutid', $layoutId);
-                            $file->setAttribute('regionid', $region->regionId);
-                            $file->setAttribute('mediaid', $widget->widgetId);
-                            $file->setAttribute('updated', $widgetModifiedDt);
-                            $fileElements->appendChild($file);
-                        }
+                        // Append this item to required files
+                        $file = $requiredFilesXml->createElement("file");
+                        $file->setAttribute('type', 'resource');
+                        $file->setAttribute('id', $widget->widgetId);
+                        $file->setAttribute('layoutid', $layoutId);
+                        $file->setAttribute('regionid', $region->regionId);
+                        $file->setAttribute('mediaid', $widget->widgetId);
+                        $file->setAttribute('updated', $widgetModifiedDt);
+                        $fileElements->appendChild($file);
                     }
                 }
             }
