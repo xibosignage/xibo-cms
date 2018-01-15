@@ -12,7 +12,7 @@
     },
     {
       "step": "Remove old link table",
-      "action": "DELETE TABLE `lkregionplaylist`;"
+      "action": "DROP TABLE `lkregionplaylist`;"
     },
     {
       "step": "Allow Playlist as a Home Page",
@@ -20,7 +20,7 @@
     },
     {
       "step": "Create Playlist Tag link table",
-      "action": "CREATE TABLE IF NOT EXISTS `lktagplaylist` (`lkTagPlaylistId` int(11) NOT NULL AUTO_INCREMENT,`tagId` int(11) NOT NULL,`playlistId` int(11) NOT NULL,PRIMARY KEY (`lkTagLayoutId`),UNIQUE KEY `tagId` (`tagId`,`playlistId`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;"
+      "action": "CREATE TABLE IF NOT EXISTS `lktagplaylist` (`lkTagPlaylistId` int(11) NOT NULL AUTO_INCREMENT,`tagId` int(11) NOT NULL,`playlistId` int(11) NOT NULL,PRIMARY KEY (`lkTagPlaylistId`),UNIQUE KEY `tagId` (`tagId`,`playlistId`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;"
     },
     {
       "step": "Additional fields for Playlist table",
