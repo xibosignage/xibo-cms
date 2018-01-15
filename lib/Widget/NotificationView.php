@@ -201,12 +201,12 @@ class NotificationView extends ModuleWidget
         $items = [];
 
         if ($isPreview)
-            $notifications = $this->getNotificationFactory()->query(null, [
+            $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC', 'subject'], [
                 'releaseDt' => ($age === 0) ? null : $this->getDate()->parse()->subMinutes($age)->format('U'),
                 'userId' => $this->getUser()->userId
             ]);
         else
-            $notifications = $this->getNotificationFactory()->query(null, [
+            $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC', 'subject'], [
                 'releaseDt' => ($age === 0) ? null : $this->getDate()->parse()->subMinutes($age)->format('U'),
                 'displayId' => $displayId
             ]);
@@ -325,5 +325,26 @@ class NotificationView extends ModuleWidget
             $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
+    }
+
+    /** @inheritdoc */
+    public function getModifiedTimestamp($displayId)
+    {
+        $widgetModifiedDt = null;
+        $age = $this->getOption('age', 0);
+
+        // Get the date/time of the last notification drawn by this Widget
+        $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC'], [
+            'releaseDt' => ($age === 0) ? null : $this->getDate()->parse()->subMinutes($age)->format('U'),
+            'displayId' => $displayId,
+            'length' => 1
+        ]);
+
+        // Get the release date from the notification returned
+        if (count($notifications) > 0) {
+            $widgetModifiedDt = $notifications[0]->releaseDt;
+        }
+
+        return $widgetModifiedDt;
     }
 }

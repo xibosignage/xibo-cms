@@ -638,7 +638,7 @@ class Ticker extends ModuleWidget
         $css = null;
 
         // Get CSS and HTML template from the original template or from the input field
-        if ($this->getOption('sourceId') != 2 && $this->getOption('overrideTemplate') == 0) {
+        if ($sourceId != 2 && $this->getOption('overrideTemplate') == 0) {
             // Feed tickers without override set.
             $template = $this->getTemplateById($this->getOption('templateId', 'title-only'));
             
@@ -1343,5 +1343,31 @@ class Ticker extends ModuleWidget
     {
         // Can't be sure because the client does the rendering
         return 1;
+    }
+
+    /** @inheritdoc */
+    public function getModifiedTimestamp($displayId)
+    {
+        $widgetModifiedDt = null;
+
+        if ($this->getOption('sourceId', 1) == 2) {
+
+            $dataSetId = $this->getOption('dataSetId');
+            $dataSet = $this->dataSetFactory->getById($dataSetId);
+
+            // Set the timestamp
+            $widgetModifiedDt = $dataSet->lastDataEdit;
+
+            // Remote dataSets are kept "active" by required files
+            if ($dataSet->isRemote) {
+                // Touch this dataSet
+                $dataSetCache = $this->getPool()->getItem('/dataset/accessed/' . $dataSet->dataSetId);
+                $dataSetCache->set('true');
+                $dataSetCache->expiresAfter($this->getSetting('REQUIRED_FILES_LOOKAHEAD') * 1.5);
+                $this->getPool()->saveDeferred($dataSetCache);
+            }
+        }
+
+        return $widgetModifiedDt;
     }
 }

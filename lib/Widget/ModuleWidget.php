@@ -1280,6 +1280,16 @@ abstract class ModuleWidget implements ModuleInterface
         return $this->statusMessage;
     }
 
+    /**
+     * Get the modified date of this Widget
+     * @param int $displayId
+     * @return null|int
+     */
+    public function getModifiedTimestamp($displayId)
+    {
+        return null;
+    }
+
     //<editor-fold desc="GetResource Helpers">
 
     private $data;
