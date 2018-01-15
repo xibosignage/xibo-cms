@@ -40,6 +40,7 @@
                                 <th>{% trans "Remote?" %}</th>
                                 <th>{% trans "Owner" %}</th>
                                 <th>{% trans "Permissions" %}</th>
+                                <th>{% trans "Last Sync" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -105,6 +106,10 @@
                 {
                     "data": "groupsWithPermissions",
                     "render": dataTableCreatePermissions
+                },
+                {
+                    "data": "lastSync",
+                    "render": dataTableDateFromUnix
                 },
                 {
                     "orderable": false,
@@ -229,7 +234,7 @@
                 XiboRemoteRequest("{{ urlFor("dataSet.test.remote") }}", $form.serializeObject(), function(response) {
                     $("#datasetRemoteTestRequestResult").html('<pre style="height: 300px; overflow: scroll">' + JSON.stringify(response.data, null, 3) + '</pre>');
                 });
-            })
+            });
 
             // Set up some dependencies between the isRemote checkbox and the tabs related to remote datasets
             onRemoteFieldChanged(dialog);

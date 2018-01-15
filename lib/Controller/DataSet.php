@@ -284,6 +284,97 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="isRemote",
+     *      in="formData",
+     *      description="Is this a remote DataSet?",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="method",
+     *      in="formData",
+     *      description="The Request Method GET or POST",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="uri",
+     *      in="formData",
+     *      description="The URI, without query parameters",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="postData",
+     *      in="formData",
+     *      description="query parameter encoded data to add to the request",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="authentication",
+     *      in="formData",
+     *      description="HTTP Authentication method None|Basic|Digest",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="username",
+     *      in="formData",
+     *      description="HTTP Authentication User Name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="password",
+     *      in="formData",
+     *      description="HTTP Authentication Password",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="refreshRate",
+     *      in="formData",
+     *      description="How often in seconds should this remote DataSet be refreshed",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="clearRate",
+     *      in="formData",
+     *      description="How often in seconds should this remote DataSet be truncated",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="runsAfter",
+     *      in="formData",
+     *      description="An optional dataSetId which should be run before this Remote DataSet",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataRoot",
+     *      in="formData",
+     *      description="The root of the data in the Remote source which is used as the base for all remote columns",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="summarize",
+     *      in="formData",
+     *      description="Should the data be aggregated? None|Summarize|Count",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="summarizeField",
+     *      in="formData",
+     *      description="Which field should be used to summarize",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -403,6 +494,97 @@ class DataSet extends Base
      *      name="code",
      *      in="formData",
      *      description="A code for this DataSet",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isRemote",
+     *      in="formData",
+     *      description="Is this a remote DataSet?",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="method",
+     *      in="formData",
+     *      description="The Request Method GET or POST",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="uri",
+     *      in="formData",
+     *      description="The URI, without query parameters",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="postData",
+     *      in="formData",
+     *      description="query parameter encoded data to add to the request",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="authentication",
+     *      in="formData",
+     *      description="HTTP Authentication method None|Basic|Digest",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="username",
+     *      in="formData",
+     *      description="HTTP Authentication User Name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="password",
+     *      in="formData",
+     *      description="HTTP Authentication Password",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="refreshRate",
+     *      in="formData",
+     *      description="How often in seconds should this remote DataSet be refreshed",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="clearRate",
+     *      in="formData",
+     *      description="How often in seconds should this remote DataSet be truncated",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="runsAfter",
+     *      in="formData",
+     *      description="An optional dataSetId which should be run before this Remote DataSet",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataRoot",
+     *      in="formData",
+     *      description="The root of the data in the Remote source which is used as the base for all remote columns",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="summarize",
+     *      in="formData",
+     *      description="Should the data be aggregated? None|Summarize|Count",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="summarizeField",
+     *      in="formData",
+     *      description="Which field should be used to summarize",
      *      type="string",
      *      required=false
      *   ),
@@ -842,11 +1024,18 @@ class DataSet extends Base
     }
 
     /**
-     * Sends out a TestRequst and returns the Data as JSON to the Client so it can be shown in the Dialog
+     * Sends out a Test Request and returns the Data as JSON to the Client so it can be shown in the Dialog
+     * @throws XiboException
      */
     public function testRemoteRequest()
     {
-        $dataSet = $this->dataSetFactory->createEmpty();
+        $testDataSetId = $this->getSanitizer()->getInt('testDataSetId');
+
+        if ($testDataSetId !== null) {
+            $dataSet = $this->dataSetFactory->getById($testDataSetId);
+        } else {
+            $dataSet = $this->dataSetFactory->createEmpty();
+        }
         $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
         $dataSet->method = $this->getSanitizer()->getString('method');
         $dataSet->uri = $this->getSanitizer()->getString('uri');
@@ -859,11 +1048,18 @@ class DataSet extends Base
         // Call the remote service requested
         $data = $this->dataSetFactory->callRemoteService($dataSet, null, false);
 
+        if ($data->number > 0) {
+            // Process the results, but don't record them
+            $this->dataSetFactory->processResults($dataSet, $data, false);
+        }
+
+        $this->getLog()->debug('Results: ' . var_export($data, true));
+
         // Return
         $this->getState()->hydrate([
             'message' => __('Run Test-Request for %s', $dataSet->dataSet),
             'id' => $dataSet->dataSetId,
-            'data' => $data->entries[0]
+            'data' => $data
         ]);
     }
 }

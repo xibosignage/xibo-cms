@@ -25,11 +25,13 @@ namespace Xibo\Factory;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use Slim\Helper\Set;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -469,75 +471,106 @@ class DataSetFactory extends BaseFactory
      *
      * @param \Xibo\Entity\DataSet $dataSet The RemoteDataset to process
      * @param \stdClass $results A simple Object with one Property 'entries' which contains all results
-     * @throws InvalidArgumentException
+     * @param $save
+     * @throws XiboException
      */
-    public function processResults(\Xibo\Entity\DataSet $dataSet, \stdClass $results) {
+    public function processResults(\Xibo\Entity\DataSet $dataSet, \stdClass $results, $save = true) {
+        $results->processed = [];
+
         if (property_exists($results, 'entries') && is_array($results->entries)) {
+            // Load the DataSet fully
+            $dataSet->load();
+
+            $results->messages = [__('Processing %d results into %d potential columns', count($results->entries), count($dataSet->columns))];
+
             foreach ($results->entries as $result) {
-                $this->process($dataSet, $result);
-            }
-        }
-    }
 
-    /**
-     * Tries to process received Data against the configured DataSet with all Columns
-     *
-     * @param \Xibo\Entity\DataSet $dataSet The RemoteDataset to process
-     * @param array The JSON received from the remote endpoint
-     * @throws InvalidArgumentException
-     */
-    private function process(\Xibo\Entity\DataSet $dataSet, $result) {
-        // Load the DataSet fully
-        $dataSet->load();
+                $results->messages[] = __('Processing Result with Data Root %s', $dataSet->dataRoot);
 
-        // Remote Data has to have the configured DataRoot which has to be an Array
-        $data = $this->getDataRootFromResult($dataSet->dataRoot, $result);
+                // Remote Data has to have the configured DataRoot which has to be an Array
+                $data = $this->getDataRootFromResult($dataSet->dataRoot, $result);
 
-        $columns = $dataSet->columns;
-        $entries = [];
+                $columns = $dataSet->columns;
+                $entries = [];
 
-        // Process the data root according to its type
-        if (is_array($data)) {
-            // First process each entry form the remote and try to map the values to the configured columns
-            foreach ($data as $k => $entry) {
-                $this->getLog()->debug('Processing key ' . $k . ' from the remote results');
-                $this->getLog()->debug('Entry is: ' . var_export($entry, true));
+                // Process the data root according to its type
+                if (is_array($data)) {
+                    // An array of results as the DataRoot
+                    $results->messages[] = 'DataRoot is an array';
 
-                if (is_array($entry) || is_object($entry)) {
-                    $entries[] = $this->processEntry((array)$entry, $columns);
+                    // First process each entry form the remote and try to map the values to the configured columns
+                    foreach ($data as $k => $entry) {
+                        $this->getLog()->debug('Processing key ' . $k . ' from the remote results');
+                        $this->getLog()->debug('Entry is: ' . var_export($entry, true));
+
+                        $results->messages[] = 'Processing ' . $k;
+
+                        if (is_array($entry) || is_object($entry)) {
+                            $entries[] = $this->processEntry((array)$entry, $columns);
+                        } else {
+                            $this->getLog()->error('DataSet ' . $dataSet->dataSet . ' failed: DataRoot ' . $dataSet->dataRoot . ' contains data which is not arrays or objects.');
+                            break;
+                        }
+                    }
+                } else if (is_object($data)) {
+                    // An object as the DataRoot.
+                    $results->messages[] = 'DataRoot is an object';
+
+                    // We should treat this as a single row? Or as multiple rows?
+                    // we could try and guess from the configuration of the dataset columns
+                    $singleRow = false;
+                    foreach ($columns as $column) {
+                        if ($column->dataSetColumnTypeId === 3 && $column->remoteField != null && !is_numeric($column->remoteField)) {
+                            $singleRow = true;
+                            break;
+                        }
+                    }
+
+                    if ($singleRow) {
+                        // Process as a single row
+                        $results->messages[] = __('Processing as a Single Row');
+
+                        $entries[] = $this->processEntry((array)$data, $columns);
+
+                    } else {
+                        // Process as multiple rows
+                        $results->messages[] = __('Processing as Multiple Rows');
+
+                        foreach (get_object_vars($data) as $property => $value) {
+                            // Treat each property as an index key (flattening the array)
+                            $results->messages[] = 'Processing ' . $property;
+
+                            $entries[] = $this->processEntry([$property, $value], $columns);
+                        }
+                    }
+
                 } else {
-                    $this->getLog()->error('DataSet ' . $dataSet->dataSet . ' failed: DataRoot ' . $dataSet->dataRoot . ' contains data which is not arrays or objeces.');
-                    break;
+                    throw new InvalidArgumentException(__('No data found at the DataRoot %s', $dataSet->dataRoot), 'dataRoot');
                 }
+
+                $results->messages[] = __('Consolidating entries');
+
+                // If there is a Consolidation-Function, use the Data against it
+                $entries = $this->consolidateEntries($dataSet, $entries, $columns);
+
+                $results->messages[] = __('There are %d entries in total', count($entries));
+
+                // Finally add each entry as a new Row in the DataSet
+                if ($save) {
+                    foreach ($entries as $entry) {
+                        $dataSet->addRow($entry);
+                    }
+                }
+
+                $results->processed[] = $entries;
             }
         }
-        else if (is_object($data)) {
-
-            $this->getLog()->debug('The data at dataroot is an object.');
-
-            foreach (get_object_vars($data) as $property => $value) {
-                // Treat each property as an index key (flattening the array)
-                $entries[] = $this->processEntry([$property, $value], $columns);
-            }
-
-        } else {
-            throw new InvalidArgumentException(__('DataSet %s misconfigured. DataRoot %s is not an array or object', $dataSet->dataSet, $dataSet->dataRoot), 'dataRoot');
-        }
-
-        // If there is a Consilidation-Function, use the Data against it
-        $entries = $this->consolidateEntries($dataSet, $entries, $columns);
-
-        // Finally add each entry as a new Row in the DataSet
-        foreach ($entries as $entry) {
-            $dataSet->addRow($entry);
-        }
-
     }
 
     /**
      * Process the RemoteResult to get the main DataRoot value which can be stay in a structure as well as the values
      *
-     * @param String Chuns splitted by a Dot where the main entries are hold
+     * @param String Chunks split by a Dot where the main entries are hold
      * @param array|\stdClass The Value from the remote request
      * @return array|\stdClass The Data hold in the configured dataRoot
      */
@@ -560,8 +593,9 @@ class DataSetFactory extends BaseFactory
     private function processEntry(array $entry, array $dataSetColumns) {
         $result = [];
 
-        foreach ($dataSetColumns as $k => $column) {
-            if ($column->dataSetColumnTypeId === 3 && $column->remoteField !== null && $column->remoteField !== '') {
+        foreach ($dataSetColumns as $column) {
+
+            if ($column->dataSetColumnTypeId === 3 && $column->remoteField != null) {
 
                 $this->getLog()->debug('Trying to match dataSetColumn ' . $column->heading . ' with remote field ' . $column->remoteField);
 
@@ -596,16 +630,16 @@ class DataSetFactory extends BaseFactory
                             $result[$column->heading] = $this->getSanitizer()->string($value[1]);
                     }
                 }
+            } else {
+                $this->getLog()->debug('Column not matched');
             }
         }
-
-        $this->getLog()->debug('processEntry returning ' . var_export($result, true));
 
         return $result;
     }
 
     /**
-     * Returns the Value of the remote DataEntry based on the remoteField definition splitted into chunks
+     * Returns the Value of the remote DataEntry based on the remoteField definition split into chunks
      *
      * This function is recursive, so be sure you remove the first value from chunks and pass it in again
      *
@@ -617,13 +651,16 @@ class DataSetFactory extends BaseFactory
         $value = null;
         $key = array_shift($chunks);
 
-        $this->getLog()->debug('Looking for ' . $key);
+        $this->getLog()->debug('Entry: ' . var_export($entry, true));
+        $this->getLog()->debug('Looking for key: ' . $key . '. Chunks: ' . var_export($chunks, true));
 
         if (($entry instanceof \stdClass) && property_exists($entry, $key)) {
             $value = $entry->{$key};
         } else if (array_key_exists($key, $entry)) {
             $value = $entry[$key];
         }
+
+        $this->getLog()->debug('Value found is: ' . var_export($value, true));
 
         if (($value != null) && (count($chunks) > 0)) {
             return $this->getFieldValueFromEntry($chunks, (array) $value);
@@ -641,11 +678,15 @@ class DataSetFactory extends BaseFactory
      * @param \Xibo\Entity\DataSet $dataSet the current DataSet
      * @param array $entries All processed entries which may be consolidated
      * @param array $columns The columns form this DataSet
-     * @return \Slim\Helper\Set which contains all Entries to be added to the DataSet
+     * @return array which contains all Entries to be added to the DataSet
      */
     private function consolidateEntries(\Xibo\Entity\DataSet $dataSet, array $entries, array $columns) {
+        // Do we need to consolidate?
         if ((count($entries) > 0) && $dataSet->doConsolidate()) {
-            $consolidated = new \Slim\Helper\Set();
+            // Yes
+            $this->getLog()->debug('Consolidate Required on field ' . $dataSet->getConsolidationField());
+
+            $consolidated = [];
             $field = $dataSet->getConsolidationField();
 
             // Get the Field-Heading based on the consolidation field
@@ -660,7 +701,7 @@ class DataSetFactory extends BaseFactory
             foreach ($entries as $entry) {
                 if (array_key_exists($field, $entry)) {
                     $key = $field . '-' . $entry[$field];
-                    $existing = $consolidated->get($key);
+                    $existing = (isset($consolidated[$key])) ? $consolidated[$key] : null;
 
                     // Create a new one if there is no currently consolidated field for this value
                     if ($existing == null) {
@@ -680,12 +721,13 @@ class DataSetFactory extends BaseFactory
                         $existing[$field] = 0;
                     }
 
-                    $consolidated->set($key, $existing);
+                    $consolidated[$key] = $existing;
                 }
             }
 
             return $consolidated;
         }
-        return new \Slim\Helper\Set($entries);
+
+        return $entries;
     }
 }
