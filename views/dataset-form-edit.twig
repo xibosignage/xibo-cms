@@ -47,6 +47,7 @@
                 <li class="tabForRemoteDataSet"><a href="#params" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
             <form id="dataSetEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("dataSet.edit", {id: dataSet.dataSetId}) }}">
+                <input type="hidden" name="testDataSetId" value="{{ dataSet.dataSetId }}"/>
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}

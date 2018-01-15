@@ -20,6 +20,7 @@
  */
 namespace Xibo\Widget;
 
+use Intervention\Image\ImageManagerStatic as Img;
 use Mimey\MimeTypes;
 use Slim\Slim;
 use Stash\Interfaces\PoolInterface;
@@ -1186,8 +1187,9 @@ abstract class ModuleWidget implements ModuleInterface
             return null;
 
         foreach ($templates as $item) {
-            if( $item['id'] == $templateId ) {
+            if ($item['id'] == $templateId) {
                 $template = $item;
+                break;
             }
         }
 
@@ -1276,6 +1278,16 @@ abstract class ModuleWidget implements ModuleInterface
     public function getStatusMessage()
     {
         return $this->statusMessage;
+    }
+
+    /**
+     * Get the modified date of this Widget
+     * @param int $displayId
+     * @return null|int
+     */
+    public function getModifiedTimestamp($displayId)
+    {
+        return null;
     }
 
     //<editor-fold desc="GetResource Helpers">

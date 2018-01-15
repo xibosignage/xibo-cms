@@ -7,15 +7,17 @@
 
 
 namespace Xibo\Controller;
-// use Xibo\Entity\DisplayGroup;
+
 use Xibo\Entity\UserGroup;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
+use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 
@@ -37,6 +39,9 @@ class Notification extends Base
     /** @var  UserGroupFactory */
     private $userGroupFactory;
 
+    /** @var DisplayNotifyService */
+    private $displayNotifyService;
+
     /**
      * Notification constructor.
      * @param LogServiceInterface $log
@@ -50,8 +55,9 @@ class Notification extends Base
      * @param UserNotificationFactory $userNotificationFactory
      * @param DisplayGroupFactory $displayGroupFactory
      * @param UserGroupFactory $userGroupFactory
+     * @param DisplayNotifyService $displayNotifyService
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $notificationFactory, $userNotificationFactory, $displayGroupFactory, $userGroupFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $notificationFactory, $userNotificationFactory, $displayGroupFactory, $userGroupFactory, $displayNotifyService)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -59,6 +65,7 @@ class Notification extends Base
         $this->userNotificationFactory = $userNotificationFactory;
         $this->displayGroupFactory = $displayGroupFactory;
         $this->userGroupFactory = $userGroupFactory;
+        $this->displayNotifyService = $displayNotifyService;
     }
 
     public function displayPage()
@@ -309,7 +316,7 @@ class Notification extends Base
      *      in="formData",
      *      description="ISO date representing the release date for this notification",
      *      type="string",
-     *      required=true
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="isEmail",
@@ -359,7 +366,13 @@ class Notification extends Base
         $notification->subject = $this->getSanitizer()->getString('subject');
         $notification->body = $this->getSanitizer()->getParam('body', '');
         $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
-        $notification->releaseDt = $this->getSanitizer()->getDate('releaseDt')->format('U');
+        $notification->releaseDt = $this->getSanitizer()->getDate('releaseDt');
+
+        if ($notification->releaseDt !== null)
+            $notification->releaseDt = $notification->releaseDt->format('U');
+        else
+            $notification->releaseDt = $notification->createdDt;
+
         $notification->isEmail = $this->getSanitizer()->getCheckbox('isEmail');
         $notification->isInterrupt = $this->getSanitizer()->getCheckbox('isInterrupt');
         $notification->userId = $this->getUser()->userId;
@@ -367,6 +380,9 @@ class Notification extends Base
         // Displays and Users to link
         foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
             $notification->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
+
+            // Notify (don't collect)
+            $this->displayNotifyService->collectLater()->notifyByDisplayGroupId($displayGroupId);
         }
 
         foreach ($this->getSanitizer()->getIntArray('userGroupIds') as $userGroupId) {
@@ -458,6 +474,8 @@ class Notification extends Base
      *      @SWG\Schema(ref="#/definitions/Notification")
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function edit($notificationId)
     {
@@ -482,6 +500,9 @@ class Notification extends Base
         // Displays and Users to link
         foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
             $notification->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
+
+            // Notify (don't collect)
+            $this->displayNotifyService->collectLater()->notifyByDisplayGroupId($displayGroupId);
         }
 
         foreach ($this->getSanitizer()->getIntArray('userGroupIds') as $userGroupId) {
@@ -521,6 +542,8 @@ class Notification extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function delete($notificationId)
     {

@@ -833,4 +833,27 @@ class DataSetView extends ModuleWidget
         // DataSet rendering will be valid
         return 1;
     }
+
+    /** @inheritdoc */
+    public function getModifiedTimestamp($displayId)
+    {
+        $widgetModifiedDt = null;
+
+        $dataSetId = $this->getOption('dataSetId');
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
+
+        // Set the timestamp
+        $widgetModifiedDt = $dataSet->lastDataEdit;
+
+        // Remote dataSets are kept "active" by required files
+        if ($dataSet->isRemote) {
+            // Touch this dataSet
+            $dataSetCache = $this->getPool()->getItem('/dataset/accessed/' . $dataSet->dataSetId);
+            $dataSetCache->set('true');
+            $dataSetCache->expiresAfter($this->getSetting('REQUIRED_FILES_LOOKAHEAD') * 1.5);
+            $this->getPool()->saveDeferred($dataSetCache);
+        }
+
+        return $widgetModifiedDt;
+    }
 }

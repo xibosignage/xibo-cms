@@ -464,16 +464,13 @@ class TwitterMetro extends TwitterBase
                         if (!$this->tweetHasPhoto($tweet)) {
                         
                             // Get the colors array
-                            if( $this->getOption('overrideColorTemplate') == 0 ) {
-                                
-                                $templates = $this->templatesAvailable();
-                                
-                                foreach ($templates as $tmplt) {
-                                    if( $tmplt['id'] == $this->getOption('colorTemplateId') ){
-                                        $colorArray = $tmplt['colors'];
-                                    }
-                                }
-                                
+                            if ($this->getOption('overrideColorTemplate') == 0) {
+                                $colorTemplate = $this->getTemplateById($this->getOption('colorTemplateId'));
+
+                                if ($colorTemplate === null)
+                                    $colorTemplate = $this->getTemplateById('default');
+
+                                $colorArray = $colorTemplate['colors'];
                             } else {
                                 $colorArray = explode("|", $this->getOption('templateColours'));
                             }
@@ -630,16 +627,13 @@ class TwitterMetro extends TwitterBase
         $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
 
         // Get the colors array
-        if( $this->getOption('overrideColorTemplate') == 0 ) {
-            
-            $templates = $this->templatesAvailable();
-            
-            foreach ($templates as $tmplt) {
-                if( $tmplt['id'] == $this->getOption('colorTemplateId') ){
-                    $colorArray = $tmplt['colors'];
-                }
-            }
-            
+        if ($this->getOption('overrideColorTemplate') == 0) {
+            $template = $this->getTemplateById($this->getOption('colorTemplateId'));
+
+            if ($template === null)
+                $template = $this->getTemplateById('default');
+
+            $colorArray = $template['colors'];
         } else {
             $colorArray = explode("|", $this->getOption('templateColours'));
         }
