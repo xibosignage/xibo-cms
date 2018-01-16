@@ -23,7 +23,7 @@
 namespace Xibo\Exception;
 
 
-class ControllerNotImplemented extends \Exception
+class ControllerNotImplemented extends XiboException
 {
 
 }

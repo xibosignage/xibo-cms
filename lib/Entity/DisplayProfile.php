@@ -1305,6 +1305,22 @@ class DisplayProfile implements \JsonSerializable
                         'groupClass' => NULL
                     ],
                     [
+                        'name' => 'logLevel',
+                        'tabId' => 'advanced',
+                        'title' => __('Log Level'),
+                        'type' => 'string',
+                        'fieldType' => 'dropdown',
+                        'options' => [
+                            ['id' => 'audit', 'value' => 'Audit'],
+                            ['id' => 'error', 'value' => 'Error'],
+                            ['id' => 'off', 'value' => 'Off']
+                        ],
+                        'default' => 'error',
+                        'helpText' => __('The logging level that should be recorded by the Player.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
                         'name' => 'timers',
                         'tabId' => 'timers',
                         'title' => __('On/Off Timers'),

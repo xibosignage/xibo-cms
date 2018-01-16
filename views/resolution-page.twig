@@ -57,6 +57,32 @@
             var table = $("#resolutions").DataTable({
                 "language": dataTablesLanguage,
                 serverSide: true, stateSave: true,
+                stateLoadCallback: function (settings, callback) {
+                    var data;
+                    $.ajax({
+                        type: "GET",
+                        async: false,
+                        url: "{{ urlFor("user.pref") }}?preference=resolutionGrid",
+                        dataType: 'json',
+                        success: function (json) {
+                            if (json.success)
+                                data = JSON.parse(json.data.value);
+                        }
+                    });
+                    return data;
+                },
+                stateSaveCallback: function (settings, data) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ urlFor("user.pref") }}",
+                        data: {
+                            preference: [{
+                                option: "resolutionGrid",
+                                value: JSON.stringify(data)
+                            }]
+                        }
+                    });
+                },
                 filter: false,
                 searchDelay: 3000,
                 "order": [[1, "asc"]],

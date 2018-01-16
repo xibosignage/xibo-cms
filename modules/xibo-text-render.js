@@ -206,8 +206,8 @@ jQuery.fn.extend({
 
                 // Cycle handles this for us
                 $(this).cycle({
-                    fx: options.fx,
-                    speed: options.speed,
+                    fx: (options.fx === "noTransition") ? "none" : options.fx,
+                    speed: (options.fx === "noTransition") ? 1 : options.speed,
                     timeout: (duration * 1000) - (options.speed * 0.7),
                     slides: "> " + slides
                 });

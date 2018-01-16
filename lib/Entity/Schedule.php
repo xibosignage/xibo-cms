@@ -502,6 +502,8 @@ class Schedule implements \JsonSerializable
      */
     public function delete()
     {
+        $this->load();
+
         // Notify display groups
         $notify = $this->displayGroups;
 
@@ -514,12 +516,14 @@ class Schedule implements \JsonSerializable
 
         // Notify
         // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
-        if ($this->inScheduleLookAhead()) {
-            $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . count($this->displayGroups) . ' display groups');
+        if ($this->inScheduleLookAhead() && $this->displayFactory !== null) {
+            $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . count($notify) . ' display groups');
             foreach ($notify as $displayGroup) {
                 /* @var DisplayGroup $displayGroup */
                 $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
             }
+        } else if ($this->displayFactory === null) {
+            $this->getLog()->info('Notify disabled, dependencies not set');
         }
 
         // Drop the cache for this event

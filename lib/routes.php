@@ -284,6 +284,8 @@ $app->post('/dataset/copy/:id', '\Xibo\Controller\DataSet:copy')->name('dataSet.
 $app->map('/dataset/import/:id', '\Xibo\Controller\DataSet:import')->via('HEAD');
 $app->post('/dataset/import/:id', '\Xibo\Controller\DataSet:import')->name('dataSet.import');
 $app->post('/dataset/importjson/:id', '\Xibo\Controller\DataSet:importJson')->name('dataSet.import.json');
+$app->post('/dataset/remote/test', '\Xibo\Controller\DataSet:testRemoteRequest')->name('dataSet.test.remote');
+
 // Columns
 $app->get('/dataset/:id/column', '\Xibo\Controller\DataSetColumn:grid')->name('dataSet.column.search');
 $app->post('/dataset/:id/column', '\Xibo\Controller\DataSetColumn:add')->name('dataSet.column.add');

@@ -23,6 +23,7 @@ namespace Xibo\Widget;
 
 use GuzzleHttp\Exception\RequestException;
 use Stash\Invalidation;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\ModuleFactory;
 
@@ -70,11 +71,11 @@ class Currencies extends AlphaVantageBase
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-finance-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/bootstrap.min.css')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-finance-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
     }
 
     /**
@@ -97,13 +98,24 @@ class Currencies extends AlphaVantageBase
         return $this->module->settings;
     }
 
+    /**
+     * Validate
+     * @throws InvalidArgumentException
+     */
     public function validate()
     {
         if($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null) )
-            throw new \InvalidArgumentException(__('Please choose a template'));
+            throw new InvalidArgumentException(__('Please choose a template'), 'templateId');
             
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new \InvalidArgumentException(__('Please enter a duration'));
+            throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
+
+        // Validate for the items field
+        if ($this->getOption('items') == '')
+            throw new InvalidArgumentException(__('Please provide a comma separated list of symbols in the items field.'), 'items');
+
+        if ($this->getOption('base') == '')
+            throw new InvalidArgumentException(__('Please provide a symbols in the base field.'), 'base');
     }
 
     /**
@@ -565,10 +577,10 @@ class Currencies extends AlphaVantageBase
 
                             $currencyCode = ($reverseConversion) ? $data['FromName'] : $data['ToName'];
                             
-                            if (!file_exists(PROJECT_ROOT . '/web/modules/currencies/currency-flags/' . $currencyCode . '.svg')) 
+                            if (!file_exists(PROJECT_ROOT . '/modules/currencies/currency-flags/' . $currencyCode . '.svg'))
                                 $currencyCode = 'default';
                             
-                            $file = $this->mediaFactory->createModuleFile('currency_' . $currencyCode, PROJECT_ROOT . '/web/modules/currencies/currency-flags/' . $currencyCode . '.svg');
+                            $file = $this->mediaFactory->createModuleFile('currency_' . $currencyCode, PROJECT_ROOT . '/modules/currencies/currency-flags/' . $currencyCode . '.svg');
                             $file->alwaysCopy = true;
                             $file->storedAs = 'currency_' . $currencyCode . '.svg';
                             $file->save();
@@ -576,7 +588,7 @@ class Currencies extends AlphaVantageBase
                             // Tag this layout with this file
                             $this->assignMedia($file->mediaId);
                             
-                            $replacement = ($isPreview) ? $this->getResourceUrl('currencies/currency-flags/' . $currencyCode . '.svg') : $file->storedAs;
+                            $replacement = $this->getFileUrl($file);
                             
                             break;
                             
@@ -822,7 +834,7 @@ class Currencies extends AlphaVantageBase
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
     }

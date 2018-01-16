@@ -30,11 +30,11 @@ class Clock extends ModuleWidget
 
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/flipclock.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/flipclock.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
     }
 
     /**
@@ -216,7 +216,7 @@ class Clock extends ModuleWidget
                 $theme = ($this->getOption('theme') == 1 ? 'light' : 'dark');
                 $theme_face = ($this->getOption('theme') == 1 ? 'clock_bg_modern_light.png' : 'clock_bg_modern_dark.png');
 
-                $data['clockFace'] = base64_encode(file_get_contents('modules/clock/' . $theme_face));
+                $data['clockFace'] = base64_encode(file_get_contents(PROJECT_ROOT . '/modules/clock/' . $theme_face));
 
                 // Light or dark?
                 $data['clockTheme'] = $theme;
@@ -295,7 +295,7 @@ class Clock extends ModuleWidget
                 $template = 'clock-get-resource-flip';
 
                 // Head Content (CSS for flip clock)
-                $data['head'] = '<style type="text/css">' . file_get_contents('modules/vendor/flipclock.css') . '</style>';
+                $data['head'] = '<style type="text/css">' . file_get_contents(PROJECT_ROOT . '/modules/vendor/flipclock.css') . '</style>';
                 $data['offset'] = $this->getOption('offset', '0');
                 $data['duration'] = $this->getDuration();
                 $data['clockFace'] = $this->getOption('clockFace', 'TwentyFourHourClock');

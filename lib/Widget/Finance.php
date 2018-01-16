@@ -53,10 +53,10 @@ class Finance extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
     }
 
     /**
@@ -540,7 +540,7 @@ class Finance extends ModuleWidget
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
     }

@@ -20,6 +20,9 @@
  */
 namespace Xibo\Widget;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use PicoFeed\Config\Config;
 use PicoFeed\Logging\Logger;
 use PicoFeed\Parser\Item;
 use PicoFeed\PicoFeedException;
@@ -29,6 +32,7 @@ use Stash\Invalidation;
 use Xibo\Controller\Library;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Service\LogService;
 
 
@@ -39,13 +43,13 @@ class Ticker extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.marquee.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
     }
 
     /**
@@ -607,6 +611,7 @@ class Ticker extends ModuleWidget
      * Get Resource
      * @param int $displayId
      * @return mixed
+     * @throws XiboException
      */
     public function getResource($displayId = 0)
     {
@@ -633,9 +638,9 @@ class Ticker extends ModuleWidget
         $css = null;
 
         // Get CSS and HTML template from the original template or from the input field
-        if ($this->getOption('sourceId') != 2 && $this->getOption('overrideTemplate') == 0) {
+        if ($sourceId != 2 && $this->getOption('overrideTemplate') == 0) {
             // Feed tickers without override set.
-            $template = $this->getTemplateById($this->getOption('templateId'));
+            $template = $this->getTemplateById($this->getOption('templateId', 'title-only'));
             
             if (isset($template)) {
                 $text = $template['template'];
@@ -663,7 +668,7 @@ class Ticker extends ModuleWidget
         $oldDirection = $this->getOption('direction', 'none');
 
         if ($oldDirection == 'single')
-            $oldDirection = 'fade';
+            $oldDirection = 'noTransition';
         else if ($oldDirection != 'none')
             $oldDirection = 'marquee' . ucfirst($oldDirection);
 
@@ -708,15 +713,13 @@ class Ticker extends ModuleWidget
 
         // Work out how many pages we will be showing.
         $pages = $numItems;
-
         if ($numItems > count($items) || $numItems == 0)
             $pages = count($items);
 
         $pages = ($itemsPerPage > 0) ? ceil($pages / $itemsPerPage) : $pages;
-        $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
 
         // Replace and Control Meta options
-        $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->';
+        $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $duration . ' -->';
 
         // Replace the head content
         $headContent = '';
@@ -780,11 +783,17 @@ class Ticker extends ModuleWidget
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
     }
 
+    /**
+     * @param $isPreview
+     * @param $text
+     * @return array|mixed|null
+     * @throws \Xibo\Exception\ConfigurationException
+     */
     private function getRssItems($isPreview, $text)
     {
         // Make sure we have the cache location configured
@@ -793,277 +802,309 @@ class Ticker extends ModuleWidget
         // Create a key to use as a caching key for this item.
         // the rendered feed will be cached, so it is important the key covers all options.
         $feedUrl = urldecode($this->getOption('uri'));
+
         /** @var \Stash\Item $cache */
-        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($isPreview . ' ' . json_encode($this->widget->widgetOptions))));
+        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($feedUrl)));
         $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
         $this->getLog()->debug('Ticker with RSS source ' . $feedUrl . '. Cache key: ' . $cache->getKey());
 
-        $items = $cache->get();
+        // Get the document out of the cache
+        $document = $cache->get();
 
         // Check our cache to see if the key exists
-        // Ticker cache holds the entire rendered contents of the feed
-        if ($cache->isHit()) {
-            // Our local cache is valid
-            return $items;
+        if ($cache->isMiss()) {
+            // Invalid local cache, requery using picofeed.
+            $this->getLog()->debug('Cache Miss, getting RSS items');
+
+            // Lock this cache item (120 seconds)
+            $cache->lock(120);
+
+            try {
+                // Create a Guzzle Client to get the Feed XML
+                $client = new Client();
+                $response = $client->get($feedUrl, $this->getConfig()->getGuzzleProxy());
+
+                // Pull out the content type and body
+                $result = explode('charset=', $response->getHeaderLine('Content-Type'));
+                $document['encoding'] = isset($result[1]) ? $result[1] : '';
+                $document['xml'] = $response->getBody()->getContents();
+
+                // Add this to the cache.
+                $cache->set($document);
+                $cache->expiresAfter($this->getOption('updateInterval', 360) * 60);
+
+                // Save
+                $this->getPool()->saveDeferred($cache);
+
+                $this->getLog()->debug('Processed feed and added to the cache for ' . $this->getOption('updateInterval', 360) . ' minutes');
+
+            } catch (RequestException $requestException) {
+                // Log and return empty?
+                $this->getLog()->error('Unable to get feed: ' . $requestException->getMessage());
+                $this->getLog()->debug($requestException->getTraceAsString());
+
+                $document['xml'] = null;
+                $document['encoding'] = null;
+            }
         }
 
-        // Lock this cache item (120 seconds)
-        $cache->lock(120);
+        $this->getLog()->debug(var_export($document, true));
 
-        // Our local cache is not valid
-        // Store our formatted items
-        $items = [];
-
+        // Cache HIT or we've requested
+        // Load the feed XML document into a feed parser
         try {
-            $clientConfig = $this->getConfig()->getPicoFeedProxy($feedUrl);
+            // Enable logging if we need to
+            if (LogService::resolveLogLevel($this->getConfig()->GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
+                Logger::enable();
+            }
 
             // Allowable attributes
+            $clientConfig = new Config();
+
             if ($this->getOption('allowedAttributes') != null) {
                 // need a sensible way to set this
                 // https://github.com/fguillot/picoFeed/issues/196
                 //$clientConfig->setFilterWhitelistedTags(explode(',', $this->getOption('allowedAttributes')));
             }
 
-            // Enable logging if we need to
-            if (LogService::resolveLogLevel($this->getConfig()->GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
-                Logger::enable();
-            }
-
-            $reader = new Reader($clientConfig);
-            $resource = $reader->download($feedUrl);
-
             // Get the feed parser
-            $parser = $reader->getParser($resource->getUrl(), $resource->getContent(), $resource->getEncoding());
+            $reader = new Reader($clientConfig);
+            $parser = $reader->getParser($feedUrl, $document['xml'], $document['encoding']);
 
             // Get a feed object
             $feed = $parser->execute();
 
-            // Parse the text template
-            $matches = '';
-            preg_match_all('/\[.*?\]/', $text, $matches);
-
             // Get all items
             $feedItems = $feed->getItems();
 
-            // Disable date sorting?
-            if ($this->getOption('disableDateSort') == 0 && $this->getOption('randomiseItems', 0) == 0) {
-                // Sort the items array by date
-                usort($feedItems, function($a, $b) {
-                    /* @var Item $a */
-                    /* @var Item $b */
-
-                    return ($a->getDate() < $b->getDate());
-                });
-            }
-
-            // Date format for the feed items
-            $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
-
-            // Set an expiry time for the media
-            $expires = $this->getDate()->parse()->addMinutes($this->getOption('updateInterval', 3600))->format('U');
-
-            // Render the content now
-            foreach ($feedItems as $item) {
-                /* @var Item $item */
-
-                // Substitute for all matches in the template
-                $rowString = $text;
-
-                // Run through all [] substitutes in $matches
-                foreach ($matches[0] as $sub) {
-                    $replace = '';
-
-                    // Does our [] have a | - if so we need to do some special parsing
-                    if (strstr($sub, '|') !== false) {
-                        // Use the provided name space to extract a tag
-                        $attribute = NULL;
-                        // Do we have more than 1 | - if we do then we are also interested in getting an attribute
-                        if (substr_count($sub, '|') > 1)
-                            list($tag, $namespace, $attribute) = explode('|', $sub);
-                        else
-                            list($tag, $namespace) = explode('|', $sub);
-
-                        // Replace some things so that we know what we are looking at
-                        $tag = str_replace('[', '', $tag);
-                        $namespace = str_replace(']', '', $namespace);
-
-                        if ($attribute !== null)
-                            $attribute = str_replace(']', '', $attribute);
-
-                        // What are we looking at
-                        $this->getLog()->debug('Namespace: ' . $namespace . ', Tag: ' . $tag . ', Attribute: ' . $attribute);
-                        //$this->getLog()->debug('Item content: %s', var_export($item, true));
-
-                        // Are we an image place holder? [tag|image]
-                        if ($namespace == 'image') {
-                            // Try to get a link for the image
-                            $link = null;
-
-                            switch ($tag) {
-                                case 'Link':
-                                    if (stripos($item->getEnclosureType(), 'image') > -1) {
-                                        // Use the link to get the image
-                                        $link = $item->getEnclosureUrl();
-
-                                        if (empty($link)) {
-                                            $this->getLog()->debug('No image found for Link|image tag using getEnclosureUrl');
-                                        }
-                                    } else {
-                                        $this->getLog()->debug('No image found for Link|image tag using getEnclosureType');
-                                    }
-                                    break;
-
-                                default:
-                                    // Default behaviour just tries to get the content from the tag provided.
-                                    // it uses the attribute as a namespace if one has been provided
-                                    if ($attribute != null)
-                                        $tags = $item->getTag($tag, $attribute);
-                                    else
-                                        $tags = $item->getTag($tag);
-
-                                    if (count($tags) > 0 && !empty($tags[0]))
-                                        $link = $tags[0];
-                                    else
-                                        $this->getLog()->debug('Tag not found for [' . $tag . '] attribute [' . $attribute . ']');
-                            }
-
-                            $this->getLog()->debug('Resolved link: ' . $link);
-
-                            // If we have managed to resolve a link, download it and replace the tag with the downloaded
-                            // image url
-                            if ($link != NULL) {
-                                // Grab the profile image
-                                $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expires);
-
-                                $replace = ($isPreview)
-                                    ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" ' . $attribute . '/>'
-                                    : '<img src="' . $file->storedAs . '" ' . $attribute . ' />';
-                            }
-                        } else {
-                            // Our namespace is not "image". Which means we are a normal text substitution using a namespace/attribute
-                            if ($attribute != null)
-                                $tags = $item->getTag($tag, $attribute);
-                            else
-                                $tags = $item->getTag($tag);
-
-                            // If we find some tags then do the business with them
-                            if ($tags != NULL && count($tags) > 0) {
-                                $replace = $tags[0];
-                            } else {
-                                $this->getLog()->debug('Tag not found for ' . $tag . ' attribute ' . $attribute);
-                            }
-                        }
-                    } else {
-                        // Use the pool of standard tags
-                        switch ($sub) {
-                            case '[Name]':
-                                $replace = $this->getOption('name');
-                                break;
-
-                            case '[Title]':
-                                $replace = $item->getTitle();
-                                break;
-
-                            case '[Description]':
-                                // Try to get the description tag
-                                if (!$desc = $item->getTag('description')) {
-                                    // use content with tags stripped
-                                    $replace = strip_tags($item->getContent());
-                                } else {
-                                    // use description
-                                    $replace = $desc[0];
-                                }
-                                break;
-
-                            case '[Content]':
-                                $replace = $item->getContent();
-                                break;
-
-                            case '[Copyright]':
-                                $replace = $item->getAuthor();
-                                break;
-
-                            case '[Date]':
-                                $replace = $this->getDate()->getLocalDate($item->getDate()->format('U'), $dateFormat);
-                                break;
-
-                            case '[PermaLink]':
-                                $replace = $item->getTag('permalink');
-                                break;
-
-                            case '[Link]':
-                                $replace = $item->getUrl();
-                                break;
-
-                            case '[Image]':
-                                if (stripos($item->getEnclosureType(), 'image') > -1) {
-                                    // Use the link to get the image
-                                    $link = $item->getEnclosureUrl();
-
-                                    if (!(empty($link))) {
-                                        // Grab the image
-                                        $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expires);
-
-                                        $replace = ($isPreview)
-                                            ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
-                                            : '<img src="' . $file->storedAs . '" />';
-                                    } else {
-                                        $this->getLog()->debug('No image found for image tag using getEnclosureUrl');
-                                    }
-                                } else {
-                                    $this->getLog()->debug('No image found for image tag using getEnclosureType');
-                                }
-                                break;
-                        }
-                    }
-
-                    if ($this->getOption('stripTags') != '') {
-                        $config = \HTMLPurifier_Config::createDefault();
-                        $config->set('HTML.ForbiddenElements', explode(',', $this->getOption('stripTags')));
-                        $purifier = new \HTMLPurifier($config);
-                        $replace = $purifier->purify($replace);
-                    }
-
-                    // Substitute the replacement we have found (it might be '')
-                    $rowString = str_replace($sub, $replace, $rowString);
-                }
-
-                $items[] = $rowString;
-            }
-
-            // Process queued downloads
-            $this->mediaFactory->processDownloads(function($media) {
-                // Success
-                $this->getLog()->debug('Successfully downloaded ' . $media->mediaId);
-
-                // Tag this layout with this file
-                $this->assignMedia($media->mediaId);
-            });
-
-            // Copyright information?
-            if ($this->getOption('copyright', '') != '') {
-                $items[] = '<span id="copyright">' . $this->getOption('copyright') . '</span>';
-            }
-
-            // Add this to the cache.
-            $cache->set($items);
-            $cache->expiresAfter($this->getOption('updateInterval', 360) * 60);
-            $this->getPool()->saveDeferred($cache);
-        }
-        catch (PicoFeedException $e) {
-            $this->getLog()->error('Unable to get feed: %s', $e->getMessage());
-            $this->getLog()->debug($e->getTraceAsString());
+        } catch (PicoFeedException $picoFeedException) {
+            // Log and return empty?
+            $this->getLog()->error('Unable to get feed: ' . $picoFeedException->getMessage());
+            $this->getLog()->debug($picoFeedException->getTraceAsString());
+            return false;
         }
 
+        // Output any PicoFeed logs
         if (LogService::resolveLogLevel($this->getConfig()->GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
             $this->getLog()->debug(var_export(Logger::getMessages(), true));
         }
 
-        // Return the formatted items
+        // Parse the text template
+        $matches = '';
+        preg_match_all('/\[.*?\]/', $text, $matches);
+
+        // Disable date sorting?
+        if ($this->getOption('disableDateSort') == 0 && $this->getOption('randomiseItems', 0) == 0) {
+            // Sort the items array by date
+            usort($feedItems, function($a, $b) {
+                /* @var Item $a */
+                /* @var Item $b */
+
+                return ($a->getDate() < $b->getDate());
+            });
+        }
+
+        // Date format for the feed items
+        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
+
+        // Set an expiry time for the media
+        $expires = $this->getDate()->parse()->addMinutes($this->getOption('updateInterval', 3600))->format('U');
+
+        // Render the content now
+        foreach ($feedItems as $item) {
+            /* @var Item $item */
+
+            // Substitute for all matches in the template
+            $rowString = $text;
+
+            // Run through all [] substitutes in $matches
+            foreach ($matches[0] as $sub) {
+                $replace = '';
+
+                // Does our [] have a | - if so we need to do some special parsing
+                if (strstr($sub, '|') !== false) {
+                    // Use the provided name space to extract a tag
+                    $attribute = NULL;
+                    // Do we have more than 1 | - if we do then we are also interested in getting an attribute
+                    if (substr_count($sub, '|') > 1)
+                        list($tag, $namespace, $attribute) = explode('|', $sub);
+                    else
+                        list($tag, $namespace) = explode('|', $sub);
+
+                    // Replace some things so that we know what we are looking at
+                    $tag = str_replace('[', '', $tag);
+                    $namespace = str_replace(']', '', $namespace);
+
+                    if ($attribute !== null)
+                        $attribute = str_replace(']', '', $attribute);
+
+                    // What are we looking at
+                    $this->getLog()->debug('Namespace: ' . $namespace . ', Tag: ' . $tag . ', Attribute: ' . $attribute);
+                    //$this->getLog()->debug('Item content: %s', var_export($item, true));
+
+                    // Are we an image place holder? [tag|image]
+                    if ($namespace == 'image') {
+                        // Try to get a link for the image
+                        $link = null;
+
+                        switch ($tag) {
+                            case 'Link':
+                                if (stripos($item->getEnclosureType(), 'image') > -1) {
+                                    // Use the link to get the image
+                                    $link = $item->getEnclosureUrl();
+
+                                    if (empty($link)) {
+                                        $this->getLog()->debug('No image found for Link|image tag using getEnclosureUrl');
+                                    }
+                                } else {
+                                    $this->getLog()->debug('No image found for Link|image tag using getEnclosureType');
+                                }
+                                break;
+
+                            default:
+                                // Default behaviour just tries to get the content from the tag provided.
+                                // it uses the attribute as a namespace if one has been provided
+                                if ($attribute != null)
+                                    $tags = $item->getTag($tag, $attribute);
+                                else
+                                    $tags = $item->getTag($tag);
+
+                                if (count($tags) > 0 && !empty($tags[0]))
+                                    $link = $tags[0];
+                                else
+                                    $this->getLog()->debug('Tag not found for [' . $tag . '] attribute [' . $attribute . ']');
+                        }
+
+                        $this->getLog()->debug('Resolved link: ' . $link);
+
+                        // If we have managed to resolve a link, download it and replace the tag with the downloaded
+                        // image url
+                        if ($link != NULL) {
+                            // Grab the profile image
+                            $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expires);
+
+                            $replace = '<img src="' . $this->getFileUrl($file, 'image') . '" ' . $attribute . ' />';
+                        }
+                    } else {
+                        // Our namespace is not "image". Which means we are a normal text substitution using a namespace/attribute
+                        if ($attribute != null)
+                            $tags = $item->getTag($tag, $attribute);
+                        else
+                            $tags = $item->getTag($tag);
+
+                        // If we find some tags then do the business with them
+                        if ($tags != NULL && count($tags) > 0) {
+                            $replace = $tags[0];
+                        } else {
+                            $this->getLog()->debug('Tag not found for ' . $tag . ' attribute ' . $attribute);
+                        }
+                    }
+                } else {
+                    // Use the pool of standard tags
+                    switch ($sub) {
+                        case '[Name]':
+                            $replace = $this->getOption('name');
+                            break;
+
+                        case '[Title]':
+                            $replace = $item->getTitle();
+                            break;
+
+                        case '[Description]':
+                            // Try to get the description tag
+                            if (!$desc = $item->getTag('description')) {
+                                // use content with tags stripped
+                                $replace = strip_tags($item->getContent());
+                            } else {
+                                // use description
+                                $replace = $desc[0];
+                            }
+                            break;
+
+                        case '[Content]':
+                            $replace = $item->getContent();
+                            break;
+
+                        case '[Copyright]':
+                            $replace = $item->getAuthor();
+                            break;
+
+                        case '[Date]':
+                            $replace = $this->getDate()->getLocalDate($item->getDate()->format('U'), $dateFormat);
+                            break;
+
+                        case '[PermaLink]':
+                            $replace = $item->getTag('permalink');
+                            break;
+
+                        case '[Link]':
+                            $replace = $item->getUrl();
+                            break;
+
+                        case '[Image]':
+                            if (stripos($item->getEnclosureType(), 'image') > -1) {
+                                // Use the link to get the image
+                                $link = $item->getEnclosureUrl();
+
+                                if (!(empty($link))) {
+                                    // Grab the image
+                                    $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expires);
+
+                                    $replace = '<img src="' . $this->getFileUrl($file, 'image') . '"/>';
+                                } else {
+                                    $this->getLog()->debug('No image found for image tag using getEnclosureUrl');
+                                }
+                            } else {
+                                $this->getLog()->debug('No image found for image tag using getEnclosureType');
+                            }
+                            break;
+                    }
+                }
+
+                if ($this->getOption('stripTags') != '') {
+                    // Handle cache path for HTML serializer
+                    $cachePath = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'cache/HTMLPurifier';
+                    if (!is_dir($cachePath))
+                        mkdir($cachePath);
+
+                    $config = \HTMLPurifier_Config::createDefault();
+                    $config->set('Cache.SerializerPath', $cachePath);
+                    $config->set('HTML.ForbiddenElements', explode(',', $this->getOption('stripTags')));
+                    $purifier = new \HTMLPurifier($config);
+                    $replace = $purifier->purify($replace);
+                }
+
+                // Substitute the replacement we have found (it might be '')
+                $rowString = str_replace($sub, $replace, $rowString);
+            }
+
+            $items[] = $rowString;
+        }
+
+        // Process queued downloads
+        $this->mediaFactory->processDownloads(function($media) {
+            // Success
+            $this->getLog()->debug((($media->isSaveRequired) ? 'Successfully downloaded ' : 'Download not required for ') . $media->mediaId);
+
+            // Tag this layout with this file
+            $this->assignMedia($media->mediaId);
+        });
+
+        // Copyright information?
+        if ($this->getOption('copyright', '') != '') {
+            $items[] = '<span id="copyright">' . $this->getOption('copyright') . '</span>';
+        }
+
         return $items;
     }
 
+    /**
+     * @param $displayId
+     * @param $isPreview
+     * @param $text
+     * @return array
+     */
     private function getDataSetItems($displayId, $isPreview, $text)
     {
         // Lock the request
@@ -1246,9 +1287,7 @@ class Ticker extends ModuleWidget
                             // Download the image, alter the replace to wrap in an image tag
                             $file = $this->mediaFactory->queueDownload('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)), $expires);
 
-                            $replace = ($isPreview)
-                                ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
-                                : '<img src="' . $file->storedAs . '" />';
+                            $replace = '<img src="' . $this->getFileUrl($file, 'image') . '"/>';
 
                         } else if ($mappings[$header]['dataTypeId'] == 5) {
                             // Library Image
@@ -1260,9 +1299,7 @@ class Ticker extends ModuleWidget
                                     // Tag this layout with this file
                                     $this->assignMedia($file->mediaId);
 
-                                    $replace = ($isPreview)
-                                        ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
-                                        : '<img src="' . $file->storedAs . '" />';
+                                    $replace = '<img src="' . $this->getFileUrl($file, 'image') . '" />';
                                 } else {
                                     $replace = '';
                                 }
@@ -1306,5 +1343,31 @@ class Ticker extends ModuleWidget
     {
         // Can't be sure because the client does the rendering
         return 1;
+    }
+
+    /** @inheritdoc */
+    public function getModifiedTimestamp($displayId)
+    {
+        $widgetModifiedDt = null;
+
+        if ($this->getOption('sourceId', 1) == 2) {
+
+            $dataSetId = $this->getOption('dataSetId');
+            $dataSet = $this->dataSetFactory->getById($dataSetId);
+
+            // Set the timestamp
+            $widgetModifiedDt = $dataSet->lastDataEdit;
+
+            // Remote dataSets are kept "active" by required files
+            if ($dataSet->isRemote) {
+                // Touch this dataSet
+                $dataSetCache = $this->getPool()->getItem('/dataset/accessed/' . $dataSet->dataSetId);
+                $dataSetCache->set('true');
+                $dataSetCache->expiresAfter($this->getSetting('REQUIRED_FILES_LOOKAHEAD') * 1.5);
+                $this->getPool()->saveDeferred($dataSetCache);
+            }
+        }
+
+        return $widgetModifiedDt;
     }
 }

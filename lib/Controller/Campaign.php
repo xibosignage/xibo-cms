@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
@@ -402,6 +403,8 @@ class Campaign extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function delete($campaignId)
     {
@@ -424,6 +427,7 @@ class Campaign extends Base
     /**
      * Layouts form
      * @param int $campaignId
+     * @throws XiboException
      */
     public function layoutsForm($campaignId)
     {
@@ -498,7 +502,7 @@ class Campaign extends Base
      *  )
      * )
      *
-     * @throws InvalidArgumentException
+     * @throws XiboException
      */
     public function assignLayout($campaignId)
     {
@@ -606,7 +610,7 @@ class Campaign extends Base
      *  )
      * )
      *
-     * @throws InvalidArgumentException
+     * @throws XiboException
      */
     public function unassignLayout($campaignId)
     {

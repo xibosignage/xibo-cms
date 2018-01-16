@@ -92,7 +92,7 @@
 {% block javaScriptTemplates %}
 
     <script type="text/javascript">
-        {% set userPreferences = currentUser.userOptions %}
+        {% set userPreferences = currentUser.getUserOptions() %}
         var userPreferences = {{ userPreferences|json_encode|raw }};
         var userPreferencesUrl = "{{ urlFor("user.pref") }}";
     </script>

@@ -143,7 +143,7 @@ class ScheduleFactory extends BaseFactory
      */
     public function getForXmds($displayId, $fromDt, $toDt, $options = [])
     {
-        $options = array_merge(['dependentsAsNodes' => false, 'useGroupId' => false], $options);
+        $options = array_merge(['useGroupId' => false], $options);
 
         // We dial the fromDt back to the top of the day, so that we include dayPart events that start on this
         // day
@@ -180,30 +180,6 @@ class ScheduleFactory extends BaseFactory
                 `campaign`.campaign,
                 `command`.command,
                 `lkscheduledisplaygroup`.displayGroupId
-        ';
-
-        if (!$options['dependentsAsNodes']) {
-            // Pull in the dependents using GROUP_CONCAT
-            $SQL .= ' ,
-                  (
-                    SELECT GROUP_CONCAT(DISTINCT StoredAs)
-                      FROM `media`
-                        INNER JOIN `lkwidgetmedia`
-                        ON `lkwidgetmedia`.MediaID = `media`.MediaID
-                        INNER JOIN `widget`
-                        ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                        INNER JOIN `lkregionplaylist`
-                        ON `lkregionplaylist`.playlistId = `widget`.playlistId
-                        INNER JOIN `region`
-                        ON `region`.regionId = `lkregionplaylist`.regionId
-                     WHERE `region`.layoutId = `layout`.layoutId
-                      AND media.type <> \'module\'
-                    GROUP BY `region`.layoutId
-                  ) AS Dependents
-            ';
-        }
-
-        $SQL .= '
                FROM `schedule`
                 INNER JOIN `lkscheduledisplaygroup`
                 ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId

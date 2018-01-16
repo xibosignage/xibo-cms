@@ -26,6 +26,7 @@ use Xibo\Event\LayoutBuildRegionEvent;
 use Xibo\Exception\DuplicateEntityException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\LayoutFactory;
@@ -587,7 +588,7 @@ class Layout implements \JsonSerializable
     /**
      * Delete Layout
      * @param array $options
-     * @throws \Exception
+     * @throws XiboException
      */
     public function delete($options = [])
     {
@@ -888,7 +889,7 @@ class Layout implements \JsonSerializable
                         // The calculated duration is the provided one
                         $widget->calculatedDuration = $widgetDuration;
 
-                    } else if (!$layoutHasRegionControllingDuration || $countWidgets > 1 || $regionLoop == 1) {
+                    } else if (!$layoutHasRegionControllingDuration || $countWidgets > 1 || $regionLoop == 1 || $widget->type === 'video') {
                         // No specified duration, but we've detected that we need to use the default duration
                         // Edge case being video - we must ensure that the default duration for video is always 0.
                         $widgetDuration = $module->getModule()->defaultDuration;
@@ -906,7 +907,12 @@ class Layout implements \JsonSerializable
 
                     // Does our widget have a durationIsPerItem and a Number of Items?
                     $numItems = $widget->getOptionValue('numItems', 0);
+                    $itemsPerPage = $widget->getOptionValue('itemsPerPage', 0);
                     if ($widget->getOptionValue('durationIsPerItem', 0) == 1 && $numItems > 1) {
+                        // If we have paging involved then work out the page count.
+                        if ($itemsPerPage > 0)
+                            $numItems = ceil($numItems / $itemsPerPage);
+
                         $widget->calculatedDuration = (($widget->useDuration == 1) ? $widget->duration : $module->getModule()->defaultDuration) * $numItems;
                     }
 
@@ -1044,6 +1050,8 @@ class Layout implements \JsonSerializable
      * @param DataSetFactory $dataSetFactory
      * @param string $fileName
      * @param array $options
+     * @throws InvalidArgumentException
+     * @throws XiboException
      */
     public function toZip($dataSetFactory, $fileName, $options = [])
     {
@@ -1058,7 +1066,7 @@ class Layout implements \JsonSerializable
         $zip = new \ZipArchive();
         $result = $zip->open($fileName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
         if ($result !== true)
-            throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: ' . $result));
+            throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code: ' . $result), 'fileName');
 
         // Add a mapping file for the region names
         $regionMapping = [];

@@ -253,6 +253,9 @@ try {
     );
     $soap->handle();
 
+    // Finish any XMR work that has been logged during the request
+    \Xibo\Middleware\Xmr::finish($app);
+
     // Get the stats for this connection
     $stats = $app->store->stats();
     $stats['length'] = microtime() - $app->startTime;

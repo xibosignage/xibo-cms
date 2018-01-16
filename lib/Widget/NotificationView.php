@@ -21,11 +21,11 @@ class NotificationView extends ModuleWidget
      */
     public function InstallFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.marquee.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
     }
 
     /**
@@ -201,12 +201,12 @@ class NotificationView extends ModuleWidget
         $items = [];
 
         if ($isPreview)
-            $notifications = $this->getNotificationFactory()->query(null, [
+            $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC', 'subject'], [
                 'releaseDt' => ($age === 0) ? null : $this->getDate()->parse()->subMinutes($age)->format('U'),
                 'userId' => $this->getUser()->userId
             ]);
         else
-            $notifications = $this->getNotificationFactory()->query(null, [
+            $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC', 'subject'], [
                 'releaseDt' => ($age === 0) ? null : $this->getDate()->parse()->subMinutes($age)->format('U'),
                 'displayId' => $displayId
             ]);
@@ -322,8 +322,29 @@ class NotificationView extends ModuleWidget
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
+    }
+
+    /** @inheritdoc */
+    public function getModifiedTimestamp($displayId)
+    {
+        $widgetModifiedDt = null;
+        $age = $this->getOption('age', 0);
+
+        // Get the date/time of the last notification drawn by this Widget
+        $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC'], [
+            'releaseDt' => ($age === 0) ? null : $this->getDate()->parse()->subMinutes($age)->format('U'),
+            'displayId' => $displayId,
+            'length' => 1
+        ]);
+
+        // Get the release date from the notification returned
+        if (count($notifications) > 0) {
+            $widgetModifiedDt = $notifications[0]->releaseDt;
+        }
+
+        return $widgetModifiedDt;
     }
 }

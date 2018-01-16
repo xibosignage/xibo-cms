@@ -705,11 +705,10 @@ class Media implements \JsonSerializable
 
     /**
      * Edit
-     * @throws ConfigurationException
      */
     private function edit()
     {
-        $this->getStore()->update('
+        $sql = '
           UPDATE `media`
             SET `name` = :name,
                 duration = :duration,
@@ -719,10 +718,10 @@ class Media implements \JsonSerializable
                 isEdited = :isEdited,
                 userId = :userId,
                 released = :released,
-                apiRef = :apiRef,
-                modifiedDt = :modifiedDt
-           WHERE mediaId = :mediaId
-        ', [
+                apiRef = :apiRef
+        ';
+
+        $params = [
             'name' => $this->name,
             'duration' => $this->duration,
             'retired' => $this->retired,
@@ -732,9 +731,17 @@ class Media implements \JsonSerializable
             'userId' => $this->ownerId,
             'released' => $this->released,
             'apiRef' => $this->apiRef,
-            'modifiedDt' => date('Y-m-d H:i:s'),
             'mediaId' => $this->mediaId
-        ]);
+        ];
+
+        if (DBVERSION >= 134) {
+            $sql .= ', modifiedDt = :modifiedDt ';
+            $params['modifiedDt'] = date('Y-m-d H:i:s');
+        }
+
+        $sql .= ' WHERE mediaId = :mediaId ';
+
+        $this->getStore()->update($sql, $params);
     }
 
     /**

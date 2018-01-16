@@ -28,6 +28,7 @@ use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\LayoutFactory;
@@ -386,6 +387,8 @@ class Layout extends Base
      *      @SWG\Schema(ref="#/definitions/Layout")
      *  )
      * )
+     *
+     * @throws XiboException
      */
     function edit($layoutId)
     {
@@ -418,7 +421,8 @@ class Layout extends Base
             'saveLayout' => true,
             'saveRegions' => $saveRegions,
             'saveTags' => true,
-            'setBuildRequired' => true
+            'setBuildRequired' => true,
+            'notify' => false
         ]);
 
         // Return
@@ -496,6 +500,8 @@ class Layout extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     function delete($layoutId)
     {
@@ -535,6 +541,8 @@ class Layout extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     function retire($layoutId)
     {
@@ -1267,6 +1275,7 @@ class Layout extends Base
 
     /**
      * @param int $layoutId
+     * @throws XiboException
      */
     public function export($layoutId)
     {

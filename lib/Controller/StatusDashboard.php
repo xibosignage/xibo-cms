@@ -20,6 +20,7 @@
  */
 namespace Xibo\Controller;
 use Exception;
+use GuzzleHttp\Client;
 use PicoFeed\PicoFeedException;
 use PicoFeed\Reader\Reader;
 use Stash\Interfaces\PoolInterface;
@@ -308,12 +309,18 @@ class StatusDashboard extends Base
                     // Check the cache
                     if ($cache->isMiss()) {
 
-                        // Get the feed
-                        $reader = new Reader($this->getConfig()->getPicoFeedProxy($feedUrl));
-                        $resource = $reader->download($feedUrl);
+                        // Create a Guzzle Client to get the Feed XML
+                        $client = new Client();
+                        $response = $client->get($feedUrl, $this->getConfig()->getGuzzleProxy());
+
+                        // Pull out the content type and body
+                        $result = explode('charset=', $response->getHeaderLine('Content-Type'));
+                        $document['encoding'] = isset($result[1]) ? $result[1] : '';
+                        $document['xml'] = $response->getBody();
 
                         // Get the feed parser
-                        $parser = $reader->getParser($resource->getUrl(), $resource->getContent(), $resource->getEncoding());
+                        $reader = new Reader();
+                        $parser = $reader->getParser($feedUrl, $document['xml'], $document['encoding']);
 
                         // Get a feed object
                         $feed = $parser->execute();
