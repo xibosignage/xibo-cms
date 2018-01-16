@@ -3784,7 +3784,7 @@
                         }
                     },
                     {
-                        "name": "userGroupId",
+                        "name": "userGroupIds",
                         "in": "formData",
                         "description": "The user group ids to assign to this notification",
                         "required": true,
@@ -3872,7 +3872,7 @@
                         }
                     },
                     {
-                        "name": "userGroupId",
+                        "name": "userGroupIds",
                         "in": "formData",
                         "description": "The user group ids to assign to this notification",
                         "required": true,
