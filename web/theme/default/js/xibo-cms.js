@@ -1,6 +1,6 @@
 /**
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2014 Daniel Garner
+ * Copyright (C) 2006-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -21,6 +21,13 @@ var timelineForm;
 var lastForm;
 var gridTimeouts = [];
 var buttonsTemplate;
+
+// Fix endsWith string prototype for IE
+if (!String.prototype.endsWith) {
+    String.prototype.endsWith = function(suffix) {
+        return this.indexOf(suffix, this.length - suffix.length) !== -1;
+    };
+}
 
 // Set up the light boxes
 $(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
@@ -539,6 +546,34 @@ function dataTableCreateTags(data, type) {
 }
 
 /**
+ * DataTable Create permissions
+ * @param data
+ * @returns {*}
+ */
+function dataTableCreatePermissions(data, type) {
+
+    if (type !== "display")
+        return data;
+
+    var returnData = '';
+
+    if(typeof data != undefined && data != null ) {
+        var arrayOfTags = data.split(',');
+
+        returnData += '<div class="permissionsDiv">';
+
+        for (var i = 0; i < arrayOfTags.length; i++) {
+            if(arrayOfTags[i] != '')
+                returnData += '<li class="badge">' + arrayOfTags[i] + '</span></li>'
+        }
+
+        returnData += '</div>';
+    }
+
+    return returnData;
+}
+
+/**
  * DataTable Create tags
  * @param e
  * @param settings
@@ -876,6 +911,27 @@ function XiboFormRender(sourceObj, data) {
 
     // Dont then submit the link/button
     return false;
+}
+
+/**
+ * Makes a remote call to XIBO and passes the result in the given onSuccess method
+ * In case of an Error it shows an ErrorMessageBox
+ * @param {String} fromUrl
+ * @param {Object} data
+ * @param {Function} onSuccess
+ */
+function XiboRemoteRequest(formUrl, data, onSuccess) {
+    $.ajax({
+        type: "post",
+        url: formUrl,
+        cache: false,
+        dataType: "json",
+        data: data,
+        success: onSuccess,
+        error: function(response) {
+            SystemMessage(response.responseText);
+        }
+    });
 }
 
 function formRenderDetectSpacingIssues(element) {

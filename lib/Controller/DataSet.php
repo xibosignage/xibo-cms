@@ -1,7 +1,8 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2011-2013 Daniel Garner
+ * Copyright (C) 2011-2017 Spring Signage Ltd
+ * contributions by LukyLuke aka Lukas Zurschmiede - https://github.com/LukyLuke
  *
  * This file is part of Xibo.
  *
@@ -21,7 +22,9 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Helper\DataSetUploadHandler;
@@ -185,12 +188,14 @@ class DataSet extends Base
                 $dataSet->buttons[] = ['divider' => true];
 
                 // Import DataSet
-                $dataSet->buttons[] = array(
-                    'id' => 'dataset_button_import',
-                    'class' => 'dataSetImportForm',
-                    'url' => $this->urlFor('dataSet.import.form', ['id' => $dataSet->dataSetId]),
-                    'text' => __('Import CSV')
-                );
+                if ($dataSet->isRemote !== 1) {
+                    $dataSet->buttons[] = array(
+                        'id' => 'dataset_button_import',
+                        'class' => 'dataSetImportForm',
+                        'url' => $this->urlFor('dataSet.import.form', ['id' => $dataSet->dataSetId]),
+                        'text' => __('Import CSV')
+                    );
+                }
 
                 // Copy
                 $dataSet->buttons[] = array(
@@ -244,6 +249,7 @@ class DataSet extends Base
     {
         $this->getState()->template = 'dataset-form-add';
         $this->getState()->setData([
+            'dataSets' => $this->dataSetFactory->query(),
             'help' => $this->getHelp()->link('DataSet', 'Add')
         ]);
     }
@@ -278,6 +284,97 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="isRemote",
+     *      in="formData",
+     *      description="Is this a remote DataSet?",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="method",
+     *      in="formData",
+     *      description="The Request Method GET or POST",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="uri",
+     *      in="formData",
+     *      description="The URI, without query parameters",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="postData",
+     *      in="formData",
+     *      description="query parameter encoded data to add to the request",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="authentication",
+     *      in="formData",
+     *      description="HTTP Authentication method None|Basic|Digest",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="username",
+     *      in="formData",
+     *      description="HTTP Authentication User Name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="password",
+     *      in="formData",
+     *      description="HTTP Authentication Password",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="refreshRate",
+     *      in="formData",
+     *      description="How often in seconds should this remote DataSet be refreshed",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="clearRate",
+     *      in="formData",
+     *      description="How often in seconds should this remote DataSet be truncated",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="runsAfter",
+     *      in="formData",
+     *      description="An optional dataSetId which should be run before this Remote DataSet",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataRoot",
+     *      in="formData",
+     *      description="The root of the data in the Remote source which is used as the base for all remote columns",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="summarize",
+     *      in="formData",
+     *      description="Should the data be aggregated? None|Summarize|Count",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="summarizeField",
+     *      in="formData",
+     *      description="Which field should be used to summarize",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -289,6 +386,8 @@ class DataSet extends Base
      *      )
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function add()
     {
@@ -296,7 +395,24 @@ class DataSet extends Base
         $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
         $dataSet->description = $this->getSanitizer()->getString('description');
         $dataSet->code = $this->getSanitizer()->getString('code');
+        $dataSet->isRemote = $this->getSanitizer()->getCheckbox('isRemote');
         $dataSet->userId = $this->getUser()->userId;
+
+        // Fields for remote
+        if ($dataSet->isRemote === 1) {
+            $dataSet->method = $this->getSanitizer()->getString('method');
+            $dataSet->uri = $this->getSanitizer()->getString('uri');
+            $dataSet->postData = trim($this->getSanitizer()->getString('postData'));
+            $dataSet->authentication = $this->getSanitizer()->getString('authentication');
+            $dataSet->username = $this->getSanitizer()->getString('username');
+            $dataSet->password = $this->getSanitizer()->getString('password');
+            $dataSet->refreshRate = $this->getSanitizer()->getInt('refreshRate');
+            $dataSet->clearRate = $this->getSanitizer()->getInt('clearRate');
+            $dataSet->runsAfter = $this->getSanitizer()->getInt('runsAfter');
+            $dataSet->dataRoot = $this->getSanitizer()->getString('dataRoot');
+            $dataSet->summarize = $this->getSanitizer()->getString('summarize');
+            $dataSet->summarizeField = $this->getSanitizer()->getString('summarizeField');
+        }
 
         // Also add one column
         $dataSetColumn = $this->dataSetColumnFactory->createEmpty();
@@ -338,6 +454,7 @@ class DataSet extends Base
         $this->getState()->template = 'dataset-form-edit';
         $this->getState()->setData([
             'dataSet' => $dataSet,
+            'dataSets' => $this->dataSetFactory->query(),
             'help' => $this->getHelp()->link('DataSet', 'Edit')
         ]);
     }
@@ -380,12 +497,105 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="isRemote",
+     *      in="formData",
+     *      description="Is this a remote DataSet?",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="method",
+     *      in="formData",
+     *      description="The Request Method GET or POST",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="uri",
+     *      in="formData",
+     *      description="The URI, without query parameters",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="postData",
+     *      in="formData",
+     *      description="query parameter encoded data to add to the request",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="authentication",
+     *      in="formData",
+     *      description="HTTP Authentication method None|Basic|Digest",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="username",
+     *      in="formData",
+     *      description="HTTP Authentication User Name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="password",
+     *      in="formData",
+     *      description="HTTP Authentication Password",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="refreshRate",
+     *      in="formData",
+     *      description="How often in seconds should this remote DataSet be refreshed",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="clearRate",
+     *      in="formData",
+     *      description="How often in seconds should this remote DataSet be truncated",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="runsAfter",
+     *      in="formData",
+     *      description="An optional dataSetId which should be run before this Remote DataSet",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataRoot",
+     *      in="formData",
+     *      description="The root of the data in the Remote source which is used as the base for all remote columns",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="summarize",
+     *      in="formData",
+     *      description="Should the data be aggregated? None|Summarize|Count",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="summarizeField",
+     *      in="formData",
+     *      description="Which field should be used to summarize",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
      *      @SWG\Schema(ref="#/definitions/DataSet")
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function edit($dataSetId)
     {
@@ -397,6 +607,23 @@ class DataSet extends Base
         $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
         $dataSet->description = $this->getSanitizer()->getString('description');
         $dataSet->code = $this->getSanitizer()->getString('code');
+        $dataSet->isRemote = $this->getSanitizer()->getCheckbox('isRemote');
+
+        if ($dataSet->isRemote === 1) {
+            $dataSet->method = $this->getSanitizer()->getString('method');
+            $dataSet->uri = $this->getSanitizer()->getString('uri');
+            $dataSet->postData = trim($this->getSanitizer()->getString('postData'));
+            $dataSet->authentication = $this->getSanitizer()->getString('authentication');
+            $dataSet->username = $this->getSanitizer()->getString('username');
+            $dataSet->password = $this->getSanitizer()->getString('password');
+            $dataSet->refreshRate = $this->getSanitizer()->getInt('refreshRate');
+            $dataSet->clearRate = $this->getSanitizer()->getInt('clearRate');
+            $dataSet->runsAfter = $this->getSanitizer()->getInt('runsAfter');
+            $dataSet->dataRoot = $this->getSanitizer()->getString('dataRoot');
+            $dataSet->summarize = $this->getSanitizer()->getString('summarize');
+            $dataSet->summarizeField = $this->getSanitizer()->getString('summarizeField');
+        }
+
         $dataSet->save();
 
         // Return
@@ -409,7 +636,8 @@ class DataSet extends Base
 
     /**
      * DataSet Delete
-     * * @param int $dataSetId
+     * @param int $dataSetId
+     * @throws XiboException
      */
     public function deleteForm($dataSetId)
     {
@@ -451,6 +679,8 @@ class DataSet extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function delete($dataSetId)
     {
@@ -459,11 +689,9 @@ class DataSet extends Base
         if (!$this->getUser()->checkDeleteable($dataSet))
             throw new AccessDeniedException();
 
-        $this->getLog()->debug('Delete data flag = ' . $this->getSanitizer()->getCheckbox('deleteData') . '. Params = ' . var_export($this->getApp()->request()->params(), true));
-
         // Is there existing data?
         if ($this->getSanitizer()->getCheckbox('deleteData') == 0 && $dataSet->hasData())
-            throw new \InvalidArgumentException(__('There is data assigned to this data set, cannot delete.'));
+            throw new InvalidArgumentException(__('There is data assigned to this data set, cannot delete.'), 'dataSetId');
 
         // Otherwise delete
         $dataSet->delete();
@@ -539,6 +767,8 @@ class DataSet extends Base
      *      @SWG\Schema(ref="#/definitions/DataSet")
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function copy($dataSetId)
     {
@@ -616,6 +846,9 @@ class DataSet extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
+     * @throws \Exception
      */
     public function import($dataSetId)
     {
@@ -787,6 +1020,46 @@ class DataSet extends Base
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Imported JSON into %s'), $dataSet->dataSet)
+        ]);
+    }
+
+    /**
+     * Sends out a Test Request and returns the Data as JSON to the Client so it can be shown in the Dialog
+     * @throws XiboException
+     */
+    public function testRemoteRequest()
+    {
+        $testDataSetId = $this->getSanitizer()->getInt('testDataSetId');
+
+        if ($testDataSetId !== null) {
+            $dataSet = $this->dataSetFactory->getById($testDataSetId);
+        } else {
+            $dataSet = $this->dataSetFactory->createEmpty();
+        }
+        $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
+        $dataSet->method = $this->getSanitizer()->getString('method');
+        $dataSet->uri = $this->getSanitizer()->getString('uri');
+        $dataSet->postData = $this->getSanitizer()->getString('postData');
+        $dataSet->authentication = $this->getSanitizer()->getString('authentication');
+        $dataSet->username = $this->getSanitizer()->getString('username');
+        $dataSet->password = $this->getSanitizer()->getString('password');
+        $dataSet->dataRoot = $this->getSanitizer()->getString('dataRoot');
+
+        // Call the remote service requested
+        $data = $this->dataSetFactory->callRemoteService($dataSet, null, false);
+
+        if ($data->number > 0) {
+            // Process the results, but don't record them
+            $this->dataSetFactory->processResults($dataSet, $data, false);
+        }
+
+        $this->getLog()->debug('Results: ' . var_export($data, true));
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => __('Run Test-Request for %s', $dataSet->dataSet),
+            'id' => $dataSet->dataSetId,
+            'data' => $data
         ]);
     }
 }

@@ -1,0 +1,5 @@
+{
+  "name": "Fetch Remote-DataSets",
+  "class": "\\Xibo\\XTR\\RemoteDataSetFetchTask",
+  "options": {}
+}

@@ -101,7 +101,8 @@ class DataSetColumnFactory extends BaseFactory
                 datasetcolumntype.dataSetColumnType,
                 listContent,
                 columnOrder,
-                formula
+                formula,
+                remoteField
             ';
 
         $body = '
@@ -120,6 +121,11 @@ class DataSetColumnFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('dataSetId', $filterBy) !== null) {
             $body .= ' AND DataSetID = :dataSetId ';
             $params['dataSetId'] = $this->getSanitizer()->getInt('dataSetId', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('remoteField', $filterBy) !== null) {
+            $body .= ' AND remoteField = :remoteField ';
+            $params['remoteField'] = $this->getSanitizer()->getInt('remoteField', $filterBy);
         }
 
         // Sorting?

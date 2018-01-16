@@ -138,6 +138,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
         foreach ($displays as $display) {
             $stdObj = new \stdClass();
+            $stdObj->displayId = $display['displayId'];
             $stdObj->xmrChannel = $display['xmrChannel'];
             $stdObj->xmrPubKey = $display['xmrPubKey'];
 
@@ -208,13 +209,9 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
                INNER JOIN `display`
                ON lkdisplaydg.DisplayID = display.displayID
-               INNER JOIN `lkcampaignlayout` 
-               ON `lkcampaignlayout`.campaignId = `schedule`.campaignId
-               INNER JOIN lkcampaignlayout layouts
-               ON layouts.layoutId = lkcampaignlayout.layoutId
-             WHERE `layouts`.campaignId = :activeCampaignId
+             WHERE `schedule`.campaignId = :activeCampaignId
               AND (
-                  (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                  (`schedule`.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
                   OR `schedule`.recurrence_range >= :fromDt 
                   OR (
                     IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 

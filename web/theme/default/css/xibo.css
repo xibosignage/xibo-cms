@@ -929,3 +929,11 @@ ul li.active.tab-design:hover a {
 .spacing-whitespace-pre {
     white-space: pre-wrap;
 }
+
+.permissionsDiv {
+    width: 200px;
+}
+
+.permissionsDiv .badge {
+    margin: 2px;
+}

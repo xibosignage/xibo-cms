@@ -102,7 +102,7 @@ class Logging extends Base
             'function' => $this->getSanitizer()->getString('function'),
             'displayId' => $this->getSanitizer()->getInt('displayId'),
             'userId' => $this->getSanitizer()->getInt('userId'),
-            'excludeLog' => 1,
+            'excludeLog' => $this->getSanitizer()->getCheckbox('excludeLog'),
             'runNo' => $this->getSanitizer()->getString('runNo'),
             'message' => $this->getSanitizer()->getString('message')
         ]));

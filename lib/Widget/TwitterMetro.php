@@ -26,6 +26,7 @@ use Emojione\Ruleset;
 use Respect\Validation\Validator as v;
 use Stash\Invalidation;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
 /**
@@ -43,7 +44,7 @@ class TwitterMetro extends TwitterBase
      */
     public function init()
     {
-        $this->resourceFolder = PROJECT_ROOT . '/web/modules/twittermetro';
+        $this->resourceFolder = PROJECT_ROOT . '/modules/twittermetro';
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
@@ -85,12 +86,12 @@ class TwitterMetro extends TwitterBase
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-metro-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/emojione/emojione.sprites.svg')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/bootstrap.min.css')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-metro-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.svg')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
         
         foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
             /* @var \Xibo\Entity\Media $media */
@@ -149,32 +150,6 @@ class TwitterMetro extends TwitterBase
         );
         
         return $templateArray[$orientation];
-    }
-    
-    /**
-    * Loads color templates for this module
-    */
-    private function loadColorTemplates()
-    {
-        $this->module->settings['colortemplates'] = [];
-
-        // Scan the folder for template files
-        foreach (glob(PROJECT_ROOT . '/modules/twittermetro/*.colortemplate.json') as $template) {
-            // Read the contents, json_decode and add to the array
-            $this->module->settings['colortemplates'][] = json_decode(file_get_contents($template), true);
-        }
-    }
-
-    /**
-    * Color templates available
-    * @return array
-    */
-    public function colorTemplatesAvailable()
-    {
-        if (!isset($this->module->settings['colortemplates']))
-            $this->loadColorTemplates();
-
-        return $this->module->settings['colortemplates'];
     }
 
     /**
@@ -264,7 +239,7 @@ class TwitterMetro extends TwitterBase
      * @param int $displayId
      * @param bool $isPreview
      * @return array|false
-     * @throws ConfigurationException
+     * @throws XiboException
      */
     protected function getTwitterFeed($displayId = 0, $isPreview = true)
     {
@@ -489,16 +464,13 @@ class TwitterMetro extends TwitterBase
                         if (!$this->tweetHasPhoto($tweet)) {
                         
                             // Get the colors array
-                            if( $this->getOption('overrideColorTemplate') == 0 ) {
-                                
-                                $templates = $this->colorTemplatesAvailable();
-                                
-                                foreach ($templates as $tmplt) {
-                                    if( $tmplt['id'] == $this->getOption('colorTemplateId') ){
-                                        $colorArray = $tmplt['colors'];
-                                    }
-                                }
-                                
+                            if ($this->getOption('overrideColorTemplate') == 0) {
+                                $colorTemplate = $this->getTemplateById($this->getOption('colorTemplateId'));
+
+                                if ($colorTemplate === null)
+                                    $colorTemplate = $this->getTemplateById('default');
+
+                                $colorArray = $colorTemplate['colors'];
                             } else {
                                 $colorArray = explode("|", $this->getOption('templateColours'));
                             }
@@ -575,6 +547,7 @@ class TwitterMetro extends TwitterBase
      * Get Resource
      * @param int $displayId
      * @return mixed
+     * @throws XiboException
      */
     public function getResource($displayId = 0)
     {
@@ -654,16 +627,13 @@ class TwitterMetro extends TwitterBase
         $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
 
         // Get the colors array
-        if( $this->getOption('overrideColorTemplate') == 0 ) {
-            
-            $templates = $this->colorTemplatesAvailable();
-            
-            foreach ($templates as $tmplt) {
-                if( $tmplt['id'] == $this->getOption('colorTemplateId') ){
-                    $colorArray = $tmplt['colors'];
-                }
-            }
-            
+        if ($this->getOption('overrideColorTemplate') == 0) {
+            $template = $this->getTemplateById($this->getOption('colorTemplateId'));
+
+            if ($template === null)
+                $template = $this->getTemplateById('default');
+
+            $colorArray = $template['colors'];
         } else {
             $colorArray = explode("|", $this->getOption('templateColours'));
         }
@@ -690,7 +660,7 @@ class TwitterMetro extends TwitterBase
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         $this->concurrentRequestRelease();
 

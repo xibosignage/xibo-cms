@@ -11,6 +11,7 @@ namespace Xibo\Controller;
 
 //use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -187,6 +188,8 @@ class DataSetData extends Base
      *      )
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function add($dataSetId)
     {
@@ -301,6 +304,8 @@ class DataSetData extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function edit($dataSetId, $rowId)
     {
@@ -334,12 +339,13 @@ class DataSetData extends Base
                 }
                 else if ($column->dataTypeId == 3) {
                     // Date
-                    $value = $this->getDate()->parse($value);
-
-                    if ($value === null)
+                    if ($value === null) {
+                        // Keep it as it was
                         $value = $existingValue;
-
-                    $value = $this->getDate()->getLocalDate($value);
+                    } else {
+                        // Parse the new date and convert to a local date/time
+                        $value = $this->getDate()->getLocalDate($this->getDate()->parse($value));
+                    }
                 }
                 else if ($column->dataTypeId == 5) {
                     // Media Id
