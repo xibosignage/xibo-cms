@@ -1369,8 +1369,12 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function appendCss($css)
     {
-        if (!empty($css))
-            $this->data['styleSheet'] .= '<style type="text/css">' . $css . '</style>' . PHP_EOL;
+        if (!empty($css)) {
+            if (stripos($css, '<style') !== false)
+                $this->data['styleSheet'] .= $css . PHP_EOL;
+            else
+                $this->data['styleSheet'] .= '<style type="text/css">' . $css . '</style>' . PHP_EOL;
+        }
 
         return $this;
     }
