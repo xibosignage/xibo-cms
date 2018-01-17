@@ -1,0 +1,97 @@
+# this is the dev container and doesn't contain CRON or composer
+# it maps the PWD straight through
+
+# Multi-stage build
+# Stage 0
+# Compile xsendfile apache module
+FROM alpine:3.6 as sendfile
+ADD ./docker/mod_xsendfile/mod_xsendfile.c /mod_xsendfile.c
+RUN apk update && apk upgrade && apk add \
+        gcc \
+        musl-dev \
+        apache2-dev \
+        apache2
+
+RUN cd / && \
+    apxs -cia mod_xsendfile.c
+
+# Stage 1
+# Build the CMS container
+FROM alpine:3.6
+MAINTAINER Spring Signage <support@springsignage.com>
+
+# Install apache, PHP, and supplimentary programs.
+RUN apk update && apk upgrade && apk add tar \
+    bash \
+    curl \
+    php7 \
+    php7-apache2 \
+    php7-zmq \
+    php7-json \
+    php7-gd \
+    php7-mcrypt \
+    php7-dom \
+    php7-pdo \
+    php7-zip \
+    php7-pdo_mysql \
+    php7-gettext \
+    php7-soap \
+    php7-iconv \
+    php7-curl \
+    php7-session \
+    mysql-client \
+    ssmtp \
+    apache2 \
+    ca-certificates \
+    tzdata \
+    && rm -rf /var/cache/apk/*
+
+# Configure mpm_prefork
+ADD ./docker/mpm_prefork.conf /etc/apache2/conf.d/mpm.conf
+
+# Add xsendfile Module
+COPY --from=sendfile /usr/lib/apache2/mod_xsendfile.so /usr/lib/apache2/mod_xsendfile.so
+
+# Update the PHP.ini file
+RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PARSE/" /etc/php7/php.ini
+RUN sed -i "s/session.gc_probability = .*$/session.gc_probability = 1/" /etc/php7/php.ini
+RUN sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php7/php.ini
+
+# Disable cron sending emails to root
+#RUN awk '/PATH=/ { print; print "MAILTO=\"\""; next}1' /etc/crontab > /tmp/crontab && mv /tmp/crontab /etc/crontab
+#RUN awk '/LOGNAME=root/ { print; print "MAILTO=\"\""; next}1' /etc/anacrontab > /tmp/anacrontab && mv /tmp/anacrontab /etc/anacrontab
+
+# Setup persistent environment variables
+ENV XMR_HOST=xmr CMS_DB_VERSION=134 CMS_SERVER_NAME=localhost
+ENV MYSQL_HOST=mysql MYSQL_USER=cms MYSQL_PASSWORD=none MYSQL_PORT=3306 MYSQL_DATABASE=cms
+ENV CMS_SERVER=smtp.gmail.com:587 CMS_SMTP_USERNAME=none CMS_SMTP_PASSWORD=none CMS_SMTP_USE_TLS=YES CMS_SMTP_USE_STARTTLS=YES CMS_SMTP_REWRITE_DOMAIN=gmail.com CMS_SMTP_HOSTNAME=none CMS_SMTP_FROM_LINE_OVERRIDE=YES
+ENV CMS_ALIAS=none CMS_PHP_SESSION_GC_MAXLIFETIME=1440
+ENV CMS_PHP_POST_MAX_SIZE=2G CMS_PHP_UPLOAD_MAX_FILESIZE=2G
+ENV CMS_PHP_MAX_EXECUTION_TIME=300
+ENV CMS_APACHE_START_SERVERS=2 CMS_APACHE_MIN_SPARE_SERVERS=5
+ENV CMS_APACHE_MAX_SPARE_SERVERS=10 CMS_APACHE_MAX_REQUEST_WORKERS=60
+ENV CMS_APACHE_MAX_CONNECTIONS_PER_CHILD=300
+
+# Expose port 80
+EXPOSE 80
+
+# Map the source files into /var/www/cms
+RUN mkdir -p
+COPY ./ /var/www/cms
+
+# https://github.com/vishnubob/wait-for-it - MIT Licence
+ADD ./docker/wait-for-it.sh  /usr/local/bin/wait-for-it.sh
+
+# Update the default apache site with the config we created.
+COPY ./docker/apache-config.conf /etc/apache2/conf.d/cms.conf
+
+# Copy up the various provisioning scripting
+COPY ./docker/entrypoint.sh /entrypoint.sh
+COPY ./docker/httpd-foreground /usr/local/bin/httpd-foreground
+
+RUN chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-it.sh && \
+    mkdir -p /run/apache2 && \
+    rm /etc/apache2/conf.d/info.conf && \
+    rm /etc/apache2/conf.d/userdir.conf
+
+CMD ["/entrypoint.sh"]
