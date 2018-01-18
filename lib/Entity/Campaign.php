@@ -225,7 +225,7 @@ class Campaign implements \JsonSerializable
      */
     public function validate()
     {
-        if (!v::string()->notEmpty()->validate($this->campaign))
+        if (!v::stringType()->notEmpty()->validate($this->campaign))
             throw new InvalidArgumentException(__('Name cannot be empty'), 'name');
     }
     

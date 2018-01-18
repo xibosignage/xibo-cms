@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 if [ "$XIBO_DEV_MODE" == "true" ]
 then

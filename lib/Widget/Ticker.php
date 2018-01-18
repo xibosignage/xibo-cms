@@ -172,7 +172,7 @@ class Ticker extends ModuleWidget
             if (!v::numeric()->validate($this->getOption('numItems', 0)))
                 throw new \InvalidArgumentException(__('The value in Number of Items must be numeric.'));
 
-            if (!v::int()->min(0)->validate($this->getOption('updateInterval')))
+            if (!v::intType()->min(0)->validate($this->getOption('updateInterval')))
                 throw new \InvalidArgumentException(__('Update Interval must be greater than or equal to 0'));
         }
     }

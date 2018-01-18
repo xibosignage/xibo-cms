@@ -178,7 +178,7 @@ class DayPart implements \JsonSerializable
     {
         $this->getLog()->debug('Validating daypart ' . $this->name);
 
-        if (!v::string()->notEmpty()->validate($this->name))
+        if (!v::stringType()->notEmpty()->validate($this->name))
             throw new InvalidArgumentException(__('Name cannot be empty'), 'name');
 
         // Check the start/end times are in the correct format (H:i)

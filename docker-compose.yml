@@ -1,4 +1,4 @@
-version: "2"
+version: "3"
 
 services:
   db:
@@ -6,7 +6,7 @@ services:
     ports:
       - 3315:3306
     volumes:
-     - ./library/containers/db:/var/lib/mysql
+     - ./containers/db:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: "root"
 
@@ -20,15 +20,12 @@ services:
       IPV6PUBSUPPORT: "false"
 
   web:
-    depends_on:
-      - db
-    image: xibosignage/xibo-cms-dev:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     volumes:
      - ./:/var/www/cms
     ports:
      - "80:80"
     environment:
       XIBO_DEV_MODE: "true"
-    links:
-      - db:mysql
-      - xmr:50001

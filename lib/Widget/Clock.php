@@ -43,7 +43,7 @@ class Clock extends ModuleWidget
     public function validate()
     {
         // Validate
-        if ($this->getUseDuration() == 1 && !v::int()->min(1)->validate($this->getDuration()))
+        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
             throw new \InvalidArgumentException(__('Please enter a duration.'));
     }
 

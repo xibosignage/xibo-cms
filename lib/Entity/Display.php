@@ -463,10 +463,10 @@ class Display implements \JsonSerializable
      */
     public function validate()
     {
-        if (!v::string()->notEmpty()->validate($this->display))
+        if (!v::stringType()->notEmpty()->validate($this->display))
             throw new InvalidArgumentException(__('Can not have a display without a name'), 'name');
 
-        if (!v::string()->notEmpty()->validate($this->license))
+        if (!v::stringType()->notEmpty()->validate($this->license))
             throw new InvalidArgumentException(__('Can not have a display without a hardware key'), 'license');
 
         if ($this->wakeOnLanEnabled == 1 && $this->wakeOnLanTime == '')

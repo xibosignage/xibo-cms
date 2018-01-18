@@ -48,7 +48,7 @@
     "gettext/gettext": "~3.3",
     "slim/views": "0.1.*",
     "twig/twig": "~1.18",
-    "respect/validation": "0.9.*",
+    "respect/validation": "1.1.*",
     "intervention/imagecache": "~2.3",
     "emojione/emojione": "^1.4",
     "jenssegers/date": "^3.0",

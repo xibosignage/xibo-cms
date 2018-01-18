@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "90ac79093088bfc61880edbdfa622495",
-    "content-hash": "35b1a6c0cfc33ef89833cabbdcc5ee91",
+    "hash": "0940c0a4a3bb5752d843533813759383",
+    "content-hash": "cdd0c68a00951085383fc4ad647123c0",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -2322,24 +2322,25 @@
         },
         {
             "name": "respect/validation",
-            "version": "0.9.8",
+            "version": "1.1.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Respect/Validation.git",
-                "reference": "7d978d64e33e522b060ef82d1d41c39e60f28959"
+                "reference": "ee9e69776a8e875ac1b5b00d8cf2d2c801c42181"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Respect/Validation/zipball/7d978d64e33e522b060ef82d1d41c39e60f28959",
-                "reference": "7d978d64e33e522b060ef82d1d41c39e60f28959",
+                "url": "https://api.github.com/repos/Respect/Validation/zipball/ee9e69776a8e875ac1b5b00d8cf2d2c801c42181",
+                "reference": "ee9e69776a8e875ac1b5b00d8cf2d2c801c42181",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.3.0"
+                "php": ">=5.4",
+                "symfony/polyfill-mbstring": "^1.2"
             },
             "require-dev": {
                 "egulias/email-validator": "~1.2",
-                "malkusch/bav": "~1.0",
+                "mikey179/vfsstream": "^1.5",
                 "phpunit/phpunit": "~4.0",
                 "symfony/validator": "~2.6.9",
                 "zendframework/zend-validator": "~2.3"
@@ -2348,14 +2349,14 @@
                 "egulias/email-validator": "Strict (RFC compliant) email validation",
                 "ext-bcmath": "Arbitrary Precision Mathematics",
                 "ext-mbstring": "Multibyte String Functions",
-                "malkusch/bav": "German bank account validation",
+                "fabpot/php-cs-fixer": "Fix PSR2 and other coding style issues",
                 "symfony/validator": "Use Symfony validator through Respect\\Validation",
                 "zendframework/zend-validator": "Use Zend Framework validator through Respect\\Validation"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "0.9-dev"
+                    "dev-master": "1.1-dev"
                 }
             },
             "autoload": {
@@ -2374,13 +2375,13 @@
                 }
             ],
             "description": "The most awesome validation engine ever created for PHP",
-            "homepage": "http://respect.li",
+            "homepage": "http://respect.github.io/Validation/",
             "keywords": [
                 "respect",
                 "validation",
                 "validator"
             ],
-            "time": "2016-03-31 17:26:10"
+            "time": "2018-01-02 21:47:22"
         },
         {
             "name": "sallar/jdatetime",
@@ -3174,16 +3175,16 @@
         },
         {
             "name": "xibosignage/xibo-xmr",
-            "version": "0.5",
+            "version": "0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/xibosignage/xibo-xmr.git",
-                "reference": "c407ac0415d23cad6454a508d915c74328fe9785"
+                "reference": "25839cc3eeb32c67899be909b45cc44cdee88110"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/xibosignage/xibo-xmr/zipball/c407ac0415d23cad6454a508d915c74328fe9785",
-                "reference": "c407ac0415d23cad6454a508d915c74328fe9785",
+                "url": "https://api.github.com/repos/xibosignage/xibo-xmr/zipball/25839cc3eeb32c67899be909b45cc44cdee88110",
+                "reference": "25839cc3eeb32c67899be909b45cc44cdee88110",
                 "shasum": ""
             },
             "require": {
@@ -3220,7 +3221,7 @@
                 "spring signage",
                 "xibo"
             ],
-            "time": "2018-01-09 12:06:29"
+            "time": "2018-01-16 09:36:18"
         },
         {
             "name": "zendframework/zendxml",

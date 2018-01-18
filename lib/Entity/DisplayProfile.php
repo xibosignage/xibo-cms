@@ -247,10 +247,10 @@ class DisplayProfile implements \JsonSerializable
      */
     public function validate()
     {
-        if (!v::string()->notEmpty()->validate($this->name))
+        if (!v::stringType()->notEmpty()->validate($this->name))
             throw new InvalidArgumentException(__('Missing name'), 'name');
 
-        if (!v::string()->notEmpty()->validate($this->type))
+        if (!v::stringType()->notEmpty()->validate($this->type))
             throw new InvalidArgumentException(__('Missing type'), 'type');
 
         // Check there is only 1 default (including this one)
