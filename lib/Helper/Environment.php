@@ -227,4 +227,12 @@ class Environment
     {
         return ini_get('allow_url_fopen');
     }
+
+    /**
+     * @return bool
+     */
+    public static function checkSimpleXml()
+    {
+        return extension_loaded('simplexml');
+    }
 }

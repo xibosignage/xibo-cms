@@ -849,7 +849,7 @@ class Ticker extends ModuleWidget
             }
         }
 
-        $this->getLog()->debug(var_export($document, true));
+        //$this->getLog()->debug(var_export($document, true));
 
         // Cache HIT or we've requested
         // Load the feed XML document into a feed parser

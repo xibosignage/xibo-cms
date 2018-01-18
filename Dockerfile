@@ -23,6 +23,10 @@ RUN composer install --no-interaction --no-dev --ignore-platform-reqs --optimize
 # todo: remove non-required vendor, docker and cms files
 
 # Stage 2
+# Run webpack
+
+
+# Stage 3
 # Build the CMS container
 FROM alpine:3.6
 MAINTAINER Spring Signage <support@springsignage.com>
@@ -46,6 +50,10 @@ RUN apk update && apk upgrade && apk add tar \
     php7-iconv \
     php7-curl \
     php7-session \
+    php7-ctype \
+    php7-fileinfo \
+    php7-xml \
+    php7-simplexml \
     mysql-client \
     ssmtp \
     apache2 \
@@ -53,26 +61,39 @@ RUN apk update && apk upgrade && apk add tar \
     tzdata \
     && rm -rf /var/cache/apk/*
 
-# Configure mpm_prefork
-ADD docker/etc/apache2/conf.d/mpm_prefork.conf /etc/apache2/conf.d/mpm.conf
+# Add all necessary config files in one layer
+ADD docker/ /
 
 # Add xsendfile Module
 COPY --from=sendfile /usr/lib/apache2/mod_xsendfile.so /usr/lib/apache2/mod_xsendfile.so
 
 # Update the PHP.ini file
-RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PARSE/" /etc/php7/php.ini
-RUN sed -i "s/session.gc_probability = .*$/session.gc_probability = 1/" /etc/php7/php.ini
-RUN sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php7/php.ini
+RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PARSE/" /etc/php7/php.ini && \
+    sed -i "s/session.gc_probability = .*$/session.gc_probability = 1/" /etc/php7/php.ini && \
+    sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php7/php.ini
 
 # Disable cron sending emails to root
 #RUN awk '/PATH=/ { print; print "MAILTO=\"\""; next}1' /etc/crontab > /tmp/crontab && mv /tmp/crontab /etc/crontab
 #RUN awk '/LOGNAME=root/ { print; print "MAILTO=\"\""; next}1' /etc/anacrontab > /tmp/anacrontab && mv /tmp/anacrontab /etc/anacrontab
 
 # Setup persistent environment variables
-ENV XMR_HOST=xmr CMS_DB_VERSION=134 CMS_SERVER_NAME=localhost
-ENV MYSQL_HOST=mysql MYSQL_USER=cms MYSQL_PASSWORD=none MYSQL_PORT=3306 MYSQL_DATABASE=cms
-ENV CMS_SERVER=smtp.gmail.com:587 CMS_SMTP_USERNAME=none CMS_SMTP_PASSWORD=none CMS_SMTP_USE_TLS=YES CMS_SMTP_USE_STARTTLS=YES CMS_SMTP_REWRITE_DOMAIN=gmail.com CMS_SMTP_HOSTNAME=none CMS_SMTP_FROM_LINE_OVERRIDE=YES
-ENV CMS_ALIAS=none \
+ENV XMR_HOST=xmr \
+    CMS_DB_VERSION=134 \
+    CMS_SERVER_NAME=localhost \
+    MYSQL_HOST=mysql \
+    MYSQL_USER=cms \
+    MYSQL_PASSWORD=none \
+    MYSQL_PORT=3306 \
+    MYSQL_DATABASE=cms \
+    CMS_SERVER=smtp.gmail.com:587 \
+    CMS_SMTP_USERNAME=none \
+    CMS_SMTP_PASSWORD=none \
+    CMS_SMTP_USE_TLS=YES \
+    CMS_SMTP_USE_STARTTLS=YES \
+    CMS_SMTP_REWRITE_DOMAIN=gmail.com \
+    CMS_SMTP_HOSTNAME=none \
+    CMS_SMTP_FROM_LINE_OVERRIDE=YES \
+    CMS_ALIAS=none \
     CMS_PHP_SESSION_GC_MAXLIFETIME=1440 \
     CMS_PHP_POST_MAX_SIZE=2G \
     CMS_PHP_UPLOAD_MAX_FILESIZE=2G \
@@ -90,41 +111,18 @@ EXPOSE 80
 RUN mkdir -p /var/www/cms
 COPY --from=composer /app /var/www/cms
 
-# https://github.com/vishnubob/wait-for-it - MIT Licence
-ADD ./docker/wait-for-it.sh  /usr/local/bin/wait-for-it.sh
-
-# add our settings templates
-ADD docker/tmp/settings.php-template /var/www/cms/web/settings.php
-ADD docker/tmp/settings.php-template /tmp/settings.php-template
-ADD docker/etc/ssmtp/ssmtp.conf /etc/ssmtp/ssmtp.conf
-ADD docker/tmp/settings-custom.php /tmp/settings-custom.php
-
 # Map a volumes to this folder.
 # Our CMS files, library, cache and backups will be in here.
 RUN mkdir -p /var/www/cms/library/temp &&  \
     mkdir -p /var/www/backup && \
     mkdir -p /var/www/cms/cache && \
     mkdir -p /var/www/cms/web/userscripts && \
-    chown -R apache:apache /var/www/cms
-
-# Update the default apache site with the config we created.
-COPY ./docker/apache-config.conf /etc/apache2/conf.d/cms.conf
-
-# Copy up the various provisioning scripting
-COPY ./docker/entrypoint.sh /entrypoint.sh
-COPY ./docker/httpd-foreground /usr/local/bin/httpd-foreground
-COPY docker/etc/cron.d/anacron /etc/cron.d/anacron
-
-RUN chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-it.sh && \
+    chown -R apache:apache /var/www/cms && \
+    chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-it.sh && \
     mkdir -p /run/apache2 && \
     rm /etc/apache2/conf.d/info.conf && \
-    rm /etc/apache2/conf.d/userdir.conf
-
-# Create a flag file which the bootstrapping process will delete
-# This tells us if it's the first run of a new container
-RUN touch /CMS-FLAG
-
-# Add a group for SSMTP
-RUN addgroup ssmtp
+    rm /etc/apache2/conf.d/userdir.conf && \
+    touch /CMS-FLAG && \
+    addgroup ssmtp
 
 CMD ["/entrypoint.sh"]

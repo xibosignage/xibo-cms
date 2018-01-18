@@ -108,6 +108,7 @@ class Session implements \SessionHandlerInterface
      */
     public function open($savePath, $sessionName)
     {
+        //$this->log->debug('Session open');
         $this->maxLifetime = ini_get('session.gc_maxlifetime');
         return true;
     }
@@ -117,6 +118,8 @@ class Session implements \SessionHandlerInterface
      */
     public function close()
     {
+        //$this->log->debug('Session close');
+
         try {
             // Commit
             $this->commit();
@@ -162,6 +165,8 @@ class Session implements \SessionHandlerInterface
      */
     function read($key)
     {
+        //$this->log->debug('Session read');
+
         $data = '';
         $this->key = $key;
 
@@ -205,8 +210,8 @@ class Session implements \SessionHandlerInterface
                 $this->userId = $row['userId'];
                 $this->sessionExpiry = $row['session_expiration'];
 
-                if (!$this->expired)
-                    $data = $row['session_data'];
+                // Set the session data (expired or not)
+                $data = $row['session_data'];
             }
 
             return (string)$data;
@@ -223,6 +228,8 @@ class Session implements \SessionHandlerInterface
      */
     public function write($key, $val)
     {
+        //$this->log->debug('Session write');
+
         // What should we do with expiry?
         $expiry = ($this->refreshExpiry) ? time() + $this->maxLifetime : $this->sessionExpiry;
 
@@ -242,6 +249,7 @@ class Session implements \SessionHandlerInterface
      */
     public function destroy($key)
     {
+        //$this->log->debug('Session destroy');
         try {
             $this->getDb()->update('DELETE FROM `session` WHERE session_id = :session_id', ['session_id' => $key]);
         } catch (\PDOException $e) {
@@ -256,6 +264,7 @@ class Session implements \SessionHandlerInterface
      */
     public function gc($maxLifetime)
     {
+        //$this->log->debug('Session gc');
         $this->gcCalled = true;
         return true;
     }
@@ -266,7 +275,7 @@ class Session implements \SessionHandlerInterface
      */
     public function setUser($userId)
     {
-        $this->log->debug('Setting user Id to %d', $userId);
+        //$this->log->debug('Setting user Id to %d', $userId);
         $_SESSION['userid'] = $userId;
         $this->userId = $userId;
     }
@@ -276,22 +285,11 @@ class Session implements \SessionHandlerInterface
      */
     public function regenerateSessionId()
     {
-        session_regenerate_id(false);
+        //$this->log->debug('Session regenerate');
 
-        $newKey = session_id();
+        session_regenerate_id(true);
 
-        try {
-            // Swap the ID's
-            $this->getDb()->update('UPDATE `session` SET session_id = :new_session_id WHERE session_id = :session_id', ['session_id' => $this->key, 'new_session_id' => $newKey]);
-
-            $this->key = $newKey;
-
-            return true;
-
-        } catch (\PDOException $e) {
-            $this->log->error('Error regenerating session: %s', $e->getMessage());
-            return false;
-        }
+        $this->key = session_id();
     }
 
     /**
@@ -403,6 +401,8 @@ class Session implements \SessionHandlerInterface
      */
     private function insertSession($key, $data, $lastAccessed, $expiry)
     {
+        //$this->log->debug('Session insert');
+
         $sql = '
           INSERT INTO `session` (session_id, session_data, session_expiration, lastaccessed, userid, isexpired, useragent, remoteaddr)
             VALUES (:session_id, :session_data, :session_expiration, :lastAccessed, :userId, :expired, :useragent, :remoteaddr)
@@ -422,8 +422,17 @@ class Session implements \SessionHandlerInterface
         $this->getDb()->update($sql, $params);
     }
 
+    /**
+     * Update Session
+     * @param $key
+     * @param $data
+     * @param $lastAccessed
+     * @param $expiry
+     */
     private function updateSession($key, $data, $lastAccessed, $expiry)
     {
+        //$this->log->debug('Session update');
+
         $sql = '
             UPDATE `session` SET
               session_data = :session_data,

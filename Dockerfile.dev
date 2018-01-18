@@ -41,15 +41,14 @@ RUN apk update && apk upgrade && apk add tar \
     php7-session \
     php7-ctype \
     php7-fileinfo \
+    php7-xml \
+    php7-simplexml \
     mysql-client \
     ssmtp \
     apache2 \
     ca-certificates \
     tzdata \
     && rm -rf /var/cache/apk/*
-
-# Add the apache user to the 1000 group - DEV only
-#RUN groupadd host && usermod -a -G host apache
 
 # Add all necessary config files in one layer
 ADD docker/ /
@@ -58,7 +57,8 @@ ADD docker/ /
 RUN chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-it.sh && \
     mkdir -p /run/apache2 && \
     rm /etc/apache2/conf.d/info.conf && \
-    rm /etc/apache2/conf.d/userdir.conf
+    rm /etc/apache2/conf.d/userdir.conf && \
+    chmod 777 /tmp
 
 # Add xsendfile Module
 COPY --from=sendfile /usr/lib/apache2/mod_xsendfile.so /usr/lib/apache2/mod_xsendfile.so
@@ -88,7 +88,10 @@ ENV CMS_SERVER_NAME=localhost \
 EXPOSE 80
 
 # Map the source files into /var/www/cms
-RUN mkdir -p /var/www/cms
+# Create the CMS-FLAG for CI
+RUN mkdir -p /var/www/cms && \
+    touch /CMS-FLAG
+
 COPY ./ /var/www/cms
 
 # Run entry

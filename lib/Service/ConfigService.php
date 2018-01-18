@@ -581,6 +581,11 @@ class ConfigService implements ConfigServiceInterface
             false
         );
 
+        $this->testItem($rows, __('SimpleXML'),
+            Environment::checkSimpleXml(),
+            __('SimpleXML is used to parse RSS feeds and other XML data sources')
+        );
+
         $this->envTested = true;
 
         return $rows;
