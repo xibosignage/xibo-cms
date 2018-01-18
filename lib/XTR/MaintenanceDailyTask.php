@@ -8,7 +8,7 @@
 
 namespace Xibo\XTR;
 use Xibo\Exception\ConfigurationException;
-use Xibo\Service\ConfigService;
+use Xibo\Helper\Environment;
 
 /**
  * Class MaintenanceDailyTask
@@ -70,7 +70,7 @@ class MaintenanceDailyTask implements TaskInterface
             if (count($steps) <= 0) {
 
                 // Insert pending upgrade steps.
-                $steps = $this->upgradeFactory->createSteps(DBVERSION, ConfigService::$WEBSITE_VERSION);
+                $steps = $this->upgradeFactory->createSteps(DBVERSION, Environment::$WEBSITE_VERSION);
 
                 foreach ($steps as $step) {
                     /* @var \Xibo\Entity\Upgrade $step */
