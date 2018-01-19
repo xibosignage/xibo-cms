@@ -31,3 +31,11 @@ services:
     environment:
       CMS_DEV_MODE: "true"
       MYSQL_DATABASE: "cms"
+
+  swagger:
+      image: swaggerapi/swagger-ui:latest
+      restart: always
+      ports:
+       - "8080:80"
+      environment:
+        - API_URL=http://localhost/swagger.json

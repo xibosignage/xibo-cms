@@ -72,10 +72,7 @@ RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PA
     sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php7/php.ini && \
     sed -i "s/memory_limit = .*$/memory_limit = 256M/" /etc/php7/php.ini
 
-# Disable cron sending emails to root
-#RUN awk '/PATH=/ { print; print "MAILTO=\"\""; next}1' /etc/crontab > /tmp/crontab && mv /tmp/crontab /etc/crontab
-#RUN awk '/LOGNAME=root/ { print; print "MAILTO=\"\""; next}1' /etc/anacrontab > /tmp/anacrontab && mv /tmp/anacrontab /etc/anacrontab
-
+# Set some environment variables
 ENV CMS_DEV_MODE=true \
     MYSQL_HOST=db \
     MYSQL_PORT=3306 \
@@ -103,8 +100,6 @@ EXPOSE 80
 RUN mkdir -p /var/www/cms && \
     mkdir -p /var/www/backup && \
     touch /CMS-FLAG
-
-COPY ./ /var/www/cms
 
 # Run entry
 CMD ["/entrypoint.sh"]

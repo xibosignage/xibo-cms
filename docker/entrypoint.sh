@@ -206,6 +206,13 @@ then
     then
         /bin/cp /tmp/settings-custom.php /var/www/cms/custom
     fi
+
+    # Remove install.php if it exists
+    if [ -e /var/www/cms/install.php ]
+    then
+        echo "Removing install.php from production container"
+        rm /var/www/cms/web/install.php
+    fi
 fi
 
 # Configure PHP session.gc_maxlifetime

@@ -19,8 +19,21 @@ COPY . /app
 RUN composer install --no-interaction --no-dev --ignore-platform-reqs --optimize-autoloader
 
 # Tidy up
-# todo: remove install.php
-# todo: remove non-required vendor, docker and cms files
+# remove non-required vendor files and anything else we do not want in the archive and do not need for
+# the next state
+RUN rm /app/composer.*
+WORKDIR /app/vendor
+RUN find . -type d -name '.git' -exec rm -r {} \; && \
+    find . -path ./vendor/twig/twig/lib/Twig -prune -type d -name 'Test' -exec rm -r {} \; && \
+    find . -type d -name 'tests' -exec rm -r {} \; && \
+    find . -type d -name 'benchmarks' -exec rm -r {} \; && \
+    find . -type d -name 'smoketests' -exec rm -r {} \; && \
+    find . -type d -name 'demo' -exec rm -r {} \; && \
+    find . -type d -name 'doc' -exec rm -r {} \; && \
+    find . -type d -name 'docs' -exec rm -r {} \; && \
+    find . -type d -name 'examples' -exec rm -r {} \; && \
+    find . -type f -name 'phpunit.xml' -exec rm -r {} \; && \
+    find . -type f -name '*.md' -exec rm -r {} \;
 
 # Stage 2
 # Run webpack
@@ -88,7 +101,7 @@ ENV CMS_DEV_MODE=false \
     MYSQL_PASSWORD=none \
     MYSQL_PORT=3306 \
     MYSQL_DATABASE=cms \
-    CMS_SERVER=smtp.gmail.com:587 \
+    CMS_SMTP_SERVER=smtp.gmail.com:587 \
     CMS_SMTP_USERNAME=none \
     CMS_SMTP_PASSWORD=none \
     CMS_SMTP_USE_TLS=YES \
