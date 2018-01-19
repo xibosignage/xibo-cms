@@ -21,24 +21,27 @@ RUN composer install --no-interaction --no-dev --ignore-platform-reqs --optimize
 # Tidy up
 # remove non-required vendor files and anything else we do not want in the archive and do not need for
 # the next state
-RUN rm /app/composer.*
+RUN rm /app/composer.* && \
+    rm -r /app/docker && \
+    rm .dockerignore
+
 WORKDIR /app/vendor
-RUN find . -type d -name '.git' -exec rm -r {} \; && \
-    find . -path ./vendor/twig/twig/lib/Twig -prune -type d -name 'Test' -exec rm -r {} \; && \
-    find . -type d -name 'tests' -exec rm -r {} \; && \
-    find . -type d -name 'benchmarks' -exec rm -r {} \; && \
-    find . -type d -name 'smoketests' -exec rm -r {} \; && \
-    find . -type d -name 'demo' -exec rm -r {} \; && \
-    find . -type d -name 'doc' -exec rm -r {} \; && \
-    find . -type d -name 'docs' -exec rm -r {} \; && \
-    find . -type d -name 'examples' -exec rm -r {} \; && \
-    find . -type f -name 'phpunit.xml' -exec rm -r {} \; && \
-    find . -type f -name '*.md' -exec rm -r {} \;
+RUN find -type d -name '.git' -exec rm -r {} + && \
+  find -path ./twig/twig/lib/Twig -prune -type d -name 'Test' -exec rm -r {} + && \
+  find -type d -name 'tests' -exec rm -r {} + && \
+  find -type d -name 'benchmarks' -exec rm -r {} + && \
+  find -type d -name 'smoketests' -exec rm -r {} + && \
+  find -type d -name 'demo' -exec rm -r {} + && \
+  find -type d -name 'doc' -exec rm -r {} + && \
+  find -type d -name 'docs' -exec rm -r {} + && \
+  find -type d -name 'examples' -exec rm -r {} + && \
+  find -type f -name 'phpunit.xml' -exec rm -r {} + && \
+  find -type f -name '*.md' -exec rm -r {} +
+
 
 # Stage 2
 # Run webpack
 # todo: this will come in 2.0
-
 
 # Stage 3
 # Build the CMS container
