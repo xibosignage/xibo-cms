@@ -126,7 +126,8 @@ RUN mkdir -p /var/www/cms/library/temp &&  \
     rm /etc/apache2/conf.d/info.conf && \
     rm /etc/apache2/conf.d/userdir.conf && \
     touch /CMS-FLAG && \
-    addgroup ssmtp
+    addgroup ssmtp && \
+    chmod 777 /tmp
 
 # Expose volume mount points
 VOLUME /var/www/cms/library
