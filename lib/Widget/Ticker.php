@@ -717,13 +717,13 @@ class Ticker extends ModuleWidget
             $pages = count($items);
 
         $pages = ($itemsPerPage > 0) ? ceil($pages / $itemsPerPage) : $pages;
+        $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
 
         // Replace and Control Meta options
-        $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $duration . ' -->';
-
+        $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->';   
         // Replace the head content
         $headContent = '';
-
+        
         if ($itemsSideBySide == 1) {
             $headContent .= '<style type="text/css">';
             $headContent .= ' .item, .page { float: left; }';

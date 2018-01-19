@@ -52,7 +52,7 @@ class EmailNotificationsTask implements TaskInterface
                 $this->log->debug('Sending Notification email to ' . $notification->email);
 
                 // Send them an email
-                $mail = new \PHPMailer();
+                $mail = new \PHPMailer\PHPMailer\PHPMailer();
                 $mail->From = $msgFrom;
                 $mail->FromName = $this->config->getThemeConfig('theme_name');
                 $mail->Subject = $notification->subject;
