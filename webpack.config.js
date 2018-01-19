@@ -17,7 +17,11 @@ module.exports = {
                 new CopyWebpackPlugin([
                         // Copy directory contents to {output}/
                         {
-                                from: 'ui/src/js'
+                            from: 'ui/src/local'
+                        },
+                        {
+                            from: 'ui/src/vendor',
+                            to: 'vendor'
                         }
                 ], {
                         // By default, we only copy modified files during
@@ -28,14 +32,29 @@ module.exports = {
         ],
         output: {
                 path: path.resolve(__dirname, 'web/dist'),
-                filename: '[name].bundle.min.js'
+                filename: '[name].bundle.min.js',
+                publicPath: '/dist/'
         },
         module: {
                 rules: [{
-                                test: /\.css$/,
+                                test: /datatables\.net.*/,
+                                use: [
+                                        'imports-loader?define=>false'
+                                ]
+                        },
+                        {
+                                test: /\.(css|scss)$/,
                                 use: [
                                         'style-loader',
                                         'css-loader'
+                                ]
+                        },
+                        {
+                                test: /\.less$/,
+                                use: [
+                                        'style-loader',
+                                        'css-loader',
+                                        'less-loader'
                                 ]
                         },
                         {
@@ -44,18 +63,16 @@ module.exports = {
                                         loader: 'file-loader',
                                         options: {
                                                 name: '[hash].[ext]',
-                                                outputPath: '../',
                                                 useRelativePath: true
                                         }
                                 }]
                         },
                         {
-                                test: /\.(woff|woff2|eot|ttf|otf|html)$/,
+                                test: /\.(ttf|eot|svg|woff|woff2)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
                                 use: [{
                                         loader: 'file-loader',
                                         options: {
-                                                name: '[name].[ext]',
-                                                outputPath: '../',
+                                                name: '[hash].[ext]',
                                                 useRelativePath: true
                                         }
                                 }]

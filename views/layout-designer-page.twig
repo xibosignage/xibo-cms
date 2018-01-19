@@ -235,7 +235,7 @@
 {% endblock %}
 
     {% block javaScript %}
-        <script src="{{ theme.uri("js/xibo-layout-designer.js") }}?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/js/xibo-layout-designer.js"></script>
         <script type="text/javascript">
             var translation = {
                 savePositionsFirst: "{% autoescape "js" %}{{ "Please save the pending position changes first by clicking Save Positions or cancel by clicking Undo."|trans }}{% endautoescape %}"

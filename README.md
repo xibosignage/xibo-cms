@@ -84,6 +84,27 @@ asked for a database you should select to create a new database and enter these 
 When asked for a library location you should enter
 
  - /var/www/cms/library
+ 
+## Package manager ( npm ) and module bundler ( webpack )
+
+Configure NPM Package Manager (https://www.npmjs.com/) and build dist folder with Webpack (https://webpack.js.org/):
+
+ - Install Node.js ( comes with NPM ) from https://nodejs.org/en/
+
+ - Update NPM to latest version:
+```
+npm install npm@latest -g
+```
+
+ - Install the dependencies in the local node_modules folder:
+```
+npm install
+```
+
+ - Build the dist folder with:
+ ```
+ npm run build
+ ```
 
 ## Under the hood
 
