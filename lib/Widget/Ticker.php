@@ -627,7 +627,12 @@ class Ticker extends ModuleWidget
 
         // Information from the Module
         $itemsSideBySide = $this->getOption('itemsSideBySide', 0);
-        $duration = $this->getCalculatedDurationForGetResource();
+        if ($this->getUseDuration() == 1){
+            $duration = $this->getDuration();
+        }
+        else {
+            $duration = $this->getModule()->defaultDuration;
+        }
         $durationIsPerItem = $this->getOption('durationIsPerItem', 1);
         $numItems = $this->getOption('numItems', 0);
         $takeItemsFrom = $this->getOption('takeItemsFrom', 'start');
@@ -717,10 +722,10 @@ class Ticker extends ModuleWidget
             $pages = count($items);
 
         $pages = ($itemsPerPage > 0) ? ceil($pages / $itemsPerPage) : $pages;
+        $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
 
         // Replace and Control Meta options
-        $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $duration . ' -->';
-
+        $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->';   
         // Replace the head content
         $headContent = '';
 
