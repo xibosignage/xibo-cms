@@ -643,7 +643,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     final public function getCalculatedDurationForGetResource()
     {
-        return ($this->widget->calculatedDuration == 0) ? $this->getModule()->defaultDuration : $this->widget->calculatedDuration;
+        return ($this->widget->useDuration == 0) ? $this->getModule()->defaultDuration : $this->widget->duration;
     }
 
     /**
