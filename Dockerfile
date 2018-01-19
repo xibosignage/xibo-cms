@@ -54,6 +54,7 @@ RUN apk update && apk upgrade && apk add tar \
     php7-fileinfo \
     php7-xml \
     php7-simplexml \
+    php7-mbstring \
     mysql-client \
     ssmtp \
     apache2 \

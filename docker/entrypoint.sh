@@ -151,67 +151,70 @@ then
   /bin/sed -i "s/define('SECRET_KEY','');/define('SECRET_KEY','$SECRET_KEY');/" /var/www/cms/web/settings.php
 fi
 
-# Configure MySQL Backup
-echo "Configuring Backups"
-echo "#!/bin/bash" > /etc/cron.daily/cms-db-backup
-echo "" >> /etc/cron.daily/cms-db-backup
-echo "/bin/mkdir -p /var/www/backup/db" >> /etc/cron.daily/cms-db-backup
-echo "/usr/bin/mysqldump --single-transaction -u '$MYSQL_USER' -p'$MYSQL_PASSWORD' -h $MYSQL_HOST -P $MYSQL_PORT $MYSQL_DATABASE > /var/www/backup/db/latest.sql" >> /etc/cron.daily/cms-db-backup
-echo "RESULT=\$?" >> /etc/cron.daily/cms-db-backup
-echo "if [ \$RESULT -eq 0 ]; then" >> /etc/cron.daily/cms-db-backup
-echo "  mv /var/www/backup/db/latest.sql.gz /var/www/backup/db/previous.sql.gz" >> /etc/cron.daily/cms-db-backup
-echo "  cd /var/www/backup/db && gzip latest.sql" >> /etc/cron.daily/cms-db-backup
-echo "fi" >> /etc/cron.daily/cms-db-backup
-/bin/chmod 700 /etc/cron.daily/cms-db-backup
-
-# Update /var/www/maintenance with current environment (for cron)
-echo "Configuring Maintenance"
-echo "#!/bin/bash" > /var/www/maintenance.sh
-echo "" >> /var/www/maintenance.sh
-/usr/bin/env | sed 's/^\(.*\)$/export \1/g' | grep -E "^export MYSQL" >> /var/www/maintenance.sh
-echo "cd /var/www/cms && /usr/bin/php bin/xtr.php" >> /var/www/maintenance.sh
-chmod 755 /var/www/maintenance.sh
-
-echo "* * * * *   apache  /var/www/maintenance.sh > /dev/null 2>&1 " > /etc/cron.d/cms-maintenance
-
-# Configure SSMTP to send emails if required
-/bin/sed -i "s/mailhub=.*$/mailhub=$CMS_SMTP_SERVER/" /etc/ssmtp/ssmtp.conf
-if [ -z "$CMS_SMTP_USERNAME" ] || [ "$CMS_SMTP_USERNAME" == "none" ]
+if [ ! "$XIBO_DEV_MODE" == "ci" ]
 then
-  /bin/sed -i "s/^#*AuthUser=.*$/#AuthUser=/" /etc/ssmtp/ssmtp.conf
-  /bin/sed -i "s/^#*AuthPass=.*$/#AuthPass=/" /etc/ssmtp/ssmtp.conf
-else
-  /bin/sed -i "s/^#*AuthUser=.*$/AuthUser=$CMS_SMTP_USERNAME/" /etc/ssmtp/ssmtp.conf
-  /bin/sed -i "s/^#*AuthPass=.*$/AuthPass=$CMS_SMTP_PASSWORD/" /etc/ssmtp/ssmtp.conf
+    # Configure MySQL Backup
+    echo "Configuring Backups"
+    echo "#!/bin/bash" > /etc/cron.daily/cms-db-backup
+    echo "" >> /etc/cron.daily/cms-db-backup
+    echo "/bin/mkdir -p /var/www/backup/db" >> /etc/cron.daily/cms-db-backup
+    echo "/usr/bin/mysqldump --single-transaction -u '$MYSQL_USER' -p'$MYSQL_PASSWORD' -h $MYSQL_HOST -P $MYSQL_PORT $MYSQL_DATABASE > /var/www/backup/db/latest.sql" >> /etc/cron.daily/cms-db-backup
+    echo "RESULT=\$?" >> /etc/cron.daily/cms-db-backup
+    echo "if [ \$RESULT -eq 0 ]; then" >> /etc/cron.daily/cms-db-backup
+    echo "  mv /var/www/backup/db/latest.sql.gz /var/www/backup/db/previous.sql.gz" >> /etc/cron.daily/cms-db-backup
+    echo "  cd /var/www/backup/db && gzip latest.sql" >> /etc/cron.daily/cms-db-backup
+    echo "fi" >> /etc/cron.daily/cms-db-backup
+    /bin/chmod 700 /etc/cron.daily/cms-db-backup
+
+    # Update /var/www/maintenance with current environment (for cron)
+    echo "Configuring Maintenance"
+    echo "#!/bin/bash" > /var/www/maintenance.sh
+    echo "" >> /var/www/maintenance.sh
+    /usr/bin/env | sed 's/^\(.*\)$/export \1/g' | grep -E "^export MYSQL" >> /var/www/maintenance.sh
+    echo "cd /var/www/cms && /usr/bin/php bin/xtr.php" >> /var/www/maintenance.sh
+    chmod 755 /var/www/maintenance.sh
+
+    echo "* * * * *   apache  /var/www/maintenance.sh > /dev/null 2>&1 " > /etc/cron.d/cms-maintenance
+
+    # Configure SSMTP to send emails if required
+    /bin/sed -i "s/mailhub=.*$/mailhub=$CMS_SMTP_SERVER/" /etc/ssmtp/ssmtp.conf
+    if [ -z "$CMS_SMTP_USERNAME" ] || [ "$CMS_SMTP_USERNAME" == "none" ]
+    then
+      /bin/sed -i "s/^#*AuthUser=.*$/#AuthUser=/" /etc/ssmtp/ssmtp.conf
+      /bin/sed -i "s/^#*AuthPass=.*$/#AuthPass=/" /etc/ssmtp/ssmtp.conf
+    else
+      /bin/sed -i "s/^#*AuthUser=.*$/AuthUser=$CMS_SMTP_USERNAME/" /etc/ssmtp/ssmtp.conf
+      /bin/sed -i "s/^#*AuthPass=.*$/AuthPass=$CMS_SMTP_PASSWORD/" /etc/ssmtp/ssmtp.conf
+    fi
+
+    /bin/sed -i "s/UseTLS=.*$/UseTLS=$CMS_SMTP_USE_TLS/" /etc/ssmtp/ssmtp.conf
+    /bin/sed -i "s/UseSTARTTLS=.*$/UseSTARTTLS=$CMS_SMTP_USE_STARTTLS/" /etc/ssmtp/ssmtp.conf
+    /bin/sed -i "s/rewriteDomain=.*$/rewriteDomain=$CMS_SMTP_REWRITE_DOMAIN/" /etc/ssmtp/ssmtp.conf
+    /bin/sed -i "s/hostname=.*$/hostname=$CMS_SMTP_HOSTNAME/" /etc/ssmtp/ssmtp.conf
+    /bin/sed -i "s/FromLineOverride=.*$/FromLineOverride=$CMS_SMTP_FROM_LINE_OVERRIDE/" /etc/ssmtp/ssmtp.conf
+
+    # Secure SSMTP files
+    # Following recommendations here:
+    # https://wiki.archlinux.org/index.php/SSMTP#Security
+    /bin/chgrp ssmtp /etc/ssmtp/ssmtp.conf
+    /bin/chgrp ssmtp /usr/sbin/ssmtp
+    /bin/chmod 640 /etc/ssmtp/ssmtp.conf
+    /bin/chmod g+s /usr/sbin/ssmtp
+
+    mkdir -p /var/www/cms/library/temp
+    chown apache.apache -R /var/www/cms
+
+    if [ ! "$CMS_ALIAS" == "none" ]
+    then
+        echo "Setting up CMS alias"
+        /bin/sed -i "s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" /etc/apache2/sites-enabled/000-default.conf
+        /bin/sed -i "s|.*RewriteBase.*$|RewriteBase $CMS_ALIAS|" /var/www/cms/web/.htaccess
+    fi
 fi
-
-/bin/sed -i "s/UseTLS=.*$/UseTLS=$CMS_SMTP_USE_TLS/" /etc/ssmtp/ssmtp.conf
-/bin/sed -i "s/UseSTARTTLS=.*$/UseSTARTTLS=$CMS_SMTP_USE_STARTTLS/" /etc/ssmtp/ssmtp.conf
-/bin/sed -i "s/rewriteDomain=.*$/rewriteDomain=$CMS_SMTP_REWRITE_DOMAIN/" /etc/ssmtp/ssmtp.conf
-/bin/sed -i "s/hostname=.*$/hostname=$CMS_SMTP_HOSTNAME/" /etc/ssmtp/ssmtp.conf
-/bin/sed -i "s/FromLineOverride=.*$/FromLineOverride=$CMS_SMTP_FROM_LINE_OVERRIDE/" /etc/ssmtp/ssmtp.conf
-
-# Secure SSMTP files
-# Following recommendations here:
-# https://wiki.archlinux.org/index.php/SSMTP#Security
-/bin/chgrp ssmtp /etc/ssmtp/ssmtp.conf
-/bin/chgrp ssmtp /usr/sbin/ssmtp
-/bin/chmod 640 /etc/ssmtp/ssmtp.conf
-/bin/chmod g+s /usr/sbin/ssmtp
-
-mkdir -p /var/www/cms/library/temp
-chown apache.apache -R /var/www/cms
 
 if [ ! -e /var/www/cms/custom/settings-custom.php ]
 then
     /bin/cp /tmp/settings-custom.php /var/www/cms/custom
-fi
-
-if [ ! "$CMS_ALIAS" == "none" ]
-then
-    echo "Setting up CMS alias"
-    /bin/sed -i "s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" /etc/apache2/sites-enabled/000-default.conf
-    /bin/sed -i "s|.*RewriteBase.*$|RewriteBase $CMS_ALIAS|" /var/www/cms/web/.htaccess
 fi
 
 # Configure PHP session.gc_maxlifetime
@@ -224,9 +227,13 @@ echo "Running maintenance"
 cd /var/www/cms
 su -s /bin/bash -c 'cd /var/www/cms && /usr/bin/php bin/run.php 1' apache
 
-echo "Starting cron"
-/usr/sbin/crond
-#/usr/sbin/anacron
+# Run CRON in Production mode
+if [ ! "$XIBO_DEV_MODE" == "ci" ]
+then
+    echo "Starting cron"
+    /usr/sbin/crond
+    #/usr/sbin/anacron
+fi
 
 echo "Starting webserver"
 exec /usr/local/bin/httpd-foreground
