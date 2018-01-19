@@ -95,9 +95,12 @@ ENV CMS_DEV_MODE=true \
 EXPOSE 80
 
 # Map the source files into /var/www/cms
+# Create library and cache, because they might not exist
 # Create /var/www/backup so that we have somewhere for entrypoint to log errors.
 # Create the CMS-FLAG for CI
 RUN mkdir -p /var/www/cms && \
+    mkdir -p /var/www/cms/library/temp && \
+    mkdir -p /var/www/cms/cache && \
     mkdir -p /var/www/backup && \
     touch /CMS-FLAG
 
