@@ -9,6 +9,7 @@ services:
      - ./containers/db:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_DATABASE: "cms"
 
   xmr:
     image: xibosignage/xibo-xmr:latest
@@ -28,4 +29,5 @@ services:
     ports:
      - "80:80"
     environment:
-      XIBO_DEV_MODE: "true"
+      CMS_DEV_MODE: "true"
+      MYSQL_DATABASE: "cms"

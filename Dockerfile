@@ -24,6 +24,7 @@ RUN composer install --no-interaction --no-dev --ignore-platform-reqs --optimize
 
 # Stage 2
 # Run webpack
+# todo: this will come in 2.0
 
 
 # Stage 3
@@ -78,7 +79,8 @@ RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PA
 #RUN awk '/LOGNAME=root/ { print; print "MAILTO=\"\""; next}1' /etc/anacrontab > /tmp/anacrontab && mv /tmp/anacrontab /etc/anacrontab
 
 # Setup persistent environment variables
-ENV XMR_HOST=xmr \
+ENV CMS_DEV_MODE=false \
+    XMR_HOST=xmr \
     CMS_DB_VERSION=134 \
     CMS_SERVER_NAME=localhost \
     MYSQL_HOST=mysql \
@@ -119,11 +121,18 @@ RUN mkdir -p /var/www/cms/library/temp &&  \
     mkdir -p /var/www/cms/cache && \
     mkdir -p /var/www/cms/web/userscripts && \
     chown -R apache:apache /var/www/cms && \
-    chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-it.sh && \
+    chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-command.sh && \
     mkdir -p /run/apache2 && \
     rm /etc/apache2/conf.d/info.conf && \
     rm /etc/apache2/conf.d/userdir.conf && \
     touch /CMS-FLAG && \
     addgroup ssmtp
+
+# Expose volume mount points
+VOLUME /var/www/cms/library
+VOLUME /var/www/cms/custom
+VOLUME /var/www/cms/web/theme/custom
+VOLUME /var/www/backup
+VOLUME /var/www/cms/web/userscripts
 
 CMD ["/entrypoint.sh"]

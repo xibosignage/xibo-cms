@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ "$XIBO_DEV_MODE" == "true" ]
+if [ "$CMS_DEV_MODE" == "true" ]
 then
   # Print MySQL connection details
   echo "MySQL Connection Details:"
@@ -14,22 +14,11 @@ then
   echo "Player Port: 9505"
   echo ""
   echo "Starting Webserver"
-
-  # Configure PHP session.gc_maxlifetime
-  sed -i "s/session.gc_maxlifetime = .*$/session.gc_maxlifetime = $CMS_PHP_SESSION_GC_MAXLIFETIME/" /etc/php7/php.ini
-  sed -i "s/post_max_size = .*$/post_max_size = $CMS_PHP_POST_MAX_SIZE/" /etc/php7/php.ini
-  sed -i "s/upload_max_filesize = .*$/upload_max_filesize = $CMS_PHP_UPLOAD_MAX_FILESIZE/" /etc/php7/php.ini
-  sed -i "s/max_execution_time = .*$/max_execution_time = $CMS_PHP_MAX_EXECUTION_TIME/" /etc/php7/php.ini
-
-  # Get the web server started in the foreground
-  echo "Starting webserver"
-  /usr/local/bin/httpd-foreground
-  exit $?
 fi
 
 # Sleep for a few seconds to give MySQL time to initialise
 echo "Waiting for MySQL to start - max 300 seconds"
-/usr/local/bin/wait-for-it.sh -q -t 300 $MYSQL_HOST:$MYSQL_PORT
+/usr/local/bin/wait-for-command.sh -q -t 300 -c "nc -z $MYSQL_HOST $MYSQL_PORT"
 
 if [ ! "$?" == 0 ]
 then
@@ -41,7 +30,7 @@ echo "MySQL started"
 sleep 1
 
 # Check if there's a database file to import
-if [ -f "/var/www/backup/import.sql" ]
+if [ -f "/var/www/backup/import.sql" ] && [ "$CMS_DEV_MODE" == "false" ]
 then
   echo "Attempting to import database"
   
@@ -76,13 +65,17 @@ fi
 
 # Check if we need to run an upgrade
 # if DB_EXISTS then see if the version installed matches
-if [ "$DB_EXISTS" == "1" ]
+# only upgrade for production containers
+if [ "$DB_EXISTS" == "1" ] && [ "$CMS_DEV_MODE" == "false" ]
 then
+  echo "Existing Database, checking if we need to upgrade it"
   # Get the currently installed schema version number
   CURRENT_DB_VERSION=$(mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -se 'SELECT DBVersion from version')
 
   if [ ! "$CURRENT_DB_VERSION"  == "$CMS_DB_VERSION" ]
   then
+    echo "We will upgrade it, take a backup"
+
     # We're going to run an upgrade. Make a database backup
     mysqldump -h $MYSQL_HOST -P $MYSQL_PORT -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE | gzip > /var/www/backup/db-$(date +"%Y-%m-%d_%H-%M-%S").sql.gz
 
@@ -130,28 +123,27 @@ fi
 
 if [ -e /CMS-FLAG ]
 then
-  # Remove the CMS-FLAG so we don't run this block time we're started
+  # Remove the CMS-FLAG so we don't run this block each time we're started
   rm /CMS-FLAG
 
   # Write settings.php
   echo "Updating settings.php"
+
+  # We won't have a settings.php in place, so we'll need to copy one in
+  cp /tmp/settings.php-template /var/www/cms/web/settings.php
+  chown apache.apache -R /var/www/cms/web/settings.php
+
   SECRET_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
+  /bin/sed -i "s/define('SECRET_KEY','');/define('SECRET_KEY','$SECRET_KEY');/" /var/www/cms/web/settings.php
 
-  if [ "$XIBO_DEV_MODE" == "ci" ]
+  if [ "$CMS_DEV_MODE" == "ci" ]
   then
-     # We won't have a settings.php in place, so we'll need to copy one in
-     cp /tmp/settings.php-template /var/www/cms/web/settings.php
-     chown apache.apache -R /var/www/cms
-
      # Unprotect maintenance in CI mode
      mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='On' WHERE \`setting\`='MAINTENANCE_ENABLED' LIMIT 1"
   fi
-
-  # Hack to settings.php so that phpunit can include it multiple times
-  /bin/sed -i "s/define('SECRET_KEY','');/define('SECRET_KEY','$SECRET_KEY');/" /var/www/cms/web/settings.php
 fi
 
-if [ ! "$XIBO_DEV_MODE" == "ci" ]
+if [ "$CMS_DEV_MODE" == "false" ]
 then
     # Configure MySQL Backup
     echo "Configuring Backups"
@@ -210,11 +202,11 @@ then
         /bin/sed -i "s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" /etc/apache2/sites-enabled/000-default.conf
         /bin/sed -i "s|.*RewriteBase.*$|RewriteBase $CMS_ALIAS|" /var/www/cms/web/.htaccess
     fi
-fi
 
-if [ ! -e /var/www/cms/custom/settings-custom.php ]
-then
-    /bin/cp /tmp/settings-custom.php /var/www/cms/custom
+    if [ ! -e /var/www/cms/custom/settings-custom.php ]
+    then
+        /bin/cp /tmp/settings-custom.php /var/www/cms/custom
+    fi
 fi
 
 # Configure PHP session.gc_maxlifetime
@@ -228,7 +220,7 @@ cd /var/www/cms
 su -s /bin/bash -c 'cd /var/www/cms && /usr/bin/php bin/run.php 1' apache
 
 # Run CRON in Production mode
-if [ ! "$XIBO_DEV_MODE" == "ci" ]
+if [ "$CMS_DEV_MODE" == "false" ]
 then
     echo "Starting cron"
     /usr/sbin/crond

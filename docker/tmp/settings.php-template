@@ -21,7 +21,7 @@ $dbpass = $_SERVER['MYSQL_PASSWORD'];
 $dbname = $_SERVER['MYSQL_DATABASE'];
 
 if (!defined('SECRET_KEY'))
-define('SECRET_KEY','');
+    define('SECRET_KEY','');
 
 if (file_exists('/var/www/cms/custom/settings-custom.php'))
     include_once('/var/www/cms/custom/settings-custom.php');

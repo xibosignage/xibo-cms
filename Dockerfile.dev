@@ -55,7 +55,7 @@ RUN apk update && apk upgrade && apk add tar \
 ADD docker/ /
 
 # Adjust file permissions as appropriate
-RUN chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-it.sh && \
+RUN chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-command.sh && \
     mkdir -p /run/apache2 && \
     rm /etc/apache2/conf.d/info.conf && \
     rm /etc/apache2/conf.d/userdir.conf && \
@@ -76,7 +76,13 @@ RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PA
 #RUN awk '/PATH=/ { print; print "MAILTO=\"\""; next}1' /etc/crontab > /tmp/crontab && mv /tmp/crontab /etc/crontab
 #RUN awk '/LOGNAME=root/ { print; print "MAILTO=\"\""; next}1' /etc/anacrontab > /tmp/anacrontab && mv /tmp/anacrontab /etc/anacrontab
 
-ENV CMS_SERVER_NAME=localhost \
+ENV CMS_DEV_MODE=true \
+    MYSQL_HOST=db \
+    MYSQL_PORT=3306 \
+    MYSQL_USER=root \
+    MYSQL_PASSWORD=root \
+    MYSQL_DATABASE=cms \
+    CMS_SERVER_NAME=localhost \
     CMS_ALIAS=none \
     CMS_PHP_SESSION_GC_MAXLIFETIME=1440 \
     CMS_PHP_POST_MAX_SIZE=2G \
@@ -92,8 +98,10 @@ ENV CMS_SERVER_NAME=localhost \
 EXPOSE 80
 
 # Map the source files into /var/www/cms
+# Create /var/www/backup so that we have somewhere for entrypoint to log errors.
 # Create the CMS-FLAG for CI
 RUN mkdir -p /var/www/cms && \
+    mkdir -p /var/www/backup && \
     touch /CMS-FLAG
 
 COPY ./ /var/www/cms
