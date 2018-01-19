@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "4a27174cc5a1774fc1a7cb869a112588",
-    "content-hash": "d7b7eb884486f35e2e6cd709f36181d6",
+    "hash": "90ac79093088bfc61880edbdfa622495",
+    "content-hash": "35b1a6c0cfc33ef89833cabbdcc5ee91",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -310,16 +310,16 @@
         },
         {
             "name": "ezyang/htmlpurifier",
-            "version": "dev-master",
+            "version": "v4.9.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ezyang/htmlpurifier.git",
-                "reference": "6d6d88512a8146939a9161bb03e95e3e97840439"
+                "reference": "95e1bae3182efc0f3422896a3236e991049dac69"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ezyang/htmlpurifier/zipball/6d6d88512a8146939a9161bb03e95e3e97840439",
-                "reference": "6d6d88512a8146939a9161bb03e95e3e97840439",
+                "url": "https://api.github.com/repos/ezyang/htmlpurifier/zipball/95e1bae3182efc0f3422896a3236e991049dac69",
+                "reference": "95e1bae3182efc0f3422896a3236e991049dac69",
                 "shasum": ""
             },
             "require": {
@@ -353,7 +353,7 @@
             "keywords": [
                 "html"
             ],
-            "time": "2017-12-30 05:23:44"
+            "time": "2017-06-03 02:28:16"
         },
         {
             "name": "fguillot/picofeed",
@@ -1986,16 +1986,16 @@
         },
         {
             "name": "phpmailer/phpmailer",
-            "version": "dev-master",
+            "version": "v6.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPMailer/PHPMailer.git",
-                "reference": "63e2c71ea1880ba37442bea6d96df46f3ebf1f46"
+                "reference": "44d49bab5ab1fef721d3ee07e75dc0865ddf4cc6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/63e2c71ea1880ba37442bea6d96df46f3ebf1f46",
-                "reference": "63e2c71ea1880ba37442bea6d96df46f3ebf1f46",
+                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/44d49bab5ab1fef721d3ee07e75dc0865ddf4cc6",
+                "reference": "44d49bab5ab1fef721d3ee07e75dc0865ddf4cc6",
                 "shasum": ""
             },
             "require": {
@@ -2048,7 +2048,7 @@
                 }
             ],
             "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
-            "time": "2018-01-15 14:04:43"
+            "time": "2018-01-05 13:19:58"
         },
         {
             "name": "psr/cache",
@@ -5404,9 +5404,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "ezyang/htmlpurifier": 20,
         "sallar/jdatetime": 20,
-        "phpmailer/phpmailer": 20,
         "fguillot/picofeed": 0,
         "umpirsky/twig-gettext-extractor": 20
     },
