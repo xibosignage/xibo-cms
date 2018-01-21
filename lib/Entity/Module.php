@@ -159,10 +159,10 @@ class Module implements \JsonSerializable
 
     public function validate()
     {
-        if (!v::string()->notEmpty()->validate($this->imageUri))
+        if (!v::stringType()->notEmpty()->validate($this->imageUri))
             throw new InvalidArgumentException(__('Image Uri is a required field.'), 'imageUri');
 
-        if (!v::int()->validate($this->defaultDuration))
+        if (!v::intType()->validate($this->defaultDuration))
             throw new InvalidArgumentException(__('Default Duration is a required field.'), 'defaultDuration');
     }
 

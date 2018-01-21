@@ -401,7 +401,7 @@ class Schedule implements \JsonSerializable
 
         if ($this->eventTypeId == Schedule::$LAYOUT_EVENT || $this->eventTypeId == Schedule::$OVERLAY_EVENT) {
             // Validate layout
-            if (!v::int()->notEmpty()->validate($this->campaignId))
+            if (!v::intType()->notEmpty()->validate($this->campaignId))
                 throw new InvalidArgumentException(__('Please select a Campaign/Layout for this event.'), 'campaignId');
 
             if ($this->dayPartId == Schedule::$DAY_PART_CUSTOM) {
@@ -414,7 +414,7 @@ class Schedule implements \JsonSerializable
 
         } else if ($this->eventTypeId == Schedule::$COMMAND_EVENT) {
             // Validate command
-            if (!v::int()->notEmpty()->validate($this->commandId))
+            if (!v::intType()->notEmpty()->validate($this->commandId))
                 throw new InvalidArgumentException(__('Please select a Command for this event.'), 'command');
 
             $this->campaignId = null;

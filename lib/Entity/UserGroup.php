@@ -186,10 +186,10 @@ class UserGroup
      */
     public function validate()
     {
-        if (!v::string()->length(1, 50)->validate($this->group))
+        if (!v::stringType()->length(1, 50)->validate($this->group))
             throw new InvalidArgumentException(__('User Group Name cannot be empty.') . $this, 'name');
 
-        if ($this->libraryQuota !== null && !v::int()->validate($this->libraryQuota))
+        if ($this->libraryQuota !== null && !v::intType()->validate($this->libraryQuota))
             throw new InvalidArgumentException(__('Library Quota must be a whole number.'), 'libraryQuota');
 
         try {

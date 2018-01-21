@@ -428,10 +428,10 @@ class Media implements \JsonSerializable
      */
     public function validate($options)
     {
-        if (!v::string()->notEmpty()->validate($this->mediaType))
+        if (!v::stringType()->notEmpty()->validate($this->mediaType))
             throw new InvalidArgumentException(__('Unknown Module Type'), 'type');
 
-        if (!v::string()->notEmpty()->length(1, 100)->validate($this->name))
+        if (!v::stringType()->notEmpty()->length(1, 100)->validate($this->name))
             throw new InvalidArgumentException(__('The name must be between 1 and 100 characters'), 'name');
 
         // Check the naming of this item to ensure it doesn't conflict

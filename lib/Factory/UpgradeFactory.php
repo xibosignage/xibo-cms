@@ -12,7 +12,7 @@ namespace Xibo\Factory;
 use Slim\Helper\Set;
 use Xibo\Entity\Upgrade;
 use Xibo\Exception\NotFoundException;
-use Xibo\Service\ConfigService;
+use Xibo\Helper\Environment;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -180,10 +180,10 @@ class UpgradeFactory extends BaseFactory
 
             // Add the version bump
             if ($i == $to) {
-                $action = 'UPDATE `version` SET `app_ver` = \'' . ConfigService::$WEBSITE_VERSION_NAME . '\', `DBVersion` = ' . $to . '; UPDATE `setting` SET `value` = 0 WHERE `setting` = \'PHONE_HOME_DATE\';';
+                $action = 'UPDATE `version` SET `app_ver` = \'' . Environment::$WEBSITE_VERSION_NAME . '\', `DBVersion` = ' . $to . '; UPDATE `setting` SET `value` = 0 WHERE `setting` = \'PHONE_HOME_DATE\';';
                 $steps[] = $this->createEmpty()->hydrate([
                     'dbVersion' => $to,
-                    'appVersion' => ConfigService::$WEBSITE_VERSION_NAME,
+                    'appVersion' => Environment::$WEBSITE_VERSION_NAME,
                     'step' => 'Finalise Upgrade',
                     'action' => $action,
                     'type' => 'sql'

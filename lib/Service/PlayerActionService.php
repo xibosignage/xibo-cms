@@ -12,6 +12,7 @@ namespace Xibo\Service;
 use Xibo\Entity\Display;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Helper\Environment;
 use Xibo\XMR\PlayerAction;
 use Xibo\XMR\PlayerActionException;
 
@@ -73,7 +74,7 @@ class PlayerActionService implements PlayerActionServiceInterface
             $displays = [$displays];
 
         // Check ZMQ
-        if (!$this->getConfig()->checkZmq())
+        if (!Environment::checkZmq())
             throw new ConfigurationException(__('ZeroMQ is required to send Player Actions. Please check your configuration.'));
 
         if ($this->xmrAddress == '')

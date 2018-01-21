@@ -212,7 +212,15 @@ class Campaign extends Base
                 $campaign->buttons[] = array(
                     'id' => 'campaign_button_delete',
                     'url' => $this->urlFor('campaign.delete.form', ['id' => $campaign->campaignId]),
-                    'text' => __('Delete')
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor('campaign.delete', ['id' => $campaign->campaignId])),
+                        array('name' => 'commit-method', 'value' => 'delete'),
+                        array('name' => 'id', 'value' => 'campaign_button_delete'),
+                        array('name' => 'text', 'value' => __('Delete')),
+                        array('name' => 'rowtitle', 'value' => $campaign->campaign)
+                    )
                 );
             }
 
@@ -222,7 +230,7 @@ class Campaign extends Base
 
                 // Permissions for Campaign
                 $campaign->buttons[] = array(
-                    'id' => 'campaign_button_delete',
+                    'id' => 'campaign_button_permissions',
                     'url' => $this->urlFor('user.permissions.form', ['entity' => 'Campaign', 'id' => $campaign->campaignId]),
                     'text' => __('Permissions')
                 );
