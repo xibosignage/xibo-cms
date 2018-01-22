@@ -144,18 +144,12 @@ fi
 
 if [ "$CMS_DEV_MODE" == "false" ]
 then
-    # Configure MySQL Backup
-    echo "Configuring Backups"
-    echo "#!/bin/bash" > /etc/cron.daily/cms-db-backup
-    echo "" >> /etc/cron.daily/cms-db-backup
-    echo "/bin/mkdir -p /var/www/backup/db" >> /etc/cron.daily/cms-db-backup
-    echo "/usr/bin/mysqldump --single-transaction -u '$MYSQL_USER' -p'$MYSQL_PASSWORD' -h $MYSQL_HOST -P $MYSQL_PORT $MYSQL_DATABASE > /var/www/backup/db/latest.sql" >> /etc/cron.daily/cms-db-backup
-    echo "RESULT=\$?" >> /etc/cron.daily/cms-db-backup
-    echo "if [ \$RESULT -eq 0 ]; then" >> /etc/cron.daily/cms-db-backup
-    echo "  mv /var/www/backup/db/latest.sql.gz /var/www/backup/db/previous.sql.gz" >> /etc/cron.daily/cms-db-backup
-    echo "  cd /var/www/backup/db && gzip latest.sql" >> /etc/cron.daily/cms-db-backup
-    echo "fi" >> /etc/cron.daily/cms-db-backup
-    /bin/chmod 700 /etc/cron.daily/cms-db-backup
+    # Update /etc/periodic/15min/cms-db-backup with current environment (for cron)
+    /bin/sed -i "s/^MYSQL_USER=.*$/MYSQL_USER=$MYSQL_USER/" /etc/periodic/15min/cms-db-backup
+    /bin/sed -i "s/^MYSQL_PASSWORD=.*$/MYSQL_PASSWORD=$MYSQL_PASSWORD/" /etc/periodic/15min/cms-db-backup
+    /bin/sed -i "s/^MYSQL_HOST=.*$/MYSQL_HOST=$MYSQL_HOST/" /etc/periodic/15min/cms-db-backup
+    /bin/sed -i "s/^MYSQL_PORT=.*$/MYSQL_PORT=$MYSQL_PORT/" /etc/periodic/15min/cms-db-backup
+    /bin/sed -i "s/^MYSQL_DATABASE=.*$/MYSQL_DATABASE=$MYSQL_DATABASE/" /etc/periodic/15min/cms-db-backup
 
     # Update /var/www/maintenance with current environment (for cron)
     echo "Configuring Maintenance"
@@ -165,7 +159,9 @@ then
     echo "cd /var/www/cms && /usr/bin/php bin/xtr.php" >> /var/www/maintenance.sh
     chmod 755 /var/www/maintenance.sh
 
-    echo "* * * * *   apache  /var/www/maintenance.sh > /dev/null 2>&1 " > /etc/cron.d/cms-maintenance
+    echo "* * * * *     /var/www/maintenance.sh > /dev/null 2>&1 " > /etc/crontabs/apache
+    echo "" >> /etc/crontabs/apache
+    crontab -u apache /etc/crontabs/apache
 
     # Configure SSMTP to send emails if required
     /bin/sed -i "s/mailhub=.*$/mailhub=$CMS_SMTP_SERVER/" /etc/ssmtp/ssmtp.conf
@@ -208,10 +204,10 @@ then
     fi
 
     # Remove install.php if it exists
-    if [ -e /var/www/cms/install.php ]
+    if [ -e /var/www/cms/web/install/index.php ]
     then
-        echo "Removing install.php from production container"
-        rm /var/www/cms/web/install.php
+        echo "Removing web/install/index.php from production container"
+        rm /var/www/cms/web/install/index.php
     fi
 fi
 
@@ -230,7 +226,6 @@ if [ "$CMS_DEV_MODE" == "false" ]
 then
     echo "Starting cron"
     /usr/sbin/crond
-    #/usr/sbin/anacron
 fi
 
 echo "Starting webserver"

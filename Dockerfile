@@ -72,6 +72,7 @@ RUN apk update && apk upgrade && apk add tar \
     php7-xml \
     php7-simplexml \
     php7-mbstring \
+    php7-memcached \
     mysql-client \
     ssmtp \
     apache2 \
@@ -89,10 +90,6 @@ COPY --from=sendfile /usr/lib/apache2/mod_xsendfile.so /usr/lib/apache2/mod_xsen
 RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PARSE/" /etc/php7/php.ini && \
     sed -i "s/session.gc_probability = .*$/session.gc_probability = 1/" /etc/php7/php.ini && \
     sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php7/php.ini
-
-# Disable cron sending emails to root
-#RUN awk '/PATH=/ { print; print "MAILTO=\"\""; next}1' /etc/crontab > /tmp/crontab && mv /tmp/crontab /etc/crontab
-#RUN awk '/LOGNAME=root/ { print; print "MAILTO=\"\""; next}1' /etc/anacrontab > /tmp/anacrontab && mv /tmp/anacrontab /etc/anacrontab
 
 # Setup persistent environment variables
 ENV CMS_DEV_MODE=false \
@@ -137,7 +134,8 @@ RUN mkdir -p /var/www/cms/library/temp &&  \
     mkdir -p /var/www/cms/cache && \
     mkdir -p /var/www/cms/web/userscripts && \
     chown -R apache:apache /var/www/cms && \
-    chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-command.sh && \
+    chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-command.sh \
+             /etc/periodic/15min/cms-db-backup && \
     mkdir -p /run/apache2 && \
     rm /etc/apache2/conf.d/info.conf && \
     rm /etc/apache2/conf.d/userdir.conf && \
