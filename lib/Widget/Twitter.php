@@ -43,7 +43,7 @@ class Twitter extends TwitterBase
      */
     public function init()
     {
-        $this->resourceFolder = PROJECT_ROOT . '/modules/twitter';
+        $this->resourceFolder = PROJECT_ROOT . '/modules/twitter/player';
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
