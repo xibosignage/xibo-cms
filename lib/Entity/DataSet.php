@@ -14,6 +14,7 @@ use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\DuplicateEntityException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
@@ -830,6 +831,7 @@ class DataSet implements \JsonSerializable
 
     /**
      * Rebuild the dataSet table
+     * @throws XiboException
      */
     public function rebuild()
     {
