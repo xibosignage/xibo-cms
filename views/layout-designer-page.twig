@@ -43,7 +43,7 @@
                         </li>
                         <div class="pull-right">
                             <span class="text-center" data-toggle="tooltip" data-placement="bottom" data-title="{% trans "Layout Duration: Duration may change depending on the exact number of items in ticker/twitter media items." %}">
-                                <i class="fa fa-clock-o" aria-hidden="true"></i> {% trans "" %}
+                                <i class="fa fa-clock-o" aria-hidden="true"></i>
                                 <span id="layout-duration" class="label label-success big-duration"></span></span>
                             <span>| <b>Currently Editing</b></span>
                             <select id="layoutJumpList" data-live-search="true" data-width="auto">
@@ -89,11 +89,11 @@
                                 <div class="btn-group btn-group-justified" role="group" aria-label="...">
                                     <div class="btn-group" role="group">
 
-                                        <a class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="bottom" title="{% trans "Decrease the canvas size" %}" role="button" href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom - 0.3 }}" ><span><i class="fa fa-search-minus"  aria-hidden="true"></i>{% trans "" %}</span> </a>
+                                        <a class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="bottom" title="{% trans "Decrease the canvas size" %}" role="button" href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom - 0.3 }}" ><span><i class="fa fa-search-minus"  aria-hidden="true"></i></span> </a>
                                     </div>
                                     <div class="btn-group" role="group">
 
-                                        <a class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="bottom" title="{% trans "Increase the canvas size" %}" role="button" href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom + 0.3 }}"><span><i class="fa fa-search-plus" aria-hidden="true"></i> {% trans "" %}</span></a>
+                                        <a class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="bottom" title="{% trans "Increase the canvas size" %}" role="button" href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom + 0.3 }}"><span><i class="fa fa-search-plus" aria-hidden="true"></i></span></a>
                                     </div>
                                     <div class="btn-group" role="group">
                                         <button id="saveDesignerSize" data-toggle="tooltip" data-placement="bottom" title="{% trans "Save canvas size as default" %}" class="btn btn-success btn-sm " role="button" data-designer-size="{{ zoom }}">
