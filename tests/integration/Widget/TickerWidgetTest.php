@@ -9,6 +9,7 @@ namespace Xibo\Tests\Integration\Widget;
 
 use Xibo\Entity\DataSet;
 use Xibo\Entity\Layout;
+use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDataSet;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
@@ -38,6 +39,21 @@ class TickerWidgetTest extends LocalWebTestCase
 	private $display;
 
     // <editor-fold desc="Init">
+
+    public static function setUpBeforeClass()
+    {
+        parent::setUpBeforeClass();
+
+        // Copy the rss resources folder into web
+        shell_exec('cp -r ' . PROJECT_ROOT . '/tests/resources/rss ' . PROJECT_ROOT . '/web');
+    }
+
+    public static function tearDownAfterClass()
+    {
+        shell_exec('rm -r ' . PROJECT_ROOT . '/web/rss');
+
+        parent::tearDownAfterClass();
+    }
 
     /**
      * setUp - called before every test automatically
@@ -111,7 +127,7 @@ class TickerWidgetTest extends LocalWebTestCase
     {
         # Sets of data used in testAdd
         return [
-            'Feed' => [true, 'http://ceu.xibo.co.uk/mediarss/feed.xml', 70, 1],
+            'Feed' => [true, 'http://localhost/rss/feed.xml', 70, 1],
             'DataSet' => [false, null, 80, 1]
         ];
     }
@@ -122,7 +138,8 @@ class TickerWidgetTest extends LocalWebTestCase
     public function testAdd($isFeed, $uri, $duration, $useDuration)
     {
         # Create layout
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Ticker layout add', 'phpunit description', '', 9);
+        $name = Random::generateString();
+        $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         
@@ -162,7 +179,7 @@ class TickerWidgetTest extends LocalWebTestCase
         return [
             'Duration is per item with num items specified (higher than actual) with copyright' => [
                 [
-                    'uri' => 'http://ceu.xibo.co.uk/mediarss/feed.xml',
+                    'uri' => 'http://localhost/rss/feed.xml',
                     'name' => 'Edited widget',
                     'duration' => 90,
                     'useDuration' => 1,
@@ -186,7 +203,7 @@ class TickerWidgetTest extends LocalWebTestCase
             ],
             'Duration is per item with num items specified (higher than actual) without copyright' => [
                 [
-                    'uri' => 'http://ceu.xibo.co.uk/mediarss/feed.xml',
+                    'uri' => 'http://localhost/rss/feed.xml',
                     'name' => 'Edited widget',
                     'duration' => 90,
                     'useDuration' => 1,
@@ -210,7 +227,7 @@ class TickerWidgetTest extends LocalWebTestCase
             ],
             'Duration is per item with num items specified (lower than actual)' => [
                 [
-                    'uri' => 'http://ceu.xibo.co.uk/mediarss/feed.xml',
+                    'uri' => 'http://localhost/rss/feed.xml',
                     'name' => 'Edited widget',
                     'duration' => 90,
                     'useDuration' => 1,
@@ -234,7 +251,7 @@ class TickerWidgetTest extends LocalWebTestCase
             ],
             'Duration not per item with num items specified' => [
                 [
-                    'uri' => 'http://ceu.xibo.co.uk/mediarss/feed.xml',
+                    'uri' => 'http://localhost/rss/feed.xml',
                     'name' => 'Edited widget',
                     'duration' => 90,
                     'useDuration' => 1,
@@ -258,7 +275,7 @@ class TickerWidgetTest extends LocalWebTestCase
             ],
             'Default Duration' => [
                 [
-                    'uri' => 'http://ceu.xibo.co.uk/mediarss/feed.xml',
+                    'uri' => 'http://localhost/rss/feed.xml',
                     'name' => 'Edited widget',
                     'duration' => 90,
                     'useDuration' => 0,
@@ -292,8 +309,9 @@ class TickerWidgetTest extends LocalWebTestCase
      */
     public function testEditFeed($newWidgetOptions, $expectedDuration)
     {
-        # Create layout 
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Ticker edit Layout', 'phpunit description', '', 9);
+        # Create layout
+        $name = Random::generateString();
+        $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
         # Create a ticker with wrapper
         $ticker = (new XiboTicker($this->getEntityProvider()))->create(1, 'http://xibo.org.uk/feed', null, 70, 1, $layout->regions[0]->playlists[0]['playlistId']);
 
@@ -466,7 +484,7 @@ class TickerWidgetTest extends LocalWebTestCase
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create a ticker with wrapper
-        $ticker = (new XiboTicker($this->getEntityProvider()))->create(1, 'http://ceu.xibo.co.uk/mediarss/feed.xml', null, 70, 1, $region->playlists[0]['playlistId']);
+        $ticker = (new XiboTicker($this->getEntityProvider()))->create(1, 'http://localhost/rss/feed.xml', null, 70, 1, $region->playlists[0]['playlistId']);
         # Delete it
         $this->client->delete('/playlist/widget/' . $ticker->widgetId);
         $response = json_decode($this->client->response->body());
