@@ -420,7 +420,7 @@ class TwitterMetro extends TwitterBase
                         break;
 
                     case 'User':
-                        $replace = $tweet->user->name;
+                        $replace = $emoji->toImage($tweet->user->name);
                         break;
 
                     case 'ScreenName':
