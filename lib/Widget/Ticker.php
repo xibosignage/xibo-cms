@@ -785,6 +785,8 @@ class Ticker extends ModuleWidget
         if ($this->hasMediaChanged())
             $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
 
+        $this->concurrentRequestRelease();
+
         return $this->renderTemplate($data);
     }
 
@@ -802,6 +804,9 @@ class Ticker extends ModuleWidget
         // Create a key to use as a caching key for this item.
         // the rendered feed will be cached, so it is important the key covers all options.
         $feedUrl = urldecode($this->getOption('uri'));
+
+        // Lock this entire request
+        $this->concurrentRequestLock(md5($feedUrl));
 
         /** @var \Stash\Item $cache */
         $cache = $this->getPool()->getItem($this->makeCacheKey(md5($feedUrl)));
@@ -1107,13 +1112,13 @@ class Ticker extends ModuleWidget
      */
     private function getDataSetItems($displayId, $isPreview, $text)
     {
-        // Lock the request
-        $this->concurrentRequestLock();
-
         // Extra fields for data sets
         $dataSetId = $this->getOption('dataSetId');
         $upperLimit = $this->getOption('upperLimit');
         $lowerLimit = $this->getOption('lowerLimit');
+
+        // Lock this request
+        $this->concurrentRequestLock($dataSetId);
 
         // Ordering
         $ordering = '';
@@ -1326,15 +1331,11 @@ class Ticker extends ModuleWidget
                 $this->assignMedia($media->mediaId);
             });
 
-            $this->concurrentRequestRelease();
-
             return $items;
         }
         catch (NotFoundException $e) {
             $this->getLog()->debug('getDataSetItems failed for id=%d. Widget=%d. Due to %s - this might be OK if we have a no-data message', $dataSetId, $this->getWidgetId(), $e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
-
-            $this->concurrentRequestRelease();
             return [];
         }
     }
