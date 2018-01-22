@@ -44,6 +44,7 @@ RUN apk update && apk upgrade && apk add tar \
     php7-xml \
     php7-simplexml \
     php7-mbstring \
+    php7-memcached \
     mysql-client \
     ssmtp \
     apache2 \
@@ -55,7 +56,8 @@ RUN apk update && apk upgrade && apk add tar \
 ADD docker/ /
 
 # Adjust file permissions as appropriate
-RUN chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-command.sh && \
+RUN chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-command.sh \ 
+             /etc/periodic/15min/cms-db-backup && \
     mkdir -p /run/apache2 && \
     rm /etc/apache2/conf.d/info.conf && \
     rm /etc/apache2/conf.d/userdir.conf && \
