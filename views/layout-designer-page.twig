@@ -254,7 +254,7 @@
 
                 var mediaTable = $("#mediaAssignments").DataTable({
                     "language": dataTablesLanguage,
-                    serverSide: true, stateSave: true,
+                    serverSide: true, stateSave: true, stateDuration: 0,
                     searchDelay: 3000,
                     "order": [[1, "asc"]],
                     "filter": false,
@@ -508,7 +508,7 @@
 
                 var timelineWidgetTabel = $("#timelineWidgets").DataTable({
                     "language": dataTablesLanguage,
-                    serverSide: true, stateSave: true,
+                    serverSide: true, stateSave: true, stateDuration: 0,
                     filter: false,
                     searchDelay: 3000,
                     "order": [[0, "asc"]],

@@ -198,7 +198,7 @@
         $(document).ready(function() {
             var table = $("#logs").DataTable({
                 "language": dataTablesLanguage,
-                serverSide: true, stateSave: true,
+                serverSide: true, stateSave: true, stateDuration: 0,
                 filter: false,
                 searchDelay: 3000,
                 "order": [[0, "desc"]],

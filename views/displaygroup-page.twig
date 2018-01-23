@@ -73,7 +73,7 @@
 {% block javaScript %}
     <script type="text/javascript">
         var table = $("#displaygroups").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true,
+            serverSide: true, stateSave: true, stateDuration: 0,
             stateLoadCallback: function (settings, callback) {
                 var data;
                 $.ajax({
@@ -168,7 +168,7 @@
                     displayTable = $("#displays").DataTable({
                         "language": dataTablesLanguage,
                         serverSide: true,
-                        stateSave: true,
+                        stateSave: true, stateDuration: 0,
                         filter: false,
                         searchDelay: 3000,
                         "order": [[1, "asc"]],
@@ -222,7 +222,7 @@
             var table = $("#displaysMembersTable").DataTable({ 
                 "language": dataTablesLanguage,
                 serverSide: true, 
-                stateSave: true,
+                stateSave: true, stateDuration: 0,
                 filter: false,
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
@@ -301,7 +301,7 @@
             
             var tableGroup = $("#displaysGroupsMembersTable").DataTable({ 
                 "language": dataTablesLanguage,
-                serverSide: true, stateSave: true,
+                serverSide: true, stateSave: true, stateDuration: 0,
                 filter: false,
                 searchDelay: 3000,
                 "order": [[1, "asc"]],

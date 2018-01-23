@@ -56,7 +56,7 @@
         $(document).ready(function() {
             var table = $("#userGroups").DataTable({
                 "language": dataTablesLanguage,
-                serverSide: true, stateSave: true,
+                serverSide: true, stateSave: true, stateDuration: 0,
                 stateLoadCallback: function (settings, callback) {
                     var data;
                     $.ajax({
