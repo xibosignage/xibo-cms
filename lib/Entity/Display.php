@@ -804,10 +804,11 @@ class Display implements \JsonSerializable
 
     /**
      * @param PoolInterface $pool
+     * @return int|null
      */
-    public function setCurrentLayoutId($pool)
+    public function getCurrentLayoutId($pool)
     {
-        $item = $pool->getItem($this->getCacheKey() . '/currentLayoutId');
+        $item = $pool->getItem('/currentLayoutId/' . $this->displayId);
 
         $data = $item->get();
 
@@ -823,5 +824,26 @@ class Display implements \JsonSerializable
         } else {
             $this->getLog()->debug('Cache miss for setCurrentLayoutId on display ' . $this->display);
         }
+
+        return $this->currentLayoutId;
+    }
+
+    /**
+     * @param PoolInterface $pool
+     * @param int $currentLayoutId
+     * @return $this
+     */
+    public function setCurrentLayoutId($pool, $currentLayoutId)
+    {
+        // Cache it
+        $this->getLog()->debug('Caching currentLayoutId with Pool');
+
+        $item = $pool->getItem('/currentLayoutId/' . $this->displayId);
+        $item->set($currentLayoutId);
+        $item->expiresAfter(new \DateInterval('P1W'));
+
+        $pool->saveDeferred($item);
+
+        return $this;
     }
 }

@@ -449,7 +449,7 @@ class Display extends Base
 
             // Current layout from cache
             $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-            $display->setCurrentLayoutId($this->pool);
+            $display->getCurrentLayoutId($this->pool);
 
             if ($this->isApi())
                 break;
