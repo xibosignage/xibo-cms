@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "c89cd5e32642004fdd7dde55d46e5356",
-    "content-hash": "86f8a5826ccfa21ef6c7d3bfc8970d23",
+    "hash": "9814a47159bfebb0fa514dea88e252f0",
+    "content-hash": "741f20d286adaf2e173c5edfff106d4d",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -3710,40 +3710,44 @@
         },
         {
             "name": "phpunit/dbunit",
-            "version": "2.0.3",
+            "version": "1.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/dbunit.git",
-                "reference": "5c35d74549c21ba55d0ea74ba89d191a51f8cf25"
+                "reference": "a5891b7a9c4f21587a51f9bc4e8f7042b741b480"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/dbunit/zipball/5c35d74549c21ba55d0ea74ba89d191a51f8cf25",
-                "reference": "5c35d74549c21ba55d0ea74ba89d191a51f8cf25",
+                "url": "https://api.github.com/repos/sebastianbergmann/dbunit/zipball/a5891b7a9c4f21587a51f9bc4e8f7042b741b480",
+                "reference": "a5891b7a9c4f21587a51f9bc4e8f7042b741b480",
                 "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
                 "ext-simplexml": "*",
-                "php": "^5.4 || ^7.0",
-                "phpunit/phpunit": "^4.0 || ^5.0 || ^6.0",
-                "symfony/yaml": "^2.1 || ^3.0"
+                "php": ">=5.3.3",
+                "phpunit/phpunit": ">=3.7.0@stable",
+                "symfony/yaml": ">=2.1.0"
             },
             "bin": [
-                "dbunit"
+                "composer/bin/dbunit"
             ],
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.0.x-dev"
+                    "dev-master": "1.3.x-dev"
                 }
             },
             "autoload": {
                 "classmap": [
-                    "src/"
+                    "PHPUnit/"
                 ]
             },
             "notification-url": "https://packagist.org/downloads/",
+            "include-path": [
+                "",
+                "../../symfony/yaml/"
+            ],
             "license": [
                 "BSD-3-Clause"
             ],
@@ -3761,7 +3765,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2016-12-02 14:39:14"
+            "time": "2014-03-26 11:25:06"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -5276,20 +5280,20 @@
         },
         {
             "name": "symfony/yaml",
-            "version": "v3.4.3",
+            "version": "v4.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/yaml.git",
-                "reference": "25c192f25721a74084272671f658797d9e0e0146"
+                "reference": "b84f646b9490d2101e2c25ddeec77ceefbda2eee"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/yaml/zipball/25c192f25721a74084272671f658797d9e0e0146",
-                "reference": "25c192f25721a74084272671f658797d9e0e0146",
+                "url": "https://api.github.com/repos/symfony/yaml/zipball/b84f646b9490d2101e2c25ddeec77ceefbda2eee",
+                "reference": "b84f646b9490d2101e2c25ddeec77ceefbda2eee",
                 "shasum": ""
             },
             "require": {
-                "php": "^5.5.9|>=7.0.8"
+                "php": "^7.1.3"
             },
             "conflict": {
                 "symfony/console": "<3.4"
@@ -5303,7 +5307,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "3.4-dev"
+                    "dev-master": "4.0-dev"
                 }
             },
             "autoload": {
@@ -5330,7 +5334,7 @@
             ],
             "description": "Symfony Yaml Component",
             "homepage": "https://symfony.com",
-            "time": "2018-01-03 07:37:34"
+            "time": "2018-01-03 07:38:00"
         },
         {
             "name": "there4/slim-test-helpers",
@@ -5620,6 +5624,6 @@
         "php": ">=7"
     },
     "platform-overrides": {
-        "php": "5.6"
+        "php": "5.5.9"
     }
 }
