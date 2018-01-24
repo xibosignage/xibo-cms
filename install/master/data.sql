@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.8.4', 5, 2, 135);
+('1.8.5', 5, 2, 136);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`, `isSystemNotification`) VALUES
 (1, 'Users', 0, 0, 0),
