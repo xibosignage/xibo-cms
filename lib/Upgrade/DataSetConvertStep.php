@@ -10,6 +10,7 @@ namespace Xibo\Upgrade;
 
 
 use Xibo\Entity\DataSet;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -45,7 +46,7 @@ class DataSetConvertStep implements Step
 
     /**
      * @param \Slim\Helper\Set $container
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\XiboException
      */
     public function doStep($container)
     {
@@ -55,7 +56,6 @@ class DataSetConvertStep implements Step
         // Get all DataSets
         foreach ($dataSetFactory->query() as $dataSet) {
             /* @var \Xibo\Entity\DataSet $dataSet */
-            $dataSet->load();
 
             // Rebuild the data table
             $dataSet->rebuild();
@@ -74,6 +74,7 @@ class DataSetConvertStep implements Step
      * Data Set Results
      * @param DataSet $dataSet
      * @return array
+     * @throws XiboException
      */
     public function getExistingData($dataSet)
     {

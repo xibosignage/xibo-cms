@@ -674,7 +674,13 @@ class DisplayGroup implements \JsonSerializable
 
         foreach ($this->events as $event) {
             /* @var Schedule $event */
-            $event->delete();
+            $event->unassignDisplayGroup($this);
+            $event->save([
+                'audit' => false,
+                'validate' => false,
+                'deleteOrphaned' => true,
+                'notify' => false
+            ]);
         }
 
         // Delete assignments

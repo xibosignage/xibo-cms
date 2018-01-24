@@ -445,12 +445,15 @@ class Schedule implements \JsonSerializable
     /**
      * Save
      * @param array $options
+     * @throws XiboException
      */
     public function save($options = [])
     {
         $options = array_merge([
             'validate' => true,
-            'audit' => true
+            'audit' => true,
+            'deleteOrphaned' => false,
+            'notify' => true
         ], $options);
 
         if ($options['validate'])
@@ -468,8 +471,15 @@ class Schedule implements \JsonSerializable
             $this->loaded = true;
         }
         else {
-            $this->edit();
-            $auditMessage = 'Saved';
+            // If this save action means there aren't any display groups assigned
+            // and if we're set to deleteOrphaned, then delete
+            if ($options['deleteOrphaned'] && count($this->displayGroups) <= 0) {
+                $this->delete();
+                return;
+            } else {
+                $this->edit();
+                $auditMessage = 'Saved';
+            }
         }
 
         // Manage display assignments
@@ -479,15 +489,17 @@ class Schedule implements \JsonSerializable
         }
 
         // Notify
-        // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
-        if ($this->inScheduleLookAhead()) {
-            $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . count($this->displayGroups) . ' display groups');
-            foreach ($this->displayGroups as $displayGroup) {
-                /* @var DisplayGroup $displayGroup */
-                $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
+        if ($options['notify']) {
+            // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
+            if ($this->inScheduleLookAhead()) {
+                $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . count($this->displayGroups) . ' display groups');
+                foreach ($this->displayGroups as $displayGroup) {
+                    /* @var DisplayGroup $displayGroup */
+                    $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
+                }
+            } else {
+                $this->getLog()->debug('Schedule changing is not within the schedule look ahead');
             }
-        } else {
-            $this->getLog()->debug('Schedule changing is not within the schedule look ahead');
         }
 
         if ($options['audit'])
