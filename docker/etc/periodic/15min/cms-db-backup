@@ -1,0 +1,43 @@
+#!/bin/bash
+
+/bin/mkdir -p /var/www/backup/db
+age=86401
+
+MYSQL_USER= 
+MYSQL_PASSWORD= 
+MYSQL_HOST= 
+MYSQL_PORT= 
+MYSQL_DATABASE= 
+
+# See if there is an existing backup, and if so, get its age
+if [ -e /var/www/backup/db/latest.sql.gz ]
+then
+    age=$((`date +%s` - `date -r /var/www/backup/db/latest.sql.gz +%s`))
+
+    # Age can potentially be negative. If it is, make it 0 so that
+    # we run a backup now
+    if [ $age -lt 0 ]
+    then
+        echo "Last backup was in the future. Resetting"
+        age=86401
+    fi
+
+    echo "Existing backup is $age seconds old"
+fi
+
+# If the backup is older than 1 day, take a new one
+if [ $age -gt 86400 ]
+then
+    echo "Creating new backup"
+    /usr/bin/mysqldump --single-transaction -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" -h $MYSQL_HOST -P $MYSQL_PORT $MYSQL_DATABASE > /var/www/backup/db/latest.sql
+    RESULT=$?
+    
+    if [ $RESULT -eq 0 ]
+    then
+        echo "Rotating backups"
+        mv /var/www/backup/db/latest.sql.gz /var/www/backup/db/previous.sql.gz
+        
+        echo "Compressing new backup"
+        cd /var/www/backup/db && gzip latest.sql
+    fi
+fi

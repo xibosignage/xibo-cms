@@ -100,7 +100,7 @@
             var table = $("#displays").DataTable({
                 "language": dataTablesLanguage,
                 serverSide: true,
-                stateSave: true,
+                stateSave: true, stateDuration: 0,
                 stateLoadCallback: function (settings, callback) {
                     var data;
                     $.ajax({

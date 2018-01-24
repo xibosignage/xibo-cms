@@ -106,7 +106,7 @@ class Translate
         // Load translations
         $translator = new Translator();
         $translator->loadTranslations(Translations::fromMoFile($localeDir . '/' . $foundLanguage . '.mo'));
-        Translator::initGettextFunctions($translator);
+        $translator->register();
 
         // Store our resolved language locales
         self::$locale = $foundLanguage;

@@ -552,10 +552,10 @@ class DisplayGroup implements \JsonSerializable
      */
     public function validate()
     {
-        if (!v::string()->notEmpty()->validate($this->displayGroup))
+        if (!v::stringType()->notEmpty()->validate($this->displayGroup))
             throw new InvalidArgumentException(__('Please enter a display group name'), 'displayGroup');
 
-        if (!empty($this->description) && !v::string()->length(null, 254)->validate($this->description))
+        if (!empty($this->description) && !v::stringType()->length(null, 254)->validate($this->description))
             throw new InvalidArgumentException(__('Description can not be longer than 254 characters'), 'description');
 
         if ($this->isDisplaySpecific == 0) {
@@ -674,7 +674,13 @@ class DisplayGroup implements \JsonSerializable
 
         foreach ($this->events as $event) {
             /* @var Schedule $event */
-            $event->delete();
+            $event->unassignDisplayGroup($this);
+            $event->save([
+                'audit' => false,
+                'validate' => false,
+                'deleteOrphaned' => true,
+                'notify' => false
+            ]);
         }
 
         // Delete assignments

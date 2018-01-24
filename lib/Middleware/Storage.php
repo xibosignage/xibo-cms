@@ -38,7 +38,7 @@ class Storage extends Middleware
     {
         $app = $this->app;
 
-        $app->startTime = microtime();
+        $app->startTime = microtime(true);
         $app->commit = true;
 
         // Configure storage
@@ -61,7 +61,7 @@ class Storage extends Middleware
 
         // Get the stats for this connection
         $stats = $app->store->stats();
-        $stats['length'] = microtime() - $app->startTime;
+        $stats['length'] = microtime(true) - $app->startTime;
 
         $app->logService->info('Request stats: %s.', json_encode($stats, JSON_PRETTY_PRINT));
 

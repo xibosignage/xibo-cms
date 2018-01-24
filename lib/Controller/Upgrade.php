@@ -22,7 +22,7 @@ namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\UpgradeFactory;
-use Xibo\Service\ConfigService;
+use Xibo\Helper\Environment;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -88,7 +88,7 @@ class Upgrade extends Base
             }
 
             // Insert pending upgrade steps.
-            $steps = $this->upgradeFactory->createSteps(DBVERSION, ConfigService::$WEBSITE_VERSION);
+            $steps = $this->upgradeFactory->createSteps(DBVERSION, Environment::$WEBSITE_VERSION);
 
             foreach ($steps as $step) {
                 /* @var \Xibo\Entity\Upgrade $step */

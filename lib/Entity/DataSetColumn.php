@@ -287,18 +287,7 @@ class DataSetColumn implements \JsonSerializable
      */
     private function edit($options)
     {
-        $this->getStore()->update('
-          UPDATE `datasetcolumn` SET
-            dataSetId = :dataSetId,
-            Heading = :heading,
-            ListContent = :listContent,
-            ColumnOrder = :columnOrder,
-            DataTypeID = :dataTypeId,
-            DataSetColumnTypeID = :dataSetColumnTypeId,
-            Formula = :formula,
-            RemoteField = :remoteField
-          WHERE dataSetColumnId = :dataSetColumnId
-        ', [
+        $params = [
             'dataSetId' => $this->dataSetId,
             'heading' => $this->heading,
             'dataTypeId' => $this->dataTypeId,
@@ -306,9 +295,28 @@ class DataSetColumn implements \JsonSerializable
             'columnOrder' => $this->columnOrder,
             'dataSetColumnTypeId' => $this->dataSetColumnTypeId,
             'formula' => $this->formula,
-            'remoteField' => $this->remoteField,
             'dataSetColumnId' => $this->dataSetColumnId
-        ]);
+        ];
+
+        $sql = '
+          UPDATE `datasetcolumn` SET
+            dataSetId = :dataSetId,
+            Heading = :heading,
+            ListContent = :listContent,
+            ColumnOrder = :columnOrder,
+            DataTypeID = :dataTypeId,
+            DataSetColumnTypeID = :dataSetColumnTypeId,
+            Formula = :formula
+        ';
+
+        if (DBVERSION >= 135) {
+            $sql .= ', RemoteField = :remoteField ';
+            $params['remoteField'] = $this->remoteField;
+        }
+
+        $sql .= ' WHERE dataSetColumnId = :dataSetColumnId ';
+
+        $this->getStore()->update($sql, $params);
 
         try {
             if ($options['rebuilding'] && ($this->dataSetColumnTypeId == 1 || $this->dataSetColumnTypeId == 3)) {

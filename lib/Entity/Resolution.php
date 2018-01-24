@@ -119,13 +119,13 @@ class Resolution implements \JsonSerializable
 
     public function validate()
     {
-        if (!v::string()->notEmpty()->validate($this->resolution))
+        if (!v::stringType()->notEmpty()->validate($this->resolution))
             throw new InvalidArgumentException(__('Please provide a name'), 'name');
 
-        if (!v::int()->notEmpty()->min(1)->validate($this->width))
+        if (!v::intType()->notEmpty()->min(1)->validate($this->width))
             throw new InvalidArgumentException(__('Please provide a width'), 'width');
 
-        if (!v::int()->notEmpty()->min(1)->validate($this->height))
+        if (!v::intType()->notEmpty()->min(1)->validate($this->height))
             throw new InvalidArgumentException(__('Please provide a height'), 'height');
 
         // Set the designer width and height

@@ -24,6 +24,7 @@ use Intervention\Image\ImageManagerStatic as Img;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 
 /**
  * Class Soap4
@@ -440,19 +441,17 @@ class Soap4 extends Soap
         $currentLayoutId = $this->getSanitizer()->getInt('currentLayoutId', $status);
 
         if ($currentLayoutId !== null) {
-            // Cache it
-            $this->getLog()->debug('Caching currentLayoutId with Pool');
-
-            $item = $this->getPool()->getItem($this->display->getCacheKey() . '/currentLayoutId');
-            $item->set($currentLayoutId);
-            $item->expiresAfter(new \DateInterval('P1W'));
-
-            $this->getPool()->saveDeferred($item);
+            $this->display->setCurrentLayoutId($this->getPool(), $currentLayoutId);
         }
 
         // Touch the display record
-        if (count($this->display->getChangedProperties()) > 0)
-            $this->display->save(Display::$saveOptionsMinimum);
+        try {
+            if (count($this->display->getChangedProperties()) > 0)
+                $this->display->save(Display::$saveOptionsMinimum);
+        } catch (XiboException $xiboException) {
+            $this->getLog()->error($xiboException->getMessage());
+            throw new \SoapFault('Receiver', 'Unable to save status update');
+        }
 
         return true;
     }

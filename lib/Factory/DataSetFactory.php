@@ -25,13 +25,13 @@ namespace Xibo\Factory;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
-use Slim\Helper\Set;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
+use Xibo\Helper\Environment;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -315,7 +315,7 @@ class DataSetFactory extends BaseFactory
         $this->getLog()->debug('Calling remote service for DataSet: ' . $dataSet->dataSet . ' and URL ' . $dataSet->uri);
 
         // Record our max memory
-        $maxMemory = $this->config->getMemoryLimitBytes() / 2;
+        $maxMemory = Environment::getMemoryLimitBytes() / 2;
 
         // Guzzle for this and add proxy support.
         $client = new Client($this->config->getGuzzleProxy());

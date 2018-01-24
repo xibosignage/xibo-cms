@@ -68,13 +68,13 @@ class Help
 
     public function validate()
     {
-        if (!v::string()->notEmpty()->length(1, 254)->validate($this->topic))
+        if (!v::stringType()->notEmpty()->length(1, 254)->validate($this->topic))
             throw new InvalidArgumentException(__('Topic is a required field. It must be between 1 and 254 characters.'), 'topic');
 
-        if (!v::string()->notEmpty()->length(1, 254)->validate($this->category))
+        if (!v::stringType()->notEmpty()->length(1, 254)->validate($this->category))
             throw new InvalidArgumentException(__('Category is a required field. It must be between 1 and 254 characters.'), 'category');
 
-        if (!v::string()->notEmpty()->length(1, 254)->validate($this->link))
+        if (!v::stringType()->notEmpty()->length(1, 254)->validate($this->link))
             throw new InvalidArgumentException(__('Link is a required field. It must be between 1 and 254 characters.'), 'link');
     }
 

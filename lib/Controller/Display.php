@@ -449,7 +449,7 @@ class Display extends Base
 
             // Current layout from cache
             $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-            $display->setCurrentLayoutId($this->pool);
+            $display->getCurrentLayoutId($this->pool);
 
             if ($this->isApi())
                 break;
@@ -515,7 +515,15 @@ class Display extends Base
                 $display->buttons[] = array(
                     'id' => 'display_button_delete',
                     'url' => $this->urlFor('display.delete.form', ['id' => $display->displayId]),
-                    'text' => __('Delete')
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor('display.delete', ['id' => $display->displayId])),
+                        array('name' => 'commit-method', 'value' => 'delete'),
+                        array('name' => 'id', 'value' => 'display_button_delete'),
+                        array('name' => 'text', 'value' => __('Delete')),
+                        array('name' => 'rowtitle', 'value' => $display->display)
+                    )
                 );
             }
 

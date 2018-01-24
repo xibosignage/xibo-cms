@@ -64,6 +64,7 @@ class CsrfGuard extends Middleware
 
     /**
      * Check CSRF token is valid.
+     * @throws TokenExpiredException
      */
     public function check()
     {

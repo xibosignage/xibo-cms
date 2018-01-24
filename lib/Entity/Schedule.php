@@ -401,7 +401,7 @@ class Schedule implements \JsonSerializable
 
         if ($this->eventTypeId == Schedule::$LAYOUT_EVENT || $this->eventTypeId == Schedule::$OVERLAY_EVENT) {
             // Validate layout
-            if (!v::int()->notEmpty()->validate($this->campaignId))
+            if (!v::intType()->notEmpty()->validate($this->campaignId))
                 throw new InvalidArgumentException(__('Please select a Campaign/Layout for this event.'), 'campaignId');
 
             if ($this->dayPartId == Schedule::$DAY_PART_CUSTOM) {
@@ -414,7 +414,7 @@ class Schedule implements \JsonSerializable
 
         } else if ($this->eventTypeId == Schedule::$COMMAND_EVENT) {
             // Validate command
-            if (!v::int()->notEmpty()->validate($this->commandId))
+            if (!v::intType()->notEmpty()->validate($this->commandId))
                 throw new InvalidArgumentException(__('Please select a Command for this event.'), 'command');
 
             $this->campaignId = null;
@@ -445,12 +445,15 @@ class Schedule implements \JsonSerializable
     /**
      * Save
      * @param array $options
+     * @throws XiboException
      */
     public function save($options = [])
     {
         $options = array_merge([
             'validate' => true,
-            'audit' => true
+            'audit' => true,
+            'deleteOrphaned' => false,
+            'notify' => true
         ], $options);
 
         if ($options['validate'])
@@ -468,8 +471,15 @@ class Schedule implements \JsonSerializable
             $this->loaded = true;
         }
         else {
-            $this->edit();
-            $auditMessage = 'Saved';
+            // If this save action means there aren't any display groups assigned
+            // and if we're set to deleteOrphaned, then delete
+            if ($options['deleteOrphaned'] && count($this->displayGroups) <= 0) {
+                $this->delete();
+                return;
+            } else {
+                $this->edit();
+                $auditMessage = 'Saved';
+            }
         }
 
         // Manage display assignments
@@ -479,15 +489,17 @@ class Schedule implements \JsonSerializable
         }
 
         // Notify
-        // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
-        if ($this->inScheduleLookAhead()) {
-            $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . count($this->displayGroups) . ' display groups');
-            foreach ($this->displayGroups as $displayGroup) {
-                /* @var DisplayGroup $displayGroup */
-                $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
+        if ($options['notify']) {
+            // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
+            if ($this->inScheduleLookAhead()) {
+                $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . count($this->displayGroups) . ' display groups');
+                foreach ($this->displayGroups as $displayGroup) {
+                    /* @var DisplayGroup $displayGroup */
+                    $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
+                }
+            } else {
+                $this->getLog()->debug('Schedule changing is not within the schedule look ahead');
             }
-        } else {
-            $this->getLog()->debug('Schedule changing is not within the schedule look ahead');
         }
 
         if ($options['audit'])

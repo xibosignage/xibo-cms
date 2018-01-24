@@ -14,6 +14,7 @@ use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\DuplicateEntityException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
@@ -576,15 +577,15 @@ class DataSet implements \JsonSerializable
      */
     public function validate()
     {
-        if (!v::string()->notEmpty()->length(null, 50)->validate($this->dataSet))
+        if (!v::stringType()->notEmpty()->length(null, 50)->validate($this->dataSet))
             throw new InvalidArgumentException(__('Name must be between 1 and 50 characters'), 'dataSet');
 
-        if ($this->description != null && !v::string()->length(null, 254)->validate($this->description))
+        if ($this->description != null && !v::stringType()->length(null, 254)->validate($this->description))
             throw new InvalidArgumentException(__('Description can not be longer than 254 characters'), 'description');
 
         // If we are a remote dataset do some additional checks
         if ($this->isRemote === 1) {
-            if (!v::string()->notEmpty()->validate($this->uri))
+            if (!v::stringType()->notEmpty()->validate($this->uri))
                 throw new InvalidArgumentException(__('A remote DataSet must have a URI.'), 'uri');
         }
 
@@ -830,6 +831,7 @@ class DataSet implements \JsonSerializable
 
     /**
      * Rebuild the dataSet table
+     * @throws XiboException
      */
     public function rebuild()
     {

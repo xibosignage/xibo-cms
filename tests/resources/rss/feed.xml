@@ -1,0 +1,27 @@
+<rss version="2.0">
+    <channel>
+        <title>Xibo Media RSS Test Feed</title>
+        <link/>
+        <description>Sample Media RSS</description>
+        <item>
+            <title>Yellow Flowers</title>
+            <description>Yellow Flowers in the Summer</description>
+            <enclosure url="http://localhost/rss/image1.jpg" type="image/jpeg"/>
+        </item>
+        <item>
+            <title>Clock Mechanism</title>
+            <description>A close-up shot of the mechanism in a clock</description>
+            <enclosure url="http://localhost/rss/image2.jpg" type="image/jpeg"/>
+        </item>
+        <item>
+            <title>Antipasti</title>
+            <description>Tasty antipasti - tomato, basil and mozzarella</description>
+            <enclosure url="http://localhost/rss/image3.jpg" type="image/jpeg"/>
+        </item>
+        <item>
+            <title>Reptile</title>
+            <description>A colourful reptile</description>
+            <enclosure url="http://localhost/rss/image4.jpg" type="image/jpeg"/>
+        </item>
+    </channel>
+</rss>

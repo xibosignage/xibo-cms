@@ -36,7 +36,7 @@ use Xibo\Factory\ModuleFactory;
  */
 class ForecastIo extends ModuleWidget
 {
-    const API_ENDPOINT = 'https://api.darksky.net/forecast/';
+    const API_ENDPOINT = 'https://api.darksky.net/forecast/player/';
 
     private $resourceFolder;
     protected $codeSchemaVersion = 1;

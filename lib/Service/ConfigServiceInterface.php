@@ -118,12 +118,6 @@ interface ConfigServiceInterface
     public function rootUri();
 
     /**
-     * Check ZeroMQ support
-     * @return bool
-     */
-    public static function checkZmq();
-
-    /**
      * Get cache drivers
      * @return array
      */
@@ -134,10 +128,4 @@ interface ConfigServiceInterface
      * @return string
      */
     public function getCacheNamespace();
-
-    /**
-     * Get the memory limit in bytes
-     * @return int
-     */
-    public function getMemoryLimitBytes();
 }

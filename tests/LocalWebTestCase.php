@@ -10,6 +10,7 @@ namespace Xibo\Tests;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Slim\Environment;
 use Slim\Helper\Set;
 use Slim\Log;
@@ -301,7 +302,8 @@ class LocalWebTestCase extends WebTestCase
     {
         // Create if necessary
         if (self::$logger === null) {
-            self::$logger = new Logger('TESTS', [new \Monolog\Handler\StreamHandler(STDERR, Logger::DEBUG)]);
+            //self::$logger = new Logger('TESTS', [new \Monolog\Handler\StreamHandler(STDERR, Logger::DEBUG)]);
+            self::$logger = new NullLogger();
         }
 
         return self::$logger;

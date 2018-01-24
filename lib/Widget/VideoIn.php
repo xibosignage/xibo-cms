@@ -63,10 +63,10 @@ class VideoIn extends ModuleWidget
     public function validate()
     {
         // Validate
-        if (!v::string()->notEmpty()->validate($this->getOption('sourceId')))
+        if (!v::stringType()->notEmpty()->validate($this->getOption('sourceId')))
             throw new InvalidArgumentException(__('Please Select the sourceId'));
 
-        if ($this->getUseDuration() == 1 && !v::int()->min(1)->validate($this->getDuration()))
+        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
             throw new InvalidArgumentException(__('You must enter a duration.'));
     }
 
