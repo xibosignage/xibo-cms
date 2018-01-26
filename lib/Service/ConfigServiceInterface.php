@@ -39,6 +39,9 @@ interface ConfigServiceInterface
      */
     public function getDatabaseConfig();
 
+    /** @return array */
+    public function getSettings();
+
     /**
      * Gets the requested setting from the DB object given
      * @param $setting string

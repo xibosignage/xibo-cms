@@ -55,10 +55,7 @@ class Theme extends Middleware
             $twig->prependPath(str_replace_first('..', PROJECT_ROOT, $app->configService->getThemeConfig('view_path')));
         }
 
-        $settings = [];
-        foreach ($app->settingsFactory->query() as $setting) {
-            $settings[$setting['setting']] = $setting['value'];
-        }
+        $settings = $app->configService->getSettings();
 
         // Date format
         $settings['DATE_FORMAT_JS'] = $app->dateService->convertPhpToMomentFormat($settings['DATE_FORMAT']);

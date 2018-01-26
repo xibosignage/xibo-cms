@@ -41,6 +41,15 @@ class ConfigService implements ConfigServiceInterface
      */
     public $pool;
 
+    /** @var string Setting Cache Key */
+    private $settingCacheKey = 'settings';
+
+    /** @var bool Has the settings cache been dropped this request? */
+    private $settingsCacheDropped = false;
+
+    /** @var array */
+    private $settings = null;
+
     /**
      * @var string
      */
@@ -280,60 +289,77 @@ class ConfigService implements ConfigServiceInterface
         }
     }
 
-    /**
-     * Gets the requested setting from the DB object given
-     * @param $setting string
-     * @param string[optional] $default
-     * @return string
-     */
-    public function GetSetting($setting, $default = NULL)
+    /** @inheritdoc */
+    public function getSettings()
     {
         $item = null;
 
-        if ($this->getPool() != null) {
-            $item = $this->getPool()->getItem('config/' . $setting);
+        if ($this->settings === null) {
+            // We need to load in our settings
+            if ($this->getPool() !== null) {
+                // Try the cache
+                $item = $this->getPool()->getItem($this->settingCacheKey);
 
-            $data = $item->get();
+                $data = $item->get();
 
-            if ($item->isHit()) {
-                return $data;
+                if ($item->isHit())
+                    $this->settings = $data;
+            }
+
+            // Are we still null?
+            if ($this->settings === null) {
+                // Load from the database
+                $results = $this->getStore()->select('SELECT `setting`, `value` FROM `setting`', []);
+
+                foreach ($results as $setting) {
+                    $this->settings[$setting['setting']] = $setting['value'];
+                }
             }
         }
 
-        $sth = $this->getStore()->getConnection()->prepare('SELECT `value` FROM `setting` WHERE `setting` = :setting');
-        $sth->execute(array('setting' => $setting));
+        // We should have our settings by now, so cache them if we can/need to
+        if ($item !== null && $item->isMiss()) {
+            $item->set($this->settings);
 
-        if (!$result = $sth->fetch())
-            $data = $default;
-        else
-            $data = $result['value'];
-
-        if ($this->getPool() != null) {
-
-            if ($setting == 'ELEVATE_LOG_UNTIL' && intval($data) > time())
-                $item->expiresAfter(intval($data) - time());
-            else if ($setting == 'LIBRARY_SIZE_LIMIT_KB' || $setting == 'MONTHLY_XMDS_TRANSFER_LIMIT_KB' || $setting == 'MAX_LICENSED_DISPLAYS')
+            // Do we have an elevated log level request? If so, then expire the cache sooner
+            if (isset($this->settings['ELEVATE_LOG_UNTIL']) && intval($this->settings['ELEVATE_LOG_UNTIL']) > time())
+                $item->expiresAfter(intval($this->settings['ELEVATE_LOG_UNTIL']));
+            else
                 $item->expiresAfter(60 * 5);
 
-            $this->getPool()->saveDeferred($item->set($data));
+            $this->getPool()->saveDeferred($item);
         }
 
-        return $data;
+        return $this->settings;
     }
 
-    /**
-     * Change Setting
-     * @param string $setting
-     * @param mixed $value
-     */
+    /** @inheritdoc */
+    public function GetSetting($setting, $default = NULL)
+    {
+        $this->getSettings();
+
+        return (isset($this->settings[$setting])) ? $this->settings[$setting] : $default;
+    }
+
+    /** @inheritdoc */
     public function ChangeSetting($setting, $value)
     {
-        $sth = $this->getStore()->getConnection()->prepare('UPDATE `setting` SET `value` = :value WHERE `setting` = :setting');
-        $sth->execute(array('setting' => $setting, 'value' => $value));
+        $this->getSettings();
 
-        if (self::getPool() != null) {
-            $item = self::getPool()->getItem('config/' . $setting);
-            self::getPool()->saveDeferred($item->set($value));
+        if (isset($this->settings[$setting])) {
+            // Update in memory cache
+            $this->settings[$setting] = $value;
+
+            // Update in database
+            $this->getStore()->update('UPDATE `setting` SET `value` = :value WHERE `setting` = :setting', [
+                'setting' => $setting, 'value' => $value
+            ]);
+
+            // Drop the cache if we've not already done so this time around
+            if (!$this->settingsCacheDropped && $this->getPool() !== null) {
+                $this->getPool()->deleteItem($this->settingCacheKey);
+                $this->settingsCacheDropped = true;
+            }
         }
     }
 
