@@ -62,6 +62,8 @@ class Storage extends Middleware
         // Get the stats for this connection
         $stats = $app->store->stats();
         $stats['length'] = microtime(true) - $app->startTime;
+        $stats['memoryUsage'] = memory_get_usage();
+        $stats['peakMemoryUsage'] = memory_get_peak_usage();
 
         $app->logService->info('Request stats: %s.', json_encode($stats, JSON_PRETTY_PRINT));
 

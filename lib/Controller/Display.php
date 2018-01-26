@@ -516,14 +516,14 @@ class Display extends Base
                     'id' => 'display_button_delete',
                     'url' => $this->urlFor('display.delete.form', ['id' => $display->displayId]),
                     'text' => __('Delete'),
-                    'multi-select' => true,
+                    /*'multi-select' => true,
                     'dataAttributes' => array(
                         array('name' => 'commit-url', 'value' => $this->urlFor('display.delete', ['id' => $display->displayId])),
                         array('name' => 'commit-method', 'value' => 'delete'),
                         array('name' => 'id', 'value' => 'display_button_delete'),
                         array('name' => 'text', 'value' => __('Delete')),
                         array('name' => 'rowtitle', 'value' => $display->display)
-                    )
+                    )*/
                 );
             }
 

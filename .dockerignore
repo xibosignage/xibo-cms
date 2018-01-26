@@ -34,3 +34,6 @@ web/settings.php
 
 # Package.json - note we will likely want to remove this in 2.0
 package.json
+
+# Our own build file
+build.sh

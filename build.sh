@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-
-while getopts r:t: option
+VERSION="latest"
+while getopts v: option
 do
  case "${option}"
  in
@@ -8,16 +8,31 @@ do
  esac
 done
 
+echo "Building an archive for $VERSION"
+
+
 # Helper script to extract a release archive from a docker container (after building or pulling it).
-docker build . -t cms-build-test
+docker pull xibosignage/xibo-cms:"$VERSION"
 
-CONTAINER=$(docker create cms-build-test)
+echo "Pulled container"
 
-docker cp "$CONTAINER":/var/www/cms "$VERSION"
+CONTAINER=$(docker create xibosignage/xibo-cms:"$VERSION")
 
-tar -czvf ./"$VERSION" "$VERSION".tar.gz
-zip -r "$VERSION".zip ./"$VERSION"
-rm -R ./"$VERSION"
+echo "Created container $CONTAINER"
+
+docker cp "$CONTAINER":/var/www/cms/ "$VERSION"
+
+echo "Copied out CMS /var/www/cms"
+
+tar -czf "$VERSION".tar.gz "$VERSION"
+
+echo "Tarred"
+
+zip -rq "$VERSION".zip "$VERSION"
+
+echo "Zipped"
 
 docker rm "$CONTAINER"
 
+echo "Container Removed"
+echo "Please remove $VERSION folder"
