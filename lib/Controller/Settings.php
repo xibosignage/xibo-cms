@@ -202,10 +202,6 @@ class Settings extends Base
         if (!$this->getUser()->userTypeId == 1)
             throw new AccessDeniedException();
 
-        // Clear all cache
-        // this clears cache of all settings, not just the ones which will subsequently be edited.
-        $this->pool->deleteItem('config/');
-
         // Get all of the settings in an array
         $settings = $this->settingsFactory->query(null, ['userChange' => 1, 'userSee' => 1]);
 
