@@ -20,7 +20,6 @@
  */
 namespace Xibo\Controller;
 use Respect\Validation\Validator as v;
-use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\SettingsFactory;
@@ -35,11 +34,6 @@ use Xibo\Service\SanitizerServiceInterface;
  */
 class Settings extends Base
 {
-    /**
-     * @var PoolInterface
-     */
-    private $pool;
-
     /**
      * @var SettingsFactory
      */
@@ -57,15 +51,13 @@ class Settings extends Base
      * @param \Xibo\Service\HelpServiceInterface $help
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
-     * @param PoolInterface $pool
      * @param SettingsFactory $settingsFactory
      * @param LayoutFactory $layoutFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $settingsFactory, $layoutFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $settingsFactory, $layoutFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
-        $this->pool = $pool;
         $this->settingsFactory = $settingsFactory;
         $this->layoutFactory = $layoutFactory;
 
@@ -202,12 +194,16 @@ class Settings extends Base
         $this->getState()->setData($data);
     }
 
-    function update()
+    /**
+     * Update settings
+     */
+    public function update()
     {
         if (!$this->getUser()->userTypeId == 1)
             throw new AccessDeniedException();
 
         // Clear all cache
+        // this clears cache of all settings, not just the ones which will subsequently be edited.
         $this->pool->deleteItem('config/');
 
         // Get all of the settings in an array
@@ -279,13 +275,13 @@ class Settings extends Base
                 $newElevateUntil = $value;
             }
 
-            $this->getConfig()->ChangeSetting($setting['setting'], $value);
+            $this->getConfig()->ChangeSetting($setting['setting'], $value, false);
         }
 
         // Have we changed log level? If so, were we also provided the elevate until setting?
         if ($newElevateUntil === null && $currentLogLevel != $newLogLevel) {
             // We haven't provided an elevate until (meaning it is not visible)
-            $this->getConfig()->ChangeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addHour(1)->format('U'));
+            $this->getConfig()->ChangeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addHour(1)->format('U'), false);
         }
 
         // Return

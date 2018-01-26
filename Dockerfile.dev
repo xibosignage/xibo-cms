@@ -67,12 +67,9 @@ RUN chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-
 COPY --from=sendfile /usr/lib/apache2/mod_xsendfile.so /usr/lib/apache2/mod_xsendfile.so
 
 # Update the PHP.ini file
-# note that in DEV mode we use a higher memory limit because CI runs tests over and over causing much of the translations
-# to be loaded into memory
 RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PARSE/" /etc/php7/php.ini && \
     sed -i "s/session.gc_probability = .*$/session.gc_probability = 1/" /etc/php7/php.ini && \
-    sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php7/php.ini && \
-    sed -i "s/memory_limit = .*$/memory_limit = 256M/" /etc/php7/php.ini
+    sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php7/php.ini
 
 # Set some environment variables
 ENV CMS_DEV_MODE=true \
@@ -87,6 +84,7 @@ ENV CMS_DEV_MODE=true \
     CMS_PHP_POST_MAX_SIZE=2G \
     CMS_PHP_UPLOAD_MAX_FILESIZE=2G \
     CMS_PHP_MAX_EXECUTION_TIME=300 \
+    CMS_PHP_MEMORY_LIMIT=256M \
     CMS_APACHE_START_SERVERS=2 \
     CMS_APACHE_MIN_SPARE_SERVERS=5 \
     CMS_APACHE_MAX_SPARE_SERVERS=10 \
