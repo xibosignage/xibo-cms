@@ -379,13 +379,18 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Hold a lock on concurrent requests
      *  blocks if the request is locked
+     * @param $key
      * @param $ttl
      * @param $wait
      * @param $tries
      */
-    public function concurrentRequestLock($ttl = 30, $wait = 5000, $tries = 3)
+    public function concurrentRequestLock($key = null, $ttl = 30, $wait = 5000, $tries = 3)
     {
-        $this->lock = $this->getPool()->getItem('locks/widget/' . $this->widget->widgetId);
+        // If the key is null default to the widgetId
+        if ($key === null)
+            $key = $this->widget->widgetId;
+
+        $this->lock = $this->getPool()->getItem('locks/widget/' . $key);
         $this->lock->setInvalidationMethod(Invalidation::SLEEP, $wait, $tries);
 
         $this->lock->get();
@@ -397,11 +402,13 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function concurrentRequestRelease()
     {
-        $this->lock->set(time());
-        $this->lock->expiresAfter(1); // Expire straight away
+        if ($this->lock !== null) {
+            $this->lock->set(time());
+            $this->lock->expiresAfter(1); // Expire straight away
 
-        // Release lock
-        $this->getPool()->saveDeferred($this->lock);
+            // Release lock
+            $this->getPool()->saveDeferred($this->lock);
+        }
     }
 
     // </editor-fold>
@@ -659,7 +666,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     final public function getCalculatedDurationForGetResource()
     {
-        return ($this->widget->calculatedDuration == 0) ? $this->getModule()->defaultDuration : $this->widget->calculatedDuration;
+        return ($this->widget->useDuration == 0) ? $this->getModule()->defaultDuration : $this->widget->duration;
     }
 
     /**
@@ -1203,8 +1210,9 @@ abstract class ModuleWidget implements ModuleInterface
             return null;
 
         foreach ($templates as $item) {
-            if( $item['id'] == $templateId ) {
+            if ($item['id'] == $templateId) {
                 $template = $item;
+                break;
             }
         }
 
@@ -1295,6 +1303,16 @@ abstract class ModuleWidget implements ModuleInterface
         return $this->statusMessage;
     }
 
+    /**
+     * Get the modified date of this Widget
+     * @param int $displayId
+     * @return null|int
+     */
+    public function getModifiedTimestamp($displayId)
+    {
+        return null;
+    }
+
     //<editor-fold desc="GetResource Helpers">
 
     private $data;
@@ -1374,8 +1392,12 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function appendCss($css)
     {
-        if (!empty($css))
-            $this->data['styleSheet'] .= '<style type="text/css">' . $css . '</style>' . PHP_EOL;
+        if (!empty($css)) {
+            if (stripos($css, '<style') !== false)
+                $this->data['styleSheet'] .= $css . PHP_EOL;
+            else
+                $this->data['styleSheet'] .= '<style type="text/css">' . $css . '</style>' . PHP_EOL;
+        }
 
         return $this;
     }

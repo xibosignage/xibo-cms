@@ -181,7 +181,7 @@ class DataSetView extends ModuleWidget
             if ($this->getOption('upperLimit') < $this->getOption('lowerLimit'))
                 throw new \InvalidArgumentException(__('Upper limit must be higher than lower limit'));
 
-            if (!v::int()->min(0)->validate($this->getOption('updateInterval')))
+            if (!v::intType()->min(0)->validate($this->getOption('updateInterval')))
                 throw new InvalidArgumentException(__('Update Interval must be greater than or equal to 0'));
 
             // Make sure we haven't entered a silly value in the filter
@@ -832,5 +832,28 @@ class DataSetView extends ModuleWidget
     {
         // DataSet rendering will be valid
         return 1;
+    }
+
+    /** @inheritdoc */
+    public function getModifiedTimestamp($displayId)
+    {
+        $widgetModifiedDt = null;
+
+        $dataSetId = $this->getOption('dataSetId');
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
+
+        // Set the timestamp
+        $widgetModifiedDt = $dataSet->lastDataEdit;
+
+        // Remote dataSets are kept "active" by required files
+        if ($dataSet->isRemote) {
+            // Touch this dataSet
+            $dataSetCache = $this->getPool()->getItem('/dataset/accessed/' . $dataSet->dataSetId);
+            $dataSetCache->set('true');
+            $dataSetCache->expiresAfter($this->getSetting('REQUIRED_FILES_LOOKAHEAD') * 1.5);
+            $this->getPool()->saveDeferred($dataSetCache);
+        }
+
+        return $widgetModifiedDt;
     }
 }

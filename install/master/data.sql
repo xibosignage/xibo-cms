@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.8.4', 5, 2, 135);
+('1.8.5', 5, 2, 136);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`, `isSystemNotification`) VALUES
 (1, 'Users', 0, 0, 0),
@@ -107,7 +107,8 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`,
   (16, 'font', 'Font', 1, 0, 'A font to use in other Modules', 'forms/library.gif', 1, 'ttf,otf,eot,svg,woff', 0, 0, NULL, NULL, '../modules', 'Xibo\\Widget\\Font', 10),
   (17, 'audio', 'Audio', 1, 0, 'Audio - support varies depending on the client hardware', 'forms/video.gif', 1, 'mp3,wav', 0, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\Audio', 0),
   (18, 'pdf', 'PDF', 1, 0, 'PDF document viewer', 'forms/pdf.gif', 1, 'pdf', 1, 1, 'html', null, '../modules', 'Xibo\\Widget\\Pdf', 60),
-  (19, 'subplaylist', 'Sub-Playlist', 1, 1, 'Embed a Sub-Playlist', 'forms/library.gif', 1, null, 1, 1, 'native', null, '../modules', 'Xibo\\Widget\\SubPlaylist', 10);
+  (19, 'notificationview', 'Notification', 1, 1, 'Display Notifications from the Notification Centre', 'forms/library.gif', 1, null, 1, 1, 'html', null, '../modules', 'Xibo\\Widget\\NotificationView', 10),
+  (20, 'subplaylist', 'Sub-Playlist', 1, 1, 'Embed a Sub-Playlist', 'forms/library.gif', 1, null, 1, 1, 'native', null, '../modules', 'Xibo\\Widget\\SubPlaylist', 10);
 
 INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (1, 'dashboard', 'Dashboard', 1),
@@ -142,7 +143,7 @@ INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (30, 'displayprofile', 'Display Profiles', 1),
   (31, 'audit', 'Audit Trail', 0),
   (32, 'region', 'Regions', 0),
-  (33, 'playlist', 'Playlist', 1),
+  (33, 'playlist', 'Playlist', 0),
   (34, 'maintenance', 'Maintenance', 0),
   (35, 'command', 'Commands', 1),
   (36, 'notification', 'Notifications', 0),

@@ -43,7 +43,7 @@ class Twitter extends TwitterBase
      */
     public function init()
     {
-        $this->resourceFolder = PROJECT_ROOT . '/modules/twitter';
+        $this->resourceFolder = PROJECT_ROOT . '/modules/twitter/player';
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
@@ -141,7 +141,7 @@ class Twitter extends TwitterBase
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('Please enter a duration'));
 
-        if (!v::string()->notEmpty()->validate($this->getOption('searchTerm')))
+        if (!v::stringType()->notEmpty()->validate($this->getOption('searchTerm')))
             throw new \InvalidArgumentException(__('Please enter a search term'));
     }
 
@@ -615,7 +615,7 @@ class Twitter extends TwitterBase
                         break;
 
                     case 'User':
-                        $replace = $tweet->user->name;
+                        $replace = $emoji->toImage($tweet->user->name);
                         break;
 
                     case 'ScreenName':

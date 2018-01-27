@@ -101,9 +101,12 @@ class DataSetColumnFactory extends BaseFactory
                 datasetcolumntype.dataSetColumnType,
                 listContent,
                 columnOrder,
-                formula,
-                remoteField
+                formula
             ';
+
+        if (DBVERSION >= 135) {
+            $select .= ' , remoteField ';
+        }
 
         $body = '
               FROM `datasetcolumn`

@@ -62,7 +62,7 @@ This is the template for the campaign page
     <script type="text/javascript">
         // Configure the DataTable
         var table = $("#campaigns").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true,
+            serverSide: true, stateSave: true, stateDuration: 0,
             "filter": false,
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
@@ -107,7 +107,7 @@ This is the template for the campaign page
 
             // Layout DataTable
             var layoutTable = $("#layoutAssignments").DataTable({ "language": dataTablesLanguage,
-                serverSide: true, stateSave: true,
+                serverSide: true, stateSave: true, stateDuration: 0, stateDuration: 0,
                 stateLoadCallback: function (settings, callback) {
                     var data;
                     $.ajax({

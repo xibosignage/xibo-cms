@@ -1,7 +1,7 @@
 <?php
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
+ * Copyright (C) 2015-2018 Spring Signage Ltd
  * (Soap.php)
  */
 
@@ -624,29 +624,14 @@ class Soap
                         $getResourceRf = $this->requiredFileFactory->createForGetResource($this->display->displayId, $widget->widgetId)->save();
                         $newRfIds[] = $getResourceRf->rfId;
 
-                        // Does the media provide a modified Date?
-                        $widgetModifiedDt = $layoutModifiedDt->getTimestamp();
+                        // Make me a module from the widget, so I can ask it whether it has an updated last accessed
+                        // date or not.
+                        $module = $this->moduleFactory->createWithWidget($widget);
 
-                        if ($widget->type == 'datasetview' || $widget->type == 'ticker') {
-                            try {
-                                $dataSetId = $widget->getOption('dataSetId');
-                                $dataSet = $this->dataSetFactory->getById($dataSetId);
-                                $widgetModifiedDt = $dataSet->lastDataEdit;
+                        $widgetModifiedDt = $module->getModifiedTimestamp($this->display->displayId);
 
-                                // Remote datasets are kept "active" by required files
-                                if ($dataSet->isRemote) {
-                                    // Touch this dataSet
-                                    $dataSetCache = $this->pool->getItem('/dataset/accessed/' . $dataSet->dataSetId);
-                                    $dataSetCache->set('true');
-                                    $dataSetCache->expiresAfter($rfLookAhead * 1.5);
-                                    $this->pool->saveDeferred($dataSetCache);
-                                }
-                            }
-                            catch (NotFoundException $e) {
-                                // Widget doesn't have a dataSet associated to it
-                                // This is perfectly valid, so ignore it.
-                            }
-                        }
+                        if ($widgetModifiedDt === null)
+                            $widgetModifiedDt = $layoutModifiedDt->getTimestamp();
 
                         // Append this item to required files
                         $file = $requiredFilesXml->createElement("file");

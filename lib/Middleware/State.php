@@ -752,7 +752,8 @@ class State extends Middleware
                 $container->notificationFactory,
                 $container->userNotificationFactory,
                 $container->displayGroupFactory,
-                $container->userGroupFactory
+                $container->userGroupFactory,
+                $container->displayNotifyService
             );
         });
 
@@ -868,7 +869,6 @@ class State extends Middleware
                 $container->helpService,
                 $container->dateService,
                 $container->configService,
-                $container->pool,
                 $container->settingsFactory,
                 $container->layoutFactory
             );

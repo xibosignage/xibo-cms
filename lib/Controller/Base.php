@@ -423,10 +423,10 @@ class Base
         $state->extra = $view['extra'];
 
         // Process the buttons
+        $state->buttons = [];
         // Expect each button on a new line
-        if (trim($view['buttons']) == '') {
-            $state->buttons = [];
-        } else {
+        if (trim($view['buttons']) != '') {
+
             // Convert to an array
             $view['buttons'] = str_replace("\n\r", "\n", $view['buttons']);
             $buttons = explode("\n", $view['buttons']);
@@ -434,6 +434,8 @@ class Base
             foreach ($buttons as $button) {
                 if ($button == '')
                     continue;
+
+                $this->getLog()->debug('Button is ' . $button);
 
                 $button = explode(',', trim($button));
 

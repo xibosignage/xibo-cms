@@ -172,7 +172,7 @@ class Ticker extends ModuleWidget
             if (!v::numeric()->validate($this->getOption('numItems', 0)))
                 throw new \InvalidArgumentException(__('The value in Number of Items must be numeric.'));
 
-            if (!v::int()->min(0)->validate($this->getOption('updateInterval')))
+            if (!v::intType()->min(0)->validate($this->getOption('updateInterval')))
                 throw new \InvalidArgumentException(__('Update Interval must be greater than or equal to 0'));
         }
     }
@@ -638,7 +638,7 @@ class Ticker extends ModuleWidget
         $css = null;
 
         // Get CSS and HTML template from the original template or from the input field
-        if ($this->getOption('sourceId') != 2 && $this->getOption('overrideTemplate') == 0) {
+        if ($sourceId != 2 && $this->getOption('overrideTemplate') == 0) {
             // Feed tickers without override set.
             $template = $this->getTemplateById($this->getOption('templateId', 'title-only'));
             
@@ -717,13 +717,13 @@ class Ticker extends ModuleWidget
             $pages = count($items);
 
         $pages = ($itemsPerPage > 0) ? ceil($pages / $itemsPerPage) : $pages;
+        $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
 
         // Replace and Control Meta options
-        $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $duration . ' -->';
-
+        $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->';   
         // Replace the head content
         $headContent = '';
-
+        
         if ($itemsSideBySide == 1) {
             $headContent .= '<style type="text/css">';
             $headContent .= ' .item, .page { float: left; }';
@@ -785,6 +785,8 @@ class Ticker extends ModuleWidget
         if ($this->hasMediaChanged())
             $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
 
+        $this->concurrentRequestRelease();
+
         return $this->renderTemplate($data);
     }
 
@@ -802,6 +804,9 @@ class Ticker extends ModuleWidget
         // Create a key to use as a caching key for this item.
         // the rendered feed will be cached, so it is important the key covers all options.
         $feedUrl = urldecode($this->getOption('uri'));
+
+        // Lock this entire request
+        $this->concurrentRequestLock(md5($feedUrl));
 
         /** @var \Stash\Item $cache */
         $cache = $this->getPool()->getItem($this->makeCacheKey(md5($feedUrl)));
@@ -849,7 +854,7 @@ class Ticker extends ModuleWidget
             }
         }
 
-        $this->getLog()->debug(var_export($document, true));
+        //$this->getLog()->debug(var_export($document, true));
 
         // Cache HIT or we've requested
         // Load the feed XML document into a feed parser
@@ -1107,13 +1112,13 @@ class Ticker extends ModuleWidget
      */
     private function getDataSetItems($displayId, $isPreview, $text)
     {
-        // Lock the request
-        $this->concurrentRequestLock();
-
         // Extra fields for data sets
         $dataSetId = $this->getOption('dataSetId');
         $upperLimit = $this->getOption('upperLimit');
         $lowerLimit = $this->getOption('lowerLimit');
+
+        // Lock this request
+        $this->concurrentRequestLock($dataSetId);
 
         // Ordering
         $ordering = '';
@@ -1326,15 +1331,11 @@ class Ticker extends ModuleWidget
                 $this->assignMedia($media->mediaId);
             });
 
-            $this->concurrentRequestRelease();
-
             return $items;
         }
         catch (NotFoundException $e) {
             $this->getLog()->debug('getDataSetItems failed for id=%d. Widget=%d. Due to %s - this might be OK if we have a no-data message', $dataSetId, $this->getWidgetId(), $e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
-
-            $this->concurrentRequestRelease();
             return [];
         }
     }
@@ -1343,5 +1344,31 @@ class Ticker extends ModuleWidget
     {
         // Can't be sure because the client does the rendering
         return 1;
+    }
+
+    /** @inheritdoc */
+    public function getModifiedTimestamp($displayId)
+    {
+        $widgetModifiedDt = null;
+
+        if ($this->getOption('sourceId', 1) == 2) {
+
+            $dataSetId = $this->getOption('dataSetId');
+            $dataSet = $this->dataSetFactory->getById($dataSetId);
+
+            // Set the timestamp
+            $widgetModifiedDt = $dataSet->lastDataEdit;
+
+            // Remote dataSets are kept "active" by required files
+            if ($dataSet->isRemote) {
+                // Touch this dataSet
+                $dataSetCache = $this->getPool()->getItem('/dataset/accessed/' . $dataSet->dataSetId);
+                $dataSetCache->set('true');
+                $dataSetCache->expiresAfter($this->getSetting('REQUIRED_FILES_LOOKAHEAD') * 1.5);
+                $this->getPool()->saveDeferred($dataSetCache);
+            }
+        }
+
+        return $widgetModifiedDt;
     }
 }
