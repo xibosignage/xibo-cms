@@ -415,17 +415,22 @@ class Playlist implements \JsonSerializable
 
     /**
      * Delete
+     * @param array $options
      * @throws InvalidArgumentException
      */
-    public function delete()
+    public function delete($options = [])
     {
+        $options = array_merge([
+            'regionDelete' => false
+        ], $options);
+
         // We must ensure everything is loaded before we delete
         if (!$this->loaded)
             $this->load();
 
         $this->getLog()->debug('Deleting ' . $this);
 
-        if ($this->regionId != 0)
+        if (!$options['regionDelete'] && $this->regionId != 0)
             throw new InvalidArgumentException(__('This Playlist belongs to a Region, please delete the Region instead.'), 'regionId');
 
         // Notify we're going to delete

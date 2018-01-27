@@ -590,15 +590,11 @@ class Layout implements \JsonSerializable
      */
     public function delete($options = [])
     {
-        $options = array_merge([
-            'deleteOrphanedPlaylists' => true
-        ], $options);
-
         // We must ensure everything is loaded before we delete
         if (!$this->loaded)
             $this->load();
 
-        $this->getLog()->debug('Deleting %s', $this);
+        $this->getLog()->debug('Deleting ' . $this);
 
         // We cannot delete the default default
         if ($this->layoutId == $this->config->GetSetting('DEFAULT_LAYOUT'))

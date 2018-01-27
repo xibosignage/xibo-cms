@@ -422,7 +422,7 @@ class Region implements \JsonSerializable
         }
 
         // Delete the region specific playlist
-        $this->getPlaylist()->delete();
+        $this->getPlaylist()->delete(['regionDelete' => true]);
 
         // Delete this region
         $this->getStore()->update('DELETE FROM `region` WHERE regionId = :regionId', array('regionId' => $this->regionId));
