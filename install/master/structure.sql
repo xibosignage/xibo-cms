@@ -380,7 +380,7 @@ CREATE TABLE IF NOT EXISTS `lktagplaylist` (
   `lkTagPlaylistId` int(11) NOT NULL AUTO_INCREMENT,
   `tagId` int(11) NOT NULL,
   `playlistId` int(11) NOT NULL,
-  PRIMARY KEY (`lkTagLayoutId`),
+  PRIMARY KEY (`lkTagPlaylistId`),
   UNIQUE KEY `tagId` (`tagId`,`playlistId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
