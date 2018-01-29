@@ -1123,6 +1123,7 @@ class Layout implements \JsonSerializable
      * Save the XLF to disk if necessary
      * @param array $options
      * @return string the path
+     * @throws XiboException
      */
     public function xlfToDisk($options = [])
     {
@@ -1135,7 +1136,7 @@ class Layout implements \JsonSerializable
 
         if ($this->status == 3 || !file_exists($path)) {
 
-            $this->getLog()->debug('XLF needs building for Layout %d', $this->layoutId);
+            $this->getLog()->debug('XLF needs building for Layout ' . $this->layoutId);
 
             // Assume error
             $this->status = 4;
