@@ -36,7 +36,7 @@ use Xibo\Factory\ModuleFactory;
  */
 class ForecastIo extends ModuleWidget
 {
-    const API_ENDPOINT = 'https://api.darksky.net/forecast/player/';
+    const API_ENDPOINT = 'https://api.darksky.net/forecast/';
 
     private $resourceFolder;
     protected $codeSchemaVersion = 1;
@@ -46,7 +46,7 @@ class ForecastIo extends ModuleWidget
      */
     public function init()
     {
-        $this->resourceFolder = PROJECT_ROOT . '/modules/forecastio';
+        $this->resourceFolder = PROJECT_ROOT . '/modules/forecastio/player';
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
