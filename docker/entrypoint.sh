@@ -70,6 +70,7 @@ if [ "$DB_EXISTS" == "1" ] && [ "$CMS_DEV_MODE" == "false" ]
 then
   echo "Existing Database, checking if we need to upgrade it"
   # Get the currently installed schema version number
+  # TODO: run phinx
   CURRENT_DB_VERSION=$(mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -se 'SELECT DBVersion from version')
 
   if [ ! "$CURRENT_DB_VERSION"  == "$CMS_DB_VERSION" ]
@@ -92,6 +93,7 @@ then
 
   echo "Provisioning Database"
   # Populate the database
+  # TODO: run phinx
   mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SOURCE /var/www/cms/install/master/structure.sql"
   mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SOURCE /var/www/cms/install/master/data.sql"
   mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SOURCE /var/www/cms/install/master/constraints.sql"

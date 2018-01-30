@@ -193,6 +193,7 @@ class Install
             throw new InstallationError(sprintf(__('Could not connect to MySQL with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
         }
 
+        // TODO: run phinx migrate
         // We should have a database that we can access and populate with our tables.
         $sql_files = array('structure.sql', 'data.sql', 'constraints.sql');
         $sqlStatementCount = 0;

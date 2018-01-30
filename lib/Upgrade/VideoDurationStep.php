@@ -8,6 +8,7 @@
 
 namespace Xibo\Upgrade;
 
+// TODO: convert into a task
 
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;

@@ -8,6 +8,7 @@
 
 namespace Xibo\Upgrade;
 
+// TODO: make this a task
 
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
@@ -164,6 +165,8 @@ class LayoutStructureStep implements Step
         // Drop the permissions
         $dbh->exec('DROP TABLE `lklayoutmediagroup`;');
         $dbh->exec('DROP TABLE `lklayoutregiongroup`;');
+        $dbh->exec('DROP TABLE lklayoutmedia');
+        $dbh->exec('ALTER TABLE `layout` DROP `xml`;');
     }
 
     private static $dbStructure = <<<END
