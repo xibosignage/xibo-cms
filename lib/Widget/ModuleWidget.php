@@ -32,6 +32,7 @@ use Xibo\Entity\User;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
@@ -371,12 +372,13 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Hold a lock on concurrent requests
      *  blocks if the request is locked
-     * @param $key
-     * @param $ttl
-     * @param $wait
-     * @param $tries
+     * @param string|null $key
+     * @param int $ttl seconds
+     * @param int $wait milliseconds
+     * @param int $tries
+     * @throws XiboException
      */
-    public function concurrentRequestLock($key = null, $ttl = 30, $wait = 5000, $tries = 3)
+    public function concurrentRequestLock($key = null, $ttl = 900, $wait = 20000, $tries = 50)
     {
         // If the key is null default to the widgetId
         if ($key === null)
@@ -386,6 +388,13 @@ abstract class ModuleWidget implements ModuleInterface
         $this->lock->setInvalidationMethod(Invalidation::SLEEP, $wait, $tries);
 
         $this->lock->get();
+
+        // Did we get a lock?
+        // if we've not been able to get a lock here - is this because we've not created this lock before?
+        // or is it because we've hit the very generous timeouts
+        if (!$this->lock->isHit() && $this->lock->getCreation() !== false)
+            throw new XiboException('Concurrent record locked, time out.');
+
         $this->lock->lock($ttl);
     }
 
