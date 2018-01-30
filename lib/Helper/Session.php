@@ -286,10 +286,15 @@ class Session implements \SessionHandlerInterface
     public function regenerateSessionId()
     {
         //$this->log->debug('Session regenerate');
-
         session_regenerate_id(true);
 
         $this->key = session_id();
+
+        // PHP7 calls open/close on regenerate
+        // PHP5 does neither
+        if (version_compare(phpversion(), '7.0') === -1) {
+            $this->insertSession($this->key, '', time(), time() + $this->maxLifetime);
+        }
     }
 
     /**
