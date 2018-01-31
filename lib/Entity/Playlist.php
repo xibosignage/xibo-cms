@@ -492,13 +492,11 @@ class Playlist implements \JsonSerializable
             'modifiedDt' => $time,
         ));
 
-        if (DBVERSION >= 160) {
-            // Insert my self link
-            $this->getStore()->insert('INSERT INTO `lkplaylistplaylist` (`parentId`, `childId`, `depth`) VALUES (:parentId, :childId, 0)', [
-                'parentId' => $this->playlistId,
-                'childId' => $this->playlistId
-            ]);
-        }
+        // Insert my self link
+        $this->getStore()->insert('INSERT INTO `lkplaylistplaylist` (`parentId`, `childId`, `depth`) VALUES (:parentId, :childId, 0)', [
+            'parentId' => $this->playlistId,
+            'childId' => $this->playlistId
+        ]);
     }
 
     /**

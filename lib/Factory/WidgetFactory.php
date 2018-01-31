@@ -193,12 +193,10 @@ class WidgetFactory extends BaseFactory
               widget.duration,
               widget.displayOrder,
               `widget`.useDuration,
-              `widget`.calculatedDuration
+              `widget`.calculatedDuration,
+              `widget`.fromDt,
+              `widget`.toDt 
         ';
-
-        if (DBVERSION >= 160) {
-            $select .=  ' , `widget`.fromDt, `widget`.toDt ';
-        }
 
         $body = '
           FROM `widget`

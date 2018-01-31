@@ -157,12 +157,7 @@ class PlaylistFactory extends BaseFactory
             SELECT `playlist`.playlistId,
                 `playlist`.ownerId,
                 `playlist`.name,
-                `user`.UserName AS owner
-        ';
-
-        if (DBVERSION >= 160) {
-            $select .= '
-                , 
+                `user`.UserName AS owner, 
                 `playlist`.regionId,
                 `playlist`.createdDt,
                 `playlist`.modifiedDt,
@@ -188,10 +183,9 @@ class PlaylistFactory extends BaseFactory
                     AND objectId = playlist.playlistId
                     AND view = 1
                 ) AS groupsWithPermissions
-            ';
+        ';
 
-            $params['permissionEntityForGroup'] = 'Xibo\\Entity\\Playlist';
-        }
+        $params['permissionEntityForGroup'] = 'Xibo\\Entity\\Playlist';
 
         $body = '  
               FROM `playlist` 
@@ -221,17 +215,17 @@ class PlaylistFactory extends BaseFactory
             $params['ownerUserGroupId'] = $this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy);
         }
 
-        if (DBVERSION >= 160 && $this->getSanitizer()->getInt('regionId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('regionId', $filterBy) !== null) {
             $body .= ' AND `playlist`.regionId = :regionId ';
             $params['regionId'] = $this->getSanitizer()->getInt('regionId', $filterBy);
         }
 
-        if (DBVERSION >= 160 && $this->getSanitizer()->getInt('requiresDurationUpdate', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('requiresDurationUpdate', $filterBy) !== null) {
             $body .= ' AND `playlist`.requiresDurationUpdate = :requiresDurationUpdate ';
             $params['requiresDurationUpdate'] = $this->getSanitizer()->getInt('requiresDurationUpdate', $filterBy);
         }
 
-        if (DBVERSION >= 160 && $this->getSanitizer()->getInt('childId', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('childId', $filterBy) !== null) {
             $body .= ' 
                 AND `playlist`.playlistId IN (
                     SELECT parentId 
@@ -250,7 +244,7 @@ class PlaylistFactory extends BaseFactory
             $params['childId'] = $this->getSanitizer()->getInt('childId', $filterBy);
         }
 
-        if (DBVERSION >= 160 && $this->getSanitizer()->getInt('regionSpecific', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('regionSpecific', $filterBy) !== null) {
             if ($this->getSanitizer()->getInt('regionSpecific', $filterBy) === 1)
                 $body .= ' AND `playlist`.regionId IS NOT NULL ';
             else

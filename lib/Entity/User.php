@@ -491,7 +491,7 @@ class User implements \JsonSerializable
         if ($this->userId == 0)
             throw new NotFoundException(__('User not found'));
 
-        if ($this->CSPRNG == 0 || $this->configService->Version('DBVersion') < 62) {
+        if ($this->CSPRNG == 0) {
             // Password is tested using a plain MD5 check
             if ($this->password != md5($password))
                 throw new AccessDeniedException();

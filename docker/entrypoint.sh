@@ -57,7 +57,7 @@ fi
 
 DB_EXISTS=0
 # Check if the database exists already
-if mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SELECT DBVersion from version"
+if mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SELECT * FROM \`setting\` LIMIT 1"
 then
   # Database exists.
   DB_EXISTS=1
@@ -69,11 +69,10 @@ fi
 if [ "$DB_EXISTS" == "1" ] && [ "$CMS_DEV_MODE" == "false" ]
 then
   echo "Existing Database, checking if we need to upgrade it"
-  # Get the currently installed schema version number
-  # TODO: run phinx
-  CURRENT_DB_VERSION=$(mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -se 'SELECT DBVersion from version')
+  # Determine if there are any migrations to be run
+  php /var/www/cms/vendor/bin/phinx status
 
-  if [ ! "$CURRENT_DB_VERSION"  == "$CMS_DB_VERSION" ]
+  if [ ! "$?" == 0 ]
   then
     echo "We will upgrade it, take a backup"
 
@@ -82,6 +81,9 @@ then
 
     # Drop app cache on upgrade
     rm -rf /var/www/cms/cache/*
+
+    # Upgrade
+    php /var/www/cms/vendor/bin/phinx migrate
   fi
 fi
 
@@ -93,10 +95,7 @@ then
 
   echo "Provisioning Database"
   # Populate the database
-  # TODO: run phinx
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SOURCE /var/www/cms/install/master/structure.sql"
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SOURCE /var/www/cms/install/master/data.sql"
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SOURCE /var/www/cms/install/master/constraints.sql"
+  php /var/www/cms/vendor/bin/phinx migrate
 
   CMS_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
 
@@ -219,10 +218,6 @@ sed -i "s/post_max_size = .*$/post_max_size = $CMS_PHP_POST_MAX_SIZE/" /etc/php7
 sed -i "s/upload_max_filesize = .*$/upload_max_filesize = $CMS_PHP_UPLOAD_MAX_FILESIZE/" /etc/php7/php.ini
 sed -i "s/max_execution_time = .*$/max_execution_time = $CMS_PHP_MAX_EXECUTION_TIME/" /etc/php7/php.ini
 sed -i "s/memory_limit = .*$/memory_limit = $CMS_PHP_MEMORY_LIMIT/" /etc/php7/php.ini
-
-echo "Running maintenance"
-cd /var/www/cms
-su -s /bin/bash -c 'cd /var/www/cms && /usr/bin/php bin/run.php 1' apache
 
 # Run CRON in Production mode
 if [ "$CMS_DEV_MODE" == "false" ]

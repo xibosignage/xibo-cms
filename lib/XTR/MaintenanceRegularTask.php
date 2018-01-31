@@ -324,11 +324,9 @@ class MaintenanceRegularTask implements TaskInterface
      */
     private function updatePlaylistDurations()
     {
-        if (DBVERSION < 160)
-            return;
-
         /** @var PlaylistFactory $playlistFactory */
         $playlistFactory = $this->app->container->get('playlistFactory');
+
         /** @var ModuleFactory $moduleFactory */
         $moduleFactory = $this->app->container->get('moduleFactory');
 

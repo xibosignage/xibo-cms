@@ -39,6 +39,7 @@ use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Helper\Environment;
 use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -1466,7 +1467,7 @@ class Layout extends Base
             }
         }
 
-        $layout->schemaVersion = $this->getConfig()->Version('XlfVersion');
+        $layout->schemaVersion = Environment::$XLF_VERSION;
         $layout->save(['validate' => false, 'notify' => $scaleContent]);
 
         // Return

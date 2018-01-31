@@ -153,7 +153,7 @@ class Error extends Base
                     $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($e)));
 
                     // An upgrade might be pending
-                    if ($e instanceof AccessDeniedException && $this->getConfig()->isUpgradePending())
+                    if ($e instanceof UpgradePendingException)
                         $exceptionClass = 'upgrade-in-progress-page';
 
                     if (file_exists(PROJECT_ROOT . '/views/' . $exceptionClass . '.twig'))

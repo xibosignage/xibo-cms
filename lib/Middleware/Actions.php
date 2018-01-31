@@ -45,7 +45,7 @@ class Actions extends Middleware
         $app->hook('slim.before.dispatch', function() use ($app) {
 
             // Process Actions
-            if (!$app->configService->isUpgradePending() && $app->configService->GetSetting('DEFAULTS_IMPORTED') == 0) {
+            if (!Environment::migrationPending() && $app->configService->GetSetting('DEFAULTS_IMPORTED') == 0) {
 
                 $folder = PROJECT_ROOT . '/web/' . $app->configService->uri('layouts', true);
 
@@ -83,14 +83,14 @@ class Actions extends Middleware
 
             // Does the version in the DB match the version of the code?
             // If not then we need to run an upgrade.
-            if ($app->configService->isUpgradePending() && !in_array($resource, $excludedRoutes)) {
+            if (Environment::migrationPending() && !in_array($resource, $excludedRoutes)) {
                 $app->logService->debug('%s not in excluded routes, redirecting. ', $resource);
                 $app->redirectTo('upgrade.view');
                 return;
             }
 
             // Do not proceed unless we have completed an upgrade
-            if ($app->configService->isUpgradePending())
+            if (Environment::migrationPending())
                 return;
 
             // Only process notifications if we are a full request

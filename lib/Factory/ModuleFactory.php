@@ -510,42 +510,24 @@ class ModuleFactory extends BaseFactory
         $params = array();
 
         $select = '
-                SELECT ModuleID,
-                   Module,
-                   Name,
-                   Enabled,
-                   Description,
-                   render_as,
-                   settings,
-                   RegionSpecific,
-                   ValidExtensions,
-                   ImageUri,
-                   PreviewEnabled,
-                   assignable,
-                   SchemaVersion
-                ';
-
-        if (DBVERSION >= 120) {
-            $select .= '
-                    ,
-                    viewPath,
-                   `class`
-                ';
-        }
-
-        if (DBVERSION >= 122) {
-            $select .= '
-                    ,
-                    `defaultDuration`
-                ';
-        }
-
-        if (DBVERSION >= 125) {
-            $select .= '
-                    ,
-                    IFNULL(`installName`, `module`) AS installName
-                ';
-        }
+            SELECT ModuleID,
+               Module,
+               Name,
+               Enabled,
+               Description,
+               render_as,
+               settings,
+               RegionSpecific,
+               ValidExtensions,
+               ImageUri,
+               PreviewEnabled,
+               assignable,
+               SchemaVersion,
+                viewPath,
+               `class`,
+                `defaultDuration`,
+                IFNULL(`installName`, `module`) AS installName
+            ';
 
         $body = '
                   FROM `module`
@@ -632,18 +614,10 @@ class ModuleFactory extends BaseFactory
             // Identification
             $module->type = strtolower($this->getSanitizer()->string($row['Module']));
 
-            if (DBVERSION >= 120) {
-                $module->class = $this->getSanitizer()->string($row['class']);
-                $module->viewPath = $this->getSanitizer()->string($row['viewPath']);
-            }
-
-            if (DBVERSION >= 122) {
-                $module->defaultDuration = $this->getSanitizer()->int($row['defaultDuration']);
-            }
-
-            if (DBVERSION >= 125) {
-                $module->installName = $this->getSanitizer()->string($row['installName']);
-            }
+            $module->class = $this->getSanitizer()->string($row['class']);
+            $module->viewPath = $this->getSanitizer()->string($row['viewPath']);
+            $module->defaultDuration = $this->getSanitizer()->int($row['defaultDuration']);
+            $module->installName = $this->getSanitizer()->string($row['installName']);
 
             $settings = $row['settings'];
             $module->settings = ($settings == '') ? array() : json_decode($settings, true);

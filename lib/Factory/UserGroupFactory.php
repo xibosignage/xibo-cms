@@ -181,28 +181,11 @@ class UserGroupFactory extends BaseFactory
         SELECT 	`group`.group,
             `group`.groupId,
             `group`.isUserSpecific,
-            `group`.isEveryone ';
-
-        if (DBVERSION >= 88) {
-            $select .= '
-                ,
-                `group`.libraryQuota
-            ';
-        }
-
-        if (DBVERSION >= 124) {
-            $select .= '
-                ,
-                `group`.isSystemNotification
-            ';
-        }
-
-        if (DBVERSION >= 134) {
-            $select .= '
-                ,
-                `group`.isDisplayNotification
-            ';
-        }
+            `group`.isEveryone,
+            `group`.libraryQuota,
+            `group`.isSystemNotification,
+            `group`.isDisplayNotification
+        ';
 
         $body = '
           FROM `group`
@@ -285,7 +268,7 @@ class UserGroupFactory extends BaseFactory
             $params['isSystemNotification'] = $this->getSanitizer()->getInt('isSystemNotification', $filterBy);
         }
 
-        if (DBVERSION >= 134 && $this->getSanitizer()->getInt('isDisplayNotification', $filterBy) !== null) {
+        if ($this->getSanitizer()->getInt('isDisplayNotification', $filterBy) !== null) {
             $body .= ' AND isDisplayNotification = :isDisplayNotification ';
             $params['isDisplayNotification'] = $this->getSanitizer()->getInt('isDisplayNotification', $filterBy);
         }

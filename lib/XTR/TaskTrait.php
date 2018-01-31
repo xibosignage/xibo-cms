@@ -15,7 +15,6 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\NotificationFactory;
-use Xibo\Factory\UpgradeFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
@@ -66,9 +65,6 @@ trait TaskTrait
 
     /** @var  DisplayFactory */
     private $displayFactory;
-
-    /** @var  UpgradeFactory */
-    private $upgradeFactory;
 
     /** @var  MediaFactory */
     private $mediaFactory;
@@ -158,13 +154,12 @@ trait TaskTrait
     }
 
     /** @inheritdoc */
-    public function setFactories($userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $upgradeFactory, $mediaFactory, $notificationFactory, $userNotificationFactory)
+    public function setFactories($userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $mediaFactory, $notificationFactory, $userNotificationFactory)
     {
         $this->userGroupFactory = $userGroupFactory;
         $this->userFactory = $userFactory;
         $this->layoutFactory = $layoutFactory;
         $this->displayFactory = $displayFactory;
-        $this->upgradeFactory = $upgradeFactory;
         $this->mediaFactory = $mediaFactory;
         $this->notificationFactory = $notificationFactory;
         $this->userNotificationFactory = $userNotificationFactory;

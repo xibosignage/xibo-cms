@@ -15,7 +15,6 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\NotificationFactory;
-use Xibo\Factory\UpgradeFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
@@ -92,13 +91,12 @@ interface TaskInterface
      * @param UserGroupFactory $userGroupFactory
      * @param LayoutFactory $layoutFactory
      * @param DisplayFactory $displayFactory
-     * @param UpgradeFactory $upgradeFactory
      * @param MediaFactory $mediaFactory
      * @param NotificationFactory $notificationFactory
      * @param UserNotificationFactory $userNotificationFactory
      * @return $this
      */
-    public function setFactories($userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $upgradeFactory, $mediaFactory, $notificationFactory, $userNotificationFactory);
+    public function setFactories($userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $mediaFactory, $notificationFactory, $userNotificationFactory);
 
     /**
      * @return $this

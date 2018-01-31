@@ -172,9 +172,6 @@ class LocalWebTestCase extends WebTestCase
 
         $container->configService->setDependencies($container->store, '/');
 
-        // Define versions, etc.
-        $container->configService->Version();
-
         // Register the sanitizer
         $container->singleton('sanitizerService', function($container) {
             return new SanitizeService($container);

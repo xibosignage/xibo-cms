@@ -199,7 +199,7 @@ class DisplayFactory extends BaseFactory
                   `display`.timeZone
               ';
 
-        if ($this->getSanitizer()->getCheckbox('showTags', $filterBy) === 1 && DBVERSION >= 134) {
+        if ($this->getSanitizer()->getCheckbox('showTags', $filterBy) === 1) {
             $select .= ', 
                 (
                   SELECT GROUP_CONCAT(DISTINCT tag) 

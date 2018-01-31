@@ -371,7 +371,7 @@ class Session implements \SessionHandlerInterface
      */
     private function beginTransaction()
     {
-        if (!$this->getDb()->getConnection()->inTransaction() && DBVERSION > 122) {
+        if (!$this->getDb()->getConnection()->inTransaction()) {
             try {
                 $this->getDb()->getConnection()->exec('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
             } catch (\PDOException $e) {

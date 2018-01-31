@@ -39,6 +39,7 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\Environment;
 use Xibo\Helper\Random;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -1638,7 +1639,7 @@ class Soap
                     $PHONE_HOME_CLIENTS = $sth->fetchColumn();
 
                     // Retrieve version number
-                    $PHONE_HOME_VERSION = $this->getConfig()->Version('app_ver');
+                    $PHONE_HOME_VERSION = Environment::$WEBSITE_VERSION_NAME;
 
                     $PHONE_HOME_URL = $this->getConfig()->GetSetting('PHONE_HOME_URL') . "?id=" . urlencode($this->getConfig()->GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
 

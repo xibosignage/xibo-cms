@@ -7,15 +7,34 @@
 
 
 namespace Xibo\Helper;
+use Phinx\Console\PhinxApplication;
+use Phinx\Wrapper\TextWrapper;
 
-
+/**
+ * Class Environment
+ * @package Xibo\Helper
+ */
 class Environment
 {
-    public static $WEBSITE_VERSION_NAME = '1.8.5';
-    public static $WEBSITE_VERSION = 136;
-
+    public static $WEBSITE_VERSION_NAME = '2.0.0-alpha1';
+    public static $XMDS_VERSION = '5';
+    public static $XLF_VERSION = '2';
     public static $VERSION_REQUIRED = '5.5';
     public static $VERSION_UNSUPPORTED = '8.0';
+
+    public static function migrationStatus()
+    {
+        // Use a Phinx text wrapper to work out what the current status is
+        $phinx = new TextWrapper(new PhinxApplication());
+        $status = $phinx->getStatus();
+
+        echo $status;
+    }
+
+    public static function migrationPending()
+    {
+        return false;
+    }
 
     /**
      * Check FileSystem Permissions

@@ -7,7 +7,6 @@
 
 
 namespace Xibo\XTR;
-use Xibo\Exception\ConfigurationException;
 use Xibo\Helper\Environment;
 
 /**
@@ -18,18 +17,10 @@ class MaintenanceDailyTask implements TaskInterface
 {
     use TaskTrait;
 
-    private $hasUpgradeRun = false;
-
     /** @inheritdoc */
     public function run()
     {
         $this->runMessage = '# ' . __('Daily Maintenance') . PHP_EOL . PHP_EOL;
-
-        // Upgrade
-        $this->upgrade();
-
-        if ($this->hasUpgradeRun)
-            return;
 
         // Long running task
         set_time_limit(0);
@@ -51,86 +42,6 @@ class MaintenanceDailyTask implements TaskInterface
 
         // API tokens
         $this->purgeExpiredApiTokens();
-    }
-
-    /**
-     * Upgrade if required
-     * @throws ConfigurationException
-     */
-    private function upgrade()
-    {
-        // Is there a pending upgrade (i.e. are there any pending upgrade steps).
-        if ($this->config->isUpgradePending()) {
-            // Flag to indicate we've run upgrade steps
-            $this->hasUpgradeRun = true;
-
-            $this->runMessage .= '#' . __('Upgrade') . PHP_EOL;
-            $steps = $this->upgradeFactory->getIncomplete();
-
-            if (count($steps) <= 0) {
-
-                // Insert pending upgrade steps.
-                $steps = $this->upgradeFactory->createSteps(DBVERSION, Environment::$WEBSITE_VERSION);
-
-                foreach ($steps as $step) {
-                    /* @var \Xibo\Entity\Upgrade $step */
-                    $step->save();
-                }
-            }
-
-            // Cycle through the steps until done
-            set_time_limit(0);
-
-            $previousStepSetsDbVersion = false;
-
-            foreach ($steps as $upgradeStep) {
-                /* @var \Xibo\Entity\Upgrade $upgradeStep */
-                if ($previousStepSetsDbVersion) {
-                    $this->log->notice('Pausing upgrade to reset version');
-                    $this->runMessage .= '#' . __('Upgrade Paused') . PHP_EOL . PHP_EOL;
-                    return;
-                }
-
-                // Assume success
-                $stepFailed = false;
-
-                try {
-                    $upgradeStep->doStep();
-                    $upgradeStep->complete = 1;
-
-                    // Commit
-                    $this->store->commitIfNecessary('upgrade');
-
-                } catch (\Exception $e) {
-                    // Failed to run upgrade step
-                    $this->log->error('Unable to run upgrade stepId ' . $upgradeStep->stepId . '. Message = ' . $e->getMessage());
-                    $this->log->error($e->getTraceAsString());
-
-                    try {
-                        $this->store->getConnection('upgrade')->rollBack();
-                    } catch (\Exception $exception) {
-                        $this->log->error('Unable to rollback. E = ' . $e->getMessage());
-                    }
-
-                    $stepFailed = true;
-                }
-
-                $upgradeStep->lastTryDate = $this->date->parse()->format('U');
-                $upgradeStep->save();
-
-                // Commit the default connection to ensure we persist this upgrade step status change.
-                $this->store->commitIfNecessary();
-
-                // if we are a step that updates the version table, then exit
-                if ($upgradeStep->type == 'sql' && stripos($upgradeStep->action, 'SET `DBVersion`'))
-                    $previousStepSetsDbVersion = true;
-
-                if ($stepFailed)
-                    throw new ConfigurationException('Unable to run upgrade step. Aborting Maintenance Task.');
-            }
-
-            $this->runMessage .= '#' . __('Upgrade Complete') . PHP_EOL . PHP_EOL;
-        }
     }
 
     /**
@@ -221,7 +132,7 @@ class MaintenanceDailyTask implements TaskInterface
     {
         $this->runMessage .= '## ' . __('Import Layouts') . PHP_EOL;
 
-        if (!$this->config->isUpgradePending() && $this->config->GetSetting('DEFAULTS_IMPORTED') == 0) {
+        if (!Environment::migrationPending() && $this->config->GetSetting('DEFAULTS_IMPORTED') == 0) {
 
             $folder = PROJECT_ROOT . '/web/' . $this->config->uri('layouts', true);
 

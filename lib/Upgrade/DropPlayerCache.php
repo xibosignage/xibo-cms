@@ -5,6 +5,7 @@
  * (DropPlayerCache.php)
  */
 
+// TODO: make into a task
 
 namespace Xibo\Upgrade;
 use Stash\Interfaces\PoolInterface;

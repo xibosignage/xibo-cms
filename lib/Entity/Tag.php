@@ -226,18 +226,14 @@ class Tag implements \JsonSerializable
             $this->layoutIds[] = $row['layoutId'];
         }
 
-        if (DBVERSION >= 129) {
-            $this->campaignIds = [];
-            foreach ($this->getStore()->select('SELECT campaignId FROM `lktagcampaign` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
-                $this->campaignIds[] = $row['campaignId'];
-            }
+        $this->campaignIds = [];
+        foreach ($this->getStore()->select('SELECT campaignId FROM `lktagcampaign` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
+            $this->campaignIds[] = $row['campaignId'];
         }
 
-        if (DBVERSION >= 160) {
-            $this->playlistIds = [];
-            foreach ($this->getStore()->select('SELECT playlistId FROM `lktagplaylist` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
-                $this->playlistIds[] = $row['playlistId'];
-            }
+        $this->playlistIds = [];
+        foreach ($this->getStore()->select('SELECT playlistId FROM `lktagplaylist` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
+            $this->playlistIds[] = $row['playlistId'];
         }
 
         $this->mediaIds = [];
@@ -356,10 +352,6 @@ class Tag implements \JsonSerializable
      */
     private function linkPlaylists()
     {
-        // Didn't exist before 160
-        if (DBVERSION < 160)
-            return;
-
         $playlistsToLink = array_diff($this->playlistIds, $this->originalLayoutIds);
 
         $this->getLog()->debug('Linking %d playlists to Tag %s', count($playlistsToLink), $this->tag);
@@ -378,10 +370,6 @@ class Tag implements \JsonSerializable
      */
     private function unlinkPlaylists()
     {
-        // Didn't exist before 160
-        if (DBVERSION < 160)
-            return;
-
         // Playlists that are in the originalLayoutIds but not in the current playlistIds
         $playlistsToUnlink = array_diff($this->originalLayoutIds, $this->playlistIds);
 
@@ -413,10 +401,6 @@ class Tag implements \JsonSerializable
      */
     private function linkCampaigns()
     {
-        // Didn't exist before 129
-        if (DBVERSION < 129)
-            return;
-
         $campaignsToLink = array_diff($this->campaignIds, $this->originalCampaignIds);
 
         $this->getLog()->debug('Linking %d campaigns to Tag %s', count($campaignsToLink), $this->tag);
@@ -435,10 +419,6 @@ class Tag implements \JsonSerializable
      */
     private function unlinkCampaigns()
     {
-        // Didn't exist before 129
-        if (DBVERSION < 129)
-            return;
-
         // Campaigns that are in the originalCampaignIds but not in the current campaignIds
         $campaignsToUnlink = array_diff($this->originalCampaignIds, $this->campaignIds);
 
@@ -520,10 +500,6 @@ class Tag implements \JsonSerializable
      */
     private function linkDisplayGroups()
     {
-        // Didn't exist before 134
-        if (DBVERSION < 134)
-            return;
-
         $displayGroupsToLink = array_diff($this->displayGroupIds, $this->originalDisplayGroupIds);
 
         $this->getLog()->debug('Linking ' . count($displayGroupsToLink) . ' displayGroups to Tag ' . $this->tag);
@@ -542,10 +518,6 @@ class Tag implements \JsonSerializable
      */
     private function unlinkDisplayGroups()
     {
-        // Didn't exist before 134
-        if (DBVERSION < 134)
-            return;
-
         // DisplayGroups that are in the $this->originalDisplayGroupIds but not in the current $this->displayGroupIds
         $displayGroupsToUnlink = array_diff($this->originalDisplayGroupIds, $this->displayGroupIds);
 

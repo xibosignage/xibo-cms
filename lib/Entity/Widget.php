@@ -828,7 +828,7 @@ class Widget implements \JsonSerializable
             `duration` = :duration,
             `displayOrder` = :displayOrder,
             `useDuration` = :useDuration,
-            `calculatedDuration` = :calculatedDuration
+            `calculatedDuration` = :calculatedDuration,
         ';
 
         $params = [
@@ -842,12 +842,10 @@ class Widget implements \JsonSerializable
             'calculatedDuration' => $this->calculatedDuration
         ];
 
-        if (DBVERSION >= 160) {
             $sql .= ', `fromDt` = :fromDt, `toDt` = :toDt ';
 
             $params['fromDt'] = ($this->fromDt == null) ? self::$DATE_MIN : $this->fromDt;
             $params['toDt'] = ($this->toDt == null) ? self::$DATE_MAX : $this->toDt;
-        }
 
         $sql .= ' WHERE `widgetId` = :widgetId ';
         $this->getStore()->update($sql, $params);
