@@ -51,8 +51,9 @@ class OldUpgradeStep135Migration extends AbstractMigration
                     'configFile' => '/tasks/remote-dataset.task'
                 ])->save();
 
-                // Bump our version
-                $this->execute('UPDATE `version` SET DBVersion = ' . $STEP);
+                // Remove the version table
+                $this->dropTable('upgrade');
+                $this->dropTable('version');
             }
         }
     }

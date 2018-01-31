@@ -85,7 +85,7 @@ class State extends Middleware
                 throw new InstanceSuspendedException();
 
             // Get to see if upgrade is pending
-            if (Environment::migrationPending() && $app->getName() != 'web')
+            if (Environment::migrationPending())
                 throw new UpgradePendingException();
 
             // Reset the ETAGs for GZIP
@@ -951,18 +951,6 @@ class State extends Middleware
                 $container->dateService,
                 $container->configService,
                 $container->transitionFactory
-            );
-        });
-
-        $app->container->singleton('\Xibo\Controller\Upgrade', function($container) {
-            return new \Xibo\Controller\Upgrade(
-                $container->logService,
-                $container->sanitizerService,
-                $container->state,
-                $container->user,
-                $container->helpService,
-                $container->dateService,
-                $container->configService
             );
         });
 

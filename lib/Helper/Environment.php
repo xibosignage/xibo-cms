@@ -22,18 +22,17 @@ class Environment
     public static $VERSION_REQUIRED = '5.5';
     public static $VERSION_UNSUPPORTED = '8.0';
 
-    public static function migrationStatus()
-    {
-        // Use a Phinx text wrapper to work out what the current status is
-        $phinx = new TextWrapper(new PhinxApplication());
-        $status = $phinx->getStatus();
-
-        echo $status;
-    }
-
+    /**
+     * Is there a migration pending
+     * @return bool
+     */
     public static function migrationPending()
     {
-        return false;
+        // Use a Phinx text wrapper to work out what the current status is
+        $phinx = new TextWrapper(new PhinxApplication(), ['configuration' => PROJECT_ROOT . '/phinx.php']);
+        $phinx->getStatus();
+
+        return ($phinx->getExitCode() != 0);
     }
 
     /**

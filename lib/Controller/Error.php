@@ -15,6 +15,7 @@ use Xibo\Exception\FormExpiredException;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\TokenExpiredException;
 use Xibo\Exception\UpgradePendingException;
+use Xibo\Helper\Environment;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -139,6 +140,12 @@ class Error extends Base
             case 'web':
 
                 $message = ($handled) ? $e->getMessage() : __('Unexpected Error, please contact support.');
+
+                // Just in case our theme has not been set by the time the exception was raised.
+                $this->getState()->setData([
+                    'theme' => $this->getConfig(),
+                    'version' => Environment::$WEBSITE_VERSION_NAME
+                ]);
 
                 if ($app->request()->isAjax()) {
                     $this->getState()->hydrate([

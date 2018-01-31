@@ -57,7 +57,7 @@ fi
 
 DB_EXISTS=0
 # Check if the database exists already
-if mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SELECT * FROM \`setting\` LIMIT 1"
+if mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SELECT settingId FROM \`setting\` LIMIT 1"
 then
   # Database exists.
   DB_EXISTS=1
@@ -83,6 +83,7 @@ then
     rm -rf /var/www/cms/cache/*
 
     # Upgrade
+    echo 'Running database migrations'
     php /var/www/cms/vendor/bin/phinx migrate
   fi
 fi

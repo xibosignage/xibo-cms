@@ -60,6 +60,36 @@ class InstallMigration extends AbstractMigration
 
     private function addStructure()
     {
+        // Start with the user type table
+        $userType = $this->table('usertype', ['id' => 'userTypeId']);
+        $userType
+            ->addColumn('userType', 'string', ['limit' => 16])
+            ->save();
+
+        // Start with the user table
+        $user = $this->table('user', ['id' => 'userId']);
+        $user
+            ->addColumn('userTypeId', 'integer')
+            ->addColumn('userName', 'string', ['limit' => 50])
+            ->addColumn('userPassword', 'string', ['limit' => 255])
+            ->addColumn('loggedIn', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
+            ->addColumn('lastAccessed', 'datetime', ['null' => true])
+            ->addColumn('email', 'string', ['limit' => 255, 'null' => true])
+            ->addColumn('homePageId', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 1])
+            ->addColumn('retired', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
+            ->addColumn('csprng', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
+            ->addColumn('newUserWizard', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
+            ->addColumn('firstName', 'string', ['limit' => 254, 'null' => true])
+            ->addColumn('lastName', 'string', ['limit' => 254, 'null' => true])
+            ->addColumn('phone', 'string', ['limit' => 254, 'null' => true])
+            ->addColumn('ref1', 'string', ['limit' => 254, 'null' => true])
+            ->addColumn('ref2', 'string', ['limit' => 254, 'null' => true])
+            ->addColumn('ref3', 'string', ['limit' => 254, 'null' => true])
+            ->addColumn('ref4', 'string', ['limit' => 254, 'null' => true])
+            ->addColumn('ref5', 'string', ['limit' => 254, 'null' => true])
+            ->addForeignKey('userTypeId', 'usertype', 'userTypeId')
+            ->save();
+
         $auditLog = $this->table('auditlog', ['id' => 'logId']);
         $auditLog->addColumn('logDate', 'integer')
             ->addColumn('userId', 'integer')
@@ -73,7 +103,7 @@ class InstallMigration extends AbstractMigration
         $bandwidthType->addColumn('name', 'string', ['limit' => 25])
             ->save();
 
-        $bandwidth = $this->table('bandwidth', ['primaryKey' => ['displayId', 'type', 'month']]);
+        $bandwidth = $this->table('bandwidth', ['id' => false, 'primaryKey' => ['displayId', 'type', 'month']]);
         $bandwidth->addColumn('displayId', 'integer')
             ->addColumn('type', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addColumn('month', 'integer')
@@ -159,7 +189,7 @@ class InstallMigration extends AbstractMigration
             ->addIndex(['notificationId', 'userId'], ['unique' => true])
             ->save();
 
-        $userOption = $this->table('userOption'. ['id' => false, ['primaryKey' => ['userId', 'option']]]);
+        $userOption = $this->table('userOption', ['id' => false, ['primaryKey' => ['userId', 'option']]]);
         $userOption->addColumn('userId', 'integer')
             ->addColumn('option', 'string', ['limit' => 50])
             ->addColumn('value', 'text')
@@ -380,6 +410,19 @@ class InstallMigration extends AbstractMigration
             ->addColumn('tagId', 'integer')
             ->addColumn('campaignId', 'integer')
             ->addIndex(['tagId', 'campaignId'], ['unique' => true])
+            ->save();
+
+        // Blacklist table depends on the media/display tables.
+        $blacklist = $this->table('blacklist', ['id' => 'blacklistId']);
+        $blacklist
+            ->addColumn('mediaId', 'integer')
+            ->addColumn('displayId', 'integer')
+            ->addColumn('userId', 'integer', ['null' => true])
+            ->addColumn('reportingDisplayId', 'integer', ['null' => true])
+            ->addColumn('reason', 'text')
+            ->addColumn('isIgnored', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
+            ->addForeignKey('mediaId', 'media')
+            ->addForeignKey('displayId', 'display')
             ->save();
     }
 

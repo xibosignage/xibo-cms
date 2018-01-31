@@ -7,7 +7,6 @@
 
 
 namespace Xibo\XTR;
-use Xibo\Helper\Environment;
 
 /**
  * Class MaintenanceDailyTask
@@ -132,7 +131,7 @@ class MaintenanceDailyTask implements TaskInterface
     {
         $this->runMessage .= '## ' . __('Import Layouts') . PHP_EOL;
 
-        if (!Environment::migrationPending() && $this->config->GetSetting('DEFAULTS_IMPORTED') == 0) {
+        if ($this->config->GetSetting('DEFAULTS_IMPORTED') == 0) {
 
             $folder = PROJECT_ROOT . '/web/' . $this->config->uri('layouts', true);
 
