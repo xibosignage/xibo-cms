@@ -7,6 +7,8 @@
 
 
 namespace Xibo\XTR;
+use Xibo\Controller\Library;
+use Xibo\Factory\LayoutFactory;
 
 /**
  * Class MaintenanceDailyTask
@@ -15,6 +17,19 @@ namespace Xibo\XTR;
 class MaintenanceDailyTask implements TaskInterface
 {
     use TaskTrait;
+
+    /** @var LayoutFactory */
+    private $layoutFactory;
+
+    /** @var Library */
+    private $libraryController;
+
+    /** @inheritdoc */
+    public function setFactories($container)
+    {
+        $this->libraryController = $container->get('\Xibo\Controller\Library');
+        $this->layoutFactory = $container->get('layoutFactory');
+    }
 
     /** @inheritdoc */
     public function run()
@@ -157,9 +172,7 @@ class MaintenanceDailyTask implements TaskInterface
      */
     private function installModuleFiles()
     {
-        /** @var \Xibo\Controller\Library $libraryController */
-        $libraryController = $this->app->container->get('\Xibo\Controller\Library');
-        $libraryController->installAllModuleFiles();
+        $this->libraryController->installAllModuleFiles();
     }
 
     /**

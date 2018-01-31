@@ -7,9 +7,15 @@
 
 
 namespace Xibo\XTR;
+use Xibo\Controller\Display;
+use Xibo\Controller\Library;
 use Xibo\Exception\XiboException;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\PlaylistFactory;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\WakeOnLan;
 
@@ -20,6 +26,42 @@ use Xibo\Helper\WakeOnLan;
 class MaintenanceRegularTask implements TaskInterface
 {
     use TaskTrait;
+
+    /** @var Display */
+    private $displayController;
+
+    /** @var Library */
+    private $libraryController;
+
+    /** @var DisplayFactory */
+    private $displayFactory;
+
+    /** @var NotificationFactory */
+    private $notificationFactory;
+
+    /** @var UserGroupFactory */
+    private $userGroupFactory;
+
+    /** @var LayoutFactory */
+    private $layoutFactory;
+
+    /** @var PlaylistFactory */
+    private $playlistFactory;
+
+    /** @var ModuleFactory */
+    private $moduleFactory;
+
+    /** @inheritdoc */
+    public function setFactories($container)
+    {
+        $this->displayController = $container->get('\Xibo\Controller\Display');
+        $this->libraryController = $container->get('\Xibo\Controller\Library');
+
+        $this->displayFactory = $container->get('displayFactory');
+        $this->notificationFactory = $container->get('notificationFactory');
+        $this->userGroupFactory = $container->get('userGroupFactory');
+        $this->layoutFactory = $container->get('layoutFactory');
+    }
 
     /** @inheritdoc */
     public function run()
@@ -53,7 +95,7 @@ class MaintenanceRegularTask implements TaskInterface
         $emailAlerts = ($this->config->GetSetting("MAINTENANCE_EMAIL_ALERTS") == 'On');
         $alwaysAlert = ($this->config->GetSetting("MAINTENANCE_ALWAYS_ALERT") == 'On');
 
-        foreach ($this->app->container->get('\Xibo\Controller\Display')->setApp($this->app)->validateDisplays($this->displayFactory->query()) as $display) {
+        foreach ($this->displayController->validateDisplays($this->displayFactory->query()) as $display) {
             /* @var \Xibo\Entity\Display $display */
             // Is this the first time this display has gone "off-line"
             $displayGoneOffline = ($display->loggedIn == 1);
@@ -222,10 +264,8 @@ class MaintenanceRegularTask implements TaskInterface
         $this->runMessage .= '## ' . __('Tidy Library') . PHP_EOL;
 
         // Keep tidy
-        /** @var \Xibo\Controller\Library $libraryController */
-        $libraryController = $this->app->container->get('\Xibo\Controller\Library');
-        $libraryController->removeExpiredFiles();
-        $libraryController->removeTempFiles();
+        $this->libraryController->removeExpiredFiles();
+        $this->libraryController->removeTempFiles();
 
         $this->runMessage .= ' - Done' . PHP_EOL . PHP_EOL;
     }
@@ -324,18 +364,13 @@ class MaintenanceRegularTask implements TaskInterface
      */
     private function updatePlaylistDurations()
     {
-        /** @var PlaylistFactory $playlistFactory */
-        $playlistFactory = $this->app->container->get('playlistFactory');
-
-        /** @var ModuleFactory $moduleFactory */
-        $moduleFactory = $this->app->container->get('moduleFactory');
-
         $this->runMessage .= '## ' . __('Playlist Duration Updates') . PHP_EOL;
 
         // Build Layouts
-        foreach ($playlistFactory->query(null, ['requiresDurationUpdate' => 1]) as $playlist) {
+        foreach ($this->playlistFactory->query(null, ['requiresDurationUpdate' => 1]) as $playlist) {
             try {
-                $playlist->setModuleFactory($moduleFactory)->updateDuration();
+                $playlist->setModuleFactory($this->moduleFactory);
+                $playlist->updateDuration();
             } catch (XiboException $xiboException) {
                 $this->log->error('Maintenance cannot update Playlist ' . $playlist->playlistId . ', ' . $xiboException->getMessage());
             }

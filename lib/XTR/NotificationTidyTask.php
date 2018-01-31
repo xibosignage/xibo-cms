@@ -17,6 +17,12 @@ class NotificationTidyTask implements TaskInterface
     use TaskTrait;
 
     /** @inheritdoc */
+    public function setFactories($container)
+    {
+        // No factories required
+    }
+
+    /** @inheritdoc */
     public function run()
     {
         // Delete notifications older than X days
