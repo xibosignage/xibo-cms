@@ -1,0 +1,5 @@
+{
+  "name": "Layout Convert",
+  "class": "\\Xibo\\XTR\\LayoutConvertTask",
+  "options": {}
+}

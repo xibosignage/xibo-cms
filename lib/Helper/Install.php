@@ -20,6 +20,8 @@
  */
 namespace Xibo\Helper;
 
+use Phinx\Console\PhinxApplication;
+use Phinx\Wrapper\TextWrapper;
 use Xibo\Exception\InstallationError;
 use Xibo\Service\ConfigService;
 use Xibo\Service\SanitizerServiceInterface;
@@ -193,31 +195,9 @@ class Install
             throw new InstallationError(sprintf(__('Could not connect to MySQL with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
         }
 
-        // TODO: run phinx migrate
-        // We should have a database that we can access and populate with our tables.
-        $sql_files = array('structure.sql', 'data.sql', 'constraints.sql');
-        $sqlStatementCount = 0;
-        $sql_file = '';
-        $sql = '';
-
-        try {
-            $dbh = $store->getConnection();
-
-            foreach ($sql_files as $filename) {
-                $delimiter = ';';
-                $sql_file = @file_get_contents(PROJECT_ROOT . '/install/master/' . $filename);
-                $sql_file = Install::remove_remarks($sql_file);
-                $sql_file = Install::split_sql_file($sql_file, $delimiter);
-
-                foreach ($sql_file as $sql) {
-                    $sqlStatementCount++;
-
-                    $dbh->exec($sql);
-                }
-            }
-        } catch (\PDOException $e) {
-            throw new InstallationError(sprintf(__('An error occurred populating the database. Statement number: %d. Error Message = [%s]. File = [%s]. SQL = [%s].'), $sqlStatementCount, $e->getMessage(), $filename, $sql));
-        }
+        // Run phinx migrate
+        $phinx = new TextWrapper(new PhinxApplication(), ['configuration' => PROJECT_ROOT . '/phinx.php']);
+        $phinx->getMigrate();
 
         // Write out a new settings.php
         $fh = fopen(PROJECT_ROOT . '/web/settings.php', 'wt');
@@ -229,7 +209,6 @@ class Install
         $secretKey = Install::generateSecret();
 
         // Escape the password before we write it to disk
-        $dbh = $store->getConnection();
         $existing_db_pass = addslashes($this->existing_db_pass);
 
         $settings = <<<END

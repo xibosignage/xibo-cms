@@ -1,65 +1,51 @@
 <?php
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (LayoutStructureStep.php)
+ * Copyright (C) 2018 Spring Signage Ltd
+ * (LayoutConvertTask.php)
  */
 
 
-namespace Xibo\Upgrade;
-
-// TODO: make this a task
-
+namespace Xibo\XTR;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 
 /**
- * Class LayoutStructureStep
- * @package Xibo\Upgrade
+ * Class LayoutConvertTask
+ * @package Xibo\XTR
  */
-class LayoutStructureStep implements Step
+class LayoutConvertTask implements TaskInterface
 {
-    /** @var  StorageServiceInterface */
-    private $store;
+    use TaskTrait;
 
-    /** @var  LogServiceInterface */
-    private $log;
+    /** @var PermissionFactory */
+    private $permissionFactory;
 
-    /** @var  ConfigServiceInterface */
-    private $config;
+    /** @var LayoutFactory */
+    private $layoutFactory;
 
-    /**
-     * DataSetConvertStep constructor.
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param ConfigServiceInterface $config
-     */
-    public function __construct($store, $log, $config)
+    /** @inheritdoc */
+    public function setFactories($container)
     {
-        $this->store = $store;
-        $this->log = $log;
-        $this->config = $config;
+        $this->permissionFactory = $container->get('permissionFactory');
+        $this->layoutFactory = $container->get('layoutFactory');
     }
 
-    /**
-     * @param \Slim\Helper\Set $container
-     * @throws \Xibo\Exception\NotFoundException
-     */
-    public function doStep($container)
+    /** @inheritdoc */
+    public function run()
     {
-        /** @var PermissionFactory $permissionFactory */
-        $permissionFactory = $container->get('permissionFactory');
-
-        /** @var LayoutFactory $layoutFactory */
-        $layoutFactory = $container->get('layoutFactory');
+        // If the layout table doesn't have an XML column, then abort.
+        if (!$this->store->exists('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :name', [
+            'schema' => $_SERVER['MYSQL_DATABASE'],
+            'name' => 'lklayoutmedia'
+        ])) {
+            return;
+        }
 
         // Build a keyed array of existing widget permissions
         $mediaPermissions = [];
         foreach ($this->store->select('SELECT groupId, layoutId, regionId, mediaId, `view`, `edit`, `del` FROM `lklayoutmediagroup`', []) as $row) {
-            $permission = $permissionFactory->createEmpty();
+            $permission = $this->permissionFactory->createEmpty();
             $permission->entityId = 6; // Widget
             $permission->groupId = $row['groupId'];
             $permission->objectId = $row['layoutId'];
@@ -74,7 +60,7 @@ class LayoutStructureStep implements Step
         // Build a keyed array of existing region permissions
         $regionPermissions = [];
         foreach ($this->store->select('SELECT groupId, layoutId, regionId, `view`, `edit`, `del` FROM `lklayoutregiongroup`', []) as $row) {
-            $permission = $permissionFactory->createEmpty();
+            $permission = $this->permissionFactory->createEmpty();
             $permission->entityId = 7; // Widget
             $permission->groupId = $row['groupId'];
             $permission->objectId = $row['layoutId'];
@@ -100,7 +86,7 @@ class LayoutStructureStep implements Step
                     $this->log->critical('Layout upgrade without any existing XLF, i.e. empty. ID = ' . $oldLayoutId);
 
                     // Pull out the layout record, and set some best guess defaults
-                    $layout = $layoutFactory->getById($oldLayoutId);
+                    $layout = $this->layoutFactory->getById($oldLayoutId);
                     $layout->schemaVersion = 2;
                     $layout->width = 1920;
                     $layout->height = 1080;
@@ -110,7 +96,7 @@ class LayoutStructureStep implements Step
                     file_put_contents($libraryLocation . 'archive_' . $oldLayoutId . '.xlf', $oldLayout['xml']);
 
                     // Create a new layout from the XML
-                    $layout = $layoutFactory->loadByXlf($oldLayout['xml'], $layoutFactory->getById($oldLayoutId));
+                    $layout = $this->layoutFactory->loadByXlf($oldLayout['xml'], $this->layoutFactory->getById($oldLayoutId));
                 }
 
                 // Save the layout
@@ -151,12 +137,12 @@ class LayoutStructureStep implements Step
         }
 
         // Drop the permissions
-        $dbh->exec('DROP TABLE `lklayoutmediagroup`;');
-        $dbh->exec('DROP TABLE `lklayoutregiongroup`;');
-        $dbh->exec('DROP TABLE lklayoutmedia');
-        $dbh->exec('ALTER TABLE `layout` DROP `xml`;');
+        $this->store->update('DROP TABLE `lklayoutmediagroup`;', []);
+        $this->store->update('DROP TABLE `lklayoutregiongroup`;', []);
+        $this->store->update('DROP TABLE lklayoutmedia', []);
+        $this->store->update('ALTER TABLE `layout` DROP `xml`;', []);
 
         // Disable the task
+        $this->getTask()->isActive = 0;
     }
-
 }

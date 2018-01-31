@@ -43,12 +43,46 @@ class OldUpgradeStep135Migration extends AbstractMigration
 
                 $task = $this->table('task');
                 $task->insert([
-                    'name' => 'Fetch Remote DataSets',
-                    'class' => '\\Xibo\\XTR\\RemoteDataSetFetchTask\\',
-                    'options' => '[]',
-                    'schedule' => '30 * * * * *',
-                    'isActive' => '1',
-                    'configFile' => '/tasks/remote-dataset.task'
+                    [
+                        'name' => 'Fetch Remote DataSets',
+                        'class' => '\\Xibo\\XTR\\RemoteDataSetFetchTask\\',
+                        'options' => '[]',
+                        'schedule' => '30 * * * * *',
+                        'isActive' => '1',
+                        'configFile' => '/tasks/remote-dataset.task'
+                    ],
+                    [
+                        'name' => 'Update Empty Video Durations',
+                        'class' => '\\Xibo\\XTR\\UpdateEmptyVideoDurations\\',
+                        'options' => '[]',
+                        'schedule' => '* * * * * *1',
+                        'isActive' => '1',
+                        'configFile' => '/tasks/update-empty-video-durations.task'
+                    ],
+                    [
+                        'name' => 'Drop Player Cache',
+                        'class' => '\\Xibo\\XTR\\DropPlayerCacheTask\\',
+                        'options' => '[]',
+                        'schedule' => '* * * * * *1',
+                        'isActive' => '1',
+                        'configFile' => '/tasks/drop-player-cache.task'
+                    ],
+                    [
+                        'name' => 'DataSet Convert (only run once)',
+                        'class' => '\\Xibo\\XTR\\DataSetConvertTask\\',
+                        'options' => '[]',
+                        'schedule' => '* * * * * *1',
+                        'isActive' => '1',
+                        'configFile' => '/tasks/dataset-convert.task'
+                    ],
+                    [
+                        'name' => 'Layout Convert (only run once)',
+                        'class' => '\\Xibo\\XTR\\LayoutConvertTask\\',
+                        'options' => '[]',
+                        'schedule' => '* * * * * *1',
+                        'isActive' => '1',
+                        'configFile' => '/tasks/layout-convert.task'
+                    ],
                 ])->save();
 
                 // Remove the version table

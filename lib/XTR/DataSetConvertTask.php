@@ -1,74 +1,61 @@
 <?php
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (DataSetConvertStep.php)
+ * Copyright (C) 2018 Spring Signage Ltd
+ * (DataSetConvertTask.php)
  */
 
 
-namespace Xibo\Upgrade;
-
-// TODO: make this a task
-
+namespace Xibo\XTR;
 use Xibo\Entity\DataSet;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetFactory;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 
 /**
- * Class DataSetConvertStep
- * @package Xibo\Upgrade
+ * Class DataSetConvertTask
+ * @package Xibo\XTR
  */
-class DataSetConvertStep implements Step
+class DataSetConvertTask implements TaskInterface
 {
-    /** @var  StorageServiceInterface */
-    private $store;
+    use TaskTrait;
 
-    /** @var  LogServiceInterface */
-    private $log;
+    /** @var DataSetFactory */
+    private $dataSetFactory;
 
-    /** @var  ConfigServiceInterface */
-    private $config;
-
-    /**
-     * DataSetConvertStep constructor.
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param ConfigServiceInterface $config
-     */
-    public function __construct($store, $log, $config)
+    /** @inheritdoc */
+    public function setFactories($container)
     {
-        $this->store = $store;
-        $this->log = $log;
-        $this->config = $config;
+        $this->dataSetFactory = $container->get('dataSetFactory');
     }
 
-    /**
-     * @param \Slim\Helper\Set $container
-     * @throws \Xibo\Exception\XiboException
-     */
-    public function doStep($container)
+    /** @inheritdoc */
+    public function run()
     {
-        /** @var DataSetFactory $dataSetFactory */
-        $dataSetFactory = $container->get('dataSetFactory');
+        // Protect against us having run before
+        if ($this->store->exists('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :name', [
+            'schema' => $_SERVER['MYSQL_DATABASE'],
+            'name' => 'datasetdata'
+        ])) {
 
-        // Get all DataSets
-        foreach ($dataSetFactory->query() as $dataSet) {
-            /* @var \Xibo\Entity\DataSet $dataSet */
+            // Get all DataSets
+            foreach ($this->dataSetFactory->query() as $dataSet) {
+                /* @var \Xibo\Entity\DataSet $dataSet */
 
-            // Rebuild the data table
-            $dataSet->rebuild();
+                // Rebuild the data table
+                $dataSet->rebuild();
 
-            // Load the existing data from datasetdata
-            foreach (self::getExistingData($dataSet) as $row) {
-                $dataSet->addRow($row);
+                // Load the existing data from datasetdata
+                foreach (self::getExistingData($dataSet) as $row) {
+                    $dataSet->addRow($row);
+                }
             }
+
+            // Drop data set data
+            $this->store->update('DROP TABLE `datasetdata`;', []);
         }
 
-        // Drop data set data
-        $this->store->update('DROP TABLE `datasetdata`;', []);
+        // Disable the task
+        $this->getTask()->isActive = 0;
     }
 
     /**
