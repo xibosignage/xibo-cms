@@ -334,7 +334,6 @@ class Task extends Base
             $start = time();
 
             $taskClass
-                ->setApp($this->getApp())
                 ->setSanitizer($this->getSanitizer())
                 ->setUser($this->getUser())
                 ->setConfig($this->getConfig())
@@ -342,15 +341,7 @@ class Task extends Base
                 ->setDate($this->getDate())
                 ->setPool($this->pool)
                 ->setStore($this->store)
-                ->setFactories(
-                    $this->userFactory,
-                    $this->userGroupFactory,
-                    $this->layoutFactory,
-                    $this->displayFactory,
-                    $this->mediaFactory,
-                    $this->notificationFactory,
-                    $this->userNotificationFactory
-                )
+                ->setFactories($this->getApp()->container)
                 ->setTask($task)
                 ->run();
 

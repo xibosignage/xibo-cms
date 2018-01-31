@@ -12,7 +12,6 @@ namespace Xibo\Upgrade;
 
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Helper\Install;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -56,17 +55,6 @@ class LayoutStructureStep implements Step
 
         /** @var LayoutFactory $layoutFactory */
         $layoutFactory = $container->get('layoutFactory');
-
-        // Create the new structure
-        $dbh = $this->store->getConnection();
-
-        // Run the SQL to create the necessary tables
-        $statements = Install::remove_remarks(self::$dbStructure);
-        $statements = Install::split_sql_file($statements, ';');
-
-        foreach ($statements as $sql) {
-            $dbh->exec($sql);
-        }
 
         // Build a keyed array of existing widget permissions
         $mediaPermissions = [];
@@ -167,69 +155,8 @@ class LayoutStructureStep implements Step
         $dbh->exec('DROP TABLE `lklayoutregiongroup`;');
         $dbh->exec('DROP TABLE lklayoutmedia');
         $dbh->exec('ALTER TABLE `layout` DROP `xml`;');
+
+        // Disable the task
     }
-
-    private static $dbStructure = <<<END
-CREATE TABLE IF NOT EXISTS `lkregionplaylist` (
-`regionId` int(11) NOT NULL,
-`playlistId` int(11) NOT NULL,
-`displayOrder` int(11) NOT NULL,
-PRIMARY KEY (`regionId`,`playlistId`,`displayOrder`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `lkwidgetmedia` (
-`widgetId` int(11) NOT NULL,
-`mediaId` int(11) NOT NULL,
-PRIMARY KEY (`widgetId`,`mediaId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `playlist` (
-`playlistId` int(11) NOT NULL AUTO_INCREMENT,
-`name` varchar(254) DEFAULT NULL,
-`ownerId` int(11) NOT NULL,
-PRIMARY KEY (`playlistId`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-
-CREATE TABLE IF NOT EXISTS `region` (
-`regionId` int(11) NOT NULL AUTO_INCREMENT,
-`layoutId` int(11) NOT NULL,
-`ownerId` int(11) NOT NULL,
-`name` varchar(254) DEFAULT NULL,
-`width` decimal(12,4) NOT NULL,
-`height` decimal(12,4) NOT NULL,
-`top` decimal(12,4) NOT NULL,
-`left` decimal(12,4) NOT NULL,
-`zIndex` smallint(6) NOT NULL,
-`duration` int(11) NOT NULL DEFAULT '0',
-PRIMARY KEY (`regionId`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-
-CREATE TABLE IF NOT EXISTS `regionoption` (
-`regionId` int(11) NOT NULL,
-`option` varchar(50) NOT NULL,
-`value` text NULL,
-PRIMARY KEY (`regionId`,`option`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `widget` (
-`widgetId` int(11) NOT NULL AUTO_INCREMENT,
-`playlistId` int(11) NOT NULL,
-`ownerId` int(11) NOT NULL,
-`type` varchar(50) NOT NULL,
-`duration` int(11) NOT NULL,
-`displayOrder` int(11) NOT NULL,
-`calculatedDuration` int(11) NOT NULL,
-`useDuration` tinyint(4) DEFAULT '1',
-PRIMARY KEY (`widgetId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-
-CREATE TABLE IF NOT EXISTS `widgetoption` (
-`widgetId` int(11) NOT NULL,
-`type` varchar(50) NOT NULL,
-`option` varchar(254) NOT NULL,
-`value` text NULL,
-PRIMARY KEY (`widgetId`,`type`,`option`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-END;
 
 }
