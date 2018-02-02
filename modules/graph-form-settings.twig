@@ -1,0 +1,28 @@
+{#
+/*
+ * Graph Xibo Module
+ * Copyright (C) 2018 Lukas Zurschmiede
+ *
+ * This Xibo-Module is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * This Xibo-Module is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with This Xibo-Module.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "module-form-settings.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block moduleFormFields %}
+    {% set title %}{% trans "Default Colors" %}{% endset %}
+    {% set helpText %}{% trans "Enter all default colors here, separated by a comma. Example: #7293CB, #E1974C, #84BA5B, #D35E60, #808585, #9067A7, #AB6857, #CCC210, #396AB1, #DA7C30, #3E9651, #CC2529, #535154, #6B4C9A, #922428, #948B3D" %}{% endset %}
+    {{ forms.input("defaultColors", title, module.getSetting("defaultColors"), helpText, "", "optional") }}
+{% endblock %}
