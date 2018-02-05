@@ -200,6 +200,7 @@ class Install
         $phinx->getMigrate();
 
         // Write out a new settings.php
+        // TODO: Perhaps this settings file should set the $_SERVER variables
         $fh = fopen(PROJECT_ROOT . '/web/settings.php', 'wt');
 
         if (!$fh)
