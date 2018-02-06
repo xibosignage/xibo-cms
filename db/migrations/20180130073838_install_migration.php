@@ -95,6 +95,11 @@ class InstallMigration extends AbstractMigration
         $userType = $this->table('usertype', ['id' => 'userTypeId']);
         $userType
             ->addColumn('userType', 'string', ['limit' => 16])
+            ->insert([
+                ['userType' => 'Super Admin'],
+                ['userType' => 'Group Admin'],
+                ['userType' => 'User'],
+            ])
             ->save();
 
         // Start with the user table
@@ -105,7 +110,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('userPassword', 'string', ['limit' => 255])
             ->addColumn('loggedIn', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addColumn('lastAccessed', 'datetime', ['null' => true])
-            ->addColumn('email', 'string', ['limit' => 255, 'null' => true])
+            ->addColumn('email', 'string', ['limit' => 255, 'null' => true, 'default' => null])
             ->addColumn('homePageId', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 1])
             ->addColumn('retired', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
             ->addColumn('csprng', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
@@ -119,6 +124,14 @@ class InstallMigration extends AbstractMigration
             ->addColumn('ref4', 'string', ['limit' => 254, 'null' => true])
             ->addColumn('ref5', 'string', ['limit' => 254, 'null' => true])
             ->addForeignKey('userTypeId', 'usertype', 'userTypeId')
+            ->insert([
+                'userTypeId' => 1,
+                'userName' => 'xibo_admin',
+                'userPassword' => '21232f297a57a5a743894a0e4a801fc3',
+                'loggedIn' => 0,
+                'lastAccessed' => null,
+                'homePageId' => 29
+            ])
             ->save();
 
         $userOption = $this->table('userOption', ['id' => false, ['primaryKey' => ['userId', 'option']]]);
@@ -137,6 +150,12 @@ class InstallMigration extends AbstractMigration
             ->addColumn('libraryQuota', 'integer', ['null' => true, 'default' => null])
             ->addColumn('isSystemNotification', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
             ->addColumn('isDisplayNotification', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
+            ->insert([
+                ['group' => 'Users', 'isUserSpecific' => 0, 'isEveryone' => 0, 'isSystemNotification' => 0],
+                ['Everyone' => 'Users', 'isUserSpecific' => 0, 'isEveryone' => 1, 'isSystemNotification' => 0],
+                ['xibo_admin' => 'Users', 'isUserSpecific' => 1, 'isEveryone' => 0, 'isSystemNotification' => 1],
+                ['System Notifications' => 'Users', 'isUserSpecific' => 0, 'isEveryone' => 0, 'isSystemNotification' => 1],
+            ])
             ->save();
 
         // Link User and User Group
@@ -147,6 +166,10 @@ class InstallMigration extends AbstractMigration
             ->addIndex(['groupId', 'userId'], ['unique' => true])
             ->addForeignKey('groupId', 'group', 'groupId')
             ->addForeignKey('userId', 'user', 'userId')
+            ->insert([
+                'groupId' => 3,
+                'userId' => 1
+            ])
             ->save();
 
 
@@ -159,6 +182,11 @@ class InstallMigration extends AbstractMigration
             ->addColumn('isDefault', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
             ->addColumn('userId', 'integer')
             ->addForeignKey('userId', 'user', 'userId')
+            ->insert([
+                ['name' => 'Windows', 'type' => 'windows', 'config' => '[]', 'userId' => 1],
+                ['name' => 'Android', 'type' => 'android', 'config' => '[]', 'userId' => 1],
+                ['name' => 'webOS', 'type' => 'lg', 'config' => '[]', 'userId' => 1],
+            ])
             ->save();
 
         // Display Table
@@ -300,6 +328,16 @@ class InstallMigration extends AbstractMigration
             ->addColumn('enabled', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 1])
             ->addColumn('userId', 'integer')
             ->addForeignKey('userId', 'user', 'userId')
+            ->insert([
+                ['resolution' => '1080p HD Landscape', 'width' => 800, 'height' => 450, 'intended_width' => 1920, 'intended_height' => 1080, 'version' => 2, 'enabled' => 1, 'userId' => 1],
+                ['resolution' => '720p HD Landscape', 'width' => 800, 'height' => 450, 'intended_width' => 1280, 'intended_height' => 720, 'version' => 2, 'enabled' => 1, 'userId' => 1],
+                ['resolution' => '1080p HD Portrait', 'width' => 450, 'height' => 800, 'intended_width' => 1080, 'intended_height' => 1920, 'version' => 2, 'enabled' => 1, 'userId' => 1],
+                ['resolution' => '720p HD Portrait', 'width' => 450, 'height' => 800, 'intended_width' => 720, 'intended_height' => 1280, 'version' => 2, 'enabled' => 1, 'userId' => 1],
+                ['resolution' => '4k cinema', 'width' => 800, 'height' => 450, 'intended_width' => 4096, 'intended_height' => 2304, 'version' => 2, 'enabled' => 1, 'userId' => 1],
+                ['resolution' => 'Common PC Monitor 4:3', 'width' => 800, 'height' => 600, 'intended_width' => 1024, 'intended_height' => 768, 'version' => 2, 'enabled' => 1, 'userId' => 1],
+                ['resolution' => '4k UHD Landscape', 'width' => 450, 'height' => 800, 'intended_width' => 3840, 'intended_height' => 2160, 'version' => 2, 'enabled' => 1, 'userId' => 1],
+                ['resolution' => '4k UHD Portrait', 'width' => 800, 'height' => 450, 'intended_width' => 2160, 'intended_height' => 3840, 'version' => 2, 'enabled' => 1, 'userId' => 1]
+            ])
             ->save();
 
         // Layout
@@ -517,11 +555,23 @@ class InstallMigration extends AbstractMigration
         $dataType = $this->table('datatype', ['id' => 'dataTypeId']);
         $dataType
             ->addColumn('dataType', 'string', ['limit' => 100])
+            ->insert([
+                ['dataType' => 'String'],
+                ['dataType' => 'Number'],
+                ['dataType' => 'Date'],
+                ['dataType' => 'External Image'],
+                ['dataType' => 'Library Image'],
+            ])
             ->save();
 
         $dataSetColumnType = $this->table('datasetcolumntype', ['id' => 'dataSetColumnTypeId']);
         $dataSetColumnType
-            ->addColumn('heading', 'string', ['limit' => 100])
+            ->addColumn('dataSetColumnType', 'string', ['limit' => 100])
+            ->insert([
+                ['dataSetColumnType' => 'Value'],
+                ['dataSetColumnType' => 'Formula'],
+                ['dataSetColumnType' => 'Remote'],
+            ])
             ->save();
 
         $dataSetColumn = $this->table('datasetcolumn', ['id' => 'dataSetColumnId']);
@@ -608,6 +658,64 @@ class InstallMigration extends AbstractMigration
             ->addColumn('name', 'string', ['limit' => 50])
             ->addColumn('title', 'string', ['limit' => 50])
             ->addColumn('asHome', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
+            ->insert([
+                ['name' => 'dashboard', 'title' => 'Dashboard', 'asHome' => 1],
+                ['name' => 'schedule', 'title' => 'Schedule', 'asHome' => 1],
+                ['name' => 'mediamanager', 'title' => 'Media Dashboard','asHome' =>  1],
+                ['name' => 'layout', 'title' => 'Layout', 'asHome' => 1],
+                ['name' => 'library', 'title' => 'Library', 'asHome' => 1],
+                ['name' => 'display', 'title' => 'Displays', 'asHome' => 1],
+                ['name' => 'update', 'title' => 'Update', 'asHome' => 0],
+                ['name' => 'admin', 'title' => 'Administration', 'asHome' => 0],
+                ['name' => 'group', 'title' => 'User Groups','asHome' =>  1],
+                ['name' => 'log', 'title' => 'Log', 'asHome' => 1],
+                ['name' => 'user', 'title' => 'Users', 'asHome' => 1],
+                ['name' => 'license', 'title' => 'Licence', 'asHome' => 1],
+                ['name' => 'index', 'title' => 'Home', 'asHome' => 0],
+                ['name' => 'module', 'title' => 'Modules', 'asHome' => 1],
+                ['name' => 'template', 'title' => 'Templates', 'asHome' => 1],
+                ['name' => 'fault', 'title' => 'Report Fault','asHome' =>  1],
+                ['name' => 'stats', 'title' => 'Statistics', 'asHome' => 1],
+                ['name' => 'manual', 'title' => 'Manual', 'asHome' => 0],
+                ['name' => 'resolution', 'title' => 'Resolutions', 'asHome' => 1],
+                ['name' => 'help', 'title' => 'Help Links','asHome' =>  1],
+                ['name' => 'clock', 'title' => 'Clock', 'asHome' => 0],
+                ['name' => 'displaygroup', 'title' => 'Display Groups','asHome' =>  1],
+                ['name' => 'application', 'title' => 'Applications', 'asHome' => 1],
+                ['name' => 'dataset', 'title' => 'DataSets', 'asHome' => 1],
+                ['name' => 'campaign', 'title' => 'Campaigns', 'asHome' => 1],
+                ['name' => 'transition', 'title' => 'Transitions', 'asHome' => 1],
+                ['name' => 'sessions', 'title' => 'Sessions', 'asHome' => 1],
+                ['name' => 'preview', 'title' => 'Preview', 'asHome' => 0],
+                ['name' => 'statusdashboard', 'title' => 'Status Dashboard','asHome' =>  1],
+                ['name' => 'displayprofile', 'title' => 'Display Profiles','asHome' =>  1],
+                ['name' => 'audit', 'title' => 'Audit Trail','asHome' =>  0],
+                ['name' => 'region', 'title' => 'Regions', 'asHome' => 0],
+                ['name' => 'playlist', 'title' => 'Playlist', 'asHome' => 0],
+                ['name' => 'maintenance', 'title' => 'Maintenance', 'asHome' => 0],
+                ['name' => 'command', 'title' => 'Commands', 'asHome' => 1],
+                ['name' => 'notification', 'title' => 'Notifications', 'asHome' => 0],
+                ['name' => 'drawer', 'title' => 'Notification Drawer','asHome' =>  0],
+                ['name' => 'daypart', 'title' => 'Dayparting', 'asHome' => 0],
+                ['name' => 'task', 'title' => 'Tasks', 'asHome' => 1]
+            ])
+            ->save();
+
+        $permissionEntity = $this->table('permissionentity', ['id' => 'entityId']);
+        $permissionEntity->addColumn('entity', 'string', ['limit' => 50])
+            ->addIndex('entity', ['unique' => true])
+            ->insert([
+                ['entity' => 'Xibo\Entity\Page'],
+                ['entity' => 'Xibo\Entity\DisplayGroup'],
+                ['entity' => 'Xibo\Entity\Media'],
+                ['entity' => 'Xibo\Entity\Campaign'],
+                ['entity' => 'Xibo\Entity\Widget'],
+                ['entity' => 'Xibo\Entity\Region'],
+                ['entity' => 'Xibo\Entity\Playlist'],
+                ['entity' => 'Xibo\Entity\DataSet'],
+                ['entity' => 'Xibo\Entity\Notification'],
+                ['entity' => 'Xibo\Entity\DayPart'],
+            ])
             ->save();
 
         $permission = $this->table('permission', ['id' => 'permissionId']);
@@ -617,11 +725,19 @@ class InstallMigration extends AbstractMigration
             ->addColumn('view', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addColumn('edit', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addColumn('delete', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
-            ->save();
-
-        $permissionEntity = $this->table('permissionentity', ['id' => 'entityId']);
-        $permissionEntity->addColumn('entity', 'string', ['limit' => 50])
-            ->addIndex('entity', ['unique' => true])
+            ->insert([
+                ['entityId' => 1, 'groupId' => 1, 'objectId' => 1, 'view' => 1, 'edit' => 0, 'delete' => 0],
+                ['entityId' => 1, 'groupId' => 1, 'objectId' => 13, 'view' => 1, 'edit' => 0, 'delete' => 0],
+                ['entityId' => 1, 'groupId' => 1, 'objectId' => 4, 'view' => 1, 'edit' => 0, 'delete' => 0],
+                ['entityId' => 1, 'groupId' => 1, 'objectId' => 5, 'view' => 1, 'edit' => 0, 'delete' => 0],
+                ['entityId' => 1, 'groupId' => 1, 'objectId' => 3, 'view' => 1, 'edit' => 0, 'delete' => 0],
+                ['entityId' => 1, 'groupId' => 1, 'objectId' => 33, 'view' => 1, 'edit' => 0, 'delete' => 0],
+                ['entityId' => 1, 'groupId' => 1, 'objectId' => 28, 'view' => 1, 'edit' => 0, 'delete' => 0],
+                ['entityId' => 1, 'groupId' => 1, 'objectId' => 32, 'view' => 1, 'edit' => 0, 'delete' => 0],
+                ['entityId' => 1, 'groupId' => 1, 'objectId' => 2, 'view' => 1, 'edit' => 0, 'delete' => 0],
+                ['entityId' => 1, 'groupId' => 1, 'objectId' => 29, 'view' => 1, 'edit' => 0, 'delete' => 0],
+                ['entityId' => 1, 'groupId' => 1, 'objectId' => 11, 'view' => 1, 'edit' => 0, 'delete' => 0]
+            ])
             ->save();
 
         // Oauth
@@ -689,6 +805,10 @@ class InstallMigration extends AbstractMigration
         $oauthScopes
             ->addColumn('id', 'string', ['limit' => 254])
             ->addColumn('description', 'string', ['limit' => 1000])
+            ->insert([
+                ['id' => 'all', 'description' => 'All'],
+                ['id' => 'mcaas', 'description' => 'Media Conversion as a Service']
+            ])
             ->save();
 
         $oauthSessions = $this->table('oauth_sessions');
@@ -749,6 +869,14 @@ class InstallMigration extends AbstractMigration
             ->addColumn('isActive', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addColumn('runNow', 'integer', ['default' => 1, 'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addColumn('configFile', 'string', ['limit' => 254])
+            ->insert([
+                ['name' => 'Daily Maintenance', 'class' => '\Xibo\XTR\MaintenanceDailyTask', 'status' => 2, 'options' => '[]', 'schedule' => '0 0 * * * *', 'isActive' => 1, 'configFile' => '/tasks/maintenance-daily.task'],
+                ['name' => 'Regular Maintenance', 'class' => '\Xibo\XTR\MaintenanceRegularTask', 'status' => 2, 'options' => '[]', 'schedule' =>  '*/5 * * * * *', 'isActive' => 1, 'configFile' => '/tasks/maintenance-regular.task'],
+                ['name' => 'Email Notifications', 'class' => '\Xibo\XTR\EmailNotificationsTask', 'status' => 2, 'options' => '[]', 'schedule' =>  '*/5 * * * * *', 'isActive' => 1, 'configFile' => '/tasks/email-notifications.task'],
+                ['name' => 'Stats Archive', 'class' => '\Xibo\XTR\StatsArchiveTask', 'status' => 2, 'options' => '{"periodSizeInDays":"7","maxPeriods":"4"}', 'schedule' =>  '0 0 * * Mon', 'isActive' => 0, 'configFile' => '/tasks/stats-archiver.task'],
+                ['name' => 'Remove old Notifications', 'class' =>  '\Xibo\XTR\NotificationTidyTask', 'status' => 2, 'options' => '{"maxAgeDays":"7","systemOnly":"1","readOnly":"0"}',  'schedule' => '15 0 * * *', 'isActive' => 1, 'configFile' => '/tasks/notification-tidy.task'],
+                ['name' => 'Fetch Remote DataSets', 'class' =>  '\Xibo\XTR\RemoteDataSetFetchTask', 'status' => 2, 'options' => '[]',  'schedule' => '30 * * * * *', 'isActive' => 1, 'configFile' => '/tasks/remote-dataset.task']
+            ])
             ->save();
 
         // Required Files
@@ -769,6 +897,11 @@ class InstallMigration extends AbstractMigration
         $tag = $this->table('tag', ['id' => 'tagId']);
         $tag
             ->addColumn('tag', 'string', ['limit' => 50])
+            ->insert([
+                ['tag' => 'template'],
+                ['tag' => 'background'],
+                ['tag' => 'thumbnail'],
+            ])
             ->save();
 
         // Tag Links
@@ -817,6 +950,11 @@ class InstallMigration extends AbstractMigration
             ->addColumn('hasDirection', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addColumn('availableAsIn', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addColumn('availableAsOut', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
+            ->insert([
+                ['transition' => 'Fade In', 'code' => 'fadeIn', 'hasDuration' => 1, 'hasDirection' => 0, 'availableAsIn' => 0, 'availableAsOut' => 0],
+                ['transition' => 'Fade Out', 'code' => 'fadeOut', 'hasDuration' => 1, 'hasDirection' => 0, 'availableAsIn' => 0, 'availableAsOut' => 0],
+                ['transition' => 'Fly', 'code' => 'fly', 'hasDuration' => 1, 'hasDirection' => 1, 'availableAsIn' => 0, 'availableAsOut' => 0],
+            ])
             ->save();
 
         // Stats
@@ -874,7 +1012,21 @@ class InstallMigration extends AbstractMigration
 
         // Bandwidth Tracking
         $bandwidthType = $this->table('bandwidthtype', ['id' => 'bandwidthTypeId']);
-        $bandwidthType->addColumn('name', 'string', ['limit' => 25])
+        $bandwidthType
+            ->addColumn('name', 'string', ['limit' => 25])
+            ->insert([
+                ['name' => 'Register'],
+                ['name' => 'Required Files'],
+                ['name' => 'Schedule'],
+                ['name' => 'Get File'],
+                ['name' => 'Get Resource'],
+                ['name' => 'Media Inventory'],
+                ['name' => 'Notify Status'],
+                ['name' => 'Submit Stats'],
+                ['name' => 'Submit Log'],
+                ['name' => 'Blacklist'],
+                ['name' => 'Screen Shot'],
+            ])
             ->save();
 
         $bandwidth = $this->table('bandwidth', ['id' => false, 'primaryKey' => ['displayId', 'type', 'month']]);
@@ -909,6 +1061,192 @@ class InstallMigration extends AbstractMigration
 
     private function addData()
     {
+        // Add settings
+        $this->execute('
+INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES
+(1, \'MEDIA_DEFAULT\', \'private\', \'dropdown\', \'Media will be created with these settings. If public everyone will be able to view and use this media.\', \'private|group|group write|public|public write\', \'permissions\', 1, \'Media Permissions\', \'\', 20, \'private\', 1, \'word\'),
+(2, \'LAYOUT_DEFAULT\', \'private\', \'dropdown\', \'New layouts will be created with these settings. If public everyone will be able to view and use this layout.\', \'private|group|group write|public|public write\', \'permissions\', 1, \'Layout Permissions\', \'\', 10, \'private\', 1, \'word\'),
+(3, \'defaultUsertype\', \'User\', \'dropdown\', \'Sets the default user type selected when creating a user.\r\n<br />\r\nWe recommend that this is set to "User"\', \'User|Group Admin|Super Admin\', \'users\', 1, \'Default User Type\', \'\', 10, \'User\', 1, \'string\'),
+(7, \'userModule\', \'module_user_general.php\', \'dirselect\', \'This sets which user authentication module is currently being used.\', NULL, \'users\', 0, \'User Module\', \'\', 0, \'module_user_general.php\', 0, \'string\'),
+(11, \'defaultTimezone\', \'Europe/London\', \'timezone\', \'Set the default timezone for the application\', \'Europe/London\', \'regional\', 1, \'Timezone\', \'\', 20, \'Europe/London\', 1, \'string\'),
+(18, \'mail_to\', \'mail@yoursite.com\', \'email\', \'Errors will be mailed here\', NULL, \'maintenance\', 1, \'Admin email address\', \'\', 30, \'mail@yoursite.com\', 1, \'string\'),
+(19, \'mail_from\', \'mail@yoursite.com\', \'email\', \'Mail will be sent from this address\', NULL, \'maintenance\', 1, \'Sending email address\', \'\', 40, \'mail@yoursite.com\', 1, \'string\'),
+(30, \'audit\', \'Error\', \'dropdown\', \'Set the level of logging the CMS should record. In production systems "error" is recommended.\', \'Emergency|Alert|Critical|Error|Warning|Notice|Info|Debug\', \'troubleshooting\', 1, \'Log Level\', \'\', 20, \'error\', 1, \'word\'),
+(33, \'LIBRARY_LOCATION\', \'\', \'text\', \'The fully qualified path to the CMS library location.\', NULL, \'configuration\', 1, \'Library Location\', \'required\', 10, \'\', 1, \'string\'),
+(34, \'SERVER_KEY\', \'\', \'text\', NULL, NULL, \'configuration\', 1, \'CMS Secret Key\', \'required\', 20, \'\', 1, \'string\'),
+(35, \'HELP_BASE\', \'http://www.xibo.org.uk/manual/en/\', \'text\', NULL, NULL, \'general\', 1, \'Location of the Manual\', \'required\', 10, \'http://www.xibo.org.uk/manual/\', 1, \'string\'),
+(36, \'PHONE_HOME\', \'On\', \'dropdown\', \'Should the server send anonymous statistics back to the Xibo project?\', \'On|Off\', \'general\', 1, \'Allow usage tracking?\', \'\', 10, \'On\', 1, \'word\'),
+(37, \'PHONE_HOME_KEY\', \'\', \'text\', \'Key used to distinguish each Xibo instance. This is generated randomly based on the time you first installed Xibo, and is completely untraceable.\', NULL, \'general\', 0, \'Phone home key\', \'\', 20, \'\', 0, \'string\'),
+(38, \'PHONE_HOME_URL\', \'http://www.xibo.org.uk/stats/track.php\', \'text\', \'The URL to connect to to PHONE_HOME (if enabled)\', NULL, \'network\', 0, \'Phone home URL\', \'\', 60, \'http://www.xibo.org.uk/stats/track.php\', 0, \'string\'),
+(39, \'PHONE_HOME_DATE\', \'0\', \'text\', \'The last time we PHONED_HOME in seconds since the epoch\', NULL, \'general\', 0, \'Phone home time\', \'\', 30, \'0\', 0, \'int\'),
+(40, \'SERVER_MODE\', \'Production\', \'dropdown\', \'This should only be set if you want to display the maximum allowed error messaging through the user interface. <br /> Useful for capturing critical php errors and environment issues.\', \'Production|Test\', \'troubleshooting\', 1, \'Server Mode\', \'\', 30, \'Production\', 1, \'word\'),
+(41, \'MAINTENANCE_ENABLED\', \'Off\', \'dropdown\', \'Allow the maintenance script to run if it is called?\', \'Protected|On|Off\', \'maintenance\', 1, \'Enable Maintenance?\', \'\', 10, \'Off\', 1, \'word\'),
+(42, \'MAINTENANCE_EMAIL_ALERTS\', \'On\', \'dropdown\', \'Global switch for email alerts to be sent\', \'On|Off\', \'maintenance\', 1, \'Enable Email Alerts?\', \'\', 20, \'On\', 1, \'word\'),
+(43, \'MAINTENANCE_KEY\', \'changeme\', \'text\', \'String appended to the maintenance script to prevent malicious calls to the script.\', NULL, \'maintenance\', 1, \'Maintenance Key\', \'\', 50, \'changeme\', 1, \'string\'),
+(44, \'MAINTENANCE_LOG_MAXAGE\', \'30\', \'number\', \'Maximum age for log entries. Set to 0 to keep logs indefinitely.\', NULL, \'maintenance\', 1, \'Max Log Age\', \'\', 60, \'30\', 1, \'int\'),
+(45, \'MAINTENANCE_STAT_MAXAGE\', \'30\', \'number\', \'Maximum age for statistics entries. Set to 0 to keep statistics indefinitely.\', NULL, \'maintenance\', 1, \'Max Statistics Age\', \'\', 70, \'30\', 1, \'int\'),
+(46, \'MAINTENANCE_ALERT_TOUT\', \'12\', \'number\', \'How long in minutes after the last time a client connects should we send an alert? Can be overridden on a per client basis.\', NULL, \'maintenance\', 1, \'Max Display Timeout\', \'\', 80, \'12\', 1, \'int\'),
+(47, \'SHOW_DISPLAY_AS_VNCLINK\', \'\', \'text\', \'Turn the display name in display management into a VNC link using the IP address last collected. The %s is replaced with the IP address. Leave blank to disable.\', NULL, \'displays\', 1, \'Display a VNC Link?\', \'\', 30, \'\', 1, \'string\'),
+(48, \'SHOW_DISPLAY_AS_VNC_TGT\', \'_top\', \'text\', \'If the display name is shown as a link in display management, what target should the link have? Set _top to open the link in the same window or _blank to open in a new window.\', NULL, \'displays\', 1, \'Open VNC Link in new window?\', \'\', 40, \'_top\', 1, \'string\'),
+(49, \'MAINTENANCE_ALWAYS_ALERT\', \'Off\', \'dropdown\', \'Should Xibo send an email if a display is in an error state every time the maintenance script runs?\', \'On|Off\', \'maintenance\', 1, \'Send repeat Display Timeouts\', \'\', 80, \'Off\', 1, \'word\'),
+(50, \'SCHEDULE_LOOKAHEAD\', \'On\', \'dropdown\', \'Should Xibo send future schedule information to clients?\', \'On|Off\', \'general\', 0, \'Send Schedule in advance?\', \'\', 40, \'On\', 1, \'word\'),
+(51, \'REQUIRED_FILES_LOOKAHEAD\', \'172800\', \'number\', \'How many seconds in to the future should the calls to RequiredFiles look?\', NULL, \'general\', 1, \'Send files in advance?\', \'\', 50, \'172800\', 1, \'int\'),
+(52, \'REGION_OPTIONS_COLOURING\', \'Media Colouring\', \'dropdown\', NULL, \'Media Colouring|Permissions Colouring\', \'permissions\', 1, \'How to colour Media on the Region Timeline\', \'\', 30, \'Media Colouring\', 1, \'string\'),
+(53, \'LAYOUT_COPY_MEDIA_CHECKB\', \'Unchecked\', \'dropdown\', \'Default the checkbox for making duplicates of media when copying layouts\', \'Checked|Unchecked\', \'defaults\', 1, \'Default copy media when copying a layout?\', \'\', 20, \'Unchecked\', 1, \'word\'),
+(54, \'MAX_LICENSED_DISPLAYS\', \'0\', \'number\', \'The maximum number of licensed clients for this server installation. 0 = unlimited\', NULL, \'displays\', 0, \'Number of display slots\', \'\', 50, \'0\', 0, \'int\'),
+(55, \'LIBRARY_MEDIA_UPDATEINALL_CHECKB\', \'Checked\', \'dropdown\', \'Default the checkbox for updating media on all layouts when editing in the library\', \'Checked|Unchecked\', \'defaults\', 1, \'Default update media in all layouts\', \'\', 10, \'Unchecked\', 1, \'word\'),
+(56, \'USER_PASSWORD_POLICY\', \'\', \'text\', \'Regular Expression for password complexity, leave blank for no policy.\', \'\', \'users\', 1, \'Password Policy Regular Expression\', \'\', 20, \'\', 1, \'string\'),
+(57, \'USER_PASSWORD_ERROR\', \'\', \'text\', \'A text description of this password policy. Will be show to users when their password does not meet the required policy\', \'\', \'users\', 1, \'Description of Password Policy\', \'\', 30, \'\', 1, \'string\'),
+(58, \'MODULE_CONFIG_LOCKED_CHECKB\', \'Unchecked\', \'dropdown\', \'Is the module config locked? Useful for Service providers.\', \'Checked|Unchecked\', \'defaults\', 0, \'Lock Module Config\', \'\', 30, \'Unchecked\', 0, \'word\'),
+(59, \'LIBRARY_SIZE_LIMIT_KB\', \'0\', \'number\', \'The Limit for the Library Size in KB\', NULL, \'network\', 0, \'Library Size Limit\', \'\', 50, \'0\', 1, \'int\'),
+(60, \'MONTHLY_XMDS_TRANSFER_LIMIT_KB\', \'0\', \'number\', \'XMDS Transfer Limit in KB/month\', NULL, \'network\', 0, \'Monthly bandwidth Limit\', \'\', 40, \'0\', 1, \'int\'),
+(61, \'DEFAULT_LANGUAGE\', \'en_GB\', \'text\', \'The default language to use\', NULL, \'regional\', 1, \'Default Language\', \'\', 10, \'en_GB\', 1, \'string\'),
+(62, \'TRANSITION_CONFIG_LOCKED_CHECKB\', \'Unchecked\', \'dropdown\', \'Is the Transition config locked?\', \'Checked|Unchecked\', \'defaults\', 0, \'Allow modifications to the transition configuration?\', \'\', 40, \'Unchecked\', 1, \'word\'),
+(63, \'GLOBAL_THEME_NAME\', \'default\', \'text\', \'The Theme to apply to all pages by default\', NULL, \'configuration\', 1, \'CMS Theme\', \'\', 30, \'default\', 1, \'word\'),
+(64, \'DEFAULT_LAT\', \'51.504\', \'number\', \'The Latitude to apply for any Geo aware Previews\', NULL, \'displays\', 1, \'Default Latitude\', \'\', 10, \'51.504\', 1, \'double\'),
+(65, \'DEFAULT_LONG\', \'-0.104\', \'number\', \'The Longitude to apply for any Geo aware Previews\', NULL, \'displays\', 1, \'Default Longitude\', \'\', 20, \'-0.104\', 1, \'double\'),
+(66, \'SCHEDULE_WITH_VIEW_PERMISSION\', \'No\', \'dropdown\', \'Should users with View permissions on displays be allowed to schedule to them?\', \'Yes|No\', \'permissions\', 1, \'Schedule with view permissions?\', \'\', 40, \'No\', 1, \'word\'),
+(67, \'SETTING_IMPORT_ENABLED\', \'1\', \'checkbox\', NULL, NULL, \'general\', 1, \'Allow Import?\', \'\', 80, \'1\', 1, \'checkbox\'),
+(68, \'SETTING_LIBRARY_TIDY_ENABLED\', \'1\', \'checkbox\', NULL, NULL, \'general\', 1, \'Enable Library Tidy?\', \'\', 90, \'1\', 1, \'checkbox\'),
+(69, \'SENDFILE_MODE\', \'Off\', \'dropdown\', \'When a user downloads a file from the library or previews a layout, should we attempt to use Apache X-Sendfile, Nginx X-Accel, or PHP (Off) to return the file from the library?\', \'Off|Apache|Nginx\', \'general\', 1, \'File download mode\', \'\', 60, \'Off\', 1, \'word\'),
+(70, \'EMBEDDED_STATUS_WIDGET\', \'\', \'text\', \'HTML to embed in an iframe on the Status Dashboard\', NULL, \'general\', 0, \'Status Dashboard Widget\', \'\', 70, \'\', 1, \'htmlstring\'),
+(71, \'PROXY_HOST\', \'\', \'text\', \'The Proxy URL\', NULL, \'network\', 1, \'Proxy URL\', \'\', 10, \'\', 1, \'string\'),
+(72, \'PROXY_PORT\', \'0\', \'number\', \'The Proxy Port\', NULL, \'network\', 1, \'Proxy Port\', \'\', 20, \'0\', 1, \'int\'),
+(73, \'PROXY_AUTH\', \'\', \'text\', \'The Authentication information for this proxy. username:password\', NULL, \'network\', 1, \'Proxy Credentials\', \'\', 30, \'\', 1, \'string\'),
+(74, \'DATE_FORMAT\',  \'Y-m-d H:i\',  \'text\',  \'The Date Format to use when displaying dates in the CMS.\', NULL ,  \'regional\',  \'1\',  \'Date Format\',  \'required\',  30,  \'Y-m-d\',  \'1\',  \'string\'),
+(75, \'DETECT_LANGUAGE\',  \'1\',  \'checkbox\',  \'Detect the browser language?\', NULL ,  \'regional\',  \'1\',  \'Detect Language\',  \'\',  40,  \'1\',  1,  \'checkbox\'),
+(76, \'DEFAULTS_IMPORTED\', \'0\', \'text\', \'Has the default layout been imported?\', NULL, \'general\', 0, \'Defaults Imported?\', \'required\', 100, \'0\', 0, \'checkbox\'),
+(77, \'FORCE_HTTPS\', \'0\', \'checkbox\', \'Force the portal into HTTPS?\', NULL, \'network\', 1, \'Force HTTPS?\', \'\', 70, \'0\', 1, \'checkbox\'),
+(78, \'ISSUE_STS\', \'0\', \'checkbox\', \'Add STS to the response headers? Make sure you fully understand STS before turning it on as it will prevent access via HTTP after the first successful HTTPS connection.\', NULL, \'network\', 1, \'Enable STS?\', \'\', 80, \'0\', 1, \'checkbox\'),
+(79, \'STS_TTL\', \'600\', \'text\', \'The Time to Live (maxage) of the STS header expressed in seconds.\', NULL, \'network\', 1, \'STS Time out\', \'\', 90, \'600\', 1, \'int\'),
+(81, \'CALENDAR_TYPE\', \'Gregorian\', \'dropdown\', \'Which Calendar Type should the CMS use?\', \'Gregorian|Jalali\', \'regional\', 1, \'Calendar Type\', \'\', 50, \'Gregorian\', 1, \'string\'),
+(82, \'DASHBOARD_LATEST_NEWS_ENABLED\', \'1\', \'checkbox\', \'Should the Dashboard show latest news? The address is provided by the theme.\', \'\', \'general\', 1, \'Enable Latest News?\', \'\', 110, \'1\', 1, \'checkbox\'),
+(83, \'LIBRARY_MEDIA_DELETEOLDVER_CHECKB\',\'Checked\',\'dropdown\',\'Default the checkbox for Deleting Old Version of media when a new file is being uploaded to the library.\',\'Checked|Unchecked\',\'defaults\',1,\'Default for "Delete old version of Media" checkbox. Shown when Editing Library Media.\', \'\', 50, \'Unchecked\', 1, \'dropdown\'),
+(84, \'PROXY_EXCEPTIONS\', \'\', \'text\', \'Hosts and Keywords that should not be loaded via the Proxy Specified. These should be comma separated.\', \'\', \'network\', 1, \'Proxy Exceptions\', \'\', 32, \'\', 1, \'text\'),
+(85, \'INSTANCE_SUSPENDED\', \'0\', \'checkbox\', \'Is this instance suspended?\', NULL, \'general\', 0, \'Instance Suspended\', \'\', 120, \'0\', 0, \'checkbox\'),
+(86, \'INHERIT_PARENT_PERMISSIONS\', \'1\', \'checkbox\', \'Inherit permissions from Parent when adding a new item?\', NULL, \'permissions\', 1, \'Inherit permissions\', \'\', 50, \'1\', 1, \'checkbox\'),
+(87, \'XMR_ADDRESS\', \'tcp://localhost:5555\', \'text\', \'Please enter the private address for XMR.\', NULL, \'displays\', 1, \'XMR Private Address\', \'\', 5, \'tcp:://localhost:5555\', 1, \'string\'),
+(88, \'XMR_PUB_ADDRESS\', \'\', \'text\', \'Please enter the public address for XMR.\', NULL, \'displays\', 1, \'XMR Public Address\', \'\', 6, \'\', 1, \'string\'),
+(89, \'CDN_URL\', \'\', \'text\', \'Content Delivery Network Address for serving file requests to Players\', \'\', \'network\', 0, \'CDN Address\', \'\', 33, \'\', 0, \'string\'),
+(90, \'ELEVATE_LOG_UNTIL\', \'1463396415\', \'datetime\', \'Elevate the log level until this date.\', null, \'troubleshooting\', 1, \'Elevate Log Until\', \' \', 25, \'\', 1, \'datetime\'),
+(91, \'RESTING_LOG_LEVEL\', \'Error\', \'dropdown\', \'Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems "error" is recommended.\', \'Emergency|Alert|Critical|Error\', \'troubleshooting\', 1, \'Resting Log Level\', \'\', 19, \'error\', 1, \'word\'),
+(92, \'TASK_CONFIG_LOCKED_CHECKB\', \'Unchecked\', \'dropdown\', \'Is the task config locked? Useful for Service providers.\', \'Checked|Unchecked\', \'defaults\', 0, \'Lock Task Config\', \'\', 30, \'Unchecked\', 0, \'word\'),
+(93, \'WHITELIST_LOAD_BALANCERS\', \'\', \'text\', \'If the CMS is behind a load balancer, what are the load balancer IP addresses, comma delimited.\', \'\', \'network\', 1, \'Whitelist Load Balancers\', \'\', 100, \'\', 1, \'string\'),
+(94, \'DEFAULT_LAYOUT\', \'1\', \'text\', \'The default layout to assign for new displays and displays which have their current default deleted.\', \'1\', \'displays\', 1, \'Default Layout\', \'\', 4, \'\', 1, \'int\'),
+(95, \'DISPLAY_PROFILE_STATS_DEFAULT\', \'0\', \'checkbox\', NULL, NULL, \'displays\', 1, \'Default setting for Statistics Enabled?\', \'\', 70, \'0\', 1, \'checkbox\'),
+(96, \'DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED\', \'1\', \'checkbox\', NULL, NULL, \'displays\', 1, \'Enable the option to report the current layout status?\', \'\', 80, \'0\', 1, \'checkbox\'),
+(97, \'DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED\', \'1\', \'checkbox\', NULL, NULL, \'displays\', 1, \'Enable the option to set the screenshot interval?\', \'\', 90, \'0\', 1, \'checkbox\'),
+(98, \'DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT\', \'200\', \'number\', \'The default size in pixels for the Display Screenshots\', NULL, \'displays\', 1, \'Display Screenshot Default Size\', \'\', 100, \'200\', 1, \'int\'),
+(99, \'LATEST_NEWS_URL\', \'http://xibo.org.uk/feed\', \'text\', \'RSS/Atom Feed to be displayed on the Status Dashboard\', \'\', \'general\', 0, \'Latest News URL\', \'\', 111, \'\', 0, \'string\'),
+(100, \'DISPLAY_LOCK_NAME_TO_DEVICENAME\', \'0\', \'checkbox\', NULL, NULL, \'displays\', 1, \'Lock the Display Name to the device name provided by the Player?\', \'\', 80, \'0\', 1, \'checkbox\');        
+        ');
 
+        // Add help
+        $this->execute('
+INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
+(1, \'Layout\', \'General\', \'layouts.html\'),
+(2, \'Content\', \'General\', \'media.html\'),
+(4, \'Schedule\', \'General\', \'scheduling.html\'),
+(5, \'Group\', \'General\', \'users_groups.html\'),
+(6, \'Admin\', \'General\', \'cms_settings.html\'),
+(7, \'Report\', \'General\', \'troubleshooting.html\'),
+(8, \'Dashboard\', \'General\', \'tour.html\'),
+(9, \'User\', \'General\', \'users.html\'),
+(10, \'Display\', \'General\', \'displays.html\'),
+(11, \'DisplayGroup\', \'General\', \'displays_groups.html\'),
+(12, \'Layout\', \'Add\', \'layouts.html#Add_Layout\'),
+(13, \'Layout\', \'Background\', \'layouts_designer.html#Background\'),
+(14, \'Content\', \'Assign\', \'layouts_playlists.html#Assigning_Content\'),
+(15, \'Layout\', \'RegionOptions\', \'layouts_regions.html\'),
+(16, \'Content\', \'AddtoLibrary\', \'media_library.html\'),
+(17, \'Display\', \'Edit\', \'displays.html#Display_Edit\'),
+(18, \'Display\', \'Delete\', \'displays.html#Display_Delete\'),
+(19, \'Displays\', \'Groups\', \'displays_groups.html#Group_Members\'),
+(20, \'UserGroup\', \'Add\', \'users_groups.html#Adding_Group\'),
+(21, \'User\', \'Add\', \'users_administration.html#Add_User\'),
+(22, \'User\', \'Delete\', \'users_administration.html#Delete_User\'),
+(23, \'Content\', \'Config\', \'cms_settings.html#Content\'),
+(24, \'LayoutMedia\', \'Permissions\', \'users_permissions.html\'),
+(25, \'Region\', \'Permissions\', \'users_permissions.html\'),
+(26, \'Library\', \'Assign\', \'layouts_playlists.html#Add_From_Library\'),
+(27, \'Media\', \'Delete\', \'media_library.html#Delete\'),
+(28, \'DisplayGroup\', \'Add\', \'displays_groups.html#Add_Group\'),
+(29, \'DisplayGroup\', \'Edit\', \'displays_groups.html#Edit_Group\'),
+(30, \'DisplayGroup\', \'Delete\', \'displays_groups.html#Delete_Group\'),
+(31, \'DisplayGroup\', \'Members\', \'displays_groups.html#Group_Members\'),
+(32, \'DisplayGroup\', \'Permissions\', \'users_permissions.html\'),
+(34, \'Schedule\', \'ScheduleNow\', \'scheduling_now.html\'),
+(35, \'Layout\', \'Delete\', \'layouts.html#Delete_Layout\'),
+(36, \'Layout\', \'Copy\', \'layouts.html#Copy_Layout\'),
+(37, \'Schedule\', \'Edit\', \'scheduling_events.html#Edit\'),
+(38, \'Schedule\', \'Add\', \'scheduling_events.html#Add\'),
+(39, \'Layout\', \'Permissions\', \'users_permissions.html\'),
+(40, \'Display\', \'MediaInventory\', \'displays.html#Media_Inventory\'),
+(41, \'User\', \'ChangePassword\', \'users.html#Change_Password\'),
+(42, \'Schedule\', \'Delete\', \'scheduling_events.html\'),
+(43, \'Layout\', \'Edit\', \'layouts_designer.html#Edit_Layout\'),
+(44, \'Media\', \'Permissions\', \'users_permissions.html\'),
+(45, \'Display\', \'DefaultLayout\', \'displays.html#DefaultLayout\'),
+(46, \'UserGroup\', \'Edit\', \'users_groups.html#Edit_Group\'),
+(47, \'UserGroup\', \'Members\', \'users_groups.html#Group_Member\'),
+(48, \'User\', \'PageSecurity\', \'users_permissions.html#Page_Security\'),
+(49, \'User\', \'MenuSecurity\', \'users_permissions.html#Menu_Security\'),
+(50, \'UserGroup\', \'Delete\', \'users_groups.html#Delete_Group\'),
+(51, \'User\', \'Edit\', \'users_administration.html#Edit_User\'),
+(52, \'User\', \'Applications\', \'users_administration.html#Users_MyApplications\'),
+(53, \'User\', \'SetHomepage\', \'users_administration.html#Media_Dashboard\'),
+(54, \'DataSet\', \'General\', \'media_datasets.html\'),
+(55, \'DataSet\', \'Add\', \'media_datasets.html#Create_Dataset\'),
+(56, \'DataSet\', \'Edit\', \'media_datasets.html#Edit_Dataset\'),
+(57, \'DataSet\', \'Delete\', \'media_datasets.html#Delete_Dataset\'),
+(58, \'DataSet\', \'AddColumn\', \'media_datasets.html#Dataset_Column\'),
+(59, \'DataSet\', \'EditColumn\', \'media_datasets.html#Dataset_Column\'),
+(60, \'DataSet\', \'DeleteColumn\', \'media_datasets.html#Dataset_Column\'),
+(61, \'DataSet\', \'Data\', \'media_datasets.html#Dataset_Row\'),
+(62, \'DataSet\', \'Permissions\', \'users_permissions.html\'),
+(63, \'Fault\', \'General\', \'troubleshooting.html#Report_Fault\'),
+(65, \'Stats\', \'General\', \'displays_metrics.html\'),
+(66, \'Resolution\', \'General\', \'layouts_resolutions.html\'),
+(67, \'Template\', \'General\', \'layouts_templates.html\'),
+(68, \'Services\', \'Register\', \'#Registered_Applications\'),
+(69, \'OAuth\', \'General\', \'api_oauth.html\'),
+(70, \'Services\', \'Log\', \'api_oauth.html#oAuthLog\'),
+(71, \'Module\', \'Edit\', \'media_modules.html\'),
+(72, \'Module\', \'General\', \'media_modules.html\'),
+(73, \'Campaign\', \'General\', \'layouts_campaigns.html\'),
+(74, \'License\', \'General\', \'licence_information.html\'),
+(75, \'DataSet\', \'ViewColumns\', \'media_datasets.html#Dataset_Column\'),
+(76, \'Campaign\', \'Permissions\', \'users_permissions.html\'),
+(77, \'Transition\', \'Edit\', \'layouts_transitions.html\'),
+(78, \'User\', \'SetPassword\', \'users_administration.html#Set_Password\'),
+(79, \'DataSet\', \'ImportCSV\', \'media_datasets.htmlmedia_datasets.html#Import_CSV\'),
+(80, \'DisplayGroup\', \'FileAssociations\', \'displays_fileassociations.html\'),
+(81, \'Statusdashboard\', \'General\', \'tour_status_dashboard.html\'),
+(82, \'Displayprofile\', \'General\', \'displays_settings.html\'),
+(83, \'DisplayProfile\', \'Edit\', \'displays_settings.html#edit\'),
+(84, \'DisplayProfile\', \'Delete\', \'displays_settings.html#delete\');        
+        ');
+
+        // Add modules
+        $this->execute('
+INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`, `defaultDuration`) VALUES
+  (1, \'Image\', \'Image\', 1, 0, \'Images. PNG, JPG, BMP, GIF\', \'forms/image.gif\', 1, \'jpg,jpeg,png,bmp,gif\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\Image\', 10),
+  (2, \'Video\', \'Video\', 1, 0, \'Videos - support varies depending on the client hardware you are using.\', \'forms/video.gif\', 1, \'wmv,avi,mpg,mpeg,webm,mp4\', 0, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\Video\', 0),
+  (3, \'Flash\', \'Flash\', 1, 0, \'Flash\', \'forms/flash.gif\', 1, \'swf\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\Flash\', 10),
+  (4, \'PowerPoint\', \'PowerPoint\', 1, 0, \'Powerpoint. PPT, PPS\', \'forms/powerpoint.gif\', 1, \'ppt,pps,pptx\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\PowerPoint\', 10),
+  (5, \'Webpage\', \'Webpage\', 1, 1, \'Webpages.\', \'forms/webpage.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\WebPage\', 60),
+  (6, \'Ticker\', \'Ticker\', 1, 1, \'RSS Ticker.\', \'forms/ticker.gif\', 1, NULL, 1, 1, NULL, \'[]\', \'../modules\', \'Xibo\\Widget\\Ticker\', 5),
+  (7, \'Text\', \'Text\', 1, 1, \'Text. With Directional Controls.\', \'forms/text.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\Text\', 5),
+  (8, \'Embedded\', \'Embedded\', 1, 1, \'Embedded HTML\', \'forms/webpage.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\Embedded\', 60),
+  (11, \'datasetview\', \'Data Set\', 1, 1, \'A view on a DataSet\', \'forms/datasetview.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\DataSetView\', 60),
+  (12, \'shellcommand\', \'Shell Command\', 1, 1, \'Execute a shell command on the client\', \'forms/shellcommand.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\ShellCommand\', 3),
+  (13, \'localvideo\', \'Local Video\', 1, 1, \'Play a video locally stored on the client\', \'forms/video.gif\', 1, NULL, 0, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\LocalVideo\', 60),
+  (14, \'genericfile\', \'Generic File\', 1, 0, \'A generic file to be stored in the library\', \'forms/library.gif\', 1, \'apk,ipk,js,html,htm\', 0, 0, NULL, NULL, \'../modules\', \'Xibo\\Widget\\GenericFile\', 10),
+  (15, \'clock\', \'Clock\', 1, 1, \'\', \'forms/library.gif\', 1, NULL, 1, 1, \'html\', \'[]\', \'../modules\', \'Xibo\\Widget\\Clock\', 5),
+  (16, \'font\', \'Font\', 1, 0, \'A font to use in other Modules\', \'forms/library.gif\', 1, \'ttf,otf,eot,svg,woff\', 0, 0, NULL, NULL, \'../modules\', \'Xibo\\Widget\\Font\', 10),
+  (17, \'audio\', \'Audio\', 1, 0, \'Audio - support varies depending on the client hardware\', \'forms/video.gif\', 1, \'mp3,wav\', 0, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\Audio\', 0),
+  (18, \'pdf\', \'PDF\', 1, 0, \'PDF document viewer\', \'forms/pdf.gif\', 1, \'pdf\', 1, 1, \'html\', null, \'../modules\', \'Xibo\\Widget\\Pdf\', 60),
+  (19, \'notificationview\', \'Notification\', 1, 1, \'Display Notifications from the Notification Centre\', \'forms/library.gif\', 1, null, 1, 1, \'html\', null, \'../modules\', \'Xibo\\Widget\\NotificationView\', 10);        
+        ');
     }
 }

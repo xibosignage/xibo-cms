@@ -296,7 +296,7 @@ END;
                 'username' => $username
             ));
 
-        } catch (InstallationError $e) {
+        } catch (\PDOException $e) {
             throw new InstallationError(sprintf(__('Unable to set the user details. This is an unexpected error, please contact support. Error Message = [%s]'), $e->getMessage()));
         }
     }
