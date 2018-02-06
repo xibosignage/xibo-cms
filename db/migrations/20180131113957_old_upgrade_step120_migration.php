@@ -134,7 +134,7 @@ class OldUpgradeStep120Migration extends AbstractMigration
                     ->save();
 
                 $region = $this->table('region', ['id' => 'regionId']);
-                $region->addColumn('layoutId', 'integer')
+                $region
                     ->addColumn('layoutId', 'integer')
                     ->addColumn('ownerId', 'integer')
                     ->addColumn('name', 'string', ['limit' => 254, 'null' => true])
@@ -186,7 +186,7 @@ class OldUpgradeStep120Migration extends AbstractMigration
                     ->addColumn('access_token', 'string', ['limit' => 254])
                     ->addColumn('scope', 'string', ['limit' => 254])
                     ->addForeignKey('access_token', 'oauth_access_tokens', 'access_token', ['delete' => 'CASCADE'])
-                    ->addForeignKey('scope', 'oauth_access_tokens', 'access_token', ['delete' => 'CASCADE'])
+                    ->addForeignKey('scope', 'oauth_access_tokens', 'id', ['delete' => 'CASCADE'])
                     ->save();
 
                 $oauthAuthCodes = $this->table('oauth_auth_codes', ['id' => false, 'primaryKey' => ['auth_code']]);

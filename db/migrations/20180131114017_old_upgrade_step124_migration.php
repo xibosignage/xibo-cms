@@ -57,6 +57,9 @@ class OldUpgradeStep124Migration extends AbstractMigration
                 $linkNotificationUser
                     ->addColumn('notificationId', 'integer')
                     ->addColumn('userId', 'integer')
+                    ->addColumn('read', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
+                    ->addColumn('readDt', 'integer')
+                    ->addColumn('emailDt', 'integer')
                     ->addIndex(['notificationId', 'userId'], ['unique' => true])
                     ->save();
 
