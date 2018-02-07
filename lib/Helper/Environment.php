@@ -41,7 +41,7 @@ class Environment
      */
     public static function checkFsPermissions()
     {
-        return (is_writable(PROJECT_ROOT . "/web/settings.php") || is_writable(PROJECT_ROOT . "/cache"));
+        return (is_writable(PROJECT_ROOT . "/web/settings.php") && is_writable(PROJECT_ROOT . "/cache"));
     }
 
     /**
