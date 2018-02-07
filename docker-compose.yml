@@ -9,7 +9,7 @@ services:
      - ./containers/db:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: "root"
-      MYSQL_DATABASE: "cms"
+      MYSQL_DATABASE: "test"
 
   xmr:
     image: xibosignage/xibo-xmr:latest
@@ -30,7 +30,7 @@ services:
      - "80:80"
     environment:
       CMS_DEV_MODE: "true"
-      MYSQL_DATABASE: "cms"
+      MYSQL_DATABASE: "test"
 
   swagger:
       image: swaggerapi/swagger-ui:latest

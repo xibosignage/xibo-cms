@@ -140,7 +140,6 @@ RUN mkdir -p /var/www/cms/library/temp &&  \
     mkdir -p /run/apache2 && \
     rm /etc/apache2/conf.d/info.conf && \
     rm /etc/apache2/conf.d/userdir.conf && \
-    touch /CMS-FLAG && \
     addgroup ssmtp && \
     chmod 777 /tmp
 

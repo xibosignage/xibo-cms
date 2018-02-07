@@ -29,6 +29,22 @@ fi
 echo "MySQL started"
 sleep 1
 
+# Check to see if we have a settings.php file in this container
+# if we don't, then we will need to create one here (it only contains the $_SERVER environment
+# variables we've already set
+if [ ! -f "/var/www/cms/web/settings.php" ]
+then
+  # Write settings.php
+  echo "Updating settings.php"
+
+  # We won't have a settings.php in place, so we'll need to copy one in
+  cp /tmp/settings.php-template /var/www/cms/web/settings.php
+  chown apache.apache -R /var/www/cms/web/settings.php
+
+  SECRET_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
+  /bin/sed -i "s/define('SECRET_KEY','');/define('SECRET_KEY','$SECRET_KEY');/" /var/www/cms/web/settings.php
+fi
+
 # Check if there's a database file to import
 if [ -f "/var/www/backup/import.sql" ] && [ "$CMS_DEV_MODE" == "false" ]
 then
@@ -70,7 +86,7 @@ if [ "$DB_EXISTS" == "1" ] && [ "$CMS_DEV_MODE" == "false" ]
 then
   echo "Existing Database, checking if we need to upgrade it"
   # Determine if there are any migrations to be run
-  php /var/www/cms/vendor/bin/phinx status
+  /var/www/cms/vendor/bin/phinx status -c /var/www/cms/phinx.php
 
   if [ ! "$?" == 0 ]
   then
@@ -84,7 +100,7 @@ then
 
     # Upgrade
     echo 'Running database migrations'
-    php /var/www/cms/vendor/bin/phinx migrate
+    /var/www/cms/vendor/bin/phinx migrate -c /var/www/cms/phinx.php
   fi
 fi
 
@@ -95,8 +111,9 @@ then
   echo "New install"
 
   echo "Provisioning Database"
+
   # Populate the database
-  php /var/www/cms/vendor/bin/phinx migrate
+  php /var/www/cms/vendor/bin/phinx migrate -c /var/www/cms/phinx.php
 
   CMS_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
 
@@ -126,22 +143,6 @@ then
 
   MAINTENANCE_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16)
   mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='$MAINTENANCE_KEY' WHERE \`setting\`='MAINTENANCE_KEY' LIMIT 1"
-fi
-
-if [ -e /CMS-FLAG ]
-then
-  # Remove the CMS-FLAG so we don't run this block each time we're started
-  rm /CMS-FLAG
-
-  # Write settings.php
-  echo "Updating settings.php"
-
-  # We won't have a settings.php in place, so we'll need to copy one in
-  cp /tmp/settings.php-template /var/www/cms/web/settings.php
-  chown apache.apache -R /var/www/cms/web/settings.php
-
-  SECRET_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
-  /bin/sed -i "s/define('SECRET_KEY','');/define('SECRET_KEY','$SECRET_KEY');/" /var/www/cms/web/settings.php
 fi
 
 if [ "$CMS_DEV_MODE" == "false" ]

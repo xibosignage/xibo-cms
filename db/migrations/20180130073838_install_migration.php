@@ -870,7 +870,15 @@ class InstallMigration extends AbstractMigration
                 ['name' => 'Email Notifications', 'class' => '\Xibo\XTR\EmailNotificationsTask', 'status' => 2, 'options' => '[]', 'schedule' =>  '*/5 * * * * *', 'isActive' => 1, 'configFile' => '/tasks/email-notifications.task'],
                 ['name' => 'Stats Archive', 'class' => '\Xibo\XTR\StatsArchiveTask', 'status' => 2, 'options' => '{"periodSizeInDays":"7","maxPeriods":"4"}', 'schedule' =>  '0 0 * * Mon', 'isActive' => 0, 'configFile' => '/tasks/stats-archiver.task'],
                 ['name' => 'Remove old Notifications', 'class' =>  '\Xibo\XTR\NotificationTidyTask', 'status' => 2, 'options' => '{"maxAgeDays":"7","systemOnly":"1","readOnly":"0"}',  'schedule' => '15 0 * * *', 'isActive' => 1, 'configFile' => '/tasks/notification-tidy.task'],
-                ['name' => 'Fetch Remote DataSets', 'class' =>  '\Xibo\XTR\RemoteDataSetFetchTask', 'status' => 2, 'options' => '[]',  'schedule' => '30 * * * * *', 'isActive' => 1, 'configFile' => '/tasks/remote-dataset.task']
+                ['name' => 'Fetch Remote DataSets', 'class' =>  '\Xibo\XTR\RemoteDataSetFetchTask', 'status' => 2, 'options' => '[]',  'schedule' => '30 * * * * *', 'isActive' => 1, 'configFile' => '/tasks/remote-dataset.task'],
+                [
+                    'name' => 'Drop Player Cache',
+                    'class' => '\\Xibo\\XTR\\DropPlayerCacheTask\\',
+                    'options' => '[]',
+                    'schedule' => '* * * * * *1',
+                    'isActive' => '1',
+                    'configFile' => '/tasks/drop-player-cache.task'
+                ],
             ])
             ->save();
 
