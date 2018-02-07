@@ -128,14 +128,14 @@ class InstallMigration extends AbstractMigration
             ->insert([
                 'userTypeId' => 1,
                 'userName' => 'xibo_admin',
-                'userPassword' => '21232f297a57a5a743894a0e4a801fc3',
+                'userPassword' => '5f4dcc3b5aa765d61d8327deb882cf99',
                 'loggedIn' => 0,
                 'lastAccessed' => null,
                 'homePageId' => 29
             ])
             ->save();
 
-        $userOption = $this->table('userOption', ['id' => false, ['primary_key' => ['userId', 'option']]]);
+        $userOption = $this->table('useroption', ['id' => false, 'primary_key' => ['userId', 'option']]);
         $userOption
             ->addColumn('userId', 'integer')
             ->addColumn('option', 'string', ['limit' => 50])
@@ -302,7 +302,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('valid', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 1])
             ->addColumn('expires', 'integer', ['default' => null, 'null' => true])
             ->addColumn('released', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 1])
-            ->addColumn('apiRef', 'string', ['limit' => 254])
+            ->addColumn('apiRef', 'string', ['limit' => 254, 'default' => null, 'null' => true])
             ->addColumn('createdDt', 'datetime')
             ->addColumn('modifiedDt', 'datetime')
             ->addForeignKey('userId', 'user', 'userId')
@@ -402,6 +402,8 @@ class InstallMigration extends AbstractMigration
             ->addColumn('name', 'string', ['limit' => 254, 'null' => true])
             ->addColumn('width', 'decimal')
             ->addColumn('height', 'decimal')
+            ->addColumn('top', 'decimal')
+            ->addColumn('left', 'decimal')
             ->addColumn('zIndex', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_SMALL])
             ->addColumn('duration', 'integer', ['default' => 0])
             ->addForeignKey('ownerId', 'user', 'userId')
@@ -444,7 +446,7 @@ class InstallMigration extends AbstractMigration
             ->addForeignKey('ownerId', 'user', 'userId')
             ->save();
 
-        $widgetOption = $this->table('widgetOption', ['id' => false, 'primary_key' => ['widgetId', 'type', 'option']]);
+        $widgetOption = $this->table('widgetoption', ['id' => false, 'primary_key' => ['widgetId', 'type', 'option']]);
         $widgetOption
             ->addColumn('widgetId', 'integer')
             ->addColumn('type', 'string', ['limit' => 50])
@@ -508,7 +510,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('toDt', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG, 'default' => null, 'null' => true])
             ->addColumn('is_priority', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addColumn('displayOrder', 'integer', ['default' => 0])
-            ->addColumn('lastRecurrenceWatermakr', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG, 'default' => null, 'null' => true])
+            ->addColumn('lastRecurrenceWatermark', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG, 'default' => null, 'null' => true])
             ->addColumn('syncTimezone', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
             ->addColumn('recurrence_type', 'enum', ['values' => ['Minute', 'Hour', 'Day', 'Week', 'Month', 'Year'], 'default' => null, 'null' => true])
             ->addColumn('recurrence_detail', 'integer', ['default' => null, 'null' => true])
@@ -1223,23 +1225,23 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
         // Add modules
         $this->execute('
 INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`, `defaultDuration`) VALUES
-  (1, \'Image\', \'Image\', 1, 0, \'Images. PNG, JPG, BMP, GIF\', \'forms/image.gif\', 1, \'jpg,jpeg,png,bmp,gif\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\Image\', 10),
-  (2, \'Video\', \'Video\', 1, 0, \'Videos - support varies depending on the client hardware you are using.\', \'forms/video.gif\', 1, \'wmv,avi,mpg,mpeg,webm,mp4\', 0, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\Video\', 0),
-  (3, \'Flash\', \'Flash\', 1, 0, \'Flash\', \'forms/flash.gif\', 1, \'swf\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\Flash\', 10),
-  (4, \'PowerPoint\', \'PowerPoint\', 1, 0, \'Powerpoint. PPT, PPS\', \'forms/powerpoint.gif\', 1, \'ppt,pps,pptx\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\PowerPoint\', 10),
-  (5, \'Webpage\', \'Webpage\', 1, 1, \'Webpages.\', \'forms/webpage.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\WebPage\', 60),
-  (6, \'Ticker\', \'Ticker\', 1, 1, \'RSS Ticker.\', \'forms/ticker.gif\', 1, NULL, 1, 1, NULL, \'[]\', \'../modules\', \'Xibo\\Widget\\Ticker\', 5),
-  (7, \'Text\', \'Text\', 1, 1, \'Text. With Directional Controls.\', \'forms/text.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\Text\', 5),
-  (8, \'Embedded\', \'Embedded\', 1, 1, \'Embedded HTML\', \'forms/webpage.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\Embedded\', 60),
-  (11, \'datasetview\', \'Data Set\', 1, 1, \'A view on a DataSet\', \'forms/datasetview.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\DataSetView\', 60),
-  (12, \'shellcommand\', \'Shell Command\', 1, 1, \'Execute a shell command on the client\', \'forms/shellcommand.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\ShellCommand\', 3),
-  (13, \'localvideo\', \'Local Video\', 1, 1, \'Play a video locally stored on the client\', \'forms/video.gif\', 1, NULL, 0, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\LocalVideo\', 60),
-  (14, \'genericfile\', \'Generic File\', 1, 0, \'A generic file to be stored in the library\', \'forms/library.gif\', 1, \'apk,ipk,js,html,htm\', 0, 0, NULL, NULL, \'../modules\', \'Xibo\\Widget\\GenericFile\', 10),
-  (15, \'clock\', \'Clock\', 1, 1, \'\', \'forms/library.gif\', 1, NULL, 1, 1, \'html\', \'[]\', \'../modules\', \'Xibo\\Widget\\Clock\', 5),
-  (16, \'font\', \'Font\', 1, 0, \'A font to use in other Modules\', \'forms/library.gif\', 1, \'ttf,otf,eot,svg,woff\', 0, 0, NULL, NULL, \'../modules\', \'Xibo\\Widget\\Font\', 10),
-  (17, \'audio\', \'Audio\', 1, 0, \'Audio - support varies depending on the client hardware\', \'forms/video.gif\', 1, \'mp3,wav\', 0, 1, NULL, NULL, \'../modules\', \'Xibo\\Widget\\Audio\', 0),
-  (18, \'pdf\', \'PDF\', 1, 0, \'PDF document viewer\', \'forms/pdf.gif\', 1, \'pdf\', 1, 1, \'html\', null, \'../modules\', \'Xibo\\Widget\\Pdf\', 60),
-  (19, \'notificationview\', \'Notification\', 1, 1, \'Display Notifications from the Notification Centre\', \'forms/library.gif\', 1, null, 1, 1, \'html\', null, \'../modules\', \'Xibo\\Widget\\NotificationView\', 10);        
+  (1, \'Image\', \'Image\', 1, 0, \'Images. PNG, JPG, BMP, GIF\', \'forms/image.gif\', 1, \'jpg,jpeg,png,bmp,gif\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Image\', 10),
+  (2, \'Video\', \'Video\', 1, 0, \'Videos - support varies depending on the client hardware you are using.\', \'forms/video.gif\', 1, \'wmv,avi,mpg,mpeg,webm,mp4\', 0, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Video\', 0),
+  (3, \'Flash\', \'Flash\', 1, 0, \'Flash\', \'forms/flash.gif\', 1, \'swf\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Flash\', 10),
+  (4, \'PowerPoint\', \'PowerPoint\', 1, 0, \'Powerpoint. PPT, PPS\', \'forms/powerpoint.gif\', 1, \'ppt,pps,pptx\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\PowerPoint\', 10),
+  (5, \'Webpage\', \'Webpage\', 1, 1, \'Webpages.\', \'forms/webpage.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\WebPage\', 60),
+  (6, \'Ticker\', \'Ticker\', 1, 1, \'RSS Ticker.\', \'forms/ticker.gif\', 1, NULL, 1, 1, NULL, \'[]\', \'../modules\', \'Xibo\\\\Widget\\\\Ticker\', 5),
+  (7, \'Text\', \'Text\', 1, 1, \'Text. With Directional Controls.\', \'forms/text.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Text\', 5),
+  (8, \'Embedded\', \'Embedded\', 1, 1, \'Embedded HTML\', \'forms/webpage.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Embedded\', 60),
+  (11, \'datasetview\', \'Data Set\', 1, 1, \'A view on a DataSet\', \'forms/datasetview.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\DataSetView\', 60),
+  (12, \'shellcommand\', \'Shell Command\', 1, 1, \'Execute a shell command on the client\', \'forms/shellcommand.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\ShellCommand\', 3),
+  (13, \'localvideo\', \'Local Video\', 1, 1, \'Play a video locally stored on the client\', \'forms/video.gif\', 1, NULL, 0, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\LocalVideo\', 60),
+  (14, \'genericfile\', \'Generic File\', 1, 0, \'A generic file to be stored in the library\', \'forms/library.gif\', 1, \'apk,ipk,js,html,htm\', 0, 0, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\GenericFile\', 10),
+  (15, \'clock\', \'Clock\', 1, 1, \'\', \'forms/library.gif\', 1, NULL, 1, 1, \'html\', \'[]\', \'../modules\', \'Xibo\\\\Widget\\\\Clock\', 5),
+  (16, \'font\', \'Font\', 1, 0, \'A font to use in other Modules\', \'forms/library.gif\', 1, \'ttf,otf,eot,svg,woff\', 0, 0, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Font\', 10),
+  (17, \'audio\', \'Audio\', 1, 0, \'Audio - support varies depending on the client hardware\', \'forms/video.gif\', 1, \'mp3,wav\', 0, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Audio\', 0),
+  (18, \'pdf\', \'PDF\', 1, 0, \'PDF document viewer\', \'forms/pdf.gif\', 1, \'pdf\', 1, 1, \'html\', null, \'../modules\', \'Xibo\\\\Widget\\\\Pdf\', 60),
+  (19, \'notificationview\', \'Notification\', 1, 1, \'Display Notifications from the Notification Centre\', \'forms/library.gif\', 1, null, 1, 1, \'html\', null, \'../modules\', \'Xibo\\\\Widget\\\\NotificationView\', 10);        
         ');
     }
 }

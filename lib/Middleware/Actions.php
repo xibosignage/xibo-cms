@@ -27,6 +27,7 @@ use Slim\Middleware;
 use Xibo\Entity\UserNotification;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\UserNotificationFactory;
+use Xibo\Helper\Environment;
 use Xibo\Helper\Translate;
 
 /**
@@ -53,7 +54,7 @@ class Actions extends Middleware
                     if (stripos($file, '.zip')) {
                         try {
                             /** @var \Xibo\Entity\Layout $layout */
-                            $layout = $app->layoutFactory->createFromZip($folder . '/' . $file, null, 1, false, false, true, false, true, $app->container->get('\Xibo\Controller\Library')->setApp($app));
+                            $layout = $app->layoutFactory->createFromZip($folder . '/' . $file, null, $app->container->get('userFactory')->getSystemUser()->getId(), false, false, true, false, true, $app->container->get('\Xibo\Controller\Library')->setApp($app));
                             $layout->save([
                                 'audit' => false
                             ]);

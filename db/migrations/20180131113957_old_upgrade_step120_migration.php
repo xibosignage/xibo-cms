@@ -163,7 +163,7 @@ class OldUpgradeStep120Migration extends AbstractMigration
                     ->addForeignKey('ownerId', 'user', 'userId')
                     ->save();
 
-                $widgetOption = $this->table('widgetOption', ['id' => false, 'primary_key' => ['widgetId', 'type', 'option']]);
+                $widgetOption = $this->table('widgetoption', ['id' => false, 'primary_key' => ['widgetId', 'type', 'option']]);
                 $widgetOption->addColumn('widgetId', 'integer')
                     ->addColumn('type', 'string', ['limit' => 50])
                     ->addColumn('option', 'string', ['limit' => 254])

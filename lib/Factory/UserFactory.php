@@ -182,7 +182,7 @@ class UserFactory extends BaseFactory
     public function getSystemUser()
     {
         $user = $this->create();
-        $user->userId = 0;
+        $user->userId = 1;
         $user->userName = 'system';
         $user->userTypeId = 1;
         $user->email = $this->configService->GetSetting('mail_to');

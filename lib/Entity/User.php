@@ -718,7 +718,7 @@ class User implements \JsonSerializable
         if ($options['saveUserOptions']) {
             // Save all Options
             foreach ($this->userOptions as $userOption) {
-                /* @var RegionOption $userOption */
+                /* @var UserOption $userOption */
                 $userOption->save();
             }
         }

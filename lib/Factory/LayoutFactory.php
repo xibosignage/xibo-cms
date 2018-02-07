@@ -592,7 +592,7 @@ class LayoutFactory extends BaseFactory
             $this->getLog()->info('Import is for an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
 
             $resolution = $this->resolutionFactory->create($layout->width . ' x ' . $layout->height, $layout->width, $layout->height);
-            $resolution->userId = $this->getUser()->userId;
+            $resolution->userId = $userId;
             $resolution->save();
         }
 

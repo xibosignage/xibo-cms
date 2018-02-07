@@ -50,7 +50,7 @@ class OldUpgradeStep122Migration extends AbstractMigration
                 $this->execute('DELETE FROM `setting` WHERE setting IN (\'ppt_length\', \'jpg_length\', \'swf_length\');');
                 $this->execute('UPDATE `widget` SET `calculatedDuration` = `duration`;');
 
-                $userOption = $this->table('userOption', ['id' => false, ['primary_key' => ['userId', 'option']]]);
+                $userOption = $this->table('useroption', ['id' => false, 'primary_key' => ['userId', 'option']]);
                 $userOption->addColumn('userId', 'integer')
                     ->addColumn('option', 'string', ['limit' => 50])
                     ->addColumn('value', 'text')
