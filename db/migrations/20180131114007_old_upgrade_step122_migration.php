@@ -50,7 +50,7 @@ class OldUpgradeStep122Migration extends AbstractMigration
                 $this->execute('DELETE FROM `setting` WHERE setting IN (\'ppt_length\', \'jpg_length\', \'swf_length\');');
                 $this->execute('UPDATE `widget` SET `calculatedDuration` = `duration`;');
 
-                $userOption = $this->table('userOption', ['id' => false, ['primaryKey' => ['userId', 'option']]]);
+                $userOption = $this->table('userOption', ['id' => false, ['primary_key' => ['userId', 'option']]]);
                 $userOption->addColumn('userId', 'integer')
                     ->addColumn('option', 'string', ['limit' => 50])
                     ->addColumn('value', 'text')
@@ -69,7 +69,7 @@ class OldUpgradeStep122Migration extends AbstractMigration
                     ->removeColumn('securityToken')
                     ->save();
 
-                $linkDisplayGroup = $this->table('lkdgdg', ['id' => false, ['primaryKey' => ['parentId', 'childId', 'depth']]]);
+                $linkDisplayGroup = $this->table('lkdgdg', ['id' => false, ['primary_key' => ['parentId', 'childId', 'depth']]]);
                 $linkDisplayGroup
                     ->addColumn('parentId', 'integer')
                     ->addColumn('childId', 'integer')

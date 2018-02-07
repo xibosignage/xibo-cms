@@ -21,10 +21,10 @@ class OldUpgradeStep135Migration extends AbstractMigration
                 $dataSet = $this->table('dataSet');
                 $dataSet
                     ->addColumn('isRemote', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
-                    ->addColumn('method', 'enum', ['limit' => ['GET', 'POST'], 'null' => true])
+                    ->addColumn('method', 'enum', ['values' => ['GET', 'POST'], 'null' => true])
                     ->addColumn('uri', 'string', ['limit' => 250, 'null' => true])
                     ->addColumn('postData', 'text', ['null' => true])
-                    ->addColumn('authentication', 'enum', ['limit' => ['none', 'plain', 'basic', 'digest'], 'null' => true])
+                    ->addColumn('authentication', 'enum', ['values' => ['none', 'plain', 'basic', 'digest'], 'null' => true])
                     ->addColumn('username', 'string', ['limit' => 250, 'null' => true])
                     ->addColumn('password', 'string', ['limit' => 250, 'null' => true])
                     ->addColumn('refreshRate', 'integer', ['default' => 86400])

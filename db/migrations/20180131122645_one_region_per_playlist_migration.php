@@ -25,9 +25,12 @@ class OneRegionPerPlaylistMigration extends AbstractMigration
 
         $this->execute('UPDATE `pages` SET asHome = 1 WHERE name = \'playlist\';');
 
-        $this->execute('INSERT INTO module (Module, Name, Enabled, RegionSpecific, Description, ImageUri, SchemaVersion, ValidExtensions, PreviewEnabled, assignable, render_as, settings, viewPath, class, defaultDuration) VALUES (\'subplaylist\', \'Sub-Playlist\', 1, 1, \'Embed a Sub-Playlist\', \'forms/library.gif\', 1, null, 1, 1, \'native\', null, \'../modules\', \'Xibo\\Widget\\SubPlaylist\', 10);');
+        $this->execute('
+          INSERT INTO module (Module, Name, Enabled, RegionSpecific, Description, ImageUri, SchemaVersion, ValidExtensions, PreviewEnabled, assignable, render_as, settings, viewPath, class, defaultDuration) 
+          VALUES (\'subplaylist\', \'Sub-Playlist\', 1, 1, \'Embed a Sub-Playlist\', \'forms/library.gif\', 1, null, 1, 1, \'native\', null, \'../modules\', \'Xibo\Widget\SubPlaylist\', 10);
+        ');
 
-        $playlistClosure = $this->table('lkplaylistplaylist', ['id' => false, 'primaryKey' => ['parentId', 'childId', 'depth']]);
+        $playlistClosure = $this->table('lkplaylistplaylist', ['id' => false, 'primary_key' => ['parentId', 'childId', 'depth']]);
         $playlistClosure
             ->addColumn('parentId', 'integer')
             ->addColumn('childId', 'integer')

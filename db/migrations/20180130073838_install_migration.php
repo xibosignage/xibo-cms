@@ -61,11 +61,11 @@ class InstallMigration extends AbstractMigration
     private function addStructure()
     {
         // Session
-        $session = $this->table('session', ['id' => false, 'primaryKey' => 'session_id']);
+        $session = $this->table('session', ['id' => false, 'primary_key' => 'session_id']);
         $session
             ->addColumn('session_id', 'string', ['limit' => 160])
             ->addColumn('session_data', 'text', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::TEXT_LONG])
-            ->addColumn('session_expiration', 'integer', ['limit' => 10, 'unsigned' => true, 'default' => 0])
+            ->addColumn('session_expiration', 'integer', ['limit' => 10, 'signed' => false, 'default' => 0])
             ->addColumn('lastAccessed', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('userId', 'integer', ['null' => true, 'default' => null])
             ->addColumn('isExpired', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 1])
@@ -75,12 +75,13 @@ class InstallMigration extends AbstractMigration
             ->save();
 
         // Settings table
-        $settings = $this->table('settings', ['id' => 'settingId']);
+        $settings = $this->table('setting', ['id' => 'settingId']);
         $settings
             ->addColumn('setting', 'string', ['limit' => 50])
             ->addColumn('type', 'string', ['limit' => 50])
             ->addColumn('title', 'string', ['limit' => 50])
             ->addColumn('value', 'string', ['limit' => 1000])
+            ->addColumn('default', 'string', ['limit' => 1000])
             ->addColumn('fieldType', 'string', ['limit' => 24])
             ->addColumn('helpText', 'text')
             ->addColumn('options', 'string', ['limit' => 254, 'null' => true, 'default' => null])
@@ -134,7 +135,7 @@ class InstallMigration extends AbstractMigration
             ])
             ->save();
 
-        $userOption = $this->table('userOption', ['id' => false, ['primaryKey' => ['userId', 'option']]]);
+        $userOption = $this->table('userOption', ['id' => false, ['primary_key' => ['userId', 'option']]]);
         $userOption
             ->addColumn('userId', 'integer')
             ->addColumn('option', 'string', ['limit' => 50])
@@ -152,9 +153,9 @@ class InstallMigration extends AbstractMigration
             ->addColumn('isDisplayNotification', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
             ->insert([
                 ['group' => 'Users', 'isUserSpecific' => 0, 'isEveryone' => 0, 'isSystemNotification' => 0],
-                ['Everyone' => 'Users', 'isUserSpecific' => 0, 'isEveryone' => 1, 'isSystemNotification' => 0],
-                ['xibo_admin' => 'Users', 'isUserSpecific' => 1, 'isEveryone' => 0, 'isSystemNotification' => 1],
-                ['System Notifications' => 'Users', 'isUserSpecific' => 0, 'isEveryone' => 0, 'isSystemNotification' => 1],
+                ['group' => 'Everyone', 'isUserSpecific' => 0, 'isEveryone' => 1, 'isSystemNotification' => 0],
+                ['group' => 'xibo_admin', 'isUserSpecific' => 1, 'isEveryone' => 0, 'isSystemNotification' => 1],
+                ['group' => 'System Notifications', 'isUserSpecific' => 0, 'isEveryone' => 0, 'isSystemNotification' => 1],
             ])
             ->save();
 
@@ -254,7 +255,7 @@ class InstallMigration extends AbstractMigration
             ->save();
 
         // Link Display Group / Display Group
-        $linkDisplayGroup = $this->table('lkdgdg', ['id' => false, ['primaryKey' => ['parentId', 'childId', 'depth']]]);
+        $linkDisplayGroup = $this->table('lkdgdg', ['id' => false, ['primary_key' => ['parentId', 'childId', 'depth']]]);
         $linkDisplayGroup
             ->addColumn('parentId', 'integer')
             ->addColumn('childId', 'integer')
@@ -273,9 +274,10 @@ class InstallMigration extends AbstractMigration
             ->addColumn('imageUri', 'string', ['limit' => 254, 'default' => null, 'null' => true])
             ->addColumn('schemaVersion', 'integer', ['default' => 1])
             ->addColumn('validExtensions', 'string', ['limit' => 254, 'default' => null, 'null' => true])
+            ->addColumn('previewEnabled', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 1])
             ->addColumn('assignable', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 1])
-            ->addColumn('renderAs', 'string', ['limit' => 10, 'default' => null, 'null' => true])
-            ->addColumn('settings', 'text')
+            ->addColumn('render_as', 'string', ['limit' => 10, 'default' => null, 'null' => true])
+            ->addColumn('settings', 'text', ['default' => null, 'null' => true])
             ->addColumn('viewPath', 'string', ['limit' => 254, 'default' => '../modules'])
             ->addColumn('class', 'string', ['limit' => 254])
             ->addColumn('defaultDuration', 'integer')
@@ -405,7 +407,7 @@ class InstallMigration extends AbstractMigration
             ->addForeignKey('ownerId', 'user', 'userId')
             ->save();
 
-        $regionOption = $this->table('regionoption', ['id' => false, 'primaryKey' => ['regionId', 'option']]);
+        $regionOption = $this->table('regionoption', ['id' => false, 'primary_key' => ['regionId', 'option']]);
         $regionOption
             ->addColumn('regionId', 'integer')
             ->addColumn('option', 'string', ['limit' => 50])
@@ -420,7 +422,7 @@ class InstallMigration extends AbstractMigration
             ->addForeignKey('ownerId', 'user', 'userId')
             ->save();
 
-        $linkRegionPlaylist = $this->table('lkregionplaylist', ['id' => false, 'primaryKey' => 'regionId', 'playlistId', 'displayOrder']);
+        $linkRegionPlaylist = $this->table('lkregionplaylist', ['id' => false, 'primary_key' => 'regionId', 'playlistId', 'displayOrder']);
         $linkRegionPlaylist
             ->addColumn('regionId', 'integer')
             ->addColumn('playlistId', 'integer')
@@ -431,7 +433,6 @@ class InstallMigration extends AbstractMigration
         // Widget
         $widget = $this->table('widget', ['id' => 'widgetId']);
         $widget
-            ->addColumn('widgetId', 'integer')
             ->addColumn('playlistId', 'integer')
             ->addColumn('ownerId', 'integer')
             ->addColumn('type', 'string', ['limit' => 50])
@@ -443,15 +444,16 @@ class InstallMigration extends AbstractMigration
             ->addForeignKey('ownerId', 'user', 'userId')
             ->save();
 
-        $widgetOption = $this->table('widgetOption', ['id' => false, 'primaryKey' => ['widgetId', 'type', 'option']]);
-        $widgetOption->addColumn('widgetId', 'integer')
+        $widgetOption = $this->table('widgetOption', ['id' => false, 'primary_key' => ['widgetId', 'type', 'option']]);
+        $widgetOption
+            ->addColumn('widgetId', 'integer')
             ->addColumn('type', 'string', ['limit' => 50])
             ->addColumn('option', 'string', ['limit' => 254])
             ->addColumn('value', 'text', ['null' => true])
             ->addForeignKey('widgetId', 'widget', 'widgetId')
             ->save();
 
-        $linkWidgetMedia = $this->table('lkwidgetmedia', ['id' => false, 'primaryKey' => ['widgetId', 'mediaId']]);
+        $linkWidgetMedia = $this->table('lkwidgetmedia', ['id' => false, 'primary_key' => ['widgetId', 'mediaId']]);
         $linkWidgetMedia
             ->addColumn('widgetId', 'integer')
             ->addColumn('mediaId', 'integer')
@@ -459,7 +461,7 @@ class InstallMigration extends AbstractMigration
             ->addForeignKey('mediaId', 'media', 'mediaId')
             ->save();
 
-        $linkWidgetAudio = $this->table('lkwidgetaudio', ['id' => false, 'primaryKey' => ['widgetId', 'mediaId']]);
+        $linkWidgetAudio = $this->table('lkwidgetaudio', ['id' => false, 'primary_key' => ['widgetId', 'mediaId']]);
         $linkWidgetAudio
             ->addColumn('widgetId', 'integer')
             ->addColumn('mediaId', 'integer')
@@ -508,17 +510,15 @@ class InstallMigration extends AbstractMigration
             ->addColumn('displayOrder', 'integer', ['default' => 0])
             ->addColumn('lastRecurrenceWatermakr', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG, 'default' => null, 'null' => true])
             ->addColumn('syncTimezone', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
-            ->addColumn('recurrence_type', 'enum', ['limit' => ['Minute', 'Hour', 'Day', 'Week', 'Month', 'Year'], 'default' => null, 'null' => true])
+            ->addColumn('recurrence_type', 'enum', ['values' => ['Minute', 'Hour', 'Day', 'Week', 'Month', 'Year'], 'default' => null, 'null' => true])
             ->addColumn('recurrence_detail', 'integer', ['default' => null, 'null' => true])
             ->addColumn('recurrence_range', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG, 'default' => null, 'null' => true])
             ->addColumn('recurrenceRepeatsOn', 'string', ['limit' => 14, 'default' => null, 'null' => true])
             ->addIndex('campaignId')
             ->addForeignKey('userId', 'user', 'userId')
-            ->addForeignKey('campaignId', 'campaign', 'campaignId')
-            ->addForeignKey('commandId', 'command', 'commandId')
             ->save();
 
-        $linkScheduleDisplayGroup = $this->table('lkscheduledisplaygroup', ['id' => false, 'primaryKey' => ['eventId'], 'displayGroupId']);
+        $linkScheduleDisplayGroup = $this->table('lkscheduledisplaygroup', ['id' => false, 'primary_key' => ['eventId'], 'displayGroupId']);
         $linkScheduleDisplayGroup
             ->addColumn('eventId', 'integer')
             ->addColumn('displayGroupId', 'integer')
@@ -536,10 +536,10 @@ class InstallMigration extends AbstractMigration
             ->addColumn('code', 'string', ['limit' => 50, 'null' => true])
             ->addColumn('isLookup', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addColumn('isRemote', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
-            ->addColumn('method', 'enum', ['limit' => ['GET', 'POST'], 'null' => true])
+            ->addColumn('method', 'enum', ['values' => ['GET', 'POST'], 'null' => true])
             ->addColumn('uri', 'string', ['limit' => 250, 'null' => true])
             ->addColumn('postData', 'text', ['null' => true])
-            ->addColumn('authentication', 'enum', ['limit' => ['none', 'plain', 'basic', 'digest'], 'null' => true])
+            ->addColumn('authentication', 'enum', ['values' => ['none', 'plain', 'basic', 'digest'], 'null' => true])
             ->addColumn('username', 'string', ['limit' => 250, 'null' => true])
             ->addColumn('password', 'string', ['limit' => 250, 'null' => true])
             ->addColumn('refreshRate', 'integer', ['default' => 86400])
@@ -643,7 +643,7 @@ class InstallMigration extends AbstractMigration
             ->addForeignKey('userId', 'user', 'userId')
             ->save();
 
-        $linkCommandDisplayProfile = $this->table('lkcommanddisplayprofile', ['id' => false, ['primaryKey' => ['commandId', 'displayProfileId']]]);
+        $linkCommandDisplayProfile = $this->table('lkcommanddisplayprofile', ['id' => false, ['primary_key' => ['commandId', 'displayProfileId']]]);
         $linkCommandDisplayProfile->addColumn('commandId', 'integer')
             ->addColumn('displayProfileId', 'integer')
             ->addColumn('commandString', 'string', ['limit' => 1000])
@@ -743,65 +743,27 @@ class InstallMigration extends AbstractMigration
         // Oauth
         //<editor-fold desc="OAUTH">
 
-        $oauthAccessTokens = $this->table('oauth_access_tokens', ['id' => false, 'primaryKey' => ['access_token']]);
-        $oauthAccessTokens
-            ->addColumn('access_token', 'string', ['limit' => 254])
-            ->addColumn('session_id', 'integer', ['signed' => false])
-            ->addColumn('expire_time', 'integer')
-            ->addForeignKey('session_id', 'oauth_sessions', 'id', ['delete' => 'CASCADE'])
-            ->save();
-
-        $oauthAccessTokenScopes = $this->table('oauth_access_token_scopes');
-        $oauthAccessTokenScopes
-            ->addColumn('access_token', 'string', ['limit' => 254])
-            ->addColumn('scope', 'string', ['limit' => 254])
-            ->addForeignKey('access_token', 'oauth_access_tokens', 'access_token', ['delete' => 'CASCADE'])
-            ->addForeignKey('scope', 'oauth_access_tokens', 'id', ['delete' => 'CASCADE'])
-            ->save();
-
-        $oauthAuthCodes = $this->table('oauth_auth_codes', ['id' => false, 'primaryKey' => ['auth_code']]);
-        $oauthAuthCodes
-            ->addColumn('auth_code', 'string', ['limit' => 254])
-            ->addColumn('session_id', 'integer', ['signed' => false])
-            ->addColumn('expire_time', 'integer')
-            ->addColumn('client_redirect_uri', 'string', ['limit' => 500])
-            ->addForeignKey('session_id', 'oauth_sessions', 'id', ['delete' => 'CASCADE'])
-            ->save();
-
-        $oauthAuthCodeScopes = $this->table('oauth_access_token_scopes');
-        $oauthAuthCodeScopes
-            ->addColumn('auth_code', 'string', ['limit' => 254])
-            ->addColumn('scope', 'string', ['limit' => 254])
-            ->addForeignKey('auth_code', 'oauth_auth_codes', 'auth_code', ['delete' => 'CASCADE'])
-            ->addForeignKey('scope', 'oauth_scopes', 'id', ['delete' => 'CASCADE'])
-            ->save();
-
-        $oauthClients = $this->table('oauth_clients', ['id' => false, 'primaryKey' => ['id']]);
+        $oauthClients = $this->table('oauth_clients', ['id' => false, 'primary_key' => ['id']]);
         $oauthClients
             ->addColumn('id', 'string', ['limit' => 254])
             ->addColumn('secret', 'string', ['limit' => 254])
-            ->addColumn('secret', 'string', ['limit' => 254])
+            ->addColumn('name', 'string', ['limit' => 254])
             ->addColumn('userId', 'integer')
             ->addColumn('authCode', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addColumn('clientCredentials', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addForeignKey('userId', 'user', 'userId')
             ->save();
 
-        $oauthClientRedirects = $this->table('oauth_client_redirect_uris');
-        $oauthClientRedirects
+        $oauthSessions = $this->table('oauth_sessions');
+        $oauthSessions
+            ->addColumn('owner_type', 'string', ['limit' => 254])
+            ->addColumn('owner_id', 'string', ['limit' => 254])
             ->addColumn('client_id', 'string', ['limit' => 254])
-            ->addColumn('redirect_uri', 'string', ['limit' => 500])
+            ->addColumn('client_redirect_uri', 'string', ['limit' => 500, 'null' => true])
+            ->addForeignKey('client_id', 'oauth_clients', 'id', ['delete' => 'CASCADE'])
             ->save();
 
-        $oauthRefreshToeksn = $this->table('oauth_refresh_tokens', ['id' => false, 'primaryKey' => ['refresh_token']]);
-        $oauthRefreshToeksn
-            ->addColumn('refresh_token', 'string', ['limit' => 254])
-            ->addColumn('expire_time', 'integer')
-            ->addColumn('access_token', 'string', ['limit' => 254])
-            ->addForeignKey('access_token', 'oauth_access_tokens', 'access_token', ['delete' => 'CASCADE'])
-            ->save();
-
-        $oauthScopes = $this->table('oauth_scopes', ['id' => false, 'primaryKey' => ['id']]);
+        $oauthScopes = $this->table('oauth_scopes', ['id' => false, 'primary_key' => ['id']]);
         $oauthScopes
             ->addColumn('id', 'string', ['limit' => 254])
             ->addColumn('description', 'string', ['limit' => 1000])
@@ -811,20 +773,57 @@ class InstallMigration extends AbstractMigration
             ])
             ->save();
 
-        $oauthSessions = $this->table('oauth_sessions');
-        $oauthSessions
-            ->addColumn('id', 'string', ['limit' => 254])
-            ->addColumn('owner_type', 'string', ['limit' => 254])
-            ->addColumn('owner_id', 'string', ['limit' => 254])
-            ->addColumn('client_id', 'string', ['limit' => 254])
-            ->addColumn('client_redirect_uri', 'string', ['limit' => 500, 'null' => true])
-            ->addForeignKey('client_id', 'oauth_clients', 'id', ['delete' => 'CASCADE'])
+        $oauthAccessTokens = $this->table('oauth_access_tokens', ['id' => false, 'primary_key' => ['access_token']]);
+        $oauthAccessTokens
+            ->addColumn('access_token', 'string', ['limit' => 254])
+            ->addColumn('session_id', 'integer')
+            ->addColumn('expire_time', 'integer')
+            ->addForeignKey('session_id', 'oauth_sessions', 'id', ['delete' => 'CASCADE'])
             ->save();
 
-        $oauthSessionsScopes = $this->table('oauth_session_scopes');
+        $oauthAccessTokenScopes = $this->table('oauth_access_token_scopes');
+        $oauthAccessTokenScopes
+            ->addColumn('access_token', 'string', ['limit' => 254])
+            ->addColumn('scope', 'string', ['limit' => 254])
+            ->addForeignKey('access_token', 'oauth_access_tokens', 'access_token', ['delete' => 'CASCADE'])
+            ->addForeignKey('scope', 'oauth_scopes', 'id', ['delete' => 'CASCADE'])
+            ->save();
+
+        $oauthAuthCodes = $this->table('oauth_auth_codes', ['id' => false, 'primary_key' => ['auth_code']]);
+        $oauthAuthCodes
+            ->addColumn('auth_code', 'string', ['limit' => 254])
+            ->addColumn('session_id', 'integer')
+            ->addColumn('expire_time', 'integer')
+            ->addColumn('client_redirect_uri', 'string', ['limit' => 500])
+            ->addForeignKey('session_id', 'oauth_sessions', 'id', ['delete' => 'CASCADE'])
+            ->save();
+
+        $oauthAuthCodeScopes = $this->table('oauth_auth_code_scopes');
+        $oauthAuthCodeScopes
+            ->addColumn('auth_code', 'string', ['limit' => 254])
+            ->addColumn('scope', 'string', ['limit' => 254])
+            ->addForeignKey('auth_code', 'oauth_auth_codes', 'auth_code', ['delete' => 'CASCADE'])
+            ->addForeignKey('scope', 'oauth_scopes', 'id', ['delete' => 'CASCADE'])
+            ->save();
+
+        $oauthClientRedirects = $this->table('oauth_client_redirect_uris');
+        $oauthClientRedirects
+            ->addColumn('client_id', 'string', ['limit' => 254])
+            ->addColumn('redirect_uri', 'string', ['limit' => 500])
+            ->save();
+
+        $oauthRefreshToeksn = $this->table('oauth_refresh_tokens', ['id' => false, 'primary_key' => ['refresh_token']]);
+        $oauthRefreshToeksn
+            ->addColumn('refresh_token', 'string', ['limit' => 254])
+            ->addColumn('expire_time', 'integer')
+            ->addColumn('access_token', 'string', ['limit' => 254])
+            ->addForeignKey('access_token', 'oauth_access_tokens', 'access_token', ['delete' => 'CASCADE'])
+            ->save();
+
+        $oauthSessionsScopes = $this->table('oauth_session_scopes', ['id' => false, 'primary_key' => ['id']]);
         $oauthSessionsScopes
             ->addColumn('id', 'string', ['limit' => 254])
-            ->addColumn('session_id', 'integer', ['signed' => false])
+            ->addColumn('session_id', 'integer')
             ->addColumn('scope', 'string', ['limit' => 254])
             ->addForeignKey('session_id', 'oauth_sessions', 'id', ['delete' => 'CASCADE'])
             ->addForeignKey('scope', 'oauth_scopes', 'id', ['delete' => 'CASCADE'])
@@ -844,12 +843,6 @@ class InstallMigration extends AbstractMigration
             ->addColumn('method', 'string', ['limit' => 8])
             ->save();
         //</editor-fold>
-
-        $requiredFile = $this->table('requiredfile');
-        $requiredFile->addColumn('requestKey', 'string', ['limit' => 10])
-            ->addColumn('bytesRequested', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG])
-            ->addColumn('complete' , 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
-            ->save();
 
         // Tasks
         $task = $this->table('task', ['id' => 'taskId']);
@@ -982,7 +975,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('start', 'integer')
             ->addColumn('end', 'integer', ['null' => true])
             ->addIndex('eventDate')
-            ->addIndex(['disaplyId', 'end'])
+            ->addIndex(['displayId', 'end'])
             ->save();
 
         // Log
@@ -1029,12 +1022,12 @@ class InstallMigration extends AbstractMigration
             ])
             ->save();
 
-        $bandwidth = $this->table('bandwidth', ['id' => false, 'primaryKey' => ['displayId', 'type', 'month']]);
+        $bandwidth = $this->table('bandwidth', ['id' => false, 'primary_key' => ['displayId', 'type', 'month']]);
         $bandwidth->addColumn('displayId', 'integer')
-            ->addColumn('type', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
+            ->addColumn('type', 'integer')
             ->addColumn('month', 'integer')
             ->addColumn('size', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG])
-            ->addForeignKey('type', 'bandwidthtype')
+            ->addForeignKey('type', 'bandwidthtype', 'bandwidthTypeId')
             ->save();
 
         // Blacklist
@@ -1046,8 +1039,8 @@ class InstallMigration extends AbstractMigration
             ->addColumn('reportingDisplayId', 'integer', ['null' => true])
             ->addColumn('reason', 'text')
             ->addColumn('isIgnored', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
-            ->addForeignKey('mediaId', 'media')
-            ->addForeignKey('displayId', 'display')
+            ->addForeignKey('mediaId', 'media', 'mediaId')
+            ->addForeignKey('displayId', 'display', 'displayId')
             ->save();
 
         // Help

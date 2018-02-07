@@ -24,7 +24,7 @@ class OldUpgradeStep125Migration extends AbstractMigration
 
                 $this->execute('INSERT INTO module (Module, Name, Enabled, RegionSpecific, Description, ImageUri, SchemaVersion, ValidExtensions, PreviewEnabled, assignable, render_as, settings, viewPath, class, defaultDuration) VALUES (\'audio\', \'Audio\', 1, 0, \'Audio - support varies depending on the client hardware\', \'forms/video.gif\', 1, \'mp3,wav\', 1, 1, null, null, \'../modules\', \'Xibo\\Widget\\Audio\', 0);');
 
-                $linkWidgetAudio = $this->table('lkwidgetaudio', ['id' => false, 'primaryKey' => ['widgetId', 'mediaId']]);
+                $linkWidgetAudio = $this->table('lkwidgetaudio', ['id' => false, 'primary_key' => ['widgetId', 'mediaId']]);
                 $linkWidgetAudio->addColumn('widgetId', 'integer')
                     ->addColumn('mediaId', 'integer')
                     ->addColumn('volume', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
