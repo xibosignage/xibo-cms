@@ -28,7 +28,7 @@ class OldUpgradeStep134Migration extends AbstractMigration
 
                 $this->execute('DELETE FROM `setting` WHERE setting = \'MAINTENANCE_ALERTS_FOR_VIEW_USERS\';');
 
-                $linkTagDisplayGroup = $this->table('lktagcampaign', ['id' => 'lkTagDisplayGroupId']);
+                $linkTagDisplayGroup = $this->table('lktagdisplaygroup', ['id' => 'lkTagDisplayGroupId']);
                 $linkTagDisplayGroup
                     ->addColumn('tagId', 'integer')
                     ->addColumn('displayGroupId', 'integer')

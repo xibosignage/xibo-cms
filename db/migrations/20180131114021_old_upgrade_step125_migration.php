@@ -40,26 +40,24 @@ class OldUpgradeStep125Migration extends AbstractMigration
                     ->addIndex(['clientId', 'scopeId'], ['unique' => true])
                     ->save();
 
+                // Bulk insert doesn't appear to handle non auto-index primary keys?!
+                $this->execute('
+                  INSERT INTO `oauth_scopes` (id, description) VALUES 
+                    (\'all\', \'All access\'), 
+                    (\'mcaas\', \'Media Conversion as a Service\')
+                ');
+
                 $oauthRouteScopes = $this->table('oauth_scope_routes');
                 $oauthRouteScopes
                     ->addColumn('scopeId', 'string', ['limit' => 254])
-                    ->addColumn('root', 'string', ['limit' => 1000])
+                    ->addColumn('route', 'string', ['limit' => 1000])
                     ->addColumn('method', 'string', ['limit' => 8])
+                    ->insert([
+                        ['scopeId' => 'mcaas', 'route' => '/', 'method' => 'GET'],
+                        ['scopeId' => 'mcaas', 'route' => '/library/download/:id(/:type)', 'method' => 'GET'],
+                        ['scopeId' => 'mcaas', 'route' => '/library/mcaas/:id', 'method' => 'POST'],
+                    ])
                     ->save();
-
-                $oauthScopes = $this->table('oauth_scopes');
-                $oauthScopes->insert([
-                    [
-                        'id' => 'all',
-                        'description', 'All access'
-                    ],
-                    [
-                        'id' => 'mcaas',
-                        'description', 'Media Conversion as a Service'
-                    ]
-                ])->save();
-
-                $this->execute('INSERT INTO `oauth_scope_routes` (scopeId, route, id, method) VALUES (\'mcaas\', \'/\', 1, \'GET\'),(\'mcaas\', \'/library/download/:id(/:type)\', 2, \'GET\'),(\'mcaas\', \'/library/mcaas/:id\', 3, \'POST\');');
 
                 $module = $this->table('module');
                 $module->addColumn('installName', 'string', ['limit' => 254, 'null' => true])

@@ -25,7 +25,7 @@ class OldUpgradeStep121Migration extends AbstractMigration
                     ->addColumn('lastCommandSuccess', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 2])
                     ->save();
 
-                $settings = $this->table('settings');
+                $settings = $this->table('setting');
                 $settings
                     ->insert([
                         [

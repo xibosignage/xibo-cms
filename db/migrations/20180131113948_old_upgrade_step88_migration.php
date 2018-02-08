@@ -31,7 +31,7 @@ class OldUpgradeStep88Migration extends AbstractMigration
 
                 $group = $this->table('group');
                 if (!$group->hasColumn('libraryQuota')) {
-                    $group->addColumn('libraryQuota', 'int', ['null' => true])
+                    $group->addColumn('libraryQuota', 'integer', ['null' => true])
                         ->save();
                 }
 

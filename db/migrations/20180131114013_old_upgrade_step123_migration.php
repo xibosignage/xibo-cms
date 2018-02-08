@@ -25,7 +25,7 @@ class OldUpgradeStep123Migration extends AbstractMigration
 
                 // The following was added in step 92, we need to check to see if we already have this
                 if (!$this->fetchRow('SELECT * FROM setting WHERE setting = \'CDN_URL\'')) {
-                    $settings = $this->table('settings');
+                    $settings = $this->table('setting');
                     $settings
                         ->insert([
                             'setting' => 'CDN_URL',

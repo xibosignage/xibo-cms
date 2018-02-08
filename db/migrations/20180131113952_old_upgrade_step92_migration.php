@@ -18,7 +18,7 @@ class OldUpgradeStep92Migration extends AbstractMigration
             // Are we on the relevent step for this upgrade?
             if ($dbVersion < $STEP) {
                 // Perform the upgrade
-                $settings = $this->table('settings');
+                $settings = $this->table('setting');
                 $settings
                     ->insert([
                         'setting' => 'CDN_URL',

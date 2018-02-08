@@ -520,7 +520,7 @@ class InstallMigration extends AbstractMigration
             ->addForeignKey('userId', 'user', 'userId')
             ->save();
 
-        $linkScheduleDisplayGroup = $this->table('lkscheduledisplaygroup', ['id' => false, 'primary_key' => ['eventId'], 'displayGroupId']);
+        $linkScheduleDisplayGroup = $this->table('lkscheduledisplaygroup', ['id' => false, 'primary_key' => ['eventId', 'displayGroupId']]);
         $linkScheduleDisplayGroup
             ->addColumn('eventId', 'integer')
             ->addColumn('displayGroupId', 'integer')
@@ -841,7 +841,7 @@ class InstallMigration extends AbstractMigration
         $oauthRouteScopes = $this->table('oauth_scope_routes');
         $oauthRouteScopes
             ->addColumn('scopeId', 'string', ['limit' => 254])
-            ->addColumn('root', 'string', ['limit' => 1000])
+            ->addColumn('route', 'string', ['limit' => 1000])
             ->addColumn('method', 'string', ['limit' => 8])
             ->save();
         //</editor-fold>

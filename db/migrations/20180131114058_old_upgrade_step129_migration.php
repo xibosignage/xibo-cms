@@ -21,6 +21,7 @@ class OldUpgradeStep129Migration extends AbstractMigration
                 $requiredFile = $this->table('requiredfile', ['id' => 'rfId']);
                 $requiredFile
                     ->addColumn('displayId', 'integer')
+                    ->addColumn('type', 'string', ['limit' => 1])
                     ->addColumn('class', 'string', ['limit' => 1])
                     ->addColumn('itemId', 'integer', ['null' => true])
                     ->addColumn('bytesRequested', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG])

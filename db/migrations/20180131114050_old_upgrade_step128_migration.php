@@ -30,7 +30,7 @@ class OldUpgradeStep128Migration extends AbstractMigration
                 $schedule->addColumn('lastRecurrenceWatermark', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG, 'null' => true])
                     ->save();
 
-                $this->dropTable('requiredFile');
+                $this->dropTable('requiredfile');
 
                 $log = $this->table('log');
                 $log

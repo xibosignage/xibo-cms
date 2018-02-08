@@ -73,7 +73,9 @@ class OldUpgradeStep120Migration extends AbstractMigration
                 $this->dropTable('lkdisplaygroupgroup');
 
                 $pages = $this->table('pages');
-                $pages->removeIndexByName('pages_ibfk_1')
+                $pages
+                    ->removeIndexByName('pages_ibfk_1')
+                    ->dropForeignKey('pageGroupId')
                     ->removeColumn('pageGroupId')
                     ->addColumn('title', 'string', ['limit' => 50])
                     ->addColumn('asHome', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
@@ -200,10 +202,6 @@ class OldUpgradeStep120Migration extends AbstractMigration
                 $oauthScopes
                     ->addColumn('id', 'string', ['limit' => 254])
                     ->addColumn('description', 'string', ['limit' => 1000])
-                    ->insert([
-                        ['id' => 'all', 'description' => 'All'],
-                        ['id' => 'mcaas', 'description' => 'Media Conversion as a Service']
-                    ])
                     ->save();
 
                 $oauthAccessTokens = $this->table('oauth_access_tokens', ['id' => false, 'primary_key' => ['access_token']]);
@@ -298,7 +296,7 @@ class OldUpgradeStep120Migration extends AbstractMigration
                 $this->execute('ALTER TABLE  `lkmediadisplaygroup` ADD UNIQUE (`mediaid` ,`displaygroupid`);');
                 $this->execute('ALTER TABLE  `lkcampaignlayout` ADD UNIQUE (`CampaignID` ,`LayoutID` ,`DisplayOrder`);');
 
-                $linkScheduleDisplayGroup = $this->table('lkscheduledisplaygroup', ['id' => false, 'primary_key' => ['eventId'], 'displayGroupId']);
+                $linkScheduleDisplayGroup = $this->table('lkscheduledisplaygroup', ['id' => false, 'primary_key' => ['eventId', 'displayGroupId']]);
                 $linkScheduleDisplayGroup
                     ->addColumn('eventId', 'integer')
                     ->addColumn('displayGroupId', 'integer')

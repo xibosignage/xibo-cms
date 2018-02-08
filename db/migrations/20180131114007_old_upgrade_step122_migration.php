@@ -33,7 +33,7 @@ class OldUpgradeStep122Migration extends AbstractMigration
                 $auditLog->changeColumn('userId', 'integer', ['null' => true])
                     ->save();
 
-                $dataSet = $this->table('dataSet');
+                $dataSet = $this->table('dataset');
                 $dataSet->addColumn('code', 'string', ['limit' => 50, 'null' => true])
                     ->addColumn('isLookup', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
                     ->save();

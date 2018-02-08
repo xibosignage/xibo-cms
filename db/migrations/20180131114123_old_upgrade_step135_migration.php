@@ -18,7 +18,7 @@ class OldUpgradeStep135Migration extends AbstractMigration
             // Are we on the relevent step for this upgrade?
             if ($dbVersion < $STEP) {
                 // Perform the upgrade
-                $dataSet = $this->table('dataSet');
+                $dataSet = $this->table('dataset');
                 $dataSet
                     ->addColumn('isRemote', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
                     ->addColumn('method', 'enum', ['values' => ['GET', 'POST'], 'null' => true])
@@ -36,7 +36,7 @@ class OldUpgradeStep135Migration extends AbstractMigration
                     ->addColumn('summarizeField', 'string', ['limit' => 250, 'null' => true])
                     ->save();
 
-                $dataSetColumn = $this->table('datasetcolumntype');
+                $dataSetColumn = $this->table('datasetcolumn');
                 $dataSetColumn
                     ->addColumn('remoteField', 'string', ['limit' => 250, 'null' => true, 'after' => 'formula'])
                     ->save();
@@ -85,8 +85,11 @@ class OldUpgradeStep135Migration extends AbstractMigration
                     ],
                 ])->save();
 
+                // If we've run the old upgrader, remove it
+                if ($this->hasTable('upgrade'))
+                    $this->dropTable('upgrade');
+
                 // Remove the version table
-                $this->dropTable('upgrade');
                 $this->dropTable('version');
             }
         }
