@@ -25,6 +25,7 @@ use Xibo\Entity\RequiredFile;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -32,9 +33,11 @@ use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\LogFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Service\ConfigServiceInterface;
@@ -111,6 +114,12 @@ class Display extends Base
     /** @var  TagFactory */
     private $tagFactory;
 
+    /** @var NotificationFactory */
+    private $notificationFactory;
+
+    /** @var UserGroupFactory */
+    private $userGroupFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -133,8 +142,10 @@ class Display extends Base
      * @param DisplayEventFactory $displayEventFactory
      * @param RequiredFileFactory $requiredFileFactory
      * @param TagFactory $tagFactory
+     * @param NotificationFactory $notificationFactory
+     * @param UserGroupFactory $userGroupFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -151,6 +162,8 @@ class Display extends Base
         $this->displayEventFactory = $displayEventFactory;
         $this->requiredFileFactory = $requiredFileFactory;
         $this->tagFactory = $tagFactory;
+        $this->notificationFactory = $notificationFactory;
+        $this->userGroupFactory = $userGroupFactory;
     }
 
     /**
@@ -1289,14 +1302,14 @@ class Display extends Base
     /**
      * Validate the display list
      * @param array[Display] $displays
-     * @return array[Display]
+     * @throws XiboException
      */
     public function validateDisplays($displays)
     {
-        $timedOutDisplays = [];
-
         // Get the global time out (overrides the alert time out on the display if 0)
         $globalTimeout = $this->getConfig()->GetSetting('MAINTENANCE_ALERT_TOUT') * 60;
+        $emailAlerts = ($this->getConfig()->GetSetting("MAINTENANCE_EMAIL_ALERTS") == 'On');
+        $alwaysAlert = ($this->getConfig()->GetSetting("MAINTENANCE_ALWAYS_ALERT") == 'On');
 
         foreach ($displays as $display) {
             /* @var \Xibo\Entity\Display $display */
@@ -1316,9 +1329,11 @@ class Display extends Base
             if ($timeOut < time()) {
                 $this->getLog()->debug('Timed out display. Last Accessed: ' . date('Y-m-d h:i:s', $display->lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
 
-                // If this is the first switch (i.e. the row was logged in before)
-                if ($display->loggedIn == 1) {
+                // Is this the first time this display has gone "off-line"
+                $displayOffline = ($display->loggedIn == 1);
 
+                // If this is the first switch (i.e. the row was logged in before)
+                if ($displayOffline) {
                     // Update the display and set it as logged out
                     $display->loggedIn = 0;
                     $display->save(\Xibo\Entity\Display::$saveOptionsMinimum);
@@ -1335,11 +1350,27 @@ class Display extends Base
                     $event->save();
                 }
 
-                // Store this row
-                $timedOutDisplays[] = $display;
+                // Should we create a notification
+                if ($emailAlerts && $display->emailAlert == 1 && ($displayOffline || $alwaysAlert)) {
+                    // Alerts enabled for this display
+                    // Display just gone offline, or always alert
+                    // Fields for email
+                    $subject = sprintf(__("Email Alert for Display %s"), $display->display);
+                    $body = sprintf(__("Display %s with ID %d was last seen at %s."), $display->display, $display->displayId, $this->getDate()->getLocalDate($display->lastAccessed));
+
+                    // Add to system
+                    $notification = $this->notificationFactory->createSystemNotification($subject, $body, $this->getDate()->parse());
+
+                    // Add in any displayNotificationGroups, with permissions
+                    foreach ($this->userGroupFactory->getDisplayNotificationGroups($display->displayGroupId) as $group) {
+                        $notification->assignUserGroup($group);
+                    }
+
+                    $notification->save();
+                } else if ($displayOffline) {
+                    $this->getLog()->info('Not sending an email for offline display - emailAlert = ' . $display->emailAlert . ', alwaysAlert = ' . $alwaysAlert);
+                }
             }
         }
-
-        return $timedOutDisplays;
     }
 }

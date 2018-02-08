@@ -504,7 +504,9 @@ class State extends Middleware
                 $container->scheduleFactory,
                 $container->displayEventFactory,
                 $container->requiredFileFactory,
-                $container->tagFactory
+                $container->tagFactory,
+                $container->notificationFactory,
+                $container->userGroupFactory
             );
         });
 
