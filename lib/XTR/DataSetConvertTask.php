@@ -26,6 +26,7 @@ class DataSetConvertTask implements TaskInterface
     public function setFactories($container)
     {
         $this->dataSetFactory = $container->get('dataSetFactory');
+        return $this;
     }
 
     /** @inheritdoc */
@@ -56,6 +57,8 @@ class DataSetConvertTask implements TaskInterface
 
         // Disable the task
         $this->getTask()->isActive = 0;
+
+        $this->appendRunMessage('Conversion Completed');
     }
 
     /**

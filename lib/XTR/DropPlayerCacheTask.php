@@ -20,6 +20,7 @@ class DropPlayerCacheTask implements TaskInterface
     public function setFactories($container)
     {
         // Nothing needed here
+        return $this;
     }
 
     /** @inheritdoc */

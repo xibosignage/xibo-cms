@@ -31,6 +31,7 @@ class UpdateEmptyVideoDurations implements TaskInterface
     {
         $this->mediaFactory = $container->get('mediaFactory');
         $this->moduleFactory = $container->get('moduleFactory');
+        return $this;
     }
 
     /** @inheritdoc */

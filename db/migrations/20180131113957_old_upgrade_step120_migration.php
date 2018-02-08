@@ -142,6 +142,8 @@ class OldUpgradeStep120Migration extends AbstractMigration
                     ->addColumn('name', 'string', ['limit' => 254, 'null' => true])
                     ->addColumn('width', 'decimal')
                     ->addColumn('height', 'decimal')
+                    ->addColumn('top', 'decimal')
+                    ->addColumn('left', 'decimal')
                     ->addColumn('zIndex', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_SMALL])
                     ->addColumn('duration', 'integer', ['default' => 0])
                     ->save();
@@ -324,23 +326,23 @@ class OldUpgradeStep120Migration extends AbstractMigration
 
                 $this->execute('ALTER TABLE `schedule` DROP `DisplayGroupIDs`;');
 
-                $this->execute('UPDATE `module` SET `class` = \'\\Xibo\\Widget\\Image\' WHERE module = \'Image\';');
-                $this->execute('UPDATE `module` SET `class` = \'\\Xibo\\Widget\\Video\' WHERE module = \'Video\';');
-                $this->execute('UPDATE `module` SET `class` = \'\\Xibo\\Widget\\Flash\' WHERE module = \'Flash\';');
-                $this->execute('UPDATE `module` SET `class` = \'\\Xibo\\Widget\\PowerPoint\' WHERE module = \'PowerPoint\';');
-                $this->execute('UPDATE `module` SET `class` = \'\\Xibo\\Widget\\Webpage\' WHERE module = \'Webpage\';');
-                $this->execute('UPDATE `module` SET `class` = \'\\Xibo\\Widget\\Ticker\' WHERE module = \'Ticker\';');
-                $this->execute('UPDATE `module` SET `class` = \'\\Xibo\\Widget\\Text\' WHERE module = \'Text\';');
-                $this->execute('UPDATE `module` SET `class` = \'\\Xibo\\Widget\\Embedded\' WHERE module = \'Embedded\';');
-                $this->execute('UPDATE `module` SET `class` = \'\\Xibo\\Widget\\DataSetView\' WHERE module = \'datasetview\';');
-                $this->execute('UPDATE `module` SET `class` = \'\\Xibo\\Widget\\ShellCommand\' WHERE module = \'shellcommand\';');
-                $this->execute('UPDATE `module` SET `class` = \'\\Xibo\\Widget\\LocalVideo\' WHERE module = \'localvideo\';');
-                $this->execute('UPDATE `module` SET `class` = \'\\Xibo\\Widget\\GenericFile\' WHERE module = \'genericfile\';');
-                $this->execute('UPDATE `module` SET `class` = \'\\Xibo\\Widget\\Clock\' WHERE module = \'Clock\';');
-                $this->execute('UPDATE `module` SET `class` = \'\\Xibo\\Widget\\Font\' WHERE module = \'Font\';');
-                $this->execute('UPDATE `module` SET `class` = \'\\Xibo\\Widget\\Twitter\' WHERE module = \'Twitter\';');
-                $this->execute('UPDATE `module` SET `class` = \'\\Xibo\\Widget\\ForecastIo\' WHERE module = \'forecastio\';');
-                $this->execute('UPDATE `module` SET `class` = \'\\Xibo\\Widget\\Finance\' WHERE module = \'ForecastIo\';');
+                $this->execute('UPDATE `module` SET `class` = \'\\\\Xibo\\\\Widget\\\\Image\' WHERE module = \'Image\';');
+                $this->execute('UPDATE `module` SET `class` = \'\\\\Xibo\\\\Widget\\\\Video\' WHERE module = \'Video\';');
+                $this->execute('UPDATE `module` SET `class` = \'\\\\Xibo\\\\Widget\\\\Flash\' WHERE module = \'Flash\';');
+                $this->execute('UPDATE `module` SET `class` = \'\\\\Xibo\\\\Widget\\\\PowerPoint\' WHERE module = \'PowerPoint\';');
+                $this->execute('UPDATE `module` SET `class` = \'\\\\Xibo\\\\Widget\\\\WebPage\' WHERE module = \'Webpage\';');
+                $this->execute('UPDATE `module` SET `class` = \'\\\\Xibo\\\\Widget\\\\Ticker\' WHERE module = \'Ticker\';');
+                $this->execute('UPDATE `module` SET `class` = \'\\\\Xibo\\\\Widget\\\\Text\' WHERE module = \'Text\';');
+                $this->execute('UPDATE `module` SET `class` = \'\\\\Xibo\\\\Widget\\\\Embedded\' WHERE module = \'Embedded\';');
+                $this->execute('UPDATE `module` SET `class` = \'\\\\Xibo\\\\Widget\\\\DataSetView\' WHERE module = \'datasetview\';');
+                $this->execute('UPDATE `module` SET `class` = \'\\\\Xibo\\\\Widget\\\\ShellCommand\' WHERE module = \'shellcommand\';');
+                $this->execute('UPDATE `module` SET `class` = \'\\\\Xibo\\\\Widget\\\\LocalVideo\' WHERE module = \'localvideo\';');
+                $this->execute('UPDATE `module` SET `class` = \'\\\\Xibo\\\\Widget\\\\GenericFile\' WHERE module = \'genericfile\';');
+                $this->execute('UPDATE `module` SET `class` = \'\\\\Xibo\\\\Widget\\\\Clock\' WHERE module = \'Clock\';');
+                $this->execute('UPDATE `module` SET `class` = \'\\\\Xibo\\\\Widget\\\\Font\' WHERE module = \'Font\';');
+                $this->execute('UPDATE `module` SET `class` = \'\\\\Xibo\\\\Widget\\\\Twitter\' WHERE module = \'Twitter\';');
+                $this->execute('UPDATE `module` SET `class` = \'\\\\Xibo\\\\Widget\\\\ForecastIo\' WHERE module = \'forecastio\';');
+                $this->execute('UPDATE `module` SET `class` = \'\\\\Xibo\\\\Widget\\\\Finance\' WHERE module = \'Finance\';');
 
                 // Bump our version
                 $this->execute('UPDATE `version` SET DBVersion = ' . $STEP);

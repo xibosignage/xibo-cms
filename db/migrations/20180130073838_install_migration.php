@@ -873,10 +873,10 @@ class InstallMigration extends AbstractMigration
                 ['name' => 'Fetch Remote DataSets', 'class' =>  '\Xibo\XTR\RemoteDataSetFetchTask', 'status' => 2, 'options' => '[]',  'schedule' => '30 * * * * *', 'isActive' => 1, 'configFile' => '/tasks/remote-dataset.task'],
                 [
                     'name' => 'Drop Player Cache',
-                    'class' => '\\Xibo\\XTR\\DropPlayerCacheTask\\',
+                    'class' => '\Xibo\XTR\DropPlayerCacheTask',
                     'options' => '[]',
-                    'schedule' => '* * * * * *1',
-                    'isActive' => '1',
+                    'schedule' => '0 0 1 1 *',
+                    'isActive' => '0',
                     'configFile' => '/tasks/drop-player-cache.task'
                 ],
             ])

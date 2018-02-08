@@ -36,6 +36,7 @@ class AuditLogArchiveTask implements TaskInterface
     {
         $this->mediaFactory = $container->get('mediaFactory');
         $this->userFactory = $container->get('userFactory');
+        return $this;
     }
 
     /** @inheritdoc */

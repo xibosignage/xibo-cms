@@ -319,13 +319,13 @@ class Task extends Base
         $task = $this->taskFactory->getById($taskId);
 
         // Set to running
-        $this->getLog()->debug('Running Task ' . $task->name . ' [' . $task->taskId . ']');
+        $this->getLog()->debug('Running Task ' . $task->name . ' [' . $task->taskId . '], Class = ' . $task->class);
 
         // Run
         try {
             // Instantiate
             if (!class_exists($task->class))
-                throw new NotFoundException();
+                throw new NotFoundException('Task with class name ' . $task->class . ' not found');
 
             /** @var TaskInterface $taskClass */
             $taskClass = new $task->class();
@@ -422,7 +422,7 @@ class Task extends Base
                 // Is the next run date of this event earlier than now, or is the task set to runNow
                 $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $task['lastRunDt']))->format('U');
 
-                if ($task['runNow'] == 1 || $nextRunDt < time()) {
+                if ($task['runNow'] == 1 || $nextRunDt <= time()) {
 
                     $this->getLog()->info('Running Task ' . $taskId);
 

@@ -29,6 +29,7 @@ class MaintenanceDailyTask implements TaskInterface
     {
         $this->libraryController = $container->get('\Xibo\Controller\Library');
         $this->layoutFactory = $container->get('layoutFactory');
+        return $this;
     }
 
     /** @inheritdoc */

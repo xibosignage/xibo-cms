@@ -32,6 +32,7 @@ class EmailNotificationsTask implements TaskInterface
     {
         $this->view = $container->get('view');
         $this->userNotificationFactory = $container->get('userNotificationFactory');
+        return $this;
     }
 
     /** @inheritdoc */

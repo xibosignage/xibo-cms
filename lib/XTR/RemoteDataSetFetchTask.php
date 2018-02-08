@@ -57,6 +57,7 @@ class RemoteDataSetFetchTask implements TaskInterface
         $this->notificationFactory = $container->get('notificationFactory');
         $this->userFactory = $container->get('userFactory');
         $this->userGroupFactory = $container->get('userGroupFactory');
+        return $this;
     }
 
     /**

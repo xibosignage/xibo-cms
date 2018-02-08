@@ -69,7 +69,7 @@ class OldUpgradeStep127Migration extends AbstractMigration
                     ->insert([
                         [
                             'name' => 'Daily Maintenance',
-                            'class' => '\\Xibo\\XTR\\MaintenanceDailyTask\\',
+                            'class' => '\Xibo\XTR\MaintenanceDailyTask',
                             'options' => '[]',
                             'schedule' => '0 0 * * * *',
                             'isActive' => '1',
@@ -77,7 +77,7 @@ class OldUpgradeStep127Migration extends AbstractMigration
                         ],
                         [
                             'name' => 'Regular Maintenance',
-                            'class' => '\\Xibo\\XTR\\MaintenanceRegularTask\\',
+                            'class' => '\Xibo\XTR\MaintenanceRegularTask',
                             'options' => '[]',
                             'schedule' => '*/5 * * * * *',
                             'isActive' => '1',
@@ -85,7 +85,7 @@ class OldUpgradeStep127Migration extends AbstractMigration
                         ],
                         [
                             'name' => 'Email Notifications',
-                            'class' => '\\Xibo\\XTR\\EmailNotificationsTask\\',
+                            'class' => '\Xibo\XTR\EmailNotificationsTask',
                             'options' => '[]',
                             'schedule' => '*/5 * * * * *',
                             'isActive' => '1',
@@ -93,7 +93,7 @@ class OldUpgradeStep127Migration extends AbstractMigration
                         ],
                         [
                             'name' => 'Stats Archive',
-                            'class' => '\\Xibo\\XTR\\StatsArchiveTask\\',
+                            'class' => '\Xibo\XTR\StatsArchiveTask',
                             'options' => '{"periodSizeInDays":"7","maxPeriods":"4"}',
                             'schedule' => '0 0 * * Mon',
                             'isActive' => '1',
@@ -101,7 +101,7 @@ class OldUpgradeStep127Migration extends AbstractMigration
                         ],
                         [
                             'name' => 'Remove old Notifications',
-                            'class' => '\\Xibo\\XTR\\NotificationTidyTask\\',
+                            'class' => '\Xibo\XTR\NotificationTidyTask',
                             'options' => '{"maxAgeDays":"7","systemOnly":"1","readOnly":"0"}',
                             'schedule' => '15 0 * * *',
                             'isActive' => '1',

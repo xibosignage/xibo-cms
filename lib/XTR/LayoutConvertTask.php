@@ -29,12 +29,13 @@ class LayoutConvertTask implements TaskInterface
     {
         $this->permissionFactory = $container->get('permissionFactory');
         $this->layoutFactory = $container->get('layoutFactory');
+        return $this;
     }
 
     /** @inheritdoc */
     public function run()
     {
-        // If the layout table doesn't have an XML column, then abort.
+        // lklayoutmedia is removed at the end of this task
         if (!$this->store->exists('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :name', [
             'schema' => $_SERVER['MYSQL_DATABASE'],
             'name' => 'lklayoutmedia'
@@ -144,5 +145,7 @@ class LayoutConvertTask implements TaskInterface
 
         // Disable the task
         $this->getTask()->isActive = 0;
+
+        $this->appendRunMessage('Conversion Completed');
     }
 }

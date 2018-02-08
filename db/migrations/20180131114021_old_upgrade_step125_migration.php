@@ -22,7 +22,11 @@ class OldUpgradeStep125Migration extends AbstractMigration
                 $schedule->changeColumn('is_priority', 'integer')
                     ->save();
 
-                $this->execute('INSERT INTO module (Module, Name, Enabled, RegionSpecific, Description, ImageUri, SchemaVersion, ValidExtensions, PreviewEnabled, assignable, render_as, settings, viewPath, class, defaultDuration) VALUES (\'audio\', \'Audio\', 1, 0, \'Audio - support varies depending on the client hardware\', \'forms/video.gif\', 1, \'mp3,wav\', 1, 1, null, null, \'../modules\', \'Xibo\\Widget\\Audio\', 0);');
+                $this->execute('
+                  INSERT INTO module (Module, Name, Enabled, RegionSpecific, Description, ImageUri, SchemaVersion, ValidExtensions, PreviewEnabled, assignable, render_as, settings, viewPath, class, defaultDuration) VALUES 
+                    (\'audio\', \'Audio\', 1, 0, \'Audio - support varies depending on the client hardware\', \'forms/video.gif\', 1, \'mp3,wav\', 1, 1, null, null, \'../modules\', \'Xibo\\\\Widget\\\\Audio\', 0),
+                    (\'pdf\', \'PDF\', 1, 0, \'PDF document viewer\', \'forms/pdf.gif\', 1, \'pdf\', 1, 1, \'html\', null, \'../modules\', \'Xibo\\\\Widget\\\\Pdf\', 60);
+                  ');
 
                 $linkWidgetAudio = $this->table('lkwidgetaudio', ['id' => false, 'primary_key' => ['widgetId', 'mediaId']]);
                 $linkWidgetAudio->addColumn('widgetId', 'integer')
@@ -30,8 +34,6 @@ class OldUpgradeStep125Migration extends AbstractMigration
                     ->addColumn('volume', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
                     ->addColumn('loop', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
                     ->save();
-
-                $this->execute('INSERT INTO module (Module, Name, Enabled, RegionSpecific, Description, ImageUri, SchemaVersion, ValidExtensions, PreviewEnabled, assignable, render_as, settings, viewPath, class, defaultDuration) VALUES (\'pdf\', \'PDF\', 1, 0, \'PDF document viewer\', \'forms/pdf.gif\', 1, \'pdf\', 1, 1, \'html\', null, \'../modules\', \'Xibo\\Widget\\Pdf\', 60);');
 
                 $oauthClientScopes = $this->table('oauth_client_scopes');
                 $oauthClientScopes

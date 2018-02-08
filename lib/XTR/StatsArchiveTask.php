@@ -36,6 +36,7 @@ class StatsArchiveTask implements TaskInterface
     {
         $this->userFactory = $container->get('userFactory');
         $this->mediaFactory = $container->get('mediaFactory');
+        return $this;
     }
 
     /** @inheritdoc */

@@ -20,6 +20,7 @@ class NotificationTidyTask implements TaskInterface
     public function setFactories($container)
     {
         // No factories required
+        return $this;
     }
 
     /** @inheritdoc */
