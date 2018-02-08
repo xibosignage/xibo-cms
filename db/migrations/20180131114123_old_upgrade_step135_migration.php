@@ -57,7 +57,8 @@ class OldUpgradeStep135Migration extends AbstractMigration
                         'options' => '[]',
                         'schedule' => '0 0 1 1 *',
                         'isActive' => '1',
-                        'configFile' => '/tasks/update-empty-video-durations.task'
+                        'configFile' => '/tasks/update-empty-video-durations.task',
+                        'runNow' => 1
                     ],
                     [
                         'name' => 'Drop Player Cache',
@@ -65,7 +66,8 @@ class OldUpgradeStep135Migration extends AbstractMigration
                         'options' => '[]',
                         'schedule' => '0 0 1 1 *',
                         'isActive' => '1',
-                        'configFile' => '/tasks/drop-player-cache.task'
+                        'configFile' => '/tasks/drop-player-cache.task',
+                        'runNow' => 1
                     ],
                     [
                         'name' => 'DataSet Convert (only run once)',
@@ -73,7 +75,8 @@ class OldUpgradeStep135Migration extends AbstractMigration
                         'options' => '[]',
                         'schedule' => '0 0 1 1 *',
                         'isActive' => '1',
-                        'configFile' => '/tasks/dataset-convert.task'
+                        'configFile' => '/tasks/dataset-convert.task',
+                        'runNow' => 1
                     ],
                     [
                         'name' => 'Layout Convert (only run once)',
@@ -81,7 +84,8 @@ class OldUpgradeStep135Migration extends AbstractMigration
                         'options' => '[]',
                         'schedule' => '0 0 1 1 *',
                         'isActive' => '1',
-                        'configFile' => '/tasks/layout-convert.task'
+                        'configFile' => '/tasks/layout-convert.task',
+                        'runNow' => 1
                     ],
                 ])->save();
 

@@ -64,7 +64,7 @@ class OldUpgradeStep127Migration extends AbstractMigration
                     ->addColumn('lastRunDuration', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_SMALL])
                     ->addColumn('lastRunExitCode', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_SMALL])
                     ->addColumn('isActive', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
-                    ->addColumn('runNow', 'integer', ['default' => 1, 'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
+                    ->addColumn('runNow', 'integer', ['default' => 0, 'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
                     ->addColumn('configFile', 'string', ['limit' => 254])
                     ->insert([
                         [

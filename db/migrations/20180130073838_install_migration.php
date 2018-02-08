@@ -862,7 +862,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('lastRunDuration', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_SMALL])
             ->addColumn('lastRunExitCode', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_SMALL])
             ->addColumn('isActive', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
-            ->addColumn('runNow', 'integer', ['default' => 1, 'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
+            ->addColumn('runNow', 'integer', ['default' => 0, 'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addColumn('configFile', 'string', ['limit' => 254])
             ->insert([
                 ['name' => 'Daily Maintenance', 'class' => '\Xibo\XTR\MaintenanceDailyTask', 'status' => 2, 'options' => '[]', 'schedule' => '0 0 * * * *', 'isActive' => 1, 'configFile' => '/tasks/maintenance-daily.task'],
@@ -871,14 +871,7 @@ class InstallMigration extends AbstractMigration
                 ['name' => 'Stats Archive', 'class' => '\Xibo\XTR\StatsArchiveTask', 'status' => 2, 'options' => '{"periodSizeInDays":"7","maxPeriods":"4"}', 'schedule' =>  '0 0 * * Mon', 'isActive' => 0, 'configFile' => '/tasks/stats-archiver.task'],
                 ['name' => 'Remove old Notifications', 'class' =>  '\Xibo\XTR\NotificationTidyTask', 'status' => 2, 'options' => '{"maxAgeDays":"7","systemOnly":"1","readOnly":"0"}',  'schedule' => '15 0 * * *', 'isActive' => 1, 'configFile' => '/tasks/notification-tidy.task'],
                 ['name' => 'Fetch Remote DataSets', 'class' =>  '\Xibo\XTR\RemoteDataSetFetchTask', 'status' => 2, 'options' => '[]',  'schedule' => '30 * * * * *', 'isActive' => 1, 'configFile' => '/tasks/remote-dataset.task'],
-                [
-                    'name' => 'Drop Player Cache',
-                    'class' => '\Xibo\XTR\DropPlayerCacheTask',
-                    'options' => '[]',
-                    'schedule' => '0 0 1 1 *',
-                    'isActive' => '0',
-                    'configFile' => '/tasks/drop-player-cache.task'
-                ],
+                ['name' => 'Drop Player Cache', 'class' => '\Xibo\XTR\DropPlayerCacheTask', 'options' => '[]', 'schedule' => '0 0 1 1 *', 'isActive' => '0', 'configFile' => '/tasks/drop-player-cache.task'],
             ])
             ->save();
 

@@ -394,7 +394,7 @@ class Task extends Base
         $db = $this->store->getConnection('xtr');
 
         // This queries for all enabled tasks, because we need to assess the schedule in code
-        $pollSth = $db->prepare('SELECT taskId, `schedule`, runNow, lastRunDt FROM `task` WHERE isActive = 1 AND `status` <> :status ORDER BY lastRunDuration');
+        $pollSth = $db->prepare('SELECT taskId, `schedule`, runNow, lastRunDt FROM `task` WHERE isActive = 1 AND `status` <> :status ORDER BY runNow DESC, lastRunDuration');
 
         // Update statements
         $updateSth = $db->prepare('UPDATE `task` SET status = :status WHERE taskId = :taskId');
