@@ -374,28 +374,54 @@ abstract class ModuleWidget implements ModuleInterface
      *  blocks if the request is locked
      * @param string|null $key
      * @param int $ttl seconds
-     * @param int $wait milliseconds
+     * @param int $wait seconds
      * @param int $tries
      * @throws XiboException
      */
-    public function concurrentRequestLock($key = null, $ttl = 900, $wait = 20000, $tries = 50)
+    public function concurrentRequestLock($key = null, $ttl = 900, $wait = 5, $tries = 100)
     {
         // If the key is null default to the widgetId
         if ($key === null)
             $key = $this->widget->widgetId;
 
         $this->lock = $this->getPool()->getItem('locks/widget/' . $key);
-        $this->lock->setInvalidationMethod(Invalidation::SLEEP, $wait, $tries);
 
+        // Set the invalidation method to simply return the value (not that we use it, but it gets us a miss on expiry)
+        $this->lock->setInvalidationMethod(Invalidation::VALUE);
+
+        // Get the lock
+        // other requests will wait here until we're done, or we've timed out
         $this->lock->get();
 
         // Did we get a lock?
-        // if we've not been able to get a lock here - is this because we've not created this lock before?
-        // or is it because we've hit the very generous timeouts
-        if (!$this->lock->isHit() && $this->lock->getCreation() !== false)
-            throw new XiboException('Concurrent record locked, time out.');
+        // if we're a miss, then we're not already locked
+        if ($this->lock->isMiss()) {
+            // so lock now
+            $this->lock->set(true);
+            $this->lock->expiresAfter($ttl);
+            $this->lock->save();
 
-        $this->lock->lock($ttl);
+            //sleep(30);
+        } else {
+            // We are a hit - we must be locked
+            $this->getLog()->debug('LOCK hit for ' . $key);
+
+            // Try again?
+            $tries--;
+
+            if ($tries <= 0) {
+                // We've waited long enough
+                throw new XiboException('Concurrent record locked, time out.');
+            } else {
+                $this->getLog()->debug('Unable to get a lock, trying again. Remaining retries: ' . $tries);
+
+                // Hang about waiting for the lock to be released.
+                sleep($wait);
+
+                // Recursive request (we've decremented the number of tries)
+                $this->concurrentRequestLock($key, $ttl, $wait, $tries);
+            }
+        }
     }
 
     /**
@@ -404,10 +430,10 @@ abstract class ModuleWidget implements ModuleInterface
     public function concurrentRequestRelease()
     {
         if ($this->lock !== null) {
-            $this->lock->set(time());
+            // Release lock
+            $this->lock->set(false);
             $this->lock->expiresAfter(1); // Expire straight away
 
-            // Release lock
             $this->getPool()->saveDeferred($this->lock);
         }
     }
