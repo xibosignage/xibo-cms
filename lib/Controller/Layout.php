@@ -1337,6 +1337,9 @@ class Layout extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
+     * @throws \Exception
      */
     public function import()
     {

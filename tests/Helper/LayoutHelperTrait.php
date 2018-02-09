@@ -31,7 +31,7 @@ trait LayoutHelperTrait
                 Random::generateString(),
                 'Layout to test Cache Invalidation',
                 '',
-                9
+                1
             );
 
         $this->getLogger()->debug('Layout created with name ' . $layout->layout);

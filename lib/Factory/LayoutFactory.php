@@ -516,7 +516,7 @@ class LayoutFactory extends BaseFactory
             }
 
             // Assign Playlist to the Region
-            $region->tempPlaylist = $playlist;
+            $region->regionPlaylist = $playlist;
 
             // Assign the region to the Layout
             $layout->regions[] = $region;
@@ -575,11 +575,11 @@ class LayoutFactory extends BaseFactory
         // Construct the Layout
         $layout = $this->loadByXlf($zip->getFromName('layout.xml'));
 
-        $this->getLog()->debug('Layout Loaded: ' . $layout);
-
         // Override the name/description
         $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);
         $layout->description = (isset($layoutDetails['description']) ? $layoutDetails['description'] : '');
+
+        $this->getLog()->debug('Layout Loaded: ' . $layout);
 
         // Check that the resolution we have in this layout exists, and if not create it.
         try {
@@ -627,7 +627,7 @@ class LayoutFactory extends BaseFactory
         $fontsAdded = false;
 
         $widgets = $layout->getWidgets();
-        $this->getLog()->debug('Layout has %d widgets', count($widgets));
+        $this->getLog()->debug('Layout has ' . count($widgets) . ' widgets');
 
         $this->getLog()->debug('Process mapping.json file.');
 

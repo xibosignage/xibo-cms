@@ -123,8 +123,13 @@ class Region implements \JsonSerializable
      */
     public $tempId = null;
 
-    /** @var Playlist|null */
-    public $tempPlaylist = null;
+    /**
+     * @var Playlist|null
+     * @SWG\Property(
+     *   description="This Regions Playlist - null if getPlaylist() has not been called."
+     * )
+     */
+    public $regionPlaylist = null;
 
     //<editor-fold desc="Factories and Dependencies">
     /**  @var DateServiceInterface */
@@ -299,18 +304,25 @@ class Region implements \JsonSerializable
      */
     public function getPlaylist()
     {
-        $this->tempPlaylist = $this->playlistFactory->getByRegionId($this->regionId)->load();
-        return $this->tempPlaylist;
+        if ($this->regionPlaylist === null)
+            $this->regionPlaylist = $this->playlistFactory->getByRegionId($this->regionId)->load();
+
+        return $this->regionPlaylist;
     }
 
     /**
      * Load
      * @param array $options
+     * @throws XiboException
      */
     public function load($options = [])
     {
         if ($this->loaded || $this->regionId == 0)
             return;
+
+        $options = array_merge([
+            'loadPlaylists' => false
+        ], $options);
 
         $this->getLog()->debug('Load Region with ' . json_encode($options));
 
@@ -319,6 +331,11 @@ class Region implements \JsonSerializable
 
         // Get region options
         $this->regionOptions = $this->regionOptionFactory->getByRegionId($this->regionId);
+
+        // Load the Playlist?
+        if ($options['loadPlaylists']) {
+            $this->getPlaylist();
+        }
 
         $this->hash = $this->hash();
         $this->loaded = true;
@@ -361,14 +378,14 @@ class Region implements \JsonSerializable
             $this->add();
 
             // Add and save a region specific playlist
-            if ($this->tempPlaylist === null) {
-                $this->tempPlaylist = $this->playlistFactory->create($this->name, $this->ownerId, $this->regionId);
+            if ($this->regionPlaylist === null) {
+                $this->regionPlaylist = $this->playlistFactory->create($this->name, $this->ownerId, $this->regionId);
             } else {
                 // assert the region id
-                $this->tempPlaylist->regionId = $this->regionId;
-                $this->tempPlaylist->setOwner($this->ownerId);
+                $this->regionPlaylist->regionId = $this->regionId;
+                $this->regionPlaylist->setOwner($this->ownerId);
             }
-            $this->tempPlaylist->save();
+            $this->regionPlaylist->save();
 
             // Audit
             if ($options['audit'])

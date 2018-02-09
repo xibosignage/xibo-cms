@@ -347,8 +347,8 @@ class InstallMigration extends AbstractMigration
         $layout
             ->addColumn('layout', 'string', ['limit' => 254])
             ->addColumn('userId', 'integer')
-            ->addColumn('createdDt', 'integer')
-            ->addColumn('modifiedDt', 'integer')
+            ->addColumn('createdDt', 'datetime')
+            ->addColumn('modifiedDt', 'datetime')
             ->addColumn('description', 'string', ['limit' => 254, 'default' => null, 'null' => true])
             ->addColumn('retired', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
             ->addColumn('duration', 'integer')
@@ -822,9 +822,8 @@ class InstallMigration extends AbstractMigration
             ->addForeignKey('access_token', 'oauth_access_tokens', 'access_token', ['delete' => 'CASCADE'])
             ->save();
 
-        $oauthSessionsScopes = $this->table('oauth_session_scopes', ['id' => false, 'primary_key' => ['id']]);
+        $oauthSessionsScopes = $this->table('oauth_session_scopes');
         $oauthSessionsScopes
-            ->addColumn('id', 'string', ['limit' => 254])
             ->addColumn('session_id', 'integer')
             ->addColumn('scope', 'string', ['limit' => 254])
             ->addForeignKey('session_id', 'oauth_sessions', 'id', ['delete' => 'CASCADE'])

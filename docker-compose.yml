@@ -7,10 +7,9 @@ services:
       - 3315:3306
     volumes:
      - ./containers/db:/var/lib/mysql
-     - ./import.sql:/var/lib/mysql/import.sql
     environment:
       MYSQL_ROOT_PASSWORD: "root"
-      MYSQL_DATABASE: "test"
+      MYSQL_DATABASE: "cms"
 
   xmr:
     image: xibosignage/xibo-xmr:latest
@@ -31,7 +30,7 @@ services:
      - "80:80"
     environment:
       CMS_DEV_MODE: "true"
-      MYSQL_DATABASE: "test"
+      MYSQL_DATABASE: "cms"
 
   swagger:
       image: swaggerapi/swagger-ui:latest

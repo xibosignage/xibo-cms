@@ -63,6 +63,9 @@ class Soap5 extends Soap4
         $displayElement = $return->createElement('display');
         $return->appendChild($displayElement);
 
+        // Uncomment this if we want additional logging in register.
+        //$this->logProcessor->setDisplay(0, 1);
+
         // Check in the database for this hardwareKey
         try {
             $display = $this->displayFactory->getByLicence($hardwareKey);

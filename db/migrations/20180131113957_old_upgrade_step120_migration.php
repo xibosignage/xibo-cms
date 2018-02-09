@@ -253,9 +253,8 @@ class OldUpgradeStep120Migration extends AbstractMigration
                     ->addForeignKey('access_token', 'oauth_access_tokens', 'access_token', ['delete' => 'CASCADE'])
                     ->save();
 
-                $oauthSessionsScopes = $this->table('oauth_session_scopes', ['id' => false, 'primary_key' => ['id']]);
+                $oauthSessionsScopes = $this->table('oauth_session_scopes');
                 $oauthSessionsScopes
-                    ->addColumn('id', 'string', ['limit' => 254])
                     ->addColumn('session_id', 'integer')
                     ->addColumn('scope', 'string', ['limit' => 254])
                     ->addForeignKey('session_id', 'oauth_sessions', 'id', ['delete' => 'CASCADE'])
