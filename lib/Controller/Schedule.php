@@ -1015,6 +1015,8 @@ class Schedule extends Base
      *      @SWG\Schema(ref="#/definitions/Schedule")
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function edit($eventId)
     {
@@ -1057,9 +1059,7 @@ class Schedule extends Base
                 // expect only a start date (no time)
                 $schedule->fromDt = $fromDt->startOfDay()->format('U');
                 $schedule->toDt = null;
-
-                if ($recurrenceRange != null)
-                    $schedule->recurrenceRange = $recurrenceRange->format('U');
+                $schedule->recurrenceRange = ($recurrenceRange === null) ? null : $recurrenceRange->format('U');
 
             } else if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
                 // In some circumstances we want to trim the seconds from the provided dates.
@@ -1072,16 +1072,14 @@ class Schedule extends Base
                 if ($toDt !== null)
                     $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
 
-                if ($recurrenceRange != null)
-                    $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
+                $schedule->recurrenceRange = ($recurrenceRange === null) ? null : $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
             } else {
                 $schedule->fromDt = $fromDt->format('U');
 
                 if ($toDt !== null)
                     $schedule->toDt = $toDt->format('U');
 
-                if ($recurrenceRange != null)
-                    $schedule->recurrenceRange = $recurrenceRange->format('U');
+                $schedule->recurrenceRange = ($recurrenceRange === null) ? null : $recurrenceRange->format('U');
             }
 
             $this->getLog()->debug('Processed start is: FromDt=' . $fromDt->toRssString());
