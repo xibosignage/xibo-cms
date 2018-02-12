@@ -239,8 +239,6 @@ class Schedule extends Base
             /* @var \Xibo\Entity\Schedule $row */
 
             // Generate this event
-            $row->setDayPartFactory($this->dayPartFactory);
-
             try {
                 $scheduleEvents = $row->getEvents($start, $end);
             } catch (XiboException $e) {
@@ -418,9 +416,7 @@ class Schedule extends Base
 
             // Assess schedules
             $schedule = $this->scheduleFactory->createEmpty()->hydrate($event, ['intProperties' => ['isPriority', 'syncTimezone', 'displayOrder']]);
-            $schedule
-                ->setDayPartFactory($this->dayPartFactory)
-                ->load();
+            $schedule->load();
 
             $this->getLog()->debug('EventId ' . $schedule->eventId . ' exists in the schedule window, checking its instances for activity');
 
@@ -776,7 +772,7 @@ class Schedule extends Base
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
         }
 
-        if ($schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+        if (!$schedule->isAlwaysDayPart()) {
             // Handle the dates
             $fromDt = $this->getSanitizer()->getDate('fromDt');
             $toDt = $this->getSanitizer()->getDate('toDt');
@@ -787,7 +783,7 @@ class Schedule extends Base
 
             $this->getLog()->debug('Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
 
-            if ($schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_CUSTOM && $schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+            if (!$schedule->isCustomDayPart() && !$schedule->isAlwaysDayPart()) {
                 // Daypart selected
                 // expect only a start date (no time)
                 $schedule->fromDt = $fromDt->startOfDay()->format('U');
@@ -847,7 +843,7 @@ class Schedule extends Base
             throw new AccessDeniedException();
 
         // Fix the event dates for display
-        if ($schedule->dayPartId == \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+        if ($schedule->isAlwaysDayPart()) {
             $schedule->fromDt = '';
             $schedule->toDt = '';
         } else {
@@ -1045,7 +1041,7 @@ class Schedule extends Base
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
         }
 
-        if ($schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+        if (!$schedule->isAlwaysDayPart()) {
             // Handle the dates
             $fromDt = $this->getSanitizer()->getDate('fromDt');
             $toDt = $this->getSanitizer()->getDate('toDt');
@@ -1056,7 +1052,7 @@ class Schedule extends Base
 
             $this->getLog()->debug('Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
 
-            if ($schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_CUSTOM && $schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+            if (!$schedule->isCustomDayPart() && !$schedule->isAlwaysDayPart()) {
                 // Daypart selected
                 // expect only a start date (no time)
                 $schedule->fromDt = $fromDt->startOfDay()->format('U');

@@ -57,6 +57,18 @@ class DayPart implements \JsonSerializable
     public $endTime;
     public $exceptions;
 
+    /**
+     * @SWG\Property(description="A readonly flag determining whether this DayPart is always")
+     * @var int
+     */
+    public $isAlways = 0;
+
+    /**
+     * @SWG\Property(description="A readonly flag determining whether this DayPart is custom")
+     * @var int
+     */
+    public $isCustom = 0;
+
     private $timeHash;
 
     /** @var  DateServiceInterface */
@@ -84,12 +96,20 @@ class DayPart implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($store, $log, $scheduleFactory)
+    public function __construct($store, $log)
     {
         $this->setCommonDependencies($store, $log);
+    }
+
+    /**
+     * @param ScheduleFactory $scheduleFactory
+     * @return $this
+     */
+    public function setScheduleFactory($scheduleFactory)
+    {
         $this->scheduleFactory = $scheduleFactory;
+        return $this;
     }
 
     /**

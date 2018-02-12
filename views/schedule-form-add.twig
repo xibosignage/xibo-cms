@@ -63,7 +63,19 @@
 
                         {% set title %}{% trans "Dayparting" %}{% endset %}
                         {% set helpText %}{% trans "Select the dayparting information for this event. To set your own times select custom and to have the event run constantly select Always." %}{% endset %}
-                        {{ forms.dropdown("dayPartId", "single", title, "", dayParts, "dayPartId", "name", helpText, "day-part-control") }}
+                        <div class="form-group day-part-control">
+                            <label class="col-sm-2 control-label" for="dayPartId" title="{{ helpText }}">{{ title }}</label>
+                            <div class="col-sm-10">
+                                <select class="form-control" name="dayPartId" id="dayPartId">
+                                    {% for dayPart in dayParts %}
+                                        <option {% if dayPart.isCustom == 1 %}selected{% endif %}
+                                                value="{{ dayPart.dayPartId }}"
+                                                data-is-always="{{ dayPart.isAlways }}"
+                                                data-is-custom="{{ dayPart.isCustom }}">{{ dayPart.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
 
                         {% set title %}{% trans "Start Time" %}{% endset %}
                         {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}

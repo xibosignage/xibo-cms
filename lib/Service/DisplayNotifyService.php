@@ -280,7 +280,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
             if ($row['eventId'] != 0) {
                 $scheduleEvents = $this->scheduleFactory
                     ->createEmpty()
-                    ->setDayPartFactory($this->dayPartFactory)
                     ->hydrate($row)
                     ->getEvents($currentDate, $rfLookAhead);
 
@@ -417,7 +416,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
             if ($row['eventId'] != 0) {
                 $scheduleEvents = $this->scheduleFactory
                     ->createEmpty()
-                    ->setDayPartFactory($this->dayPartFactory)
                     ->hydrate($row)
                     ->getEvents($currentDate, $rfLookAhead);
 
@@ -532,7 +530,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
             if ($row['eventId'] != 0) {
                 $scheduleEvents = $this->scheduleFactory
                     ->createEmpty()
-                    ->setDayPartFactory($this->dayPartFactory)
                     ->hydrate($row)
                     ->getEvents($currentDate, $rfLookAhead);
 

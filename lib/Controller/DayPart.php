@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -99,7 +100,9 @@ class DayPart extends Base
     {
         $filter = [
             'dayPartId' => $this->getSanitizer()->getInt('dayPartId'),
-            'name' => $this->getSanitizer()->getString('name')
+            'name' => $this->getSanitizer()->getString('name'),
+            'isAlways' => 0,
+            'isCustom' => 0
         ];
 
         $dayParts = $this->dayPartFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
@@ -177,6 +180,9 @@ class DayPart extends Base
         if (!$this->getUser()->checkEditable($dayPart))
             throw new AccessDeniedException();
 
+        if ($dayPart->isAlways === 1 || $dayPart->isCustom === 1)
+            throw new AccessDeniedException();
+
         $this->getState()->template = 'daypart-form-edit';
         $this->getState()->setData([
             'dayPart' => $dayPart,
@@ -195,6 +201,9 @@ class DayPart extends Base
         $dayPart = $this->dayPartFactory->getById($dayPartId);
 
         if (!$this->getUser()->checkDeleteable($dayPart))
+            throw new AccessDeniedException();
+
+        if ($dayPart->isAlways === 1 || $dayPart->isCustom === 1)
             throw new AccessDeniedException();
 
         // Get a count of schedules for this day part
@@ -284,7 +293,9 @@ class DayPart extends Base
         $dayPart = $this->dayPartFactory->createEmpty();
         $this->handleCommonInputs($dayPart);
 
-        $dayPart->save();
+        $dayPart
+            ->setScheduleFactory($this->scheduleFactory)
+            ->save();
 
         // Return
         $this->getState()->hydrate([
@@ -370,6 +381,8 @@ class DayPart extends Base
      *      @SWG\Schema(ref="#/definitions/DayPart")
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function edit($dayPartId)
     {
@@ -381,8 +394,13 @@ class DayPart extends Base
         if (!$this->getUser()->checkEditable($dayPart))
             throw new AccessDeniedException();
 
+        if ($dayPart->isAlways === 1 || $dayPart->isCustom === 1)
+            throw new AccessDeniedException();
+
         $this->handleCommonInputs($dayPart);
-        $dayPart->save();
+        $dayPart
+            ->setScheduleFactory($this->scheduleFactory)
+            ->save();
 
         // Return
         $this->getState()->hydrate([
@@ -471,6 +489,8 @@ class DayPart extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function delete($dayPartId)
     {
@@ -479,7 +499,10 @@ class DayPart extends Base
         if (!$this->getUser()->checkDeleteable($dayPart))
             throw new AccessDeniedException();
 
-        $dayPart->setDateService($this->getDate())->delete();
+        $dayPart
+            ->setDateService($this->getDate())
+            ->setScheduleFactory($this->scheduleFactory)
+            ->delete();
 
         // Return
         $this->getState()->hydrate([

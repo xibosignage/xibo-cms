@@ -1134,8 +1134,7 @@ class State extends Middleware
                 $container->logService,
                 $container->sanitizerService,
                 $container->user,
-                $container->userFactory,
-                $container->scheduleFactory
+                $container->userFactory
             );
         });
 
@@ -1344,7 +1343,8 @@ class State extends Middleware
                 $container->configService,
                 $container->pool,
                 $container->dateService,
-                $container->displayGroupFactory
+                $container->displayGroupFactory,
+                $container->dayPartFactory
             );
         });
 

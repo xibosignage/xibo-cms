@@ -1426,8 +1426,6 @@ class Library extends Base
             /* @var \Xibo\Entity\Schedule $row */
 
             // Generate this event
-            $row->setDayPartFactory($this->dayPartFactory);
-
             // Assess the date?
             if ($mediaDate !== null) {
                 try {
