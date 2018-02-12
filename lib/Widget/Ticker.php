@@ -828,10 +828,28 @@ class Ticker extends ModuleWidget
             try {
                 // Create a Guzzle Client to get the Feed XML
                 $client = new Client();
-                $response = $client->get($feedUrl, $this->getConfig()->getGuzzleProxy());
+                $response = $client->get($feedUrl, $this->getConfig()->getGuzzleProxy([
+                    'headers' => [
+                        'Accept' => 'application/rss+xml, application/rdf+xml;q=0.8, application/atom+xml;q=0.6, application/xml;q=0.4, text/xml;q=0.4'
+                    ],
+                    'stream' => true,
+                    'timeout' => 20 // wait no more than 20 seconds: https://github.com/xibosignage/xibo/issues/1401
+                ]));
 
-                // Pull out the content type and body
-                $result = explode('charset=', $response->getHeaderLine('Content-Type'));
+                // Pull out the content type
+                $contentType = $response->getHeaderLine('Content-Type');
+
+                $this->getLog()->debug('Feed returned content-type ' . $contentType);
+
+                // https://github.com/xibosignage/xibo/issues/1401
+                if (stripos($contentType, 'rss') === false && stripos($contentType, 'xml') === false) {
+                    // The content type isn't compatible
+                    $this->getLog()->error('Incompatible content type: ' . $contentType);
+                    return false;
+                }
+
+                // Get the body, etc
+                $result = explode('charset=', $contentType);
                 $document['encoding'] = isset($result[1]) ? $result[1] : '';
                 $document['xml'] = $response->getBody()->getContents();
 
@@ -849,8 +867,7 @@ class Ticker extends ModuleWidget
                 $this->getLog()->error('Unable to get feed: ' . $requestException->getMessage());
                 $this->getLog()->debug($requestException->getTraceAsString());
 
-                $document['xml'] = null;
-                $document['encoding'] = null;
+                return false;
             }
         }
 
