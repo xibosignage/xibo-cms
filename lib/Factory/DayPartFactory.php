@@ -78,6 +78,36 @@ class DayPartFactory extends BaseFactory
     }
 
     /**
+     * Get the Always DayPart
+     * @return DayPart
+     * @throws NotFoundException
+     */
+    public function getAlwaysDayPart()
+    {
+        $dayParts = $this->query(null, ['disableUserCheck' => 1, 'isAlways' => 1]);
+
+        if (count($dayParts) <= 0)
+            throw new NotFoundException();
+
+        return $dayParts[0];
+    }
+
+    /**
+     * Get the Custom DayPart
+     * @return DayPart
+     * @throws NotFoundException
+     */
+    public function getCustomDayPart()
+    {
+        $dayParts = $this->query(null, ['disableUserCheck' => 1, 'isCustom' => 1]);
+
+        if (count($dayParts) <= 0)
+            throw new NotFoundException();
+
+        return $dayParts[0];
+    }
+
+    /**
      * Get all dayparts with the system entries (always and custom)
      * @return DayPart[]
      */

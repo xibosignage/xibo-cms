@@ -749,10 +749,15 @@ class Schedule extends Base
      *      )
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function add()
     {
         $this->getLog()->debug('Add Schedule');
+
+        // Get the custom day part to use as a default day part
+        $customDayPart = $this->dayPartFactory->getCustomDayPart();
 
         $schedule = $this->scheduleFactory->createEmpty();
         $schedule->userId = $this->getUser()->userId;
@@ -761,7 +766,12 @@ class Schedule extends Base
         $schedule->commandId = $this->getSanitizer()->getInt('commandId');
         $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder', 0);
         $schedule->isPriority = $this->getSanitizer()->getInt('isPriority', 0);
-        $schedule->dayPartId = $this->getSanitizer()->getInt('dayPartId', 0);
+        $schedule->dayPartId = $this->getSanitizer()->getInt('dayPartId', $customDayPart->dayPartId);
+
+        // Workaround for cases where we're supplied 0 as the dayPartId (legacy custom dayPart)
+        if ($schedule->dayPartId === 0)
+            $schedule->dayPartId = $customDayPart->dayPartId;
+
         $schedule->syncTimezone = $this->getSanitizer()->getCheckbox('syncTimezone', 0);
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
