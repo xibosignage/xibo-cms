@@ -683,7 +683,7 @@ class Ticker extends ModuleWidget
             'takeItemsFrom' => $takeItemsFrom,
             'itemsPerPage' => $itemsPerPage,
             'randomiseItems' => $this->getOption('randomiseItems', 0),
-            'speed' => $this->getOption('speed'),
+            'speed' => $this->getOption('speed', 1000),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
             'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
