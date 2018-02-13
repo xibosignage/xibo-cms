@@ -17,6 +17,10 @@
     {
       "step": "Back fill the existing schedules with the correct day parts - always",
       "action": "UPDATE `schedule` SET dayPartId = (SELECT dayPartId FROM daypart WHERE isAlways = 1) WHERE dayPartId = 1;"
+    },
+    {
+      "step": "Add email from setting",
+      "action": "INSERT INTO setting (setting, value, fieldType, helptext, options, cat, userChange, title, validation, ordering, `default`, userSee, type) VALUES ('mail_from_name', '', 'text', 'Mail will be sent under this name', null, 'maintenance', 1, 'Sending email name', '', 45, '', 1, 'string');"
     }
   ]
 }

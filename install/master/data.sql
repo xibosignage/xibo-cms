@@ -236,7 +236,8 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (97, 'DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED', '1', 'checkbox', NULL, NULL, 'displays', 1, 'Enable the option to set the screenshot interval?', '', 90, '0', 1, 'checkbox'),
 (98, 'DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', '200', 'number', 'The default size in pixels for the Display Screenshots', NULL, 'displays', 1, 'Display Screenshot Default Size', '', 100, '200', 1, 'int'),
 (99, 'LATEST_NEWS_URL', 'http://xibo.org.uk/feed', 'text', 'RSS/Atom Feed to be displayed on the Status Dashboard', '', 'general', 0, 'Latest News URL', '', 111, '', 0, 'string'),
-(100, 'DISPLAY_LOCK_NAME_TO_DEVICENAME', '0', 'checkbox', NULL, NULL, 'displays', 1, 'Lock the Display Name to the device name provided by the Player?', '', 80, '0', 1, 'checkbox');
+(100, 'DISPLAY_LOCK_NAME_TO_DEVICENAME', '0', 'checkbox', NULL, NULL, 'displays', 1, 'Lock the Display Name to the device name provided by the Player?', '', 80, '0', 1, 'checkbox'),
+(101, 'mail_from_name', '', 'text', 'Mail will be sent under this name', null, 'maintenance', 1, 'Sending email name', '', 45, '', 1, 'string');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),
