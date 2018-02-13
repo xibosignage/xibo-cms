@@ -1201,11 +1201,17 @@ abstract class ModuleWidget implements ModuleInterface
             foreach (glob(PROJECT_ROOT . '/modules/' . $this->module->type . '/*.template.json') as $template) {
                 // Read the contents, json_decode and add to the array
                 $template = json_decode(file_get_contents($template), true);
-                $template['fileName'] = $template['image'];
 
-                if ($loadImage) {
-                    // We ltrim this because the control is expecting a relative URL
-                    $template['image'] = ltrim($this->getApp()->urlFor('module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]), '/');
+                if (isset($template['image'])) {
+                    $template['fileName'] = $template['image'];
+
+                    if ($loadImage) {
+                        // We ltrim this because the control is expecting a relative URL
+                        $template['image'] = ltrim($this->getApp()->urlFor('module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]), '/');
+                    }
+                } else {
+                    $template['fileName'] = '';
+                    $template['image'] = '';
                 }
 
                 $this->module->settings['templates'][] = $template;
