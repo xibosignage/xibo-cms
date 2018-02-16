@@ -25,15 +25,12 @@ class Graph extends ModuleWidget {
 	const DEFAULT_COLORS = '#7293CB, #E1974C, #84BA5B, #D35E60, #808585, #9067A7, #AB6857, #CCC210, #396AB1, #DA7C30, #3E9651, #CC2529, #535154, #6B4C9A, #922428, #948B3D';
 	
 	public $codeSchemaVersion = 1;
-	private $resourceFolder;
 
 	/**
 	 * Graph constructor.
 	 * @Override
 	 */
 	public function init() {
-		$this->resourceFolder = PROJECT_ROOT . '/web/modules/Graph';
-
 		// Initialise extra validation rules
 		v::with('Xibo\\Validation\\Rules\\');
 	}
