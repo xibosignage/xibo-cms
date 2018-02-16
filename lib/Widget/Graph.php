@@ -31,7 +31,6 @@ class Graph extends ModuleWidget {
 	 * @Override
 	 */
 	public function init() {
-		// Initialise extra validation rules
 		v::with('Xibo\\Validation\\Rules\\');
 	}
 	
@@ -107,6 +106,16 @@ class Graph extends ModuleWidget {
 		array_unshift($result, []);
 		return $result;
 	}
+	
+	public function dataSetIds() {
+    $ids = unserialize($this->getOption('dataSetIds'));
+    $labels = unserialize($this->getOption('dataSetLabels'));
+    $result = [];
+    foreach ($ids as $k => $v) {
+      $result[] = ['selected' => $v, 'label' => $labels[$k]];
+    }
+    return $result;
+	}
 
 	/**
 	 * Validates the settings
@@ -148,12 +157,17 @@ class Graph extends ModuleWidget {
 		$this->setOption('graphType', $this->getSanitizer()->getString('graphType'));
 		$this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
 
-		// TODO: Das muss irgendwie schöner gemacht werden...
-		$this->setOption('dataSetId1', $this->getSanitizer()->getString('dataSetId1'));
-		$this->setOption('dataSetId2', $this->getSanitizer()->getString('dataSetId2'));
-		$this->setOption('dataSetId3', $this->getSanitizer()->getString('dataSetId3'));
-		$this->setOption('dataSetId4', $this->getSanitizer()->getString('dataSetId4'));
-		$this->setOption('labelColumn', $this->getSanitizer()->getString('labelColumn'));
+    $ids = $this->getSanitizer()->getIntArray('dataSetIds');
+    $labels = $this->getSanitizer()->getStringArray('dataSetLabels');
+    foreach ($ids as $k => $v) {
+      if (empty($v)) {
+        unset($ids[$k]);
+        unset($labels[$k]);
+      }
+    }
+    $this->setOption('dataSetIds', serialize($ids));
+    $this->setOption('dataSetLabels', serialize($labels));
+    $this->setOption('maxdata', $this->getSanitizer()->getInt('maxdata', 180));
 
 		$this->setOption('showLegend', $this->getSanitizer()->getCheckbox('showLegend', 0));
 		$this->setOption('legendCenter', $this->getSanitizer()->getCheckbox('legendCenter', 0));
@@ -186,8 +200,10 @@ class Graph extends ModuleWidget {
 	public function getResource($displayId = 0) {
 		$data = [];
 		$containerId = 'graph-' . $displayId;
-		$dataSetIds = $this->getOption('dataSetId1') . ',' . $this->getOption('dataSetId2') . ',' . $this->getOption('dataSetId3') . ',' . $this->getOption('dataSetId4');
-		$graphData = $this->getDatasetContentForRGraph($dataSetIds, $this->getOption('labelColumn', ''));
+		$dataSetIds = unserialize($this->getOption('dataSetIds'));
+		$dataLabels = unserialize($this->getOption('dataSetLabels'));
+		$maxData = $this->getOption('maxdata', 180);
+		$graphData = $this->getDatasetContentForRGraph($dataSetIds, $dataLabels, $maxData);
 
 		// Replace the View Port Width if we are in Preview-Mode
 		$data['viewPortWidth'] = ($this->getSanitizer()->getCheckbox('preview') == 1) ? $this->region->width : '[[ViewPortWidth]]';
@@ -366,12 +382,13 @@ class Graph extends ModuleWidget {
 	/**
 	 * Load all possible Columns and data from the selected DataSet
 	 * 
-	 * @param String $dataSetIds The IDs of the Datasets to visualize
-	 * @param String $labelCol The Column where the Label for the X-Axis is saved in
+	 * @param array $dataSetIds The IDs of the Datasets to visualize
+	 * @param array $labelCols The Column where the Labels for the X-Axis are saved in
+   * @param int $maxData Maximum Datapoints to read
 	 * @return Object { data: [], labels: [], legend: [] }
 	 */
-	protected function getDatasetContentForRGraph($dataSetIds, $labelCol) {
-		$ids = array_unique(explode(',', $dataSetIds));
+	protected function getDatasetContentForRGraph($dataSetIds, $labelCols, $maxData) {
+    $maxData = abs($maxData);
 		$graphData = (object)[];
 		$graphData->data = [];
 		$graphData->labels = [];
@@ -381,14 +398,14 @@ class Graph extends ModuleWidget {
 			// Get all Headers to show as different Data-Streams
 			$columns = [];
 			$maxColumns = 0;
-			foreach ($ids as $id) {
-				if (trim($id) == '') continue;
+			foreach ($dataSetIds as $k => $id) {
+				if (empty(trim($id))) continue;
 				$dataSet = $this->dataSetFactory->getById($id);
 
 				/* @var DataSetColumn $column */
 				foreach ($dataSet->getColumn() as $column) {
 					// DataSetColumn->dataTypeId "2" (Number) and "3" (Date) can be processed
-					if (($column == $labelCol) || (($column->dataTypeId != 2) && ($column->dataTypeId != 3)) ) {
+					if (($column == $labelCols[$k]) || (($column->dataTypeId != 2) && ($column->dataTypeId != 3)) ) {
 						continue;
 					}
 					$graphData->legend[] = $dataSet->dataSet . ': ' . $column->heading;
@@ -397,15 +414,22 @@ class Graph extends ModuleWidget {
 				$maxColumns = max([$maxColumns, count($columns[$dataSet->dataSetId])]);
 			}
 
-			foreach ($ids as $id) {
-				if (trim($id) == '') continue;
+			foreach ($dataSetIds as $k => $id) {
+				if (empty(trim($id))) continue;
 				$dataSet = $this->dataSetFactory->getById($id);
 				$columnOffset = count($graphData->data);
-				
+
+				// Get the total number of data to limit to the last $maxData entries
+				$data = $dataSet->getData([], ['requireTotal' => true]);
+				$filter = [
+				  'size' => $maxData,
+				  'start' => max(0, $dataSet->countLast() - $maxData)
+				];
+        
 				// Add Labels and Data
-				foreach ($dataSet->getData() as $c => $row) {
+				foreach ($dataSet->getData($filter, ['requireTotal' => true]) as $c => $row) {
 					if (!array_key_exists($c, $graphData->labels)) {
-						$graphData->labels[$c] = '' . ((strlen($labelCol) > 0) ? $row[$labelCol] : $c);
+						$graphData->labels[$c] = '' . (!empty($labelCols[$k]) ? $row[$labelCols[$k]] : $c);
 					}
 					
 					// Add all Data
