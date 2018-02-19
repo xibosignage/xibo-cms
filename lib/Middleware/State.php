@@ -75,7 +75,11 @@ class State extends Middleware
                     $app->response()->header('strict-transport-security', 'max-age=' . $app->configService->GetSetting('STS_TTL', 600));
 
             } else {
-                if ($app->configService->GetSetting('FORCE_HTTPS', 0) == 1) {
+                // Get the current route pattern
+                $resource = $app->router->getCurrentRoute()->getPattern();
+
+                // Allow non-https access to the clock page, otherwise force https
+                if ($resource !== '/clock' && $app->configService->GetSetting('FORCE_HTTPS', 0) == 1) {
                     $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
                     header("Location: $redirect");
                     $app->halt(302);
