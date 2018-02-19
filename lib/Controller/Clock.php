@@ -81,7 +81,7 @@ class Clock extends Base
     {
         $this->session->refreshExpiry = false;
 
-        if ($this->getApp()->request()->isAjax()) {
+        if ($this->getApp()->request()->isAjax() || $this->isApi()) {
             $output = $this->getDate()->getLocalDate(null, 'H:i T');
 
             $this->getState()->setData(array('time' => $output));
