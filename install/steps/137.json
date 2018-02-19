@@ -21,6 +21,18 @@
     {
       "step": "Add email from setting",
       "action": "INSERT INTO setting (setting, value, fieldType, helptext, options, cat, userChange, title, validation, ordering, `default`, userSee, type) VALUES ('mail_from_name', '', 'text', 'Mail will be sent under this name', null, 'maintenance', 1, 'Sending email name', '', 45, '', 1, 'string');"
+    },
+    {
+      "step": "Drop parent/child/depth unique keys on Display Group closure",
+      "action": "DROP INDEX parentId ON lkdgdg; DROP INDEX childId ON lkdgdg;"
+    },
+    {
+      "step": "Create parent/child/depth index on Display Group closure",
+      "action": "CREATE INDEX lkdgdg_parentId_childId_depth_index ON lkdgdg (parentId, childId, depth);"
+    },
+    {
+      "step": "Create parent/child/depth index on Display Group closure",
+      "action": "CREATE INDEX lkdgdg_childId_parentId_depth_index ON lkdgdg (childId, parentId, depth);"
     }
   ]
 }
