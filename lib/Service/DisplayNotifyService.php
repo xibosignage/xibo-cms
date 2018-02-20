@@ -209,8 +209,20 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
                INNER JOIN `display`
                ON lkdisplaydg.DisplayID = display.displayID
-             WHERE `schedule`.campaignId = :activeCampaignId
-              AND (
+               INNER JOIN (
+                  SELECT campaignId
+                    FROM campaign
+                   WHERE campaign.campaignId = :activeCampaignId
+                   UNION
+                  SELECT DISTINCT parent.campaignId
+                    FROM `lkcampaignlayout` child
+                      INNER JOIN `lkcampaignlayout` parent
+                      ON parent.layoutId = child.layoutId 
+                   WHERE child.campaignId = :activeCampaignId
+                      
+               ) campaigns
+               ON campaigns.campaignId = `schedule`.campaignId
+             WHERE (
                   (`schedule`.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
                   OR `schedule`.recurrence_range >= :fromDt 
                   OR (
@@ -268,7 +280,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
             if ($row['eventId'] != 0) {
                 $scheduleEvents = $this->scheduleFactory
                     ->createEmpty()
-                    ->setDayPartFactory($this->dayPartFactory)
                     ->hydrate($row)
                     ->getEvents($currentDate, $rfLookAhead);
 
@@ -405,7 +416,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
             if ($row['eventId'] != 0) {
                 $scheduleEvents = $this->scheduleFactory
                     ->createEmpty()
-                    ->setDayPartFactory($this->dayPartFactory)
                     ->hydrate($row)
                     ->getEvents($currentDate, $rfLookAhead);
 
@@ -520,7 +530,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
             if ($row['eventId'] != 0) {
                 $scheduleEvents = $this->scheduleFactory
                     ->createEmpty()
-                    ->setDayPartFactory($this->dayPartFactory)
                     ->hydrate($row)
                     ->getEvents($currentDate, $rfLookAhead);
 

@@ -630,7 +630,11 @@ class MediaFactory extends BaseFactory
 
         // Expired files?
         if ($this->getSanitizer()->getInt('expires', $filterBy) != 0) {
-            $body .= ' AND media.expires < :expires AND IFNULL(media.expires, 0) <> 0 ';
+            $body .= ' 
+                AND media.expires < :expires 
+                AND IFNULL(media.expires, 0) <> 0 
+                AND media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`)
+            ';
             $params['expires'] = $this->getSanitizer()->getInt('expires', $filterBy);
         }
 
