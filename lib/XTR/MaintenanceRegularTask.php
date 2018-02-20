@@ -133,13 +133,13 @@ class MaintenanceRegularTask implements TaskInterface
                             $this->runMessage .= ' - ' . $display->display . ' Error=' . $e->getMessage() . PHP_EOL;
                         }
                     }
-                    else
+                    else {
                         $this->runMessage .= ' - ' . $display->display . ' Display already awake. Previous WOL send time: ' . $this->date->getLocalDate($display->lastWakeOnLanCommandSent) . PHP_EOL;
+                    }
                 }
-                else
+                else {
                     $this->runMessage .= ' - ' . $display->display . ' Sleeping' . PHP_EOL;
-
-                $this->runMessage .= ' - ' . $display->display . ' N/A' . PHP_EOL;
+                }
             }
 
             $this->runMessage .= ' - Done' . PHP_EOL . PHP_EOL;
