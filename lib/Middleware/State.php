@@ -1120,7 +1120,8 @@ class State extends Middleware
                 $container->pool,
                 $container->dataSetColumnFactory,
                 $container->permissionFactory,
-                $container->displayFactory
+                $container->displayFactory,
+                $container->dateService
             );
         });
 
