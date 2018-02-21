@@ -891,19 +891,40 @@ class DisplayGroup implements \JsonSerializable
             return $a->getId() - $b->getId();
         });
 
-        $this->getLog()->debug('Unlinking %d display groups to Display Group %s', count($links), $this->displayGroup);
+        $this->getLog()->debug('Unlinking ' . count($links) . ' display groups to Display Group ' . $this->displayGroup);
 
         foreach ($links as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
-            $this->getStore()->update('
-                DELETE link
-                  FROM `lkdgdg` p, `lkdgdg` link, `lkdgdg` c
-                 WHERE p.parentId = link.parentId AND c.childId = link.childId
-                   AND p.childId = :parentId AND c.parentId = :childId
-            ', [
+            // Only ever delete 1 because if there are more than 1, we can assume that it is linked at that level from
+            // somewhere else
+            // https://github.com/xibosignage/xibo/issues/1417
+            $linksToDelete = $this->getStore()->select('
+                SELECT DISTINCT link.parentId, link.childId, link.depth
+                  FROM `lkdgdg` p
+                    INNER JOIN `lkdgdg` link
+                    ON p.parentId = link.parentId
+                    INNER JOIN `lkdgdg` c
+                    ON c.childId = link.childId
+                 WHERE p.childId = :parentId 
+                    AND c.parentId = :childId
+                ', [
                 'parentId' => $this->displayGroupId,
                 'childId' => $displayGroup->displayGroupId
             ]);
+
+            foreach ($linksToDelete as $linkToDelete) {
+                $this->getStore()->update('
+                  DELETE FROM `lkdgdg` 
+                   WHERE parentId = :parentId 
+                    AND childId = :childId 
+                    AND depth = :depth 
+                  LIMIT 1
+                ', [
+                    'parentId' => $linkToDelete['parentId'],
+                    'childId' => $linkToDelete['childId'],
+                    'depth' => $linkToDelete['depth']
+                ]);
+            }
         }
     }
 

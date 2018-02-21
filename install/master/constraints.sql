@@ -120,3 +120,7 @@ CREATE INDEX requiredfile_displayId_type_index ON requiredfile (displayId, type)
 
 CREATE INDEX idx_lkregionplaylist_playlistId ON lkregionplaylist (playlistId);
 
+CREATE INDEX lkdgdg_parentId_childId_depth_index ON lkdgdg (parentId, childId, depth);
+
+CREATE INDEX lkdgdg_childId_parentId_depth_index ON lkdgdg (childId, parentId, depth);
+

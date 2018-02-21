@@ -204,11 +204,17 @@ jQuery.fn.extend({
                     height: height
                 });
 
+                var timeout = duration * 1000;
+
+                if (options.fx !== "noTransition") {
+                    timeout = timeout - (options.speed * 0.7);
+                }
+
                 // Cycle handles this for us
                 $(this).cycle({
                     fx: (options.fx === "noTransition") ? "none" : options.fx,
                     speed: (options.fx === "noTransition") ? 1 : options.speed,
-                    timeout: (duration * 1000) - (options.speed * 0.7),
+                    timeout: timeout,
                     slides: "> " + slides
                 });
             }

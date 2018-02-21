@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.8.5', 5, 2, 136);
+('1.8.6', 5, 2, 137);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`, `isSystemNotification`) VALUES
 (1, 'Users', 0, 0, 0),
@@ -236,7 +236,8 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (97, 'DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED', '1', 'checkbox', NULL, NULL, 'displays', 1, 'Enable the option to set the screenshot interval?', '', 90, '0', 1, 'checkbox'),
 (98, 'DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', '200', 'number', 'The default size in pixels for the Display Screenshots', NULL, 'displays', 1, 'Display Screenshot Default Size', '', 100, '200', 1, 'int'),
 (99, 'LATEST_NEWS_URL', 'http://xibo.org.uk/feed', 'text', 'RSS/Atom Feed to be displayed on the Status Dashboard', '', 'general', 0, 'Latest News URL', '', 111, '', 0, 'string'),
-(100, 'DISPLAY_LOCK_NAME_TO_DEVICENAME', '0', 'checkbox', NULL, NULL, 'displays', 1, 'Lock the Display Name to the device name provided by the Player?', '', 80, '0', 1, 'checkbox');
+(100, 'DISPLAY_LOCK_NAME_TO_DEVICENAME', '0', 'checkbox', NULL, NULL, 'displays', 1, 'Lock the Display Name to the device name provided by the Player?', '', 80, '0', 1, 'checkbox'),
+(101, 'mail_from_name', '', 'text', 'Mail will be sent under this name', null, 'maintenance', 1, 'Sending email name', '', 45, '', 1, 'string');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),
@@ -323,3 +324,8 @@ INSERT INTO task (taskId, name, class, status, options, schedule, isActive, conf
   (4, 'Stats Archive', '\\Xibo\\XTR\\StatsArchiveTask', 2, '{"periodSizeInDays":"7","maxPeriods":"4"}', '0 0 * * Mon', 0, '/tasks/stats-archiver.task'),
   (5, 'Remove old Notifications', '\\Xibo\\XTR\\NotificationTidyTask', 2, '{"maxAgeDays":"7","systemOnly":"1","readOnly":"0"}', '15 0 * * *', 1, '/tasks/notification-tidy.task'),
   (6, 'Fetch Remote DataSets', '\\Xibo\\XTR\\RemoteDataSetFetchTask', 2, '[]', '30 * * * * *', 1, '/tasks/remote-dataset.task');
+
+
+INSERT INTO daypart (name, description, isRetired, userid, startTime, endTime, exceptions, isAlways, isCustom) VALUES
+  ('Custom', 'User specifies the from/to date', 0, 1, '', '', '', 0, 1),
+  ('Always', 'Event runs always', 0, 1, '', '', '', 1, 0);

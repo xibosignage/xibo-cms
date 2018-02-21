@@ -25,6 +25,7 @@ namespace Xibo\Entity;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
@@ -80,9 +81,20 @@ class Campaign implements \JsonSerializable
     public $totalDuration;
 
     public $tags = [];
-    
+
+    /**
+     * @var Layout[]
+     */
     private $layouts = [];
+
+    /**
+     * @var Permission[]
+     */
     private $permissions = [];
+
+    /**
+     * @var Schedule[]
+     */
     private $events = [];
     
     // Private
@@ -469,6 +481,28 @@ class Campaign implements \JsonSerializable
 
         if ($countBefore !== $countAfter)
             $this->layoutAssignmentsChanged = true;
+    }
+
+    /**
+     * Is the provided layout already assigned to this campaign
+     * @param Layout $checkLayout
+     * @return bool
+     * @throws XiboException
+     */
+    public function isLayoutAssigned($checkLayout)
+    {
+        $assigned = false;
+
+        $this->load();
+
+        foreach ($this->layouts as $layout) {
+            if ($layout->layoutId === $checkLayout->layoutId) {
+                $assigned = true;
+                break;
+            }
+        }
+
+        return $assigned;
     }
 
     private function add()
