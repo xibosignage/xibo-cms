@@ -180,7 +180,7 @@
                     var eventIcon = "fa-desktop";
                     var eventClass = "event-warning";
 
-                    if (event.event.dayPartId != 1) {
+                    if (event.event.isAlways != 1) {
                     if (event.event.eventTypeId == 2) {
                     title = "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsTimeFormat) + "] " + event.title;
                     } else if (event.sameDay) {
@@ -267,7 +267,7 @@
                     var eventIcon = "fa-desktop";
                     var eventClass = "event-warning";
 
-                    if (event.event.dayPartId != 1) {
+                    if (event.event.isAlways != 1) {
                     if (event.event.eventTypeId == 2) {
                     title = "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsTimeFormat) + "] " + event.title;
                     } else if (event.sameDay) {
@@ -347,7 +347,7 @@
             var eventIcon = "fa-desktop";
             var eventClass = "event-warning";
 
-            if (event.event.dayPartId != 1) {
+            if (event.event.isAlways != 1) {
             if (event.event.eventTypeId == 2) {
             title = "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsTimeFormat) + "] " + event.title;
             } else if (event.sameDay) {
@@ -367,7 +367,7 @@
             eventClass = "event-success";
             }
 
-            if (event.event.dayPartId == 1) {
+            if (event.event.isAlways == 1) {
             eventIcon = "fa-retweet";
             }
 
@@ -575,7 +575,7 @@
                                     icon = "fa-exclamation";
                             %>
                             <td><span class="fa <%= icon %>"></span></td>
-                            <% if (layout.eventDayPartId == 1) { %>
+                            <% if (layout.isAlways == 1) { %>
                                 <td>{% endraw %}{% trans "Always" %}{% raw %}</td>
                                 <td><span class="fa fa-retweet"></span></td>
                             <% } else { %> 
