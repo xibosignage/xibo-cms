@@ -235,4 +235,13 @@ class Environment
     {
         return extension_loaded('simplexml');
     }
+
+    /**
+     * @param $url
+     * @return bool
+     */
+    public static function checkUrl($url)
+    {
+        return (stripos($url, '/web/') === false);
+    }
 }

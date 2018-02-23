@@ -60,6 +60,10 @@
                                 <span style="color:#f48260;"></span>
                             </h3>
 
+                            {% if urlError %}
+                                <p class="alert alert-info">{% trans "CMS configuration warning, it is very unlikely that /web/ should be in the URL. This usually means that the DocumentRoot of the web server is wrong and may put your CMS at risk if not corrected." %}</p>
+                            {% endif %}
+
                             {% if binLogError %}
                                 <p class="alert alert-info">{% trans "The CMS may not be working as expected because MySQL BINLOG format is set to STATEMENT. This can effect sessions and should be set to ROW or MIXED." %}</p>
                             {% endif %}
