@@ -108,6 +108,10 @@ class DataSetColumnFactory extends BaseFactory
             $select .= ' , remoteField ';
         }
 
+        if (DBVERSION >= 138) {
+            $select .= ' , showFilter, showSort ';
+        }
+
         $body = '
               FROM `datasetcolumn`
                INNER JOIN `datatype`
@@ -147,7 +151,7 @@ class DataSetColumnFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['showFilter', 'showSort']]);
         }
 
         // Paging

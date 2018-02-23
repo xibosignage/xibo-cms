@@ -122,6 +122,8 @@ CREATE TABLE IF NOT EXISTS `datasetcolumn` (
   `ColumnOrder` smallint(6) NOT NULL,
   `Formula` varchar(1000) DEFAULT NULL,
   `RemoteField` VARCHAR(250) DEFAULT NULL,
+  `showFilter` TINYINT(4) DEFAULT 1,
+  `showSort` TINYINT(4) DEFAULT 1,
   PRIMARY KEY (`DataSetColumnID`),
   KEY `DataSetID` (`DataSetID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;

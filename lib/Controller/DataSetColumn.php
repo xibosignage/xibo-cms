@@ -10,6 +10,7 @@ namespace Xibo\Controller;
 
 
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetColumnTypeFactory;
 use Xibo\Factory\DataSetFactory;
@@ -241,6 +242,20 @@ class DataSetColumn extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="showFilter",
+     *      in="formData",
+     *      description="Flag indicating whether this column should present a filter on DataEntry",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="showSort",
+     *      in="formData",
+     *      description="Flag indicating whether this column should allow sorting on DataEntry",
+     *      type="integer",
+     *      required=true
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -252,6 +267,8 @@ class DataSetColumn extends Base
      *      )
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function add($dataSetId)
     {
@@ -269,6 +286,8 @@ class DataSetColumn extends Base
         $column->dataSetColumnTypeId = $this->getSanitizer()->getInt('dataSetColumnTypeId');
         $column->formula = $this->getSanitizer()->getParam('formula', null);
         $column->remoteField = $this->getSanitizer()->getParam('remoteField', null);
+        $column->showFilter = $this->getSanitizer()->getCheckbox('showFilter');
+        $column->showSort = $this->getSanitizer()->getCheckbox('showSort');
 
         // Assign the column to set the column order if necessary
         $dataSet->assignColumn($column);
@@ -384,6 +403,20 @@ class DataSetColumn extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="showFilter",
+     *      in="formData",
+     *      description="Flag indicating whether this column should present a filter on DataEntry",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="showSort",
+     *      in="formData",
+     *      description="Flag indicating whether this column should allow sorting on DataEntry",
+     *      type="integer",
+     *      required=true
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -395,6 +428,8 @@ class DataSetColumn extends Base
      *      )
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function edit($dataSetId, $dataSetColumnId)
     {
@@ -412,6 +447,8 @@ class DataSetColumn extends Base
         $column->dataSetColumnTypeId = $this->getSanitizer()->getInt('dataSetColumnTypeId');
         $column->formula = $this->getSanitizer()->getParam('formula', null);
         $column->remoteField = $this->getSanitizer()->getParam('remoteField', null);
+        $column->showFilter = $this->getSanitizer()->getCheckbox('showFilter');
+        $column->showSort = $this->getSanitizer()->getCheckbox('showSort');
         $column->save();
 
         $dataSet->notify();
