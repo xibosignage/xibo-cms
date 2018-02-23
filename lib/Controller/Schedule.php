@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
@@ -1198,6 +1199,8 @@ class Schedule extends Base
      * Schedule Now Form
      * @param string $from The object that called this form
      * @param int $id The Id
+     *
+     * @throws NotFoundException
      */
     public function scheduleNowForm($from, $id)
     {
@@ -1226,6 +1229,8 @@ class Schedule extends Base
             'displays' => $displays,
             'displayGroups' => $groups,
             'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1]),
+            'alwaysDayPart' => $this->dayPartFactory->getAlwaysDayPart(),
+            'customDayPart' => $this->dayPartFactory->getCustomDayPart(),
             'help' => $this->getHelp()->link('Schedule', 'ScheduleNow')
         ]);
     }

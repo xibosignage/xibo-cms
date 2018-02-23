@@ -12,7 +12,7 @@ namespace Xibo\Helper;
 class Environment
 {
     public static $WEBSITE_VERSION_NAME = '1.8.6';
-    public static $WEBSITE_VERSION = 137;
+    public static $WEBSITE_VERSION = 138;
 
     public static $VERSION_REQUIRED = '5.5';
     public static $VERSION_UNSUPPORTED = '8.0';
@@ -234,5 +234,14 @@ class Environment
     public static function checkSimpleXml()
     {
         return extension_loaded('simplexml');
+    }
+
+    /**
+     * @param $url
+     * @return bool
+     */
+    public static function checkUrl($url)
+    {
+        return (stripos($url, '/web/') === false);
     }
 }
