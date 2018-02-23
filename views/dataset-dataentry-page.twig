@@ -28,7 +28,7 @@
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
                             {% for col in dataSet.getColumn() %}
-                                {% if col.dataSetColumnTypeId == 1 and (col.dataTypeId == 1 or col.dataTypeId == 2) %}
+                                {% if col.dataSetColumnTypeId == 1 and (col.dataTypeId == 1 or col.dataTypeId == 2) and col.showFilter == 1 %}
                                     {{ inline.input(col.heading, col.heading) }}
                                 {% endif %}
                             {% endfor %}
@@ -64,9 +64,9 @@
         cols.push({ "name": "id", "data": "id" });
         {% for col in dataSet.getColumn() %}
             {% if col.dataTypeId == 3 %}
-                cols.push({ "data": "{{ col.heading }}", "render": dataTableDateFromIso });
+                cols.push({ "data": "{{ col.heading }}", "orderable": {% if col.showSort == 1 %}true{% else %}false{% endif %}, "render": dataTableDateFromIso });
             {% elseif col.dataTypeId == 5 %}
-                cols.push({ "data": "{{ col.heading }}", "render": function(data, type, row) {
+                cols.push({ "data": "{{ col.heading }}", "orderable": {% if col.showSort == 1 %}true{% else %}false{% endif %}, "render": function(data, type, row) {
                         if (type != "display")
                             return data;
 
@@ -77,7 +77,7 @@
                     }
                 });
             {% else %}
-                cols.push({ "data": "{{ col.heading }}" });
+                cols.push({ "data": "{{ col.heading }}", "orderable": {% if col.showSort == 1 %}true{% else %}false{% endif %} });
             {% endif %}
         {% endfor %}
 
@@ -100,8 +100,25 @@
             "order": [[ 0, "asc"]],
             ajax: {
                 "url": "{{ urlFor("dataSet.data.search", {id: dataSet.dataSetId}) }}",
-                "data": function(d) {
-                    $.extend(d, $("#datasets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                "data": function(dataToSend) {
+                    var data = {};
+                    data.draw = dataToSend.draw;
+                    data.length = dataToSend.length;
+                    data.start = dataToSend.start;
+                    data.order = dataToSend.order;
+                    data.columns = [];
+                    $.each(dataToSend.columns, function (index, e) {
+                        var col = {};
+                        col.data = e.data;
+                        if (e.orderable) {
+                            data.columns.push(col);
+                        } else {
+                            data.columns.push({});
+                        }
+                    });
+
+                    $.extend(data, $("#datasets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    return data;
                 }
             },
             "columns": cols

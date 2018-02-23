@@ -82,6 +82,14 @@
                 {% set title %}{% trans "Formula" %}{% endset %}
                 {% set helpText %}{% trans "A formula to use as a calculation for formula column types" %}{% endset %}
                 {{ forms.input("formula", title, dataSetColumn.formula, helpText, "formula") }}
+
+                {% set title %}{% trans "Filter?" %}{% endset %}
+                {% set helpText %}{% trans "Show as a filter option on the Data Entry Page?" %}{% endset %}
+                {{ forms.checkbox("showFilter", title, dataSetColumn.showFilter, helpText) }}
+
+                {% set title %}{% trans "Sort?" %}{% endset %}
+                {% set helpText %}{% trans "Enable sorting on the Data Entry Page? We recommend that the number of sortable columns is kept to a minimum." %}{% endset %}
+                {{ forms.checkbox("showSort", title, dataSetColumn.showSort, helpText) }}
             </form>
         </div>
     </div>
