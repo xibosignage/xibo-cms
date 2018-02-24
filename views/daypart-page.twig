@@ -207,7 +207,7 @@
     <script type="text/x-handlebars-template" id="dayPartExceptionsTemplate">
         <div class="form-group">
             <div class="col-sm-3">
-                <select class="form-control" name="exceptionDay[]">
+                <select class="form-control" name="exceptionDays[]">
                     <option value=""></option>
                     {{#each daysOfWeek}}
                     <option value="{{ day }}" {{#if_eq day ../exceptionDay}}selected{{/if_eq}}>{{ title }}</option>

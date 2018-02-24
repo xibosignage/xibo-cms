@@ -94,7 +94,44 @@ class DayPart extends Base
     }
 
     /**
-     * Search
+     *  Search
+     *
+     * @SWG\Get(
+     *  path="/daypart",
+     *  operationId="dayPartSearch",
+     *  tags={"dayPart"},
+     *  summary="Daypart Search",
+     *  description="Search dayparts",
+     *  @SWG\Parameter(
+     *      name="dayPartId",
+     *      in="formData",
+     *      description="The dayPart ID to Search",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="The name of the dayPart to Search",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="embed",
+     *      in="formData",
+     *      description="Embed related data such as exceptions",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Daypart")
+     *      )
+     *  )
+     * )
      */
     public function grid()
     {
@@ -107,7 +144,9 @@ class DayPart extends Base
 
         foreach ($dayParts as $dayPart) {
             /* @var \Xibo\Entity\DayPart $dayPart */
-
+            if (in_array('exceptions', $embed)){
+                $dayPart->load();
+            }
             if ($this->isApi())
                 break;
 
@@ -426,7 +465,7 @@ class DayPart extends Base
         $dayPart->endTime = $this->getSanitizer()->getString('endTime');
 
         // Exceptions
-        $exceptionDays = $this->getSanitizer()->getStringArray('exceptionDay');
+        $exceptionDays = $this->getSanitizer()->getStringArray('exceptionDays');
         $exceptionStartTimes = $this->getSanitizer()->getStringArray('exceptionStartTimes');
         $exceptionEndTimes = $this->getSanitizer()->getStringArray('exceptionEndTimes');
 

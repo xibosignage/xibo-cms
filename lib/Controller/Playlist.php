@@ -236,6 +236,13 @@ class Playlist extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="formData",
+     *      description="The widget ID to Search",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -253,8 +260,10 @@ class Playlist extends Base
         // Transitions
         $transIn = $this->transitionFactory->getEnabledByType('in');
         $transOut = $this->transitionFactory->getEnabledByType('out');
-        $widgets = $this->widgetFactory->query($this->gridRenderSort(), $this->gridRenderFilter(['playlistId' => $this->getSanitizer()->getInt('playlistId')]));
-
+        $widgets = $this->widgetFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
+            'playlistId' => $this->getSanitizer()->getInt('playlistId'),
+            'widgetId' => $this->getSanitizer()->getInt('widgetId')
+        ]));
         foreach ($widgets as $widget) {
             /* @var Widget $widget */
             $widget->load();
