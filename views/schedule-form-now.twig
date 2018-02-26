@@ -26,7 +26,9 @@
         <div class="col-md-12">
             <form id="scheduleNowForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
                 {{ forms.hidden("eventTypeId", "1") }}
-                {{ forms.hidden("dayPartId", "0") }}
+                {{ forms.hidden("dayPartId", customDayPart.dayPartId) }}
+                {{ forms.hidden("alwaysDayPartId", alwaysDayPart.dayPartId) }}
+                {{ forms.hidden("customDayPartId", customDayPart.dayPartId) }}
                 {{ forms.hidden("fromDt", "") }}
                 {{ forms.hidden("toDt", "") }}
                 {{ forms.hidden("syncTimezone", "1") }}

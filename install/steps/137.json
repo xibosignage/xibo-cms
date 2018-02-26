@@ -11,12 +11,12 @@
       "action": "INSERT INTO daypart (name, description, isRetired, userid, startTime, endTime, exceptions, isAlways, isCustom) VALUES ('Custom', 'User specifies the from/to date', 0, 1, '', '', '', 0, 1),('Always', 'Event runs always', 0, 1, '', '', '', 1, 0);"
     },
     {
-      "step": "Back fill the existing schedules with the correct day parts - custom",
-      "action": "UPDATE `schedule` SET dayPartId = (SELECT dayPartId FROM daypart WHERE isCustom = 1) WHERE dayPartId = 0;"
-    },
-    {
       "step": "Back fill the existing schedules with the correct day parts - always",
       "action": "UPDATE `schedule` SET dayPartId = (SELECT dayPartId FROM daypart WHERE isAlways = 1) WHERE dayPartId = 1;"
+    },
+    {
+      "step": "Back fill the existing schedules with the correct day parts - custom",
+      "action": "UPDATE `schedule` SET dayPartId = (SELECT dayPartId FROM daypart WHERE isCustom = 1) WHERE dayPartId = 0;"
     },
     {
       "step": "Add email from setting",

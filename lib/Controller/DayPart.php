@@ -94,53 +94,93 @@ class DayPart extends Base
     }
 
     /**
-     * Search
+     *  Search
+     *
+     * @SWG\Get(
+     *  path="/daypart",
+     *  operationId="dayPartSearch",
+     *  tags={"dayPart"},
+     *  summary="Daypart Search",
+     *  description="Search dayparts",
+     *  @SWG\Parameter(
+     *      name="dayPartId",
+     *      in="formData",
+     *      description="The dayPart ID to Search",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="The name of the dayPart to Search",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="embed",
+     *      in="formData",
+     *      description="Embed related data such as exceptions",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/DayPart")
+     *      )
+     *  )
+     * )
      */
     public function grid()
     {
         $filter = [
             'dayPartId' => $this->getSanitizer()->getInt('dayPartId'),
-            'name' => $this->getSanitizer()->getString('name'),
-            'isAlways' => 0,
-            'isCustom' => 0
+            'name' => $this->getSanitizer()->getString('name')
         ];
 
         $dayParts = $this->dayPartFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($dayParts as $dayPart) {
             /* @var \Xibo\Entity\DayPart $dayPart */
-
+            if (in_array('exceptions', $embed)){
+                $dayPart->load();
+            }
             if ($this->isApi())
                 break;
 
             $dayPart->includeProperty('buttons');
 
-            // Default Layout
-            $dayPart->buttons[] = array(
-                'id' => 'daypart_button_edit',
-                'url' => $this->urlFor('daypart.edit.form', ['id' => $dayPart->dayPartId]),
-                'text' => __('Edit')
-            );
-
-            if ($this->getUser()->checkDeleteable($dayPart)) {
+            if ($dayPart->isCustom !== 1 && $dayPart->isAlways !== 1) {
+                // CRUD
                 $dayPart->buttons[] = array(
-                    'id' => 'daypart_button_delete',
-                    'url' => $this->urlFor('daypart.delete.form', ['id' => $dayPart->dayPartId]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('daypart.delete', ['id' => $dayPart->dayPartId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'daypart_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $dayPart->name)
-                    )
+                    'id' => 'daypart_button_edit',
+                    'url' => $this->urlFor('daypart.edit.form', ['id' => $dayPart->dayPartId]),
+                    'text' => __('Edit')
                 );
+
+                if ($this->getUser()->checkDeleteable($dayPart)) {
+                    $dayPart->buttons[] = array(
+                        'id' => 'daypart_button_delete',
+                        'url' => $this->urlFor('daypart.delete.form', ['id' => $dayPart->dayPartId]),
+                        'text' => __('Delete'),
+                        'multi-select' => true,
+                        'dataAttributes' => array(
+                            array('name' => 'commit-url', 'value' => $this->urlFor('daypart.delete', ['id' => $dayPart->dayPartId])),
+                            array('name' => 'commit-method', 'value' => 'delete'),
+                            array('name' => 'id', 'value' => 'daypart_button_delete'),
+                            array('name' => 'text', 'value' => __('Delete')),
+                            array('name' => 'rowtitle', 'value' => $dayPart->name)
+                        )
+                    );
+                }
             }
 
             if ($this->getUser()->checkPermissionsModifyable($dayPart)) {
 
-                $dayPart->buttons[] = ['divider' => true];
+                if (count($dayPart->buttons) > 0)
+                    $dayPart->buttons[] = ['divider' => true];
 
                 // Edit Permissions
                 $dayPart->buttons[] = array(
@@ -425,7 +465,7 @@ class DayPart extends Base
         $dayPart->endTime = $this->getSanitizer()->getString('endTime');
 
         // Exceptions
-        $exceptionDays = $this->getSanitizer()->getStringArray('exceptionDay');
+        $exceptionDays = $this->getSanitizer()->getStringArray('exceptionDays');
         $exceptionStartTimes = $this->getSanitizer()->getStringArray('exceptionStartTimes');
         $exceptionEndTimes = $this->getSanitizer()->getStringArray('exceptionEndTimes');
 

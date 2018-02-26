@@ -78,19 +78,19 @@
         if (showSeconds === 0 && (clockFace === "TwelveHourClock" || clockFace === 'TwentyFourHourClock'))
             clock_width = 300;
 
-        $('.flip-clock-wrapper').css("width", clock_width + "px");
-
         // Calculate the width ratio between the actual width and the clock_width
         var ratio = width / clock_width;
 
         // What IE are we?
         if ($("body").hasClass('ie7') || $("body").hasClass('ie8')) {
             $("#clock").css({
+                "width": clock_width + "px",
                 "filter": "progid:DXImageTransform.Microsoft.Matrix(M11=" + ratio + ", M12=0, M21=0, M22=" + ratio + ", SizingMethod='auto expand'"
             });
         }
         else {
             $("#clock").css({
+                "width": clock_width + "px",
                 "transform": "scale(" + ratio + ")",
                 "transform-origin": "0 0"
             });

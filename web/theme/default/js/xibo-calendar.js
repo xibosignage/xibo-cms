@@ -554,14 +554,15 @@ var setupScheduleNowForm = function(form) {
 
     $(form).find("#always").on("change", function() {
         var always = $(form).find("#always").is(':checked');
+        var dayPartId = (always) ? $(form).find("#alwaysDayPartId").val() : $(form).find("#customDayPartId").val();
 
-        $(form).find("#dayPartId").val(always ? 1 : 0);
+        $(form).find("#dayPartId").val(dayPartId);
 
         $(form).find(".duration-part").toggle();
         if (dateFormat.indexOf("s") <= -1) {
             $(form).find(".schedule-now-seconds-field").hide();
         }
-    })
+    });
 
     var evaluateDates = $.debounce(500, function() {
       scheduleNowFormEvaluateDates(form);

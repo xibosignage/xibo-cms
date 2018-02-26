@@ -64,7 +64,7 @@
                         {% set title %}{% trans "Dayparting" %}{% endset %}
                         {% set helpText %}{% trans "Select the dayparting information for this event. To set your own times select custom and to have the event run constantly select Always." %}{% endset %}
                         <div class="form-group day-part-control">
-                            <label class="col-sm-2 control-label" for="dayPartId" title="{{ helpText }}">{{ title }}</label>
+                            <label class="col-sm-2 control-label" for="dayPartId">{{ title }}</label>
                             <div class="col-sm-10">
                                 <select class="form-control" name="dayPartId" id="dayPartId">
                                     {% for dayPart in dayParts %}
@@ -74,6 +74,7 @@
                                                 data-is-custom="{{ dayPart.isCustom }}">{{ dayPart.name }}</option>
                                     {% endfor %}
                                 </select>
+                                <span class="help-block">{{ helpText }}</span>
                             </div>
                         </div>
 

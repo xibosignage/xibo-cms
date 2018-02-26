@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.8.6', 5, 2, 137);
+('1.8.7', 5, 2, 138);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`, `isSystemNotification`) VALUES
 (1, 'Users', 0, 0, 0),
@@ -329,3 +329,12 @@ INSERT INTO task (taskId, name, class, status, options, schedule, isActive, conf
 INSERT INTO daypart (name, description, isRetired, userid, startTime, endTime, exceptions, isAlways, isCustom) VALUES
   ('Custom', 'User specifies the from/to date', 0, 1, '', '', '', 0, 1),
   ('Always', 'Event runs always', 0, 1, '', '', '', 1, 0);
+
+INSERT INTO `permission` (entityId, groupId, objectId, view, edit, `delete`)
+  SELECT entityId, groupId, dayPartId, 1, 0, 0
+  FROM daypart
+    CROSS JOIN permissionentity
+    CROSS JOIN `group`
+  WHERE entity LIKE '%DayPart'
+        AND IsEveryone = 1
+        AND (isCustom = 1 OR isAlways = 1);
