@@ -141,11 +141,12 @@ class DayPart extends Base
         ];
 
         $dayParts = $this->dayPartFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
-
+        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+        
         foreach ($dayParts as $dayPart) {
             /* @var \Xibo\Entity\DayPart $dayPart */
-            if (in_array('exceptions', $embed)){
-                $dayPart->load();
+            if (!in_array('exceptions', $embed)){
+                $dayPart->excludeProperty('exceptions');
             }
             if ($this->isApi())
                 break;
