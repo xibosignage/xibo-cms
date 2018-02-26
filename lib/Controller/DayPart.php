@@ -149,7 +149,7 @@ class DayPart extends Base
                 $dayPart->excludeProperty('exceptions');
             }
             if ($this->isApi())
-                break;
+                continue;
 
             $dayPart->includeProperty('buttons');
 
