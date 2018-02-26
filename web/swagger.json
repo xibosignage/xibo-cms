@@ -956,6 +956,20 @@
                         "description": "JSON-String to select Data from the Remote DataSet",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "showFilter",
+                        "in": "formData",
+                        "description": "Flag indicating whether this column should present a filter on DataEntry",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "showSort",
+                        "in": "formData",
+                        "description": "Flag indicating whether this column should allow sorting on DataEntry",
+                        "required": true,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -1045,6 +1059,20 @@
                         "description": "JSON-String to select Data from the Remote DataSet",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "showFilter",
+                        "in": "formData",
+                        "description": "Flag indicating whether this column should present a filter on DataEntry",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "showSort",
+                        "in": "formData",
+                        "description": "Flag indicating whether this column should allow sorting on DataEntry",
+                        "required": true,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -1219,6 +1247,48 @@
             }
         },
         "/daypart": {
+            "get": {
+                "tags": [
+                    "dayPart"
+                ],
+                "summary": "Daypart Search",
+                "description": "Search dayparts",
+                "operationId": "dayPartSearch",
+                "parameters": [
+                    {
+                        "name": "dayPartId",
+                        "in": "formData",
+                        "description": "The dayPart ID to Search",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "The name of the dayPart to Search",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "embed",
+                        "in": "formData",
+                        "description": "Embed related data such as exceptions",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/DayPart"
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "tags": [
                     "dayPart"
@@ -3928,6 +3998,13 @@
                         "in": "formData",
                         "description": "The Playlist ID to Search",
                         "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "widgetId",
+                        "in": "formData",
+                        "description": "The widget ID to Search",
+                        "required": false,
                         "type": "integer"
                     }
                 ],
@@ -8008,6 +8085,14 @@
                     "description": "The data field of the remote DataSet as a JSON-String",
                     "type": "string"
                 },
+                "showFilter": {
+                    "description": "Does this column show a filter on the data entry page?",
+                    "type": "string"
+                },
+                "showSort": {
+                    "description": "Does this column allow a sorting on the data entry page?",
+                    "type": "string"
+                },
                 "dataSetColumnType": {
                     "description": "The column type for this Column",
                     "type": "string"
@@ -8042,6 +8127,14 @@
             "properties": {
                 "dayPartId": {
                     "description": "The ID of this Daypart",
+                    "type": "integer"
+                },
+                "isAlways": {
+                    "description": "A readonly flag determining whether this DayPart is always",
+                    "type": "integer"
+                },
+                "isCustom": {
+                    "description": "A readonly flag determining whether this DayPart is custom",
                     "type": "integer"
                 }
             }
@@ -9019,6 +9112,14 @@
                 },
                 "dayPartId": {
                     "description": "The Day Part Id",
+                    "type": "integer"
+                },
+                "isAlways": {
+                    "description": "Is this event an always on event?",
+                    "type": "integer"
+                },
+                "isCustom": {
+                    "description": "Does this event have custom from/to date times?",
                     "type": "integer"
                 },
                 "syncTimezone": {

@@ -128,7 +128,7 @@ class DayPart extends Base
      *      description="successful operation",
      *      @SWG\Schema(
      *          type="array",
-     *          @SWG\Items(ref="#/definitions/Daypart")
+     *          @SWG\Items(ref="#/definitions/DayPart")
      *      )
      *  )
      * )
