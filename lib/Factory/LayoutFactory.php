@@ -946,10 +946,9 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.backgroundzIndex, ";
         $select .= "        layout.schemaVersion, ";
 
-        if ($this->getSanitizer()->getInt('campaignId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('campaignId', $filterBy) !== null) {
             $select .= ' lkcl.displayOrder, ';
-        }
-        else {
+        } else {
             $select .= ' NULL as displayOrder, ';
         }
 
@@ -973,10 +972,14 @@ class LayoutFactory extends BaseFactory
         $body .= "       AND campaign.IsLayoutSpecific = 1";
         $body .= "   INNER JOIN `user` ON `user`.userId = `campaign`.userId ";
 
-        if ($this->getSanitizer()->getInt('campaignId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('campaignId', $filterBy) !== null) {
             // Join Campaign back onto it again
-            $body .= " INNER JOIN `lkcampaignlayout` lkcl ON lkcl.layoutid = layout.layoutid AND lkcl.CampaignID = :campaignId ";
-            $params['campaignId'] = $this->getSanitizer()->getInt('campaignId', 0, $filterBy);
+            $body .= " 
+                INNER JOIN `lkcampaignlayout` lkcl 
+                ON lkcl.layoutid = layout.layoutid 
+                    AND lkcl.CampaignID = :campaignId 
+            ";
+            $params['campaignId'] = $this->getSanitizer()->getInt('campaignId', $filterBy);
         }
 
         if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {

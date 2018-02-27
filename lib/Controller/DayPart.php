@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -93,7 +94,44 @@ class DayPart extends Base
     }
 
     /**
-     * Search
+     *  Search
+     *
+     * @SWG\Get(
+     *  path="/daypart",
+     *  operationId="dayPartSearch",
+     *  tags={"dayPart"},
+     *  summary="Daypart Search",
+     *  description="Search dayparts",
+     *  @SWG\Parameter(
+     *      name="dayPartId",
+     *      in="formData",
+     *      description="The dayPart ID to Search",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="The name of the dayPart to Search",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="embed",
+     *      in="formData",
+     *      description="Embed related data such as exceptions",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/DayPart")
+     *      )
+     *  )
+     * )
      */
     public function grid()
     {
@@ -103,41 +141,47 @@ class DayPart extends Base
         ];
 
         $dayParts = $this->dayPartFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
-
+        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+        
         foreach ($dayParts as $dayPart) {
             /* @var \Xibo\Entity\DayPart $dayPart */
-
+            if (!in_array('exceptions', $embed)){
+                $dayPart->excludeProperty('exceptions');
+            }
             if ($this->isApi())
-                break;
+                continue;
 
             $dayPart->includeProperty('buttons');
 
-            // Default Layout
-            $dayPart->buttons[] = array(
-                'id' => 'daypart_button_edit',
-                'url' => $this->urlFor('daypart.edit.form', ['id' => $dayPart->dayPartId]),
-                'text' => __('Edit')
-            );
-
-            if ($this->getUser()->checkDeleteable($dayPart)) {
+            if ($dayPart->isCustom !== 1 && $dayPart->isAlways !== 1) {
+                // CRUD
                 $dayPart->buttons[] = array(
-                    'id' => 'daypart_button_delete',
-                    'url' => $this->urlFor('daypart.delete.form', ['id' => $dayPart->dayPartId]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('daypart.delete', ['id' => $dayPart->dayPartId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'daypart_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $dayPart->name)
-                    )
+                    'id' => 'daypart_button_edit',
+                    'url' => $this->urlFor('daypart.edit.form', ['id' => $dayPart->dayPartId]),
+                    'text' => __('Edit')
                 );
+
+                if ($this->getUser()->checkDeleteable($dayPart)) {
+                    $dayPart->buttons[] = array(
+                        'id' => 'daypart_button_delete',
+                        'url' => $this->urlFor('daypart.delete.form', ['id' => $dayPart->dayPartId]),
+                        'text' => __('Delete'),
+                        'multi-select' => true,
+                        'dataAttributes' => array(
+                            array('name' => 'commit-url', 'value' => $this->urlFor('daypart.delete', ['id' => $dayPart->dayPartId])),
+                            array('name' => 'commit-method', 'value' => 'delete'),
+                            array('name' => 'id', 'value' => 'daypart_button_delete'),
+                            array('name' => 'text', 'value' => __('Delete')),
+                            array('name' => 'rowtitle', 'value' => $dayPart->name)
+                        )
+                    );
+                }
             }
 
             if ($this->getUser()->checkPermissionsModifyable($dayPart)) {
 
-                $dayPart->buttons[] = ['divider' => true];
+                if (count($dayPart->buttons) > 0)
+                    $dayPart->buttons[] = ['divider' => true];
 
                 // Edit Permissions
                 $dayPart->buttons[] = array(
@@ -177,6 +221,9 @@ class DayPart extends Base
         if (!$this->getUser()->checkEditable($dayPart))
             throw new AccessDeniedException();
 
+        if ($dayPart->isAlways === 1 || $dayPart->isCustom === 1)
+            throw new AccessDeniedException();
+
         $this->getState()->template = 'daypart-form-edit';
         $this->getState()->setData([
             'dayPart' => $dayPart,
@@ -195,6 +242,9 @@ class DayPart extends Base
         $dayPart = $this->dayPartFactory->getById($dayPartId);
 
         if (!$this->getUser()->checkDeleteable($dayPart))
+            throw new AccessDeniedException();
+
+        if ($dayPart->isAlways === 1 || $dayPart->isCustom === 1)
             throw new AccessDeniedException();
 
         // Get a count of schedules for this day part
@@ -284,7 +334,9 @@ class DayPart extends Base
         $dayPart = $this->dayPartFactory->createEmpty();
         $this->handleCommonInputs($dayPart);
 
-        $dayPart->save();
+        $dayPart
+            ->setScheduleFactory($this->scheduleFactory)
+            ->save();
 
         // Return
         $this->getState()->hydrate([
@@ -370,6 +422,8 @@ class DayPart extends Base
      *      @SWG\Schema(ref="#/definitions/DayPart")
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function edit($dayPartId)
     {
@@ -381,8 +435,13 @@ class DayPart extends Base
         if (!$this->getUser()->checkEditable($dayPart))
             throw new AccessDeniedException();
 
+        if ($dayPart->isAlways === 1 || $dayPart->isCustom === 1)
+            throw new AccessDeniedException();
+
         $this->handleCommonInputs($dayPart);
-        $dayPart->save();
+        $dayPart
+            ->setScheduleFactory($this->scheduleFactory)
+            ->save();
 
         // Return
         $this->getState()->hydrate([
@@ -407,7 +466,7 @@ class DayPart extends Base
         $dayPart->endTime = $this->getSanitizer()->getString('endTime');
 
         // Exceptions
-        $exceptionDays = $this->getSanitizer()->getStringArray('exceptionDay');
+        $exceptionDays = $this->getSanitizer()->getStringArray('exceptionDays');
         $exceptionStartTimes = $this->getSanitizer()->getStringArray('exceptionStartTimes');
         $exceptionEndTimes = $this->getSanitizer()->getStringArray('exceptionEndTimes');
 
@@ -471,6 +530,8 @@ class DayPart extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function delete($dayPartId)
     {
@@ -479,7 +540,10 @@ class DayPart extends Base
         if (!$this->getUser()->checkDeleteable($dayPart))
             throw new AccessDeniedException();
 
-        $dayPart->setDateService($this->getDate())->delete();
+        $dayPart
+            ->setDateService($this->getDate())
+            ->setScheduleFactory($this->scheduleFactory)
+            ->delete();
 
         // Return
         $this->getState()->hydrate([

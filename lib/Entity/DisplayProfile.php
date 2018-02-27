@@ -1152,6 +1152,8 @@ class DisplayProfile implements \JsonSerializable
                 'tabs' => [
                     ['id' => 'general', 'name' => __('General')],
                     ['id' => 'timers', 'name' => __('On/Off Time')],
+                    ['id' => 'pictureOptions', 'name' => __('Picture')],
+                    ['id' => 'lockOptions', 'name' => __('Lock')],
                     ['id' => 'advanced', 'name' => __('Advanced')],
                 ],
                 'settings' => [
@@ -1328,6 +1330,28 @@ class DisplayProfile implements \JsonSerializable
                         'fieldType' => 'text',
                         'default' => '{}',
                         'helpText' => __('A JSON object indicating the on/off timers to set'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'pictureOptions',
+                        'tabId' => 'pictureOptions',
+                        'title' => __('Picture Options'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '{}',
+                        'helpText' => __('A JSON object indicating the picture options to set'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'lockOptions',
+                        'tabId' => 'lockOptions',
+                        'title' => __('Lock Options'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '{}',
+                        'helpText' => __('A JSON object indicating the lock options to set'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ]

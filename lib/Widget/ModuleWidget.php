@@ -32,6 +32,7 @@ use Xibo\Entity\User;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
@@ -379,22 +380,56 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Hold a lock on concurrent requests
      *  blocks if the request is locked
-     * @param $key
-     * @param $ttl
-     * @param $wait
-     * @param $tries
+     * @param string|null $key
+     * @param int $ttl seconds
+     * @param int $wait seconds
+     * @param int $tries
+     * @throws XiboException
      */
-    public function concurrentRequestLock($key = null, $ttl = 30, $wait = 5000, $tries = 3)
+    public function concurrentRequestLock($key = null, $ttl = 900, $wait = 5, $tries = 100)
     {
         // If the key is null default to the widgetId
         if ($key === null)
             $key = $this->widget->widgetId;
 
         $this->lock = $this->getPool()->getItem('locks/widget/' . $key);
-        $this->lock->setInvalidationMethod(Invalidation::SLEEP, $wait, $tries);
 
+        // Set the invalidation method to simply return the value (not that we use it, but it gets us a miss on expiry)
+        $this->lock->setInvalidationMethod(Invalidation::VALUE);
+
+        // Get the lock
+        // other requests will wait here until we're done, or we've timed out
         $this->lock->get();
-        $this->lock->lock($ttl);
+
+        // Did we get a lock?
+        // if we're a miss, then we're not already locked
+        if ($this->lock->isMiss()) {
+            // so lock now
+            $this->lock->set(true);
+            $this->lock->expiresAfter($ttl);
+            $this->lock->save();
+
+            //sleep(30);
+        } else {
+            // We are a hit - we must be locked
+            $this->getLog()->debug('LOCK hit for ' . $key);
+
+            // Try again?
+            $tries--;
+
+            if ($tries <= 0) {
+                // We've waited long enough
+                throw new XiboException('Concurrent record locked, time out.');
+            } else {
+                $this->getLog()->debug('Unable to get a lock, trying again. Remaining retries: ' . $tries);
+
+                // Hang about waiting for the lock to be released.
+                sleep($wait);
+
+                // Recursive request (we've decremented the number of tries)
+                $this->concurrentRequestLock($key, $ttl, $wait, $tries);
+            }
+        }
     }
 
     /**
@@ -403,10 +438,10 @@ abstract class ModuleWidget implements ModuleInterface
     public function concurrentRequestRelease()
     {
         if ($this->lock !== null) {
-            $this->lock->set(time());
+            // Release lock
+            $this->lock->set(false);
             $this->lock->expiresAfter(1); // Expire straight away
 
-            // Release lock
             $this->getPool()->saveDeferred($this->lock);
         }
     }
@@ -1182,11 +1217,17 @@ abstract class ModuleWidget implements ModuleInterface
             foreach (glob(PROJECT_ROOT . '/modules/' . $this->module->type . '/*.template.json') as $template) {
                 // Read the contents, json_decode and add to the array
                 $template = json_decode(file_get_contents($template), true);
-                $template['fileName'] = $template['image'];
 
-                if ($loadImage) {
-                    // We ltrim this because the control is expecting a relative URL
-                    $template['image'] = ltrim($this->getApp()->urlFor('module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]), '/');
+                if (isset($template['image'])) {
+                    $template['fileName'] = $template['image'];
+
+                    if ($loadImage) {
+                        // We ltrim this because the control is expecting a relative URL
+                        $template['image'] = ltrim($this->getApp()->urlFor('module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]), '/');
+                    }
+                } else {
+                    $template['fileName'] = '';
+                    $template['image'] = '';
                 }
 
                 $this->module->settings['templates'][] = $template;

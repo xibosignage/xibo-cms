@@ -28,4 +28,5 @@ RewriteRule ^ maint/index.php [QSA,L]
 
 # all others - i.e. web
 RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.php [QSA,L]

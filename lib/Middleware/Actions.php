@@ -111,6 +111,16 @@ class Actions extends Middleware
 
                         $notifications[] = $factory->create(__('There is a problem with this installation. "install.php" should be deleted.'));
                         $extraNotifications++;
+
+                        // Test for web in the URL.
+                        $url = $app->request()->getUrl() . $app->request()->getPathInfo();
+
+                        if (!Environment::checkUrl($url)) {
+                            $app->logService->notice('Suspicious URL detected - it is very unlikely that /web/ should be in the URL. URL is ' . $url);
+
+                            $notifications[] = $factory->create(__('CMS configuration warning, it is very unlikely that /web/ should be in the URL. This usually means that the DocumentRoot of the web server is wrong and may put your CMS at risk if not corrected.'));
+                            $extraNotifications++;
+                        }
                     }
 
                     // Language match?

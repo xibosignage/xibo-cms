@@ -165,6 +165,8 @@ echo __('Display Screenshot Default Size');
 echo __('Latest News URL');
 echo __('RSS/Atom Feed to be displayed on the Status Dashboard');
 echo __('Lock the Display Name to the device name provided by the Player?');
+echo __('Sending email name');
+echo __('Mail will be sent under this name');
 
 // Transitions
 echo __('Fade In');

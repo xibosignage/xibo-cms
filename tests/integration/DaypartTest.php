@@ -18,15 +18,20 @@ use Xibo\Tests\LocalWebTestCase;
 
 class DaypartTest extends LocalWebTestCase
 {
+    /** @var XiboDaypart[] */
 	protected $startDayparts;
+
     /**
      * setUp - called before every test automatically
      */
     public function setup()
     {  
         parent::setup();
-        $this->startDayParts = (new XiboDaypart($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+        $this->startDayparts = (new XiboDaypart($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+
+        $this->getLogger()->debug('There are ' . count($this->startDayparts) . ' dayparts at the start of the test');
     }
+
     /**
      * tearDown - called after every test automatically
      */

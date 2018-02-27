@@ -33,6 +33,7 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Helper\Environment;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -58,6 +59,9 @@ class DataSetFactory extends BaseFactory
     /** @var  DisplayFactory */
     private $displayFactory;
 
+    /** @var DateServiceInterface */
+    private $date;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -70,8 +74,9 @@ class DataSetFactory extends BaseFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param PermissionFactory $permissionFactory
      * @param DisplayFactory $displayFactory
+     * @param DateServiceInterface $date
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool, $dataSetColumnFactory, $permissionFactory, $displayFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool, $dataSetColumnFactory, $permissionFactory, $displayFactory, $date)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
@@ -80,6 +85,7 @@ class DataSetFactory extends BaseFactory
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->permissionFactory = $permissionFactory;
         $this->displayFactory = $displayFactory;
+        $this->date = $date;
     }
 
     /**
@@ -104,7 +110,8 @@ class DataSetFactory extends BaseFactory
             $this,
             $this->dataSetColumnFactory,
             $this->permissionFactory,
-            $this->displayFactory
+            $this->displayFactory,
+            $this->date
         );
     }
 

@@ -20,6 +20,7 @@ use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -206,6 +207,9 @@ class DataSet implements \JsonSerializable
     /** @var  DisplayFactory */
     private $displayFactory;
 
+    /** @var DateServiceInterface */
+    private $date;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -217,8 +221,9 @@ class DataSet implements \JsonSerializable
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param PermissionFactory $permissionFactory
      * @param DisplayFactory $displayFactory
+     * @param DateServiceInterface $date
      */
-    public function __construct($store, $log, $sanitizer, $config, $pool, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory)
+    public function __construct($store, $log, $sanitizer, $config, $pool, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory, $date)
     {
         $this->setCommonDependencies($store, $log);
         $this->sanitizer = $sanitizer;
@@ -228,6 +233,7 @@ class DataSet implements \JsonSerializable
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->permissionFactory = $permissionFactory;
         $this->displayFactory = $displayFactory;
+        $this->date = $date;
     }
 
     /**
@@ -388,6 +394,9 @@ class DataSet implements \JsonSerializable
         // Keep track of the columns we are allowed to order by
         $allowedOrderCols = ['id'];
 
+        // Are there any client side formulas
+        $clientSideFormula = [];
+
         // Select (columns)
         foreach ($this->getColumn() as $column) {
             /* @var DataSetColumn $column */
@@ -398,6 +407,13 @@ class DataSet implements \JsonSerializable
 
             // Formula column?
             if ($column->dataSetColumnTypeId == 2) {
+
+                // Is this a client side column?
+                if (substr($column->formula, 0, 1) === '$') {
+                    $clientSideFormula[] = $column;
+                    continue;
+                }
+
                 $formula = str_replace($this->blackList, '', htmlspecialchars_decode($column->formula, ENT_QUOTES));
                 $formula = str_replace('[DisplayId]', $displayId, $formula);
 
@@ -472,8 +488,6 @@ class DataSet implements \JsonSerializable
 
         $sql = $select . $body . $order . $limit;
 
-
-
         $data = $this->getStore()->select($sql, $params);
 
         // If there are limits run some SQL to work out the full payload of rows
@@ -482,7 +496,34 @@ class DataSet implements \JsonSerializable
             $this->countLast = intval($results[0]['total']);
         }
 
-        return $data;
+        // Are there any client side formulas?
+        if (count($clientSideFormula) > 0) {
+            $renderedData = [];
+            foreach ($data as $item) {
+                foreach ($clientSideFormula as $column) {
+                    // Run the formula and add the resulting value to the list
+                    $value = null;
+                    try {
+                        if (substr($column->formula, 0, strlen('$dateFormat(')) === '$dateFormat(') {
+                            // Pull out the column name and date format
+                            $details = explode(',', str_replace(')', '', str_replace('$dateFormat(', '', $column->formula)));
+
+                            $value = $this->date->parse($item[$details[0]])->format($details[1]);
+                        }
+                    } catch (\Exception $e) {
+                        $this->getLog()->error('DataSet client side formula error in dataSetId ' . $this->dataSetId . ' with column formula ' . $column->formula);
+                    }
+
+                    $item[$column->heading] = $value;
+                }
+
+                $renderedData[] = $item;
+            }
+        } else {
+            $renderedData = $data;
+        }
+
+        return $renderedData;
     }
 
     /**
