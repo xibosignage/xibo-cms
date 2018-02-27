@@ -80,6 +80,6 @@ class DisplayGroupClosureIndexToNonUnique extends AbstractMigration
 
         $indexes = $this->fetchAll($sql);
 
-        return (count($indexes) === count($columns)) ? $indexes['INDEX_NAME'] : false;
+        return (count($indexes) === count($columns)) ? $indexes[0]['INDEX_NAME'] : false;
     }
 }
