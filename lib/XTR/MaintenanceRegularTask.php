@@ -94,7 +94,7 @@ class MaintenanceRegularTask implements TaskInterface
     {
         $this->runMessage .= '## ' . __('Email Alerts') . PHP_EOL;
 
-        $this->displayController->validateDisplays($this->displayFactory->query())
+        $this->displayController->validateDisplays($this->displayFactory->query());
 
         $this->appendRunMessage(__('Done'));
     }
