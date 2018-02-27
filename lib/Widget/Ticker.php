@@ -615,6 +615,9 @@ class Ticker extends ModuleWidget
      */
     public function getResource($displayId = 0)
     {
+        // Clear all linked media.
+        $this->clearMedia();
+        
         // Load in the template
         $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);

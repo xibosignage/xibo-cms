@@ -721,6 +721,9 @@ class Twitter extends TwitterBase
             return '';
         }
 
+        // Clear all linked media.
+        $this->clearMedia();
+
         // Lock the request
         $this->concurrentRequestLock();
 
