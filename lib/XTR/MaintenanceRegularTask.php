@@ -61,6 +61,7 @@ class MaintenanceRegularTask implements TaskInterface
         $this->notificationFactory = $container->get('notificationFactory');
         $this->userGroupFactory = $container->get('userGroupFactory');
         $this->layoutFactory = $container->get('layoutFactory');
+        $this->playlistFactory = $container->get('playlistFactory');
         return $this;
     }
 

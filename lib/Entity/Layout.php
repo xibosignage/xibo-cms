@@ -640,6 +640,9 @@ class Layout implements \JsonSerializable
             'defaultLayoutId' => $this->config->GetSetting('DEFAULT_LAYOUT')
         ]);
 
+        // Remove any display group links
+        $this->getStore()->update('DELETE FROM `lklayoutdisplaygroup` WHERE layoutId = :layoutId', ['layoutId' => $this->layoutId]);
+
         // Remove the Layout (now it is orphaned it can be deleted safely)
         $this->getStore()->update('DELETE FROM `layout` WHERE layoutid = :layoutId', array('layoutId' => $this->layoutId));
 

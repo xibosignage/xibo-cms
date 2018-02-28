@@ -59,7 +59,7 @@ class LayoutInCampaignStatusTest extends LocalWebTestCase
         $this->layout = $this->createLayout();
 
         // Create a text widget on the Layout
-        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $this->layout->regions[0]->playlists[0]['playlistId'], [
+        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $this->layout->regions[0]->regionPlaylist['playlistId'], [
             'text' => 'Widget A',
             'duration' => 100,
             'useDuration' => 1

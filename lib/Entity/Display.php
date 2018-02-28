@@ -703,7 +703,7 @@ class Display implements \JsonSerializable
             'cidr' => $this->cidr,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
-            'displayProfileId' => $this->displayProfileId,
+            'displayProfileId' => ($this->displayProfileId == null) ? null : $this->displayProfileId,
             'lastAccessed' => $this->lastAccessed,
             'loggedIn' => $this->loggedIn,
             'clientAddress' => $this->clientAddress,

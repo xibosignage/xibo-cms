@@ -829,6 +829,9 @@ class Widget implements \JsonSerializable
             `displayOrder` = :displayOrder,
             `useDuration` = :useDuration,
             `calculatedDuration` = :calculatedDuration,
+            `fromDt` = :fromDt,
+            `toDt` = :toDt
+           WHERE `widgetId` = :widgetId
         ';
 
         $params = [
@@ -839,15 +842,11 @@ class Widget implements \JsonSerializable
             'widgetId' => $this->widgetId,
             'displayOrder' => $this->displayOrder,
             'useDuration' => $this->useDuration,
-            'calculatedDuration' => $this->calculatedDuration
+            'calculatedDuration' => $this->calculatedDuration,
+            'fromDt' => ($this->fromDt == null) ? self::$DATE_MIN : $this->fromDt,
+            'toDt' => ($this->toDt == null) ? self::$DATE_MAX : $this->toDt
         ];
 
-            $sql .= ', `fromDt` = :fromDt, `toDt` = :toDt ';
-
-            $params['fromDt'] = ($this->fromDt == null) ? self::$DATE_MIN : $this->fromDt;
-            $params['toDt'] = ($this->toDt == null) ? self::$DATE_MAX : $this->toDt;
-
-        $sql .= ' WHERE `widgetId` = :widgetId ';
         $this->getStore()->update($sql, $params);
     }
 
