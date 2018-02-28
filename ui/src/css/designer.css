@@ -1,0 +1,72 @@
+#layout-editor  {
+    background: lightblue;
+}
+
+/* Layout top region */
+#layout-editor #layout-top-region {
+    background: gray;
+}
+
+#layout-editor #layout-top-region #layout-navigator {
+    background: black;
+    min-height: 200px;
+    padding: 0;
+}
+
+#layout-editor #layout-top-region #layout-timeline {
+    background: cornflowerblue;
+}
+
+/* Layout center region */
+#layout-editor #layout-center-region {
+    background: lightgray;
+}
+
+#layout-editor #layout-center-region #layout-viewer {
+    height: 450px;
+    background: lightcyan;
+}
+
+#layout-editor #layout-center-region #layout-property-panel {
+    background: lightpink;
+    height: 500px;
+}
+
+
+/* Layout Navigator - Edit Mode */
+#layout-editor #layout-navigator-edit {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(35, 35, 35, 0.9); /* Black w/ opacity */
+}
+
+#layout-editor #layout-navigator-edit-content {
+    width: 90%;
+    background: black;
+    height: 90%;
+    top: 3%;
+    left: 5%;
+    position: relative;
+}
+
+#layout-editor #layout-navigator-edit #layout-navigator-edit-navbar {
+    padding: 5px;
+    background: gray;
+    width: 90%;
+    left: 5%;
+}
+
+/* Layout bottom navbar */
+#layout-editor #layout-bottom-navbar {
+    min-height: 40px;
+    padding: 3px 0 0 190px;
+    z-index: 0;
+    background: gray;
+}

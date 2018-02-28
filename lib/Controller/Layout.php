@@ -682,7 +682,7 @@ class Layout extends Base
                 continue;
 
             $layout->includeProperty('buttons');
-            $layout->excludeProperty('regions');
+            //$layout->excludeProperty('regions');
 
             $layout->thumbnail = '';
 

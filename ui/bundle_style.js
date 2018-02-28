@@ -38,10 +38,10 @@ require('datatables.net-buttons-dt/css/buttons.dataTables.min.css');
 require('timepicker/jquery.timepicker.min.css');
 
 //--- Xibo style files ---
-require('./src/local/css/dashboard.css');
-require('./src/local/css/timeline.css');
-require('./src/local/css/xibo.css');
-require('./src/local/css/calendar.css');
+require('./src/css/dashboard.css');
+require('./src/css/timeline.css');
+require('./src/css/xibo.css');
+require('./src/css/calendar.css');
 
 require('./src/vendor/calendar/css/calendar.css');
 require('./src/vendor/jquery-file-upload/css/jquery.fileupload.css');

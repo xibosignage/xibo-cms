@@ -8,8 +8,6 @@
     <meta name="token" content="{{ csrfToken }}"/>
     <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
 
-    <link href="{{ theme.uri("libraries/bootstrap/css/bootstrap.min.css") }}" rel="stylesheet" media="screen">
-    <link href="{{ theme.uri("libraries/bootstrap/css/bootstrap-theme.min.css") }}" rel="stylesheet" media="screen">
     <!-- Import CSS bundle from dist -->
     <script src="{{ theme.rootUri() }}dist/style.bundle.min.js"></script>
     
@@ -72,9 +70,6 @@
             | <a id="about-link" class="XiboFormButton" href="{{ urlFor("about") }}" title="{% trans "About" %}">{% trans "About" %}</a>
         </p>
     </div> <!-- /container -->
-    <script src="{{ theme.uri("libraries/jquery/jquery-1.11.1.min.js") }}"></script>
-    <script src="{{ theme.uri("libraries/bootstrap/js/bootstrap.min.js") }}"></script>
-    
     <!-- Import JS bundle from dist -->
     <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js"></script>
 </body>
