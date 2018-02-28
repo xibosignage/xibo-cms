@@ -445,6 +445,7 @@ class Layout implements \JsonSerializable
     /**
      * Load this Layout
      * @param array $options
+     * @throws XiboException
      */
     public function load($options = [])
     {
@@ -488,6 +489,7 @@ class Layout implements \JsonSerializable
     /**
      * Load Playlists
      * @param array $options
+     * @throws XiboException
      */
     public function loadPlaylists($options = [])
     {
@@ -1268,7 +1270,7 @@ class Layout implements \JsonSerializable
             'retired' => $this->retired,
             'width' => $this->width,
             'height' => $this->height,
-            'backgroundImageId' => $this->backgroundImageId,
+            'backgroundImageId' => ($this->backgroundImageId == null) ? null : $this->backgroundImageId,
             'backgroundColor' => $this->backgroundColor,
             'backgroundzIndex' => $this->backgroundzIndex,
             'status' => $this->status,

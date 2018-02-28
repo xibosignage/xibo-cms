@@ -969,6 +969,8 @@ class Layout extends Base
      *      )
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function copy($layoutId)
     {

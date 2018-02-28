@@ -181,10 +181,12 @@ class Region implements \JsonSerializable
      */
     public function __clone()
     {
-        // Clear the regionId, keep the same Playlist assigned.
+        // Clear the regionId, clone the Playlist
         $this->regionId = null;
         $this->hash = null;
         $this->permissions = [];
+
+        $this->regionPlaylist = clone $this->regionPlaylist;
 
         $this->regionOptions = array_map(function ($object) { return clone $object; }, $this->regionOptions);
     }
