@@ -617,7 +617,7 @@ class Ticker extends ModuleWidget
     {
         // Clear all linked media.
         $this->clearMedia();
-        
+
         // Load in the template
         $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
@@ -710,6 +710,7 @@ class Ticker extends ModuleWidget
                 $items[] = $noDataMessage;
             } else {
                 $this->getLog()->error('Request failed for dataSet id=%d. Widget=%d. Due to No Records Found', $this->getOption('dataSetId'), $this->getWidgetId());
+                $this->concurrentRequestRelease();
                 return '';
             }
         }

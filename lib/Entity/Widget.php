@@ -248,6 +248,7 @@ class Widget implements \JsonSerializable
      */
     private function mediaHash()
     {
+        sort($this->mediaIds);
         return md5(implode(',', $this->mediaIds));
     }
 

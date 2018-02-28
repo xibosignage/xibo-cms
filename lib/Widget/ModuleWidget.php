@@ -378,7 +378,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @param int $tries
      * @throws XiboException
      */
-    public function concurrentRequestLock($key = null, $ttl = 900, $wait = 5, $tries = 100)
+    public function concurrentRequestLock($key = null, $ttl = 900, $wait = 2, $tries = 5)
     {
         // If the key is null default to the widgetId
         if ($key === null)
@@ -387,15 +387,18 @@ abstract class ModuleWidget implements ModuleInterface
         $this->lock = $this->getPool()->getItem('locks/widget/' . $key);
 
         // Set the invalidation method to simply return the value (not that we use it, but it gets us a miss on expiry)
-        $this->lock->setInvalidationMethod(Invalidation::VALUE);
+        // isMiss() returns false if the item is missing or expired, no exceptions.
+        $this->lock->setInvalidationMethod(Invalidation::NONE);
 
         // Get the lock
         // other requests will wait here until we're done, or we've timed out
-        $this->lock->get();
+        $locked = $this->lock->get();
 
         // Did we get a lock?
         // if we're a miss, then we're not already locked
-        if ($this->lock->isMiss()) {
+        if ($this->lock->isMiss() || $locked === false) {
+            $this->getLog()->debug('Lock miss or false. Locking for ' . $ttl . ' seconds. $locked is '. var_export($locked, true) . ', widgetId = ' . $this->widget->widgetId);
+
             // so lock now
             $this->lock->set(true);
             $this->lock->expiresAfter($ttl);
@@ -404,7 +407,7 @@ abstract class ModuleWidget implements ModuleInterface
             //sleep(30);
         } else {
             // We are a hit - we must be locked
-            $this->getLog()->debug('LOCK hit for ' . $key);
+            $this->getLog()->debug('LOCK hit for ' . $key . ' expires ' . $this->lock->getExpiration()->format('Y-m-d H:i:s') . ', created ' . $this->lock->getCreation()->format('Y-m-d H:i:s'));
 
             // Try again?
             $tries--;
@@ -430,11 +433,13 @@ abstract class ModuleWidget implements ModuleInterface
     public function concurrentRequestRelease()
     {
         if ($this->lock !== null) {
+            $this->getLog()->debug('Releasing lock ' . $this->lock->getKey() . ' widgetId ' . $this->widget->widgetId);
+
             // Release lock
             $this->lock->set(false);
-            $this->lock->expiresAfter(1); // Expire straight away
+            $this->lock->expiresAfter(10); // Expire straight away (but give it time to save the thing)
 
-            $this->getPool()->saveDeferred($this->lock);
+            $this->getPool()->save($this->lock);
         }
     }
 

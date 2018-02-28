@@ -576,8 +576,10 @@ class TwitterMetro extends TwitterBase
         $templateData = $this->getTemplateData();
         
         // Return empty string if there are no items to show.
-        if (count($items) == 0)
+        if (count($items) == 0) {
+            $this->concurrentRequestRelease();
             return '';
+        }
 
         $options = array(
             'type' => $this->getModuleType(),
