@@ -1,15 +1,31 @@
 <?php
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (ScheduleTest.php)
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2015-2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Tests\Integration;
+
 use Xibo\OAuth2\Client\Entity\XiboCampaign;
 use Xibo\OAuth2\Client\Entity\XiboCommand;
 use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboSchedule;
+use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
@@ -18,6 +34,8 @@ use Xibo\Tests\LocalWebTestCase;
  */
 class ScheduleTest extends LocalWebTestCase
 {
+    use LayoutHelperTrait;
+
     protected $route = '/schedule';
     
     protected $startCommands;
@@ -166,7 +184,8 @@ class ScheduleTest extends LocalWebTestCase
             ]);
         } else {
             # Create layout
-            $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', 9);
+            $layout = $this->createLayout();
+
             # Create new event with data from provideSuccessCasesCampaign where isCampaign is set to false
             $response = $this->client->post($this->route, [
                 'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
@@ -260,8 +279,10 @@ class ScheduleTest extends LocalWebTestCase
     {
         # Create new dispay group
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
+
         # Create layout
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', 9);
+        $layout = $this->createLayout();
+
         # Create new event with data from provideSuccessCasesOverlay
             $response = $this->client->post($this->route, [
                 'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
