@@ -8,9 +8,10 @@
  * @param {string} [options.backgroundColor="#555"] - Color for the background
  */
 var Region = function(id, data, {backgroundColor = '#555'} = {}) {
-    this.id = id;
+    this.id = 'region_' + id;
     this.data = data;
     this.backgroundColor = backgroundColor;
+    this.selected = false;
 
     this.containerProperties = {
         width: this.data.width,

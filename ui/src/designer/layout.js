@@ -7,7 +7,7 @@
  */
 var Layout = function(id, data) {
 
-    this.id = id;
+    this.id = 'layout_' + id;
     this.data = data;
     this.regions = {};
 
@@ -31,7 +31,6 @@ Layout.prototype.scaleTo = function(container) {
     var containerHeight = container.DOMObject.height();
     var containerSizeRatio = containerWidth / containerHeight;
     var containerPadding = Math.min(containerWidth, containerHeight) * container.paddingPercentage;
-
 
     if(layoutSizeRatio > containerSizeRatio) { // If the layout W/H is bigger than the container
         // Calculate width and height 

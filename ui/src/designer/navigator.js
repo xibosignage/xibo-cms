@@ -7,12 +7,10 @@
  * @param {bool} [options.edit = false] - Edit mode enable flag
  * @param {number} [options.padding = 0.05] - Padding for the navigator
  */
-var Navigator = function( container, { edit = false, padding = 0.05 } = {} ) {
+var Navigator = function(container, {edit = false, padding = 0.05} = {}) {
 
     this.editMode = edit;
-
     this.DOMObject = container;
-    
     this.paddingPercentage = padding;
 };
 
@@ -23,22 +21,20 @@ var Navigator = function( container, { edit = false, padding = 0.05 } = {} ) {
  * @param {function} layoutTemplate - the layout handlebar template function
  */
 Navigator.prototype.render = function(layout, layoutTemplate) {
-    console.log('Navigator - render');
-
     // Apply navigator scale to the layout
     layout.scaleTo(this);
 
     // Regions Scalling
     for(var region in layout.regions) {
+        layout.regions[region].selectedFlag = (layout.regions[region].selected) ? 'selected-region' : '';
         layout.regions[region].scaleTo(layout.containerProperties.scaleToTheOriginal);
     }
-    
 
     // Get the background image ( and resize it ) or color
     if(layout.data.backgroundImageId == null) {
         layout.backgroundCss = layout.data.backgroundColor;
     } else {
-        layout.backgroundCss = "url('/layout/background/" + layout.id + "?preview=1&width=" + layout.containerProperties.width + "&height=" + layout.containerProperties.height + "&proportional=0&layoutBackgroundId=" + layout.data.backgroundImageId + "') top center no-repeat; background-color: " + layout.data.backgroundColor;
+        layout.backgroundCss = "url('/layout/background/" + layout.data.layoutId + "?preview=1&width=" + layout.containerProperties.width + "&height=" + layout.containerProperties.height + "&proportional=0&layoutBackgroundId=" + layout.data.backgroundImageId + "') top center no-repeat; background-color: " + layout.data.backgroundColor;
     }
 
     // Compile layout template with data
@@ -49,7 +45,7 @@ Navigator.prototype.render = function(layout, layoutTemplate) {
 
     // Make regions draggable and resizable if navigator's on edit mode
     // Get layout container
-    var layoutContainer = this.DOMObject.find('#layout_' + layout.id);
+    var layoutContainer = this.DOMObject.find('#layout_' + layout.data.layoutId);
 
     // Find all the regions and enable drag and resize
     this.DOMObject.find('#regions .region').resizable({
@@ -60,8 +56,17 @@ Navigator.prototype.render = function(layout, layoutTemplate) {
         disabled: !this.editMode
     }).on("resizestop dragstop",
         function(event, ui) {
-            layout.regions[$(this).data('regionId')].saveTransformation($(this).width(), $(this).height(), $(this).position().top, $(this).position().left, layout.containerProperties.scaleToTheOriginal);
+            layout.regions[$(this).attr('id')].saveTransformation($(this).width(), $(this).height(), $(this).position().top, $(this).position().left, layout.containerProperties.scaleToTheOriginal);
+        }
+    );
+
+    // Enable hover and select for each layout/region
+    if(!this.editMode) {
+        this.DOMObject.find('.selectable').click(function(e) {
+            e.stopPropagation();
+            selectObject($(this));
         });
+    }
 }
 
 module.exports = Navigator;

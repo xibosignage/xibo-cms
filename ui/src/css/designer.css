@@ -32,7 +32,6 @@
     height: 500px;
 }
 
-
 /* Layout Navigator - Edit Mode */
 #layout-editor #layout-navigator-edit {
     display: none; /* Hidden by default */
@@ -61,6 +60,21 @@
     background: gray;
     width: 90%;
     left: 5%;
+}
+
+/* Layout object selection */
+#layout-editor #layout-navigator .region.selected-region {
+    background: #00fff9 !important;
+}
+
+#layout-editor #layout-navigator .region.selected-widget,
+#layout-editor #layout-navigator .widget.selected-widget {
+    background: #8bc34a !important;
+}
+
+#layout-editor .region:hover,
+#layout-editor .widget:hover {
+    background: #cfcfcf !important;
 }
 
 /* Layout bottom navbar */

@@ -1,4 +1,4 @@
-<div id="layout_{{ id }}" style="position:relative; 
+<div id="{{ id }}" data-type="layout" class="layout selectable"  style="position:relative; 
         width: {{ containerProperties.width }}px; 
         height: {{ containerProperties.height }}px; 
         top: {{ containerProperties.top }}px;
@@ -6,7 +6,7 @@
         background: {{ backgroundCss }};">
     <div id="regions">
         {{#each regions}}
-            {{> region-template}}
+            {{> navigator-region}}
         {{/each}}
     </div>
 </div>

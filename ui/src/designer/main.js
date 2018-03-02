@@ -19,16 +19,16 @@
  */
 
 // Include handlebars templates
-const designerMainTemplate = require('../templates/designer-template.hbs');
-const layoutTemplate = require('../templates/layout-template.hbs');
-const regionTemplate = require('../templates/region-template.hbs');
-const messageTemplate = require('../templates/message-template.hbs');
+const designerMainTemplate = require('../templates/designer.hbs');
+const navigatorLayoutTemplate = require('../templates/navigator-layout.hbs');
+const navigatorRegionTemplate = require('../templates/navigator-region.hbs');
+const messageTemplate = require('../templates/message.hbs');
 
 // Include modules
-const Navigator = require('./navigator.js');
 const Region = require('./region.js');
 const Layout = require('./layout.js');
 const Widget = require('./widget.js');
+const Navigator = require('./navigator.js');
 
 // Include CSS
 require('../css/designer.css');
@@ -42,6 +42,9 @@ var layout = {};
 
 // Designer DOM div
 var designerDiv = $('#layout-editor');
+
+// Selected object
+var selectedObject = {};
 
 // Load Layout and build app structure
 $(document).ready(function() {
@@ -65,12 +68,12 @@ $(document).ready(function() {
                 // Create regions and add them to the layout
                 for(var region in data.regions) {
                     var newRegion = new Region(
-                        data.regions[region].regionId, 
+                        data.regions[region].regionId,
                         data.regions[region]
                     );
-                    
+
                     // Push Region to the Layout region array
-                    layout.regions[data.regions[region].regionId] = newRegion;
+                    layout.regions[newRegion.id] = newRegion;
                 }
 
                 // Initialize navigator
@@ -81,6 +84,9 @@ $(document).ready(function() {
 
                 // Render navigator
                 renderContainer(navigator);
+
+                // Default selected object is the layout
+                selectObject(designerDiv.find('#layout_' + layoutId));
             }
         })
         .fail(function(data) {
@@ -97,49 +103,103 @@ $(document).ready(function() {
         });
 
     // Button actions
-    $('#refreshDesigner').click(function() {
+    designerDiv.find('#refreshDesigner').click(function() {
         refreshDesigner();
     });
 
-    $('#layout-navigator-edit-navbar .close-button').click(function() {
+    designerDiv.find('#layout-navigator-edit-navbar .close-button').click(function() {
         toggleNavigatorEditing(false);
     });
 
-    $('#enableNavigatorEditMode, #layout-navigator').click(function() {
+    designerDiv.find('#enableNavigatorEditMode').click(function() {
         toggleNavigatorEditing(true);
     });
 
-    $('#layout-navigator-edit').click(function(event) {
+    designerDiv.find('#layout-navigator-edit').click(function(event) {
         if(event.target.id == 'layout-navigator-edit') {
             toggleNavigatorEditing(false);
         }
     });
-    
+
     // Refresh the designer render on window resize
-    $(window).resize($.debounce(500,function() {
+    $(window).resize($.debounce(500, function() {
         refreshDesigner();
     }));
 });
 
 
 /**
- * Refresh designer
+ * Select a layout object (layout/region/widget)
+ * @param  {object} obj - Object to be selected
  */
-var refreshDesigner = function() {
-    console.log('Main - refreshDesigner');
+window.selectObject = function(obj) {
 
-    renderContainer(navigator);
-    renderContainer(navigatorEdit);
+    var newSelectedId = obj.attr('id');
+    var newSelectedType = obj.data('type');
+
+    var oldSelectedId = selectedObject.id;
+    var oldSelectedType = selectedObject.type;
+
+    console.log('Old selected: ' + oldSelectedId + ' - ' + oldSelectedType);
+
+    // Unselect the previous selected object
+    switch(selectedObject.type) {
+        case 'region':
+            layout.regions[selectedObject.id].selected = false;
+            break;
+
+        case 'widget':
+            console.log('To be implemented!');
+            break;
+
+        default:
+            break;
+    }
+    
+    // Set to the default object
+    selectedObject = layout;
+    selectedObject.type = 'layout';
+
+    // If the selected object was different from the previous, select a new one
+    if(oldSelectedId != newSelectedId) {
+
+        // Save the new selected object
+        if(newSelectedType === 'region') {
+            layout.regions[newSelectedId].selected = true;
+            selectedObject = layout.regions[newSelectedId];
+        } else if(newSelectedType === 'widget') {
+            console.log('To be implemented!');
+        }
+
+        selectedObject.type = newSelectedType;
+    }
+
+    // TODO - Output selected object properties on PROPERTIES container
+    designerDiv.find('#layout-property-panel').html(
+        '<h2>id: ' + selectedObject.id + '</h2>' +
+        '<h2>type: ' + selectedObject.type + '</h2>'
+    );
+
+    // Refresh the designer containers
+    this.refreshDesigner();
 }
 
 /**
- * Refresh container
+ * Refresh designer
  */
-var renderContainer = function(container) {
-    console.log('Main - renderContainer');
+window.refreshDesigner = function() {
+    this.renderContainer(navigator);
+    this.renderContainer(navigatorEdit);
+    this.renderContainer(timeline);
+}
 
-    if( !jQuery.isEmptyObject(container) ) {
-        container.render(layout, layoutTemplate);
+/**
+ * Render layout structure to container, if it exists
+ * @param {object} container - Container for the layout to be rendered
+ */
+window.renderContainer = function(container) {
+    if(!jQuery.isEmptyObject(container)) {
+        container.render(layout, navigatorLayoutTemplate);
     }
 }
 
@@ -147,10 +207,8 @@ var renderContainer = function(container) {
  * Toggle editing functionality on Navigator
  * @param {boolean} enable - flag to toggle the editing
  */
-var toggleNavigatorEditing = function(enable) {
-    console.log('Main - toggleNavigatorEditing: ' + enable);
-
-    if( enable ) {
+window.toggleNavigatorEditing = function(enable) {
+    if(enable) {
         // Create a new navigator instance
         navigatorEdit = new Navigator(
             designerDiv.find('#layout-navigator-edit-content'),
