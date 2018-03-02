@@ -695,7 +695,7 @@ class Soap
 
         // Set any remaining required files to have 0 bytes requested (as we've generated a new nonce)
         try {
-            $this->getStore()->update('UPDATE `requiredfile` SET bytesRequested = 0 WHERE displayId = :displayId', [
+            $this->getStore()->updateWithDeadlockLoop('UPDATE `requiredfile` SET bytesRequested = 0 WHERE displayId = :displayId', [
                 'displayId' => $this->display->displayId
             ]);
         } catch (DeadlockException $deadlockException) {
