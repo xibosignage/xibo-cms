@@ -615,9 +615,6 @@ class Ticker extends ModuleWidget
      */
     public function getResource($displayId = 0)
     {
-        // Clear all linked media.
-        $this->clearMedia();
-
         // Load in the template
         $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
@@ -710,7 +707,6 @@ class Ticker extends ModuleWidget
                 $items[] = $noDataMessage;
             } else {
                 $this->getLog()->error('Request failed for dataSet id=%d. Widget=%d. Due to No Records Found', $this->getOption('dataSetId'), $this->getWidgetId());
-                $this->concurrentRequestRelease();
                 return '';
             }
         }
@@ -785,12 +781,6 @@ class Ticker extends ModuleWidget
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        // Update and save widget if we've changed our assignments.
-        if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
-
-        $this->concurrentRequestRelease();
-
         return $this->renderTemplate($data);
     }
 
@@ -808,9 +798,6 @@ class Ticker extends ModuleWidget
         // Create a key to use as a caching key for this item.
         // the rendered feed will be cached, so it is important the key covers all options.
         $feedUrl = urldecode($this->getOption('uri'));
-
-        // Lock this entire request
-        $this->concurrentRequestLock(md5($feedUrl));
 
         /** @var \Stash\Item $cache */
         $cache = $this->getPool()->getItem($this->makeCacheKey(md5($feedUrl)));
@@ -888,11 +875,11 @@ class Ticker extends ModuleWidget
             // Allowable attributes
             $clientConfig = new Config();
 
-            if ($this->getOption('allowedAttributes') != null) {
-                // need a sensible way to set this
-                // https://github.com/fguillot/picoFeed/issues/196
+            // need a sensible way to set this
+            // https://github.com/fguillot/picoFeed/issues/196
+            //if ($this->getOption('allowedAttributes') != null) {
                 //$clientConfig->setFilterWhitelistedTags(explode(',', $this->getOption('allowedAttributes')));
-            }
+            //}
 
             // Get the feed parser
             $reader = new Reader($clientConfig);
@@ -1137,9 +1124,6 @@ class Ticker extends ModuleWidget
         $dataSetId = $this->getOption('dataSetId');
         $upperLimit = $this->getOption('upperLimit');
         $lowerLimit = $this->getOption('lowerLimit');
-
-        // Lock this request
-        $this->concurrentRequestLock($dataSetId);
 
         // Ordering
         $ordering = '';
@@ -1391,5 +1375,35 @@ class Ticker extends ModuleWidget
         }
 
         return $widgetModifiedDt;
+    }
+
+    /** @inheritdoc */
+    public function getCacheDuration()
+    {
+        return $this->getOption('updateInterval', 120) * 60;
+    }
+
+    /** @inheritdoc */
+    public function getCacheKey($displayId)
+    {
+        if ($this->getOption('sourceId', 1) == 2) {
+            // DataSets might use Display
+            return $this->getWidgetId() . '_' . $displayId;
+        } else {
+            // Tickers are non-display specific
+            return $this->getWidgetId();
+        }
+    }
+
+    /** @inheritdoc */
+    public function getLockKey()
+    {
+        if ($this->getOption('sourceId', 1) == 2) {
+            // Lock to the dataSetId, because our dataSet might have external images which are downloaded.
+            return $this->getOption('dataSetId');
+        } else {
+            // Tickers are locked to the feed
+            return md5(urldecode($this->getOption('uri')));
+        }
     }
 }

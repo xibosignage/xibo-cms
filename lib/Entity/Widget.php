@@ -389,6 +389,8 @@ class Widget implements \JsonSerializable
      */
     public function getPrimaryMedia()
     {
+        $this->load();
+
         $this->getLog()->debug('Getting first primary media for Widget: ' . $this->widgetId . ' Media: ' . json_encode($this->mediaIds) . ' audio ' . json_encode($this->getAudioIds()));
 
         if (count($this->mediaIds) <= 0)

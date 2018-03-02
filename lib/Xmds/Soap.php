@@ -1599,7 +1599,7 @@ class Soap
             $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget($this->display->displayId, $mediaId);
 
             $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($mediaId), $this->regionFactory->getById($regionId));
-            $resource = $module->getResource($this->display->displayId);
+            $resource = $module->getResourceOrCache($this->display->displayId);
 
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
             $requiredFile->save();
