@@ -608,7 +608,7 @@ class Soap
             $fileElements->appendChild($file);
 
             // Get the Layout Modified Date
-            $layoutModifiedDt = new \DateTime($layout->modifiedDt);
+            $layoutModifiedDt = $this->getDate()->parse($layout->modifiedDt, 'Y-m-d H:i:s');
 
             // Load the layout XML and work out if we have any ticker / text / dataset media items
             foreach ($layout->regions as $region) {
@@ -632,10 +632,10 @@ class Soap
                             // date or not.
                             $module = $this->moduleFactory->createWithWidget($widget);
 
-                            $widgetModifiedDt = $module->getModifiedTimestamp($this->display->displayId);
-
-                            if ($widgetModifiedDt === null)
-                                $widgetModifiedDt = $layoutModifiedDt->getTimestamp();
+                            // Get the widget modified date
+                            // we will use the later of this vs the layout modified date as the updated attribute on
+                            // required files
+                            $widgetModifiedDt = $module->getModifiedDate($this->display->displayId);
 
                             // Append this item to required files
                             $file = $requiredFilesXml->createElement("file");
@@ -644,7 +644,7 @@ class Soap
                             $file->setAttribute('layoutid', $layoutId);
                             $file->setAttribute('regionid', $region->regionId);
                             $file->setAttribute('mediaid', $widget->widgetId);
-                            $file->setAttribute('updated', $widgetModifiedDt);
+                            $file->setAttribute('updated', ($layoutModifiedDt->greaterThan($widgetModifiedDt) ? $layoutModifiedDt : $widgetModifiedDt));
                             $fileElements->appendChild($file);
                         }
                     }

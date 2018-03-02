@@ -853,13 +853,13 @@ class DataSetView extends ModuleWidget
     /** @inheritdoc */
     public function getCacheDuration()
     {
-        return $this->getOption('updateInterval', 120 * 60);
+        return $this->getOption('updateInterval', 120) * 60;
     }
 
     /** @inheritdoc */
     public function getCacheKey($displayId)
     {
-        // Default is the widgetId
+        // DataSetViews are display specific
         return $this->getWidgetId() . '_' . $displayId;
     }
 

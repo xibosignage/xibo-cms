@@ -65,7 +65,7 @@ interface ModuleInterface
     /**
      * Get the Modified Date of this Widget
      * @param int $displayId The displayId, or 0 for preview
-     * @return Date|null the date this widgets data was modified or null to use the layout modified date
+     * @return Date the date this widgets data was modified or null to use the layout modified date
      */
     public function getModifiedDate($displayId);
 

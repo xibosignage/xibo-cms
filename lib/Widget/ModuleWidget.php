@@ -1284,8 +1284,8 @@ abstract class ModuleWidget implements ModuleInterface
     /** @inheritdoc */
     public function getModifiedDate($displayId)
     {
-        // Default behaviour is to assume we use the layout modified date
-        return null;
+        // Default behaviour is to assume we use the widget modified date
+        return $this->getDate()->parse($this->widget->modifiedDt, 'U');
     }
 
     /** @inheritdoc */
@@ -1378,6 +1378,8 @@ abstract class ModuleWidget implements ModuleInterface
 
                         // Notify
                         $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
+                    } else {
+                        $this->getLog()->debug('Cache file identical no need to notify the display');
                     }
 
                     // Update the cache date
