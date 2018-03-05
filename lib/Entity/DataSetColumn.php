@@ -7,6 +7,7 @@
 
 
 namespace Xibo\Entity;
+use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DataSetColumnFactory;
@@ -14,7 +15,6 @@ use Xibo\Factory\DataSetColumnTypeFactory;
 use Xibo\Factory\DataTypeFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-
 
 /**
  * Class DataSetColumn
@@ -162,9 +162,6 @@ class DataSetColumn implements \JsonSerializable
      */
     public function validate()
     {
-        if (strtolower($this->heading) == 'id')
-            throw new InvalidArgumentException(__('Please provide an other column heading, the name \'id\' can not be used.'), 'heading');
-            
         if ($this->dataSetId == 0 || $this->dataSetId == '')
             throw new InvalidArgumentException(__('Missing dataSetId'), 'dataSetId');
 
@@ -176,6 +173,9 @@ class DataSetColumn implements \JsonSerializable
 
         if ($this->heading == '')
             throw new InvalidArgumentException(__('Please provide a column heading.'), 'heading');
+
+        if (!v::stringType()->alnum()->validate($this->heading) || strtolower($this->heading) == 'id')
+            throw new InvalidArgumentException(__('Please provide an alternative column heading %s can not be used.', $this->heading), 'heading');
 
         // Make sure this column name is unique
         $columns = $this->dataSetColumnFactory->getByDataSetId($this->dataSetId);

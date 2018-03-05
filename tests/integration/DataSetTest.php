@@ -10,7 +10,6 @@ namespace Xibo\Tests\Integration;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDataSet;
 use Xibo\OAuth2\Client\Entity\XiboDataSetColumn;
-use Xibo\OAuth2\Client\Entity\XiboDataSetRow;
 use Xibo\Tests\LocalWebTestCase;
 
 class DataSetTest extends LocalWebTestCase
@@ -67,7 +66,6 @@ class DataSetTest extends LocalWebTestCase
 
     /**
      * @group add
-     * @return int
      */
     public function testAdd()
     {
@@ -245,7 +243,9 @@ class DataSetTest extends LocalWebTestCase
             // Value
             'Incorrect dataType' => ['incorrect data type', NULL, 2, 12, 1, NULL],     
             'Incorrect columnType' => ['incorrect column type', NULL, 2, 19, 1, NULL],   
-            'Empty Name' => [NULL, NULL, 2, 3, 1, NULL]
+            'Empty Name' => [NULL, NULL, 2, 3, 1, NULL],
+            'Symbol Name' => ['a.b.c', NULL, 2, 3, 1, NULL],
+            'Symbol Name 2' => ['$£"', NULL, 2, 3, 1, NULL]
         ];
     }
 
