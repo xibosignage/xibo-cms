@@ -694,13 +694,9 @@ class Soap
         }
 
         // Set any remaining required files to have 0 bytes requested (as we've generated a new nonce)
-        try {
-            $this->getStore()->updateWithDeadlockLoop('UPDATE `requiredfile` SET bytesRequested = 0 WHERE displayId = :displayId', [
-                'displayId' => $this->display->displayId
-            ]);
-        } catch (DeadlockException $deadlockException) {
-            $this->getLog()->error('Deadlock when updating required files bytesRequested - ignoring and continuing with request');
-        }
+        $this->getStore()->update('UPDATE `requiredfile` SET bytesRequested = 0 WHERE displayId = :displayId', [
+            'displayId' => $this->display->displayId
+        ]);
 
         // Phone Home?
         $this->phoneHome();

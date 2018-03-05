@@ -653,16 +653,21 @@ abstract class ModuleWidget implements ModuleInterface
             . DIRECTORY_SEPARATOR;
 
         // Drop the cache
-        $it = new \RecursiveDirectoryIterator($cachePath, \RecursiveDirectoryIterator::SKIP_DOTS);
-        $files = new \RecursiveIteratorIterator($it, \RecursiveIteratorIterator::CHILD_FIRST);
-        foreach($files as $file) {
-            if ($file->isDir()) {
-                rmdir($file->getRealPath());
-            } else {
-                unlink($file->getRealPath());
+        // there is a chance this may not yet exist
+        try {
+            $it = new \RecursiveDirectoryIterator($cachePath, \RecursiveDirectoryIterator::SKIP_DOTS);
+            $files = new \RecursiveIteratorIterator($it, \RecursiveIteratorIterator::CHILD_FIRST);
+            foreach ($files as $file) {
+                if ($file->isDir()) {
+                    rmdir($file->getRealPath());
+                } else {
+                    unlink($file->getRealPath());
+                }
             }
+            rmdir($cachePath);
+        } catch (\UnexpectedValueException $unexpectedValueException) {
+            $this->getLog()->debug('HTML cache doesn\'t exist yet or cannot be deleted. ' . $unexpectedValueException->getMessage());
         }
-        rmdir($cachePath);
     }
 
     /**
