@@ -975,7 +975,15 @@ class Module extends Base
 
         // Call module GetResource
         $module->setUser($this->getUser());
-        echo $module->getResource();
+
+        if ($module->getModule()->regionSpecific == 0) {
+            // Non region specific module - no caching required as this is only ever called via preview.
+            echo $module->getResource(0);
+        } else {
+            // Region-specific module, need to handle caching and locking.
+            echo $module->getResourceOrCache(0);
+        }
+
         $this->setNoOutput(true);
     }
 

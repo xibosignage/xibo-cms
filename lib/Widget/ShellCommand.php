@@ -209,4 +209,11 @@ class ShellCommand extends ModuleWidget
         $data['commands'] = $this->commandFactory->query();
         return $data;
     }
+
+    /** @inheritdoc */
+    public function getResource($displayId)
+    {
+        // Get resource isn't required for this module.
+        return null;
+    }
 }

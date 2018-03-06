@@ -26,6 +26,7 @@ use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\LibraryFullException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DayPartFactory;
@@ -1000,7 +1001,10 @@ class Library extends Base
             $widget = $this->moduleFactory->createWithMedia($media);
         }
 
-        $widget->getResource();
+        if ($widget->getModule()->regionSpecific == 1)
+            throw new NotFoundException('Cannot download region specific module');
+
+        $widget->getResource(0);
 
         $this->setNoOutput(true);
     }
