@@ -1,0 +1,7 @@
+{
+  "title": "Data-Visualization with Graphs",
+  "author": "Lukas Zurschmiede",
+  "description": "A module to visualize from local Datastores with a Graph.",
+  "name": "graph",
+  "class": "Xibo\\Widget\\Graph"
+} 
