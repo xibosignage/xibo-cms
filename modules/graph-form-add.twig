@@ -184,61 +184,34 @@
                         
                         <h4>{% trans "Select all DataSets to use for this Graph:" %}</h4>
                         <div id="dataSetContainer">
-                          {% set i = 0 %}
-                          {% set title %}{% trans "DataSet" %}{% endset %}
-                          {{ forms.dropdown("dataSetIds[" ~ i ~ "]", "single", title, "", module.dataSets(), "dataSetId", "dataSet", "", "dataset-fields") }}
-                          
-                          {% set title %}{% trans "Label Column" %}{% endset %}
-                          {{ forms.input("dataSetLabels[" ~ i ~ "]", title, "", "", "", "required") }}
-                            
-                          {% set i = i + 1 %}
+                            {% set i = 0 %}
+                            {% set title %}{% trans "DataSet" %}{% endset %}
+                            {{ forms.dropdown("dataSetIds[" ~ i ~ "]", "single", title, "", module.dataSets(), "dataSetId", "dataSet", "", "dataset-fields") }}
+
+                            {% set title %}{% trans "Label Column" %}{% endset %}
+                            {{ forms.input("dataSetLabels[" ~ i ~ "]", title, "", "", "", "required") }}
+
+                            {% set i = i + 1 %}
                         </div>
                         
                         <hr/>
                         
                         <small>
-                          <a href="#" id="dataSetAdd">{% trans "Add DataSet" %}</a>
-                          <br/>
-                          {% trans "Add as many DataSets as you want to show on this Graph." %}<br/>
-                          {% trans "For each DataSet give the Name of the Column where the Labels are stored in." %}
-                          {% trans "Labels are shown horizontally on the X-Axis." %}<br/>
+                            <a href="#" id="dataSetAdd">{% trans "Add DataSet" %}</a>
+                            <br/>
+                            {% trans "Add as many DataSets as you want to show on this Graph." %}<br/>
+                            {% trans "For each DataSet give the Name of the Column where the Labels are stored in." %}
+                            {% trans "Labels are shown horizontally on the X-Axis." %}<br/>
                         </small>
                         
                         <div style="display:none" id="dataSetTemplate">
-                          <hr/>
-                          {% set title %}{% trans "DataSet" %}{% endset %}
-                          {{ forms.dropdown("_dataSetIds", "single", title, "", module.dataSets(), "dataSetId", "dataSet", "", "dataset-fields") }}
-                          
-                          {% set title %}{% trans "Label Column" %}{% endset %}
-                          {{ forms.input("_dataSetLabels", title, "", "", "", "required") }}
+                            <hr/>
+                            {% set title %}{% trans "DataSet" %}{% endset %}
+                            {{ forms.dropdown("_dataSetIds", "single", title, "", module.dataSets(), "dataSetId", "dataSet", "", "dataset-fields") }}
+
+                            {% set title %}{% trans "Label Column" %}{% endset %}
+                            {{ forms.input("_dataSetLabels", title, "", "", "", "required") }}
                         </div>
-                        <script>
-                          var next = {{ i }};
-                          $('#dataSetAdd').on('click', function(e) {
-                            var cont = $('#dataSetTemplate')
-                                .clone()
-                                .attr('id', null)
-                                .appendTo($('#dataSetContainer'))
-                                .show();
-                            
-                            $('#_dataSetIds', cont).attr({
-                              'id': null,
-                              'name': null
-                            }).attr({
-                              'id':   'dataSetIds[' + next + ']',
-                              'name': 'dataSetIds[' + next + ']'
-                            });
-                            
-                            $('#_dataSetLabels', cont).attr({
-                              'id': null,
-                              'name': null
-                            }).attr({
-                              'id':   'dataSetLabels[' + next + ']',
-                              'name': 'dataSetLabels[' + next + ']'
-                            });
-                            next++;
-                          });
-                        </script>
                     </div>
 
                     <div class="tab-pane" id="effectTab">

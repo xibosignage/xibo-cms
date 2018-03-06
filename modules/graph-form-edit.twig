@@ -215,33 +215,6 @@
                           {% set title %}{% trans "Label Column" %}{% endset %}
                           {{ forms.input("_dataSetLabels", title, "", "", "", "required") }}
                         </div>
-                        <script>
-                          var next = {{ i }};
-                          $('#dataSetAdd').on('click', function(e) {
-                            var cont = $('#dataSetTemplate')
-                                .clone()
-                                .attr('id', null)
-                                .appendTo($('#dataSetContainer'))
-                                .show();
-                            
-                            $('#_dataSetIds', cont).attr({
-                              'id': null,
-                              'name': null
-                            }).attr({
-                              'id':   'dataSetIds[' + next + ']',
-                              'name': 'dataSetIds[' + next + ']'
-                            });
-                            
-                            $('#_dataSetLabels', cont).attr({
-                              'id': null,
-                              'name': null
-                            }).attr({
-                              'id':   'dataSetLabels[' + next + ']',
-                              'name': 'dataSetLabels[' + next + ']'
-                            });
-                            next++;
-                          });
-                        </script>
                     </div>
 
                     <div class="tab-pane" id="effectTab">

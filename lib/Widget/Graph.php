@@ -18,19 +18,25 @@
  */
 namespace Xibo\Widget;
 
-use InvalidArgumentException;
 use Respect\Validation\Validator as v;
+use Xibo\Entity\DataSet;
+use Xibo\Entity\DataSetColumn;
+use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
+use Xibo\Factory\ModuleFactory;
 
-class Graph extends ModuleWidget {
+class Graph extends ModuleWidget
+{
 	const DEFAULT_COLORS = '#7293CB, #E1974C, #84BA5B, #D35E60, #808585, #9067A7, #AB6857, #CCC210, #396AB1, #DA7C30, #3E9651, #CC2529, #535154, #6B4C9A, #922428, #948B3D';
 	
 	public $codeSchemaVersion = 1;
 
 	/**
 	 * Graph constructor.
-	 * @Override
+	 * @override
 	 */
-	public function init() {
+	public function init()
+    {
 		v::with('Xibo\\Validation\\Rules\\');
 	}
 	
@@ -39,7 +45,8 @@ class Graph extends ModuleWidget {
 	 * @param ModuleFactory $moduleFactory
 	 * @Override
 	 */
-	public function installOrUpdate($moduleFactory) {
+	public function installOrUpdate($moduleFactory)
+    {
 		// Install
 		if ($this->module == null) {
 			$module = $moduleFactory->createEmpty();
@@ -68,8 +75,9 @@ class Graph extends ModuleWidget {
 	/**
 	 * Install all Javascript-Files provided by Graph
 	 */
-	public function installFiles() {
-		$sourcePath = PROJECT_ROOT . '/modules/graph/rgraph/';
+	public function installFiles()
+    {
+		$sourcePath = PROJECT_ROOT . '/modules/vendor/rgraph/';
 		$dir = opendir($sourcePath);
 		while ($dir && ($file = readdir($dir)) !== false) {
 			if (substr($file, -3) == '.js') {
@@ -80,57 +88,68 @@ class Graph extends ModuleWidget {
 
 	/**
 	 * Form for updating the module settings
-	 * @return Name of the Settings-Form
-	 * @Override
+	 * @return string Name of the Settings-Form
+	 * @override
 	 */
-	public function settingsForm() {
+	public function settingsForm()
+    {
 		return 'graph-form-settings';
 	}
 
 	/**
 	 * Process any module settings
-	 * @return An array of the processed settings.
-	 * @Override
+	 * @return array An array of the processed settings.
+	 * @override
 	 */
-	public function settings() {
+	public function settings()
+    {
 		$this->module->settings['defaultColors'] = $this->getSanitizer()->getString('defaultColors', self::DEFAULT_COLORS);
 		return $this->module->settings;
 	}
 
 	/**
-	 * DataSets
-	 * @return array[DataSet]
+	 * Used by the TWIG template to show a list of available dataSets
+	 * @return DataSet[]
 	 */
 	public function dataSets() {
 		$result = $this->dataSetFactory->query();
 		array_unshift($result, []);
 		return $result;
 	}
-	
-	public function dataSetIds() {
-    $ids = unserialize($this->getOption('dataSetIds'));
-    $labels = unserialize($this->getOption('dataSetLabels'));
-    $result = [];
-    foreach ($ids as $k => $v) {
-      $result[] = ['selected' => $v, 'label' => $labels[$k]];
+
+    /**
+     * Get the currently selected DataSetIds
+     * @return int[]
+     */
+	public function dataSetIds()
+    {
+        $ids = unserialize($this->getOption('dataSetIds'));
+        $labels = unserialize($this->getOption('dataSetLabels'));
+        $result = [];
+        foreach ($ids as $k => $v) {
+            $result[] = ['selected' => $v, 'label' => $labels[$k]];
+        }
+        return $result;
     }
-    return $result;
-	}
 
 	/**
 	 * Validates the settings
-	 * @Override
+	 * @override
+     * @throws InvalidArgumentException
 	 */
-	public function validate() {
+	public function validate()
+    {
 		if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-			throw new InvalidArgumentException(__('You must enter a duration.'));
+			throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
 	}
 
 	/**
 	 * Adds a Widget
-	 * @Override
+	 * @override
+     * @throws InvalidArgumentException
 	 */
-	public function add() {
+	public function add()
+    {
 		$this->setCommonOptions();
 		$this->validate();
 		$this->saveWidget();
@@ -138,9 +157,11 @@ class Graph extends ModuleWidget {
 
 	/**
 	 * Edit the Widget
-	 * @Override
+     * @override
+     * @throws InvalidArgumentException
 	 */
-	public function edit() {
+	public function edit()
+    {
 		$this->setCommonOptions();
 		$this->validate();
 		$this->saveWidget();
@@ -149,61 +170,54 @@ class Graph extends ModuleWidget {
 	/**
 	 * Set common options from Request Params
 	 */
-	private function setCommonOptions() {
-		$this->setOption('name', $this->getSanitizer()->getString('name'));
-		$this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-		$this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-		$this->setOption('rendering', $this->getSanitizer()->getString('rendering'));
-		$this->setOption('graphType', $this->getSanitizer()->getString('graphType'));
-		$this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
+	private function setCommonOptions()
+    {
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setOption('rendering', $this->getSanitizer()->getString('rendering'));
+        $this->setOption('graphType', $this->getSanitizer()->getString('graphType'));
+        $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
 
-    $ids = $this->getSanitizer()->getIntArray('dataSetIds');
-    $labels = $this->getSanitizer()->getStringArray('dataSetLabels');
-    foreach ($ids as $k => $v) {
-      if (empty($v)) {
-        unset($ids[$k]);
-        unset($labels[$k]);
-      }
+        $ids = $this->getSanitizer()->getIntArray('dataSetIds');
+        $labels = $this->getSanitizer()->getStringArray('dataSetLabels');
+        foreach ($ids as $k => $v) {
+            if (empty($v)) {
+                unset($ids[$k]);
+                unset($labels[$k]);
+            }
+        }
+        $this->setOption('dataSetIds', serialize($ids));
+        $this->setOption('dataSetLabels', serialize($labels));
+        $this->setOption('maxdata', $this->getSanitizer()->getInt('maxdata', 180));
+
+        $this->setOption('showLegend', $this->getSanitizer()->getCheckbox('showLegend', 0));
+        $this->setOption('legendCenter', $this->getSanitizer()->getCheckbox('legendCenter', 0));
+        $this->setOption('legendX', $this->getSanitizer()->getInt('legendX', 0));
+        $this->setOption('legendY', $this->getSanitizer()->getInt('legendY', 0));
+        $this->setOption('legendRight', $this->getSanitizer()->getCheckbox('legendRight', 0));
+        $this->setOption('legendBottom', $this->getSanitizer()->getCheckbox('legendBottom', 0));
     }
-    $this->setOption('dataSetIds', serialize($ids));
-    $this->setOption('dataSetLabels', serialize($labels));
-    $this->setOption('maxdata', $this->getSanitizer()->getInt('maxdata', 180));
-
-		$this->setOption('showLegend', $this->getSanitizer()->getCheckbox('showLegend', 0));
-		$this->setOption('legendCenter', $this->getSanitizer()->getCheckbox('legendCenter', 0));
-		$this->setOption('legendX', $this->getSanitizer()->getInt('legendX', 0));
-		$this->setOption('legendY', $this->getSanitizer()->getInt('legendY', 0));
-		$this->setOption('legendRight', $this->getSanitizer()->getCheckbox('legendRight', 0));
-		$this->setOption('legendBottom', $this->getSanitizer()->getCheckbox('legendBottom', 0));
-	}
 
 	/**
-	 * Preview code for a module
-	 * 
-	 * @param int $width
-	 * @param int $height
-	 * @param int $scaleOverride The Scale Override
-	 * @return string The Rendered Content
-	 * @Override
+	 * @inheritdoc
 	 */
-	public function preview($width, $height, $scaleOverride = 0) {
+	public function preview($width, $height, $scaleOverride = 0)
+    {
 		return $this->previewAsClient($width, $height, $scaleOverride);
 	}
 
 	/**
-	 * GetResource for the Graph page
-	 * 
-	 * @param int $displayId
-	 * @return mixed|string
-	 * @Override
+	 * @inheritdoc
 	 */
-	public function getResource($displayId = 0) {
+	public function getResource($displayId = 0)
+    {
 		$data = [];
 		$containerId = 'graph-' . $displayId;
 		$dataSetIds = unserialize($this->getOption('dataSetIds'));
 		$dataLabels = unserialize($this->getOption('dataSetLabels'));
 		$maxData = $this->getOption('maxdata', 180);
-		$graphData = $this->getDatasetContentForRGraph($dataSetIds, $dataLabels, $maxData);
+		$graphData = $this->getDataSetContentForRGraph($dataSetIds, $dataLabels, $maxData);
 
 		// Replace the View Port Width if we are in Preview-Mode
 		$data['viewPortWidth'] = ($this->getSanitizer()->getCheckbox('preview') == 1) ? $this->region->width : '[[ViewPortWidth]]';
@@ -223,21 +237,21 @@ class Graph extends ModuleWidget {
 		);
 		
 		// Use SVG or Canvas?
-		$svg = $this->getOption('rendering') == 'render_with_svg' ? '.SVG' : '';
+		$svg = $this->getOption('rendering') == 'render_with_svg' ? '.svg' : '';
 
 		// Head Content contains all needed scrips from Graph
-		$jsObject = '';
 		$data['head'] = '';
 		if ($this->getOption('rendering') == 'render_with_svg') {
-			$data['head']  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.SVG.common.core.js') . '"></script>'."\n";
-			$data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.SVG.common.ajax.js') . '"></script>'."\n";
-			$data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.SVG.common.fx.js') . '"></script>'."\n";
+			$data['head']  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.SVG.common.core.js') . '"></script>';
+			$data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.SVG.common.ajax.js') . '"></script>';
+			$data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.SVG.common.fx.js') . '"></script>';
 		} else {
-			$data['head']  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.common.core.js') . '"></script>'."\n";
-			$data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.common.dynamic.js') . '"></script>'."\n";
-			$data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.common.effects.js') . '"></script>'."\n";
+			$data['head']  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.common.core.js') . '"></script>';
+			$data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.common.dynamic.js') . '"></script>';
+			$data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.common.effects.js') . '"></script>';
 		}
-		
+
+		// Processing dependent on the Graph Type
 		switch ($this->getOption('graphType')) {
 			case 'pie_chart':
 				$jsObject = 'RGraph.Pie';
@@ -297,7 +311,29 @@ class Graph extends ModuleWidget {
 				$data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph' . $svg . '.line.js') . '"></script>';
 				break;
 		}
-		$data['head'] .= '<style type="text/css">.graphLegend { position:absolute;display:inline-block;z-index:9999;text-align:left;border: 1px solid #ddd; box-shadow: 1px 1px 2px #ccc;padding:0.5em 0.8em;line-height:1.8em; } .graphLegend div { font-weight:bold; } .legendWrapper { width:100%;top:0;left:0;text-align:center; }</style>';
+
+		$data['head'] .= '
+            <style type="text/css">
+                .graphLegend { 
+                    position:absolute;
+                    display:inline-block;
+                    z-index:9999;
+                    text-align:left;
+                    border: 1px solid #ddd; 
+                    box-shadow: 1px 1px 2px #ccc;
+                    padding:0.5em 0.8em;
+                    line-height:1.8em; 
+                } 
+                .graphLegend div { 
+                    font-weight:bold; 
+                } 
+                .legendWrapper { 
+                    width:100%;
+                    top:0;
+                    left:0;
+                    text-align:center; 
+                }
+            </style>';
 
 		// Background for the Graph and the legend
 		$backgroundColor = $this->getOption('backgroundColor');
@@ -329,10 +365,12 @@ class Graph extends ModuleWidget {
 		}
 
 		// Body content
-		$data['body'] = '<div id="' . $containerId . '" style="' . $backgroundColor . '">
-			<canvas id="' . $containerId . '_graph" width="' . $this->region->width . '" height="' . $this->region->height . '" style="border: 1px solid #ddd; box-shadow: 1px 1px 2px #ccc">[No Canvas support :o(]</canvas>
+		$data['body'] = '
+		    <div id="' . $containerId . '" style="' . $backgroundColor . '">
+			    <canvas id="' . $containerId . '_graph" width="' . $this->region->width . '" height="' . $this->region->height . '" style="border: 1px solid #ddd; box-shadow: 1px 1px 2px #ccc">[No Canvas support]</canvas>
 			' . $legend . '
-		</div>';
+		    </div>
+		';
 
 		// After body content - mostly XIBO-Stuff for scaling and so on
 		$javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
@@ -347,8 +385,7 @@ class Graph extends ModuleWidget {
 				var graphOptions = ' . json_encode($this->getSanitizer()->getParam($jsObject, (object) array())) . ';
 				graphOptions.colors = ["' . str_replace(',', '","', $this->getOption('defaultColors', self::DEFAULT_COLORS)) . '"];
 
-				var data = ' . json_encode( $graphData ) . ';
-				';
+				var data = ' . json_encode( $graphData ) . ';';
 
 		if ((int)$this->getOption('showLegend') > 0) {
 			$javaScriptContent .= '
@@ -374,7 +411,6 @@ class Graph extends ModuleWidget {
 
 		// Replace the After body Content
 		$data['body'] .= $javaScriptContent;
-		//$data['javaScript'] = $javaScriptContent;
 
 		return $this->renderTemplate($data);
 	}
@@ -384,11 +420,12 @@ class Graph extends ModuleWidget {
 	 * 
 	 * @param array $dataSetIds The IDs of the Datasets to visualize
 	 * @param array $labelCols The Column where the Labels for the X-Axis are saved in
-   * @param int $maxData Maximum Datapoints to read
+     * @param int $maxData Maximum Datapoints to read
 	 * @return Object { data: [], labels: [], legend: [] }
 	 */
-	protected function getDatasetContentForRGraph($dataSetIds, $labelCols, $maxData) {
-    $maxData = abs($maxData);
+	protected function getDataSetContentForRGraph($dataSetIds, $labelCols, $maxData)
+    {
+        $maxData = abs($maxData);
 		$graphData = (object)[];
 		$graphData->data = [];
 		$graphData->labels = [];
@@ -438,7 +475,7 @@ class Graph extends ModuleWidget {
 					}
 				}
 			}
-		} catch (\Xibo\Exception\NotFoundException $e) {
+		} catch (NotFoundException $e) {
 			// In case there is a datset to be displayed what does not exists (deleted or so)
 			$graphData->data[0][] = 0;
 			$graphData->legend[] = 'Unknown Dataset';
@@ -452,7 +489,8 @@ class Graph extends ModuleWidget {
 	 *
 	 * @param Object $graphData
 	 */
-	protected function swapLabelAndLegend($graphData) {
+	protected function swapLabelAndLegend($graphData)
+    {
 		$labels = $graphData->labels;
 		$legend = $graphData->legend;
 		$graphData->labels = $legend;
@@ -460,14 +498,10 @@ class Graph extends ModuleWidget {
 	}
 	
 	/**
-	 * Returns if this module is valid or not.
-	 *   0 => Invalid
-	 *   1 => Valid
-	 *   2 => Unknown
-	 * @return Validation-Level
-	 * @Override
+	 * @inheritdoc
 	 */
-	public function IsValid() {
+	public function IsValid()
+    {
 		// Can't be sure because the client does the rendering
 		return 2;
 	}

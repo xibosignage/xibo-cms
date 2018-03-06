@@ -1,0 +1,29 @@
+{% raw %}
+<script type="text/javascript">
+    var next = 1;
+    $('#dataSetAdd').on('click', function (e) {
+        var cont = $('#dataSetTemplate')
+            .clone()
+            .attr('id', null)
+            .appendTo($('#dataSetContainer'))
+            .show();
+
+        $('#_dataSetIds', cont).attr({
+            'id': null,
+            'name': null
+        }).attr({
+            'id': 'dataSetIds[' + next + ']',
+            'name': 'dataSetIds[' + next + ']'
+        });
+
+        $('#_dataSetLabels', cont).attr({
+            'id': null,
+            'name': null
+        }).attr({
+            'id': 'dataSetLabels[' + next + ']',
+            'name': 'dataSetLabels[' + next + ']'
+        });
+        next++;
+    });
+</script>
+{% endraw %}
