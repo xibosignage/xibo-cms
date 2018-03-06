@@ -25,7 +25,6 @@ use Emojione\Client;
 use Emojione\Ruleset;
 use Respect\Validation\Validator as v;
 use Stash\Invalidation;
-use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
@@ -429,9 +428,6 @@ class Twitter extends TwitterBase
      */
     protected function getTwitterFeed($displayId = 0, $isPreview = true)
     {
-        if (!extension_loaded('curl'))
-            throw new ConfigurationException(__('cURL extension is required for Twitter'));
-
         // Do we need to add a geoCode?
         $geoCode = '';
         $distance = $this->getOption('tweetDistance');

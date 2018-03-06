@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
+ * Copyright (C) 2006-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -1296,7 +1296,7 @@ abstract class ModuleWidget implements ModuleInterface
     /** @inheritdoc */
     public final function getCacheDate($displayId)
     {
-        $item = $this->getPool()->getItem('widget/html/' . $this->getCacheKey($displayId));
+        $item = $this->getPool()->getItem($this->makeCacheKey('html/' . $this->getCacheKey($displayId)));
         $date = $item->get();
 
         // If not cached set it to have cached a long time in the past
@@ -1311,7 +1311,7 @@ abstract class ModuleWidget implements ModuleInterface
     public final function setCacheDate($displayId, $overrideDuration = null)
     {
         $now = $this->getDate()->parse();
-        $item = $this->getPool()->getItem('widget/html/' . $this->getCacheKey($displayId));
+        $item = $this->getPool()->getItem($this->makeCacheKey('html/' . $this->getCacheKey($displayId)));
 
         $item->set($now->format('Y-m-d H:i:s'));
         $item->expiresAt($now->addYear(1));
