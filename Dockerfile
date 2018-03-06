@@ -73,6 +73,7 @@ RUN apk update && apk upgrade && apk add tar \
     php7-simplexml \
     php7-mbstring \
     php7-memcached \
+    php7-zlib \
     mysql-client \
     ssmtp \
     apache2 \
@@ -94,7 +95,7 @@ RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PA
 # Setup persistent environment variables
 ENV CMS_DEV_MODE=false \
     XMR_HOST=xmr \
-    CMS_DB_VERSION=136 \
+    CMS_DB_VERSION=139 \
     CMS_SERVER_NAME=localhost \
     MYSQL_HOST=mysql \
     MYSQL_USER=cms \

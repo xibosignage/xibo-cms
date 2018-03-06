@@ -29,6 +29,7 @@ class StatsArchiveTask implements TaskInterface
         // Archive tasks by week.
         $periodSizeInDays = $this->getOption('periodSizeInDays', 7);
         $maxPeriods = $this->getOption('maxPeriods', 4);
+        $periodsToKeep = $this->getOption('periodsToKeep', 1);
         $this->setArchiveOwner();
 
         $this->runMessage = '# ' . __('Stats Archive') . PHP_EOL . PHP_EOL;
@@ -46,7 +47,7 @@ class StatsArchiveTask implements TaskInterface
 
         // Take the earliest date and roll forward until the current time
         /** @var Date $now */
-        $now = $this->date->parse()->subDay($periodSizeInDays)->setTime(0, 0, 0);
+        $now = $this->date->parse()->subDay($periodSizeInDays * $periodsToKeep)->setTime(0, 0, 0);
         $i = 0;
 
         while ($earliestDate < $now && $i < $maxPeriods) {

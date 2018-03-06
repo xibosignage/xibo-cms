@@ -777,6 +777,8 @@ if(!String.prototype.formatNum) {
 					eventFromDt: moment(event.fromDt, "X").tz(timezone).format(jsDateFormat),
 					eventToDt: moment(event.toDt, "X").tz(timezone).format(jsDateFormat),
 					eventDayPartId: event.dayPartId,
+					isAlways: event.isAlways,
+					isCustom: event.isCustom,
 					layoutDuration: layout.duration,
 					layoutDisplayOrder: event.displayOrder,
 					eventPriority: event.isPriority,

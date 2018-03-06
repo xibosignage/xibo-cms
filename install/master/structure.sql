@@ -122,6 +122,8 @@ CREATE TABLE IF NOT EXISTS `datasetcolumn` (
   `ColumnOrder` smallint(6) NOT NULL,
   `Formula` varchar(1000) DEFAULT NULL,
   `RemoteField` VARCHAR(250) DEFAULT NULL,
+  `showFilter` TINYINT(4) DEFAULT 1,
+  `showSort` TINYINT(4) DEFAULT 1,
   PRIMARY KEY (`DataSetColumnID`),
   KEY `DataSetID` (`DataSetID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
@@ -986,6 +988,8 @@ CREATE TABLE IF NOT EXISTS `widget` (
   `displayOrder` int(11) NOT NULL,
   `useDuration` int(4) NOT NULL DEFAULT '1',
   `calculatedDuration` int(4) NOT NULL,
+  `createdDt` int(11) NOT NULL,
+  `modifiedDt` int(11) NOT NULL,
   PRIMARY KEY (`widgetId`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
@@ -1032,9 +1036,7 @@ CREATE TABLE IF NOT EXISTS `useroption` (
 CREATE TABLE IF NOT EXISTS `lkdgdg` (
   `parentId` int(11) NOT NULL,
   `childId` int(11) NOT NULL,
-  `depth` int(11) NOT NULL,
-  UNIQUE KEY `parentId` (`parentId`,`childId`,`depth`),
-  UNIQUE KEY `childId` (`childId`,`parentId`,`depth`)
+  `depth` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -1127,8 +1129,10 @@ CREATE TABLE `daypart` (
   `startTime` VARCHAR(8) DEFAULT '00:00:00',
   `endTime` VARCHAR(8) DEFAULT '00:00:00',
   `exceptions` TEXT NULL,
+  `isAlways` TINYINT(4) DEFAULT 0 NOT NULL,
+  `isCustom` TINYINT(4) DEFAULT 0 NOT NULL,
   PRIMARY KEY (`dayPartId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=2;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
 CREATE TABLE `task` (
   `taskId` INT(11) NOT NULL AUTO_INCREMENT,

@@ -74,15 +74,23 @@ class Clock extends Base
      *      )
      *  )
      * )
+     *
+     * @throws \Exception
      */
-    function clock()
+    public function clock()
     {
-        $output = $this->getDate()->getLocalDate(null, 'H:i T');
         $this->session->refreshExpiry = false;
 
-        $this->getState()->setData(array('time' => $output));
-        $this->getState()->html = $output;
-        $this->getState()->clockUpdate = true;
-        $this->getState()->success = true;
+        if ($this->getApp()->request()->isAjax() || $this->isApi()) {
+            $output = $this->getDate()->getLocalDate(null, 'H:i T');
+
+            $this->getState()->setData(array('time' => $output));
+            $this->getState()->html = $output;
+            $this->getState()->clockUpdate = true;
+            $this->getState()->success = true;
+        } else {
+            $this->setNoOutput(true);
+            echo $this->getDate()->getLocalDate(null, 'c');
+        }
     }
 }

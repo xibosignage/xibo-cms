@@ -250,23 +250,31 @@ function XiboInitialise(scope) {
             minView: 2,
             calendarType: calendarType
         }).change(function() {
-            var value = moment($(this).val(), jsDateFormat);
-            
-            // Get the current master data
             var preset = $("#" + $(this).data().linkCombined);
-            var updatedMaster = (preset.val() == "") ? moment() : moment(preset.val(), systemDateFormat);
-            
-            if (!updatedMaster.isValid())
-                updatedMaster = moment();
+            var value = $(this).val();
 
-            updatedMaster.year(value.year());
-            updatedMaster.month(value.month());
-            updatedMaster.date(value.date());
-            
-            preset.val(updatedMaster.format(systemDateFormat));
+            // The user has wiped the value (it is empty, so we should set the hidden field to empty)
+            if (value === "") {
+                preset.val("");
+            } else {
+                // Parse the value into a moment
+                value = moment($(this).val(), jsDateFormat);
+
+                // Get the current master data (if empty, then assume now)
+                var updatedMaster = (preset.val() === "") ? moment() : moment(preset.val(), systemDateFormat);
+
+                if (!updatedMaster.isValid())
+                    updatedMaster = moment();
+
+                updatedMaster.year(value.year());
+                updatedMaster.month(value.month());
+                updatedMaster.date(value.date());
+
+                preset.val(updatedMaster.format(systemDateFormat));
+            }
         });
 
-        if (preset != undefined && preset != "")
+        if (preset !== undefined && preset !== "")
             $(this).find(".dateTimePickerDate").datetimepicker('update', moment(preset, systemDateFormat).format(systemDateFormat));
             
         // Time control
@@ -274,23 +282,28 @@ function XiboInitialise(scope) {
             'timeFormat': timeFormat,
             'step': 15
         }).change(function() {
-            var value = moment($(this).val(), jsTimeFormat);
-            
-            // Get the current master data
+            var value = $(this).val();
             var preset = $("#" + $(this).data().linkCombined);
-            
-            var updatedMaster = (preset.val() == "") ? moment() : moment(preset.val(), systemDateFormat);
-            if (!updatedMaster.isValid())
-                updatedMaster = moment();
-                
-            updatedMaster.hour(value.hour());
-            updatedMaster.minute(value.minute());
-            updatedMaster.second(value.second());
 
-            preset.val(updatedMaster.format(systemDateFormat));
+            if (value === "") {
+                preset.val("");
+            } else {
+                value = moment($(this).val(), jsTimeFormat);
+
+                // Get the current master data
+                var updatedMaster = (preset.val() === "") ? moment() : moment(preset.val(), systemDateFormat);
+                if (!updatedMaster.isValid())
+                    updatedMaster = moment();
+
+                updatedMaster.hour(value.hour());
+                updatedMaster.minute(value.minute());
+                updatedMaster.second(value.second());
+
+                preset.val(updatedMaster.format(systemDateFormat));
+            }
         });
         
-        if (preset != undefined && preset != "")
+        if (preset !== undefined && preset !== "")
             $(this).find(".dateTimePickerTime").timepicker('setTime', moment(preset, systemDateFormat).toDate());
     });
 
@@ -951,14 +964,22 @@ function formRenderDetectSpacingIssues(element) {
 }
 
 function XiboMultiSelectFormRender(button) {
-
+    // The button ID
     var buttonId = $(button).data().buttonId;
+
+    // Get a list of buttons that match the ID
     var matches = [];
+    var formOpenCallback = null;
 
     $("." + buttonId).each(function() {
         if ($(this).closest('tr').hasClass('selected')) {
             // This particular button should be included.
             matches.push($(this));
+
+            if (matches.length === 1) {
+                // this is the first button which matches, so use the form open hook if one has been provided.
+                formOpenCallback = $(this).data().formCallback;
+            }
         }
     });
 
@@ -980,6 +1001,11 @@ function XiboMultiSelectFormRender(button) {
     var dialogContent = dialog.find(".modal-body");
     var footer = $("<div>").addClass("modal-footer");
     dialog.find(".modal-content").append(footer);
+
+    // Call our open function if we have one
+    if (formOpenCallback !== undefined && formOpenCallback !== null) {
+        eval(formOpenCallback)(dialog);
+    }
 
     // Add some buttons
     var extrabutton;
@@ -1003,6 +1029,9 @@ function XiboMultiSelectFormRender(button) {
                 // continue processing the queue once the AJAX request's callback executes.
                 callback: function( item ) {
                     var data = $(item).data();
+
+                    if (dialog.data().commitData !== undefined)
+                        data = $.extend({}, data, dialog.data().commitData);
 
                     // Make an AJAX call
                     $.ajax({

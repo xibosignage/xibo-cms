@@ -41,6 +41,9 @@ class ScheduleFactory extends BaseFactory
      */
     private $displayGroupFactory;
 
+    /** @var DayPartFactory */
+    private $dayPartFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -50,14 +53,16 @@ class ScheduleFactory extends BaseFactory
      * @param PoolInterface $pool
      * @param DateServiceInterface $date
      * @param DisplayGroupFactory $displayGroupFactory
+     * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($store, $log, $sanitizerService, $config, $pool, $date, $displayGroupFactory)
+    public function __construct($store, $log, $sanitizerService, $config, $pool, $date, $displayGroupFactory, $dayPartFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->config = $config;
         $this->pool = $pool;
         $this->dateService = $date;
         $this->displayGroupFactory = $displayGroupFactory;
+        $this->dayPartFactory = $dayPartFactory;
     }
 
     /**
@@ -72,7 +77,8 @@ class ScheduleFactory extends BaseFactory
             $this->config,
             $this->pool,
             $this->dateService,
-            $this->displayGroupFactory
+            $this->displayGroupFactory,
+            $this->dayPartFactory
         );
     }
 
@@ -179,8 +185,12 @@ class ScheduleFactory extends BaseFactory
                 schedule.syncTimezone,
                 `campaign`.campaign,
                 `command`.command,
-                `lkscheduledisplaygroup`.displayGroupId
+                `lkscheduledisplaygroup`.displayGroupId,
+                `daypart`.isAlways,
+                `daypart`.isCustom
                FROM `schedule`
+                INNER JOIN `daypart`
+                ON `daypart`.dayPartId = `schedule`.dayPartId
                 INNER JOIN `lkscheduledisplaygroup`
                 ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
                 INNER JOIN `lkdgdg`
@@ -263,8 +273,12 @@ class ScheduleFactory extends BaseFactory
             `command`.commandId,
             `command`.command,
             `schedule`.dayPartId,
-            `schedule`.syncTimezone
+            `schedule`.syncTimezone,
+            `daypart`.isAlways,
+            `daypart`.isCustom
           FROM `schedule`
+            INNER JOIN `daypart`
+            ON `daypart`.dayPartId = `schedule`.dayPartId
             LEFT OUTER JOIN `campaign`
             ON campaign.CampaignID = `schedule`.CampaignID
             LEFT OUTER JOIN `command`
@@ -364,7 +378,7 @@ class ScheduleFactory extends BaseFactory
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isPriority', 'syncTimezone']]);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isPriority', 'syncTimezone', 'isAlways', 'isCustom']]);
         }
 
         return $entries;

@@ -7,6 +7,7 @@
 
 
 namespace Xibo\Entity;
+use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DataSetColumnFactory;
@@ -14,7 +15,6 @@ use Xibo\Factory\DataSetColumnTypeFactory;
 use Xibo\Factory\DataTypeFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-
 
 /**
  * Class DataSetColumn
@@ -87,6 +87,18 @@ class DataSetColumn implements \JsonSerializable
     public $remoteField;
 
     /**
+     * @SWG\Property(description="Does this column show a filter on the data entry page?")
+     * @var string
+     */
+    public $showFilter;
+
+    /**
+     * @SWG\Property(description="Does this column allow a sorting on the data entry page?")
+     * @var string
+     */
+    public $showSort;
+
+    /**
      * @SWG\Property(description="The column type for this Column")
      * @var string
      */
@@ -150,9 +162,6 @@ class DataSetColumn implements \JsonSerializable
      */
     public function validate()
     {
-        if (strtolower($this->heading) == 'id')
-            throw new InvalidArgumentException(__('Please provide an other column heading, the name \'id\' can not be used.'), 'heading');
-            
         if ($this->dataSetId == 0 || $this->dataSetId == '')
             throw new InvalidArgumentException(__('Missing dataSetId'), 'dataSetId');
 
@@ -164,6 +173,9 @@ class DataSetColumn implements \JsonSerializable
 
         if ($this->heading == '')
             throw new InvalidArgumentException(__('Please provide a column heading.'), 'heading');
+
+        if (!v::stringType()->alnum()->validate($this->heading) || strtolower($this->heading) == 'id')
+            throw new InvalidArgumentException(__('Please provide an alternative column heading %s can not be used.', $this->heading), 'heading');
 
         // Make sure this column name is unique
         $columns = $this->dataSetColumnFactory->getByDataSetId($this->dataSetId);
@@ -260,8 +272,8 @@ class DataSetColumn implements \JsonSerializable
     private function add()
     {
         $this->dataSetColumnId = $this->getStore()->insert('
-        INSERT INTO `datasetcolumn` (DataSetID, Heading, DataTypeID, ListContent, ColumnOrder, DataSetColumnTypeID, Formula, RemoteField)
-          VALUES (:dataSetId, :heading, :dataTypeId, :listContent, :columnOrder, :dataSetColumnTypeId, :formula, :remoteField)
+        INSERT INTO `datasetcolumn` (DataSetID, Heading, DataTypeID, ListContent, ColumnOrder, DataSetColumnTypeID, Formula, RemoteField, `showFilter`, `showSort`)
+          VALUES (:dataSetId, :heading, :dataTypeId, :listContent, :columnOrder, :dataSetColumnTypeId, :formula, :remoteField, :showFilter, :showSort)
         ', [
             'dataSetId' => $this->dataSetId,
             'heading' => $this->heading,
@@ -270,7 +282,9 @@ class DataSetColumn implements \JsonSerializable
             'columnOrder' => $this->columnOrder,
             'dataSetColumnTypeId' => $this->dataSetColumnTypeId,
             'formula' => $this->formula,
-            'remoteField' => $this->remoteField
+            'remoteField' => $this->remoteField,
+            'showFilter' => $this->showFilter,
+            'showSort' => $this->showSort
         ]);
 
         // Add Column to Underlying Table
@@ -312,6 +326,12 @@ class DataSetColumn implements \JsonSerializable
         if (DBVERSION >= 135) {
             $sql .= ', RemoteField = :remoteField ';
             $params['remoteField'] = $this->remoteField;
+        }
+
+        if (DBVERSION >= 138) {
+            $sql .= ', `showFilter` = :showFilter, `showSort` = :showSort ';
+            $params['showFilter'] = $this->showFilter;
+            $params['showSort'] = $this->showSort;
         }
 
         $sql .= ' WHERE dataSetColumnId = :dataSetColumnId ';

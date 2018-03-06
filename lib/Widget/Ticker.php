@@ -683,7 +683,7 @@ class Ticker extends ModuleWidget
             'takeItemsFrom' => $takeItemsFrom,
             'itemsPerPage' => $itemsPerPage,
             'randomiseItems' => $this->getOption('randomiseItems', 0),
-            'speed' => $this->getOption('speed'),
+            'speed' => $this->getOption('speed', 1000),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
             'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
@@ -781,12 +781,6 @@ class Ticker extends ModuleWidget
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        // Update and save widget if we've changed our assignments.
-        if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
-
-        $this->concurrentRequestRelease();
-
         return $this->renderTemplate($data);
     }
 
@@ -804,9 +798,6 @@ class Ticker extends ModuleWidget
         // Create a key to use as a caching key for this item.
         // the rendered feed will be cached, so it is important the key covers all options.
         $feedUrl = urldecode($this->getOption('uri'));
-
-        // Lock this entire request
-        $this->concurrentRequestLock(md5($feedUrl));
 
         /** @var \Stash\Item $cache */
         $cache = $this->getPool()->getItem($this->makeCacheKey(md5($feedUrl)));
@@ -828,10 +819,27 @@ class Ticker extends ModuleWidget
             try {
                 // Create a Guzzle Client to get the Feed XML
                 $client = new Client();
-                $response = $client->get($feedUrl, $this->getConfig()->getGuzzleProxy());
+                $response = $client->get($feedUrl, $this->getConfig()->getGuzzleProxy([
+                    'headers' => [
+                        'Accept' => 'application/rss+xml, application/rdf+xml;q=0.8, application/atom+xml;q=0.6, application/xml;q=0.4, text/xml;q=0.4'
+                    ],
+                    'timeout' => 20 // wait no more than 20 seconds: https://github.com/xibosignage/xibo/issues/1401
+                ]));
 
-                // Pull out the content type and body
-                $result = explode('charset=', $response->getHeaderLine('Content-Type'));
+                // Pull out the content type
+                $contentType = $response->getHeaderLine('Content-Type');
+
+                $this->getLog()->debug('Feed returned content-type ' . $contentType);
+
+                // https://github.com/xibosignage/xibo/issues/1401
+                if (stripos($contentType, 'rss') === false && stripos($contentType, 'xml') === false) {
+                    // The content type isn't compatible
+                    $this->getLog()->error('Incompatible content type: ' . $contentType);
+                    return false;
+                }
+
+                // Get the body, etc
+                $result = explode('charset=', $contentType);
                 $document['encoding'] = isset($result[1]) ? $result[1] : '';
                 $document['xml'] = $response->getBody()->getContents();
 
@@ -849,8 +857,7 @@ class Ticker extends ModuleWidget
                 $this->getLog()->error('Unable to get feed: ' . $requestException->getMessage());
                 $this->getLog()->debug($requestException->getTraceAsString());
 
-                $document['xml'] = null;
-                $document['encoding'] = null;
+                return false;
             }
         }
 
@@ -867,11 +874,11 @@ class Ticker extends ModuleWidget
             // Allowable attributes
             $clientConfig = new Config();
 
-            if ($this->getOption('allowedAttributes') != null) {
-                // need a sensible way to set this
-                // https://github.com/fguillot/picoFeed/issues/196
+            // need a sensible way to set this
+            // https://github.com/fguillot/picoFeed/issues/196
+            //if ($this->getOption('allowedAttributes') != null) {
                 //$clientConfig->setFilterWhitelistedTags(explode(',', $this->getOption('allowedAttributes')));
-            }
+            //}
 
             // Get the feed parser
             $reader = new Reader($clientConfig);
@@ -1116,9 +1123,6 @@ class Ticker extends ModuleWidget
         $dataSetId = $this->getOption('dataSetId');
         $upperLimit = $this->getOption('upperLimit');
         $lowerLimit = $this->getOption('lowerLimit');
-
-        // Lock this request
-        $this->concurrentRequestLock($dataSetId);
 
         // Ordering
         $ordering = '';
@@ -1370,5 +1374,35 @@ class Ticker extends ModuleWidget
         }
 
         return $widgetModifiedDt;
+    }
+
+    /** @inheritdoc */
+    public function getCacheDuration()
+    {
+        return $this->getOption('updateInterval', 120) * 60;
+    }
+
+    /** @inheritdoc */
+    public function getCacheKey($displayId)
+    {
+        if ($this->getOption('sourceId', 1) == 2) {
+            // DataSets might use Display
+            return $this->getWidgetId() . '_' . $displayId;
+        } else {
+            // Tickers are non-display specific
+            return $this->getWidgetId();
+        }
+    }
+
+    /** @inheritdoc */
+    public function getLockKey()
+    {
+        if ($this->getOption('sourceId', 1) == 2) {
+            // Lock to the dataSetId, because our dataSet might have external images which are downloaded.
+            return $this->getOption('dataSetId');
+        } else {
+            // Tickers are locked to the feed
+            return md5(urldecode($this->getOption('uri')));
+        }
     }
 }

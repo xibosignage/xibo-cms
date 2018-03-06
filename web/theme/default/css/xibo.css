@@ -937,3 +937,7 @@ ul li.active.tab-design:hover a {
 .permissionsDiv .badge {
     margin: 2px;
 }
+
+.template-override-controls .well {
+    min-height: 100px;
+}

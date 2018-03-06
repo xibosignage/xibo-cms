@@ -75,7 +75,11 @@ class State extends Middleware
                     $app->response()->header('strict-transport-security', 'max-age=' . $app->configService->GetSetting('STS_TTL', 600));
 
             } else {
-                if ($app->configService->GetSetting('FORCE_HTTPS', 0) == 1) {
+                // Get the current route pattern
+                $resource = $app->router->getCurrentRoute()->getPattern();
+
+                // Allow non-https access to the clock page, otherwise force https
+                if ($resource !== '/clock' && $app->configService->GetSetting('FORCE_HTTPS', 0) == 1) {
                     $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
                     header("Location: $redirect");
                     $app->halt(302);
@@ -504,7 +508,9 @@ class State extends Middleware
                 $container->scheduleFactory,
                 $container->displayEventFactory,
                 $container->requiredFileFactory,
-                $container->tagFactory
+                $container->tagFactory,
+                $container->notificationFactory,
+                $container->userGroupFactory
             );
         });
 
@@ -1114,7 +1120,8 @@ class State extends Middleware
                 $container->pool,
                 $container->dataSetColumnFactory,
                 $container->permissionFactory,
-                $container->displayFactory
+                $container->displayFactory,
+                $container->dateService
             );
         });
 
@@ -1132,8 +1139,7 @@ class State extends Middleware
                 $container->logService,
                 $container->sanitizerService,
                 $container->user,
-                $container->userFactory,
-                $container->scheduleFactory
+                $container->userFactory
             );
         });
 
@@ -1342,7 +1348,8 @@ class State extends Middleware
                 $container->configService,
                 $container->pool,
                 $container->dateService,
-                $container->displayGroupFactory
+                $container->displayGroupFactory,
+                $container->dayPartFactory
             );
         });
 

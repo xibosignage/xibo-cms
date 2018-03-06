@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -279,6 +280,8 @@ class Template extends Base
      *      )
      *  )
      * )
+     *
+     * @throws XiboException
      */
     function add($layoutId)
     {
@@ -305,6 +308,7 @@ class Template extends Base
         $layout->tags = $this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags'));
         $layout->tags[] = $this->tagFactory->getByTag('template');
         $layout->description = $this->getSanitizer()->getString('description');
+        $layout->setOwner($this->getUser()->userId, true);
         $layout->save();
 
         // Return
