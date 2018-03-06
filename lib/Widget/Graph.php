@@ -20,7 +20,6 @@ namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
 use Xibo\Entity\DataSet;
-use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\ModuleFactory;
@@ -377,10 +376,10 @@ class Graph extends ModuleWidget
 		$javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
 
 		// Add all Chart Javascript
-		$javaScriptContent .= '<script>
+		$javaScriptContent .= '
+        <script type="text/javascript">
 			$(document).ready(function() {
-				var options = ' . json_encode($options) . '
-				$("#' . $containerId . '").xiboLayoutScaler(options);
+				$("#' . $containerId . '").xiboLayoutScaler(' . json_encode($options) . ');
 
 				var graphOptions = ' . json_encode($this->getSanitizer()->getParam($jsObject, (object) array())) . ';
 				graphOptions.colors = ["' . str_replace(',', '","', $this->getOption('defaultColors', self::DEFAULT_COLORS)) . '"];
@@ -435,13 +434,18 @@ class Graph extends ModuleWidget
 			// Get all Headers to show as different Data-Streams
 			$columns = [];
 			$maxColumns = 0;
+
+			// We go through once to pick out the columns we will use.
 			foreach ($dataSetIds as $k => $id) {
-				if (empty(trim($id))) continue;
+				if (empty(trim($id)))
+				    continue;
+
 				$dataSet = $this->dataSetFactory->getById($id);
 
-				/* @var DataSetColumn $column */
+				// Loop through our columns to get the one specified by the label cols provided
 				foreach ($dataSet->getColumn() as $column) {
 					// DataSetColumn->dataTypeId "2" (Number) and "3" (Date) can be processed
+                    // TODO - why?
 					if (($column == $labelCols[$k]) || (($column->dataTypeId != 2) && ($column->dataTypeId != 3)) ) {
 						continue;
 					}
@@ -451,8 +455,12 @@ class Graph extends ModuleWidget
 				$maxColumns = max([$maxColumns, count($columns[$dataSet->dataSetId])]);
 			}
 
+			// We go through again to get the actual data
+            // TODO: i am not sure why we do this twice?
 			foreach ($dataSetIds as $k => $id) {
-				if (empty(trim($id))) continue;
+				if (empty(trim($id)))
+				    continue;
+
 				$dataSet = $this->dataSetFactory->getById($id);
 				$columnOffset = count($graphData->data);
 
@@ -476,9 +484,9 @@ class Graph extends ModuleWidget
 				}
 			}
 		} catch (NotFoundException $e) {
-			// In case there is a datset to be displayed what does not exists (deleted or so)
+			// In case there is a DataSet to be displayed what does not exists (deleted or so)
 			$graphData->data[0][] = 0;
-			$graphData->legend[] = 'Unknown Dataset';
+			$graphData->legend[] = __('Unknown DataSet');
 			$graphData->labels[] = '';
 		}
 		return $graphData;
