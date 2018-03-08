@@ -860,12 +860,12 @@ class Twitter extends TwitterBase
     /** @inheritdoc */
     public function getCacheKey($displayId)
     {
-        if ($this->getOption('tweetDistance', 0) > 0) {
+        if ($displayId === 0 || $this->getOption('tweetDistance', 0) > 0) {
             // We use the display to fence in the tweets to our location
             return $this->getWidgetId() . '_' . $displayId;
         } else {
             // Non-display specific
-            return $this->getWidgetId();
+            return $this->getWidgetId(). (($displayId === 0) ? '_0' : '');
         }
     }
 

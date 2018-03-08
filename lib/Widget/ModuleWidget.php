@@ -1276,7 +1276,7 @@ abstract class ModuleWidget implements ModuleInterface
     public function getCacheKey($displayId)
     {
         // Default is the widgetId
-        return $this->getWidgetId();
+        return $this->getWidgetId() . (($displayId === 0) ? '_0' : '');
     }
 
     /** @inheritdoc */
