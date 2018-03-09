@@ -128,7 +128,6 @@
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li><a href="#dataset" role="tab" data-toggle="tab" data-enlarge="1"><span>{% trans "Dataset" %}</span></a></li>
-                <li><a href="#effectTab" role="tab" data-toggle="tab"><span>{% trans "Effect" %}</span></a></li>
                 <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
             <form id="graphEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
@@ -147,8 +146,7 @@
                         {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
                         
                         {% set title %}{% trans "Background Color" %}{% endset %}
-                        {% set helpText %}{% trans "The selected effect works best with a background color. Optionally add one here." %}{% endset %}
-                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
+                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), "", "background-color-group") }}
                     </div>
                     
                     <div class="tab-pane" id="dataset">
@@ -181,6 +179,10 @@
                         {% set title %}{% trans "Maximum Data" %}{% endset %}
                         {% set helpText %}{% trans "With this value you can limit the amount of shown data. For example if your DataSet has one value for each day, you can limit the a Graph to only show the last 30 days." %}{% endset %}
                         {{ forms.number("maxdata", title, module.getOption("maxdata"), helpText, "maxdata-fields", "required") }}
+                        
+                        {% set title %}{% trans "Switch Rows and Columns" %}{% endset %}
+                        {% set helpText %}{% trans "If checked, the rows and columns will be switched. For example in a Bar-Chart: Each value in a row is presented side by side, each new row will be a new group of bars. Otherwise, if not checked, each row will be a new group of values." %}{% endset %}
+                        {{ forms.checkbox("groupLabel", title, module.getOption("groupLabel"), helpText, "groupLabel") }}
                         
                         <h4>{% trans "Select all DataSets to use for this Graph:" %}</h4>
                         <div id="dataSetContainer">
@@ -215,39 +217,6 @@
                           {% set title %}{% trans "Label Column" %}{% endset %}
                           {{ forms.input("_dataSetLabels", title, "", "", "", "required") }}
                         </div>
-                    </div>
-
-                    <div class="tab-pane" id="effectTab">
-                        {% set noneOption %}{% trans "None" %}{% endset %}
-                        {% set fade %}{% trans "Fade" %}{% endset %}
-                        {% set fadeout %}{% trans "Fade Out" %}{% endset %}
-                        {% set scrollHorz %}{% trans "Scroll Horizontal" %}{% endset %}
-                        {% set scrollVert %}{% trans "Scroll Vertical" %}{% endset %}
-                        {% set flipHorz %}{% trans "Flip Horizontal" %}{% endset %}
-                        {% set flipVert %}{% trans "Flip Vertical" %}{% endset %}
-                        {% set shuffle %}{% trans "Shuffle" %}{% endset %}
-                        {% set tileSlide %}{% trans "Tile Slide" %}{% endset %}
-                        {% set tileBlind %}{% trans "Tile Blind" %}{% endset %}
-                        {% set options = [
-                        { effectid: "noAnim", effect: noneOption },
-                        { effectid: "fade", effect: fade },
-                        { effectid: "fadeout", effect: fadeout},
-                        { effectid: "scrollHorz", effect: scrollHorz},
-                        { effectid: "scrollVert", effect: scrollVert},
-                        { effectid: "flipHorz", effect: flipHorz},
-                        { effectid: "flipVert", effect: flipVert},
-                        { effectid: "shuffle", effect: shuffle},
-                        { effectid: "tileSlide", effect: tileSlide},
-                        { effectid: "tileBlind", effect: tileBlind}
-                        ] %}
-                        
-                        {% set title %}{% trans "Effect" %}{% endset %}
-                        {% set helpText %}{% trans "Please select the effect that will be used to transition between items." %}{% endset %}
-                        {{ forms.dropdown("effect", "single", title, module.getOption("effect"), options, "effectid", "effect", helpText) }}
-
-                        {% set title %}{% trans "Speed" %}{% endset %}
-                        {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000)." %}{% endset %}
-                        {{ forms.number("speed", title, module.getOption("speed"), helpText, "effect-controls") }}
                     </div>
 
                     <div class="tab-pane" id="advanced">
