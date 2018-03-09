@@ -1,5 +1,8 @@
 // NAVIGATOR Module
 
+// Load templates
+const navigatorLayoutTemplate = require('../templates/navigator-layout.hbs');
+
 /**
  * Navigator contructor
  * @param {object} container - the container to render the navigator to
@@ -18,27 +21,18 @@ var Navigator = function(container, {edit = false, padding = 0.05} = {}) {
 /**
  * Render Navigator and the layout
  * @param {Object} layout - the layout object to be rendered
- * @param {function} layoutTemplate - the layout handlebar template function
  */
-Navigator.prototype.render = function(layout, layoutTemplate) {
+Navigator.prototype.render = function(layout) {
     // Apply navigator scale to the layout
     layout.scaleTo(this);
 
     // Regions Scalling
     for(var region in layout.regions) {
-        layout.regions[region].selectedFlag = (layout.regions[region].selected) ? 'selected-region' : '';
         layout.regions[region].scaleTo(layout.containerProperties.scaleToTheOriginal);
     }
 
-    // Get the background image ( and resize it ) or color
-    if(layout.data.backgroundImageId == null) {
-        layout.backgroundCss = layout.data.backgroundColor;
-    } else {
-        layout.backgroundCss = "url('/layout/background/" + layout.data.layoutId + "?preview=1&width=" + layout.containerProperties.width + "&height=" + layout.containerProperties.height + "&proportional=0&layoutBackgroundId=" + layout.data.backgroundImageId + "') top center no-repeat; background-color: " + layout.data.backgroundColor;
-    }
-
     // Compile layout template with data
-    var html = layoutTemplate(layout);
+    var html = navigatorLayoutTemplate(layout);
 
     // Append layout html to the main div
     this.DOMObject.html(html);
@@ -67,6 +61,6 @@ Navigator.prototype.render = function(layout, layoutTemplate) {
             selectObject($(this));
         });
     }
-}
+};
 
 module.exports = Navigator;

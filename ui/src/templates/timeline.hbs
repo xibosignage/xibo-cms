@@ -1,0 +1,28 @@
+<div class="text-center">
+    <button id="minTime" type="button" class="btn btn-default" disabled="disabled" style="float: left; width: 60px;">
+        {{properties.minTime}}s
+    </button>
+    <button id="zoomOut" type="button"  {{properties.zoomOutDisable}} class="btn btn-warning">
+        <i class="fa fa-search-minus"></i>
+    </button>
+    <button id="zoom" type="button" class="btn btn-default">
+        {{properties.zoom}}%
+    </button>
+    <button id="zoomIn" type="button" {{properties.zoomInDisable}} class="btn btn-success">
+        <i class="fa fa-search-plus"></i>
+    </button>
+    <button id="maxTime" type="button" class="btn btn-default" disabled="disabled" style="float: right; width: 60px;">
+        {{properties.maxTime}}s
+    </button>
+</div>
+
+<div id="regions-container">
+    <div id="regions" style="width:{{properties.zoom}}%;">
+        {{#each layout.regions}}
+            {{> timeline-region}}
+        {{/each}}
+    </div>
+</div>
+    
+
+

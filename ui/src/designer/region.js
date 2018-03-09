@@ -12,12 +12,32 @@ var Region = function(id, data, {backgroundColor = '#555'} = {}) {
     this.data = data;
     this.backgroundColor = backgroundColor;
     this.selected = false;
+    this.loop = false;
+    this.widgets = {};
 
     this.containerProperties = {
         width: this.data.width,
         height: this.data.height,
         top: this.data.top,
         left: this.data.left
+    };
+
+    this.timelineProperties = {
+        createWidgetGhosts: false,
+        extendWidget: false
+    };
+
+    /**
+     * Return the value if the region is selectd or not for the CSS
+     */
+    this.selectedFlag = function() {
+        for(widget in this.widgets) {
+            if (this.widgets[widget].selected == true) {
+                return 'selected-widget';
+            }
+        }
+
+        return (this.selected) ? 'selected-region' : '';
     };
 };
 
@@ -32,8 +52,7 @@ Region.prototype.scaleTo = function(layoutScale) {
             this.containerProperties[property] = this.data[property] * layoutScale;
         }
     }
-
-}
+};
 
 /**
  * Transform a region using the new values and the layout's scaling and save the values to the structure
@@ -51,6 +70,6 @@ Region.prototype.saveTransformation = function(width, height, top, left, layoutS
     this.data.height = height / layoutScale;
     this.data.top = top / layoutScale;
     this.data.left = left / layoutScale;
-}
+};
 
 module.exports = Region;

@@ -1,0 +1,11 @@
+<div id="{{ id }}" data-type="widget" data-widget-id="{{ id }}" data-widget-type="{{ data.type }}" data-widget-region="{{ regionId }}" class="widget selectable {{selectedFlag}}" style="
+width: {{ durationPercentage }}%;">
+     {{ data.type }} :  {{ data.duration }} : {{loop}}
+</div>
+
+{{#if extend}}
+    <div class="extension" style="
+    width: {{extendSize}}%;">
+         {{ data.type }} : {{ data.duration }}
+    </div>
+{{/if}}

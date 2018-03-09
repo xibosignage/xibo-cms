@@ -7,19 +7,44 @@
     background: gray;
 }
 
-#layout-editor #layout-top-region #layout-navigator {
-    background: black;
-    min-height: 200px;
-    padding: 0;
-}
-
-#layout-editor #layout-top-region #layout-timeline {
-    background: cornflowerblue;
-}
-
 /* Layout center region */
 #layout-editor #layout-center-region {
     background: lightgray;
+}
+
+/* Layout timeline */
+#layout-editor #layout-top-region #layout-timeline {
+    background: #444;
+    padding: 10px;
+    overflow-x: hidden;
+}
+
+#layout-editor #layout-top-region #layout-timeline #regions-container {
+    overflow: auto;
+    max-height: 250px;
+}
+
+#layout-editor #layout-top-region #layout-timeline .region {
+    background: cadetblue;
+    height: 40px;
+    padding: 4px;
+    margin: 4px 0;
+}
+
+#layout-editor #layout-top-region #layout-timeline .widget {
+    color: #222;
+    font-weight: bold;
+    float: left;
+    height: 100%;
+}
+
+#layout-editor #layout-top-region #layout-timeline .extension {
+    color: #999;
+    font-weight: bold;
+    float: left;
+    background: #f3f3f370;
+    height: 80%;
+    margin-top: 0.2em;
 }
 
 #layout-editor #layout-center-region #layout-viewer {
@@ -32,7 +57,13 @@
     height: 500px;
 }
 
-/* Layout Navigator - Edit Mode */
+/* Layout Navigator */
+#layout-editor #layout-navigator {
+    background: black;
+    min-height: 200px;
+    padding: 0;
+}
+
 #layout-editor #layout-navigator-edit {
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
@@ -63,18 +94,19 @@
 }
 
 /* Layout object selection */
-#layout-editor #layout-navigator .region.selected-region {
-    background: #00fff9 !important;
-}
-
-#layout-editor #layout-navigator .region.selected-widget,
-#layout-editor #layout-navigator .widget.selected-widget {
-    background: #8bc34a !important;
-}
-
 #layout-editor .region:hover,
 #layout-editor .widget:hover {
     background: #cfcfcf !important;
+}
+
+#layout-editor #layout-navigator .region.selected-region,
+#layout-editor #layout-timeline .region.selected-region {
+    background: #1358e5 !important;
+}
+
+#layout-editor #layout-navigator .region.selected-widget,
+#layout-editor .widget.selected-widget {
+    background: #8bc34a !important;
 }
 
 /* Layout bottom navbar */

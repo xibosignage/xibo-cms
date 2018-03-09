@@ -20,8 +20,6 @@
 
 // Include handlebars templates
 const designerMainTemplate = require('../templates/designer.hbs');
-const navigatorLayoutTemplate = require('../templates/navigator-layout.hbs');
-const navigatorRegionTemplate = require('../templates/navigator-region.hbs');
 const messageTemplate = require('../templates/message.hbs');
 
 // Include modules
@@ -29,6 +27,7 @@ const Region = require('./region.js');
 const Layout = require('./layout.js');
 const Widget = require('./widget.js');
 const Navigator = require('./navigator.js');
+const Timeline = require('./timeline.js');
 
 // Include CSS
 require('../css/designer.css');
@@ -39,6 +38,9 @@ var navigatorEdit = {};
 
 // Layout structure
 var layout = {};
+
+// Timeline structure
+var timeline = {};
 
 // Designer DOM div
 var designerDiv = $('#layout-editor');
@@ -72,6 +74,45 @@ $(document).ready(function() {
                         data.regions[region]
                     );
 
+                    // Widgets
+                    var widgets = newRegion.data.playlists[0].widgets; //TODO - Change the way to get the data from the API
+                    var loopSingleWidget = false;
+                    var singleWidget = false;
+
+                    // If there is only one widget in the playlist, check the loop option for that region
+                    if(widgets.length == 1) {
+
+                        singleWidget = true;
+
+                        // Check the loop option
+                        for(var option in newRegion.data.regionOptions) {
+                            if(newRegion.data.regionOptions[option].option == 'loop' && newRegion.data.regionOptions[option].value == '1') {
+                                newRegion.timelineProperties.createWidgetGhosts = true;
+                                loopSingleWidget = true;
+                                break;
+                            }
+                        }
+                    } else {
+                        newRegion.timelineProperties.createWidgetGhosts = true;
+                    }
+
+                    // Create widgets for this region
+                    for(var widget in widgets) {
+                        var newWidget = new Widget(
+                            widgets[widget].widgetId,
+                            data.regions[region].regionId,
+                            widgets[widget],
+                            data.duration // Layout Duration
+                        );
+
+                        // If the widget needs to be extended
+                        newWidget.singleWidget = singleWidget;
+                        newWidget.loop = loopSingleWidget;
+
+                        // Push newWidget to the Region widget array
+                        newRegion.widgets[newWidget.id] = newWidget;
+                    }
+
                     // Push Region to the Layout region array
                     layout.regions[newRegion.id] = newRegion;
                 }
@@ -82,10 +123,13 @@ $(document).ready(function() {
                     designerDiv.find('#layout-navigator'),
                 );
 
-                // Render navigator
-                renderContainer(navigator);
+                // Initialize timeline
+                timeline = new Timeline(
+                    designerDiv.find('#layout-timeline'),
+                    data.duration
+                );
 
-                // Default selected object is the layout
+                // Default selected object is the layout ( that will render the containers )
                 selectObject(designerDiv.find('#layout_' + layoutId));
             }
         })
@@ -139,9 +183,7 @@ window.selectObject = function(obj) {
 
     var oldSelectedId = selectedObject.id;
     var oldSelectedType = selectedObject.type;
-
-    console.log('Old selected: ' + oldSelectedId + ' - ' + oldSelectedType);
-
+    
     // Unselect the previous selected object
     switch(selectedObject.type) {
         case 'region':
@@ -149,7 +191,7 @@ window.selectObject = function(obj) {
             break;
 
         case 'widget':
-            console.log('To be implemented!');
+            layout.regions[selectedObject.regionId].widgets[selectedObject.id].selected = false;
             break;
 
         default:
@@ -168,7 +210,8 @@ window.selectObject = function(obj) {
             layout.regions[newSelectedId].selected = true;
             selectedObject = layout.regions[newSelectedId];
         } else if(newSelectedType === 'widget') {
-            console.log('To be implemented!');
+            layout.regions[obj.data('widgetRegion')].widgets[newSelectedId].selected = true;
+            selectedObject = layout.regions[obj.data('widgetRegion')].widgets[newSelectedId];
         }
 
         selectedObject.type = newSelectedType;
@@ -199,7 +242,7 @@ window.refreshDesigner = function() {
  */
 window.renderContainer = function(container) {
     if(!jQuery.isEmptyObject(container)) {
-        container.render(layout, navigatorLayoutTemplate);
+        container.render(layout);
     }
 }
 

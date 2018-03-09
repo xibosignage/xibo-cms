@@ -18,6 +18,15 @@ var Layout = function(id, data) {
         left: 0,
         scaleToTheOriginal: 1
     };
+
+    this.backgroundCss = function () {        
+        if(this.data.backgroundImageId == null) {
+            return this.data.backgroundColor;
+        } else {
+            return "url('/layout/background/" + this.data.layoutId + "?preview=1&width=" + this.containerProperties.width + "&height=" + this.containerProperties.height + "&proportional=0&layoutBackgroundId=" + this.data.backgroundImageId + "') top center no-repeat; background-color: " + this.data.backgroundColor;
+        }
+    }
+
 };
 
 /**
@@ -53,6 +62,6 @@ Layout.prototype.scaleTo = function(container) {
 
     // Calculate scale from the original
     this.containerProperties.scaleToTheOriginal = this.containerProperties.width / this.data.width;
-}
+};
 
 module.exports = Layout;
