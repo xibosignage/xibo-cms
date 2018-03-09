@@ -435,7 +435,7 @@ class Graph extends ModuleWidget
                 /* @var DataSetColumn $column */
                 foreach ($dataSet->getColumn() as $column) {
                     // DataSetColumn->dataTypeId "2" (Number) and "3" (Date) can be processed
-                    if (($column == $labelCols[$k]) || (($column->dataTypeId != 2) && ($column->dataTypeId != 3)) ) {
+                    if (($column->heading == $labelCols[$k]) || (($column->dataTypeId != 2) && ($column->dataTypeId != 3)) ) {
                         continue;
                     }
                     $graphData->legend[] = $column->heading;
