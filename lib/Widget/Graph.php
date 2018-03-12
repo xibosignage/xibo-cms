@@ -20,7 +20,6 @@ namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
 use Xibo\Entity\DataSet;
-use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\ModuleFactory;
@@ -84,6 +83,11 @@ class Graph extends ModuleWidget
                 $this->mediaFactory->createModuleSystemFile($sourcePath . $file)->save();
             }
         }
+    }
+
+    public function layoutDesignerJavaScript()
+    {
+        return 'graph-designer-javascript';
     }
 
     /**
@@ -510,8 +514,13 @@ class Graph extends ModuleWidget
      */
     public function IsValid()
     {
-        // Can't be sure because the client does the rendering
-        return 2;
+		// Can't be sure because the client does the rendering
+		return 2;
+	}
+
+	public function getModifiedDate($displayId)
+    {
+        return $this->getDate()->parse();
     }
 }
 
