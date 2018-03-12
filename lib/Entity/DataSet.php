@@ -379,10 +379,14 @@ class DataSet implements \JsonSerializable
         // Get the Latitude and Longitude ( might be used in a formula )
         if ($displayId == 0) {
             $displayGeoLocation = "GEOMFROMTEXT('POINT(" . $this->config->GetSetting('DEFAULT_LAT') . " " . $this->config->GetSetting('DEFAULT_LONG') . ")')";
+            //Show DataSet-Row on Preview if Filter-KeyField empty
+            $displayName = '';
         }
         else {
             $displayGeoLocation = '(SELECT GeoLocation FROM `display` WHERE DisplayID = :displayId)';
             $params['displayId'] = $displayId;
+            //Get displayName from Database
+            $displayName = $this->getStore()->select('Select display from display where displayid = '.$displayId ,[])[0]['display'];
         }
 
         // Build a SQL statement, based on the columns for this dataset
@@ -432,6 +436,9 @@ class DataSet implements \JsonSerializable
         if ($filter != '') {
             // Support display filtering.
             $filter = str_replace('[DisplayId]', $displayId, $filter);
+            // Support display filtering by [DisplayName]
+            $filter = str_replace('[DisplayName]', $displayName , $filter);
+
             $filter = str_replace($this->blackList, '', $filter);
 
             $body .= ' AND ' . $filter;
