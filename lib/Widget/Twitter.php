@@ -583,9 +583,13 @@ class Twitter extends TwitterBase
                 // Maybe make this more generic?
                 switch ($subClean) {
                     case 'Tweet':
-                        // Get the tweet text to operate on
-                        $tweetText = $tweet->full_text;
-
+                        // Get the tweet text to operate on, if it is a retweet we need to take the full_text in a different way
+                        if (isset($tweet->retweeted_status)){
+                            $tweetText = 'RT @' . $tweet->retweeted_status->user->screen_name . ': ' . $tweet->retweeted_status->full_text;
+                        }
+                        else
+                            $tweetText = $tweet->full_text;
+                            
                         // Replace URLs with their display_url before removal
                         if (isset($tweet->entities->urls)) {
                             foreach ($tweet->entities->urls as $url) {
