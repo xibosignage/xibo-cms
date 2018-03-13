@@ -54,6 +54,8 @@ class EmailNotificationsTask implements TaskInterface
 
                 // Send them an email
                 $mail = new \PHPMailer\PHPMailer\PHPMailer();
+                $mail->CharSet = 'UTF-8';
+                $mail->Encoding = 'base64';
                 $mail->From = $msgFrom;
 
                 if ($msgFromName != null)
