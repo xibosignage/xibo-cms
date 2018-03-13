@@ -556,7 +556,7 @@ class Soap
             try {
                 $layout = $this->layoutFactory->loadById($layoutId);
                 $layout->loadPlaylists();
-            } catch (NotFoundException $e) {
+            } catch (XiboException $e) {
                 $this->getLog()->error('Layout not found - ID: ' . $layoutId . ', skipping.');
                 continue;
             }
