@@ -265,8 +265,8 @@ echo __('This should only be set if you want to display the maximum allowed erro
 echo __('Allow the maintenance script to run if it is called?');
 echo __('Global switch for email alerts to be sent');
 echo __('String appended to the maintenance script to prevent malicious calls to the script.');
-echo __('Maximum age for log entries. Set to 0 to keep logs indefinitely.');
-echo __('Maximum age for statistics entries. Set to 0 to keep statistics indefinitely.');
+echo __('Maximum age for log entries in days. Set to 0 to keep logs indefinitely.');
+echo __('Maximum age for statistics entries in days. Set to 0 to keep statistics indefinitely.');
 echo __('How long in minutes after the last time a client connects should we send an alert? Can be overridden on a per client basis.');
 
 
