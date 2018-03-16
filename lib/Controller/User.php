@@ -1169,4 +1169,19 @@ class User extends Base
             'id' => $user->userId
         ]);
     }
+
+    /**
+     * Update the User Welcome Tutorial to Seen
+     */
+    public function userWelcomeSetSeen()
+    {
+        $this->getUser()->newUserWizard = 1;
+        $this->getUser()->save(['validate' => false]);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('%s has seen the welcome tutorial'), $this->getUser()->userName)
+        ]);
+    }
 }
