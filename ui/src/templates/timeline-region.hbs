@@ -1,5 +1,15 @@
 <div id="{{ id }}" data-type="region" class="region selectable {{selectedFlag}}">
-    {{#each widgets}}
-        {{> timeline-widget}}
-    {{/each}}
+    {{#unless hideDetails}}
+        {{#each widgets}}
+            {{> timeline-widget}}
+        {{/each}}
+        
+        {{#if loop}}
+            {{#each ghostWidgetsObject}}
+                {{> timeline-ghost-widget}}
+            {{/each}}
+        {{/if}}
+    {{else}}
+        <p>Zoom in to see/edit region</p>
+    {{/unless}}
 </div>

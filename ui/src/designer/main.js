@@ -71,7 +71,8 @@ $(document).ready(function() {
                 for(var region in data.regions) {
                     var newRegion = new Region(
                         data.regions[region].regionId,
-                        data.regions[region]
+                        data.regions[region],
+                        data.duration
                     );
 
                     // Widgets
@@ -87,13 +88,14 @@ $(document).ready(function() {
                         // Check the loop option
                         for(var option in newRegion.data.regionOptions) {
                             if(newRegion.data.regionOptions[option].option == 'loop' && newRegion.data.regionOptions[option].value == '1') {
-                                newRegion.timelineProperties.createWidgetGhosts = true;
+                                newRegion.loop = true;
                                 loopSingleWidget = true;
                                 break;
                             }
                         }
-                    } else {
-                        newRegion.timelineProperties.createWidgetGhosts = true;
+                    } else if(parseFloat(newRegion.data.duration) < parseFloat(data.duration)) {
+                        // if the region duration is less than the layout duration enable loop
+                        newRegion.loop = true;
                     }
 
                     // Create widgets for this region

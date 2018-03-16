@@ -4,15 +4,17 @@
  * Region contructor
  * @param {number} id - region id
  * @param {object} data - data from the API request
+ * @param {number} layoutDuration - total duration of the layout
  * @param {object=} [options] - Region options
  * @param {string} [options.backgroundColor="#555"] - Color for the background
  */
-var Region = function(id, data, {backgroundColor = '#555'} = {}) {
+var Region = function(id, data, layoutDuration, {backgroundColor = '#555'} = {}) {
     this.id = 'region_' + id;
     this.data = data;
     this.backgroundColor = backgroundColor;
     this.selected = false;
-    this.loop = false;
+    this.loop = false; // Loop region widgets
+    this.layoutDuration = layoutDuration;
     this.widgets = {};
 
     this.containerProperties = {
@@ -20,11 +22,6 @@ var Region = function(id, data, {backgroundColor = '#555'} = {}) {
         height: this.data.height,
         top: this.data.top,
         left: this.data.left
-    };
-
-    this.timelineProperties = {
-        createWidgetGhosts: false,
-        extendWidget: false
     };
 
     /**
@@ -39,6 +36,7 @@ var Region = function(id, data, {backgroundColor = '#555'} = {}) {
 
         return (this.selected) ? 'selected-region' : '';
     };
+
 };
 
 /**

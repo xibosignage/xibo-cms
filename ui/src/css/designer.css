@@ -15,7 +15,7 @@
 /* Layout timeline */
 #layout-editor #layout-top-region #layout-timeline {
     background: #444;
-    padding: 10px;
+    padding: 5px;
     overflow-x: hidden;
 }
 
@@ -27,12 +27,39 @@
 #layout-editor #layout-top-region #layout-timeline .region {
     background: cadetblue;
     height: 40px;
-    padding: 4px;
+    padding: 3px;
     margin: 4px 0;
+}
+
+#layout-editor #layout-top-region #layout-timeline #labels-container {
+    float: left;
+    width: 4%;
+    padding-top: 40px;
+}
+
+#layout-editor #layout-top-region #layout-timeline #timeline-container {
+    float: left;
+    width: 96%
+}
+
+#layout-editor #layout-top-region #layout-timeline .label-region {
+    height: 40px;
+    padding: 10px 2px 0 0; 
+    text-align: right;
+    font-weight: bold;
+    color: white;
 }
 
 #layout-editor #layout-top-region #layout-timeline .widget {
     color: #222;
+    font-weight: bold;
+    float: left;
+    height: 100%;
+}
+
+#layout-editor #layout-top-region #layout-timeline .widget-ghost {
+    background: #f3f3f370;
+    color: #999;
     font-weight: bold;
     float: left;
     height: 100%;
@@ -94,8 +121,17 @@
 }
 
 /* Layout object selection */
-#layout-editor .region:hover,
-#layout-editor .widget:hover {
+#layout-editor .selectable {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+}
+
+#layout-editor .region.selectable:hover,
+#layout-editor .widget.selectable:hover {
     background: #cfcfcf !important;
 }
 

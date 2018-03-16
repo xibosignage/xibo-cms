@@ -11,7 +11,6 @@ const timelineTemplate = require('../templates/timeline.hbs');
  */
 var Timeline = function(container, layoutDuration) {
     this.DOMObject = container;
-
     this.layoutDuration = layoutDuration;
 
     this.scrollPercent = {
@@ -21,11 +20,16 @@ var Timeline = function(container, layoutDuration) {
 
     // Properties to be used for the template
     this.properties = {
-        zoom: 100,
+        zoom: -1, // Zoom by default is -1 so that can be calculated based on the widgets of the regions
+        startingZoom: -1,
         minTime: 0,
         maxTime: layoutDuration,
+        deltatime: layoutDuration,
         zoomInDisable: '',
-        zoomOutDisable: 'disabled'
+        zoomOutDisable: '',
+        scrollPosition: 0, // scroll position
+        widgetMinimumVisibleRatio: 4, // Minimum % value so that the region details are shown
+        widgetMinimumDurationOnStart: 10 // % of the shortest widget to be used to calculate the default zoom 
     };
 };
 
@@ -34,38 +38,207 @@ var Timeline = function(container, layoutDuration) {
  * @param {number} zoom - the change to be applied to zoom ( -1:zoomOut, 0: default, 1: zoomIn )
  */
 Timeline.prototype.changeZoom = function(zoom) {
+    
+    // Reset to starting zoom
+    if(zoom == 0){
+        this.properties.scrollPosition = 0;
+        this.properties.zoom = this.properties.startingZoom;
+        return;
+    }
+
+    var zoomVariation = 10;
+    
+    if(this.properties.zoom >= 5000) {
+        zoomVariation = 1000;
+    } else if(this.properties.zoom >= 1000) {
+        zoomVariation = 200;
+    } else if(this.properties.zoom >= 500) {
+        zoomVariation = 100;
+    } else if(this.properties.zoom >= 200) {
+        zoomVariation = 50;
+    }
 
     // Calculate new zoom value
-    var newZoom = Math.round(this.properties.zoom + (10 * zoom));
+    var newZoom = Math.round(this.properties.zoom + (zoomVariation * zoom));
     
     // Reset zoom enable flags
     this.properties.zoomOutDisable = this.properties.zoomInDisable = '';
 
-    // If zoom out is 100% or less ( or zoom has been defaulted ) disable button limit it to 100%
-    if( newZoom <= 100 || zoom == 0){
+    // If zoom out is 100% or less disable button limit it to 100%
+    if( newZoom <= 100 ){
         newZoom = 100;
         this.properties.zoomOutDisable = 'disabled';
+        
+        // Set scroll position to 0
+        this.properties.scrollPosition = 0;
     }
 
     // Set the zoom and calculate the max time for the ruler
     this.properties.zoom = newZoom;
-
-    // Set labels
-    var rightPercentage = Math.round((100 / newZoom) * 100);
-    this.calculateLabels(0, rightPercentage);
 };
 
 /**
- * Calculate timeline labels
- * @param {percLeft} zoom - Percentage related to the zoom and current scroll, on the left
- * @param {percRight} zoom - Percentage related to the zoom and current scroll, on the right
+ * Calculate time values/labels based on zoom and position of the scroll view
  */
-Timeline.prototype.calculateLabels = function (percLeft, percRight) {
-    this.properties.minTime = Math.round( 10 * ((percLeft / 100) * (this.layoutDuration / (this.properties.zoom / 100))) ) / 10;
-    this.properties.maxTime = Math.round( 10 * ((percRight / 100) * this.layoutDuration) ) / 10;
+Timeline.prototype.calculateTimeValues = function() {
+
+    this.properties.deltatime = Math.round(10 * (this.layoutDuration / (this.properties.zoom / 100))) / 10;
+    this.properties.minTime = Math.round(10 * (this.properties.scrollPosition * this.layoutDuration)) / 10;
+    this.properties.maxTime = this.properties.minTime + this.properties.deltatime;
+};
+
+/**
+ * Update timeline labels after rendering
+ */
+Timeline.prototype.updateLabels = function() {
 
     this.DOMObject.find('#minTime').html(this.properties.minTime + 's');
     this.DOMObject.find('#maxTime').html(this.properties.maxTime + 's');
+    this.DOMObject.find('#zoom').html(this.properties.deltatime + 's');
+};
+
+/**
+ * If zoom is not defined, calculate default value based on widget lenght
+ * @param {object} regions - Layout regions
+ */
+Timeline.prototype.calculateStartingZoom = function(regions) {
+
+    // Find the smallest widget ( by duration )
+    var smallerWidgetDuration = -1;
+    for(region in regions) {
+        for(widget in regions[region].widgets) {
+            if(regions[region].widgets[widget].getDuration() < smallerWidgetDuration || smallerWidgetDuration == -1){
+                smallerWidgetDuration = regions[region].widgets[widget].getDuration();
+            }
+        }
+    }
+
+    // Calculate zoom and limit its minimum to 100%
+    this.properties.zoom = Math.floor(this.properties.widgetMinimumDurationOnStart / (smallerWidgetDuration / this.layoutDuration));
+    
+    if(this.properties.zoom <= 100 ) {
+        this.properties.zoom = this.properties.startingZoom = 100;
+        this.properties.zoomOutDisable = 'disabled';
+    } else {
+        this.properties.zoomOutDisable = '';
+    }
+
+    this.properties.startingZoom = this.properties.zoom;
+};
+
+/**
+ * Check regions and choose display type ( detailed/zoom-to-see-details) 
+ * @param {object} regions - Layout regions
+ */
+Timeline.prototype.checkRegionsVisibility = function(regions) {
+
+    var visibleDuration = this.layoutDuration * (100 / this.properties.zoom); //this.properties.maxTime - this.properties.minTime;
+    
+    for(region in regions) {
+        // Reset the region visibility flag
+        regions[region].hideDetails = false;
+
+        for(widget in regions[region].widgets) {
+
+            // Calculate the ratio of the widget compared to the region length
+            var widthRatio = regions[region].widgets[widget].getDuration() / visibleDuration;
+
+            // Mark region as hidden if the widget is too small to be displayed
+            if(widthRatio < (this.properties.widgetMinimumVisibleRatio/100)) {
+                regions[region].hideDetails = true;
+                break;
+            }
+        }
+    }
+};
+
+/**
+ * Create widget replicas
+ * @param {object} regions - Layout regions
+ */
+Timeline.prototype.createGhostWidgetsDinamically = function(regions) {
+    console.log('TODO: Creating ghosts');
+
+    for(region in regions) {
+        var currentRegion = regions[region];
+
+        // If the regions isn't marked for looping, skip to the next one
+        if(!currentRegion.loop) {
+            continue;
+        }
+
+        console.log('Region: ' + currentRegion.id);
+        console.log('1. Check current time');
+        console.log(this.properties.minTime + ' -> ' + this.properties.maxTime);
+        
+    }
+};
+
+/**
+ * Create widget replicas
+ * @param {object} regions - Layout regions
+ */
+Timeline.prototype.createGhostWidgetsOld = function(regions) {
+
+    console.log('TODO: remove createGhostWidgetsOld');
+
+    for(region in regions) {
+        var currentRegion = regions[region];
+        
+        if(!currentRegion.loop) {
+            console.log('Error: region widgets not supposed to loop!');
+            continue;
+        }
+
+        var widgetsTotalDuration = 0;
+        var ghostWidgetsObject = [];
+
+        // Calculate widgets total duration
+        for(widget in currentRegion.widgets) {
+            widgetsTotalDuration += currentRegion.widgets[widget].getDuration();
+        }
+
+        var widgetsAllRepetitions = currentRegion.layoutDuration / widgetsTotalDuration; // number of times that the widget list fits in the region duration
+        var ghostLackingFullRepetitions = Math.floor(widgetsAllRepetitions) - 1; // full cycle of the widgets combination that fit the region duration ( minus the actual widgets )
+        var ghostLackingCuttedRepetition = (widgetsAllRepetitions - 1) - ghostLackingFullRepetitions; // the remaining duration after the repetetitions fill the duration
+
+
+        // Add a full set of widgets for each full loop
+        for(let i = 0;i < ghostLackingFullRepetitions;i++) {
+            for(widget in currentRegion.widgets) {
+                ghostWidgetsObject.push(currentRegion.widgets[widget].createClone());
+
+            }
+        }
+
+        // Create the non-full widget repetition
+        var lastWidgetCycleDurationRemaining = Math.round(ghostLackingCuttedRepetition * widgetsTotalDuration);
+
+        if(lastWidgetCycleDurationRemaining > 0) {
+            for(widget in currentRegion.widgets) {
+                var widget = currentRegion.widgets[widget]; // Widget copy
+                var widgetDuration = widget.getDuration();
+
+                if(widgetDuration < lastWidgetCycleDurationRemaining) { // if the widget duration fits inside the remaining region time
+                    // calculate the remaining time
+                    lastWidgetCycleDurationRemaining -= widgetDuration;
+
+                    // create a clone of the widget and add it to the array
+                    ghostWidgetsObject.push(widget.createClone());
+                } else {
+                    // create a clone of the last widget and add it to the array
+                    var newWidgetIndex = ghostWidgetsObject.push(widget.createClone()) - 1;
+
+                    // set this widget new duration
+                    ghostWidgetsObject[newWidgetIndex].data.duration = lastWidgetCycleDurationRemaining;
+                    break;
+                }
+            }
+        }
+
+        // return array with the widget ghosts
+        currentRegion.ghostWidgetsObject = ghostWidgetsObject;
+    }
 };
 
 
@@ -75,14 +248,37 @@ Timeline.prototype.calculateLabels = function (percLeft, percRight) {
  */
 Timeline.prototype.render = function(layout) {
 
-    console.log('Timeline -> Render');
-    console.log(layout.regions);
+    // If starting zoom is not defined, calculate its value based on minimum widget duration
+    if(this.properties.zoom == -1) {
+        this.calculateStartingZoom(layout.regions);
+    }
+
+    // Calulate time values based on scroll position
+    this.calculateTimeValues();
     
-    var html = timelineTemplate({layout: layout, properties: this.properties});
-    var self = this;
+    // Check regions to see if they can be rendered with details or not
+    this.checkRegionsVisibility(layout.regions);
+
+    // TODO: Check widget repetition and create ghosts
+    this.createGhostWidgetsDinamically(layout.regions);
+
+    // Render timeline template using layout object
+    var html = timelineTemplate({
+        layout: layout, 
+        properties: this.properties
+    });
 
     // Append layout html to the main div
     this.DOMObject.html(html);
+
+    // Load region container
+    var regionsContainer = this.DOMObject.find('#regions-container');
+
+    // Maintain the previous scroll position
+    regionsContainer.scrollLeft(this.properties.scrollPosition * regionsContainer.find("#regions").width());
+
+    // Update timeline labels
+    this.updateLabels();
 
     // Enable hover and select for each layout/region
     this.DOMObject.find('.selectable').click(function(e) {
@@ -91,6 +287,7 @@ Timeline.prototype.render = function(layout) {
     });
 
     // Button actions
+    var self = this;
     this.DOMObject.find('#zoomIn').click(function() {
         self.changeZoom(1);
         self.render(layout);
@@ -106,17 +303,16 @@ Timeline.prototype.render = function(layout) {
         self.render(layout);
     });
 
-    this.DOMObject.find('#regions-container').scroll(function() {
-        var currLeft = $(this).scrollLeft();
-        var postWidth = $(this).width();
-        var scrollWidth = $(this).find('#regions').width();
+    regionsContainer.scroll($.debounce(250, function(){
+        // Get new scroll position
+        var newScrollPosition = $(this).scrollLeft() / $(this).find("#regions").width();
 
-        // Calculate left and right percentage
-        var scrollPercentLeft = (currLeft / postWidth) * 100;
-        var scrollPercentRight = ((postWidth + currLeft)/scrollWidth)*100;
-
-        self.calculateLabels(scrollPercentLeft, scrollPercentRight);
-    });
+        // Only render if the scroll position has been updated
+        if(self.properties.scrollPosition != newScrollPosition) {
+            self.properties.scrollPosition = newScrollPosition;
+            self.render(layout);
+        }
+    }));
     
 };
 
