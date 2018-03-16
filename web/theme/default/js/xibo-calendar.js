@@ -500,7 +500,7 @@ var processScheduleFormElements = function(el) {
             // Set control visibility
             $startTime.css('display', startTimeControlDisplay);
             $endTime.css('display', endTimeControlDisplay);
-            $repeats.css('display', repeatsControlDisplay );
+            $repeats.css('display', repeatsControlDisplay);
 
             // Dayparts only show the start control
             if (meta.isAlways === 0 && meta.isCustom === 0) {
