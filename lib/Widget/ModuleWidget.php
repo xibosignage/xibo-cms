@@ -1141,8 +1141,8 @@ abstract class ModuleWidget implements ModuleInterface
                     $template['fileName'] = $template['image'];
 
                     if ($loadImage) {
-                        // We ltrim this because the control is expecting a relative URL
-                        $template['image'] = ltrim($this->getApp()->urlFor('module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]), '/');
+                        // Find the URL to the module file representing this template image
+                        $template['image'] = $this->getApp()->urlFor('module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]);
                     }
                 } else {
                     $template['fileName'] = '';

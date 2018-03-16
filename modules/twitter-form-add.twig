@@ -192,7 +192,7 @@
 
                         {% set title %}{% trans "Template" %}{% endset %}
                         {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
-                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId", "tweet-only"), module.templatesAvailable(),"id", "value", helptext, "template-selector-control selectPicker selectPickerWithImage", null, null, null, null, null, baseUrl, "image") }}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId", "tweet-only"), module.templatesAvailable(),"id", "value", helptext, "template-selector-control selectPicker selectPickerWithImage", null, null, null, null, null, "image") }}
 
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
