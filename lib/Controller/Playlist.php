@@ -12,6 +12,7 @@ namespace Xibo\Controller;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\MediaFactory;
@@ -164,14 +165,16 @@ class Playlist extends Base
             // Only proceed if we have edit permissions
             if ($this->getUser()->checkEditable($playlist)) {
 
-                // Timeline eidt
-                $playlist->buttons[] = array(
-                    'id' => 'playlist_timeline_button_edit',
-                    'url' => $this->urlFor('playlist.timeline.form', ['id' => $playlist->playlistId]),
-                    'text' => __('Timeline')
-                );
+                if ($playlist->isDynamic === 0) {
+                    // Timeline edit
+                    $playlist->buttons[] = array(
+                        'id' => 'playlist_timeline_button_edit',
+                        'url' => $this->urlFor('playlist.timeline.form', ['id' => $playlist->playlistId]),
+                        'text' => __('Timeline')
+                    );
 
-                $playlist->buttons[] = ['divider' => true];
+                    $playlist->buttons[] = ['divider' => true];
+                }
 
                 // Edit Button
                 $playlist->buttons[] = array(
@@ -258,14 +261,21 @@ class Playlist extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="startMediaName",
+     *      name="isDynamic",
+     *      in="formData",
+     *      description="Is this Playlist Dynamic?",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="filterMediaName",
      *      in="formData",
      *      description="Add Library Media matching the name filter provided",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="startMediaTag",
+     *      name="filterMediaTag",
      *      in="formData",
      *      description="Add Library Media matching the tag filter provided",
      *      type="string",
@@ -288,7 +298,19 @@ class Playlist extends Base
     public function add()
     {
         $playlist = $this->playlistFactory->create($this->getSanitizer()->getString('name'), $this->getUser()->getId());
+        $playlist->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
         $playlist->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
+
+        // Do we have a tag or name filter?
+        $nameFilter = $this->getSanitizer()->getString('filterMediaName');
+        $tagFilter = $this->getSanitizer()->getString('filterMediaTag');
+
+        // Capture these as dynamic filter criteria
+        if ($playlist->isDynamic === 1) {
+            $playlist->filterMediaName = $nameFilter;
+            $playlist->filterMediaTags = $tagFilter;
+        }
+
         $playlist->save();
 
         // Default permissions
@@ -297,11 +319,8 @@ class Playlist extends Base
             $permission->save();
         }
 
-        // Do we have a tag or name filter?
-        $nameFilter = $this->getSanitizer()->getString('startMediaName');
-        $tagFilter = $this->getSanitizer()->getString('startMediaTag');
-
-        if (!empty($nameFilter) || !empty($tagFilter)) {
+        // Should we assign any existing media
+        if ($playlist->isDynamic === 0 && (!empty($nameFilter) || !empty($tagFilter))) {
             $media = $this->mediaFactory->query(null, ['name' => $nameFilter, 'tags' => $tagFilter]);
 
             if (count($media) > 0) {
@@ -385,8 +404,63 @@ class Playlist extends Base
 
     /**
      * Edit
-     * @param $playlistId
-     * @throws \Xibo\Exception\NotFoundException
+     *
+     * @SWG\Put(
+     *  path="/playlist/{playlistId}",
+     *  operationId="playlistEdit",
+     *  tags={"playlist"},
+     *  summary="Edit a Playlist",
+     *  description="Edit a Playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The PlaylistId to Edit",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="The Name for this Playlist",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="Tags",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isDynamic",
+     *      in="formData",
+     *      description="Is this Playlist Dynamic?",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="filterMediaName",
+     *      in="formData",
+     *      description="Add Library Media matching the name filter provided",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="filterMediaTag",
+     *      in="formData",
+     *      description="Add Library Media matching the tag filter provided",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @param int $playlistId
+     * @throws XiboException
      */
     public function edit($playlistId)
     {
@@ -396,7 +470,16 @@ class Playlist extends Base
             throw new AccessDeniedException();
 
         $playlist->name = $this->getSanitizer()->getString('name');
+        $playlist->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
         $playlist->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
+
+        // Do we have a tag or name filter?
+        // Capture these as dynamic filter criteria
+        if ($playlist->isDynamic === 1) {
+            $playlist->filterMediaName = $this->getSanitizer()->getString('filterMediaName');
+            $playlist->filterMediaTags = $this->getSanitizer()->getString('filterMediaTag');
+        }
+
         $playlist->save();
 
         // Success
@@ -784,6 +867,9 @@ class Playlist extends Base
 
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
+
+        if ($playlist->isDynamic === 1)
+            throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept manual assignments.'), 'isDynamic');
 
         // Expect a list of mediaIds
         $media = $this->getSanitizer()->getIntArray('media');

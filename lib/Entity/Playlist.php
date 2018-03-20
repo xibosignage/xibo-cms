@@ -70,6 +70,24 @@ class Playlist implements \JsonSerializable
     public $regionId;
 
     /**
+     * @SWG\Property(description="Flag indicating if this is a dynamic Playlist")
+     * @var int
+     */
+    public $isDynamic;
+
+    /**
+     * @SWG\Property(description="Filter Name for a Dynamic Playlist")
+     * @var string
+     */
+    public $filterMediaName;
+
+    /**
+     * @SWG\Property(description="Filter Tags for a Dynamic Playlist")
+     * @var string
+     */
+    public $filterMediaTags;
+
+    /**
      * @var string
      * @SWG\Property(
      *  description="The datetime the Layout was created"
@@ -483,11 +501,17 @@ class Playlist implements \JsonSerializable
 
         $time = date('Y-m-d H:i:s');
 
-        $sql = 'INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `createdDt`, `modifiedDt`) VALUES (:name, :ownerId, :regionId, :createdDt, :modifiedDt)';
+        $sql = '
+        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `createdDt`, `modifiedDt`) 
+          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :createdDt, :modifiedDt)
+        ';
         $this->playlistId = $this->getStore()->insert($sql, array(
             'name' => $this->name,
             'ownerId' => $this->ownerId,
             'regionId' => $this->regionId == 0 ? null : $this->regionId,
+            'isDynamic' => $this->isDynamic,
+            'filterMediaName' => $this->filterMediaName,
+            'filterMediaTags' => $this->filterMediaTags,
             'createdDt' => $time,
             'modifiedDt' => $time,
         ));
@@ -512,6 +536,9 @@ class Playlist implements \JsonSerializable
                 `regionId` = :regionId, 
                 `modifiedDt` = :modifiedDt, 
                 `duration` = :duration,
+                `isDynamic` = :isDynamic,
+                `filterMediaName` = :filterMediaName,
+                `filterMediaTags` = :filterMediaTags,
                 `requiresDurationUpdate` = :requiresDurationUpdate
              WHERE `playlistId` = :playlistId
         ';
@@ -521,6 +548,9 @@ class Playlist implements \JsonSerializable
             'name' => $this->name,
             'regionId' => $this->regionId == 0 ? null : $this->regionId,
             'duration' => $this->duration,
+            'isDynamic' => $this->isDynamic,
+            'filterMediaName' => $this->filterMediaName,
+            'filterMediaTags' => $this->filterMediaTags,
             'modifiedDt' => date('Y-m-d H:i:s'),
             'requiresDurationUpdate' => $this->requiresDurationUpdate
         ));

@@ -20,12 +20,52 @@
 
 {% block callBack %}playlistFormOpen{% endblock %}
 
+{% block formFieldActions %}
+    [{
+    "field": "isDynamic",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".dynamic-message": { "display": "none" },
+    ".static-message": { "display": "block" }
+    }
+    },{
+    "field": "isDynamic",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".dynamic-message": { "display": "none" },
+    ".static-message": { "display": "block" }
+    }
+    },{
+    "field": "isDynamic",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".dynamic-message": { "display": "block" },
+    ".static-message": { "display": "none" }
+    }
+    },{
+    "field": "isDynamic",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".dynamic-message": { "display": "block" },
+    ".static-message": { "display": "none" }
+    }
+    }]
+{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#populate" role="tab" data-toggle="tab"><span>{% trans "Populate" %}</span></a></li>
+                <li><a href="#populate" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
             </ul>
             <form id="playlistAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("playlist.add") }}">
                 <div class="tab-content">
@@ -37,16 +77,26 @@
                         {% set title %}{% trans "Tags" %}{% endset %}
                         {% set helpText %}{% trans "Tags for this playlist - used when searching for it. Comma delimited. (1 - 250 characters)" %}{% endset %}
                         {{ forms.inputWithTags("tags", title, "", helpText) }}
+
+                        {% set title %}{% trans "Dynamic?" %}{% endset %}
+                        {% set helpText %}{% trans "Is this Playlist to have its Widget assignments managed automatically by the CMS based on filter criteria? Set a filter on the next tab." %}{% endset %}
+                        {{ forms.checkbox("isDynamic", title, 0, helpText) }}
                     </div>
                     <div class="tab-pane" id="populate">
-                        {% set message = "Populate with Library Media matching the criteria below. This is a one time assignment and is not automatically maintained."|trans %}
-                        {{ forms.message(message) }}
+                        <div class="dynamic-message">
+                            {% set message = "Populate with Library Media matching the criteria below and automatically maintain the Playlist."|trans %}
+                            {{ forms.message(message) }}
+                        </div>
+                        <div class="static-message">
+                            {% set message = "Populate with Library Media matching the criteria below. This is a one time assignment and is not automatically maintained."|trans %}
+                            {{ forms.message(message) }}
+                        </div>
 
                         {% set title %}{% trans "Name filter" %}{% endset %}
-                        {{ forms.input("startMediaName", title) }}
+                        {{ forms.input("filterMediaName", title) }}
 
                         {% set title %}{% trans "Tag filter" %}{% endset %}
-                        {{ forms.inputWithTags("startMediaTag", title) }}
+                        {{ forms.inputWithTags("filterMediaTag", title) }}
 
                         <div class="row">
                             <div class="col-md-12">

@@ -63,6 +63,7 @@
                                 <th>{% trans "Name" %}</th>
                                 <th>{% trans "Duration" %}</th>
                                 <th>{% trans "Tags" %}</th>
+                                <th>{% trans "Dynamic?" %}</th>
                                 <th>{% trans "Owner" %}</th>
                                 <th>{% trans "Permissions" %}</th>
                                 <th>{% trans "Created" %}</th>
@@ -186,6 +187,7 @@
                         "visible": false,
                         "data": dataTableCreateTags
                     },
+                    { "data": "isDynamic", "render": dataTableTickCrossColumn },
                     {"data": "owner"},
                     {
                         "data": "groupsWithPermissions",
@@ -224,11 +226,11 @@
         function playlistFormOpen(dialog) {
             mediaTable = null;
 
-            $(dialog).find("input[name=startMediaName]").on("keyup", $.debounce(500, function() {
+            $(dialog).find("input[name=filterMediaName]").on("keyup", $.debounce(500, function() {
                 playlistFormPopulateMediaTable(dialog);
             }));
 
-            $(dialog).find("input[name=startMediaTag]").on("change", function() {
+            $(dialog).find("input[name=filterMediaTag]").on("change", function() {
                 playlistFormPopulateMediaTable(dialog);
             });
 
@@ -238,8 +240,8 @@
 
         function playlistFormPopulateMediaTable(dialog) {
 
-            nameFilter = $(dialog).find("input[name=startMediaName]").val();
-            tagFilter = $(dialog).find("input[name=startMediaTag]").val();
+            nameFilter = $(dialog).find("input[name=filterMediaName]").val();
+            tagFilter = $(dialog).find("input[name=filterMediaTag]").val();
 
             if (nameFilter === "" && tagFilter === "") {
                 if (mediaTable != null) {

@@ -139,6 +139,7 @@ class PlaylistFactory extends BaseFactory
         $playlist->name = $name;
         $playlist->ownerId = $ownerId;
         $playlist->regionId = $regionId;
+        $playlist->isDynamic = 0;
 
         return $playlist;
     }
@@ -162,6 +163,9 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.createdDt,
                 `playlist`.modifiedDt,
                 `playlist`.duration,
+                `playlist`.isDynamic,
+                `playlist`.filterMediaName,
+                `playlist`.filterMediaTags,
                 `playlist`.requiresDurationUpdate,
                 (
                 SELECT GROUP_CONCAT(DISTINCT tag) 
@@ -223,6 +227,11 @@ class PlaylistFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('requiresDurationUpdate', $filterBy) !== null) {
             $body .= ' AND `playlist`.requiresDurationUpdate = :requiresDurationUpdate ';
             $params['requiresDurationUpdate'] = $this->getSanitizer()->getInt('requiresDurationUpdate', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('isDynamic', $filterBy) !== null) {
+            $body .= ' AND `playlist`.isDynamic = :isDynamic ';
+            $params['isDynamic'] = $this->getSanitizer()->getInt('isDynamic', $filterBy);
         }
 
         if ($this->getSanitizer()->getInt('childId', $filterBy) !== null) {
@@ -367,7 +376,7 @@ class PlaylistFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $playlist = $this->createEmpty()->hydrate($row, ['intProperties' => ['requiresDurationUpdate']]);
+            $playlist = $this->createEmpty()->hydrate($row, ['intProperties' => ['requiresDurationUpdate', 'isDynamic']]);
             $playlist->excludeProperty('requiresDurationUpdate');
             $entries[] = $playlist;
         }
