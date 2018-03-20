@@ -168,6 +168,7 @@ $app->get('/display/form/defaultlayout/:id', '\Xibo\Controller\Display:defaultLa
 //
 $app->get('/user/view', '\Xibo\Controller\User:displayPage')->name('user.view');
 $app->get('/user/welcome', '\Xibo\Controller\Login:userWelcome')->name('welcome.wizard');
+$app->put('/user/welcome', '\Xibo\Controller\User:userWelcomeSetSeen')->name('welcome.wizard.seen');
 $app->get('/user/apps', '\Xibo\Controller\User:myApplications')->name('user.applications');
 $app->get('/user/form/password', '\Xibo\Controller\User:changePasswordForm')->name('user.change.password.form');
 $app->get('/user/form/add', '\Xibo\Controller\User:addForm')->name('user.add.form');
