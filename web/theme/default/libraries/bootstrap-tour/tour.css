@@ -1,0 +1,18 @@
+.popover-double-width {
+  max-width: 652px !important;
+  background-color: #d9edf7 !important;
+}
+.popover-normal-width {
+  max-width: 552px !important;
+  min-width: 150px;
+  background-color: #d9edf7 !important;
+}
+.padminus {
+    padding-right: 5px !important;
+}
+.popover-content-large{
+    font-size: large !important;
+}
+.tour .popover-title{
+    background-color: #b2bfdc;
+}
