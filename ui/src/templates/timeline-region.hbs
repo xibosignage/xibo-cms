@@ -1,15 +1,27 @@
 <div id="{{ id }}" data-type="region" class="region selectable {{selectedFlag}}">
     {{#unless hideDetails}}
+
+        {{!-- Draw widgets --}}
         {{#each widgets}}
             {{> timeline-widget}}
         {{/each}}
         
         {{#if loop}}
+
+            {{!-- Ghost widget padding --}}
+            {{#if ghostWidgetsHavePadding}}
+                <div class="ghost-padding" style="
+                    width: {{ ghostWidgetsPadding }}%;">
+                </div>
+            {{/if}}
+
+            {{!-- Ghost widget objects --}}
             {{#each ghostWidgetsObject}}
                 {{> timeline-ghost-widget}}
             {{/each}}
         {{/if}}
     {{else}}
+        {{!-- Show message to zoom in --}}
         <p>Zoom in to see/edit region</p>
     {{/unless}}
 </div>

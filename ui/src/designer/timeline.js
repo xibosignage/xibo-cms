@@ -157,90 +157,82 @@ Timeline.prototype.checkRegionsVisibility = function(regions) {
  * @param {object} regions - Layout regions
  */
 Timeline.prototype.createGhostWidgetsDinamically = function(regions) {
-    console.log('TODO: Creating ghosts');
 
     for(region in regions) {
         var currentRegion = regions[region];
 
-        // If the regions isn't marked for looping, skip to the next one
+        // if the regions isn't marked for looping, skip to the next one
         if(!currentRegion.loop) {
-            continue;
-        }
-
-        console.log('Region: ' + currentRegion.id);
-        console.log('1. Check current time');
-        console.log(this.properties.minTime + ' -> ' + this.properties.maxTime);
-        
-    }
-};
-
-/**
- * Create widget replicas
- * @param {object} regions - Layout regions
- */
-Timeline.prototype.createGhostWidgetsOld = function(regions) {
-
-    console.log('TODO: remove createGhostWidgetsOld');
-
-    for(region in regions) {
-        var currentRegion = regions[region];
-        
-        if(!currentRegion.loop) {
-            console.log('Error: region widgets not supposed to loop!');
             continue;
         }
 
         var widgetsTotalDuration = 0;
         var ghostWidgetsObject = [];
 
-        // Calculate widgets total duration
+        // calculate widgets total duration
         for(widget in currentRegion.widgets) {
             widgetsTotalDuration += currentRegion.widgets[widget].getDuration();
         }
 
-        var widgetsAllRepetitions = currentRegion.layoutDuration / widgetsTotalDuration; // number of times that the widget list fits in the region duration
-        var ghostLackingFullRepetitions = Math.floor(widgetsAllRepetitions) - 1; // full cycle of the widgets combination that fit the region duration ( minus the actual widgets )
-        var ghostLackingCuttedRepetition = (widgetsAllRepetitions - 1) - ghostLackingFullRepetitions; // the remaining duration after the repetetitions fill the duration
+        // starting and ending time to check/draw ghosts in
+        //      get the ghosts drawing starting time, depending on the minimum visualization time and if the widgets are shown on screen after it or not
+        var ghostsStartTime = (widgetsTotalDuration > this.properties.minTime) ? widgetsTotalDuration : this.properties.minTime;
+        var ghostsEndTime = this.properties.maxTime;
+        
+        // distance from the beggining of ghosts and the end of the widgets
+        var paddingLeft = 0;
 
-
-        // Add a full set of widgets for each full loop
-        for(let i = 0;i < ghostLackingFullRepetitions;i++) {
-            for(widget in currentRegion.widgets) {
-                ghostWidgetsObject.push(currentRegion.widgets[widget].createClone());
-
-            }
+        // if the widgets are shown until the end visualization ( or after ), don't draw any ghosts
+        if(widgetsTotalDuration > ghostsEndTime){
+            return;
         }
 
-        // Create the non-full widget repetition
-        var lastWidgetCycleDurationRemaining = Math.round(ghostLackingCuttedRepetition * widgetsTotalDuration);
+        // start the auxiliar time just after the widgets
+        var auxTime = widgetsTotalDuration;
 
-        if(lastWidgetCycleDurationRemaining > 0) {
+        // go through auxiliar time, advancing with each widget's time
+        while( auxTime < ghostsEndTime) {
+
+            // repeat widget playlist to advance time and create the ghost widgets
             for(widget in currentRegion.widgets) {
-                var widget = currentRegion.widgets[widget]; // Widget copy
-                var widgetDuration = widget.getDuration();
 
-                if(widgetDuration < lastWidgetCycleDurationRemaining) { // if the widget duration fits inside the remaining region time
-                    // calculate the remaining time
-                    lastWidgetCycleDurationRemaining -= widgetDuration;
+                // if the next widget shows on the time span, add it to the array
+                if(auxTime + currentRegion.widgets[widget].getDuration() > ghostsStartTime) {
+                    // clone widget to create a ghost
+                    var ghost = currentRegion.widgets[widget].createClone();
 
-                    // create a clone of the widget and add it to the array
-                    ghostWidgetsObject.push(widget.createClone());
-                } else {
-                    // create a clone of the last widget and add it to the array
-                    var newWidgetIndex = ghostWidgetsObject.push(widget.createClone()) - 1;
+                    // if the ghost goes after the layout ending, crop it
+                    if(auxTime + ghost.data.duration > this.layoutDuration) {
+                        var cropDuration = ghost.data.duration - ((auxTime + ghost.data.duration) - this.layoutDuration);
+                        ghost.data.duration = cropDuration;
+                    }
 
-                    // set this widget new duration
-                    ghostWidgetsObject[newWidgetIndex].data.duration = lastWidgetCycleDurationRemaining;
+                    // Add ghost to the array
+                    ghostWidgetsObject.push(ghost);
+                } else {                
+                    paddingLeft += currentRegion.widgets[widget].getDuration();
+                }
+
+                // Advance auxiliar time with the widget duration
+                auxTime += currentRegion.widgets[widget].getDuration();
+
+                // if the time has passed the end ghost time, break out from the widget loop
+                if(auxTime >= ghostsEndTime){
                     break;
                 }
             }
         }
 
-        // return array with the widget ghosts
+        // flag to see if there's padding
+        currentRegion.ghostWidgetsHavePadding = (paddingLeft > 0);
+    
+        // Calulate padding in percentage ( related to the duration )
+        currentRegion.ghostWidgetsPadding = (paddingLeft / this.layoutDuration) * 100;
+
+        // add ghost object array to the region
         currentRegion.ghostWidgetsObject = ghostWidgetsObject;
     }
 };
-
 
 /**
  * Render Timeline and the layout
@@ -259,7 +251,7 @@ Timeline.prototype.render = function(layout) {
     // Check regions to see if they can be rendered with details or not
     this.checkRegionsVisibility(layout.regions);
 
-    // TODO: Check widget repetition and create ghosts
+    // Check widget repetition and create ghosts
     this.createGhostWidgetsDinamically(layout.regions);
 
     // Render timeline template using layout object
@@ -302,8 +294,9 @@ Timeline.prototype.render = function(layout) {
         self.changeZoom(0);
         self.render(layout);
     });
+    
+    regionsContainer.scroll($.debounce(500, function() { //TODO: try to find a best alternative to the debounce
 
-    regionsContainer.scroll($.debounce(250, function(){
         // Get new scroll position
         var newScrollPosition = $(this).scrollLeft() / $(this).find("#regions").width();
 
@@ -313,7 +306,6 @@ Timeline.prototype.render = function(layout) {
             self.render(layout);
         }
     }));
-    
 };
 
 module.exports = Timeline;

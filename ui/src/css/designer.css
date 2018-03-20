@@ -65,6 +65,12 @@
     height: 100%;
 }
 
+#layout-editor #layout-top-region #layout-timeline .ghost-padding {
+    background: #11111121;
+    float: left;
+    height: 100%;
+}
+
 #layout-editor #layout-top-region #layout-timeline .extension {
     color: #999;
     font-weight: bold;

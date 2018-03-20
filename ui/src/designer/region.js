@@ -61,7 +61,6 @@ Region.prototype.scaleTo = function(layoutScale) {
  * @param  {number} layoutScale Layout scaling from the container to the actual layout dimensions
  */
 Region.prototype.saveTransformation = function(width, height, top, left, layoutScale) {
-    console.log('Region - saveTransformation');
 
     // Change data structure properties
     this.data.width = width / layoutScale;

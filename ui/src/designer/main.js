@@ -219,7 +219,7 @@ window.selectObject = function(obj) {
         selectedObject.type = newSelectedType;
     }
 
-    // TODO - Output selected object properties on PROPERTIES container
+    //TODO: Output selected object properties on PROPERTIES container
     designerDiv.find('#layout-property-panel').html(
         '<h2>id: ' + selectedObject.id + '</h2>' +
         '<h2>type: ' + selectedObject.type + '</h2>'
