@@ -175,8 +175,6 @@
                             if (type !== "display" && type !== "export")
                                 return data;
 
-                            console.log(row);
-
                             if (row.requiresDurationUpdate === 1)
                                 return '<span class="fa fa-clock-o" title="{{ "Changes have been made and we are recalculating this Playlists duration" }}"></span>';
 
@@ -215,6 +213,80 @@
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#playlists_wrapper').find('.col-sm-6').eq(1));
         });
+
+        // Playlist Add Form
+        // contains a grid on the populate tab
+        // hook up the grid
+        var mediaTable;
+        var nameFilter;
+        var tagFilter;
+
+        function playlistFormOpen(dialog) {
+            mediaTable = null;
+
+            $(dialog).find("input[name=startMediaName]").on("keyup", $.debounce(500, function() {
+                playlistFormPopulateMediaTable(dialog);
+            }));
+
+            $(dialog).find("input[name=startMediaTag]").on("change", function() {
+                playlistFormPopulateMediaTable(dialog);
+            });
+
+            // First time in there
+            playlistFormPopulateMediaTable(dialog);
+        }
+
+        function playlistFormPopulateMediaTable(dialog) {
+
+            nameFilter = $(dialog).find("input[name=startMediaName]").val();
+            tagFilter = $(dialog).find("input[name=startMediaTag]").val();
+
+            if (nameFilter === "" && tagFilter === "") {
+                if (mediaTable != null) {
+                    mediaTable.destroy();
+                    mediaTable = null;
+                    $("#media tbody").empty();
+                }
+
+                return;
+            }
+
+            if (mediaTable != null) {
+                mediaTable.ajax.reload();
+            } else {
+                mediaTable = $("#media").DataTable({
+                    "language": dataTablesLanguage,
+                    serverSide: true,
+                    stateSave: true,
+                    stateDuration: 0,
+                    filter: false,
+                    searchDelay: 3000,
+                    "order": [[1, "asc"]],
+                    ajax: {
+                        "url": "{{ urlFor("library.search") }}",
+                        "data": function (d) {
+                            $.extend(d, {media: nameFilter, tags: tagFilter});
+                        }
+                    },
+                    "columns": [
+                        {"data": "mediaId"},
+                        {"data": "name"},
+                        {"data": "mediaType"},
+                        {
+                            "name": "duration",
+                            "data": function (data, type) {
+                                if (type !== "display")
+                                    return data.duration;
+
+                                return moment().startOf("day").seconds(data.duration).format("H:mm:ss");
+                            }
+                        }
+                    ]
+                });
+
+                mediaTable.on('processing.dt', dataTableProcessing);
+            }
+        }
     </script>
 
     {% for module in modules %}

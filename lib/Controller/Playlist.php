@@ -236,6 +236,54 @@ class Playlist extends Base
 
     /**
      * Add
+     *
+     * @SWG\Post(
+     *  path="/playlist",
+     *  operationId="playlistAdd",
+     *  tags={"playlist"},
+     *  summary="Add a Playlist",
+     *  description="Add a new Playlist",
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="The Name for this Playlist",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="Tags",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="startMediaName",
+     *      in="formData",
+     *      description="Add Library Media matching the name filter provided",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="startMediaTag",
+     *      in="formData",
+     *      description="Add Library Media matching the tag filter provided",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Playlist"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     *
+     * @throws XiboException
      */
     public function add()
     {
@@ -247,6 +295,66 @@ class Playlist extends Base
         foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
             /* @var Permission $permission */
             $permission->save();
+        }
+
+        // Do we have a tag or name filter?
+        $nameFilter = $this->getSanitizer()->getString('startMediaName');
+        $tagFilter = $this->getSanitizer()->getString('startMediaTag');
+
+        if (!empty($nameFilter) || !empty($tagFilter)) {
+            $media = $this->mediaFactory->query(null, ['name' => $nameFilter, 'tags' => $tagFilter]);
+
+            if (count($media) > 0) {
+                $widgets = [];
+
+                foreach ($media as $item) {
+                    // Create a module
+                    $module = $this->moduleFactory->create($item->mediaType);
+
+                    // Determine the duration
+                    $itemDuration = ($item->duration == 0) ? $module->determineDuration() : $item->duration;
+
+                    // Create a widget
+                    $widget = $this->widgetFactory->create($this->getUser()->userId, $playlist->playlistId, $item->mediaType, $itemDuration);
+                    $widget->assignMedia($item->mediaId);
+
+                    // Assign the widget to the module
+                    $module->setWidget($widget);
+
+                    // Set default options (this sets options on the widget)
+                    $module->setDefaultWidgetOptions();
+
+                    // Calculate the duration
+                    $widget->calculateDuration($module);
+
+                    // Assign the widget to the playlist
+                    $playlist->assignWidget($widget);
+
+                    // Add to a list of new widgets
+                    $widgets[] = $widget;
+                }
+
+                // Save the playlist
+                $playlist->save();
+
+                // Handle permissions
+                foreach ($widgets as $widget) {
+                    /* @var Widget $widget */
+                    if ($this->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
+                        // Apply permissions from the Parent
+                        foreach ($playlist->permissions as $permission) {
+                            /* @var Permission $permission */
+                            $permission = $this->permissionFactory->create($permission->groupId, get_class($widget), $widget->getId(), $permission->view, $permission->edit, $permission->delete);
+                            $permission->save();
+                        }
+                    } else {
+                        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+                            /* @var Permission $permission */
+                            $permission->save();
+                        }
+                    }
+                }
+            }
         }
 
         // Success
