@@ -26,6 +26,8 @@
         <link href="{{ theme.uri("libraries/jquery-file-upload/css/jquery.fileupload.css") }}?{{ version }}" rel="stylesheet">
         <link href="{{ theme.uri("libraries/jquery-file-upload/css/jquery.fileupload-ui.css") }}?{{ version }}" rel="stylesheet">
         <link href="{{ theme.uri("libraries/toastr/toastr.min.css") }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/bootstrap-tour/bootstrap-tour.min.css") }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/bootstrap-tour/tour.css") }}" rel="stylesheet">
         <link href="{{ theme.uri("css/dashboard.css") }}?{{ version }}" rel="stylesheet" media="screen">
         <link href="{{ theme.uri("css/timeline.css") }}?{{ version }}" rel="stylesheet" media="screen">
         <link href="{{ theme.uri("css/xibo.css") }}?{{ version }}" rel="stylesheet" media="screen">
@@ -77,6 +79,8 @@
         <script src="{{ theme.uri("libraries/jquery-message-queuing/jquery.ba-jqmq.min.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("libraries/jquery-throttle-debounce/jquery.ba-throttle-debounce.min.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("libraries/toastr/toastr.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/bootstrap-tour/bootstrap-tour.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/bootstrap-tour/tour.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("libraries/date-time-format.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("libraries/momentjs/moment.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("libraries/momentjs/moment-timezone.js") }}?{{ version }}"></script>
@@ -155,7 +159,7 @@
             var clockUrl = "{{ urlFor("clock") }}";
             var calendarLanguage = "{{ translate.calendarLanguage }}";
             var pingUrl = "{{ urlFor("ping") }}";
-
+            var newUserWizard = {{currentUser.newUserWizard}};
             {% autoescape "js" %}
             var dataTablesLanguage = {
                 "decimal":        "",
