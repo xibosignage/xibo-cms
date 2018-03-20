@@ -159,6 +159,7 @@ Timeline.prototype.checkRegionsVisibility = function(regions) {
 Timeline.prototype.createGhostWidgetsDinamically = function(regions) {
 
     for(region in regions) {
+        
         var currentRegion = regions[region];
 
         // if the regions isn't marked for looping, skip to the next one
@@ -168,6 +169,9 @@ Timeline.prototype.createGhostWidgetsDinamically = function(regions) {
 
         var widgetsTotalDuration = 0;
         var ghostWidgetsObject = [];
+
+        // Clear region previous ghosts
+        currentRegion.ghostWidgetsObject = [];
 
         // calculate widgets total duration
         for(widget in currentRegion.widgets) {
@@ -184,7 +188,7 @@ Timeline.prototype.createGhostWidgetsDinamically = function(regions) {
 
         // if the widgets are shown until the end visualization ( or after ), don't draw any ghosts
         if(widgetsTotalDuration > ghostsEndTime){
-            return;
+            continue;
         }
 
         // start the auxiliar time just after the widgets
