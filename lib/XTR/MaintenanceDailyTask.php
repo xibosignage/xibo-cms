@@ -8,7 +8,9 @@
 
 namespace Xibo\XTR;
 use Xibo\Controller\Library;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\UserFactory;
 
 /**
  * Class MaintenanceDailyTask
@@ -21,6 +23,9 @@ class MaintenanceDailyTask implements TaskInterface
     /** @var LayoutFactory */
     private $layoutFactory;
 
+    /** @var UserFactory */
+    private $userFactory;
+
     /** @var Library */
     private $libraryController;
 
@@ -29,6 +34,7 @@ class MaintenanceDailyTask implements TaskInterface
     {
         $this->libraryController = $container->get('\Xibo\Controller\Library');
         $this->layoutFactory = $container->get('layoutFactory');
+        $this->userFactory = $container->get('userFactory');
         return $this;
     }
 
@@ -142,6 +148,7 @@ class MaintenanceDailyTask implements TaskInterface
 
     /**
      * Import Layouts
+     * @throws XiboException
      */
     private function importLayouts()
     {
@@ -153,7 +160,18 @@ class MaintenanceDailyTask implements TaskInterface
 
             foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                 if (stripos($file, '.zip')) {
-                    $layout = $this->layoutFactory->createFromZip($folder . '/' . $file, null, 1, false, false, true, false, true, $this->app->container->get('\Xibo\Controller\Library')->setApp($this->app));
+                    $layout = $this->layoutFactory->createFromZip(
+                        $folder . '/' . $file,
+                        null,
+                        $this->userFactory->getSystemUser()->getId(),
+                        false,
+                        false,
+                        true,
+                        false,
+                        true,
+                        $this->libraryController
+                    );
+
                     $layout->save([
                         'audit' => false
                     ]);
