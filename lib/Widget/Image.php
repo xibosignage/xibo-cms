@@ -169,12 +169,7 @@ class Image extends ModuleWidget
         return $output;
     }
 
-    /**
-     * Get Resource
-     * @param int $displayId
-     * @return mixed
-     * @throws XiboException
-     */
+    /** @inheritdoc */
     public function getResource($displayId = 0)
     {
         $this->getLog()->debug('Image Module: GetResource for ' . $this->getMediaId());

@@ -154,7 +154,7 @@ class Schedule extends Base
      *  operationId="scheduleCalendarData",
      *  tags={"schedule"},
      *  @SWG\Parameter(
-     *      name="DisplayGroupIds",
+     *      name="displayGroupIds",
      *      description="The DisplayGroupIds to return the schedule for. Empty for All.",
      *      in="formData",
      *      type="array",
@@ -342,7 +342,7 @@ class Schedule extends Base
      * @param $displayGroupId
      *
      * @SWG\Get(
-     *  path="/schedule/:displayGroupId/events",
+     *  path="/schedule/{displayGroupId}/events",
      *  operationId="scheduleCalendarData",
      *  tags={"schedule"},
      *  @SWG\Parameter(

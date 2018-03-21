@@ -964,14 +964,22 @@ function formRenderDetectSpacingIssues(element) {
 }
 
 function XiboMultiSelectFormRender(button) {
-
+    // The button ID
     var buttonId = $(button).data().buttonId;
+
+    // Get a list of buttons that match the ID
     var matches = [];
+    var formOpenCallback = null;
 
     $("." + buttonId).each(function() {
         if ($(this).closest('tr').hasClass('selected')) {
             // This particular button should be included.
             matches.push($(this));
+
+            if (matches.length === 1) {
+                // this is the first button which matches, so use the form open hook if one has been provided.
+                formOpenCallback = $(this).data().formCallback;
+            }
         }
     });
 
@@ -993,6 +1001,11 @@ function XiboMultiSelectFormRender(button) {
     var dialogContent = dialog.find(".modal-body");
     var footer = $("<div>").addClass("modal-footer");
     dialog.find(".modal-content").append(footer);
+
+    // Call our open function if we have one
+    if (formOpenCallback !== undefined && formOpenCallback !== null) {
+        eval(formOpenCallback)(dialog);
+    }
 
     // Add some buttons
     var extrabutton;
@@ -1016,6 +1029,9 @@ function XiboMultiSelectFormRender(button) {
                 // continue processing the queue once the AJAX request's callback executes.
                 callback: function( item ) {
                     var data = $(item).data();
+
+                    if (dialog.data().commitData !== undefined)
+                        data = $.extend({}, data, dialog.data().commitData);
 
                     // Make an AJAX call
                     $.ajax({

@@ -96,6 +96,22 @@ class Widget implements \JsonSerializable
     public $calculatedDuration = 0;
 
     /**
+     * @var string
+     * @SWG\Property(
+     *  description="The datetime the Layout was created"
+     * )
+     */
+    public $createdDt;
+
+    /**
+     * @var string
+     * @SWG\Property(
+     *  description="The datetime the Layout was last modified"
+     * )
+     */
+    public $modifiedDt;
+
+    /**
      * @SWG\Property(description="Widget From Date")
      * @var int
      */
@@ -256,7 +272,18 @@ class Widget implements \JsonSerializable
      */
     private function hash()
     {
-        return md5($this->widgetId . $this->playlistId . $this->ownerId . $this->type . $this->duration . $this->displayOrder . $this->useDuration . $this->calculatedDuration . $this->fromDt . $this->toDt);
+        return md5($this->widgetId
+            . $this->playlistId
+            . $this->ownerId
+            . $this->type
+            . $this->duration
+            . $this->displayOrder
+            . $this->useDuration
+            . $this->calculatedDuration
+            . $this->fromDt
+            . $this->toDt
+            . json_encode($this->widgetOptions)
+        );
     }
 
     /**
@@ -265,6 +292,7 @@ class Widget implements \JsonSerializable
      */
     private function mediaHash()
     {
+        sort($this->mediaIds);
         return md5(implode(',', $this->mediaIds));
     }
 
@@ -405,6 +433,8 @@ class Widget implements \JsonSerializable
      */
     public function getPrimaryMedia()
     {
+        $this->load();
+
         $this->getLog()->debug('Getting first primary media for Widget: ' . $this->widgetId . ' Media: ' . json_encode($this->mediaIds) . ' audio ' . json_encode($this->getAudioIds()));
 
         if (count($this->mediaIds) <= 0)
@@ -800,8 +830,8 @@ class Widget implements \JsonSerializable
         $this->isNew = true;
 
         $sql = '
-            INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`, `displayOrder`, `useDuration`, `calculatedDuration`, `fromDt`, `toDt`)
-            VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder, :useDuration, :calculatedDuration, :fromDt, :toDt)
+            INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`, `displayOrder`, `useDuration`, `calculatedDuration`, `fromDt`, `toDt`, `createdDt`, `modifiedDt`)
+            VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder, :useDuration, :calculatedDuration, :fromDt, :toDt, :createdDt, :modifiedDt)
         ';
 
         $this->widgetId = $this->getStore()->insert($sql, array(
@@ -813,7 +843,9 @@ class Widget implements \JsonSerializable
             'useDuration' => $this->useDuration,
             'calculatedDuration' => $this->calculatedDuration,
             'fromDt' => ($this->fromDt == null) ? self::$DATE_MIN : $this->fromDt,
-            'toDt' => ($this->toDt == null) ? self::$DATE_MAX : $this->toDt
+            'toDt' => ($this->toDt == null) ? self::$DATE_MAX : $this->toDt,
+            'createdDt' => ($this->createdDt === null) ? time() : $this->createdDt,
+            'modifiedDt' => time()
         ));
     }
 
@@ -830,7 +862,8 @@ class Widget implements \JsonSerializable
             `useDuration` = :useDuration,
             `calculatedDuration` = :calculatedDuration,
             `fromDt` = :fromDt,
-            `toDt` = :toDt
+            `toDt` = :toDt, 
+            `modifiedDt` = :modifiedDt
            WHERE `widgetId` = :widgetId
         ';
 
@@ -844,7 +877,8 @@ class Widget implements \JsonSerializable
             'useDuration' => $this->useDuration,
             'calculatedDuration' => $this->calculatedDuration,
             'fromDt' => ($this->fromDt == null) ? self::$DATE_MIN : $this->fromDt,
-            'toDt' => ($this->toDt == null) ? self::$DATE_MAX : $this->toDt
+            'toDt' => ($this->toDt == null) ? self::$DATE_MAX : $this->toDt,
+            'modifiedDt' => time()
         ];
 
         $this->getStore()->update($sql, $params);

@@ -195,7 +195,9 @@ class WidgetFactory extends BaseFactory
               `widget`.useDuration,
               `widget`.calculatedDuration,
               `widget`.fromDt,
-              `widget`.toDt 
+              `widget`.toDt, 
+              `widget`.createdDt, 
+              `widget`.modifiedDt
         ';
 
         $body = '
@@ -243,7 +245,7 @@ class WidgetFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['duration', 'fromDt', 'toDt']]);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['duration', 'fromDt', 'toDt', 'createdDt', 'modifiedDt']]);
         }
 
         // Paging
