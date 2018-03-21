@@ -67,7 +67,7 @@
     "symfony/event-dispatcher": "^3.1",
     "illuminate/database": "5.2.*",
     "illuminate/cache": "5.2.*",
-    "xibosignage/oauth2-xibo-cms": "^1.1",
+    "xibosignage/oauth2-xibo-cms": "dev-feature/swift",
     "mtdowling/cron-expression": "^1.1",
     "ralouphie/mimey": "^1.0",
     "robmorgan/phinx": "^0.9.2"

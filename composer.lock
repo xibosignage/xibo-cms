@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "d23c17818658af3b6c50bd38d9debbef",
-    "content-hash": "7573201cd5c36bbc7f19c74460224d53",
+    "hash": "60fd27dc68ef254ade30a3dead506742",
+    "content-hash": "e3b50382c825a64eca6c3223d1d5ee3f",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -406,6 +406,7 @@
             ],
             "description": "Modern library to handle RSS/Atom feeds",
             "homepage": "https://github.com/miniflux/picoFeed",
+            "abandoned": true,
             "time": "2017-11-02 03:20:36"
         },
         {
@@ -3489,16 +3490,16 @@
         },
         {
             "name": "xibosignage/oauth2-xibo-cms",
-            "version": "1.1",
+            "version": "dev-feature/swift",
             "source": {
                 "type": "git",
                 "url": "https://github.com/xibosignage/oauth2-xibo-cms.git",
-                "reference": "7c1c8e5c69399fbfaeb5f6b7ad029671f1b47eb5"
+                "reference": "c9900c30e3160ea240978a8dcd7fb6b5ea9e2a18"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/xibosignage/oauth2-xibo-cms/zipball/7c1c8e5c69399fbfaeb5f6b7ad029671f1b47eb5",
-                "reference": "7c1c8e5c69399fbfaeb5f6b7ad029671f1b47eb5",
+                "url": "https://api.github.com/repos/xibosignage/oauth2-xibo-cms/zipball/c9900c30e3160ea240978a8dcd7fb6b5ea9e2a18",
+                "reference": "c9900c30e3160ea240978a8dcd7fb6b5ea9e2a18",
                 "shasum": ""
             },
             "require": {
@@ -3536,7 +3537,7 @@
                 "xibo",
                 "xibo cms"
             ],
-            "time": "2017-11-30 07:51:47"
+            "time": "2018-03-21 13:51:50"
         },
         {
             "name": "xibosignage/xibo-xmr",
@@ -5860,6 +5861,7 @@
     "stability-flags": {
         "sallar/jdatetime": 20,
         "fguillot/picofeed": 0,
+        "xibosignage/oauth2-xibo-cms": 20,
         "umpirsky/twig-gettext-extractor": 20
     },
     "prefer-stable": false,
