@@ -284,13 +284,6 @@ ul.dropdown-menu-form {
     margin: 0;
 }
 
-#new-user-welcome-carousel .carousel-caption {
-    background-color: rgba(0, 0, 0, .7);
-    border-radius: 5px;
-    top: 20px;
-    bottom: auto;
-}
-
 .display-screenshot {
     width: 200px;
 }
