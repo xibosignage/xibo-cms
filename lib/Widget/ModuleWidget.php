@@ -660,7 +660,7 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Delete Widget
      */
-    public final function delete()
+    public function delete()
     {
         $cachePath = $this->getConfig()->GetSetting('LIBRARY_LOCATION')
             . 'widget'

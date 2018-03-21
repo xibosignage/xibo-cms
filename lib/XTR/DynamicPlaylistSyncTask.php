@@ -32,12 +32,12 @@ use Xibo\Service\DateServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
- * Class DynamicPlaylistSync
+ * Class DynamicPlaylistSyncTask
  * @package Xibo\XTR
  *
  * Keep dynamic Playlists in sync with changes to the Media table.
  */
-class DynamicPlaylistSync implements TaskInterface
+class DynamicPlaylistSyncTask implements TaskInterface
 {
     use TaskTrait;
 

@@ -1,0 +1,5 @@
+{
+  "name": "Sync Dynamic Playlists",
+  "class": "\\Xibo\\XTR\\DynamicPlaylistSyncTask",
+  "options": {}
+}

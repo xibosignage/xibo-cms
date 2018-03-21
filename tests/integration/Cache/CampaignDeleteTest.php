@@ -114,7 +114,7 @@ class CampaignDeleteTest extends LocalWebTestCase
         // Make sure our Display is already DONE
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
 
-        // Add the Layout we have prepared to the existing Campaign
+        // Delete the Campaign
         $this->client->delete('/campaign/' . $this->campaign->campaignId);
 
         // Validate the display status afterwards

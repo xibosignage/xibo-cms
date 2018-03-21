@@ -184,9 +184,9 @@ class InstallMigration extends AbstractMigration
             ->addColumn('userId', 'integer')
             ->addForeignKey('userId', 'user', 'userId')
             ->insert([
-                ['name' => 'Windows', 'type' => 'windows', 'config' => '[]', 'userId' => 1],
-                ['name' => 'Android', 'type' => 'android', 'config' => '[]', 'userId' => 1],
-                ['name' => 'webOS', 'type' => 'lg', 'config' => '[]', 'userId' => 1],
+                ['name' => 'Windows', 'type' => 'windows', 'config' => '[]', 'userId' => 1, 'default' => 1],
+                ['name' => 'Android', 'type' => 'android', 'config' => '[]', 'userId' => 1, 'default' => 1],
+                ['name' => 'webOS', 'type' => 'lg', 'config' => '[]', 'userId' => 1, 'default' => 1],
             ])
             ->save();
 

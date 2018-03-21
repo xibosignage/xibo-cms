@@ -37,5 +37,16 @@ class PlaylistAddDynamicFilterMigration extends AbstractMigration
             ->addColumn('filterMediaName', 'string', ['limit' => 255, 'null' => true, 'default' => null])
             ->addColumn('filterMediaTags', 'string', ['limit' => 255, 'null' => true, 'default' => null])
             ->update();
+
+        $task = $this->table('task');
+        $task->insert([
+                'name' => 'Sync Dynamic Playlists',
+                'class' => '\Xibo\XTR\DynamicPlaylistSyncTask',
+                'options' => '[]',
+                'schedule' => '* * * * * *',
+                'isActive' => '1',
+                'configFile' => '/tasks/dynamic-playlist-sync.task'
+            ])
+            ->save();
     }
 }

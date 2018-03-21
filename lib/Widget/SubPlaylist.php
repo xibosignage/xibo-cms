@@ -405,4 +405,12 @@ class SubPlaylist extends ModuleWidget
 
         return $duration;
     }
+
+    /**
+     * @inheritdoc
+     */
+    public function getResource($displayId = 0)
+    {
+        return '';
+    }
 }

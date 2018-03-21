@@ -653,7 +653,7 @@ class Layout implements \JsonSerializable
 
     /**
      * Validate this layout
-     * @throws NotFoundException
+     * @throws XiboException
      */
     public function validate()
     {
