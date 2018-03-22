@@ -214,12 +214,6 @@ class User implements \JsonSerializable
     public $homePage;
 
     /**
-     * @SWG\Property(description="The user options")
-     * @var UserOption[]
-     */
-    public $userOptions = [];
-
-    /**
      * @SWG\Property(description="Does this Group receive system notifications.")
      * @var int
      */
@@ -230,6 +224,11 @@ class User implements \JsonSerializable
      * @var int
      */
     public $isDisplayNotification = 0;
+
+    /**
+     * @var UserOption[]
+     */
+    private $userOptions = [];
 
     /**
      * Cached Permissions
@@ -901,7 +900,7 @@ class User implements \JsonSerializable
     public function touch()
     {
         // This needs to happen on a separate connection
-        $this->getStore()->isolated('UPDATE `user` SET lastAccessed = :time, loggedIn = :loggedIn  WHERE userId = :userId', [
+        $this->getStore()->update('UPDATE `user` SET lastAccessed = :time, loggedIn = :loggedIn  WHERE userId = :userId', [
             'userId' => $this->userId,
             'loggedIn' => $this->loggedIn,
             'time' => date("Y-m-d H:i:s")
@@ -951,7 +950,12 @@ class User implements \JsonSerializable
         if ($this->pageFactory == null)
             throw new ConfigurationException('routeViewable called before user object has been initialised');
 
+        // Super-admins get all routes
         if ($this->userTypeId == 1)
+            return true;
+
+        // All users have access to the logout page
+        if ($route === '/logout')
             return true;
 
         try {
@@ -1274,5 +1278,16 @@ class User implements \JsonSerializable
             if(!preg_match($policy, $password, $matches))
                 throw new \InvalidArgumentException($policyError);
         }
+    }
+
+    /**
+     * @return UserOption[]
+     */
+    public function getUserOptions()
+    {
+        // Don't return anything with Grid in it (these have to be specifically requested).
+        return array_filter($this->userOptions, function($element) {
+            return !(stripos($element->option, 'Grid'));
+        });
     }
 }

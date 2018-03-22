@@ -10,6 +10,7 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -129,6 +130,7 @@ class Command implements \JsonSerializable
 
     /**
      * Validate
+     * @throws InvalidArgumentException
      */
     public function validate()
     {
@@ -144,9 +146,9 @@ class Command implements \JsonSerializable
 
     /**
      * Load
-     * @param array $options
+     * @throws NotFoundException
      */
-    public function load($options = [])
+    public function load()
     {
         if ($this->loaded || $this->commandId == null)
             return;
@@ -157,6 +159,8 @@ class Command implements \JsonSerializable
     /**
      * Save
      * @param array $options
+     *
+     * @throws InvalidArgumentException
      */
     public function save($options = [])
     {

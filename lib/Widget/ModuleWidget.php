@@ -20,6 +20,8 @@
  */
 namespace Xibo\Widget;
 
+use Intervention\Image\ImageManagerStatic as Img;
+use Mimey\MimeTypes;
 use Slim\Slim;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
@@ -788,18 +790,61 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
-     * Get Resource Url
-     * @param $uri
+     * Get File URL
+     * @param Media $file
+     * @param string|null $type
      * @return string
      */
-    protected function getResourceUrl($uri)
+    protected function getFileUrl($file, $type = null)
+    {
+        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
+        $params = ['id' => $file->mediaId];
+
+        if ($type !== null) {
+            $params['type'] = $type;
+        }
+
+        if ($isPreview) {
+            return $this->getApp()->urlFor('library.download', $params) . '?preview=1"';
+        } else {
+            $url = $file->storedAs;
+        }
+
+        return $url;
+    }
+
+    /**
+     * Get Resource Url
+     * @param string $uri The file name
+     * @param string|null $type
+     * @return string
+     */
+    protected function getResourceUrl($uri, $type = null)
     {
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
-        if ($isPreview)
-            $uri = $this->getApp()->rootUri . 'modules/' . $uri;
-        else
-            $uri = basename($uri);
+        // Local clients store all files in the root of the library
+        $uri = basename($uri);
+
+        if ($isPreview) {
+            // Use the URI to get this media record
+            try {
+                $media = $this->mediaFactory->getByName($uri);
+                $params = ['id' => $media->mediaId];
+
+                if ($type !== null) {
+                    $params['type'] = $type;
+                }
+
+                return $this->getApp()->urlFor('library.download', $params) . '?preview=1';
+
+            } catch (NotFoundException $notFoundException) {
+                $this->getLog()->info('Widget referencing a resource that doesnt exist: ' . $this->getModuleType() . ' for ' . $uri);
+
+                // Return a URL which will 404
+                return '/' . $uri;
+            }
+        }
 
         return $uri;
     }
@@ -1012,29 +1057,44 @@ abstract class ModuleWidget implements ModuleInterface
 
         $this->getLog()->debug('Download for mediaId ' . $media->mediaId);
 
-        // This widget is expected to output a file - usually this is for file based media
-        // Get the name with library
-        $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
-        $libraryPath = $libraryLocation . $media->storedAs;
-        $attachmentName = $this->getSanitizer()->getString('attachment', $media->storedAs);
+        // Are we a preview or not?
+        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
-        $size = filesize($libraryPath);
+        // The file path
+        $libraryPath = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . $media->storedAs;
 
-        // Issue some headers
-        $this->getApp()->etag($media->md5);
-        $this->getApp()->expires('+1 week');
-        header('Content-Type: application/octet-stream');
-        header('Content-Transfer-Encoding: Binary');
-        header('Content-disposition: attachment; filename="' . $attachmentName . '"');
-        header('Content-Length: ' . $size);
+        // Set the content length
+        $headers = $this->getApp()->response()->headers();
+        $headers->set('Content-Length', filesize($libraryPath));
 
-        // Send via Apache X-Sendfile header?
-        if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Apache') {
-            header("X-Sendfile: $libraryPath");
+        // Different behaviour depending on whether we are a preview or not.
+        if ($isPreview) {
+            // correctly grab the MIME type of the file we want to serve
+            $mimeTypes = new MimeTypes();
+            $ext = explode('.', $media->storedAs);
+            $headers->set('Content-Type', $mimeTypes->getMimeType($ext[count($ext) - 1]));
+        } else {
+            // This widget is expected to output a file - usually this is for file based media
+            // Get the name with library
+            $attachmentName = $this->getSanitizer()->getString('attachment', $media->storedAs);
+
+            // Issue some headers
+            $this->getApp()->etag($media->md5);
+            $this->getApp()->expires('+1 week');
+
+            $headers->set('Content-Type', 'application/octet-stream');
+            $headers->set('Content-Transfer-Encoding', 'Binary');
+            $headers->set('Content-disposition', 'attachment; filename="' . $attachmentName . '"');
         }
-        // Send via Nginx X-Accel-Redirect?
+
+        // Output the file
+        if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Apache') {
+            // Send via Apache X-Sendfile header?
+            $headers->set('X-Sendfile', $libraryPath);
+        }
         else if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Nginx') {
-            header("X-Accel-Redirect: /download/" . $media->storedAs);
+            // Send via Nginx X-Accel-Redirect?
+            $headers->set('X-Accel-Redirect', '/download/' . $media->storedAs);
         }
         else {
             // Return the file with PHP
@@ -1086,9 +1146,10 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Get templatesAvailable
+     * @param bool $loadImage Should the image URL be loaded?
      * @return array
      */
-    public function templatesAvailable()
+    public function templatesAvailable($loadImage = true)
     {
         if (!isset($this->module->settings['templates'])) {
 
@@ -1097,9 +1158,16 @@ abstract class ModuleWidget implements ModuleInterface
             // Scan the folder for template files
             foreach (glob(PROJECT_ROOT . '/modules/' . $this->module->type . '/*.template.json') as $template) {
                 // Read the contents, json_decode and add to the array
-                $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
-            }
+                $template = json_decode(file_get_contents($template), true);
+                $template['fileName'] = $template['image'];
 
+                if ($loadImage) {
+                    // We ltrim this because the control is expecting a relative URL
+                    $template['image'] = ltrim($this->getApp()->urlFor('module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]), '/');
+                }
+
+                $this->module->settings['templates'][] = $template;
+            }
         }
 
         return $this->module->settings['templates'];
@@ -1112,15 +1180,16 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function getTemplateById($templateId)
     {
-        $templates = $this->templatesAvailable();
+        $templates = $this->templatesAvailable(false);
         $template = null;
 
         if (count($templates) <= 0)
             return null;
 
         foreach ($templates as $item) {
-            if( $item['id'] == $templateId ) {
+            if ($item['id'] == $templateId) {
                 $template = $item;
+                break;
             }
         }
 
@@ -1135,6 +1204,22 @@ abstract class ModuleWidget implements ModuleInterface
     public function setTemplateData($data)
     {
         return $data;
+    }
+
+    /**
+     * Download an image for this template
+     * @param int $templateId
+     * @throws NotFoundException
+     */
+    public function getTemplateImage($templateId)
+    {
+        $template = $this->getTemplateById($templateId);
+
+        if ($template === null || !isset($template['fileName']) || $template['fileName'] == '')
+            throw new NotFoundException();
+
+        // Output the image associated with this template
+        echo Img::make(PROJECT_ROOT . '/' . $template['fileName'])->response();
     }
 
     /**
@@ -1195,6 +1280,16 @@ abstract class ModuleWidget implements ModuleInterface
         return $this->statusMessage;
     }
 
+    /**
+     * Get the modified date of this Widget
+     * @param int $displayId
+     * @return null|int
+     */
+    public function getModifiedTimestamp($displayId)
+    {
+        return null;
+    }
+
     //<editor-fold desc="GetResource Helpers">
 
     private $data;
@@ -1211,6 +1306,8 @@ abstract class ModuleWidget implements ModuleInterface
         $this->data['head'] = '';
         $this->data['body'] = '';
         $this->data['controlMeta'] = '';
+        $this->data['options'] = '{}';
+        $this->data['items'] = '{}';
         return $this;
     }
 
@@ -1229,9 +1326,8 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function finaliseGetResource($templateName = 'get-resource')
     {
-        return $this
-            ->appendJavaScript('var options = ' . $this->data['options'] . '; var items = ' . $this->data['items'] . ';')
-            ->renderTemplate($this->data, $templateName);
+        $this->data['javaScript'] = '<script type="text/javascript">var options = ' . $this->data['options'] . '; var items = ' . $this->data['items'] . ';</script>' . PHP_EOL . $this->data['javaScript'];
+        return $this->renderTemplate($this->data, $templateName);
     }
 
     /**
@@ -1246,13 +1342,23 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * Append Font CSS
+     * @return $this
+     */
+    protected function appendFontCss()
+    {
+        $this->data['styleSheet'] .= '<link href="' . (($this->isPreview()) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen" />' . PHP_EOL;
+        return $this;
+    }
+
+    /**
      * Append CSS File
      * @param string $uri The URI, according to whether this is a CMS preview or not
      * @return $this
      */
     protected function appendCssFile($uri)
     {
-        $this->data['styleSheet'] .= '<link href="' . $uri . '" rel="stylesheet" media="screen" />';
+        $this->data['styleSheet'] .= '<link href="' . $this->getResourceUrl($uri) . '" rel="stylesheet" media="screen" />' . PHP_EOL;
         return $this;
     }
 
@@ -1264,7 +1370,7 @@ abstract class ModuleWidget implements ModuleInterface
     protected function appendCss($css)
     {
         if (!empty($css))
-            $this->data['styleSheet'] .= '<style type="text/css">' . $css . '</style>';
+            $this->data['styleSheet'] .= '<style type="text/css">' . $css . '</style>' . PHP_EOL;
 
         return $this;
     }
@@ -1276,7 +1382,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function appendJavaScriptFile($uri)
     {
-        $this->data['javaScript'] .= '<script type="text/javascript" src="' . $this->getResourceUrl($uri) . '"></script>';
+        $this->data['javaScript'] .= '<script type="text/javascript" src="' . $this->getResourceUrl($uri) . '"></script>' . PHP_EOL;
         return $this;
     }
 
@@ -1288,7 +1394,7 @@ abstract class ModuleWidget implements ModuleInterface
     protected function appendJavaScript($javasScript)
     {
         if (!empty($javasScript))
-            $this->data['javaScript'] .= '<script type="text/javascript">' . $javasScript . '</script>';
+            $this->data['javaScript'] .= '<script type="text/javascript">' . $javasScript . '</script>' . PHP_EOL;
 
         return $this;
     }
@@ -1301,7 +1407,7 @@ abstract class ModuleWidget implements ModuleInterface
     protected function appendBody($body)
     {
         if (!empty($body))
-            $this->data['body'] .= $body;
+            $this->data['body'] .= $body . PHP_EOL;
 
         return $this;
     }
@@ -1325,6 +1431,18 @@ abstract class ModuleWidget implements ModuleInterface
     protected function appendItems($items)
     {
         $this->data['items'] = json_encode($items);
+        return $this;
+    }
+
+    /**
+     * Append raw string
+     * @param string $key
+     * @param string $item
+     * @return $this
+     */
+    protected function appendRaw($key, $item)
+    {
+        $this->data[$key] .= $item . PHP_EOL;
         return $this;
     }
 

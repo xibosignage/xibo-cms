@@ -251,6 +251,7 @@ $app->post('/displaygroup/:id/layout/assign', '\Xibo\Controller\DisplayGroup:ass
 $app->post('/displaygroup/:id/layout/unassign', '\Xibo\Controller\DisplayGroup:unassignLayouts')->name('displayGroup.unassign.layout');
 
 $app->post('/displaygroup/:id/action/collectNow', '\Xibo\Controller\DisplayGroup:collectNow')->name('displayGroup.action.collectNow');
+$app->post('/displaygroup/:id/action/clearStatsAndLogs', '\Xibo\Controller\DisplayGroup:clearStatsAndLogs')->name('displayGroup.action.clearStatsAndLogs');
 $app->post('/displaygroup/:id/action/changeLayout', '\Xibo\Controller\DisplayGroup:changeLayout')->name('displayGroup.action.changeLayout');
 $app->post('/displaygroup/:id/action/overlayLayout', '\Xibo\Controller\DisplayGroup:overlayLayout')->name('displayGroup.action.overlayLayout');
 $app->post('/displaygroup/:id/action/revertToSchedule', '\Xibo\Controller\DisplayGroup:revertToSchedule')->name('displayGroup.action.revertToSchedule');
@@ -283,6 +284,8 @@ $app->post('/dataset/copy/:id', '\Xibo\Controller\DataSet:copy')->name('dataSet.
 $app->map('/dataset/import/:id', '\Xibo\Controller\DataSet:import')->via('HEAD');
 $app->post('/dataset/import/:id', '\Xibo\Controller\DataSet:import')->name('dataSet.import');
 $app->post('/dataset/importjson/:id', '\Xibo\Controller\DataSet:importJson')->name('dataSet.import.json');
+$app->post('/dataset/remote/test', '\Xibo\Controller\DataSet:testRemoteRequest')->name('dataSet.test.remote');
+
 // Columns
 $app->get('/dataset/:id/column', '\Xibo\Controller\DataSetColumn:grid')->name('dataSet.column.search');
 $app->post('/dataset/:id/column', '\Xibo\Controller\DataSetColumn:add')->name('dataSet.column.add');

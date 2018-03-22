@@ -10,4 +10,3 @@ custom
 .DS_Store
 web/theme/custom
 node_modules
-web/dist

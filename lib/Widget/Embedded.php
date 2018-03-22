@@ -20,7 +20,10 @@
  */
 namespace Xibo\Widget;
 
-
+/**
+ * Class Embedded
+ * @package Xibo\Widget
+ */
 class Embedded extends ModuleWidget
 {
     /**
@@ -28,9 +31,9 @@ class Embedded extends ModuleWidget
      */
     public function InstallFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
     }
 
     /**
@@ -150,6 +153,9 @@ class Embedded extends ModuleWidget
         $this->saveWidget();
     }
 
+    /**
+     * @inheritdoc
+     */
     public function isValid()
     {
         // Can't be sure because the client does the rendering
@@ -164,74 +170,47 @@ class Embedded extends ModuleWidget
      */
     public function getResource($displayId = 0)
     {
-        // Behave exactly like the client.
-        $data = [];
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
-
-        // Replace the View Port Width?
-        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
+        // Construct the response HTML
+        $this->initialiseGetResource()->appendViewPortWidth($this->region->width);
 
         // Clear all linked media.
         $this->clearMedia();
 
-        // Embedded Html
-        $html = $this->parseLibraryReferences($isPreview, $this->getRawNode('embedHtml', null));
-
-        // Include some vendor items
-        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
-
-        // Get the Script
-        $javaScriptContent .= $this->parseLibraryReferences($isPreview, $this->getRawNode('embedScript', null));
-
-        // Get the Style Sheet
-        $styleSheetContent = $this->parseLibraryReferences($isPreview, $this->getRawNode('embedStyle', null));
-
-        // Set some options
-        $options = array(
-            'originalWidth' => $this->region->width,
-            'originalHeight' => $this->region->height,
-            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
-        );
-
-        // Add an options variable with some useful information for scaling
-        $javaScriptContent .= '<script type="text/javascript">';
-        $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
-        $javaScriptContent .= '   $(document).ready(function() { EmbedInit(); });';
-        $javaScriptContent .= '   $("body").find("img").xiboImageRender(options);';
-        $javaScriptContent .= '</script>';
+        // Include some vendor items and javascript
+        $this
+            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js')
+            ->appendJavaScriptFile('xibo-layout-scaler.js')
+            ->appendJavaScriptFile('xibo-image-render.js')
+            ->appendRaw('javaScript', $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedScript', null)))
+            ->appendCss($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedStyle', null)))
+            ->appendFontCss()
+            ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
+            ->appendOptions([
+                'originalWidth' => $this->region->width,
+                'originalHeight' => $this->region->height,
+                'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
+                'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
+                'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
+            ])
+            ->appendJavaScript('
+                $(document).ready(function() { EmbedInit(); });
+                $("body").find("img").xiboImageRender(options);
+            ')
+            ->appendBody($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedHtml', null)));
 
         // Do we want to scale?
         if ($this->getOption('scaleContent') == 1) {
-            $javaScriptContent .= '<script>
+            $this->appendJavaScript('
                 $(document).ready(function() {
                     $("body").xiboLayoutScaler(options);
                 });
-            </script>';
+            ');
         }
-
-        // Add our fonts.css file
-        $headContent = '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
-        $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
-
-        $data['head'] = $headContent;
-
-        // Replace the Style Sheet Content with our generated Style Sheet
-        $data['styleSheet'] = $styleSheetContent;
-
-        // Replace the Head Content with our generated java script
-        $data['javaScript'] = $javaScriptContent;
-
-        // Replace the Body Content with our generated text
-        $data['body'] = $html;
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
 
-        return $this->renderTemplate($data);
+        return $this->finaliseGetResource();
     }
 }

@@ -629,20 +629,14 @@ class Soap
                             $getResourceRf = $this->requiredFileFactory->createForGetResource($this->display->displayId, $widget->widgetId)->save();
                             $newRfIds[] = $getResourceRf->rfId;
 
-                            // Does the media provide a modified Date?
-                            $widgetModifiedDt = $layoutModifiedDt->getTimestamp();
+                            // Make me a module from the widget, so I can ask it whether it has an updated last accessed
+                            // date or not.
+                            $module = $this->moduleFactory->createWithWidget($widget);
 
-                            if ($widget->type == 'datasetview' || $widget->type == 'ticker') {
-                                try {
-                                    $dataSetId = $widget->getOption('dataSetId');
-                                    $dataSet = $this->dataSetFactory->getById($dataSetId);
-                                    $widgetModifiedDt = $dataSet->lastDataEdit;
-                                }
-                                catch (NotFoundException $e) {
-                                    // Widget doesn't have a dataSet associated to it
-                                    // This is perfectly valid, so ignore it.
-                                }
-                            }
+                            $widgetModifiedDt = $module->getModifiedTimestamp($this->display->displayId);
+
+                            if ($widgetModifiedDt === null)
+                                $widgetModifiedDt = $layoutModifiedDt->getTimestamp();
 
                             // Append this item to required files
                             $file = $requiredFilesXml->createElement("file");
@@ -830,40 +824,37 @@ class Soap
             // If our dependents are nodes, then build a list of layouts we can use to query for nodes
             $layoutDependents = [];
 
-            if ($options['dependentsAsNodes']) {
+            // Layouts (pop in the default)
+            $layoutIds = [$this->display->defaultLayoutId];
 
-                // Layouts (pop in the default)
-                $layoutIds = [$this->display->defaultLayoutId];
-
-                foreach ($events as $event) {
-                    if ($event['layoutId'] != null && !in_array($event['layoutId'], $layoutIds))
-                        $layoutIds[] = $event['layoutId'];
-                }
-
-                $SQL = '
-                    SELECT DISTINCT `region`.layoutId, `media`.storedAs
-                      FROM `media`
-                        INNER JOIN `lkwidgetmedia`
-                        ON `lkwidgetmedia`.MediaID = `media`.MediaID
-                        INNER JOIN `widget`
-                        ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                        INNER JOIN `lkregionplaylist`
-                        ON `lkregionplaylist`.playlistId = `widget`.playlistId
-                        INNER JOIN `region`
-                        ON `region`.regionId = `lkregionplaylist`.regionId
-                     WHERE `region`.layoutId IN (' . implode(',', $layoutIds) . ')
-                      AND media.type <> \'module\'
-                ';
-
-                foreach ($this->getStore()->select($SQL, []) as $row) {
-                    if (!array_key_exists($row['layoutId'], $layoutDependents))
-                        $layoutDependents[$row['layoutId']] = [];
-
-                    $layoutDependents[$row['layoutId']][] = $row['storedAs'];
-                }
-
-                $this->getLog()->debug('Resolved dependents for Schedule: %s.', json_encode($layoutDependents, JSON_PRETTY_PRINT));
+            foreach ($events as $event) {
+                if ($event['layoutId'] != null && !in_array($event['layoutId'], $layoutIds))
+                    $layoutIds[] = $event['layoutId'];
             }
+
+            $SQL = '
+                SELECT DISTINCT `region`.layoutId, `media`.storedAs
+                  FROM `media`
+                    INNER JOIN `lkwidgetmedia`
+                    ON `lkwidgetmedia`.MediaID = `media`.MediaID
+                    INNER JOIN `widget`
+                    ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                    INNER JOIN `lkregionplaylist`
+                    ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                    INNER JOIN `region`
+                    ON `region`.regionId = `lkregionplaylist`.regionId
+                 WHERE `region`.layoutId IN (' . implode(',', $layoutIds) . ')
+                  AND media.type <> \'module\'
+            ';
+
+            foreach ($this->getStore()->select($SQL, []) as $row) {
+                if (!array_key_exists($row['layoutId'], $layoutDependents))
+                    $layoutDependents[$row['layoutId']] = [];
+
+                $layoutDependents[$row['layoutId']][] = $row['storedAs'];
+            }
+
+            $this->getLog()->debug('Resolved dependents for Schedule: %s.', json_encode($layoutDependents, JSON_PRETTY_PRINT));
 
             $overlayNodes = null;
 
@@ -925,19 +916,23 @@ class Soap
                         $layout->setAttribute("scheduleid", $scheduleId);
                         $layout->setAttribute("priority", $is_priority);
 
-                        if (!$options['dependentsAsNodes']) {
-                            $dependents = $this->getSanitizer()->string($row['Dependents']);
-                            $layout->setAttribute("dependents", $dependents);
-                        } else if (array_key_exists($layoutId, $layoutDependents)) {
-                            $dependentNode = $scheduleXml->createElement("dependents");
+                        // Handle dependents
+                        if (array_key_exists($layoutId, $layoutDependents)) {
+                            if ($options['dependentsAsNodes']) {
+                                // Add the dependents to the layout as new nodes
+                                $dependentNode = $scheduleXml->createElement("dependents");
 
-                            foreach ($layoutDependents[$layoutId] as $storedAs) {
-                                $fileNode = $scheduleXml->createElement("file", $storedAs);
+                                foreach ($layoutDependents[$layoutId] as $storedAs) {
+                                    $fileNode = $scheduleXml->createElement("file", $storedAs);
 
-                                $dependentNode->appendChild($fileNode);
+                                    $dependentNode->appendChild($fileNode);
+                                }
+
+                                $layout->appendChild($dependentNode);
+                            } else {
+                                // Add the dependents to the layout as an attribute
+                                $layout->setAttribute("dependents", implode(',', $layoutDependents[$layoutId]));
                             }
-
-                            $layout->appendChild($dependentNode);
                         }
 
                         $layoutElements->appendChild($layout);

@@ -958,14 +958,24 @@ class Library extends Base
      *      )
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function download($mediaId, $type = '')
     {
-        $media = $this->mediaFactory->getById($mediaId);
+        // We can download by mediaId or by mediaName.
+        if (is_numeric($mediaId)) {
+            $media = $this->mediaFactory->getById($mediaId);
+        } else {
+            $media = $this->mediaFactory->getByName($mediaId);
+        }
 
-        $this->getLog()->debug('Download request for mediaId ' . $mediaId . ' and type ' . $type . '. Media is a ' . $media->mediaType);
+        $this->getLog()->debug('Download request for mediaId ' . $mediaId . ' and type ' . $type . '. Media is a ' . $media->mediaType . ' [' . $media->moduleSystemFile . ']');
 
-        if ($media->mediaType === 'module') {
+        if ($media->mediaType === 'module' && $media->moduleSystemFile === 1) {
+            // grant permissions
+            // (everyone has access to module system files)
+        } else if ($media->mediaType === 'module') {
             // Make sure that our user has this mediaId assigned to a Widget they can view
             // we can't test for normal media permissions, because no user has direct access to these "module" files
             // https://github.com/xibosignage/xibo/issues/1304
@@ -976,12 +986,15 @@ class Library extends Base
             throw new AccessDeniedException();
         }
 
+        if ($type === '' && $media->mediaType === 'module') {
+            $type = 'genericfile';
+        }
+
         if ($type != '') {
             $widget = $this->moduleFactory->create($type);
             $widgetOverride = $this->widgetFactory->createEmpty();
             $widgetOverride->assignMedia($media->mediaId);
             $widget->setWidget($widgetOverride);
-
         } else {
             // Make a media module
             $widget = $this->moduleFactory->createWithMedia($media);

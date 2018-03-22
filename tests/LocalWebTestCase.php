@@ -7,9 +7,9 @@
 
 namespace Xibo\Tests;
 
-use Monolog\Handler\PHPConsoleHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 use Slim\Environment;
 use Slim\Helper\Set;
 use Slim\Log;
@@ -26,6 +26,8 @@ use Xibo\OAuth2\Client\Provider\XiboEntityProvider;
 use Xibo\Service\ConfigService;
 use Xibo\Service\SanitizeService;
 use Xibo\Storage\PdoStorageService;
+use Xibo\Storage\StorageServiceInterface;
+use Xibo\Tests\Middleware\TestAuthMiddleware;
 use Xibo\Tests\Xmds\XmdsWrapper;
 
 /**
@@ -36,6 +38,9 @@ class LocalWebTestCase extends WebTestCase
 {
     /** @var  Set */
     public static $container;
+
+    /** @var LoggerInterface */
+    public static $logger;
 
     /** @var  XiboEntityProvider */
     public static $entityProvider;
@@ -64,10 +69,11 @@ class LocalWebTestCase extends WebTestCase
     /**
      * Gets the Slim instance configured
      * @return Slim
-     * @throws \Xibo\Exception\NotFoundException
      */
     public function getSlimInstance()
     {
+        //$this->getLogger()->debug('Getting Slim Instance');
+
         // Mock and Environment for use before the test is called
         Environment::mock([
             'REQUEST_METHOD' => 'GET',
@@ -79,7 +85,7 @@ class LocalWebTestCase extends WebTestCase
         $logger = new AccessibleMonologWriter(array(
             'name' => 'PHPUNIT',
             'handlers' => array(
-                new StreamHandler('test.log', Logger::DEBUG)
+                new StreamHandler(PROJECT_ROOT . '/library/log.txt', Logger::DEBUG)
             ),
             'processors' => array(
                 new \Xibo\Helper\LogProcessor(),
@@ -95,13 +101,17 @@ class LocalWebTestCase extends WebTestCase
         $app->setName('default');
         $app->setName('test');
 
+        //$this->getLogger()->debug('Loading Config');
+
         // Config
         $app->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+
+        //$this->getLogger()->debug('Setting Middleware');
 
         $app->add(new TestAuthMiddleware());
         $app->add(new \Xibo\Middleware\State());
         $app->add(new \Xibo\Middleware\Storage());
-        $app->add(new \Xibo\Middleware\Xmr());
+        $app->add(new \Xibo\Tests\Middleware\TestXmr());
 
         $app->view(new ApiView());
 
@@ -110,9 +120,14 @@ class LocalWebTestCase extends WebTestCase
             $app->container->get('\Xibo\Controller\Error')->handler($e);
         });
 
+        //$this->getLogger()->debug('Including Routes');
+
         // All routes
         require PROJECT_ROOT . '/lib/routes.php';
         require PROJECT_ROOT . '/lib/routes-web.php';
+
+        // Add the route for running a task manually
+        $app->get('/tasks/:id', '\Xibo\Controller\Task:run');
 
         return $app;
     }
@@ -120,6 +135,7 @@ class LocalWebTestCase extends WebTestCase
     /**
      * Create container
      * @return Set
+     * @throws \Exception
      */
     public static function createContainer()
     {
@@ -130,7 +146,7 @@ class LocalWebTestCase extends WebTestCase
         $logger = new AccessibleMonologWriter(array(
             'name' => 'PHPUNIT',
             'handlers' => array(
-                new StreamHandler('test.container.log')
+                new \Monolog\Handler\StreamHandler(PROJECT_ROOT . '/library/log-container.txt', Logger::DEBUG)
             ),
             'processors' => array(
                 new \Monolog\Processor\UidProcessor(7)
@@ -172,6 +188,9 @@ class LocalWebTestCase extends WebTestCase
         return $container;
     }
 
+    /**
+     * @throws \Exception
+     */
     public static function setUpBeforeClass()
     {
         // Configure global test state
@@ -257,10 +276,47 @@ class LocalWebTestCase extends WebTestCase
         self::$xmds = $xmds;
     }
 
-    // Convenience function to skip a test with a reason and close output
-    // buffers nicely.
+    /**
+     * Convenience function to skip a test with a reason and close output buffers nicely.
+     * @param string $reason
+     */
     public function skipTest($reason)
     {
         $this->markTestSkipped($reason);
+    }
+
+    /**
+     * Get Store
+     * @return StorageServiceInterface
+     */
+    public function getStore()
+    {
+        return self::$container->store;
+    }
+
+    /**
+     * @return LoggerInterface
+     */
+    public function getLogger()
+    {
+        // Create if necessary
+        if (self::$logger === null) {
+            self::$logger = new Logger('TESTS', [new \Monolog\Handler\StreamHandler(STDERR, Logger::DEBUG)]);
+        }
+
+        return self::$logger;
+    }
+
+    /**
+     * @return int[]
+     */
+    public function getPlayerActionQueue()
+    {
+        $service = $this->app->container->get('playerActionService');
+
+        if ($service === null)
+            $this->fail('Test hasnt used the client and therefore cannot determine XMR activity');
+
+        return $service->processQueue();
     }
 }

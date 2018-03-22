@@ -28,6 +28,7 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\DeadlockException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
@@ -46,6 +47,10 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class Display implements \JsonSerializable
 {
+    public static $STATUS_DONE = 1;
+    public static $STATUS_DOWNLOADING = 2;
+    public static $STATUS_PENDING = 3;
+
     private $_config;
     use EntityTrait;
 
@@ -320,7 +325,7 @@ class Display implements \JsonSerializable
      */
     private $commands = null;
 
-    public static $saveOptionsMinimum = ['validate' => false, 'audit' => false, 'triggerDynamicDisplayGroupAssessment' => false];
+    public static $saveOptionsMinimum = ['validate' => false, 'audit' => false];
 
     /**
      * @var ConfigServiceInterface
@@ -542,32 +547,39 @@ class Display implements \JsonSerializable
     /**
      * Save
      * @param array $options
+     * @throws XiboException
      */
     public function save($options = [])
     {
         $options = array_merge([
             'validate' => true,
-            'audit' => true,
-            'triggerDynamicDisplayGroupAssessment' => false
+            'audit' => true
         ], $options);
+
+        $allowNotify = true;
 
         if ($options['validate'])
             $this->validate();
 
-        if ($this->displayId == null || $this->displayId == 0)
+        if ($this->displayId == null || $this->displayId == 0) {
             $this->add();
-        else
+
+            // Never notify on add (there is little point, we've only just added).
+            $allowNotify = false;
+        }
+        else {
             $this->edit();
+        }
 
         if ($options['audit'])
             $this->getLog()->audit('Display', $this->displayId, 'Display Saved', $this->getChangedProperties());
 
         // Trigger an update of all dynamic DisplayGroups
-        if ($options['triggerDynamicDisplayGroupAssessment']) {
+        if ($this->hasPropertyChanged('display')) {
             foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
                 /* @var DisplayGroup $group */
                 $group->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-                $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true]);
+                $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true, 'allowNotify' => $allowNotify]);
             }
         }
     }
@@ -585,7 +597,7 @@ class Display implements \JsonSerializable
             /* @var DisplayGroup $displayGroup */
             $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $displayGroup->unassignDisplay($this);
-            $displayGroup->save(['validate' => false]);
+            $displayGroup->save(['validate' => false, 'manageDynamicDisplayLinks' => false]);
         }
 
         // Delete our display specific group

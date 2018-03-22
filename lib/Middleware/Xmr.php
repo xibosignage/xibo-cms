@@ -9,6 +9,7 @@
 namespace Xibo\Middleware;
 
 use Slim\Middleware;
+use Slim\Slim;
 use Xibo\Exception\XiboException;
 use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\PlayerActionService;
@@ -35,6 +36,16 @@ class Xmr extends Middleware
 
         $this->next->call();
 
+        // Finish
+        self::finish($app);
+    }
+
+    /**
+     * Finish XMR
+     * @param Slim $app
+     */
+    public static function finish($app)
+    {
         // Handle display notifications
         if ($app->displayNotifyService != null) {
             try {

@@ -24,6 +24,7 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
@@ -180,6 +181,10 @@ class Campaign implements \JsonSerializable
         $this->ownerId = $ownerId;
     }
 
+    /**
+     * @param array $options
+     * @throws \Xibo\Exception\NotFoundException
+     */
     public function load($options = [])
     {
         $options = array_merge([
@@ -202,7 +207,7 @@ class Campaign implements \JsonSerializable
 
         // Layouts
         if ($options['loadLayouts'])
-            $this->layouts = $this->layoutFactory->getByCampaignId($this->campaignId);
+            $this->layouts = $this->layoutFactory->getByCampaignId($this->campaignId, false);
             
         // Load all tags
         if ($options['loadTags'])
@@ -215,6 +220,9 @@ class Campaign implements \JsonSerializable
         $this->loaded = true;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function validate()
     {
         if (!v::string()->notEmpty()->validate($this->campaign))
@@ -226,6 +234,7 @@ class Campaign implements \JsonSerializable
      * Does the campaign have the provided tag?
      * @param $searchTag
      * @return bool
+     * @throws NotFoundException
      */
     public function hasTag($searchTag)
     {
@@ -296,6 +305,7 @@ class Campaign implements \JsonSerializable
     /**
      * Save this Campaign
      * @param array $options
+     * @throws InvalidArgumentException
      */
     public function save($options = [])
     {
@@ -351,6 +361,10 @@ class Campaign implements \JsonSerializable
         $this->notify($options);
     }
 
+    /**
+     * Delete Campaign
+     * @throws NotFoundException
+     */
     public function delete()
     {
         $this->load();
@@ -372,9 +386,14 @@ class Campaign implements \JsonSerializable
             $tag->save();
         }
 
+        // Notify anyone interested of the changes
+        // we do this before we delete from the DB (otherwise notify won't find anything)
+        $this->notify();
+
         // Delete all events
         foreach ($this->events as $event) {
             /* @var Schedule $event */
+            $event->setDisplayFactory($this->displayFactory);
             $event->delete();
         }
 
@@ -385,6 +404,7 @@ class Campaign implements \JsonSerializable
     /**
      * Assign Layout
      * @param Layout $layout
+     * @throws NotFoundException
      */
     public function assignLayout($layout)
     {
@@ -538,7 +558,7 @@ class Campaign implements \JsonSerializable
      * Notify displays of this campaign change
      * @param array $options
      */
-    private function notify($options)
+    private function notify($options = [])
     {
         $options = array_merge([
             'notify' => true,

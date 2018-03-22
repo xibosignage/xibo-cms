@@ -21,6 +21,9 @@
  */
 namespace Xibo\Widget;
 
+use GuzzleHttp\Exception\RequestException;
+use Stash\Invalidation;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\ModuleFactory;
 
@@ -28,7 +31,7 @@ use Xibo\Factory\ModuleFactory;
  * Class Stocks
  * @package Xibo\Widget
  */
-class Stocks extends YahooBase
+class Stocks extends AlphaVantageBase
 {
     public $codeSchemaVersion = 1;
 
@@ -44,7 +47,7 @@ class Stocks extends YahooBase
             $module->name = 'Stocks';
             $module->type = 'stocks';
             $module->class = 'Xibo\Widget\Stocks';
-            $module->description = 'Yahoo Stocks';
+            $module->description = 'A module for showing Stock quotes';
             $module->imageUri = 'forms/library.gif';
             $module->enabled = 1;
             $module->previewEnabled = 1;
@@ -68,11 +71,11 @@ class Stocks extends YahooBase
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-finance-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/bootstrap.min.css')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-finance-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
     }
 
     /**
@@ -88,19 +91,28 @@ class Stocks extends YahooBase
      */
     public function settings()
     {
+        $this->module->settings['apiKey'] = $this->getSanitizer()->getString('apiKey');
         $this->module->settings['cachePeriod'] = $this->getSanitizer()->getInt('cachePeriod', 300);
 
         // Return an array of the processed settings.
         return $this->module->settings;
     }
 
+    /**
+     * Validate
+     * @throws InvalidArgumentException
+     */
     public function validate()
     {
         if($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null) )
-            throw new \InvalidArgumentException(__('Please choose a template'));
+            throw new InvalidArgumentException(__('Please choose a template'), 'templateId');
             
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new \InvalidArgumentException(__('Please enter a duration'));
+            throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
+
+        // Validate for the items field
+        if ($this->getOption('items') == '')
+            throw new InvalidArgumentException(__('Please provide a comma separated list of symbols in the items field.'), 'items');
     }
 
 
@@ -309,64 +321,91 @@ class Stocks extends YahooBase
      * Get YQL Data
      * @return array|bool an array of results according to the key specified by result identifier. false if an invalid value is returned.
      */
-    protected function getYql()
+    protected function getResults()
     {
         // Construct the YQL
         // process items
-        $yql = "select * from yahoo.finance.quotes where symbol in ([Item])";
         $items = $this->getOption('items');
-        $resultIdentifier = "quote";
 
-        $this->getLog()->debug('Finance module with YQL = . Looking for %s in response', $yql, $items);
-
-        if ($yql == '' || $items == '') {
-            $this->getLog()->error('Missing YQL/Items for Finance Module with WidgetId %d', $this->getWidgetId());
+        if ($items == '') {
+            $this->getLog()->error('Missing Items for Stocks Module with WidgetId ' . $this->getWidgetId());
             return false;
         }
 
-        if (strstr($items, ','))
-            $items = explode(',', $items);
-        else
-            $items = [$items];
-            
-        // quote each item
-        $itemsJoined = array();
-        foreach ($items as $key => $item) {
-            array_push($itemsJoined, ('\'' . trim($item) . '\''));
-        }
-
-        $yql = str_replace('[Item]', implode(',', $itemsJoined), $yql);
-
         // Fire off a request for the data
-        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($yql)));
+        /** @var \Stash\Item $cache */
+        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($items)));
+        $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
         $data = $cache->get();
 
         if ($cache->isMiss()) {
 
+            // Start fresh
+            $data = [];
+
+            // Lock
             $cache->lock();
 
-            $this->getLog()->debug('Querying API for ' . $yql);
+            $this->getLog()->debug('Querying API for ' . $items);
 
-            if (!$data = $this->request($yql)) {
+            // Parse items out into an array
+            $items = explode(',', $items);
+
+            try {
+                foreach ($items as $symbol) {
+
+                    // Does this symbol have any additional data
+                    $parsedSymbol = explode('|', $symbol);
+
+                    $symbol = $parsedSymbol[0];
+                    $name = (isset($parsedSymbol[1]) ? $parsedSymbol[1] : $symbol);
+                    $currency = (isset($parsedSymbol[2]) ? $parsedSymbol[2] : '');
+
+                    $result = $this->getStockQuote($symbol);
+
+                    $this->getLog()->debug('Results are: ' . var_export($result, true));
+
+                    $parsedResult = [];
+
+                    foreach ($result['Time Series (Daily)'] as $series) {
+
+                        $parsedResult = [
+                            'Name' => $name,
+                            'Symbol' => $symbol,
+                            'time' => $result['Meta Data']['3. Last Refreshed'],
+                            'LastTradePriceOnly' => round($series['4. close'], 4),
+                            'RawLastTradePriceOnly' => $series['4. close'],
+                            'YesterdayTradePriceOnly' => round($series['1. open'], 4),
+                            'RawYesterdayTradePriceOnly' => $series['1. open'],
+                            'TimeZone' => $result['Meta Data']['5. Time Zone'],
+                            'Currency' => $currency
+                        ];
+
+                        $parsedResult['Change'] = round($parsedResult['RawYesterdayTradePriceOnly'] - $parsedResult['RawLastTradePriceOnly'], 4);
+
+                        break;
+                    }
+
+                    // Parse the result and add it to our data array
+                    $data[] = $parsedResult;
+                }
+            } catch (RequestException $requestException) {
+                $this->getLog()->error('Problem getting stock information. E = ' . $requestException->getMessage());
+                $this->getLog()->debug($requestException->getTraceAsString());
+
                 return false;
             }
 
+            $this->getLog()->debug('Parsed Results are: ' . var_export($data, true));
+
             // Cache it
             $cache->set($data);
-            $cache->expiresAfter($this->getSetting('cachePeriod', 300));
+            $cache->expiresAfter($this->getSetting('cachePeriod', 3600));
             $this->getPool()->saveDeferred($cache);
-
         }
 
-        // Pull out the results according to the resultIdentifier
-        // If the element to return is an array and we aren't, then box.
-        $results = $data[$resultIdentifier];
-
-        if (array_key_exists(0, $results))
-            return $results;
-        else
-            return [$results];
+        return $data;
     }
 
     /**
@@ -399,7 +438,7 @@ class Stocks extends YahooBase
                 if (stripos($replace, 'time|') > -1) {
                     $timeSplit = explode('|', $replace);
 
-                    $time = $this->getDate()->getLocalDate($data['time'], $timeSplit[1]);
+                    $time = $this->getDate()->parse($data['time'], 'Y-m-d H:i:s')->format($timeSplit[1]);
 
                     $replacement = $time;
 
@@ -470,15 +509,15 @@ class Stocks extends YahooBase
                             }
                             
                             break;
-                            
+
                         case 'CurrencyUpper':
                             // Currency in uppercase
                             $replacement = strtoupper($data['Currency']);
-                            
+
                             break;
                             
                         default:
-                            $replacement = 'NULL';
+                            $replacement = null;
                             
                             break;
                     }    
@@ -497,7 +536,7 @@ class Stocks extends YahooBase
      */
     public function getTab($tab)
     {
-        if (!$data = $this->getYql())
+        if (!$data = $this->getResults())
             throw new NotFoundException(__('No data returned, please check error log.'));
 
         return ['results' => $data[0]];
@@ -521,7 +560,7 @@ class Stocks extends YahooBase
         $durationIsPerItem = $this->getOption('durationIsPerItem', 1);
 
         // Generate a JSON string of items.
-        if (!$items = $this->getYql()) {
+        if (!$items = $this->getResults()) {
             return '';
         }
         
@@ -635,7 +674,7 @@ class Stocks extends YahooBase
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
     }

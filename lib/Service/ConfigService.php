@@ -30,8 +30,8 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class ConfigService implements ConfigServiceInterface
 {
-    public static $WEBSITE_VERSION_NAME = '1.8.3';
-    public static $WEBSITE_VERSION = 134;
+    public static $WEBSITE_VERSION_NAME = '1.8.4';
+    public static $WEBSITE_VERSION = 135;
     public static $VERSION_REQUIRED = '5.5';
     public static $VERSION_UNSUPPORTED = '7.0';
 
@@ -447,31 +447,6 @@ class ConfigService implements ConfigServiceInterface
         }
 
         return $httpOptions;
-    }
-
-    /**
-     * Get PicoFeed Proxy
-     * @param string $feedUrl
-     * @return null|\PicoFeed\Config\Config
-     */
-    public function getPicoFeedProxy($feedUrl)
-    {
-        $clientOptions = null;
-
-        if ($this->GetSetting('PROXY_HOST') != '' && !$this->isProxyException($feedUrl)) {
-            $clientOptions = new \PicoFeed\Config\Config();
-            $clientOptions->setProxyHostname($this->GetSetting('PROXY_HOST'));
-            $clientOptions->setProxyPort($this->GetSetting('PROXY_PORT'));
-
-            $proxyAuth = $this->GetSetting('PROXY_AUTH');
-            if ($proxyAuth != '') {
-                $proxyAuth = explode(':', $proxyAuth);
-                $clientOptions->setProxyUsername($proxyAuth[0]);
-                $clientOptions->setProxyPassword($proxyAuth[1]);
-            }
-        }
-
-        return $clientOptions;
     }
 
     /**
@@ -1091,5 +1066,14 @@ class ConfigService implements ConfigServiceInterface
     public function checkOpenSsl()
     {
         return extension_loaded('openssl');
+    }
+
+    /**
+     * @inheritdoc
+     * https://stackoverflow.com/a/45767760
+     */
+    public function getMemoryLimitBytes()
+    {
+        return intval(str_replace(array('G', 'M', 'K'), array('000000000', '000000', '000'), ini_get('memory_limit')));
     }
 }

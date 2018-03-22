@@ -26,8 +26,14 @@ use GuzzleHttp\Exception\RequestException;
 use Respect\Validation\Validator as v;
 use Xibo\Entity\Media;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
+/**
+ * Class ForecastIo
+ * Weather module powered by the DarkSky API
+ * @package Xibo\Widget
+ */
 class ForecastIo extends ModuleWidget
 {
     const API_ENDPOINT = 'https://api.darksky.net/forecast/';
@@ -40,7 +46,7 @@ class ForecastIo extends ModuleWidget
      */
     public function init()
     {
-        $this->resourceFolder = PROJECT_ROOT . '/web/modules/forecastio';
+        $this->resourceFolder = PROJECT_ROOT . '/modules/forecastio';
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
@@ -79,10 +85,10 @@ class ForecastIo extends ModuleWidget
 
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/bootstrap.min.css')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
 
         foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
             /* @var Media $media */
@@ -374,32 +380,40 @@ class ForecastIo extends ModuleWidget
             array('id' => 'az', 'value' => __('Azerbaijani')),
             array('id' => 'be', 'value' => __('Belarusian')),
             array('id' => 'bs', 'value' => __('Bosnian')),
-            array('id' => 'cs', 'value' => __('Czech')),
-            array('id' => 'de', 'value' => __('German')),
-            array('id' => 'en', 'value' => __('English')),
-            array('id' => 'el', 'value' => __('Greek')),
-            array('id' => 'es', 'value' => __('Spanish')),
-            array('id' => 'fr', 'value' => __('French')),
+            array('id' => 'bg', 'value' => __('Bulgarian')),
+            array('id' => 'ca', 'value' => __('Catalan')),
+            array('id' => 'kw', 'value' => __('Cornish')),
+            array('id' => 'zh', 'value' => __('Simplified Chinese')),
+            array('id' => 'zh-tw', 'value' => __('Traditional Chinese')),
             array('id' => 'hr', 'value' => __('Croatian')),
+            array('id' => 'cs', 'value' => __('Czech')),
+            array('id' => 'da', 'value' => __('Danish')),
+            array('id' => 'nl', 'value' => __('Dutch')),
+            array('id' => 'ka', 'value' => __('Georgian')),
+            array('id' => 'de', 'value' => __('German')),
+            array('id' => 'el', 'value' => __('Greek')),
+            array('id' => 'en', 'value' => __('English')),
+            array('id' => 'et', 'value' => __('Estonian')),
+            array('id' => 'fi', 'value' => __('Finnish')),
+            array('id' => 'fr', 'value' => __('French')),
             array('id' => 'hu', 'value' => __('Hungarian')),
+            array('id' => 'is', 'value' => __('Icelandic')),
             array('id' => 'id', 'value' => __('Indonesian')),
             array('id' => 'it', 'value' => __('Italian')),
-            array('id' => 'is', 'value' => __('Icelandic')),
-            array('id' => 'kw', 'value' => __('Cornish')),
+            array('id' => 'ja', 'value' => __('Japanese')),
             array('id' => 'nb', 'value' => __('Norwegian Bokmål')),
-            array('id' => 'nl', 'value' => __('Dutch')),
             array('id' => 'pl', 'value' => __('Polish')),
             array('id' => 'pt', 'value' => __('Portuguese')),
             array('id' => 'ru', 'value' => __('Russian')),
-            array('id' => 'sk', 'value' => __('Slovak')),
             array('id' => 'sr', 'value' => __('Serbian')),
+            array('id' => 'sk', 'value' => __('Slovak')),
+            array('id' => 'sl', 'value' => __('Slovenian')),
+            array('id' => 'es', 'value' => __('Spanish')),
             array('id' => 'sv', 'value' => __('Swedish')),
             array('id' => 'tet', 'value' => __('Tetum')),
             array('id' => 'tr', 'value' => __('Turkish')),
             array('id' => 'uk', 'value' => __('Ukrainian')),
-            array('id' => 'x-pig-latin', 'value' => __('lgpay Atinlay')),
-            array('id' => 'zh', 'value' => __('Simplified Chinese')),
-            array('id' => 'zh-tw', 'value' => __('Traditional Chinese'))
+            array('id' => 'x-pig-latin', 'value' => __('lgpay Atinlay'))
         );
     }
 
@@ -449,6 +463,7 @@ class ForecastIo extends ModuleWidget
      * Get the forecast data for the provided display id
      * @param int $displayId
      * @return array|boolean
+     * @throws XiboException
      */
     private function getForecastData($displayId)
     {
@@ -653,6 +668,7 @@ class ForecastIo extends ModuleWidget
      * Get Resource
      * @param int $displayId
      * @return mixed
+     * @throws XiboException
      */
     public function getResource($displayId = 0)
     {
@@ -714,7 +730,7 @@ class ForecastIo extends ModuleWidget
             'night-partly-cloudy-image' => $this->getResourceUrl('forecastio/wi-night-partly-cloudy.jpg'),            
             'rain-image' => $this->getResourceUrl('forecastio/wi-rain.jpg'),
             'snow-image' => $this->getResourceUrl('forecastio/wi-snow.jpg'),
-            'windy' => $this->getResourceUrl('forecastio/wi-windy.jpg'),
+            'windy-image' => $this->getResourceUrl('forecastio/wi-windy.jpg'),
           ], $styleSheet
         );
 
@@ -805,7 +821,7 @@ class ForecastIo extends ModuleWidget
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         // Return that content.
         return $this->renderTemplate($data);

@@ -18,6 +18,9 @@ abstract class PlayerAction implements PlayerActionInterface
     public $createdDt;
     public $ttl;
 
+    /** @var int QOS */
+    private $qos;
+
     // Channel and key
     private $channel;
     private $publicKey;
@@ -46,7 +49,17 @@ abstract class PlayerAction implements PlayerActionInterface
     public final function setTtl($ttl = 120)
     {
         $this->ttl = $ttl;
+        return $this;
+    }
 
+    /**
+     * Set the message QOS
+     * @param int $qos
+     * @return $this
+     */
+    public final function setQos($qos = 10)
+    {
+        $this->qos = $qos;
         return $this;
     }
 
@@ -102,6 +115,10 @@ abstract class PlayerAction implements PlayerActionInterface
             if ($this->ttl == 0)
                 $this->setTtl();
 
+            // Set the QOS if not already set
+            if ($this->qos === null)
+                $this->setQos();
+
             // Get the encrypted message
             $encrypted = $this->getEncryptedMessage();
 
@@ -109,7 +126,8 @@ abstract class PlayerAction implements PlayerActionInterface
             $message = [
                 'channel' => $this->channel,
                 'message' => $encrypted['message'],
-                'key' => $encrypted['key']
+                'key' => $encrypted['key'],
+                'qos' => $this->qos
             ];
 
             // Issue a message payload to XMR.

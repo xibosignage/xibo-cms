@@ -15,4 +15,7 @@
     {% set helpText %}{% trans "Finance uses the Yahoo API. Please enter the number of seconds you would like to cache results." %}{% endset %}
     {{ forms.input("cachePeriod", title, module.getSetting("cachePeriod", 300), helpText, "", "required") }}
 
+    {% set message %}{% trans "This module no longer functions as originally designed due to a 3rd party unannounced change and will be removed in 1.9. Please see the release notes for more information" %}{% endset %}
+    {{ forms.message(message, "alert alert-danger") }}
+
 {% endblock %}

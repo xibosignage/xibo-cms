@@ -12,6 +12,8 @@ namespace Xibo\Entity;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\DuplicateEntityException;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -127,7 +129,12 @@ class DisplayGroup implements \JsonSerializable
      * Is collect required?
      * @var bool
      */
-    private $collectRequired = false;
+    private $collectRequired = true;
+
+    /**
+     * @var bool Are we allowed to notify?
+     */
+    private $allowNotify = true;
 
     /**
      * @var DisplayFactory
@@ -258,12 +265,15 @@ class DisplayGroup implements \JsonSerializable
      */
     public function notify()
     {
-        $notify = $this->displayFactory->getDisplayNotifyService();
+        if ($this->allowNotify) {
 
-        if ($this->collectRequired)
-            $notify->collectNow();
+            $notify = $this->displayFactory->getDisplayNotifyService();
 
-        $notify->notifyByDisplayGroupId($this->displayGroupId);
+            if ($this->collectRequired)
+                $notify->collectNow();
+
+            $notify->notifyByDisplayGroupId($this->displayGroupId);
+        }
     }
 
     /**
@@ -294,6 +304,9 @@ class DisplayGroup implements \JsonSerializable
     {
         $this->load();
 
+        // Changes made?
+        $countBefore = count($this->displays);
+
         $this->displays = array_udiff($this->displays, [$display], function($a, $b) {
             /**
              * @var Display $a
@@ -301,6 +314,10 @@ class DisplayGroup implements \JsonSerializable
              */
             return $a->getId() - $b->getId();
         });
+
+        // Notify if necessary
+        if ($countBefore !== count($this->displays))
+            $this->notifyRequired = true;
     }
 
     /**
@@ -323,6 +340,9 @@ class DisplayGroup implements \JsonSerializable
     {
         $this->load();
 
+        // Changes made?
+        $countBefore = count($this->displayGroups);
+
         $this->displayGroups = array_udiff($this->displayGroups, [$displayGroup], function($a, $b) {
             /**
              * @var DisplayGroup $a
@@ -330,6 +350,10 @@ class DisplayGroup implements \JsonSerializable
              */
             return $a->getId() - $b->getId();
         });
+
+        // Notify if necessary
+        if ($countBefore !== count($this->displayGroups))
+            $this->notifyRequired = true;
     }
 
     /**
@@ -356,6 +380,9 @@ class DisplayGroup implements \JsonSerializable
     {
         $this->load();
 
+        // Changes made?
+        $countBefore = count($this->media);
+
         $this->media = array_udiff($this->media, [$media], function($a, $b) {
             /**
              * @var Media $a
@@ -363,6 +390,10 @@ class DisplayGroup implements \JsonSerializable
              */
             return $a->getId() - $b->getId();
         });
+
+        // Notify if necessary
+        if ($countBefore !== count($this->media))
+            $this->notifyRequired = true;
     }
 
     /**
@@ -389,6 +420,9 @@ class DisplayGroup implements \JsonSerializable
     {
         $this->load();
 
+        // Changes made?
+        $countBefore = count($this->layouts);
+
         $this->layouts = array_udiff($this->layouts, [$layout], function($a, $b) {
             /**
              * @var Layout $a
@@ -396,6 +430,10 @@ class DisplayGroup implements \JsonSerializable
              */
             return $a->getId() - $b->getId();
         });
+
+        // Notify if necessary
+        if ($countBefore !== count($this->layouts))
+            $this->notifyRequired = true;
     }
 
     /**
@@ -472,6 +510,7 @@ class DisplayGroup implements \JsonSerializable
     /**
      * Load the contents for this display group
      * @param array $options
+     * @throws NotFoundException
      */
     public function load($options = [])
     {
@@ -538,6 +577,7 @@ class DisplayGroup implements \JsonSerializable
     /**
      * Save
      * @param array $options
+     * @throws XiboException
      */
     public function save($options = [])
     {
@@ -545,8 +585,13 @@ class DisplayGroup implements \JsonSerializable
             'validate' => true,
             'saveGroup' => true,
             'manageLinks' => true,
-            'manageDisplayLinks' => true
+            'manageDisplayLinks' => true,
+            'manageDynamicDisplayLinks' => true,
+            'allowNotify' => true
         ], $options);
+
+        // Should we allow notification or not?
+        $this->allowNotify = $options['allowNotify'];
 
         if ($options['validate'])
             $this->validate();
@@ -555,8 +600,9 @@ class DisplayGroup implements \JsonSerializable
             $this->add();
             $this->loaded = true;
         }
-        else if ($options['saveGroup'])
+        else if ($options['saveGroup']) {
             $this->edit();
+        }
 
         // Tags
         if (is_array($this->tags)) {
@@ -597,14 +643,14 @@ class DisplayGroup implements \JsonSerializable
 
             if ($options['manageDisplayLinks']) {
                 // Handle any changes in the displays linked
-                $this->manageDisplayLinks();
+                $this->manageDisplayLinks($options['manageDynamicDisplayLinks']);
 
                 // Handle any group links
                 $this->manageDisplayGroupLinks();
             }
 
-        } else if ($this->isDynamic && $options['manageDisplayLinks']) {
-            $this->manageDisplayLinks();
+        } else if ($this->isDynamic && $options['manageDynamicDisplayLinks']) {
+            $this->manageDisplayLinks(true);
         }
 
         // Set media incomplete if necessary
@@ -705,10 +751,12 @@ class DisplayGroup implements \JsonSerializable
 
     /**
      * Manage the links to this display, dynamic or otherwise
+     * @var bool $manageDynamic
+     * @throws NotFoundException
      */
-    private function manageDisplayLinks()
+    private function manageDisplayLinks($manageDynamic = true)
     {
-        if ($this->isDynamic) {
+        if ($this->isDynamic && $manageDynamic) {
 
             $this->getLog()->info('Managing Display Links for Dynamic Display Group %s', $this->displayGroup);
 
@@ -731,7 +779,19 @@ class DisplayGroup implements \JsonSerializable
             $this->notifyRequired = (count($difference) >= 0);
         }
 
+        // Link
         $this->linkDisplays();
+
+        // Check if we should notify
+        if ($this->notifyRequired) {
+            // We must notify before we unlink
+            $this->notify();
+
+            // Don't do it again
+            $this->notifyRequired = false;
+        }
+
+        // Unlink
         $this->unlinkDisplays();
     }
 

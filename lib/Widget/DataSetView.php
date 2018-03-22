@@ -36,11 +36,11 @@ class DataSetView extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-dataset-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-image-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-dataset-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
     }
 
     /**
@@ -543,7 +543,7 @@ class DataSetView extends ModuleWidget
 
         // Update and save widget if we've changed our assignments.
         if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notifyDisplays' => true, 'audit' => false]);
+            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
     }
@@ -832,5 +832,28 @@ class DataSetView extends ModuleWidget
     {
         // DataSet rendering will be valid
         return 1;
+    }
+
+    /** @inheritdoc */
+    public function getModifiedTimestamp($displayId)
+    {
+        $widgetModifiedDt = null;
+
+        $dataSetId = $this->getOption('dataSetId');
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
+
+        // Set the timestamp
+        $widgetModifiedDt = $dataSet->lastDataEdit;
+
+        // Remote dataSets are kept "active" by required files
+        if ($dataSet->isRemote) {
+            // Touch this dataSet
+            $dataSetCache = $this->getPool()->getItem('/dataset/accessed/' . $dataSet->dataSetId);
+            $dataSetCache->set('true');
+            $dataSetCache->expiresAfter($this->getSetting('REQUIRED_FILES_LOOKAHEAD') * 1.5);
+            $this->getPool()->saveDeferred($dataSetCache);
+        }
+
+        return $widgetModifiedDt;
     }
 }

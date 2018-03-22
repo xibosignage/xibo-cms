@@ -10,6 +10,7 @@ namespace Xibo\Controller;
 
 
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -155,6 +156,7 @@ class Command extends Base
     /**
      * Edit Command
      * @param int $commandId
+     * @throws XiboException
      */
     public function editForm($commandId)
     {
@@ -172,6 +174,7 @@ class Command extends Base
     /**
      * Delete Command
      * @param int $commandId
+     * @throws XiboException
      */
     public function deleteForm($commandId)
     {
@@ -283,6 +286,8 @@ class Command extends Base
      *      @SWG\Schema(ref="#/definitions/Command")
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function edit($commandId)
     {
