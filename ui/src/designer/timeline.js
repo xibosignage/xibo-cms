@@ -206,9 +206,9 @@ Timeline.prototype.createGhostWidgetsDinamically = function(regions) {
                     var ghost = currentRegion.widgets[widget].createClone();
 
                     // if the ghost goes after the layout ending, crop it
-                    if(auxTime + ghost.data.duration > this.layoutDuration) {
-                        var cropDuration = ghost.data.duration - ((auxTime + ghost.data.duration) - this.layoutDuration);
-                        ghost.data.duration = cropDuration;
+                    if(auxTime + ghost.duration > this.layoutDuration) {
+                        var cropDuration = ghost.duration - ((auxTime + ghost.duration) - this.layoutDuration);
+                        ghost.duration = cropDuration;
                     }
 
                     // Add ghost to the array
@@ -257,7 +257,7 @@ Timeline.prototype.render = function(layout) {
 
     // Check widget repetition and create ghosts
     this.createGhostWidgetsDinamically(layout.regions);
-
+    
     // Render timeline template using layout object
     var html = timelineTemplate({
         layout: layout, 
@@ -269,6 +269,8 @@ Timeline.prototype.render = function(layout) {
 
     // Load region container
     var regionsContainer = this.DOMObject.find('#regions-container');
+
+    console.log('Render timeline: ' + this.properties.scrollPosition);
 
     // Maintain the previous scroll position
     regionsContainer.scrollLeft(this.properties.scrollPosition * regionsContainer.find("#regions").width());
@@ -299,7 +301,7 @@ Timeline.prototype.render = function(layout) {
         self.render(layout);
     });
     
-    regionsContainer.scroll($.debounce(500, function() { //TODO: try to find a best alternative to the debounce
+    regionsContainer.scroll($.debounce(500, function() {
 
         // Get new scroll position
         var newScrollPosition = $(this).scrollLeft() / $(this).find("#regions").width();

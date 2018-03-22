@@ -4,24 +4,40 @@
  * Region contructor
  * @param {number} id - region id
  * @param {object} data - data from the API request
- * @param {number} layoutDuration - total duration of the layout
  * @param {object=} [options] - Region options
  * @param {string} [options.backgroundColor="#555"] - Color for the background
  */
-var Region = function(id, data, layoutDuration, {backgroundColor = '#555'} = {}) {
+var Region = function(id, data, {backgroundColor = '#555'} = {}) {
     this.id = 'region_' + id;
-    this.data = data;
+    this.regionId = id;
+
+    //this.data = data; //TODO: check if we need to maintain the "pure" data object
+
+    this.playlists = data.playlists[0]; //TODO: Change the way to get the data from the API
+
     this.backgroundColor = backgroundColor;
     this.selected = false;
     this.loop = false; // Loop region widgets
-    this.layoutDuration = layoutDuration;
+
+    // widget structure
     this.widgets = {};
 
+    this.options = data.regionOptions;
+
+    // set default dimentions
+    this.dimensions = {
+        width: data.width,
+        height: data.height,
+        top: data.top,
+        left: data.left
+    };
+
+    // container properties
     this.containerProperties = {
-        width: this.data.width,
-        height: this.data.height,
-        top: this.data.top,
-        left: this.data.left
+        width: data.width,
+        height: data.height,
+        top: data.top,
+        left: data.left
     };
 
     /**
@@ -47,7 +63,7 @@ Region.prototype.scaleTo = function(layoutScale) {
     // Loop through the container properties and scale them according to the layout scale from the original
     for(var property in this.containerProperties) {
         if(this.containerProperties.hasOwnProperty(property)) {
-            this.containerProperties[property] = this.data[property] * layoutScale;
+            this.containerProperties[property] = this.dimensions[property] * layoutScale;
         }
     }
 };
@@ -63,10 +79,10 @@ Region.prototype.scaleTo = function(layoutScale) {
 Region.prototype.saveTransformation = function(width, height, top, left, layoutScale) {
 
     // Change data structure properties
-    this.data.width = width / layoutScale;
-    this.data.height = height / layoutScale;
-    this.data.top = top / layoutScale;
-    this.data.left = left / layoutScale;
+    this.width = width / layoutScale;
+    this.height = height / layoutScale;
+    this.top = top / layoutScale;
+    this.left = left / layoutScale;
 };
 
 module.exports = Region;

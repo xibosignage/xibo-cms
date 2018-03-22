@@ -39,7 +39,7 @@ Navigator.prototype.render = function(layout) {
 
     // Make regions draggable and resizable if navigator's on edit mode
     // Get layout container
-    var layoutContainer = this.DOMObject.find('#layout_' + layout.data.layoutId);
+    var layoutContainer = this.DOMObject.find('#' + layout.id);
 
     // Find all the regions and enable drag and resize
     this.DOMObject.find('#regions .region').resizable({

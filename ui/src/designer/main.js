@@ -62,62 +62,8 @@ $(document).ready(function() {
 
             if(res.data.length > 0) {
 
-                var data = res.data[0];
-
-                // Succesful request: Create Layout
-                layout = new Layout(layoutId, data);
-
-                // Create regions and add them to the layout
-                for(var region in data.regions) {
-                    var newRegion = new Region(
-                        data.regions[region].regionId,
-                        data.regions[region],
-                        data.duration
-                    );
-
-                    // Widgets
-                    var widgets = newRegion.data.playlists[0].widgets; //TODO - Change the way to get the data from the API
-                    var loopSingleWidget = false;
-                    var singleWidget = false;
-
-                    // If there is only one widget in the playlist, check the loop option for that region
-                    if(widgets.length == 1) {
-
-                        singleWidget = true;
-
-                        // Check the loop option
-                        for(var option in newRegion.data.regionOptions) {
-                            if(newRegion.data.regionOptions[option].option == 'loop' && newRegion.data.regionOptions[option].value == '1') {
-                                newRegion.loop = true;
-                                loopSingleWidget = true;
-                                break;
-                            }
-                        }
-                    } else if(parseFloat(newRegion.data.duration) < parseFloat(data.duration)) {
-                        // if the region duration is less than the layout duration enable loop
-                        newRegion.loop = true;
-                    }
-
-                    // Create widgets for this region
-                    for(var widget in widgets) {
-                        var newWidget = new Widget(
-                            widgets[widget].widgetId,
-                            data.regions[region].regionId,
-                            widgets[widget],
-                            data.duration // Layout Duration
-                        );
-
-                        // If the widget needs to be extended
-                        newWidget.singleWidget = singleWidget;
-                        newWidget.loop = loopSingleWidget;
-
-                        // Push newWidget to the Region widget array
-                        newRegion.widgets[newWidget.id] = newWidget;
-                    }
-
-                    // Push Region to the Layout region array
-                    layout.regions[newRegion.id] = newRegion;
-                }
+                // Create layout
+                layout = new Layout(layoutId, res.data[0]);
 
                 // Initialize navigator
                 navigator = new Navigator(
@@ -128,7 +74,7 @@ $(document).ready(function() {
                 // Initialize timeline
                 timeline = new Timeline(
                     designerDiv.find('#layout-timeline'),
-                    data.duration
+                    layout.duration
                 );
 
                 // Default selected object is the layout ( that will render the containers )
@@ -173,7 +119,6 @@ $(document).ready(function() {
     }));
 });
 
-
 /**
  * Select a layout object (layout/region/widget)
  * @param  {object} obj - Object to be selected
@@ -214,6 +159,7 @@ window.selectObject = function(obj) {
         } else if(newSelectedType === 'widget') {
             layout.regions[obj.data('widgetRegion')].widgets[newSelectedId].selected = true;
             selectedObject = layout.regions[obj.data('widgetRegion')].widgets[newSelectedId];
+            console.log(selectedObject.getDuration(true));
         }
 
         selectedObject.type = newSelectedType;
@@ -227,7 +173,7 @@ window.selectObject = function(obj) {
 
     // Refresh the designer containers
     this.refreshDesigner();
-}
+};
 
 /**
  * Refresh designer
@@ -236,7 +182,7 @@ window.refreshDesigner = function() {
     this.renderContainer(navigator);
     this.renderContainer(navigatorEdit);
     this.renderContainer(timeline);
-}
+};
 
 /**
  * Render layout structure to container, if it exists
@@ -246,7 +192,7 @@ window.renderContainer = function(container) {
     if(!jQuery.isEmptyObject(container)) {
         container.render(layout);
     }
-}
+};
 
 /**
  * Toggle editing functionality on Navigator
@@ -281,4 +227,4 @@ window.toggleNavigatorEditing = function(enable) {
         designerDiv.find('#layout-navigator-edit').css('display', 'none');
 
     }
-}
+};
