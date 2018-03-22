@@ -102,10 +102,12 @@ class Twitter extends TwitterBase
         try {
             $oldSvg = $this->mediaFactory->createModuleFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.svg');
 
-            if ($oldSvg->mediaId != null)
+            if ($oldSvg->mediaId != null) {
+                $this->getLog()->debug('Deleting old emoji svg file');
                 $oldSvg->delete();
+            }
         } catch (XiboException $xiboException) {
-            $this->getLog()->error('Unable to delete old SVG reference during Twitter install.');
+            $this->getLog()->error('Unable to delete old SVG reference during Twitter install. E = ' . $xiboException->getMessage());
             $this->getLog()->debug($xiboException->getTraceAsString());
         }
     }
