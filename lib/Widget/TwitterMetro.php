@@ -90,7 +90,8 @@ class TwitterMetro extends TwitterBase
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-metro-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.svg')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.png')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.css')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
         
         foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
@@ -360,9 +361,9 @@ class TwitterMetro extends TwitterBase
 
         // Make an emojione client
         $emoji = new Client(new Ruleset());
-        $emoji->imageType = 'svg';
+        $emoji->imageType = 'png';
         $emoji->sprites = true;
-        $emoji->imagePathSVGSprites = $this->getResourceUrl('emojione/emojione.sprites.svg');
+        $emoji->imagePathPNG = $this->getResourceUrl('emojione/emojione.sprites.png');
 
         // Get the date format to apply
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
@@ -600,8 +601,11 @@ class TwitterMetro extends TwitterBase
         $headContent = '';
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
-        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
+        $headContent .= '
+            <link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('emojione/emojione.sprites.css')  . '" rel="stylesheet" media="screen">
+        ';
         
         $backgroundColor = $this->getOption('backgroundColor');
         if ($backgroundColor != '') {
