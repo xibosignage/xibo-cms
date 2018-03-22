@@ -44,8 +44,6 @@ class TwitterMetro extends TwitterBase
      */
     public function init()
     {
-        $this->resourceFolder = PROJECT_ROOT . '/modules/twittermetro';
-
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
     }
@@ -93,11 +91,6 @@ class TwitterMetro extends TwitterBase
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.png')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.css')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
-        
-        foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
-            /* @var \Xibo\Entity\Media $media */
-            $media->save();
-        }
     }
 
     /**
