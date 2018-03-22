@@ -182,7 +182,7 @@ class UserFactory extends BaseFactory
     public function getSystemUser()
     {
         $user = $this->create();
-        $user->userId = 0;
+        $user->userId = 1;
         $user->userName = 'system';
         $user->userTypeId = 1;
         $user->email = $this->configService->GetSetting('mail_to');
@@ -217,20 +217,9 @@ class UserFactory extends BaseFactory
                 CSPRNG,
                 UserPassword AS password,
                 group.groupId,
-                group.group
-        ';
-
-        if (DBVERSION >= 120) {
-            $select .= '
-                ,
+                group.group,
                 `pages`.pageId AS homePageId,
-                `pages`.title AS homePage
-            ';
-        }
-
-        if (DBVERSION >= 121) {
-            $select .= '
-                ,
+                `pages`.title AS homePage,
                 `user`.firstName,
                 `user`.lastName,
                 `user`.phone,
@@ -238,30 +227,11 @@ class UserFactory extends BaseFactory
                 `user`.ref2,
                 `user`.ref3,
                 `user`.ref4,
-                `user`.ref5
-            ';
-        }
-
-        if (DBVERSION >= 88) {
-            $select .= '
-                ,
-                IFNULL(group.libraryQuota, 0) AS libraryQuota
-            ';
-        }
-
-        if (DBVERSION >= 124) {
-            $select .= '
-                ,
-                `group`.isSystemNotification
-            ';
-        }
-
-        if (DBVERSION >= 134) {
-            $select .= '
-                ,
+                `user`.ref5,
+                IFNULL(group.libraryQuota, 0) AS libraryQuota,
+                `group`.isSystemNotification,
                 `group`.isDisplayNotification
-            ';
-        }
+        ';
 
         $body = '
               FROM `user`
@@ -270,16 +240,8 @@ class UserFactory extends BaseFactory
                 INNER JOIN `group`
                 ON `group`.groupId = lkusergroup.groupId
                   AND isUserSpecific = 1
-        ';
-
-        if (DBVERSION >= 120) {
-            $body .= '
                 LEFT OUTER JOIN `pages`
                 ON pages.pageId = `user`.homePageId
-            ';
-        }
-
-        $body .= '
              WHERE 1 = 1
          ';
 

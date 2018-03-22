@@ -1036,9 +1036,6 @@ class Library extends Base
      */
     public function fontCKEditorConfig()
     {
-        if (DBVERSION < 125)
-            return null;
-
         // Regenerate the CSS for fonts
         $css = $this->installFonts(['invalidateCache' => false]);
 

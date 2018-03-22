@@ -9,8 +9,9 @@
 namespace Xibo\XTR;
 
 
+use Slim\View;
 use Xibo\Entity\UserNotification;
-use Xibo\Exception\ConfigurationException;
+use Xibo\Factory\UserNotificationFactory;
 
 /**
  * Class EmailNotificationsTask
@@ -19,6 +20,20 @@ use Xibo\Exception\ConfigurationException;
 class EmailNotificationsTask implements TaskInterface
 {
     use TaskTrait;
+
+    /** @var View */
+    private $view;
+
+    /** @var UserNotificationFactory */
+    private $userNotificationFactory;
+
+    /** @inheritdoc */
+    public function setFactories($container)
+    {
+        $this->view = $container->get('view');
+        $this->userNotificationFactory = $container->get('userNotificationFactory');
+        return $this;
+    }
 
     /** @inheritdoc */
     public function run()
@@ -94,7 +109,6 @@ class EmailNotificationsTask implements TaskInterface
      * @param $subject
      * @param $body
      * @return string
-     * @throws ConfigurationException
      */
     private function generateEmailBody($subject, $body)
     {
@@ -103,7 +117,7 @@ class EmailNotificationsTask implements TaskInterface
         ob_start();
 
         // Render the template
-        $this->app->render('email-template.twig', ['config' => $this->config, 'subject' => $subject, 'body' => $body]);
+        $this->view->display('email-template.twig', ['config' => $this->config, 'subject' => $subject, 'body' => $body]);
 
         $body = ob_get_contents();
 

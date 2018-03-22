@@ -1,0 +1,5 @@
+{
+  "name": "Drop Player Cache",
+  "class": "\\Xibo\\XTR\\DropPlayerCacheTask",
+  "options": {}
+}

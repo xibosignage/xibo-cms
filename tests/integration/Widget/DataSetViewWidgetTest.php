@@ -1,23 +1,36 @@
 <?php
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (DataSetViewWidgetTest.php)
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2015-2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 namespace Xibo\Tests\Integration\Widget;
 
 use Xibo\Helper\Random;
-use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboDataSet;
 use Xibo\OAuth2\Client\Entity\XiboDataSetColumn;
 use Xibo\OAuth2\Client\Entity\XiboDataSetView;
-use Xibo\OAuth2\Client\Entity\XiboWidget;
+use Xibo\OAuth2\Client\Entity\XiboLayout;
+use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
 class DataSetViewWidgetTest extends LocalWebTestCase
 {
+    use LayoutHelperTrait;
 
 	protected $startLayouts;
     protected $startDataSets;
@@ -79,14 +92,14 @@ class DataSetViewWidgetTest extends LocalWebTestCase
 
     public function testAdd()
     {
-        # Create layout
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('DataSetView add', 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        // Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+
         # Create a new dataset
         $dataSet = (new XiboDataSet($this->getEntityProvider()))->create('phpunit dataset', 'phpunit description');
 
-        $response = $this->client->post('/playlist/widget/dataSetView/' . $region->playlists[0]['playlistId'], [
+        $response = $this->client->post('/playlist/widget/dataSetView/' . $playlistId, [
             'name' => 'API dataSetView',
             'dataSetId' => $dataSet->dataSetId
             ]);
@@ -94,21 +107,21 @@ class DataSetViewWidgetTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object);
-        $widgetOptions = (new XiboDataSetView($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $widgetOptions = (new XiboDataSetView($this->getEntityProvider()))->getById($playlistId);
         $this->assertSame('API dataSetView', $widgetOptions->name);
         $this->assertSame(60, $widgetOptions->duration);
     }
 
     public function testEdit()
     {
-        # Create layout
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('DataSetView edit', 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        // Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+
         # Create a new dataset
         $dataSet = (new XiboDataSet($this->getEntityProvider()))->create('phpunit dataset', 'phpunit description');
         # Create dataSetView widget
-        $dataSetView = (new XiboDataSetView($this->getEntityProvider()))->create('API dataSetView', $dataSet->dataSetId, $region->playlists[0]['playlistId']);
+        $dataSetView = (new XiboDataSetView($this->getEntityProvider()))->create('API dataSetView', $dataSet->dataSetId, $playlistId);
         $nameCol = Random::generateString(8, 'phpunit');
         $nameCol2 = Random::generateString(8, 'phpunit');
         $column = (new XiboDataSetColumn($this->getEntityProvider()))->create($dataSet->dataSetId, $nameCol,'', 2, 1, 1, '');
@@ -136,7 +149,7 @@ class DataSetViewWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $widgetOptions = (new XiboDataSetView($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $widgetOptions = (new XiboDataSetView($this->getEntityProvider()))->getById($playlistId);
         $this->assertSame($nameNew, $widgetOptions->name);
         $this->assertSame($durationNew, $widgetOptions->duration);
         foreach ($widgetOptions->widgetOptions as $option) {
@@ -149,16 +162,16 @@ class DataSetViewWidgetTest extends LocalWebTestCase
         }
     }
 
-        public function testDelete()
+    public function testDelete()
     {
-        # Create layout
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('DataSetView delete Layout', 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        // Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+
         # Create a new dataset
         $dataSet = (new XiboDataSet($this->getEntityProvider()))->create('phpunit dataset', 'phpunit description');
         # Create dataSetView widget
-        $dataSetView = (new XiboDataSetView($this->getEntityProvider()))->create('API dataSetView', $dataSet->dataSetId, $region->playlists[0]['playlistId']);
+        $dataSetView = (new XiboDataSetView($this->getEntityProvider()))->create('API dataSetView', $dataSet->dataSetId, $playlistId);
         # Delete it
         $this->client->delete('/playlist/widget/' . $dataSetView->widgetId);
         $response = json_decode($this->client->response->body());

@@ -364,49 +364,6 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /**
-     * Defines the Version and returns it
-     * @param $object string[optional]
-     * @return array|string
-     * @throws \Exception
-     */
-    public function Version($object = '')
-    {
-        try {
-
-            $sth = $this->getStore()->getConnection()->prepare('SELECT app_ver, XlfVersion, XmdsVersion, DBVersion FROM version');
-            $sth->execute();
-
-            if (!$row = $sth->fetch(\PDO::FETCH_ASSOC))
-                throw new \Exception('No results returned');
-
-            $appVer = $row['app_ver'];
-            $dbVer = intval($row['DBVersion']);
-
-            if (!defined('VERSION'))
-                define('VERSION', $appVer);
-
-            if (!defined('DBVERSION'))
-                define('DBVERSION', $dbVer);
-
-            if ($object != '')
-                return $row[$object];
-
-            return $row;
-        } catch (\Exception $e) {
-            throw new \Exception(__('No Version information - please contact technical support'));
-        }
-    }
-
-    /**
-     * Is an upgrade pending?
-     * @return bool
-     */
-    public function isUpgradePending()
-    {
-        return DBVERSION < Environment::$WEBSITE_VERSION;
-    }
-
-    /**
      * Should the host be considered a proxy exception
      * @param $host
      * @return bool

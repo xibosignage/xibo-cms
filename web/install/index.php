@@ -37,7 +37,7 @@ new \Xibo\Middleware\Theme('default');
 $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'INSTALL',
     'handlers' => array(
-        new \Monolog\Handler\StreamHandler(PROJECT_ROOT . '/install/install_log.txt')
+        new \Monolog\Handler\StreamHandler(PROJECT_ROOT . '/library/install_log.txt')
     ),
     'processors' => array(
         new \Xibo\Helper\LogProcessor(),
